@@ -14,6 +14,12 @@ from .sourcing import _canonical_url, url_has_sensitive_query
 from .util import iso_utc, project_root, stable_id
 
 
+MAX_ADMISSION_MATERIALS = 32
+MAX_ADMISSION_RESEARCH_FINDINGS = 500
+MAX_ADMISSION_FIELDS = 1_000
+MATERIAL_KINDS = {"resume_docx", "resume_pdf", "cover_letter_docx", "cover_letter_pdf", "application_narrative", "visual_evidence"}
+
+
 def _validate_relative_display(value: object, code: str) -> str:
     if not isinstance(value, str):
         raise JobOpsError(code, "A bounded project-relative display path is required.")
@@ -227,8 +233,19 @@ class QueueManager:
             validate_secure_reference(str(review_packet.get("secure_ref", "")))
             if review_packet.get("status") != "AWAITING_APPROVAL":
                 raise JobOpsError("REVIEW_PACKET_STATUS_INVALID", "A queue admission accepts only an awaiting-approval review packet.")
+        if len(material_records or []) > MAX_ADMISSION_MATERIALS or len(research_records or []) > MAX_ADMISSION_RESEARCH_FINDINGS or len(field_records or []) > MAX_ADMISSION_FIELDS:
+            raise JobOpsError("QUEUE_ADMISSION_RECORD_LIMIT_EXCEEDED", "The queue admission evidence exceeds its bounded record limits.")
         for material in material_records or []:
             validate_secure_reference(str(material.get("path", "")))
+            if (
+                not re.fullmatch(r"MAT-[A-F0-9]{12}", str(material.get("material_id", "")))
+                or material.get("kind") not in MATERIAL_KINDS
+                or not re.fullmatch(r"sha256:[a-f0-9]{64}", str(material.get("content_hash", "")))
+                or not isinstance(material.get("claim_ids", []), list)
+                or len(material.get("claim_ids", [])) > 500
+                or not all(re.fullmatch(r"CLM-[A-Z0-9_-]{4,64}", str(item)) for item in material.get("claim_ids", []))
+            ):
+                raise JobOpsError("MATERIAL_RECORD_INVALID", "A queued material must use bounded IDs, hashes, kinds and claim references.")
         for field in field_records or []:
             if field.get("secure_ref") is not None:
                 validate_secure_reference(str(field["secure_ref"]))
