@@ -55,6 +55,6 @@ JobFlow 本身应从 Windows 双击 `.cmd` 文件运行。`$env:USERPROFILE` 之
 
 - Reproduce with the synthetic demo whenever possible. / 尽量使用合成演示复现。
 - Never attach a real resume, export, Candidate Profile, Answer Bank, database, DPAPI file, token, absolute path, or private screenshot to a public issue. / 不要在公开 Issue 附上真实简历、导出、Candidate Profile、Answer Bank、数据库、DPAPI 文件、令牌、绝对路径或私人截图。
-- Include the JobFlow version, first failed health-check ID, expected behavior and actual behavior. / 提供 JobFlow 版本、第一条失败检查 ID、预期行为和实际行为。
+- Include the non-sensitive JobFlow version shown by the health check (or `jobflow --version`), first failed health-check ID, expected behavior and actual behavior. / 提供一键自检（或 `jobflow --version`）显示的非敏感版本、第一条失败检查 ID、预期行为和实际行为。
 
 See [Security / 安全](../SECURITY.md) for private vulnerability reporting rules.

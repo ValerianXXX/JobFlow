@@ -1,12 +1,18 @@
 [CmdletBinding()]
 param(
-    [switch]$Json
+    [switch]$Json,
+    [string]$PythonPath = ""
 )
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $projectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
-$venvPython = Join-Path $projectRoot ".venv\Scripts\python.exe"
+$venvPython = if ([string]::IsNullOrWhiteSpace($PythonPath)) {
+    Join-Path $projectRoot ".venv\Scripts\python.exe"
+}
+else {
+    $PythonPath
+}
 $checks = [System.Collections.Generic.List[object]]::new()
 
 function Add-JobFlowCheck {
@@ -37,13 +43,22 @@ Add-JobFlowCheck "PYTHON_RUNTIME" $pythonReady "本地运行环境已安装" "Lo
 $packageReady = $false
 $dependenciesReady = $false
 $cliReady = $false
+$detectedVersion = $null
 if ($pythonReady) {
-    $versionText = & $venvPython -c "import jobops; print(jobops.__version__)" 2>$null
-    $packageReady = $LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$versionText)
-    $dependencyText = & $venvPython -m pip check 2>$null
-    $dependenciesReady = $LASTEXITCODE -eq 0
-    $helpText = & $venvPython -m jobops.cli --help 2>$null
-    $cliReady = $LASTEXITCODE -eq 0 -and $helpText -match "onboarding-center" -and $helpText -match "demo"
+    $savedErrorPreference = $ErrorActionPreference
+    $ErrorActionPreference = "SilentlyContinue"
+    try {
+        $versionText = & $venvPython -c "import jobops; print(jobops.__version__)" 2>$null
+        $packageReady = $LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$versionText)
+        if ($packageReady) { $detectedVersion = ([string]$versionText).Trim() }
+        $dependencyText = & $venvPython -m pip check 2>$null
+        $dependenciesReady = $LASTEXITCODE -eq 0
+        $helpText = & $venvPython -m jobops.cli --help 2>$null
+        $cliReady = $LASTEXITCODE -eq 0 -and $helpText -match "onboarding-center" -and $helpText -match "demo"
+    }
+    finally {
+        $ErrorActionPreference = $savedErrorPreference
+    }
 }
 Add-JobFlowCheck "PACKAGE_IMPORT" $packageReady "JobFlow 程序可载入" "JobFlow package loads" "重新运行 Install JobFlow.cmd" "Run Install JobFlow.cmd again"
 Add-JobFlowCheck "DEPENDENCIES" $dependenciesReady "依赖完整" "Dependencies healthy" "重新运行 Install JobFlow.cmd" "Run Install JobFlow.cmd again"
@@ -90,6 +105,7 @@ $failed = @($checks | Where-Object { $_.status -ne "PASS" })
 $result = [ordered]@{
     schema_version = 1
     status = if ($failed.Count -eq 0) { "JOBFLOW_READY" } else { "JOBFLOW_NEEDS_REPAIR" }
+    version = $detectedVersion
     checks_passed = $checks.Count - $failed.Count
     checks_total = $checks.Count
     checks = $checks

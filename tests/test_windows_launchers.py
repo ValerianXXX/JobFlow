@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import unittest
 
 from _support import PROJECT
+from jobops import __version__
 
 
 class WindowsLauncherTests(unittest.TestCase):
@@ -51,6 +53,7 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         result = json.loads(completed.stdout.lstrip("\ufeff"))
         self.assertEqual(result["status"], "JOBFLOW_READY")
+        self.assertEqual(result["version"], __version__)
         self.assertEqual(result["checks_passed"], result["checks_total"])
         self.assertEqual(result["private_values_read"], 0)
         self.assertEqual(result["private_values_emitted"], 0)
@@ -59,6 +62,19 @@ class WindowsLauncherTests(unittest.TestCase):
         serialized = json.dumps(result)
         self.assertNotIn(str(PROJECT), serialized)
         self.assertNotIn("secure-ref:", serialized)
+
+    def test_public_cli_reports_a_safe_version(self) -> None:
+        completed = subprocess.run(
+            [sys.executable, "-m", "jobops.cli", "--version"],
+            cwd=PROJECT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0)
+        self.assertEqual(completed.stdout.strip(), f"JobFlow {__version__}")
+        self.assertNotIn(str(PROJECT), completed.stdout)
 
 
 if __name__ == "__main__":

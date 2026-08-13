@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from . import __version__
 from .audit import audit_environment
 from .adapters import audit_real_external_actions
 from .ats_browser import analyze_local_ats_form, analyze_local_ats_form_sequence
@@ -82,6 +83,7 @@ def _add_path_argument(command: argparse.ArgumentParser) -> None:
 
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(prog="jobflow", description="Local evidence-gated JobFlow controller")
+    root.add_argument("--version", action="version", version=f"JobFlow {__version__}")
     sub = root.add_subparsers(dest="command", required=True)
     _add_path_argument(sub.add_parser("status"))
     sub.add_parser("audit")
