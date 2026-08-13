@@ -4,6 +4,7 @@ import base64
 import json
 import os
 import subprocess
+import uuid
 from pathlib import Path
 
 from .errors import JobOpsError
@@ -43,8 +44,27 @@ class WindowsDPAPIStore:
     def put_bytes(self, value: bytes, *, reference: str | None = None) -> dict[str, str | bool]:
         if not value:
             raise JobOpsError("SECURE_VALUE_EMPTY", "Cannot store an empty application-private value.")
-        result = json.loads(self._run("Put", reference=reference, payload=base64.b64encode(value).decode("ascii"), input_encoding="Base64").stdout)
+        generated = reference is None
+        target_reference = reference or ("secure-ref:" + uuid.uuid4().hex)
+        try:
+            result = json.loads(self._run("Put", reference=target_reference, payload=base64.b64encode(value).decode("ascii"), input_encoding="Base64").stdout)
+        except Exception:
+            # The caller-selected reference lets us remove a new ciphertext even if the
+            # helper was interrupted after its atomic file replacement but before reply.
+            if generated and self.cipher_path(target_reference).is_file():
+                try:
+                    self._run("Delete", reference=target_reference)
+                except Exception:
+                    pass
+            raise
         validate_secure_reference(result["secure_ref"])
+        if result["secure_ref"] != target_reference:
+            if generated and self.cipher_path(target_reference).is_file():
+                try:
+                    self._run("Delete", reference=target_reference)
+                except Exception:
+                    pass
+            raise JobOpsError("SECURE_STORE_REFERENCE_MISMATCH", "DPAPI returned an unexpected secure reference.")
         return result
 
     def get_bytes(self, reference: str) -> bytes:

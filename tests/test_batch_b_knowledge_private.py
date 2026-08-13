@@ -7,6 +7,7 @@ import sqlite3
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from _support import fixture_manifest, make_knowledge_root, project_temp, write_json
 from jobops.claim_registry import ClaimRegistry
@@ -15,6 +16,7 @@ from jobops.errors import JobOpsError, SecurityBoundaryError
 from jobops.knowledge import KnowledgeGateway
 from jobops.locator import locate_knowledge_root
 from jobops.private_onboarding import PrivateOnboarding
+from jobops.release import security_scan
 from jobops.secure_store import WindowsDPAPIStore
 from jobops.security import assert_project_io_path, path_has_hard_excluded_name
 from jobops.util import iso_utc, sha256_bytes, sha256_file
@@ -199,6 +201,123 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
             self.assertEqual(caught.exception.code, "SECURE_STORE_FAILED")
             self.assertNotIn(SENTINEL, json.dumps(caught.exception.as_dict()))
             onboarding.delete(record["secure_ref"], user_confirmed=True)
+
+    def test_private_import_and_rotation_roll_back_metadata_failures(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            local_app_data = temp / "localappdata"
+            script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
+            store = WindowsDPAPIStore(script, local_app_data=local_app_data)
+            onboarding = PrivateOnboarding(database, store)
+
+            original_connect = database.connect
+            import_calls = 0
+
+            def fail_import_metadata():
+                nonlocal import_calls
+                import_calls += 1
+                if import_calls == 2:
+                    raise sqlite3.OperationalError("synthetic metadata failure")
+                return original_connect()
+
+            with patch.object(database, "connect", side_effect=fail_import_metadata):
+                with self.assertRaises(JobOpsError) as failed_import:
+                    onboarding.import_bytes("candidate_profile", SENTINEL.encode("utf-8"), synthetic=True)
+            self.assertEqual(failed_import.exception.code, "PRIVATE_IMPORT_DATABASE_FAILED")
+            self.assertFalse(any(store.private_root.glob("*.dpapi")))
+            self.assertFalse(any(store.private_root.glob(".jobflow-write-*")))
+
+            original = (SENTINEL + "-ORIGINAL").encode("utf-8")
+            record = onboarding.import_bytes("answer_bank", original, synthetic=True)
+            rotate_calls = 0
+
+            def fail_rotation_metadata():
+                nonlocal rotate_calls
+                rotate_calls += 1
+                if rotate_calls == 3:
+                    raise sqlite3.OperationalError("synthetic rotation failure")
+                return original_connect()
+
+            with patch.object(database, "connect", side_effect=fail_rotation_metadata):
+                with self.assertRaises(JobOpsError) as failed_rotation:
+                    onboarding.rotate(record["secure_ref"], (SENTINEL + "-NEW").encode("utf-8"))
+            self.assertEqual(failed_rotation.exception.code, "PRIVATE_ROTATION_DATABASE_FAILED")
+            self.assertEqual(onboarding.read_bytes(record["secure_ref"]), original)
+            with original_connect() as connection:
+                row = connection.execute("SELECT version,status FROM private_refs WHERE secure_ref=?", (record["secure_ref"],)).fetchone()
+            self.assertEqual((row["version"], row["status"]), (1, "ACTIVE"))
+            self.assertFalse(any(store.private_root.glob(".jobflow-write-*")))
+            onboarding.delete(record["secure_ref"], user_confirmed=True)
+
+    def test_interrupted_new_dpapi_write_has_a_known_cleanup_reference(self) -> None:
+        with project_temp() as temp:
+            script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
+            store = WindowsDPAPIStore(script, local_app_data=temp / "localappdata")
+            original_run = store._run
+
+            def interrupted(operation, reference=None, payload=None, **kwargs):
+                if operation == "Put":
+                    path = store.cipher_path(reference)
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(b"synthetic interrupted ciphertext")
+                    raise JobOpsError("SECURE_STORE_FAILED", "Synthetic interrupted helper.")
+                return original_run(operation, reference=reference, payload=payload, **kwargs)
+
+            with patch.object(store, "_run", side_effect=interrupted):
+                with self.assertRaises(JobOpsError) as interrupted_write:
+                    store.put_bytes(SENTINEL.encode("utf-8"))
+            self.assertEqual(interrupted_write.exception.code, "SECURE_STORE_FAILED")
+            self.assertFalse(any(store.private_root.glob("*.dpapi")))
+
+    def test_interrupted_rotation_restores_old_private_content(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
+            store = WindowsDPAPIStore(script, local_app_data=temp / "localappdata")
+            onboarding = PrivateOnboarding(database, store)
+            original = (SENTINEL + "-ORIGINAL").encode("utf-8")
+            record = onboarding.import_bytes("answer_bank", original, synthetic=True)
+            original_run = store._run
+            failed_once = False
+
+            def interrupted(operation, reference=None, payload=None, **kwargs):
+                nonlocal failed_once
+                if operation == "Put" and not failed_once:
+                    failed_once = True
+                    # Simulate a helper that replaced the destination and then lost its reply.
+                    completed = original_run(operation, reference=reference, payload=payload, **kwargs)
+                    self.assertEqual(completed.returncode, 0)
+                    raise JobOpsError("SECURE_STORE_FAILED", "Synthetic interrupted helper.")
+                return original_run(operation, reference=reference, payload=payload, **kwargs)
+
+            with patch.object(store, "_run", side_effect=interrupted):
+                with self.assertRaises(JobOpsError) as interrupted_rotation:
+                    onboarding.rotate(record["secure_ref"], (SENTINEL + "-NEW").encode("utf-8"))
+            self.assertEqual(interrupted_rotation.exception.code, "PRIVATE_ROTATION_WRITE_FAILED")
+            self.assertEqual(onboarding.read_bytes(record["secure_ref"]), original)
+            with database.connect() as connection:
+                row = connection.execute("SELECT version,status FROM private_refs WHERE secure_ref=?", (record["secure_ref"],)).fetchone()
+            self.assertEqual((row["version"], row["status"]), (1, "ACTIVE"))
+            self.assertFalse(any(store.private_root.glob(".jobflow-write-*")))
+            onboarding.delete(record["secure_ref"], user_confirmed=True)
+
+    def test_release_scan_rejects_atomic_write_residue(self) -> None:
+        with project_temp() as temp:
+            project = temp / "project"
+            project.mkdir()
+            database = JobOpsDB(project / "jobops.db")
+            database.initialize()
+            local_app_data = temp / "localappdata"
+            private_root = local_app_data / "JobOps" / "private"
+            private_root.mkdir(parents=True)
+            (private_root / ".jobflow-write-synthetic.tmp").write_bytes(b"synthetic encrypted residue")
+            with patch.dict(os.environ, {"LOCALAPPDATA": str(local_app_data)}):
+                report = security_scan(project, database)
+            self.assertEqual(report["status"], "FAIL")
+            self.assertEqual(report["private_temporary_file_count"], 1)
+            self.assertIn("private_atomic_write_residue", {item["kind"] for item in report["findings"]})
 
 
 if __name__ == "__main__":

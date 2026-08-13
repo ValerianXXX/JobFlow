@@ -44,13 +44,26 @@ class PrivateOnboarding:
             }
         stored = self.store.put_bytes(value)
         secure_ref = str(stored["secure_ref"])
-        with self.database.connect() as connection:
-            connection.execute(
-                """INSERT INTO private_refs(
-                secure_ref,kind,display_name,ciphertext_sha256,content_sha256,version,status,synthetic,created_at,updated_at)
-                VALUES(?,?,?,?,?,1,'ACTIVE',?,?,?)""",
-                (secure_ref, kind, display, stored["ciphertext_sha256"], content_hash, int(synthetic), now, now),
-            )
+        try:
+            with self.database.connect() as connection:
+                connection.execute(
+                    """INSERT INTO private_refs(
+                    secure_ref,kind,display_name,ciphertext_sha256,content_sha256,version,status,synthetic,created_at,updated_at)
+                    VALUES(?,?,?,?,?,1,'ACTIVE',?,?,?)""",
+                    (secure_ref, kind, display, stored["ciphertext_sha256"], content_hash, int(synthetic), now, now),
+                )
+        except Exception as exc:
+            try:
+                self.store.delete(secure_ref)
+            except Exception as cleanup_error:
+                raise JobOpsError(
+                    "PRIVATE_IMPORT_ROLLBACK_FAILED",
+                    "Private storage could not be rolled back after its local metadata transaction failed.",
+                ) from cleanup_error
+            raise JobOpsError(
+                "PRIVATE_IMPORT_DATABASE_FAILED",
+                "Private storage was removed after its local metadata transaction failed.",
+            ) from exc
         return {"secure_ref": secure_ref, "kind": kind, "display_name": display, "content_sha256": content_hash, "ciphertext_sha256": stored["ciphertext_sha256"], "version": 1, "status": "ACTIVE", "deduplicated": False}
 
     def import_file(self, kind: str, selected_path: Path, *, synthetic: bool = False) -> dict[str, object]:
@@ -78,13 +91,56 @@ class PrivateOnboarding:
         row = self._record(reference)
         if row["status"] != "ACTIVE":
             raise JobOpsError("SECURE_REFERENCE_REVOKED", "Only an active secure reference can rotate.")
-        stored = self.store.put_bytes(value, reference=reference)
+        previous = self.read_bytes(reference)
+        try:
+            stored = self.store.put_bytes(value, reference=reference)
+        except Exception as exc:
+            try:
+                self.store.put_bytes(previous, reference=reference)
+            except Exception as rollback_error:
+                try:
+                    with self.database.connect() as connection:
+                        connection.execute(
+                            "UPDATE private_refs SET status='CORRUPT',updated_at=? WHERE secure_ref=?",
+                            (iso_utc(), reference),
+                        )
+                except Exception:
+                    pass
+                raise JobOpsError(
+                    "PRIVATE_ROTATION_ROLLBACK_FAILED",
+                    "Private storage could not restore its prior content after an interrupted ciphertext update.",
+                ) from rollback_error
+            raise JobOpsError(
+                "PRIVATE_ROTATION_WRITE_FAILED",
+                "Private storage restored its prior content after an interrupted ciphertext update.",
+            ) from exc
         version = int(row["version"]) + 1
-        with self.database.connect() as connection:
-            connection.execute(
-                "UPDATE private_refs SET ciphertext_sha256=?,content_sha256=?,version=?,updated_at=? WHERE secure_ref=?",
-                (stored["ciphertext_sha256"], sha256_bytes(value), version, iso_utc(), reference),
-            )
+        try:
+            with self.database.connect() as connection:
+                connection.execute(
+                    "UPDATE private_refs SET ciphertext_sha256=?,content_sha256=?,version=?,updated_at=? WHERE secure_ref=?",
+                    (stored["ciphertext_sha256"], sha256_bytes(value), version, iso_utc(), reference),
+                )
+        except Exception as exc:
+            try:
+                self.store.put_bytes(previous, reference=reference)
+            except Exception as rollback_error:
+                try:
+                    with self.database.connect() as connection:
+                        connection.execute(
+                            "UPDATE private_refs SET status='CORRUPT',updated_at=? WHERE secure_ref=?",
+                            (iso_utc(), reference),
+                        )
+                except Exception:
+                    pass
+                raise JobOpsError(
+                    "PRIVATE_ROTATION_ROLLBACK_FAILED",
+                    "Private storage could not restore its prior content after a local metadata failure.",
+                ) from rollback_error
+            raise JobOpsError(
+                "PRIVATE_ROTATION_DATABASE_FAILED",
+                "Private storage restored its prior content after a local metadata failure.",
+            ) from exc
         return {"secure_ref": reference, "version": version, "status": "ACTIVE", "content_sha256": sha256_bytes(value)}
 
     def revoke(self, reference: str) -> dict[str, object]:

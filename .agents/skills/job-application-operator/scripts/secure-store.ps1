@@ -26,15 +26,28 @@ if ($Operation -eq 'Put') {
     } else { [Guid]::NewGuid().ToString('N') }
     $ref = 'secure-ref:' + $id
     $path = Resolve-RefPath $ref
+    $temporaryPath = Join-Path $privateRoot ('.jobflow-write-' + [Guid]::NewGuid().ToString('N') + '.tmp')
+    $backupPath = Join-Path $privateRoot ('.jobflow-write-' + [Guid]::NewGuid().ToString('N') + '.bak')
     $bytes = if ($InputEncoding -eq 'Base64') { [Convert]::FromBase64String($inputValue) } else { [Text.Encoding]::UTF8.GetBytes($inputValue) }
     try {
         $cipher = [Security.Cryptography.ProtectedData]::Protect($bytes, $null, [Security.Cryptography.DataProtectionScope]::CurrentUser)
-        [IO.File]::WriteAllBytes($path, $cipher)
+        [IO.File]::WriteAllBytes($temporaryPath, $cipher)
+        if (Test-Path -LiteralPath $path -PathType Leaf) {
+            [IO.File]::Replace($temporaryPath, $path, $backupPath, $true)
+        }
+        else {
+            [IO.File]::Move($temporaryPath, $path)
+        }
         $hash = [Security.Cryptography.SHA256]::Create()
         try { $hex = -join ($hash.ComputeHash($cipher) | ForEach-Object { $_.ToString('x2') }) } finally { $hash.Dispose() }
         [pscustomobject]@{status='STORED';secure_ref=$ref;ciphertext_sha256=('sha256:'+$hex);plaintext_logged=$false} | ConvertTo-Json -Compress
     }
     finally {
+        if (Test-Path -LiteralPath $temporaryPath -PathType Leaf) { Remove-Item -LiteralPath $temporaryPath -Force }
+        if (Test-Path -LiteralPath $backupPath -PathType Leaf) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { [IO.File]::Move($backupPath, $path) }
+            else { Remove-Item -LiteralPath $backupPath -Force }
+        }
         if ($null -ne $bytes) { [Array]::Clear($bytes, 0, $bytes.Length) }
         $inputValue = $null
     }

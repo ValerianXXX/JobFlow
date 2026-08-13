@@ -111,11 +111,14 @@ def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
     private_root = Path(local_app_data) / "JobOps" / "private" if local_app_data else None
     staging_residue = []
     ciphertext_residue = []
+    private_temporary_residue = []
     if private_root and private_root.is_dir():
         staging = private_root / "staging"
         staging_residue = [path for path in staging.rglob("*") if path.is_file()] if staging.is_dir() else []
         ciphertext_residue = [path for path in private_root.glob("*.dpapi") if path.is_file()]
+        private_temporary_residue = [path for path in private_root.glob(".jobflow-write-*") if path.is_file()]
         findings.extend({"kind": "private_staging_residue", "location": "$LOCALAPPDATA/JobOps/private/staging"} for _ in staging_residue)
+        findings.extend({"kind": "private_atomic_write_residue", "location": "$LOCALAPPDATA/JobOps/private"} for _ in private_temporary_residue)
         if ciphertext_residue:
             with database.connect() as connection:
                 active = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='ACTIVE'").fetchone()[0])
@@ -130,6 +133,7 @@ def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
             "docx_xml", "pdf_text_and_metadata", "png_metadata", "workspace", "private_staging",
         ],
         "private_staging_file_count": len(staging_residue),
+        "private_temporary_file_count": len(private_temporary_residue),
         "private_ciphertext_file_count": len(ciphertext_residue),
     }
 
@@ -190,7 +194,7 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         "external_actions": actions["real_external_actions"] == 0,
         "database": schema_version == JobOpsDB.LATEST_SCHEMA_VERSION and "CHECK(dry_run = 1)" in dry_run_sql,
         "synthetic_private_purged": active_synthetic_private == 0,
-        "private_store_consistent": active_private == scan["private_ciphertext_file_count"],
+        "private_store_consistent": active_private == scan["private_ciphertext_file_count"] and scan["private_temporary_file_count"] == 0,
         "public_repository": public_repository["status"] == "PASS",
         "independent_qa": independent_fresh,
     }
@@ -225,6 +229,7 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
             "synthetic_ciphertext_residue": active_synthetic_private,
             "private_ciphertext_file_count": scan["private_ciphertext_file_count"],
             "private_staging_file_count": scan["private_staging_file_count"],
+            "private_temporary_file_count": scan["private_temporary_file_count"],
         },
         "independent_qa": independent_view,
         "document_visual_review": load_json(project / "reports" / "validation-artifacts" / "complex-resume-visual-review.json"),
@@ -264,7 +269,7 @@ def write_release_reports(project: Path, result: dict[str, Any]) -> None:
         f"- Security findings: {result['security_scan']['finding_count']}.",
         f"- Public repository: {result['public_repository']['status']}; current-tree findings {result['public_repository']['tree']['finding_count']}; full-history findings {result['public_repository']['history']['finding_count']}; author identity {result['public_repository']['author_identity']['status']}.",
         f"- External-action audit: {result['external_action_audit']['attempt_count']} recorded attempts; {result['external_action_audit']['real_external_actions']} real side effects.",
-        f"- Active private references: {result['private_data']['active_references']} (real: {result['private_data']['active_real_references']}; synthetic: {result['private_data']['active_synthetic_references']}); deleted synthetic metadata: {result['private_data']['deleted_synthetic_metadata_records']}; synthetic ciphertext residue: {result['private_data']['synthetic_ciphertext_residue']}; total ciphertext files: {result['private_data']['private_ciphertext_file_count']}; staging files: {result['private_data']['private_staging_file_count']}.",
+        f"- Active private references: {result['private_data']['active_references']} (real: {result['private_data']['active_real_references']}; synthetic: {result['private_data']['active_synthetic_references']}); deleted synthetic metadata: {result['private_data']['deleted_synthetic_metadata_records']}; synthetic ciphertext residue: {result['private_data']['synthetic_ciphertext_residue']}; total ciphertext files: {result['private_data']['private_ciphertext_file_count']}; staging files: {result['private_data']['private_staging_file_count']}; atomic-write temporary files: {result['private_data']['private_temporary_file_count']}.",
         f"- P0/P1/must-fix open: {result['p0_open']}/{result['p1_open']}/{result['must_fix_open']}.",
         f"- Independent QA: {'PASS (fresh)' if result['checks']['independent_qa'] else 'STALE OR MISSING'}.", "",
         "## Implemented", "",
