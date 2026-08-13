@@ -102,3 +102,13 @@ python .agents/skills/job-application-operator/scripts/jobops.py purge-synthetic
 用户可通过 `secure-onboard-resume` 从经授权的 Downloads 范围安全接入简历，并由系统建立 Candidate Profile、Answer Bank 和 Claim 审阅草稿。只有 PDF 时会明确保留 `EDITABLE_MASTER_DOCX_MISSING`，仍需补充可编辑 DOCX 才能做版式保持的母版修改。所有个人 Claim 都要逐条审阅。即使以后另行授权 Phase 5—6，仍应逐岗位检查站点条款，并在最终提交前要求新鲜的精确批准；当前版本没有真实传输适配器。
 
 架构、审批绑定、敏感字段、恢复、私人接入和发布证据详见现有 Skill 的一层 `references/` 与 `reports/`。
+
+## 本地发布候选 / Local release candidate
+
+公开发布前先在干净提交上运行：
+
+```powershell
+.\.venv\Scripts\python.exe -m jobops.release_candidate
+```
+
+该命令只在本地生成完整源码 ZIP，并从同一提交构建两次验证哈希一致；它会逐项扫描归档路径、文本、DOCX/PDF、私人运行目录与所需启动文件。结果写入被 Git 忽略的 `dist` 与 `reports`，不会联网或上传。Python wheel 仅用于 CI 的代码打包烟雾测试；当前 Windows 桌面应用应使用完整源码候选，因为运行还需要项目级 Schema、Skill、配置与启动脚本。真正上传前仍需确认 Git 作者身份策略并完成冻结源码上的新一轮独立 QA。
