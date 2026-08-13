@@ -8,6 +8,7 @@ from pathlib import PurePosixPath
 from .db import JobOpsDB
 from .errors import JobOpsError
 from .security import assert_no_plaintext_secret
+from .sourcing import _canonical_url, url_has_sensitive_query
 from .util import iso_utc, sha256_bytes, stable_id
 
 
@@ -50,6 +51,13 @@ class JobCollector:
                 "JOB_SOURCE_LOCATOR_INVALID",
                 "The job source locator must be a bounded project-relative display value.",
             )
+        if official_url is not None:
+            official_url = _canonical_url(official_url)
+            if url_has_sensitive_query(official_url):
+                raise JobOpsError(
+                    "JOB_SOURCE_URL_SENSITIVE_QUERY",
+                    "The official job URL cannot contain authentication or private query parameters.",
+                )
         assert_no_plaintext_secret(content)
         normalized = content.replace("\r\n", "\n").replace("\r", "\n").strip() + "\n"
         content_hash = sha256_bytes(normalized.encode("utf-8"))

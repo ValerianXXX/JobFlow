@@ -48,6 +48,14 @@ class WorkflowGateTests(unittest.TestCase):
                 with self.subTest(locator=locator), self.assertRaises(JobOpsError) as blocked:
                     collector.collect_text("Another synthetic description", source_locator=locator)
                 self.assertEqual(blocked.exception.code, "JOB_SOURCE_LOCATOR_INVALID")
+
+            for official_url, code in (
+                ("http://example.test/jobs/1", "HTTPS_REQUIRED"),
+                ("https://example.test/jobs/1?session_token=private", "JOB_SOURCE_URL_SENSITIVE_QUERY"),
+            ):
+                with self.subTest(official_url=official_url), self.assertRaises(JobOpsError) as blocked:
+                    collector.collect_text("Another synthetic description", official_url=official_url)
+                self.assertEqual(blocked.exception.code, code)
             self.assertEqual(database.table_counts()["jobs"], 1)
 
     def test_plaintext_secrets_and_invalid_private_values_are_rejected(self) -> None:
