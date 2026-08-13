@@ -1,0 +1,48 @@
+# JobFlow architecture / JobFlow 架构
+
+JobFlow is a Windows-first local application plus an embedded Codex Skill. The browser UI is only a local control surface; private values are encrypted outside the project, while the repository contains code, schemas and synthetic evidence only.
+
+JobFlow 是 Windows 优先的本地应用，并内嵌一个 Codex Skill。浏览器界面只是本机控制面；私人值在项目外加密，仓库只包含代码、Schema 与合成证据。
+
+```mermaid
+flowchart LR
+  U["User / 用户"] --> UI["Local bilingual UI / 本机双语界面"]
+  UI --> S["DPAPI secure store / DPAPI 安全存储"]
+  UI --> A["AI adapter gate / AI 适配门"]
+  A --> P["Proposed entities and Claims / 候选实体与 Claim"]
+  K["Read-only knowledge / 只读知识库"] --> E["Evidence gateway / 证据网关"]
+  P --> E
+  E --> R["Human review / 人工审阅"]
+  R --> Q["Bounded approval queue / 有上限审批队列"]
+  O["Saved official-page snapshots / 已保存官网快照"] --> D["Offline discovery and ATS analysis / 离线找岗与 ATS 分析"]
+  D --> Q
+  Q --> X["AWAITING_APPROVAL"]
+  X -. "closed / 关闭" .-> W["Real website actions / 真实网站动作"]
+```
+
+## Trust boundaries / 信任边界
+
+| Boundary | Enforced behavior | 强制行为 |
+|---|---|---|
+| Private values | DPAPI outside the project; ordinary records keep opaque `secure-ref` only | 项目外 DPAPI；普通记录只存不透明 `secure-ref` |
+| AI output | Entity completeness, provenance and grounding validation; fail closed | 实体完整性、来源和依据校验；失败关闭 |
+| Personal claims | Always proposed first; never externally approved automatically | 始终先作为候选；绝不自动批准对外使用 |
+| Knowledge | Read-only fingerprints and zero-write verification | 只读指纹与零写入验证 |
+| Job discovery | Saved company/ATS snapshots only; no live freshness claim | 只读已保存官网/ATS 快照；不声称实时有效 |
+| Browser/ATS | Opaque field plans and zero-modification fake adapter | 不透明字段计划与零修改假适配器 |
+| Queue | Transactional capacity and FIFO deferred intake | 事务容量与延后任务 FIFO |
+| External actions | Production transport absent and fail-closed | 生产传输不存在且失败关闭 |
+
+## Main packages / 主要模块
+
+- `onboarding_center`, `onboarding_server`, `ui/`: bilingual one-time profile and Claim review.
+- `ai_runtime`, `ai_connections`, `onboarding_extraction`: local/Agent AI connection and strict extraction.
+- `secure_store`, `private_onboarding`, `resume_onboarding`: DPAPI lifecycle and master-resume onboarding.
+- `knowledge`, `claims`, `claim_registry`, `evidence`: read-only evidence and approval lifecycle.
+- `official_discovery`, `sourcing`, `ats_browser`, `ats_capabilities`: offline official-source and ATS safety framework.
+- `orchestrator`, `queue_manager`, `continuous_intake`: content-bound processing to the bounded review queue.
+- `public_release`, `release_candidate`, `release`: current-tree/history privacy gates and release evidence.
+
+Every persisted transition is content-bound or auditable. `SUBMISSION_UNKNOWN`, CAPTCHA, MFA, OTP, login and account creation do not have an automatic continuation path.
+
+每个持久化状态迁移都有内容绑定或审计记录。`SUBMISSION_UNKNOWN`、CAPTCHA、MFA、验证码、登录和账号创建均无自动继续路径。

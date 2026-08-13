@@ -1,0 +1,59 @@
+name: Bug report / 缺陷报告
+description: Report a reproducible JobFlow defect using synthetic data only. / 仅用合成数据报告可复现缺陷。
+title: "[Bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste a real resume, profile, answer, Claim evidence, API key, token, cookie, absolute user path, database, DPAPI file, or screenshot containing personal data.
+        请勿粘贴真实简历、个人档案、答案、Claim 证据、密钥、Token、Cookie、用户绝对路径、数据库、DPAPI 文件或含个人信息的截图。
+  - type: dropdown
+    id: language
+    attributes:
+      label: Interface language / 界面语言
+      options: ["中文", "English", "Both / 两者"]
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area / 模块
+      options: ["Install or startup / 安装或启动", "Onboarding UI / 入职界面", "AI analysis / AI 分析", "Claim review / Claim 审阅", "Queue / 队列", "Offline ATS / 离线 ATS", "Release tooling / 发布工具", "Other / 其他"]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Synthetic reproduction / 合成复现
+      description: Give the smallest steps and synthetic fixture needed to reproduce the problem. / 提供最小步骤与合成测试件。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior / 预期行为
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior / 实际行为
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: JobFlow version or commit / 版本或提交
+      placeholder: v0.1.0 or a short commit hash
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation / 安全确认
+      options:
+        - label: I used only synthetic or redacted values and included no private applicant data. / 我只使用合成或脱敏值，未包含私人求职资料。
+          required: true
+        - label: I did not enable or attempt any real external recruiting action. / 我未启用或尝试真实招聘外部动作。
+          required: true

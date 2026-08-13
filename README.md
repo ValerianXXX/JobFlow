@@ -2,6 +2,20 @@
 
 JobFlow（内部工程代号 JobOps）是本地优先、证据驱动的求职工作流。它把离线岗位资料处理到可审阅的 `AWAITING_APPROVAL`，然后继续处理其他岗位，直到用户设置的待审批上限。真实网站预填、上传、提交、账号创建、邮件、招聘者联系和系统定时任务均未授权、未注册、不可运行。
 
+> AI 负责理解与归并，证据门负责约束真实性，用户负责批准个人事实；真实外部动作保持关闭。
+> AI understands and consolidates, evidence gates constrain truthfulness, and the user approves personal facts; real external actions remain closed.
+
+[架构 / Architecture](docs/architecture.md) · [路线图 / Roadmap](docs/roadmap.md) · [安全 / Security](SECURITY.md) · [参与贡献 / Contributing](CONTRIBUTING.md) · [MIT License](LICENSE)
+
+| 能力 / Capability | 当前证据 / Current evidence | 真实动作 / Real action |
+|---|---|---|
+| 简历、项目与 AI 导出 / Resume, projects and AI exports | 本机加密接入、严格 AI 提取、人工 Claim 审阅 / Encrypted local intake, strict AI extraction, human Claim review | 0 |
+| Candidate Profile 与 Answer Bank | DPAPI 版本化草稿与一次性确认 / Versioned DPAPI drafts and one-time confirmation | 0 |
+| 公司官网找岗 / Company-careers discovery | 仅已保存快照；候选仍需实时复验 / Saved snapshots only; candidates still require live verification | 0 |
+| Greenhouse、Lever、Workday | 合成/已保存页面安全证据，不声称实时兼容 / Synthetic or saved-page safety evidence, no live claim | 0 |
+| 连续处理 / Continuous processing | 人工触发批次、FIFO、待审批上限 / Manual ticks, FIFO, bounded approvals | 0 |
+| 上传、提交、账号、邮件、招聘者联系 / Upload, submit, account, email, recruiter contact | 关闭且失败关闭 / Closed and fail-closed | 0 |
+
 ## 找工流水线 / JobFlow
 
 ### Windows 一键安装与启动
