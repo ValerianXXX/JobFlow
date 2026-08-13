@@ -319,6 +319,38 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
             self.assertEqual(report["private_temporary_file_count"], 1)
             self.assertIn("private_atomic_write_residue", {item["kind"] for item in report["findings"]})
 
+    def test_private_staging_rejects_project_overlap_and_unsafe_suffixes(self) -> None:
+        with project_temp() as temp:
+            project = temp / "project"
+            project.mkdir()
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
+            overlapping = PrivateOnboarding(
+                database,
+                WindowsDPAPIStore(script, local_app_data=project / "localappdata"),
+            )
+            with self.assertRaises(JobOpsError) as overlap:
+                overlapping.assert_outside_project(project)
+            self.assertEqual(overlap.exception.code, "PRIVATE_STORE_PROJECT_OVERLAP")
+
+            safe = PrivateOnboarding(
+                database,
+                WindowsDPAPIStore(script, local_app_data=temp / "localappdata"),
+            )
+            safe.assert_outside_project(project)
+            record = safe.import_bytes("answer_bank", SENTINEL.encode("utf-8"), synthetic=True)
+            with self.assertRaises(JobOpsError) as suffix:
+                with safe.staged_file(record["secure_ref"], "../../escape.txt"):
+                    pass
+            self.assertEqual(suffix.exception.code, "PRIVATE_STAGING_SUFFIX_INVALID")
+            with safe.staged_file(record["secure_ref"], ".txt") as staged:
+                self.assertEqual(staged.read_bytes(), SENTINEL.encode("utf-8"))
+                staged.with_suffix(".sidecar").write_text("synthetic", encoding="utf-8")
+                staging_directory = staged.parent
+            self.assertFalse(staging_directory.exists())
+            safe.delete(record["secure_ref"], user_confirmed=True)
+
 
 if __name__ == "__main__":
     unittest.main()

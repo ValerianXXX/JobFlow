@@ -693,6 +693,7 @@ class ResumeOnboardingManager:
         self.database = database
         self.database.initialize()
         self.onboarding = onboarding
+        self.onboarding.assert_outside_project(self.project)
         self.schemas = self.project / "schemas"
 
     def prepare(self) -> dict[str, Any]:

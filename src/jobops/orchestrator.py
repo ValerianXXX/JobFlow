@@ -98,6 +98,7 @@ class JobOpsOrchestrator:
         self.database = database
         self.database.initialize()
         self.onboarding = onboarding
+        self.onboarding.assert_outside_project(self.project)
         self.queue = QueueManager(database)
         self.schemas = self.project / "schemas"
 

@@ -582,6 +582,7 @@ class OnboardingCenterService:
         self.database = database
         self.database.initialize()
         self.onboarding = onboarding
+        self.onboarding.assert_outside_project(self.project)
         initial_engine = ai_engine or configured_ai_engine()
         self.ai_connections = ai_connections or AIConnectionManager(
             self.onboarding.store.private_root.parent / "ai-connection.json",

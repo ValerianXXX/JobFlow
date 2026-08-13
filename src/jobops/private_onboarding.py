@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import contextlib
+import re
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Iterator
@@ -8,7 +10,7 @@ from typing import Iterator
 from .db import JobOpsDB
 from .errors import JobOpsError
 from .secure_store import WindowsDPAPIStore
-from .util import iso_utc, sha256_bytes
+from .util import has_reparse_component, is_relative_to, iso_utc, sha256_bytes
 
 
 PRIVATE_KINDS = {
@@ -24,6 +26,31 @@ class PrivateOnboarding:
     def __init__(self, database: JobOpsDB, store: WindowsDPAPIStore) -> None:
         self.database = database
         self.store = store
+
+    def assert_outside_project(self, project: Path) -> None:
+        project_root = project.resolve(strict=True)
+        private_root = self.store.private_root.absolute()
+        if is_relative_to(private_root, project_root) or is_relative_to(project_root, private_root):
+            raise JobOpsError(
+                "PRIVATE_STORE_PROJECT_OVERLAP",
+                "The DPAPI private root and project directory must be completely separate.",
+            )
+        if has_reparse_component(private_root):
+            raise JobOpsError(
+                "PRIVATE_STORE_REPARSE_FORBIDDEN",
+                "The DPAPI private root cannot traverse a link or Windows reparse point.",
+            )
+
+    def _staging_root(self) -> Path:
+        self.store.private_root.mkdir(parents=True, exist_ok=True)
+        staging = self.store.private_root / "staging"
+        staging.mkdir(parents=True, exist_ok=True)
+        if has_reparse_component(staging, self.store.private_root):
+            raise JobOpsError(
+                "PRIVATE_STAGING_UNSAFE",
+                "Private staging cannot traverse a link or Windows reparse point.",
+            )
+        return staging
 
     def import_bytes(self, kind: str, value: bytes, *, synthetic: bool = False) -> dict[str, object]:
         if kind not in PRIVATE_KINDS:
@@ -168,29 +195,21 @@ class PrivateOnboarding:
 
     @contextlib.contextmanager
     def staged_file(self, reference: str, suffix: str) -> Iterator[Path]:
-        self.store.private_root.mkdir(parents=True, exist_ok=True)
-        staging = self.store.private_root / "staging"
-        staging.mkdir(parents=True, exist_ok=True)
+        if re.fullmatch(r"\.[A-Za-z0-9]{1,12}", suffix) is None:
+            raise JobOpsError("PRIVATE_STAGING_SUFFIX_INVALID", "Private staging accepts only a simple file extension.")
+        staging = self._staging_root()
         directory = Path(tempfile.mkdtemp(prefix="jobops-stage-", dir=staging))
         target = directory / ("material" + suffix)
         try:
             target.write_bytes(self.read_bytes(reference))
             yield target
         finally:
-            if target.exists():
-                target.unlink()
-            try:
-                directory.rmdir()
-            except OSError:
-                pass
+            shutil.rmtree(directory, ignore_errors=True)
 
     @contextlib.contextmanager
     def staging_directory(self) -> Iterator[Path]:
         """Create a private, OneDrive-external working directory and always clean it."""
-        import shutil
-
-        staging = self.store.private_root / "staging"
-        staging.mkdir(parents=True, exist_ok=True)
+        staging = self._staging_root()
         directory = Path(tempfile.mkdtemp(prefix="jobops-stage-", dir=staging))
         try:
             yield directory

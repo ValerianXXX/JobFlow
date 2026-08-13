@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import shutil
 import socket
+import tempfile
 import unittest
 import urllib.request
+from pathlib import Path
 from unittest.mock import patch
 
 from _support import PROJECT, project_temp
@@ -23,9 +26,11 @@ class SyntheticGreenhouseVerticalTests(unittest.TestCase):
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")
             database.initialize()
+            private_temp = Path(tempfile.mkdtemp(prefix="jobflow-private-test-"))
+            self.addCleanup(shutil.rmtree, private_temp, True)
             store = WindowsDPAPIStore(
                 PROJECT / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1",
-                local_app_data=temp / "local",
+                local_app_data=private_temp,
             )
             onboarding = PrivateOnboarding(database, store)
             orchestrator = JobOpsOrchestrator(PROJECT, database, onboarding)

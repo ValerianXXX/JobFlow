@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import shutil
+import tempfile
 import unittest
+from pathlib import Path
 
 from _support import PROJECT, project_temp
 from jobops.db import JobOpsDB
@@ -15,7 +18,12 @@ class OrchestratorForwardTests(unittest.TestCase):
     def build(self, temp):
         database = JobOpsDB(temp / "jobops.db")
         database.initialize()
-        store = WindowsDPAPIStore(PROJECT / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1", local_app_data=temp / "local")
+        private_temp = Path(tempfile.mkdtemp(prefix="jobflow-private-test-"))
+        self.addCleanup(shutil.rmtree, private_temp, True)
+        store = WindowsDPAPIStore(
+            PROJECT / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1",
+            local_app_data=private_temp,
+        )
         onboarding = PrivateOnboarding(database, store)
         return database, onboarding, JobOpsOrchestrator(PROJECT, database, onboarding)
 
