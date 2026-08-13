@@ -57,6 +57,8 @@ MAX_CHATGPT_AI_SELECTION_CHARS = MAX_AI_INPUT_CHARS
 MAX_DOCX_MEMBERS = 10_000
 MAX_DOCX_XML_BYTES = 64 * 1024 * 1024
 MAX_DOCX_XML_COMPRESSION_RATIO = 200
+MAX_JSON_NODES = 250_000
+MAX_JSON_DEPTH = 100
 MAX_REVIEW_PACKET_BYTES = 2 * 1024 * 1024
 ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "ai_summary", "chatgpt_export"}
 ALLOWED_EXTENSIONS = {".docx", ".pdf", ".txt", ".md", ".json", ".zip"}
@@ -277,14 +279,24 @@ def _split_values(value: str) -> list[str]:
 
 
 def _string_values(value: Any) -> Iterable[str]:
-    if isinstance(value, str):
-        yield value
-    elif isinstance(value, list):
-        for item in value:
-            yield from _string_values(item)
-    elif isinstance(value, dict):
-        for item in value.values():
-            yield from _string_values(item)
+    stack: list[tuple[Any, int]] = [(value, 0)]
+    visited = 0
+    while stack:
+        current, depth = stack.pop()
+        visited += 1
+        if visited > MAX_JSON_NODES or depth > MAX_JSON_DEPTH:
+            raise JobOpsError(
+                "ONBOARDING_JSON_COMPLEXITY_LIMIT",
+                "The JSON source exceeds the bounded node or nesting-depth limit.",
+                maximum_nodes=MAX_JSON_NODES,
+                maximum_depth=MAX_JSON_DEPTH,
+            )
+        if isinstance(current, str):
+            yield current
+        elif isinstance(current, list):
+            stack.extend((item, depth + 1) for item in reversed(current))
+        elif isinstance(current, dict):
+            stack.extend((item, depth + 1) for item in reversed(tuple(current.values())))
 
 
 def _chatgpt_user_fragments(value: Any) -> Iterable[str]:
@@ -374,6 +386,11 @@ def _iter_json_array(stream: Any) -> Iterable[Any]:
             try:
                 value, end = decoder.raw_decode(buffer, position)
                 break
+            except RecursionError as exc:
+                raise JobOpsError(
+                    "CHATGPT_EXPORT_CONVERSATION_TOO_COMPLEX",
+                    "One conversation exceeds the bounded JSON nesting limit.",
+                ) from exc
             except json.JSONDecodeError as exc:
                 pending = len(buffer) - position
                 if pending > MAX_CHATGPT_CONVERSATION_CHARS:
@@ -577,6 +594,12 @@ def _chatgpt_export_text_path(path: Path) -> tuple[str, int, dict[str, Any]]:
 def _json_text(data: bytes) -> str:
     try:
         value = json.loads(data.decode("utf-8-sig"))
+    except RecursionError as exc:
+        raise JobOpsError(
+            "ONBOARDING_JSON_COMPLEXITY_LIMIT",
+            "The uploaded JSON exceeds the bounded nesting-depth limit.",
+            maximum_depth=MAX_JSON_DEPTH,
+        ) from exc
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise JobOpsError("ONBOARDING_JSON_INVALID", "The uploaded JSON is not valid UTF-8 JSON.") from exc
     parts: list[str] = []

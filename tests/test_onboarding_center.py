@@ -22,7 +22,7 @@ from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
 from jobops.instance_lock import local_instance_lock
 from jobops.onboarding_catalog import FIELD_BY_ID, FIELD_IDS, public_catalog
-from jobops.onboarding_center import OnboardingCenterService, _docx_text, _evidence_preview
+from jobops.onboarding_center import OnboardingCenterService, _docx_text, _evidence_preview, _json_text, _string_values
 from jobops.onboarding_server import create_server
 from jobops.private_onboarding import PrivateOnboarding
 from jobops.util import canonical_json, sha256_bytes
@@ -424,6 +424,7 @@ class OnboardingCenterTests(unittest.TestCase):
                 with self.assertRaises(JobOpsError) as blocked:
                     service.preview_source("chatgpt_export", ".zip", buffer.getvalue())
             self.assertEqual(blocked.exception.code, "CHATGPT_EXPORT_LIGHTNING_REQUIRED")
+            self.assertEqual(service.bootstrap()["pending_sources"], [])
 
     def test_docx_extraction_is_bounded_and_rejects_ambiguous_main_parts(self) -> None:
         namespace = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -477,7 +478,18 @@ class OnboardingCenterTests(unittest.TestCase):
                 with self.assertRaises(JobOpsError) as export:
                     service._prepare_source("chatgpt_export", ".zip", b"123456789")
                 self.assertNotEqual(export.exception.code, "ONBOARDING_SOURCE_SIZE_INVALID")
-            self.assertEqual(service.bootstrap()["pending_sources"], [])
+
+    def test_json_text_traversal_is_iterative_and_complexity_bounded(self) -> None:
+        self.assertEqual(list(_string_values({"first": ["one", {"second": "two"}]})), ["one", "two"])
+        with mock.patch("jobops.onboarding_center.MAX_JSON_DEPTH", 2):
+            with self.assertRaises(JobOpsError) as deep:
+                list(_string_values([[[["too deep"]]]]))
+        self.assertEqual(deep.exception.code, "ONBOARDING_JSON_COMPLEXITY_LIMIT")
+
+        with mock.patch("jobops.onboarding_center.MAX_JSON_NODES", 3):
+            with self.assertRaises(JobOpsError) as wide:
+                _json_text(b'["one","two","three"]')
+        self.assertEqual(wide.exception.code, "ONBOARDING_JSON_COMPLEXITY_LIMIT")
 
     def test_source_preview_prevents_unreviewed_line_claims(self) -> None:
         with project_temp() as root:
