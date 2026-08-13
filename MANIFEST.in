@@ -1,0 +1,18 @@
+include LICENSE
+include README.md
+include SECURITY.md
+include CONTRIBUTING.md
+include AGENTS.md
+include .jobops-root
+include *.cmd
+graft .agents/skills/job-application-operator
+graft config
+graft schemas
+graft scripts
+graft src/jobops/ui
+prune build
+prune dist
+prune reports
+prune state
+prune workspace
+global-exclude __pycache__ *.py[cod] *.db *.sqlite *.sqlite3 *.dpapi *.zip *.7z *.rar *.log

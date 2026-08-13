@@ -10,6 +10,8 @@
 *.yml text eol=lf
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
+LICENSE text eol=lf
+MANIFEST.in text eol=lf
 *.png binary
 *.pdf binary
 *.docx binary

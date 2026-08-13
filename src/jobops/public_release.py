@@ -27,7 +27,7 @@ SECRET_PATTERNS = {
     "aws_key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
     "private_key": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
 }
-TEXT_SUFFIXES = {".py", ".js", ".css", ".json", ".md", ".yaml", ".yml", ".txt", ".ps1", ".html", ".toml"}
+TEXT_SUFFIXES = {".py", ".js", ".css", ".json", ".md", ".yaml", ".yml", ".txt", ".ps1", ".html", ".toml", ".in"}
 HISTORY_DOCUMENT_SUFFIXES = {".docx", ".pdf"}
 MAX_HISTORY_TEXT_BYTES = 5_000_000
 REQUIRED_PUBLIC_FILES = {
@@ -35,6 +35,7 @@ REQUIRED_PUBLIC_FILES = {
     ".gitignore",
     "CONTRIBUTING.md",
     "LICENSE",
+    "MANIFEST.in",
     "README.md",
     "SECURITY.md",
     "pyproject.toml",

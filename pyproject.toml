@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=77,<81", "wheel>=0.43,<1"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,6 +9,9 @@ description = "Local-first, evidence-gated job application workflow"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{name = "JobFlow Contributors"}]
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["job-search", "privacy", "local-first", "workflow", "ai", "windows"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Win32 (MS Windows)",
@@ -16,6 +19,7 @@ classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Topic :: Office/Business",
 ]
 dependencies = [
   "Pillow>=10,<12",
@@ -23,6 +27,9 @@ dependencies = [
   "pypdf>=4,<6",
   "python-docx>=1.1,<2",
 ]
+
+[project.optional-dependencies]
+build = ["setuptools>=77,<81", "wheel>=0.43,<1"]
 
 [project.scripts]
 jobflow = "jobops.cli:main"
