@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/external-claim-set.schema.json",
+  "title": "Encrypted applicant-approved Claim set",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "claim_set_id", "onboarding_state_ref", "profile_ref", "master_resume", "review_hash", "allowed_uses", "claim_count", "claims", "approved_at", "expires_at", "applicant_confirmed", "real_external_actions", "content_hash"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "EXTERNAL_CLAIMS_APPROVED"},
+    "claim_set_id": {"type": "string", "pattern": "^CLS-[A-F0-9]{12}$"},
+    "onboarding_state_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+    "profile_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+    "master_resume": {
+      "type": "object", "additionalProperties": false,
+      "required": ["secure_ref", "sha256", "editable_docx"],
+      "properties": {
+        "secure_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+        "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "editable_docx": {"type": "boolean"}
+      }
+    },
+    "review_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "allowed_uses": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["resume", "cover_letter", "application_narrative"]}},
+    "claim_count": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "claims": {
+      "type": "array", "minItems": 1, "maxItems": 1000,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["claim_id", "category", "claim_kind", "allowed_wording", "responsibility_boundary", "source_bindings", "allowed_uses", "approved_for_external", "applicant_confirmed"],
+        "properties": {
+          "claim_id": {"type": "string", "pattern": "^CLM-[A-Z0-9_-]{4,64}$"},
+          "category": {"enum": ["work", "internship", "education", "project", "skill", "certification", "language", "summary"]},
+          "claim_kind": {"enum": ["entity_summary", "responsibility", "achievement", "qualification", "skill", "summary"]},
+          "allowed_wording": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "string", "minLength": 1, "maxLength": 2000}},
+          "responsibility_boundary": {
+            "type": "object", "additionalProperties": false, "required": ["candidate", "team", "ai"],
+            "properties": {"candidate": {"type": "string", "minLength": 1}, "team": {"type": "string", "minLength": 1}, "ai": {"type": "string", "minLength": 1}}
+          },
+          "source_bindings": {
+            "type": "array", "minItems": 1, "uniqueItems": true,
+            "items": {
+              "type": "object", "additionalProperties": false, "required": ["kind", "secure_ref", "content_sha256"],
+              "properties": {
+                "kind": {"enum": ["MASTER_RESUME", "UPLOADED_MATERIAL"]},
+                "secure_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+                "content_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+              }
+            }
+          },
+          "allowed_uses": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["resume", "cover_letter", "application_narrative"]}},
+          "approved_for_external": {"const": true},
+          "applicant_confirmed": {"const": true}
+        }
+      }
+    },
+    "approved_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "applicant_confirmed": {"const": true},
+    "real_external_actions": {"const": 0},
+    "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}

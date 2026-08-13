@@ -9,6 +9,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] Windows one-click install/start and bilingual JobFlow UI.
 - [x] DPAPI Candidate Profile, Answer Bank, source deletion and versioned onboarding review.
 - [x] AI-required entity reconstruction, source coverage, grounding and Claim quality gates.
+- [x] Encrypted Master Resume designation plus separate, exact-wording Claim-use approval and a bilingual blocker-by-blocker readiness board.
 - [x] Transactional pending-review queue with explicit approve/reject/revise/defer decisions.
 - [x] Offline company-careers discovery from saved HTML/page snapshots and saved Greenhouse/Lever job JSON.
 - [x] Fail-closed local ATS form and Workday saved-sequence analysis.

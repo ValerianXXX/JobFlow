@@ -17,6 +17,7 @@ from . import UI_PROTOCOL_VERSION, __version__
 from .adapters import audit_real_external_actions
 from .approvals import ApprovalContext, issue_approval
 from .ats_capabilities import offline_ats_capabilities
+from .application_readiness import build_application_readiness
 from .application_execution import validate_application_execution_plan_integrity
 from .ai_runtime import (
     ALLOWED_CATEGORIES,
@@ -28,8 +29,15 @@ from .ai_runtime import (
 )
 from .ai_connections import AIConnectionManager
 from .db import JobOpsDB
+from .document_builder import discover_template_slots, template_fingerprint
 from .document_qa import extract_pdf_text
 from .errors import JobOpsError
+from .external_claims import (
+    ALLOWED_EXTERNAL_USES,
+    build_external_claim_set,
+    claim_review_hash,
+    validate_external_claim_set_integrity,
+)
 from .external_actions import ExternalActionGateway, ExternalActionPolicy
 from .official_discovery import MAX_SNAPSHOT_BYTES, discover_official_jobs
 from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, REQUIRED_FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
@@ -656,6 +664,148 @@ class OnboardingCenterService:
             ).fetchone()
         return str(row[0]) if row else None
 
+    def _secure_content_hash(self, reference: str) -> str:
+        with self.database.connect() as connection:
+            row = connection.execute(
+                "SELECT content_sha256,status FROM private_refs WHERE secure_ref=?", (reference,)
+            ).fetchone()
+        if row is None or str(row["status"]) != "ACTIVE":
+            raise JobOpsError("SECURE_REFERENCE_MISSING", "An encrypted application source is not active.")
+        return str(row["content_sha256"])
+
+    def _master_resume_descriptor(self, state: dict[str, Any]) -> dict[str, Any] | None:
+        current = state.get("master_resume")
+        if isinstance(current, dict) and current.get("secure_ref"):
+            reference = str(current["secure_ref"])
+            content_hash = self._secure_content_hash(reference)
+            if content_hash != current.get("sha256"):
+                raise JobOpsError("MASTER_RESUME_HASH_INVALID", "The encrypted Master Resume binding has changed.")
+            return deepcopy(current)
+        with self.database.connect() as connection:
+            row = connection.execute(
+                """SELECT secure_ref,kind,content_sha256 FROM private_refs
+                   WHERE kind IN ('master_resume_docx','master_resume_pdf') AND status='ACTIVE'
+                   ORDER BY updated_at DESC LIMIT 1"""
+            ).fetchone()
+        if row is None:
+            return None
+        editable = str(row["kind"]) == "master_resume_docx"
+        return {
+            "secure_ref": str(row["secure_ref"]), "sha256": str(row["content_sha256"]),
+            "extension": ".docx" if editable else ".pdf", "source_id": None,
+            "editable_docx": editable, "template_fingerprint": None,
+            "template_slots": [], "designated_at": None,
+        }
+
+    def _designate_master_resume(self, state: dict[str, Any], pending: dict[str, Any]) -> dict[str, Any] | None:
+        metadata = pending.get("metadata") if isinstance(pending.get("metadata"), dict) else {}
+        extension = str(metadata.get("extension", "")).casefold()
+        if metadata.get("category") != "resume" or not metadata.get("raw_retained") or extension not in {".docx", ".pdf"}:
+            return None
+        reference = str(metadata.get("secure_ref", ""))
+        content_hash = self._secure_content_hash(reference)
+        if content_hash != metadata.get("sha256"):
+            raise JobOpsError("MASTER_RESUME_HASH_INVALID", "The retained resume hash does not match its encrypted source.")
+        fingerprint_hash = content_hash
+        slots: list[str] = []
+        if extension == ".docx":
+            with self.onboarding.staging_directory() as staging:
+                local_copy = staging / "master-resume.docx"
+                local_copy.write_bytes(self.onboarding.read_bytes(reference))
+                fingerprint = template_fingerprint(local_copy)
+                if fingerprint.master_sha256 != content_hash:
+                    raise JobOpsError("MASTER_RESUME_HASH_INVALID", "The decrypted Master Resume failed its hash check.")
+                fingerprint_hash = sha256_bytes(canonical_json(fingerprint.as_dict()))
+                slots = discover_template_slots(local_copy)
+        descriptor = {
+            "secure_ref": reference, "sha256": content_hash, "extension": extension,
+            "source_id": str(metadata.get("source_id") or pending.get("source_id") or ""),
+            "editable_docx": extension == ".docx", "template_fingerprint": fingerprint_hash,
+            "template_slots": slots, "designated_at": iso_utc(),
+        }
+        state["master_resume"] = descriptor
+        return descriptor
+
+    def _claim_approval_context(
+        self, state_ref: str, state: dict[str, Any]
+    ) -> tuple[dict[str, Any] | None, list[dict[str, Any]], str | None, str | None]:
+        master = self._master_resume_descriptor(state)
+        ui_claims = [
+            item for item in self._claims_for_ui(state)
+            if item.get("decision") == "CONFIRMED" and item.get("deleted") is not True
+        ]
+        if master is None or not ui_claims:
+            return master, [], None, self._latest_ref("candidate_profile")
+        review_hash = claim_review_hash(ui_claims, str(master["sha256"]))
+        profile_ref = self._latest_ref("candidate_profile")
+        base = {
+            str(item.get("claim_id")): item for item in self._claim_bundle().get("claims", [])
+            if item.get("claim_id")
+        }
+        material = {
+            str(item.get("claim_id")): item for item in state.get("material_claims", [])
+            if item.get("claim_id")
+        }
+
+        def binding(kind: str, reference: str) -> dict[str, str]:
+            return {"kind": kind, "secure_ref": reference, "content_sha256": self._secure_content_hash(reference)}
+
+        def source_bindings(claim_id: str, seen: set[str] | None = None) -> list[dict[str, str]]:
+            visited = set(seen or ())
+            if claim_id in visited:
+                raise JobOpsError("EXTERNAL_CLAIM_PROVENANCE_CYCLE", "A derived Claim contains a provenance cycle.")
+            visited.add(claim_id)
+            if claim_id in base:
+                return [binding("MASTER_RESUME", str(master["secure_ref"]))]
+            item = material.get(claim_id)
+            if item is None:
+                raise JobOpsError("EXTERNAL_CLAIM_SOURCE_MISSING", "A confirmed Claim has no encrypted source.")
+            direct_ref = str(item.get("source_ref") or "")
+            if direct_ref:
+                return [binding("UPLOADED_MATERIAL", direct_ref)]
+            output: list[dict[str, str]] = []
+            for parent in item.get("provenance_claim_ids", []):
+                output.extend(source_bindings(str(parent), visited))
+            if not output:
+                raise JobOpsError("EXTERNAL_CLAIM_SOURCE_MISSING", "A derived Claim has no encrypted source ancestry.")
+            return list({canonical_json(value).decode("utf-8"): value for value in output}.values())
+
+        claims: list[dict[str, Any]] = []
+        for item in ui_claims:
+            claim_id = str(item["claim_id"])
+            original = base.get(claim_id, {})
+            claims.append({
+                **item,
+                "responsibility_boundary": original.get("responsibility_boundary"),
+                "source_bindings": source_bindings(claim_id),
+            })
+        return master, claims, review_hash, profile_ref
+
+    def _external_claim_status(
+        self, state_ref: str, state: dict[str, Any], review_hash: str | None, master: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        reference = self._latest_ref("external_claim_set")
+        if not reference or not review_hash or master is None:
+            return {"current": False, "claim_count": 0, "allowed_uses": []}
+        try:
+            value = self._read_json_ref(reference)
+            validate_named("external-claim-set", value, self.schemas)
+            validate_external_claim_set_integrity(value)
+        except JobOpsError:
+            return {"current": False, "claim_count": 0, "allowed_uses": []}
+        current = (
+            value.get("onboarding_state_ref") == state_ref
+            and value.get("review_hash") == review_hash
+            and (value.get("master_resume") or {}).get("sha256") == master.get("sha256")
+            and value.get("profile_ref") == self._latest_ref("candidate_profile")
+        )
+        return {
+            "current": bool(current),
+            "claim_count": int(value.get("claim_count", 0)) if current else 0,
+            "allowed_uses": list(value.get("allowed_uses", [])) if current else [],
+            "content_hash": str(value.get("content_hash")) if current else None,
+        }
+
     def _read_json_ref(self, reference: str) -> dict[str, Any]:
         try:
             value = json.loads(self.onboarding.read_bytes(reference).decode("utf-8"))
@@ -708,6 +858,7 @@ class OnboardingCenterService:
         state["strict_ai_claims"] = True
         state.setdefault("pending_sources", [])
         state.setdefault("claim_overrides", {})
+        state.setdefault("master_resume", None)
         state.setdefault("revision_number", 1)
         state.setdefault("previous_state_ref", None)
         state.setdefault("answer_bank_ref", self._latest_ref("answer_bank"))
@@ -1160,6 +1311,19 @@ class OnboardingCenterService:
         completion = self._completion(state["answers"])
         claims = self._claims_for_ui(state)
         conflicts = self._conflicts_for_ui(state)
+        master, approval_claims, review_hash, _ = self._claim_approval_context(reference, state)
+        external_claims = self._external_claim_status(reference, state, review_hash, master)
+        queue_status = QueueManager(self.database).status()
+        readiness = build_application_readiness(
+            onboarding_status=str(state.get("status", IN_PROGRESS)),
+            ai_ready=bool(self.ai_engine.ready and self.ai_engine.public_status().get("status") == "READY"),
+            master_resume=master,
+            confirmed_claim_count=len(approval_claims),
+            claim_review_hash=review_hash,
+            external_claim_status=external_claims,
+            queue=queue_status,
+        )
+        validate_named("application-readiness", readiness, self.schemas)
         all_base = self._claim_bundle().get("claims", [])
         all_material = state.get("material_claims", [])
         raw_claim_count = len(all_base) + len(all_material)
@@ -1170,6 +1334,17 @@ class OnboardingCenterService:
                 "ui_protocol": UI_PROTOCOL_VERSION,
             },
             "dashboard": self._pipeline_dashboard(state),
+            "application_readiness": readiness,
+            "external_claim_approval": {
+                "available": bool(
+                    state.get("status") == COMPLETE and master is not None and approval_claims and review_hash
+                ),
+                "current": bool(external_claims["current"]),
+                "confirmed_claim_count": len(approval_claims),
+                "review_hash": review_hash,
+                "allowed_uses": list(ALLOWED_EXTERNAL_USES),
+                "real_external_actions": 0,
+            },
             "ats_capabilities": offline_ats_capabilities(),
             "status": state.get("status", IN_PROGRESS), "locale": state.get("locale", "zh"),
             "revision_number": int(state.get("revision_number", 1)),
@@ -1748,9 +1923,15 @@ class OnboardingCenterService:
         if pending is None:
             raise JobOpsError("SOURCE_PREVIEW_MISSING", "The selected source preview no longer exists.")
         counts = self._commit_pending_source(state, pending, selections)
+        master = self._designate_master_resume(state, pending)
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != source_id]
         self._save_state(reference, state)
-        return {"status": "SOURCE_SECURELY_IMPORTED", "source_id": source_id, **counts, "private_values_emitted": 0, "real_external_actions": 0}
+        return {
+            "status": "SOURCE_SECURELY_IMPORTED", "source_id": source_id, **counts,
+            "master_resume_designated": master is not None,
+            "editable_master_docx": bool(master and master.get("editable_docx")),
+            "private_values_emitted": 0, "real_external_actions": 0,
+        }
 
     @_synchronized
     def discard_source_preview(self, source_id: str) -> dict[str, Any]:
@@ -1829,6 +2010,8 @@ class OnboardingCenterService:
         ]
         state["suggestions"] = [item for item in state.get("suggestions", []) if item.get("source_id") != source_id]
         state["profile_review"] = "PENDING"
+        if isinstance(state.get("master_resume"), dict) and state["master_resume"].get("source_id") == source_id:
+            state["master_resume"] = None
         self._refresh_field_conflicts(state)
         self._save_state(reference, state)
         secure_ref = str(source.get("secure_ref", ""))
@@ -1912,6 +2095,7 @@ class OnboardingCenterService:
             {"candidate_id": item["candidate_id"], "selected": True, "statement": item["statement"], "category": item["category"]}
             for item in prepared["candidates"]
         ])
+        master = self._designate_master_resume(state, pending)
         prepared_reference = str(prepared["secure_ref"])
         try:
             self._save_state(reference, state)
@@ -1939,7 +2123,60 @@ class OnboardingCenterService:
             "safe_display_name": existing_source["safe_display_name"] if existing_source else metadata["safe_display_name"],
             "source_status": prepared["source_status"], "suggestion_count": len(prepared["suggestions"]), "fact_count": len(prepared["candidates"]),
             "raw_retained": prepared["raw_retained"], "excluded_secret_fragments": prepared["excluded_secret_fragments"],
+            "master_resume_designated": master is not None,
+            "editable_master_docx": bool(master and master.get("editable_docx")),
             **counts,
+            "private_values_emitted": 0, "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def approve_external_claims(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError(
+                "EXTERNAL_CLAIM_CONFIRMATION_REQUIRED",
+                "Using confirmed Claim wording in resumes and application materials requires explicit approval.",
+            )
+        expected_review_hash = str(payload.get("expected_review_hash", ""))
+        if not re.fullmatch(r"sha256:[a-f0-9]{64}", expected_review_hash):
+            raise JobOpsError("EXTERNAL_CLAIM_REVIEW_HASH_INVALID", "The external Claim review binding is invalid.")
+        uses = payload.get("allowed_uses")
+        if not isinstance(uses, list) or not all(isinstance(item, str) for item in uses):
+            raise JobOpsError("EXTERNAL_CLAIM_USES_INVALID", "External Claim uses must be a list.")
+        state_ref, state = self.ensure_state()
+        if state.get("status") != COMPLETE:
+            raise JobOpsError("ONBOARDING_INCOMPLETE", "Complete onboarding before approving Claims for materials.")
+        master, claims, review_hash, profile_ref = self._claim_approval_context(state_ref, state)
+        if master is None:
+            raise JobOpsError("MASTER_RESUME_MISSING", "A secure Master Resume is required before external Claim approval.")
+        if not claims:
+            raise JobOpsError("CONFIRMED_CLAIMS_MISSING", "Confirm at least one Claim before external use approval.")
+        if profile_ref is None:
+            raise JobOpsError("CANDIDATE_PROFILE_MISSING", "The completed encrypted Candidate Profile is missing.")
+        if review_hash != expected_review_hash:
+            raise JobOpsError("EXTERNAL_CLAIM_REVIEW_STALE", "The Claim review changed; review the current wording again.")
+        current = self._external_claim_status(state_ref, state, review_hash, master)
+        normalized_uses = sorted(set(uses))
+        if current.get("current") and current.get("allowed_uses") == normalized_uses:
+            return {
+                "status": "EXTERNAL_CLAIMS_ALREADY_APPROVED", "changed": False,
+                "claim_count": int(current["claim_count"]), "content_hash": current.get("content_hash"),
+                "allowed_uses": normalized_uses, "real_external_actions": 0,
+            }
+        value = build_external_claim_set(
+            onboarding_state_ref=state_ref,
+            profile_ref=profile_ref,
+            master_resume=master,
+            claims=claims,
+            allowed_uses=normalized_uses,
+            expected_review_hash=expected_review_hash,
+        )
+        validate_named("external-claim-set", value, self.schemas)
+        validate_external_claim_set_integrity(value)
+        record = self.onboarding.import_bytes("external_claim_set", canonical_json(value), synthetic=False)
+        return {
+            "status": "EXTERNAL_CLAIMS_APPROVED", "changed": not bool(record.get("deduplicated")),
+            "claim_count": value["claim_count"], "content_hash": value["content_hash"],
+            "allowed_uses": value["allowed_uses"], "claim_set_ref": record["secure_ref"],
             "private_values_emitted": 0, "real_external_actions": 0,
         }
 

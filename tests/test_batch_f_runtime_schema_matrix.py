@@ -6,7 +6,9 @@ import unittest
 
 from _support import PROJECT
 from jobops.application_execution import build_application_execution_plan
+from jobops.application_readiness import build_application_readiness
 from jobops.errors import JobOpsError
+from jobops.external_claims import build_external_claim_set, claim_review_hash
 from jobops.runtime_schema import validate_named
 from jobops.sourcing import source_route_hash
 
@@ -54,6 +56,33 @@ def valid_fixtures() -> dict[str, dict]:
             "real_external_actions": 0,
         },
         pending_limit=3,
+    )
+    external_claim_input = [{
+        "claim_id": "CLM-SYNTHETIC01", "category": "project", "claim_kind": "achievement",
+        "statement": "The applicant completed a synthetic, evidence-bound project.",
+        "decision": "CONFIRMED", "deleted": False,
+        "source_bindings": [{
+            "kind": "MASTER_RESUME", "secure_ref": "secure-ref:SYNTHETIC01", "content_sha256": H,
+        }],
+    }]
+    external_claim_set = build_external_claim_set(
+        onboarding_state_ref="secure-ref:SYNTHETIC01",
+        profile_ref="secure-ref:SYNTHETIC02",
+        master_resume={"secure_ref": "secure-ref:SYNTHETIC03", "sha256": H, "editable_docx": True},
+        claims=external_claim_input,
+        allowed_uses=["resume", "cover_letter", "application_narrative"],
+        expected_review_hash=claim_review_hash(external_claim_input, H),
+        approved_at="2098-01-01T00:00:00Z",
+    )
+    application_readiness = build_application_readiness(
+        onboarding_status="ONBOARDING_COMPLETE", ai_ready=True,
+        master_resume={
+            "secure_ref": "secure-ref:SYNTHETIC03", "sha256": H, "editable_docx": True,
+            "template_fingerprint": H, "template_slots": ["SUMMARY"],
+        },
+        confirmed_claim_count=1, claim_review_hash=external_claim_set["review_hash"],
+        external_claim_status={"current": True, "claim_count": 1},
+        queue={"pending_limit": 3, "awaiting_approval": 1, "slots_available": 2},
     )
     return {
         "application": {"application_id": APP, "job_id": JOB, "status": "AWAITING_APPROVAL", "site": "example.com", "resume_hash": H, "answers_hash": H, "dry_run": True, "secure_profile_ref": "secure-ref:SYNTHETIC01", "sensitive_fields": [], "unknown_fields": []},
@@ -156,6 +185,8 @@ def valid_fixtures() -> dict[str, dict]:
         },
         "application-field": {"field_id": "FLD-ABCDEF123456", "application_id": APP, "classification": "ordinary_fixed", "action": "PREFILL", "status": "READY", "secure_ref": None, "redacted_summary": None, "field_hash": H},
         "application-execution-plan": execution_plan,
+        "external-claim-set": external_claim_set,
+        "application-readiness": application_readiness,
         "ats-form-snapshot": {
             "schema_version": 1, "status": "FORM_SNAPSHOT_ANALYZED", "source_mode": "LOCAL_SNAPSHOT_ONLY",
             "provider": "company", "step_kind": "MY_INFORMATION", "canonical_url": "https://example.com/careers/a", "source_route_hash": route["route_hash"],

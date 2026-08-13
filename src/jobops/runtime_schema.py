@@ -166,6 +166,20 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
                 "SCHEMA_SEMANTIC_CONFLICT",
                 "HTML and saved-page discovery cannot claim provider_json evidence.",
             )
+    if name == "external-claim-set":
+        from .external_claims import validate_external_claim_set_integrity
+        validate_external_claim_set_integrity(value)
+    if name == "application-readiness":
+        ready = value.get("status") == "READY_FOR_OFFLINE_APPLICATION_PREPARATION"
+        capabilities = value.get("capabilities", {})
+        if ready != (not value.get("blockers")):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Application readiness and blocker state disagree.")
+        for key in (
+            "offline_application_preparation", "tailored_resume_generation",
+            "on_demand_cover_letter_generation", "review_packet_generation",
+        ):
+            if bool(capabilities.get(key)) != ready:
+                raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Application readiness capability flags disagree.")
     if name == "ats-form-snapshot":
         if value.get("field_count") != len(value.get("fields", [])):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS form field_count must match the field list.")

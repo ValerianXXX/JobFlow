@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v12">
+  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v13">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -61,6 +61,19 @@
         <article><span data-i18n="availableSlots">剩余容量</span><strong id="metricSlots">0</strong><small id="metricLimit"></small></article>
         <article><span data-i18n="deferredJobs">排队等待</span><strong id="metricDeferred">0</strong><small data-i18n="continuesUntilLimit">达到上限前继续处理其他岗位</small></article>
       </div>
+      <section class="application-readiness-board" aria-labelledby="applicationReadinessTitle">
+        <div class="application-readiness-copy">
+          <div class="subheading"><div><h3 id="applicationReadinessTitle" data-i18n="applicationReadinessTitle">自动投递准备度</h3><small data-i18n="applicationReadinessBody">逐项显示资料、AI、Master Resume、Claim 授权与材料模板是否已形成闭环。</small></div><span id="applicationReadinessStatus">—</span></div>
+          <div id="applicationReadinessBlockers" class="application-readiness-blockers"></div>
+        </div>
+        <div id="externalClaimApprovalPanel" class="external-claim-approval hidden">
+          <strong data-i18n="externalClaimApprovalTitle">允许已确认 Claim 用于申请材料</strong>
+          <p id="externalClaimApprovalBody" data-i18n="externalClaimApprovalBody">这项批准只允许系统使用你已经确认的确切措辞生成简历、求职信和申请回答；不会打开网站、上传或提交。</p>
+          <label><input id="externalClaimConfirm" type="checkbox"><span data-i18n="externalClaimConsent">我已检查这些 Claim，并允许按当前措辞用于生成申请材料。</span></label>
+          <button id="approveExternalClaims" class="primary" type="button" data-i18n="approveExternalClaims">批准材料使用</button>
+          <small id="externalClaimApprovalMeta"></small>
+        </div>
+      </section>
       <div class="queue-preferences">
         <div><strong data-i18n="queuePreferences">待审批数量上限</strong><small data-i18n="queuePreferencesBody">JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。</small></div>
         <label><span data-i18n="pendingLimitLabel">最多等待</span><input id="pendingLimitInput" type="number" min="1" max="1000" step="1" inputmode="numeric"><button id="saveQueueLimit" class="secondary compact" type="button" data-i18n="saveLimit">保存上限</button></label>
@@ -301,6 +314,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260813-jobflow-v12"></script>
+  <script src="app.js?v=20260813-jobflow-v13"></script>
 </body>
 </html>

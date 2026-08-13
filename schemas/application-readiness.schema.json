@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/application-readiness.schema.json",
+  "title": "Redacted offline application readiness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "blockers", "onboarding_complete", "ai_structured_ready", "master_resume", "claims", "queue", "capabilities", "generated_at", "real_external_actions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["NEEDS_ONBOARDING", "NEEDS_AI", "NEEDS_MASTER_RESUME", "NEEDS_EDITABLE_MASTER_RESUME", "NEEDS_CONFIRMED_CLAIMS", "NEEDS_EXTERNAL_CLAIM_APPROVAL", "NEEDS_TEMPLATE_PREPARATION", "READY_FOR_OFFLINE_APPLICATION_PREPARATION"]},
+    "blockers": {
+      "type": "array", "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["code", "stage", "user_action_required"],
+        "properties": {"code": {"type": "string", "minLength": 1}, "stage": {"enum": ["PROFILE", "AI", "MATERIALS", "CLAIMS"]}, "user_action_required": {"type": "string", "minLength": 1}}
+      }
+    },
+    "onboarding_complete": {"type": "boolean"},
+    "ai_structured_ready": {"type": "boolean"},
+    "master_resume": {
+      "type": "object", "additionalProperties": false, "required": ["present", "editable_docx", "template_fingerprint_present", "tailoring_mode", "template_slot_count"],
+      "properties": {"present": {"type": "boolean"}, "editable_docx": {"type": "boolean"}, "template_fingerprint_present": {"type": "boolean"}, "tailoring_mode": {"enum": ["EXPLICIT_TEMPLATE_SLOTS", "MANIFEST_REQUIRED", "UNAVAILABLE"]}, "template_slot_count": {"type": "integer", "minimum": 0}}
+    },
+    "claims": {
+      "type": "object", "additionalProperties": false, "required": ["confirmed_count", "review_hash", "external_approval_current", "externally_approved_count"],
+      "properties": {"confirmed_count": {"type": "integer", "minimum": 0}, "review_hash": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"}, "external_approval_current": {"type": "boolean"}, "externally_approved_count": {"type": "integer", "minimum": 0}}
+    },
+    "queue": {
+      "type": "object", "additionalProperties": false, "required": ["pending_limit", "awaiting_approval", "slots_available", "continues_after_awaiting_approval"],
+      "properties": {"pending_limit": {"type": "integer", "minimum": 1}, "awaiting_approval": {"type": "integer", "minimum": 0}, "slots_available": {"type": "integer", "minimum": 0}, "continues_after_awaiting_approval": {"const": true}}
+    },
+    "capabilities": {
+      "type": "object", "additionalProperties": false, "required": ["saved_official_job_discovery", "offline_application_preparation", "tailored_resume_generation", "on_demand_cover_letter_generation", "review_packet_generation", "live_site_access", "real_prefill", "real_upload", "final_submission"],
+      "properties": {"saved_official_job_discovery": {"const": true}, "offline_application_preparation": {"type": "boolean"}, "tailored_resume_generation": {"type": "boolean"}, "on_demand_cover_letter_generation": {"type": "boolean"}, "review_packet_generation": {"type": "boolean"}, "live_site_access": {"const": false}, "real_prefill": {"const": false}, "real_upload": {"const": false}, "final_submission": {"const": false}}
+    },
+    "generated_at": {"type": "string", "format": "date-time"},
+    "real_external_actions": {"const": 0}
+  }
+}

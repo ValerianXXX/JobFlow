@@ -170,7 +170,10 @@ class OnboardingCenterTests(unittest.TestCase):
         project = root / "project"
         (project / "schemas").mkdir(parents=True)
         (project / "state").mkdir()
-        for name in ("candidate-profile", "onboarding-answer-bank", "onboarding-completion", "official-discovery"):
+        for name in (
+            "candidate-profile", "onboarding-answer-bank", "onboarding-completion", "official-discovery",
+            "external-claim-set", "application-readiness",
+        ):
             shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
         (project / "config").mkdir()
         shutil.copy2(PROJECT / "config" / "policy.json", project / "config" / "policy.json")
@@ -1042,6 +1045,61 @@ class OnboardingCenterTests(unittest.TestCase):
                 service.complete(user_confirmed=True)
             self.assertEqual(caught_again.exception.code, "ONBOARDING_ALREADY_COMPLETE")
 
+    def test_external_claim_material_approval_is_explicit_encrypted_and_stale_on_revision(self) -> None:
+        with project_temp() as root:
+            service, onboarding, _, _, _ = self.make_service(root)
+            master_record = onboarding.import_bytes("master_resume_docx", b"synthetic editable master", synthetic=True)
+            state_ref, state = service.ensure_state()
+            state["master_resume"] = {
+                "secure_ref": master_record["secure_ref"], "sha256": master_record["content_sha256"],
+                "extension": ".docx", "source_id": "SRC-SYNTHETICMASTER",
+                "editable_docx": True, "template_fingerprint": "sha256:" + "7" * 64,
+                "template_slots": ["SUMMARY"], "designated_at": "2026-08-13T00:00:00Z",
+            }
+            service._save_state(state_ref, state)
+            service.save_answers({"locale": "zh", "answers": full_answers()})
+            bootstrap = service.bootstrap()
+            service.save_review({
+                "profile_review": "CONFIRMED",
+                "claim_decisions": {item["claim_id"]: "CONFIRMED" for item in bootstrap["claims"]},
+                "conflict_resolutions": {
+                    item["conflict_id"]: {"resolution": "USE_RESUME", "manual_value": None}
+                    for item in bootstrap["conflicts"]
+                },
+            })
+            service.complete(user_confirmed=True)
+            pending = service.bootstrap()
+            self.assertTrue(pending["external_claim_approval"]["available"])
+            self.assertFalse(pending["external_claim_approval"]["current"])
+            self.assertEqual(pending["application_readiness"]["status"], "NEEDS_EXTERNAL_CLAIM_APPROVAL")
+
+            with self.assertRaises(JobOpsError) as unconfirmed:
+                service.approve_external_claims({
+                    "user_confirmed": False,
+                    "expected_review_hash": pending["external_claim_approval"]["review_hash"],
+                    "allowed_uses": pending["external_claim_approval"]["allowed_uses"],
+                })
+            self.assertEqual(unconfirmed.exception.code, "EXTERNAL_CLAIM_CONFIRMATION_REQUIRED")
+
+            approved = service.approve_external_claims({
+                "user_confirmed": True,
+                "expected_review_hash": pending["external_claim_approval"]["review_hash"],
+                "allowed_uses": pending["external_claim_approval"]["allowed_uses"],
+            })
+            self.assertEqual(approved["status"], "EXTERNAL_CLAIMS_APPROVED")
+            encrypted_value = json.loads(onboarding.read_bytes(str(approved["claim_set_ref"])))
+            self.assertTrue(encrypted_value["applicant_confirmed"])
+            self.assertTrue(all(item["applicant_confirmed"] for item in encrypted_value["claims"]))
+            ready = service.bootstrap()
+            self.assertTrue(ready["external_claim_approval"]["current"])
+            self.assertEqual(ready["application_readiness"]["status"], "READY_FOR_OFFLINE_APPLICATION_PREPARATION")
+            self.assertEqual(ready["application_readiness"]["real_external_actions"], 0)
+
+            service.start_revision()
+            revised = service.bootstrap()
+            self.assertFalse(revised["external_claim_approval"]["current"])
+            self.assertEqual(revised["application_readiness"]["status"], "NEEDS_ONBOARDING")
+
     def test_completion_failure_removes_partial_refs_and_restores_answer_bank(self) -> None:
         with project_temp() as root:
             service, onboarding, store, _, _ = self.make_service(root)
@@ -1449,7 +1507,11 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="officialSnapshotFile"', html)
         self.assertIn('id="analyzeOfficialSnapshot"', html)
         self.assertIn('id="officialCandidateList"', html)
+        self.assertIn('id="applicationReadinessStatus"', html)
+        self.assertIn('id="externalClaimConfirm"', html)
+        self.assertIn('id="approveExternalClaims"', html)
         self.assertIn("function renderDashboard()", app)
+        self.assertIn("function renderApplicationReadiness()", app)
         self.assertIn("function renderOfficialDiscovery", app)
         self.assertIn("function clearOfficialDiscovery", app)
         self.assertIn('event.target.matches("#officialCompanyDomain,#officialCareersUrl,#officialSnapshotFile")', app)
@@ -1458,6 +1520,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('api("queue-limit"', app)
         self.assertIn('api("review-packet"', app)
         self.assertIn('api("queue-decision"', app)
+        self.assertIn('api("approve-external-claims"', app)
         self.assertIn('id="packetDecisionConfirm"', html)
         self.assertIn('id="confirmPacketDecision"', html)
         self.assertNotIn("showToast(e.message", app)

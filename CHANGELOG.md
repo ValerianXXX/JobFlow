@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- A resume uploaded through onboarding can now be designated as the encrypted Master Resume, while application-material use of confirmed Claims requires a separate, hash-bound applicant approval. The bilingual readiness board shows every remaining local blocker and automatically invalidates that approval after a revision.
+- 通过入职页上传的简历现在可以成为加密 Master Resume；已确认 Claim 用于简历、求职信或申请回答前，还必须取得一份与当前文字哈希绑定的单独申请人授权。双语准备度面板会列明所有本地阻挡项，建新版后旧授权自动失效。
 - Offline official-careers discovery now auto-detects saved Greenhouse job JSON and Lever posting JSON, while preserving the same no-network, no-queue-mutation and live-freshness-required boundary.
 - 离线官网找岗现在可自动识别已保存的 Greenhouse 岗位 JSON 与 Lever 职位 JSON，同时继续保持不联网、不修改队列且必须实时复验的边界。
 - Every review packet now contains a hash-bound six-step application execution plan covering live freshness, guest entry, safe prefill, conditional materials, protected questions, and final submission. It plainly identifies each approval gate and confirms that other jobs continue until the pending-review limit.

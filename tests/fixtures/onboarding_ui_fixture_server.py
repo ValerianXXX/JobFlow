@@ -76,7 +76,10 @@ def main() -> None:
         project = root / "project"
         (project / "schemas").mkdir(parents=True)
         (project / "state").mkdir()
-        for name in ("candidate-profile", "onboarding-answer-bank", "onboarding-completion"):
+        for name in (
+            "candidate-profile", "onboarding-answer-bank", "onboarding-completion",
+            "external-claim-set", "application-readiness",
+        ):
             shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
         database = JobOpsDB(project / "state" / "jobops.db")
         database.initialize()

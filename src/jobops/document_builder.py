@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import uuid
 import zipfile
@@ -28,6 +29,10 @@ MAX_DOCX_PACKAGE_MEMBERS = 10_000
 MAX_DOCX_PACKAGE_UNCOMPRESSED_BYTES = 256 * 1024 * 1024
 MAX_DOCX_PACKAGE_PART_BYTES = 64 * 1024 * 1024
 MAX_DOCX_PACKAGE_COMPRESSION_RATIO = 200
+ALLOWED_TEMPLATE_SLOTS = {
+    "CANDIDATE_NAME", "TARGET_ROLE", "SUMMARY", "EXPERIENCE_BULLET",
+    "PROJECT", "SKILLS", "EDUCATION", "COVER_LETTER", "APPLICATION_NARRATIVE",
+}
 
 
 @dataclass(frozen=True)
@@ -135,6 +140,30 @@ def template_fingerprint(path: Path) -> TemplateFingerprint:
     )
 
 
+def discover_template_slots(path: Path) -> list[str]:
+    """Return only literal slots the preserve-only tailor can actually replace."""
+
+    _zip_inventory(path)
+    found: set[str] = set()
+    try:
+        with zipfile.ZipFile(path) as archive:
+            for name in archive.namelist():
+                if not (
+                    name == "word/document.xml"
+                    or name.startswith("word/header")
+                    or name.startswith("word/footer")
+                ) or not name.endswith(".xml"):
+                    continue
+                data = archive.read(name)
+                for raw in re.findall(rb"\{\{([A-Z_]{2,40})\}\}", data):
+                    slot = raw.decode("ascii")
+                    if slot in ALLOWED_TEMPLATE_SLOTS:
+                        found.add(slot)
+    except (OSError, RuntimeError, zipfile.BadZipFile, zipfile.LargeZipFile) as exc:
+        raise JobOpsError("DOCX_PACKAGE_INVALID", "The DOCX template slots could not be inspected safely.") from exc
+    return sorted(found)
+
+
 def _claim_wordings(claims: list[dict[str, Any]]) -> set[str]:
     return {wording for _, wording, _ in _assert_claims(claims)}
 
@@ -158,11 +187,7 @@ def tailor_master_resume(
     if master_path.suffix.casefold() != ".docx":
         raise JobOpsError("DOCX_MASTER_REQUIRED", "PDF masters may be securely retained, but editable tailoring requires a DOCX master.")
     before = template_fingerprint(master_path)
-    allowed_slots = {
-        "CANDIDATE_NAME", "TARGET_ROLE", "SUMMARY", "EXPERIENCE_BULLET",
-        "PROJECT", "SKILLS", "EDUCATION", "COVER_LETTER", "APPLICATION_NARRATIVE",
-    }
-    unknown = sorted(set(replacements) - allowed_slots)
+    unknown = sorted(set(replacements) - ALLOWED_TEMPLATE_SLOTS)
     if unknown:
         raise JobOpsError("UNKNOWN_TEMPLATE_SLOT", "Template replacement contains an unsupported slot.", slots=unknown)
     gated = {"SUMMARY", "EXPERIENCE_BULLET", "PROJECT", "SKILLS", "EDUCATION", "COVER_LETTER", "APPLICATION_NARRATIVE"}

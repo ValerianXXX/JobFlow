@@ -30,6 +30,8 @@ DEMO_SCHEMAS = (
     "onboarding-answer-bank",
     "onboarding-completion",
     "review-packet",
+    "external-claim-set",
+    "application-readiness",
 )
 DEMO_APPLICATION_ID = "APP-DEFACED00001"
 
