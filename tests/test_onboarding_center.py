@@ -217,6 +217,15 @@ class OnboardingCenterTests(unittest.TestCase):
         script = (PROJECT / "src" / "jobops" / "ui" / "app.js").read_text(encoding="utf-8")
         styles = (PROJECT / "src" / "jobops" / "ui" / "styles.css").read_text(encoding="utf-8")
         self.assertLess(html.index('id="conflictSection"'), html.index('id="claimGroups"'))
+        self.assertIn("function arrangePrimaryWorkflow()", script)
+        self.assertIn("finish.after(dashboard)", script)
+        self.assertIn("arrangePrimaryWorkflow();", script)
+        self.assertIn('id="sourceIntakeNotice"', html)
+        self.assertEqual(html.count("data-start-revision"), 2)
+        self.assertIn("sourceIntakeDemoTitle", script)
+        self.assertIn("sourceIntakeReadonlyTitle", script)
+        self.assertIn("sourceIntakeAiTitle", script)
+        self.assertIn("source-intake-notice", styles)
         self.assertIn('id="activityIndicator"', html)
         for activity in (
             'withActivity("loadingInitial"',

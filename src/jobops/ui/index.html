@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v9">
+  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v10">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -163,7 +163,7 @@
 
     <section id="stateBanner" class="state-banner hidden" aria-live="polite">
       <div><strong data-i18n="completedSnapshotTitle">当前是已完成的只读快照</strong><p data-i18n="completedSnapshotBody">历史版本不会被覆盖。若要修改资料，请建立一个新的可编辑版本。</p></div>
-      <button id="startRevision" class="primary" type="button" data-i18n="startRevision">建立可编辑新版本</button>
+      <button id="startRevision" class="primary" type="button" data-start-revision data-i18n="startRevision">建立可编辑新版本</button>
     </section>
 
     <nav class="steps" aria-label="Onboarding steps">
@@ -181,6 +181,11 @@
       <div id="aiEngineBanner" class="ai-engine-banner">
         <span class="ai-engine-dot" aria-hidden="true"></span>
         <div><strong id="aiEngineTitle"></strong><p id="aiEngineBody"></p></div>
+      </div>
+      <div id="sourceIntakeNotice" class="source-intake-notice hidden" role="status" aria-live="polite">
+        <span class="source-intake-mark" aria-hidden="true">!</span>
+        <div><strong id="sourceIntakeTitle"></strong><p id="sourceIntakeBody"></p></div>
+        <button id="sourceStartRevision" class="secondary compact hidden" type="button" data-start-revision data-i18n="startRevision">建立可编辑新版本</button>
       </div>
       <div class="source-grid">
         <article class="source-card">
@@ -295,6 +300,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260813-jobflow-v9"></script>
+  <script src="app.js?v=20260813-jobflow-v10"></script>
 </body>
 </html>
