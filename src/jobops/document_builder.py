@@ -532,9 +532,19 @@ def export_docx_to_pdf(docx_path: Path, pdf_path: Path, powershell_script: Path)
 
 def render_pdf_to_pngs(pdf_path: Path, output_dir: Path, pdftoppm: str) -> list[Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
-    prefix = output_dir / pdf_path.stem
-    completed = subprocess.run([pdftoppm, "-png", "-r", "150", str(pdf_path), str(prefix)], capture_output=True, text=True, timeout=90, check=False)
-    pages = sorted(output_dir.glob(f"{pdf_path.stem}-*.png"))
-    if completed.returncode != 0 or not pages:
-        raise JobOpsError("PDF_RENDER_FAILED", "Poppler did not produce page images.", returncode=completed.returncode, stderr=completed.stderr[-1000:])
+    prefix = output_dir / f".{pdf_path.stem}.jobflow-{uuid.uuid4().hex}"
+    try:
+        completed = subprocess.run([pdftoppm, "-png", "-r", "150", str(pdf_path), str(prefix)], capture_output=True, text=True, timeout=90, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        for page in output_dir.glob(f"{prefix.name}-*.png"):
+            page.unlink(missing_ok=True)
+        raise JobOpsError("PDF_RENDER_FAILED", "Poppler could not start a bounded PDF render.") from exc
+    pages = sorted(
+        output_dir.glob(f"{prefix.name}-*.png"),
+        key=lambda page: int(page.stem.rsplit("-", 1)[-1]) if page.stem.rsplit("-", 1)[-1].isdigit() else 10**9,
+    )
+    if completed.returncode != 0 or not pages or any(not page.is_file() or page.stat().st_size < 1 for page in pages):
+        for page in pages:
+            page.unlink(missing_ok=True)
+        raise JobOpsError("PDF_RENDER_FAILED", "Poppler did not produce fresh page images.", returncode=completed.returncode, stderr=completed.stderr[-1000:])
     return pages

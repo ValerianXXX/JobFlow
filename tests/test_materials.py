@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest import mock
 
 from _support import project_temp
-from jobops.document_builder import _save_document_atomic, build_cover_letter, build_resume, export_docx_to_pdf
+from jobops.document_builder import _save_document_atomic, build_cover_letter, build_resume, export_docx_to_pdf, render_pdf_to_pngs
 from jobops.errors import JobOpsError
 from jobops.evidence import map_evidence
 from jobops.materials import approved_wordings, master_diff
@@ -32,6 +32,31 @@ def approved_claim(claim_id: str, wording: str, fact: str):
 
 
 class MaterialTests(unittest.TestCase):
+    def test_pdf_render_requires_fresh_pages_from_the_current_invocation(self) -> None:
+        with project_temp() as temp:
+            pdf = temp / "resume.pdf"
+            renders = temp / "renders"
+            renders.mkdir()
+            pdf.write_bytes(b"synthetic pdf")
+            stale = renders / "resume-1.png"
+            stale.write_bytes(b"stale page")
+            completed = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+            with mock.patch("jobops.document_builder.subprocess.run", return_value=completed):
+                with self.assertRaises(JobOpsError) as blocked:
+                    render_pdf_to_pngs(pdf, renders, "pdftoppm")
+            self.assertEqual(blocked.exception.code, "PDF_RENDER_FAILED")
+            self.assertEqual(stale.read_bytes(), b"stale page")
+
+            def successful_render(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+                Path(str(command[-1]) + "-1.png").write_bytes(b"fresh page")
+                return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+            with mock.patch("jobops.document_builder.subprocess.run", side_effect=successful_render):
+                pages = render_pdf_to_pngs(pdf, renders, "pdftoppm")
+            self.assertEqual(len(pages), 1)
+            self.assertEqual(pages[0].read_bytes(), b"fresh page")
+            self.assertNotEqual(pages[0], stale)
+
     def test_pdf_export_never_accepts_or_overwrites_a_stale_target(self) -> None:
         with project_temp() as temp:
             docx = temp / "resume.docx"
