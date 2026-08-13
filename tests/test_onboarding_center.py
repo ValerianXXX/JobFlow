@@ -293,6 +293,8 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("sourceAnalysisErrorMessage", script)
         self.assertIn("aiRepairApplied", script)
         self.assertIn("AI_RESPONSE_REPAIR_FAILED", script)
+        self.assertIn('SECURE_CIPHERTEXT_HASH_MISMATCH:"privateWriteRepair"', script)
+        self.assertIn('ONBOARDING_INITIAL_INDEX_WRITE_FAILED:"privateWriteRetry"', script)
         self.assertIn("完整扫描 ZIP", script)
         self.assertIn("Full ZIP scan", script)
         self.assertIn("analysisPassedSelected", script)
