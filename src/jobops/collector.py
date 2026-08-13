@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import tempfile
 from pathlib import Path
 from pathlib import PurePosixPath
 
@@ -64,30 +65,43 @@ class JobCollector:
         job_id = stable_id("JOB", content_hash, official_url or source_locator)
         snapshot_id = stable_id("JDS", content_hash)
         job_dir = self.jobs_workspace / job_id / "raw"
-        job_dir.mkdir(parents=True, exist_ok=True)
         snapshot_path = job_dir / f"{snapshot_id}.txt"
         created = False
-        with self.database.connect() as connection:
-            existing = connection.execute("SELECT job_id, snapshot_path FROM jd_snapshots WHERE content_hash=?", (content_hash,)).fetchone()
-            if existing:
-                return {"status": "DUPLICATE", "job_id": existing["job_id"], "snapshot_hash": content_hash, "snapshot_path": existing["snapshot_path"]}
-            now = iso_utc()
-            connection.execute(
-                "INSERT OR IGNORE INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)",
-                (job_id, source_type, source_locator, official_url, company, title, None, "DISCOVERED", now, now),
-            )
-            temporary = snapshot_path.with_suffix(".tmp")
-            temporary.write_text(normalized, encoding="utf-8")
-            os.replace(temporary, snapshot_path)
-            created = True
-            try:
-                connection.execute(
-                    "INSERT INTO jd_snapshots VALUES(?,?,?,?,?)",
-                    (snapshot_id, job_id, content_hash, self._stored_path(snapshot_path), now),
-                )
-                connection.execute("UPDATE jobs SET status='SNAPSHOTTED', updated_at=? WHERE job_id=?", (now, job_id))
-            except sqlite3.IntegrityError:
-                snapshot_path.unlink(missing_ok=True)
+        temporary: Path | None = None
+        try:
+            with self.database.connect() as connection:
+                connection.execute("BEGIN IMMEDIATE")
                 existing = connection.execute("SELECT job_id, snapshot_path FROM jd_snapshots WHERE content_hash=?", (content_hash,)).fetchone()
-                return {"status": "DUPLICATE", "job_id": existing["job_id"], "snapshot_hash": content_hash, "snapshot_path": existing["snapshot_path"]}
+                if existing:
+                    return {"status": "DUPLICATE", "job_id": existing["job_id"], "snapshot_hash": content_hash, "snapshot_path": existing["snapshot_path"]}
+                now = iso_utc()
+                connection.execute(
+                    "INSERT OR IGNORE INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    (job_id, source_type, source_locator, official_url, company, title, None, "DISCOVERED", now, now),
+                )
+                job_dir.mkdir(parents=True, exist_ok=True)
+                descriptor, temporary_name = tempfile.mkstemp(prefix=f".{snapshot_id}-", suffix=".tmp", dir=job_dir)
+                os.close(descriptor)
+                temporary = Path(temporary_name)
+                temporary.write_text(normalized, encoding="utf-8")
+                os.replace(temporary, snapshot_path)
+                temporary = None
+                created = True
+                try:
+                    connection.execute(
+                        "INSERT INTO jd_snapshots VALUES(?,?,?,?,?)",
+                        (snapshot_id, job_id, content_hash, self._stored_path(snapshot_path), now),
+                    )
+                    connection.execute("UPDATE jobs SET status='SNAPSHOTTED', updated_at=? WHERE job_id=?", (now, job_id))
+                except sqlite3.IntegrityError:
+                    existing = connection.execute("SELECT job_id, snapshot_path FROM jd_snapshots WHERE content_hash=?", (content_hash,)).fetchone()
+                    if existing:
+                        return {"status": "DUPLICATE", "job_id": existing["job_id"], "snapshot_hash": content_hash, "snapshot_path": existing["snapshot_path"]}
+                    raise
+        except Exception:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
+            if created:
+                snapshot_path.unlink(missing_ok=True)
+            raise
         return {"status": "SNAPSHOTTED" if created else "DUPLICATE", "job_id": job_id, "snapshot_hash": content_hash, "snapshot_path": self._stored_path(snapshot_path)}

@@ -58,6 +58,25 @@ class WorkflowGateTests(unittest.TestCase):
                 self.assertEqual(blocked.exception.code, code)
             self.assertEqual(database.table_counts()["jobs"], 1)
 
+    def test_jd_snapshot_failure_rolls_back_database_and_files(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            with database.connect() as connection:
+                connection.execute(
+                    "CREATE TRIGGER reject_snapshot BEFORE INSERT ON jd_snapshots "
+                    "BEGIN SELECT RAISE(ABORT, 'synthetic snapshot failure'); END"
+                )
+            collector = JobCollector(database, temp / "jobs")
+
+            with self.assertRaises(sqlite3.IntegrityError):
+                collector.collect_text("A synthetic job description")
+
+            self.assertEqual(database.table_counts()["jobs"], 0)
+            self.assertEqual(database.table_counts()["jd_snapshots"], 0)
+            self.assertEqual(list((temp / "jobs").rglob("*.txt")), [])
+            self.assertEqual(list((temp / "jobs").rglob("*.tmp")), [])
+
     def test_plaintext_secrets_and_invalid_private_values_are_rejected(self) -> None:
         with self.assertRaises(SecurityBoundaryError):
             assert_no_plaintext_secret("pass" + "word = synthetic-fixture-value")
