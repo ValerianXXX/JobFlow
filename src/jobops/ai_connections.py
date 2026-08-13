@@ -19,6 +19,7 @@ from .ai_runtime import (
     MAX_AI_OUTPUT_BYTES,
     AIAnalysisEngine,
     LocalSubprocessAIEngine,
+    _run_bounded_ai_command,
     configured_ai_engine,
 )
 from .errors import JobOpsError
@@ -450,6 +451,27 @@ def _validated_agent_result(completed: subprocess.CompletedProcess[str]) -> dict
     return value
 
 
+def _run_bounded_agent_command(
+    command: list[str],
+    request: dict[str, Any],
+    *,
+    timeout_seconds: int,
+    cwd: Path | None = None,
+) -> subprocess.CompletedProcess[str]:
+    try:
+        returncode, stdout = _run_bounded_ai_command(
+            command,
+            request,
+            timeout_seconds=timeout_seconds,
+            cwd=cwd,
+        )
+    except JobOpsError as exc:
+        if exc.code == "AI_ENGINE_FAILED":
+            raise JobOpsError("AI_AGENT_FAILED", "The detected Agent exceeded the bounded output limit.") from exc
+        raise JobOpsError("AI_AGENT_UNAVAILABLE", "The detected Agent could not complete a private structured request.") from exc
+    return subprocess.CompletedProcess(command, returncode, stdout=stdout, stderr="")
+
+
 def _analyze_with_single_repair(
     invoke: Callable[[dict[str, Any]], Any],
     request: dict[str, Any],
@@ -591,19 +613,27 @@ class AgentCLIEngine(AIAnalysisEngine):
                         "--code-mode", "direct", "--timeout", str(self.timeout_seconds),
                     ],
                 )
-                completed = self.process_runner(
-                    command,
-                    input=json.dumps(request, ensure_ascii=False),
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    errors="strict",
-                    timeout=self.timeout_seconds + 10,
-                    check=False,
-                    shell=False,
-                    cwd=isolated_workspace,
-                    creationflags=creation_flags,
-                )
+                if self.process_runner is subprocess.run:
+                    completed = _run_bounded_agent_command(
+                        command,
+                        request,
+                        timeout_seconds=self.timeout_seconds + 10,
+                        cwd=isolated_workspace,
+                    )
+                else:
+                    completed = self.process_runner(
+                        command,
+                        input=json.dumps(request, ensure_ascii=False),
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="strict",
+                        timeout=self.timeout_seconds + 10,
+                        check=False,
+                        shell=False,
+                        cwd=isolated_workspace,
+                        creationflags=creation_flags,
+                    )
         except (OSError, subprocess.SubprocessError) as exc:
             raise JobOpsError("AI_AGENT_UNAVAILABLE", "The detected Agent could not complete a private structured request.") from exc
         return _validated_agent_result(completed)
@@ -681,18 +711,25 @@ class WSLAgentCLIEngine(AgentCLIEngine):
         ))
         try:
             command = [self.wsl_executable, "-d", self.distribution, "--exec", "sh", "-lc", script]
-            completed = self.process_runner(
-                command,
-                input=json.dumps(request, ensure_ascii=False),
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="strict",
-                timeout=self.timeout_seconds + 10,
-                check=False,
-                shell=False,
-                creationflags=creation_flags,
-            )
+            if self.process_runner is subprocess.run:
+                completed = _run_bounded_agent_command(
+                    command,
+                    request,
+                    timeout_seconds=self.timeout_seconds + 10,
+                )
+            else:
+                completed = self.process_runner(
+                    command,
+                    input=json.dumps(request, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="strict",
+                    timeout=self.timeout_seconds + 10,
+                    check=False,
+                    shell=False,
+                    creationflags=creation_flags,
+                )
         except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
             raise JobOpsError("AI_AGENT_UNAVAILABLE", "WSL OpenClaw could not complete a private structured request.") from exc
         return _validated_agent_result(completed)
@@ -758,18 +795,25 @@ class WSLHermesCLIEngine(AgentCLIEngine):
         ))
         try:
             command = [self.wsl_executable, "-d", self.distribution, "--exec", "sh", "-lc", script]
-            completed = self.process_runner(
-                command,
-                input=json.dumps(request, ensure_ascii=False),
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="strict",
-                timeout=self.timeout_seconds + 10,
-                check=False,
-                shell=False,
-                creationflags=creation_flags,
-            )
+            if self.process_runner is subprocess.run:
+                completed = _run_bounded_agent_command(
+                    command,
+                    request,
+                    timeout_seconds=self.timeout_seconds + 10,
+                )
+            else:
+                completed = self.process_runner(
+                    command,
+                    input=json.dumps(request, ensure_ascii=False),
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="strict",
+                    timeout=self.timeout_seconds + 10,
+                    check=False,
+                    shell=False,
+                    creationflags=creation_flags,
+                )
         except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
             raise JobOpsError("AI_AGENT_UNAVAILABLE", "WSL Hermes could not complete a private structured request.") from exc
         return _validated_agent_result(completed)

@@ -50,7 +50,13 @@ ENTITY_VERB_RE = re.compile(
 CHINESE_ENTITY_VERBS = ("担任", "负责", "完成", "建立", "领导", "参与", "开发", "管理", "分析", "提升", "创建", "就读", "获得", "交付", "推动", "设计", "实施")
 
 
-def _run_bounded_ai_command(command: list[str], payload: dict[str, Any], *, timeout_seconds: int) -> tuple[int, str]:
+def _run_bounded_ai_command(
+    command: list[str],
+    payload: dict[str, Any],
+    *,
+    timeout_seconds: int,
+    cwd: Path | None = None,
+) -> tuple[int, str]:
     """Run a local AI adapter without ever buffering unbounded process output."""
     creation_flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
     encoded_input = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -62,6 +68,7 @@ def _run_bounded_ai_command(command: list[str], payload: dict[str, Any], *, time
             stderr=subprocess.DEVNULL,
             shell=False,
             creationflags=creation_flags,
+            cwd=cwd,
         )
     except OSError as exc:
         raise JobOpsError("AI_ENGINE_UNAVAILABLE", "The configured local AI engine could not start.") from exc

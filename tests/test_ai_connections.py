@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,12 +15,27 @@ from jobops.ai_connections import (
     _analyze_with_single_repair,
     _assert_loopback_url,
     _decode_wsl_distribution_output,
+    _run_bounded_agent_command,
 )
 from jobops.ai_runtime import AIAnalysisEngine, LocalSubprocessAIEngine
 from jobops.errors import JobOpsError
 
 
 class AIConnectionTests(unittest.TestCase):
+    def test_agent_bridge_stops_unbounded_output_during_generation(self) -> None:
+        command = [
+            sys.executable,
+            "-c",
+            "import sys; sys.stdin.buffer.read(); sys.stdout.buffer.write(b'x'*(6*1024*1024)); sys.stdout.flush()",
+        ]
+        with self.assertRaises(JobOpsError) as blocked:
+            _run_bounded_agent_command(
+                command,
+                {"private_content": "synthetic"},
+                timeout_seconds=30,
+            )
+        self.assertEqual(blocked.exception.code, "AI_AGENT_FAILED")
+
     def test_complete_analysis_chunks_large_text_and_merges_cross_chunk_duplicates(self) -> None:
         line = "Built a synthetic project workflow."
         source_text = "\n".join(line for _ in range(14_000))
