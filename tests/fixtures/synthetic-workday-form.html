@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>Synthetic Workday form</title></head>
+  <body>
+    <main data-provider="workday">
+      <h1>Synthetic application</h1>
+      <p>Guest flow. A CAPTCHA challenge may appear. Verification code and sign in are never automated.</p>
+      <form action="/en-US/careers/job/123/apply">
+        <input type="hidden" name="csrf" value="DO_NOT_LEAK_HIDDEN_SENTINEL">
+        <h2>Contact</h2>
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" required value="DO_NOT_LEAK_PRIVATE_SENTINEL">
+        <label for="portfolio">Portfolio URL</label>
+        <input id="portfolio" name="portfolio" type="url">
+        <h2>Eligibility</h2>
+        <label for="authorization">Are you legally authorized to work?</label>
+        <select id="authorization" name="authorization" required><option>Select</option><option>Yes</option><option>No</option></select>
+        <label for="salary">Expected salary</label>
+        <input id="salary" name="salary" type="number">
+        <h2>Voluntary self-identification</h2>
+        <label for="gender">Gender</label>
+        <select id="gender" name="gender"><option>Decline to answer</option></select>
+        <h2>Documents</h2>
+        <label for="resume">Resume</label>
+        <input id="resume" name="resume" type="file" required>
+        <button id="submit" type="submit">Submit application</button>
+      </form>
+      <iframe src="https://unapproved.example.net/challenge"></iframe>
+      <script>fetch('https://malicious.invalid/'); const token='DO_NOT_EXECUTE';</script>
+    </main>
+  </body>
+</html>

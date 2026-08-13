@@ -106,6 +106,9 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         history = value.get("navigation_history", [])
         if not history or history[-1] != value.get("current_url"):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Route history must end at current_url.")
+        from .sourcing import source_route_hash
+        if value.get("route_hash") != source_route_hash(value):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Source route hash does not bind the current route content.")
     if name == "jd-snapshot" and value.get("source_format") == "page_snapshot" and not value.get("source_url"):
         raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "A saved page snapshot must retain its source URL.")
     if name == "fit-result":
@@ -148,6 +151,24 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Official discovery candidate_count must match the candidate list.")
         if any(item.get("snapshot_hash") != value.get("snapshot_hash") for item in candidates):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Every discovered candidate must retain the same local snapshot hash.")
+    if name == "ats-form-snapshot":
+        if value.get("field_count") != len(value.get("fields", [])):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS form field_count must match the field list.")
+        counts: dict[str, int] = {}
+        for field in value.get("fields", []):
+            classification = str(field.get("classification"))
+            counts[classification] = counts.get(classification, 0) + 1
+        if value.get("classification_counts") != counts:
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS form classification counts do not match the field list.")
+    if name == "browser-action-plan":
+        actions = value.get("actions", [])
+        fillable = sum(item.get("action") == "PROPOSE_PREFILL" for item in actions)
+        if value.get("fillable_count") != fillable or value.get("stopped_count") != len(actions) - fillable:
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Browser action plan counts do not match its actions.")
+        for item in actions:
+            is_fill = item.get("action") == "PROPOSE_PREFILL"
+            if is_fill != (item.get("binding_kind") != "NONE" and item.get("binding_ref") is not None):
+                raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Only bound controls may be proposed for prefill.")
 
 
 def validate_named(name: str, value: dict[str, Any], schema_dir: Path) -> dict[str, Any]:

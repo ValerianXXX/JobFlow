@@ -95,6 +95,17 @@ class SourceRoute:
         return {**self.__dict__, "navigation_history": list(self.navigation_history)}
 
 
+def source_route_hash(value: dict[str, object]) -> str:
+    material = {
+        "company_domain": value["company_domain"], "official_entry_url": value["official_entry_url"],
+        "current_url": value["current_url"], "route_kind": value["route_kind"], "provider": value["provider"],
+        "tenant": value["ats_tenant"], "board": value["ats_board"], "job_identity": value["ats_job_identity"],
+        "official_page_hash": value["official_page_hash"], "jd_snapshot_hash": value["jd_snapshot_hash"],
+        "navigation_history": list(value["navigation_history"]),
+    }
+    return sha256_bytes(canonical_json(material))
+
+
 def assess_job_freshness(*, official_listing_present: bool, application_form_available: bool, checked_at: str, max_age_minutes: int = 30, now=None) -> dict[str, object]:
     from datetime import datetime, timezone
     current = now or datetime.now(timezone.utc)
@@ -177,10 +188,10 @@ def verify_source_route(
         guest_mode, account_action, status = "UNKNOWN", "NEEDS_USER_INPUT", "NEEDS_USER_INPUT"
     material = {
         "company_domain": derived_company, "official_entry_url": entry_url, "current_url": current_canonical,
-        "route_kind": kind, "provider": provider, "tenant": tenant, "board": board, "job_identity": identity,
+        "route_kind": kind, "provider": provider, "ats_tenant": tenant, "ats_board": board, "ats_job_identity": identity,
         "official_page_hash": page_hash, "jd_snapshot_hash": snapshot_hash, "navigation_history": canonical_history,
     }
     return SourceRoute(
         status, derived_company, entry_url, current_canonical, kind, provider, tenant, board, identity,
-        guest_mode, account_action, page_hash, snapshot_hash, sha256_bytes(canonical_json(material)), tuple(canonical_history),
+        guest_mode, account_action, page_hash, snapshot_hash, source_route_hash(material), tuple(canonical_history),
     )

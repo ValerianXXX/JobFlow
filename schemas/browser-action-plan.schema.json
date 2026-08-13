@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/browser-action-plan.schema.json",
+  "title": "Offline Browser Action Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "form_snapshot_hash", "source_route_hash", "canonical_url", "plan_hash", "fillable_count", "stopped_count", "actions", "submit_blocked", "upload_blocked", "account_creation_blocked", "browser_actions", "network_actions", "real_external_actions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["LOCAL_PLAN_READY", "NO_FIELDS_BOUND"]},
+    "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "canonical_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "fillable_count": {"type": "integer", "minimum": 0},
+    "stopped_count": {"type": "integer", "minimum": 0},
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["control_ref", "classification", "action", "binding_kind", "binding_ref", "reason_code"],
+        "properties": {
+          "control_ref": {"type": "string", "pattern": "^CTL-[A-F0-9]{12}$"},
+          "classification": {"enum": ["ordinary_fixed", "private_fixed", "sensitive_review", "work_authorization_stop", "compensation_stop", "legal_declaration_stop", "signature_stop", "voluntary_disclosure_stop", "account_creation_stop", "file_upload_stop", "final_submit_stop", "unknown_stop"]},
+          "action": {"enum": ["PROPOSE_PREFILL", "STOP"]},
+          "binding_kind": {"enum": ["NONE", "PUBLIC_VALUE_HASH", "SECURE_REF"]},
+          "binding_ref": {"type": ["string", "null"], "pattern": "^(?:sha256:[a-f0-9]{64}|secure-ref:[A-Za-z0-9_-]{8,128})$"},
+          "reason_code": {"enum": ["KNOWN_PUBLIC_BINDING_REQUIRED", "SECURE_REFERENCE_REQUIRED", "FILE_UPLOAD_EXTERNAL_ACTION", "FINAL_SUBMIT_EXTERNAL_ACTION", "ACCOUNT_CREATION_REQUIRES_APPROVAL", "UNKNOWN_FIELD_FAIL_CLOSED", "PROTECTED_OR_SENSITIVE_FIELD"]}
+        }
+      }
+    },
+    "submit_blocked": {"const": true},
+    "upload_blocked": {"const": true},
+    "account_creation_blocked": {"const": true},
+    "browser_actions": {"const": 0},
+    "network_actions": {"const": 0},
+    "real_external_actions": {"const": 0}
+  }
+}

@@ -101,10 +101,26 @@ class FakeBrowserPrefillAdapter:
     kind: str = "fake"
 
     def prefill(self, request: dict[str, Any]) -> dict[str, Any]:
-        fields = list(request.get("fields", []))
-        if any(item.get("action") == "SUBMIT" or item.get("classification") == "final_submit_stop" for item in fields):
-            raise JobOpsError("FINAL_SUBMIT_BLOCKED", "The fake browser never activates final submit controls.")
-        return {"status": "FAKE_PREFILL_COMPLETE", "field_count": len(fields), "uploaded_files": [], "network_actions": 0, "real_side_effects": 0}
+        if set(request) != {"plan", "current_form_snapshot_hash", "isolation_policy"}:
+            raise JobOpsError("FAKE_BROWSER_REQUEST_INVALID", "The fake browser accepts only a bound safe plan and its current snapshot hash.")
+        if request.get("isolation_policy") != "ISOLATED_FAKE_ONLY":
+            raise JobOpsError("FAKE_ISOLATION_REQUIRED", "Synthetic browser validation requires the explicit isolated fake policy.")
+        plan = request.get("plan")
+        if not isinstance(plan, dict):
+            raise JobOpsError("BROWSER_PLAN_REQUIRED", "The fake browser requires a structured browser action plan.")
+        from .ats_browser import validate_browser_action_plan_integrity
+        validate_browser_action_plan_integrity(plan)
+        if request.get("current_form_snapshot_hash") != plan.get("form_snapshot_hash"):
+            raise JobOpsError("SITE_CHANGED", "The local synthetic form no longer matches the reviewed browser plan.")
+        if any(item.get("action") not in {"PROPOSE_PREFILL", "STOP"} for item in plan.get("actions", [])):
+            raise JobOpsError("BROWSER_ACTION_FORBIDDEN", "The fake browser plan contains an unsupported action.")
+        if not plan.get("submit_blocked") or not plan.get("upload_blocked") or not plan.get("account_creation_blocked"):
+            raise JobOpsError("BROWSER_STOP_GATE_MISSING", "Submit, upload and account gates must remain closed.")
+        return {
+            "status": "FAKE_PLAN_VALIDATED", "proposed_field_count": int(plan["fillable_count"]),
+            "fields_modified": 0, "uploaded_files": [], "browser_actions": 0, "network_actions": 0,
+            "real_side_effects": 0,
+        }
 
 
 @dataclass

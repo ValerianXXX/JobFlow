@@ -42,6 +42,8 @@ def _field_material(field: dict[str, Any], page_context: str = "") -> str:
 
 def classify_application_field(field: dict[str, Any], *, page_context: str = "", blocked_categories: Iterable[str] = ()) -> tuple[str, str]:
     material = _field_material(field, page_context)
+    if normalized_name(str(field.get("type", ""))) == "file":
+        return "file_upload_stop", "File selection is an external upload action and remains blocked."
     if normalized_name(str(field.get("type", ""))) in {"submit", "image"}:
         return "final_submit_stop", "Final submit controls always require the external action gateway."
     section = normalized_name(str(field.get("section_heading", "")) + " " + page_context)

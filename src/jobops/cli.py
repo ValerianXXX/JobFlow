@@ -9,6 +9,7 @@ from typing import Any
 
 from .audit import audit_environment
 from .adapters import audit_real_external_actions
+from .ats_browser import analyze_local_ats_form
 from .approvals import ApprovalContext, issue_approval
 from .claim_registry import ClaimRegistry
 from .collector import JobCollector
@@ -105,6 +106,9 @@ def parser() -> argparse.ArgumentParser:
     discovery.add_argument("--input", type=Path, required=True)
     discovery.add_argument("--company-domain", required=True)
     discovery.add_argument("--official-url", required=True)
+    form_snapshot = sub.add_parser("analyze-ats-form")
+    form_snapshot.add_argument("--input", type=Path, required=True)
+    form_snapshot.add_argument("--route", type=Path, required=True)
 
     onboard = sub.add_parser("secure-onboard")
     onboard.add_argument("--input-file", type=Path)
@@ -289,6 +293,24 @@ def main(argv: list[str] | None = None) -> int:
             )
             validate_named("official-discovery", result, project / "schemas")
             emit({**result, "next_safe_action": "verify-route-after-fresh-authorization"}, project)
+        elif args.command == "analyze-ats-form":
+            input_path = _project_input(project, args.input, operation="read")
+            route_path = _project_input(project, args.route, operation="read")
+            if input_path.suffix.casefold() not in {".html", ".htm"}:
+                raise JobOpsError("ATS_FORM_SNAPSHOT_FORMAT_UNSUPPORTED", "Select a project-local HTML form snapshot.")
+            request = load_json(route_path)
+            policy = load_json(project / "config" / "policy.json")
+            route = verify_source_route(
+                company_domain=request.get("company_domain"), official_entry_url=request["official_entry_url"],
+                current_url=request["current_url"], navigation_history=request["navigation_history"],
+                approved_ats_hosts=policy["approved_ats_hosts"], guest_available=request.get("guest_available"),
+                tenant_binding=request.get("tenant_binding"), official_page_hash=request.get("official_page_hash"),
+                jd_snapshot_hash=request.get("jd_snapshot_hash"), approved_intermediary_hosts=request.get("approved_intermediary_hosts"),
+            ).as_dict()
+            result = analyze_local_ats_form(
+                input_path.read_bytes(), route=route, blocked_categories=policy["blocked_form_categories"]
+            )
+            emit({**result, "next_safe_action": "review-form-bindings-no-real-browser"}, project)
         elif args.command == "secure-onboard":
             database = _database(project); onboarding = _onboarding(project, database)
             if args.synthetic:

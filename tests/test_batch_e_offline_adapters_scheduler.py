@@ -17,10 +17,25 @@ from jobops.errors import JobOpsError
 from jobops.external_actions import ExternalActionGateway, ExternalActionPolicy
 from jobops.fake_scheduler import FakeClock, OfflineScheduler
 from jobops.recovery import RecoveryManager
-from jobops.util import iso_utc
+from jobops.util import canonical_json, iso_utc, sha256_bytes
 
 
 H = "sha256:" + "a" * 64
+
+
+def safe_browser_plan() -> dict:
+    actions = [{
+        "control_ref": "CTL-ABCDEF123456", "classification": "final_submit_stop", "action": "STOP",
+        "binding_kind": "NONE", "binding_ref": None, "reason_code": "FINAL_SUBMIT_EXTERNAL_ACTION",
+    }]
+    material = {"form_snapshot_hash": H, "source_route_hash": H, "canonical_url": "https://example.com/careers/a", "actions": actions}
+    return {
+        "schema_version": 1, "status": "NO_FIELDS_BOUND", "form_snapshot_hash": H, "source_route_hash": H,
+        "canonical_url": "https://example.com/careers/a", "plan_hash": sha256_bytes(canonical_json(material)),
+        "fillable_count": 0, "stopped_count": 1, "actions": actions, "submit_blocked": True,
+        "upload_blocked": True, "account_creation_blocked": True, "browser_actions": 0,
+        "network_actions": 0, "real_external_actions": 0,
+    }
 
 
 def context() -> ApprovalContext:
@@ -63,7 +78,9 @@ class OfflineAdapterTests(unittest.TestCase):
             database = JobOpsDB(temp / "jobops.db")
             database.initialize()
             adapters = [
-                lambda: FakeBrowserPrefillAdapter().prefill({"fields": [{"classification": "ordinary_fixed", "action": "PREFILL"}]}),
+                lambda: FakeBrowserPrefillAdapter().prefill({
+                    "plan": safe_browser_plan(), "current_form_snapshot_hash": H, "isolation_policy": "ISOLATED_FAKE_ONLY",
+                }),
                 lambda: FakeSubmissionAdapter(database).submit({"application_id": None, "isolation_policy": "ISOLATED_FAKE_ONLY"}),
                 lambda: FakeOutboxAdapter().send_email({"to": "synthetic@example.test", "body": "fixture"}),
                 lambda: FakeReceiptAdapter().verify({"source": "fake-receipt", "confirmation_number": "SYN-1"}),
@@ -74,9 +91,15 @@ class OfflineAdapterTests(unittest.TestCase):
             self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 0)
 
     def test_fake_browser_blocks_submit_and_fake_receipt_never_guesses(self) -> None:
+        plan = safe_browser_plan()
+        plan["actions"][0].update({"action": "PROPOSE_PREFILL", "binding_kind": "SECURE_REF", "binding_ref": "secure-ref:SYNTHETIC01"})
+        plan["fillable_count"], plan["stopped_count"] = 1, 0
+        plan["status"] = "LOCAL_PLAN_READY"
+        material = {"form_snapshot_hash": H, "source_route_hash": H, "canonical_url": "https://example.com/careers/a", "actions": plan["actions"]}
+        plan["plan_hash"] = sha256_bytes(canonical_json(material))
         with self.assertRaises(JobOpsError) as caught:
-            FakeBrowserPrefillAdapter().prefill({"fields": [{"classification": "final_submit_stop"}]})
-        self.assertEqual(caught.exception.code, "FINAL_SUBMIT_BLOCKED")
+            FakeBrowserPrefillAdapter().prefill({"plan": plan, "current_form_snapshot_hash": H, "isolation_policy": "ISOLATED_FAKE_ONLY"})
+        self.assertEqual(caught.exception.code, "BROWSER_PLAN_PROTECTED_FIELD")
         self.assertEqual(FakeReceiptAdapter().verify({"source": "fake-receipt"})["status"], "SUBMISSION_UNKNOWN")
 
     def test_only_verified_fake_receipt_can_confirm_after_fake_submission(self) -> None:

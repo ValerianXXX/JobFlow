@@ -7,6 +7,7 @@ import unittest
 from _support import PROJECT
 from jobops.errors import JobOpsError
 from jobops.runtime_schema import validate_named
+from jobops.sourcing import source_route_hash
 
 
 H = "sha256:" + "a" * 64
@@ -28,6 +29,7 @@ def valid_fixtures() -> dict[str, dict]:
         "account_action": "NONE", "official_page_hash": H, "jd_snapshot_hash": H, "route_hash": H,
         "navigation_history": ["https://example.com/careers/a"],
     }
+    route["route_hash"] = source_route_hash(route)
     return {
         "application": {"application_id": APP, "job_id": JOB, "status": "AWAITING_APPROVAL", "site": "example.com", "resume_hash": H, "answers_hash": H, "dry_run": True, "secure_profile_ref": "secure-ref:SYNTHETIC01", "sensitive_fields": [], "unknown_fields": []},
         "approval": {
@@ -103,6 +105,32 @@ def valid_fixtures() -> dict[str, dict]:
         "site-policy": {"policy_version": "1", "provider": "local_fixture", "real_actions_enabled": False, "guest_first": True, "account_creation_enabled": False, "allowed_actions": ["local_snapshot"], "checked_at": T},
         "material-version": {"material_id": "MAT-ABCDEF123456", "application_id": APP, "kind": "resume_pdf", "relative_path": "reports/fixture.pdf", "content_hash": H, "master_hash": H, "claim_set_hash": H, "version": 1, "qa_status": "PASS", "created_at": T},
         "application-field": {"field_id": "FLD-ABCDEF123456", "application_id": APP, "classification": "ordinary_fixed", "action": "PREFILL", "status": "READY", "secure_ref": None, "redacted_summary": None, "field_hash": H},
+        "ats-form-snapshot": {
+            "schema_version": 1, "status": "FORM_SNAPSHOT_ANALYZED", "source_mode": "LOCAL_SNAPSHOT_ONLY",
+            "provider": "company", "canonical_url": "https://example.com/careers/a", "source_route_hash": route["route_hash"],
+            "page_content_hash": H, "form_snapshot_hash": H, "field_count": 1, "ignored_hidden_control_count": 1,
+            "classification_counts": {"private_fixed": 1},
+            "fields": [{
+                "control_ref": "CTL-ABCDEF123456", "control_type": "email", "required": True,
+                "classification": "private_fixed", "reason_code": "SECURE_REFERENCE_REQUIRED", "prompt_hash": H,
+                "option_count": 0, "existing_value_discarded": True, "binding_status": "UNBOUND", "action": "STOP",
+            }],
+            "blockers": [], "form_action_statuses": ["SAME_ORIGIN"], "iframe_statuses": [],
+            "entered_values_retained": False, "submit_blocked": True, "upload_blocked": True,
+            "account_creation_blocked": True, "untrusted_page_content_executed": False,
+            "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
+        },
+        "browser-action-plan": {
+            "schema_version": 1, "status": "LOCAL_PLAN_READY", "form_snapshot_hash": H,
+            "source_route_hash": route["route_hash"], "canonical_url": "https://example.com/careers/a", "plan_hash": H,
+            "fillable_count": 1, "stopped_count": 0,
+            "actions": [{
+                "control_ref": "CTL-ABCDEF123456", "classification": "private_fixed", "action": "PROPOSE_PREFILL",
+                "binding_kind": "SECURE_REF", "binding_ref": "secure-ref:SYNTHETIC01", "reason_code": "SECURE_REFERENCE_REQUIRED",
+            }],
+            "submit_blocked": True, "upload_blocked": True, "account_creation_blocked": True,
+            "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
+        },
         "queue-reservation": {"reservation_id": "RSV-ABCDEF123456", "intake_key": H, "application_id": APP, "status": "CONSUMED", "pending_limit": 3, "pending_count": 1, "reserved_count": 1, "created_at": T, "updated_at": T},
         "recovery-event": {"recovery_id": "RCV-ABCDEF123456", "application_id": APP, "blocked_state": "SUBMISSION_UNKNOWN", "last_safe_state": "APPROVED", "validation_hash": H, "decision": "NO_AUTO_RETRY", "created_at": T},
         "receipt": {"receipt_id": "RCP-ABCDEF123456", "application_id": APP, "source": "fake-receipt", "confirmation_type": "confirmation_number", "confirmation_hash": H, "verified": True, "verified_at": T},
@@ -180,6 +208,8 @@ class RuntimeSchemaMatrixTests(unittest.TestCase):
             "recovery-event": ("decision", "RESUME_SAFE_STEP"),
             "receipt": ("verified", False),
             "official-discovery": ("candidate_count", 2),
+            "ats-form-snapshot": ("field_count", 2),
+            "browser-action-plan": ("fillable_count", 0),
         }
         for name, (field, invalid) in conflicts.items():
             changed = copy.deepcopy(self.fixtures[name]); changed[field] = invalid
