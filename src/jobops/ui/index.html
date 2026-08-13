@@ -22,8 +22,8 @@
       <span class="local-badge"><i></i><span data-i18n="localOnly">仅限本机 · DPAPI 加密</span></span>
       <button id="aiConnectButton" class="ai-connect-button" type="button" aria-expanded="false" aria-controls="aiConnectionPanel" data-i18n="connectAi">连接 AI</button>
       <div class="locale-switch" role="group" aria-label="Language">
-        <button type="button" data-locale="zh" class="active">中文</button>
-        <button type="button" data-locale="en">EN</button>
+        <button type="button" data-locale="zh" class="active" aria-pressed="true">中文</button>
+        <button type="button" data-locale="en" aria-pressed="false">EN</button>
       </div>
     </div>
   </header>
@@ -83,7 +83,7 @@
         </section>
       </div>
       <section id="reviewPacketPanel" class="review-packet-panel hidden" aria-live="polite">
-        <header><div><p class="eyebrow" data-i18n="reviewPacketEyebrow">LOCAL REVIEW PACKET</p><h3 id="reviewPacketTitle"></h3><small id="reviewPacketMeta"></small></div><button id="closeReviewPacket" class="text-action" type="button" data-i18n="closePacket">关闭审阅包</button></header>
+        <header><div><p class="eyebrow" data-i18n="reviewPacketEyebrow">LOCAL REVIEW PACKET</p><h3 id="reviewPacketTitle" data-i18n="reviewPacketTitlePlaceholder">本地审阅包</h3><small id="reviewPacketMeta"></small></div><button id="closeReviewPacket" class="text-action" type="button" data-i18n="closePacket">关闭审阅包</button></header>
         <div id="reviewPacketBody" class="review-packet-body"></div>
         <fieldset id="packetDecisionPanel" class="packet-decision-panel">
           <legend data-i18n="packetDecisionTitle">你对这份审阅包的决定</legend>
@@ -139,10 +139,10 @@
     </section>
 
     <nav class="steps" aria-label="Onboarding steps">
-      <button class="step active" data-target="sources"><b>1</b><span data-i18n="stepSources">资料来源</span></button>
-      <button class="step" data-target="questionnaire"><b>2</b><span data-i18n="stepQuestions">完整问卷</span></button>
-      <button class="step" data-target="review"><b>3</b><span data-i18n="stepReview">资料与 Claim 审阅</span></button>
-      <button class="step" data-target="finish"><b>4</b><span data-i18n="stepFinish">确认完成</span></button>
+      <button type="button" class="step active" data-target="sources" data-step-label="stepSources" aria-label="1 资料来源" aria-current="step"><b>1</b><span data-i18n="stepSources">资料来源</span></button>
+      <button type="button" class="step" data-target="questionnaire" data-step-label="stepQuestions" aria-label="2 完整问卷"><b>2</b><span data-i18n="stepQuestions">完整问卷</span></button>
+      <button type="button" class="step" data-target="review" data-step-label="stepReview" aria-label="3 资料与 Claim 审阅"><b>3</b><span data-i18n="stepReview">资料与 Claim 审阅</span></button>
+      <button type="button" class="step" data-target="finish" data-step-label="stepFinish" aria-label="4 确认完成"><b>4</b><span data-i18n="stepFinish">确认完成</span></button>
     </nav>
 
     <section id="sources" class="panel active-panel">

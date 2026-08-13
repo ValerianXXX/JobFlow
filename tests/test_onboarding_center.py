@@ -210,6 +210,22 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="activityProgress"', html)
         self.assertIn("elapsedWithEstimate", script)
         self.assertIn("updateActivity", script)
+        self.assertIn("function learnedActivityEstimate", script)
+        self.assertIn("activityDurations", script)
+        self.assertIn('data-i18n="reviewPacketTitlePlaceholder"', html)
+        self.assertIn('aria-current="step"', html)
+        self.assertIn('aria-pressed="true"', html)
+        self.assertEqual(html.count('data-step-label="'), 4)
+        self.assertIn('el.setAttribute("aria-label",`${number} ${t(el.dataset.stepLabel)}`.trim())', script)
+        for accessible_label in (
+            "answerValueLabel", "answerStatusLabel", "answerPolicyLabel",
+            "claimDecisionLabel", "splitInputLabel",
+        ):
+            self.assertIn(accessible_label, script)
+        self.assertIn('aria-label="${escapeHtml(accessibleName)}"', script)
+        self.assertIn("scroll-margin-top: 94px", styles)
+        self.assertIn(":focus-visible", styles)
+        self.assertIn("scroll-behavior: auto", styles)
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
