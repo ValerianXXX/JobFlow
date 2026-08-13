@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import json
 import http.server
 import subprocess
@@ -7,6 +8,7 @@ import sys
 import tempfile
 import threading
 import unittest
+import warnings
 from pathlib import Path
 
 import _support  # noqa: F401  # Adds the project src directory to sys.path.
@@ -65,10 +67,14 @@ class AIConnectionTests(unittest.TestCase):
         for thread in threads:
             thread.start()
         try:
-            with self.assertRaises(JobOpsError) as blocked:
-                _loopback_json(f"http://127.0.0.1:{source.server_port}/models")
+            with warnings.catch_warnings(record=True) as resource_warnings:
+                warnings.simplefilter("always", ResourceWarning)
+                with self.assertRaises(JobOpsError) as blocked:
+                    _loopback_json(f"http://127.0.0.1:{source.server_port}/models")
+                gc.collect()
             self.assertEqual(blocked.exception.code, "AI_LOCAL_ENDPOINT_UNAVAILABLE")
             self.assertEqual(destination_hits, [])
+            self.assertEqual([item for item in resource_warnings if item.category is ResourceWarning], [])
         finally:
             source.shutdown()
             destination.shutdown()

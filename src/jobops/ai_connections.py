@@ -288,6 +288,9 @@ def _loopback_json(
     try:
         with opener.open(request, timeout=max(0.2, min(float(timeout), 600.0))) as response:
             raw = response.read(MAX_CONNECTION_RESPONSE_BYTES + 1)
+    except urllib.error.HTTPError as exc:
+        exc.close()
+        raise JobOpsError("AI_LOCAL_ENDPOINT_UNAVAILABLE", "The selected local AI endpoint is not available.") from exc
     except (OSError, urllib.error.URLError, TimeoutError) as exc:
         raise JobOpsError("AI_LOCAL_ENDPOINT_UNAVAILABLE", "The selected local AI endpoint is not available.") from exc
     if not raw or len(raw) > MAX_CONNECTION_RESPONSE_BYTES:
