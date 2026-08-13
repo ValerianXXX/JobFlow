@@ -50,6 +50,7 @@ MAX_LARGE_CONVERSATIONS_BYTES = 8 * 1024 * 1024 * 1024
 MAX_CHATGPT_MEMBER_COMPRESSION_RATIO = 1_000
 MAX_CHATGPT_CONVERSATION_CHARS = 64 * 1024 * 1024
 MAX_CHATGPT_FRAGMENT_CANDIDATES = 600
+MAX_CHATGPT_AI_SELECTION_CHARS = MAX_AI_INPUT_CHARS
 MAX_REVIEW_PACKET_BYTES = 2 * 1024 * 1024
 ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "ai_summary", "chatgpt_export"}
 ALLOWED_EXTENSIONS = {".docx", ".pdf", ".txt", ".md", ".json", ".zip"}
@@ -95,6 +96,10 @@ def _public_ai_analysis(summary: Any) -> dict[str, Any]:
             "ai_chunks", "ai_chunking_applied", "ai_input_characters",
             "ai_covered_characters", "ai_input_truncated", "ai_repair_count",
             "quality_contract", "quality_gate_version",
+            "archive_scan_complete", "user_fragments_scanned", "readable_user_fragments",
+            "safe_fragments_considered", "ai_selected_fragments", "ai_omitted_fragments",
+            "ai_selection_bounded", "ai_selection_mode", "ai_selection_character_limit",
+            "ai_selected_characters",
         )
         if key in value
     }
@@ -392,12 +397,13 @@ def _chatgpt_fragment_priority(value: str) -> int:
     return score
 
 
-def _select_chatgpt_fragments(values: Iterable[Any]) -> tuple[str, int]:
+def _select_chatgpt_fragments(values: Iterable[Any]) -> tuple[str, int, dict[str, Any]]:
     """Keep a representative, high-signal sample while scanning the full export."""
 
     selected: list[tuple[int, str, int, str]] = []
     excluded = 0
     ordinal = 0
+    readable = 0
     for value in values:
         for fragment in _chatgpt_user_fragments(value):
             ordinal += 1
@@ -406,6 +412,7 @@ def _select_chatgpt_fragments(values: Iterable[Any]) -> tuple[str, int]:
             cleaned = " ".join(_clean_text(fragment, limit=30_000).split())
             if not cleaned:
                 continue
+            readable += 1
             try:
                 assert_no_plaintext_secret(cleaned)
             except Exception:
@@ -421,7 +428,7 @@ def _select_chatgpt_fragments(values: Iterable[Any]) -> tuple[str, int]:
     packed: list[tuple[int, str]] = []
     used = 0
     for _, _, item_ordinal, cleaned in sorted(selected, key=lambda item: (item[0], item[1]), reverse=True):
-        available = MAX_AI_INPUT_CHARS - used
+        available = MAX_CHATGPT_AI_SELECTION_CHARS - used
         if available < 40:
             break
         bounded = cleaned[:available]
@@ -430,7 +437,21 @@ def _select_chatgpt_fragments(values: Iterable[Any]) -> tuple[str, int]:
         packed.append((item_ordinal, bounded))
         used += len(bounded) + 1
     packed.sort(key=lambda item: item[0])
-    return "\n".join(value for _, value in packed), excluded
+    safe_fragments = max(0, readable - excluded)
+    selected_text = "\n".join(value for _, value in packed)
+    omitted = max(0, safe_fragments - len(packed))
+    return selected_text, excluded, {
+        "archive_scan_complete": True,
+        "user_fragments_scanned": ordinal,
+        "readable_user_fragments": readable,
+        "safe_fragments_considered": safe_fragments,
+        "ai_selected_fragments": len(packed),
+        "ai_omitted_fragments": omitted,
+        "ai_selection_bounded": omitted > 0,
+        "ai_selection_mode": "HIGH_SIGNAL_BOUNDED" if omitted > 0 else "ALL_SAFE_USER_MESSAGES",
+        "ai_selection_character_limit": MAX_CHATGPT_AI_SELECTION_CHARS,
+        "ai_selected_characters": len(selected_text),
+    }
 
 
 def extract_key_value_suggestions(text: str, *, source_id: str, source_status: str) -> list[dict[str, Any]]:
@@ -479,7 +500,7 @@ def _docx_text(data: bytes) -> str:
     return "\n".join(lines)
 
 
-def _chatgpt_archive_text(archive: zipfile.ZipFile, *, large_mode: bool) -> tuple[str, int]:
+def _chatgpt_archive_text(archive: zipfile.ZipFile, *, large_mode: bool) -> tuple[str, int, dict[str, Any]]:
     members = archive.infolist()
     member_limit = MAX_LARGE_ZIP_MEMBERS if large_mode else MAX_ZIP_MEMBERS
     if len(members) > member_limit:
@@ -507,7 +528,7 @@ def _chatgpt_archive_text(archive: zipfile.ZipFile, *, large_mode: bool) -> tupl
         raise JobOpsError("CHATGPT_EXPORT_INVALID", "conversations.json could not be safely streamed as UTF-8 JSON.") from exc
 
 
-def _chatgpt_export_text(data: bytes) -> tuple[str, int]:
+def _chatgpt_export_text(data: bytes) -> tuple[str, int, dict[str, Any]]:
     try:
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             return _chatgpt_archive_text(archive, large_mode=False)
@@ -515,7 +536,7 @@ def _chatgpt_export_text(data: bytes) -> tuple[str, int]:
         raise JobOpsError("CHATGPT_EXPORT_INVALID", "The uploaded ChatGPT export is not a valid ZIP archive.") from exc
 
 
-def _chatgpt_export_text_path(path: Path) -> tuple[str, int]:
+def _chatgpt_export_text_path(path: Path) -> tuple[str, int, dict[str, Any]]:
     try:
         with zipfile.ZipFile(path) as archive:
             return _chatgpt_archive_text(archive, large_mode=True)
@@ -1131,24 +1152,24 @@ class OnboardingCenterService:
         self._save_state(reference, state)
         return {"status": "SUGGESTION_ACCEPTED", "field_id": field_id, "private_values_emitted": 0}
 
-    def _extract_text(self, data: bytes, extension: str, source_type: str) -> tuple[str, int]:
+    def _extract_text(self, data: bytes, extension: str, source_type: str) -> tuple[str, int, dict[str, Any]]:
         if source_type == "chatgpt_export":
             if extension != ".zip":
                 raise JobOpsError("CHATGPT_EXPORT_FORMAT_INVALID", "The official ChatGPT export must be uploaded as ZIP.")
             return _chatgpt_export_text(data)
         if extension == ".docx":
-            return _docx_text(data), 0
+            return _docx_text(data), 0, {}
         if extension == ".pdf":
             with self.onboarding.staging_directory() as staging:
                 target = staging / "source.pdf"
                 target.write_bytes(data)
                 # Upload review needs spatial separation before block reconstruction.
                 text, _ = extract_pdf_text(target, layout=True)
-                return text, 0
+                return text, 0, {}
         if extension == ".json":
-            return _json_text(data), 0
+            return _json_text(data), 0, {}
         try:
-            return data.decode("utf-8-sig"), 0
+            return data.decode("utf-8-sig"), 0, {}
         except UnicodeDecodeError as exc:
             raise JobOpsError("ONBOARDING_TEXT_ENCODING_INVALID", "Text onboarding sources must be UTF-8 compatible.") from exc
 
@@ -1162,6 +1183,7 @@ class OnboardingCenterService:
         excluded_secret_fragments: int,
         raw_data: bytes | None,
         intake_mode: str,
+        source_selection: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         if not self.ai_engine.ready:
             raise JobOpsError(
@@ -1204,6 +1226,7 @@ class OnboardingCenterService:
                 "candidate_count": len(candidates), "suggestions": [],
                 "excluded_secret_fragments": excluded_secret_fragments, "raw_retained": False,
                 "intake_mode": intake_mode,
+                "source_selection": source_selection or {},
             }
             stored = self.onboarding.import_bytes("onboarding_ai_derived", canonical_json(derived), synthetic=False)
         else:
@@ -1218,6 +1241,7 @@ class OnboardingCenterService:
             "claim_candidates": len(candidates),
             "non_claim_blocks": 0,
             "intake_mode": intake_mode,
+            **(source_selection or {}),
             **extraction_summary,
         }
         return {
@@ -1245,7 +1269,7 @@ class OnboardingCenterService:
                 threshold_bytes=LARGE_EXPORT_THRESHOLD_BYTES,
             )
         source_hash = sha256_bytes(data)
-        text, excluded_secret_fragments = self._extract_text(data, extension, source_type)
+        text, excluded_secret_fragments, source_selection = self._extract_text(data, extension, source_type)
         return self._analyze_prepared_text(
             source_type=source_type,
             extension=extension,
@@ -1254,6 +1278,7 @@ class OnboardingCenterService:
             excluded_secret_fragments=excluded_secret_fragments,
             raw_data=data,
             intake_mode="STANDARD_MEMORY",
+            source_selection=source_selection,
         )
 
     def _prepare_large_chatgpt_export(
@@ -1275,7 +1300,7 @@ class OnboardingCenterService:
         staging_root = (self.onboarding.store.private_root / "staging").resolve(strict=True)
         if staging_root not in resolved.parents or resolved.stat().st_size != int(upload_size):
             raise JobOpsError("ONBOARDING_STAGING_BOUNDARY_INVALID", "The streamed upload left its controlled private staging boundary.")
-        text, excluded_secret_fragments = _chatgpt_export_text_path(resolved)
+        text, excluded_secret_fragments, source_selection = _chatgpt_export_text_path(resolved)
         if resolved.stat().st_size != int(upload_size):
             raise JobOpsError("ONBOARDING_STAGING_FILE_CHANGED", "The streamed upload changed during analysis.")
         return self._analyze_prepared_text(
@@ -1286,6 +1311,7 @@ class OnboardingCenterService:
             excluded_secret_fragments=excluded_secret_fragments,
             raw_data=None,
             intake_mode="LIGHTNING_STREAM",
+            source_selection=source_selection,
         )
 
     @staticmethod

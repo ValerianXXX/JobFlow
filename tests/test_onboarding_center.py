@@ -246,6 +246,9 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("sourceAnalysisErrorMessage", script)
         self.assertIn("aiRepairApplied", script)
         self.assertIn("AI_RESPONSE_REPAIR_FAILED", script)
+        self.assertIn("完整扫描 ZIP", script)
+        self.assertIn("Full ZIP scan", script)
+        self.assertIn("analysisPassedSelected", script)
 
     def test_draft_is_private_and_language_is_persisted(self) -> None:
         with project_temp() as root:
@@ -282,7 +285,42 @@ class OnboardingCenterTests(unittest.TestCase):
             export = service.import_source("chatgpt_export", ".zip", buffer.getvalue())
             self.assertFalse(export["raw_retained"])
             self.assertGreaterEqual(export["excluded_secret_fragments"], 1)
-            self.assertEqual(service.bootstrap()["suggestions"], [])
+            bootstrap = service.bootstrap()
+            self.assertEqual(bootstrap["suggestions"], [])
+            export_source = next(item for item in bootstrap["sources"] if item["category"] == "chatgpt_export")
+            self.assertTrue(export_source["archive_scan_complete"])
+            self.assertEqual(export_source["user_fragments_scanned"], 2)
+            self.assertEqual(export_source["safe_fragments_considered"], 1)
+            self.assertEqual(export_source["ai_selected_fragments"], 1)
+            self.assertEqual(export_source["ai_omitted_fragments"], 0)
+            self.assertFalse(export_source["ai_selection_bounded"])
+
+    def test_chatgpt_export_discloses_bounded_high_signal_selection(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            mapping = {
+                f"user-{index}": {
+                    "message": {
+                        "author": {"role": "user"},
+                        "content": {"parts": [f"I built synthetic project workflow {index} and documented the result."]},
+                    }
+                }
+                for index in range(5)
+            }
+            buffer = io.BytesIO()
+            with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("conversations.json", json.dumps([{"mapping": mapping}]))
+            with mock.patch("jobops.onboarding_center.MAX_CHATGPT_FRAGMENT_CANDIDATES", 2):
+                service.import_source("chatgpt_export", ".zip", buffer.getvalue())
+
+            source = service.bootstrap()["sources"][0]
+            self.assertTrue(source["archive_scan_complete"])
+            self.assertEqual(source["user_fragments_scanned"], 5)
+            self.assertEqual(source["safe_fragments_considered"], 5)
+            self.assertEqual(source["ai_selected_fragments"], 2)
+            self.assertEqual(source["ai_omitted_fragments"], 3)
+            self.assertTrue(source["ai_selection_bounded"])
+            self.assertEqual(source["ai_selection_mode"], "HIGH_SIGNAL_BOUNDED")
 
     def test_official_chatgpt_export_uses_user_messages_only(self) -> None:
         with project_temp() as root:
