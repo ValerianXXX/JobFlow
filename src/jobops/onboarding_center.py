@@ -1522,10 +1522,24 @@ class OnboardingCenterService:
         pending = next((item for item in state.get("pending_sources", []) if item.get("source_id") == source_id), None)
         if pending is None:
             raise JobOpsError("SOURCE_PREVIEW_MISSING", "The selected source preview no longer exists.")
+        previous_state = deepcopy(state)
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != source_id]
-        if not pending.get("replace_existing") and not any(item.get("source_id") == source_id for item in state.get("sources", [])):
-            self.onboarding.delete(str(pending["metadata"]["secure_ref"]), user_confirmed=True)
         self._save_state(reference, state)
+        if not pending.get("replace_existing") and not any(item.get("source_id") == source_id for item in state.get("sources", [])):
+            try:
+                self.onboarding.delete(str(pending["metadata"]["secure_ref"]), user_confirmed=True)
+            except Exception as exc:
+                try:
+                    self._save_state(reference, previous_state)
+                except Exception as rollback_error:
+                    raise JobOpsError(
+                        "SOURCE_PREVIEW_DISCARD_ROLLBACK_FAILED",
+                        "The preview could not be discarded and its encrypted state could not be restored.",
+                    ) from rollback_error
+                raise JobOpsError(
+                    "SOURCE_PREVIEW_PRIVATE_DELETE_FAILED",
+                    "The private preview could not be deleted, so the preview was restored for a safe retry.",
+                ) from exc
         return {"status": "SOURCE_PREVIEW_DISCARDED", "source_id": source_id, "real_external_actions": 0}
 
     @_synchronized
@@ -1537,6 +1551,7 @@ class OnboardingCenterService:
         source = next((item for item in state.get("sources", []) if item.get("source_id") == source_id), None)
         if source is None:
             raise JobOpsError("SOURCE_MISSING", "The selected imported source no longer exists.")
+        previous_state = deepcopy(state)
         remaining_sources = {
             str(item.get("source_id")): item for item in state.get("sources", [])
             if item.get("source_id") != source_id
@@ -1580,15 +1595,30 @@ class OnboardingCenterService:
         self._refresh_field_conflicts(state)
         self._save_state(reference, state)
         secure_ref = str(source.get("secure_ref", ""))
+        ciphertext_deleted = False
         if secure_ref and not any(item.get("secure_ref") == secure_ref for item in state.get("sources", [])):
-            self.onboarding.delete(secure_ref, user_confirmed=True)
+            try:
+                self.onboarding.delete(secure_ref, user_confirmed=True)
+                ciphertext_deleted = True
+            except Exception as exc:
+                try:
+                    self._save_state(reference, previous_state)
+                except Exception as rollback_error:
+                    raise JobOpsError(
+                        "SOURCE_DELETE_ROLLBACK_FAILED",
+                        "The source could not be deleted and its encrypted onboarding state could not be restored.",
+                    ) from rollback_error
+                raise JobOpsError(
+                    "SOURCE_PRIVATE_DELETE_FAILED",
+                    "The private source could not be deleted, so the source and its review state were restored for a safe retry.",
+                ) from exc
         return {
             "status": "SOURCE_DELETED",
             "source_id": source_id,
             "removed_claims": len(removed_claim_ids),
             "retained_shared_claims": retained_shared_claims,
             "removed_suggestions": before_suggestions - len(state.get("suggestions", [])),
-            "private_ciphertext_deleted": bool(secure_ref),
+            "private_ciphertext_deleted": ciphertext_deleted,
             "secure_erase_claimed": False,
             "real_external_actions": 0,
         }

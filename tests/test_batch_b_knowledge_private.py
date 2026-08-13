@@ -274,6 +274,69 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
             self.assertFalse(any(store.private_root.glob(".jobflow-write-*")))
             onboarding.delete(record["secure_ref"], user_confirmed=True)
 
+    def test_private_delete_rolls_back_storage_and_metadata_failures(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
+            store = WindowsDPAPIStore(script, local_app_data=temp / "localappdata")
+            onboarding = PrivateOnboarding(database, store)
+            record = onboarding.import_bytes("answer_bank", SENTINEL.encode("utf-8"), synthetic=True)
+            reference = str(record["secure_ref"])
+
+            with patch.object(store, "delete", side_effect=JobOpsError("SECURE_STORE_FAILED", "Synthetic delete failure.")):
+                with self.assertRaises(JobOpsError) as storage_failure:
+                    onboarding.delete(reference, user_confirmed=True)
+            self.assertEqual(storage_failure.exception.code, "PRIVATE_DELETE_STORAGE_FAILED")
+            self.assertTrue(store.test(reference))
+            with database.connect() as connection:
+                status = connection.execute("SELECT status FROM private_refs WHERE secure_ref=?", (reference,)).fetchone()[0]
+            self.assertEqual(status, "ACTIVE")
+
+            original_connect = database.connect
+            connect_calls = 0
+
+            def fail_delete_metadata():
+                nonlocal connect_calls
+                connect_calls += 1
+                if connect_calls == 2:
+                    raise sqlite3.OperationalError("synthetic delete metadata failure")
+                return original_connect()
+
+            with patch.object(database, "connect", side_effect=fail_delete_metadata):
+                with self.assertRaises(JobOpsError) as database_failure:
+                    onboarding.delete(reference, user_confirmed=True)
+            self.assertEqual(database_failure.exception.code, "PRIVATE_DELETE_DATABASE_FAILED")
+            self.assertTrue(store.test(reference))
+            with original_connect() as connection:
+                status = connection.execute("SELECT status FROM private_refs WHERE secure_ref=?", (reference,)).fetchone()[0]
+            self.assertEqual(status, "ACTIVE")
+            onboarding.delete(reference, user_confirmed=True)
+            self.assertFalse(store.test(reference))
+
+    def test_private_delete_accepts_helper_failure_after_completed_delete(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
+            store = WindowsDPAPIStore(script, local_app_data=temp / "localappdata")
+            onboarding = PrivateOnboarding(database, store)
+            record = onboarding.import_bytes("answer_bank", SENTINEL.encode("utf-8"), synthetic=True)
+            reference = str(record["secure_ref"])
+            original_delete = store.delete
+
+            def complete_then_fail(value: str) -> None:
+                original_delete(value)
+                raise JobOpsError("SECURE_STORE_FAILED", "Synthetic lost helper reply.")
+
+            with patch.object(store, "delete", side_effect=complete_then_fail):
+                deleted = onboarding.delete(reference, user_confirmed=True)
+            self.assertEqual(deleted["status"], "DELETED")
+            self.assertFalse(store.test(reference))
+            with database.connect() as connection:
+                status = connection.execute("SELECT status FROM private_refs WHERE secure_ref=?", (reference,)).fetchone()[0]
+            self.assertEqual(status, "DELETED")
+
     def test_interrupted_new_dpapi_write_has_a_known_cleanup_reference(self) -> None:
         with project_temp() as temp:
             script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"

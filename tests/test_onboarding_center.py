@@ -683,6 +683,51 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertFalse(any(item["source_id"] == preview["source_id"] for item in bootstrap["sources"]))
             self.assertFalse(any(item.get("source_id") == preview["source_id"] for item in bootstrap["claims"]))
 
+    def test_source_delete_failure_restores_source_claims_and_private_reference(self) -> None:
+        with project_temp() as root:
+            service, onboarding, store, _, _ = self.make_service(root)
+            imported = service.import_source(
+                "project_case", ".txt",
+                b"Built a synthetic workflow with a documented review boundary.",
+            )
+            before = service.bootstrap()
+            _, private_state = service.ensure_state()
+            source_ref = next(
+                item["secure_ref"] for item in private_state["sources"]
+                if item["source_id"] == imported["source_id"]
+            )
+            with mock.patch.object(
+                onboarding, "delete",
+                side_effect=JobOpsError("PRIVATE_DELETE_STORAGE_FAILED", "Synthetic private deletion failure."),
+            ):
+                with self.assertRaises(JobOpsError) as failed:
+                    service.delete_source(imported["source_id"], user_confirmed=True)
+            self.assertEqual(failed.exception.code, "SOURCE_PRIVATE_DELETE_FAILED")
+            after = service.bootstrap()
+            self.assertEqual(after["sources"], before["sources"])
+            self.assertEqual(after["claims"], before["claims"])
+            self.assertTrue(store.test(source_ref))
+
+    def test_preview_discard_failure_restores_pending_preview(self) -> None:
+        with project_temp() as root:
+            service, onboarding, store, _, _ = self.make_service(root)
+            preview = service.preview_source(
+                "project_case", ".txt",
+                b"Built a synthetic workflow with a documented review boundary.",
+            )
+            before = service.bootstrap()["pending_sources"]
+            _, private_state = service.ensure_state()
+            source_ref = str(private_state["pending_sources"][0]["metadata"]["secure_ref"])
+            with mock.patch.object(
+                onboarding, "delete",
+                side_effect=JobOpsError("PRIVATE_DELETE_STORAGE_FAILED", "Synthetic private deletion failure."),
+            ):
+                with self.assertRaises(JobOpsError) as failed:
+                    service.discard_source_preview(preview["source_id"])
+            self.assertEqual(failed.exception.code, "SOURCE_PREVIEW_PRIVATE_DELETE_FAILED")
+            self.assertEqual(service.bootstrap()["pending_sources"], before)
+            self.assertTrue(store.test(source_ref))
+
     def test_source_delete_keeps_other_ai_filtered_sources(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)

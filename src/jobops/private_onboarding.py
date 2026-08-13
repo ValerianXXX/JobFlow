@@ -255,11 +255,64 @@ class PrivateOnboarding:
     def delete(self, reference: str, *, user_confirmed: bool) -> dict[str, object]:
         if not user_confirmed:
             raise JobOpsError("PRIVATE_DELETE_CONFIRMATION_REQUIRED", "Private deletion requires explicit user confirmation.")
-        self._record(reference)
-        if self.store.test(reference):
-            self.store.delete(reference)
-        with self.database.connect() as connection:
-            connection.execute("UPDATE private_refs SET status='DELETED',updated_at=? WHERE secure_ref=?", (iso_utc(), reference))
+        row = self._record(reference)
+        previous_status = str(row["status"])
+        try:
+            ciphertext_present = self.store.test(reference)
+        except Exception as exc:
+            raise JobOpsError(
+                "PRIVATE_DELETE_STORAGE_PROBE_FAILED",
+                "Private deletion could not verify the local ciphertext state; no metadata was changed.",
+            ) from exc
+        try:
+            with self.database.connect() as connection:
+                connection.execute(
+                    "UPDATE private_refs SET status='DELETED',updated_at=? WHERE secure_ref=?",
+                    (iso_utc(), reference),
+                )
+        except Exception as exc:
+            raise JobOpsError(
+                "PRIVATE_DELETE_DATABASE_FAILED",
+                "Private deletion could not reserve the reference for deletion; the ciphertext was retained.",
+            ) from exc
+        if ciphertext_present:
+            try:
+                self.store.delete(reference)
+            except Exception as exc:
+                # A helper can fail after performing the deletion. Probe before
+                # rolling metadata back so an already-complete deletion remains
+                # internally consistent and idempotent.
+                try:
+                    ciphertext_present = self.store.test(reference)
+                except Exception as probe_error:
+                    try:
+                        with self.database.connect() as connection:
+                            connection.execute(
+                                "UPDATE private_refs SET status='CORRUPT',updated_at=? WHERE secure_ref=?",
+                                (iso_utc(), reference),
+                            )
+                    except Exception:
+                        pass
+                    raise JobOpsError(
+                        "PRIVATE_DELETE_STATE_UNKNOWN",
+                        "Private deletion could not determine the final ciphertext state; the reference was quarantined.",
+                    ) from probe_error
+                if ciphertext_present:
+                    try:
+                        with self.database.connect() as connection:
+                            connection.execute(
+                                "UPDATE private_refs SET status=?,updated_at=? WHERE secure_ref=?",
+                                (previous_status, iso_utc(), reference),
+                            )
+                    except Exception as rollback_error:
+                        raise JobOpsError(
+                            "PRIVATE_DELETE_ROLLBACK_FAILED",
+                            "Private deletion could not restore its prior metadata after a local storage failure.",
+                        ) from rollback_error
+                    raise JobOpsError(
+                        "PRIVATE_DELETE_STORAGE_FAILED",
+                        "Private deletion failed and restored its prior reference status.",
+                    ) from exc
         return {"secure_ref": reference, "status": "DELETED", "deleted": ["ciphertext", "reference", "staging_cache"], "secure_erase_claimed": False}
 
     def purge_synthetic(self) -> dict[str, object]:
