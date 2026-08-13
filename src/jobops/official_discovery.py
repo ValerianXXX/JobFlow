@@ -4,7 +4,7 @@ import json
 import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
-from urllib.parse import parse_qsl, urljoin, urlparse
+from urllib.parse import urljoin, urlparse
 
 from .errors import JobOpsError
 from .sourcing import (
@@ -14,6 +14,7 @@ from .sourcing import (
     _provider_and_tenant,
     host_matches_registered,
     registrable_domain,
+    url_has_sensitive_query,
 )
 from .util import canonical_json, sha256_bytes, stable_id
 
@@ -23,15 +24,6 @@ MAX_LINK_EVIDENCE = 20_000
 MAX_VISIBLE_TEXT_CHARACTERS = 4_000_000
 MAX_JOB_CANDIDATES = 5_000
 PLAIN_HTTPS_URL = re.compile(r"https://[^\s<>\"']+", re.IGNORECASE)
-SENSITIVE_QUERY_KEYS = {
-    "api_key", "apikey", "auth", "authorization", "code", "credential", "email", "id_token",
-    "login", "oauth_token", "password", "secret", "session", "session_id", "sig", "signature",
-    "token", "username",
-}
-SENSITIVE_QUERY_KEY_PARTS = re.compile(
-    r"(?:^|[_-])(?:auth|credential|email|password|secret|session|signature|token|username)(?:$|[_-])",
-    re.IGNORECASE,
-)
 GENERIC_LINK_TEXT = {
     "", "apply", "apply now", "career", "careers", "career opportunities", "details", "job", "jobs",
     "join us", "learn more", "open", "view", "view job", "view role", "申请", "招聘", "查看", "查看职位",
@@ -159,14 +151,6 @@ def _is_allowed_ats(host: str, approved_ats_hosts: list[str]) -> bool:
     return any(candidate == _host(value) or candidate.endswith("." + _host(value)) for value in approved_ats_hosts)
 
 
-def _has_sensitive_query(url: str) -> bool:
-    try:
-        keys = (key.casefold() for key, _ in parse_qsl(urlparse(url).query, keep_blank_values=True))
-        return any(key in SENSITIVE_QUERY_KEYS or SENSITIVE_QUERY_KEY_PARTS.search(key) for key in keys)
-    except ValueError:
-        return True
-
-
 def _job_link(
     evidence: _LinkEvidence,
     *,
@@ -182,7 +166,7 @@ def _job_link(
         canonical = _canonical_url(urljoin(official_entry_url, href))
     except (JobOpsError, ValueError):
         return None
-    if _has_sensitive_query(canonical):
+    if url_has_sensitive_query(canonical):
         return None
     parsed = urlparse(canonical)
     host = _host(parsed.hostname or "")
@@ -257,7 +241,7 @@ def discover_official_jobs(
         raise JobOpsError("OFFICIAL_SNAPSHOT_ENCODING_INVALID", "The local snapshot must be UTF-8.") from exc
 
     entry_url = _canonical_url(official_entry_url)
-    if _has_sensitive_query(entry_url):
+    if url_has_sensitive_query(entry_url):
         raise JobOpsError(
             "OFFICIAL_URL_SENSITIVE_QUERY",
             "The official careers URL contains a credential-like query field and cannot enter a local report.",

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import ipaddress
+import re
 from dataclasses import dataclass
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import parse_qsl, urlparse, urlunparse
 
 from .errors import JobOpsError
 from .util import canonical_json, parse_iso, sha256_bytes
@@ -10,6 +11,15 @@ from .util import canonical_json, parse_iso, sha256_bytes
 
 CAREER_HINTS = ("career", "careers", "jobs", "job", "join-us", "joinus", "work-with-us", "招聘", "职位")
 COMMON_CC_SLD = {"ac", "co", "com", "edu", "gov", "go", "net", "ne", "org", "or", "mil", "nom"}
+SENSITIVE_QUERY_KEYS = {
+    "api_key", "apikey", "auth", "authorization", "code", "credential", "email", "id_token",
+    "login", "oauth_token", "password", "secret", "session", "session_id", "sig", "signature",
+    "token", "username",
+}
+SENSITIVE_QUERY_KEY_PARTS = re.compile(
+    r"(?:^|[_-])(?:auth|credential|email|password|secret|session|signature|token|username)(?:$|[_-])",
+    re.IGNORECASE,
+)
 
 
 def _host(value: str) -> str:
@@ -37,6 +47,14 @@ def registrable_domain(host: str) -> str:
 def host_matches_registered(host: str, registered: str) -> bool:
     value = _host(host)
     return value == registered or value.endswith("." + registered)
+
+
+def url_has_sensitive_query(value: str) -> bool:
+    try:
+        keys = (key.casefold() for key, _ in parse_qsl(urlparse(value).query, keep_blank_values=True))
+        return any(key in SENSITIVE_QUERY_KEYS or SENSITIVE_QUERY_KEY_PARTS.search(key) for key in keys)
+    except ValueError:
+        return True
 
 
 def _canonical_url(value: str) -> str:
@@ -146,6 +164,11 @@ def verify_source_route(
     if not navigation_history or _canonical_url(navigation_history[0]) != entry_url:
         raise JobOpsError("ROUTE_PROVENANCE_MISSING", "Navigation history must begin at the verified official careers URL.")
     canonical_history = [_canonical_url(value) for value in navigation_history]
+    if any(url_has_sensitive_query(value) for value in (entry_url, current_canonical, *canonical_history)):
+        raise JobOpsError(
+            "ROUTE_URL_SENSITIVE_QUERY",
+            "Application routes cannot retain credential-, session-, identity-, or signature-like query fields.",
+        )
     if canonical_history[-1] != current_canonical:
         raise JobOpsError("ROUTE_CURRENT_URL_MISMATCH", "navigation_history[-1] must exactly equal current_url after canonicalization.")
     intermediaries = {_host(value) for value in (approved_intermediary_hosts or [])}

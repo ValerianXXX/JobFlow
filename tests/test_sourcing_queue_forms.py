@@ -50,6 +50,39 @@ class SourcingQueueFormTests(unittest.TestCase):
             )
         self.assertEqual(caught.exception.code, "COMPANY_DOMAIN_MISMATCH")
 
+    def test_route_rejects_sensitive_query_fields_before_persistence(self) -> None:
+        with self.assertRaises(JobOpsError) as entry:
+            verify_source_route(
+                company_domain="example.com",
+                official_entry_url="https://example.com/careers?session_token=private-value",
+                current_url="https://example.com/careers?session_token=private-value",
+                navigation_history=["https://example.com/careers?session_token=private-value"],
+                approved_ats_hosts=ATS,
+                guest_available=True,
+            )
+        self.assertEqual(entry.exception.code, "ROUTE_URL_SENSITIVE_QUERY")
+
+        with self.assertRaises(JobOpsError) as ats:
+            verify_source_route(
+                company_domain="example.com",
+                official_entry_url="https://example.com/careers",
+                current_url="https://jobs.lever.co/example/123?signature=private-value",
+                navigation_history=[
+                    "https://example.com/careers",
+                    "https://jobs.lever.co/example/123?signature=private-value",
+                ],
+                approved_ats_hosts=ATS,
+                guest_available=True,
+                tenant_binding={
+                    "provider": "lever", "company_registrable_domain": "example.com",
+                    "ats_host": "jobs.lever.co", "tenant": "example", "board": "default",
+                    "job_identity": "123", "official_page_hash": HASH_A, "jd_snapshot_hash": HASH_B,
+                },
+                official_page_hash=HASH_A,
+                jd_snapshot_hash=HASH_B,
+            )
+        self.assertEqual(ats.exception.code, "ROUTE_URL_SENSITIVE_QUERY")
+
     def test_no_guest_requires_account_approval_not_auto_registration(self) -> None:
         route = verify_source_route(
             company_domain="example.com",
