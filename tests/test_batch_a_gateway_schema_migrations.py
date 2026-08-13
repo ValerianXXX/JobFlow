@@ -8,9 +8,11 @@ from datetime import datetime, timedelta, timezone
 
 from _support import PROJECT, project_temp
 from jobops.approvals import ApprovalContext, UploadBinding, issue_approval, validate_approval
+from jobops.application_execution import build_application_execution_plan
 from jobops.db import JobOpsDB, MIGRATION_001_SQL, MIGRATION_003_SQL
 from jobops.errors import JobOpsError
 from jobops.external_actions import ExternalActionGateway, ExternalActionPolicy
+from jobops.final_submission import issue_final_submission_authorization, validate_final_submission_authorization
 from jobops.runtime_schema import validate_named
 from jobops.util import iso_utc
 
@@ -71,6 +73,25 @@ def seed_awaiting(database: JobOpsDB, binding: ApprovalContext) -> None:
         )
 
 
+def execution_plan(binding: ApprovalContext) -> dict:
+    return build_application_execution_plan(
+        application_id=binding.application_id,
+        source_route={
+            "provider": "workday", "route_hash": binding.source_route_hash,
+            "guest_mode": "GUEST_SELECTED", "account_action": "NONE",
+        },
+        form_snapshot_hash=binding.form_snapshot_hash,
+        browser_plan_hash=HASH_A,
+        form_fields=[],
+        material_plan={
+            "status": "READY_FOR_REVIEW", "cover_letter": {"generation_status": "NOT_GENERATED"},
+            "portfolio_file": {"binding_status": "NOT_REQUESTED"},
+            "all_uploads_and_submission_blocked": True, "real_external_actions": 0,
+        },
+        pending_limit=10,
+    )
+
+
 class GatewayAndApprovalTests(unittest.TestCase):
     def test_raw_database_transition_cannot_enter_protected_states(self) -> None:
         with project_temp() as temp:
@@ -119,17 +140,47 @@ class GatewayAndApprovalTests(unittest.TestCase):
             approval = issue_approval(context=binding, user_confirmed=True)
             gateway = ExternalActionGateway(database, ExternalActionPolicy.isolated_fake())
             gateway.persist_approval(approval, binding)
-            result = gateway.begin_submission(binding)
+            plan = execution_plan(binding)
+            with self.assertRaises(JobOpsError) as missing:
+                gateway.begin_submission(binding, execution_plan=plan, freshness_evidence_hash=HASH_C)
+            self.assertEqual(missing.exception.code, "FINAL_SUBMISSION_AUTHORIZATION_REQUIRED")
+            with self.assertRaises(JobOpsError) as unconfirmed:
+                issue_final_submission_authorization(
+                    context=binding, execution_plan=plan, freshness_evidence_hash=HASH_C,
+                    user_confirmed=False,
+                )
+            self.assertEqual(unconfirmed.exception.code, "FINAL_SUBMISSION_CONFIRMATION_REQUIRED")
+            final_authorization = issue_final_submission_authorization(
+                context=binding, execution_plan=plan, freshness_evidence_hash=HASH_C,
+                user_confirmed=True,
+            )
+            self.assertEqual(
+                validate_final_submission_authorization(
+                    final_authorization, context=binding, execution_plan=plan,
+                    freshness_evidence_hash=HASH_B,
+                ),
+                "FINAL_SUBMISSION_AUTHORIZATION_INVALIDATED",
+            )
+            gateway.persist_final_submission_authorization(
+                final_authorization, context=binding, execution_plan=plan,
+                freshness_evidence_hash=HASH_C,
+            )
+            result = gateway.begin_submission(binding, execution_plan=plan, freshness_evidence_hash=HASH_C)
             self.assertEqual(result["status"], "SUBMITTING")
             with self.assertRaises(JobOpsError) as caught:
-                gateway.begin_submission(binding)
+                gateway.begin_submission(binding, execution_plan=plan, freshness_evidence_hash=HASH_C)
             self.assertEqual(caught.exception.code, "APPROVAL_REPLAYED")
             with database.connect() as connection:
                 application = connection.execute("SELECT status FROM applications WHERE application_id=?", (binding.application_id,)).fetchone()[0]
                 approval_status = connection.execute("SELECT status FROM approvals WHERE approval_id=?", (approval.approval_id,)).fetchone()[0]
+                final_status = connection.execute(
+                    "SELECT status FROM final_submission_authorizations WHERE authorization_id=?",
+                    (final_authorization.authorization_id,),
+                ).fetchone()[0]
                 event = connection.execute("SELECT from_state,to_state FROM events WHERE to_state='SUBMITTING'").fetchone()
             self.assertEqual(application, "SUBMITTING")
             self.assertEqual(approval_status, "CONSUMED")
+            self.assertEqual(final_status, "CONSUMED")
             self.assertEqual(tuple(event), ("APPROVED", "SUBMITTING"))
 
 
@@ -146,6 +197,19 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
         value["expires_at"] = iso_utc(now - timedelta(seconds=1))
         with self.assertRaises(JobOpsError) as caught:
             validate_named("approval", value, PROJECT / "schemas")
+        self.assertEqual(caught.exception.code, "SCHEMA_SEMANTIC_CONFLICT")
+
+    def test_final_submission_authorization_schema_rejects_bad_time_order(self) -> None:
+        now = datetime.now(timezone.utc)
+        binding = context()
+        value = issue_final_submission_authorization(
+            context=binding, execution_plan=execution_plan(binding),
+            freshness_evidence_hash=HASH_C, user_confirmed=True, now=now,
+        ).as_dict()
+        validate_named("final-submission-authorization", value, PROJECT / "schemas")
+        value["expires_at"] = iso_utc(now - timedelta(seconds=1))
+        with self.assertRaises(JobOpsError) as caught:
+            validate_named("final-submission-authorization", value, PROJECT / "schemas")
         self.assertEqual(caught.exception.code, "SCHEMA_SEMANTIC_CONFLICT")
 
     def test_versioned_migration_preserves_v1_rows_and_dry_run_constraint(self) -> None:
@@ -193,7 +257,7 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                     ("RPK-PACKET-1", "APP-PACKET", HASH_A, "secure-ref:SYNTHETIC_PACKET_1", "AWAITING_APPROVAL", now),
                 )
 
-            self.assertEqual(database.migrate(), [4])
+            self.assertEqual(database.migrate(), [4, 5])
             with database.connect() as connection:
                 row = connection.execute(
                     "SELECT packet_id,packet_version,supersedes_packet_id,status FROM review_packets"
@@ -209,6 +273,9 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                         ) VALUES(?,?,?,?,?,?,?)""",
                         ("RPK-PACKET-2", "APP-PACKET", HASH_B, "secure-ref:SYNTHETIC_PACKET_2", "AWAITING_APPROVAL", 2, now),
                     )
+                self.assertIsNotNone(connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='final_submission_authorizations'"
+                ).fetchone())
 
 
 if __name__ == "__main__":

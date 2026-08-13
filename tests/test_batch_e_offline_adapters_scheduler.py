@@ -11,10 +11,12 @@ from unittest.mock import patch
 
 from _support import project_temp
 from jobops.adapters import AdapterRegistry, DisabledAdapter, FakeBrowserPrefillAdapter, FakeOfficialSourceAdapter, FakeOutboxAdapter, FakeReceiptAdapter, FakeSubmissionAdapter, audit_real_external_actions
+from jobops.application_execution import build_application_execution_plan
 from jobops.approvals import ApprovalContext, UploadBinding, issue_approval
 from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
 from jobops.external_actions import ExternalActionGateway, ExternalActionPolicy
+from jobops.final_submission import issue_final_submission_authorization
 from jobops.fake_scheduler import FakeClock, OfflineScheduler
 from jobops.recovery import RecoveryManager
 from jobops.util import canonical_json, iso_utc, sha256_bytes
@@ -54,6 +56,19 @@ def seed_awaiting(database: JobOpsDB, ctx: ApprovalContext) -> None:
         connection.execute("INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)", (ctx.job_id, "txt", "fixture", ctx.canonical_url, "Example", "Analyst", "Remote", "FORM_VALIDATED", now, now))
         connection.execute("INSERT INTO applications VALUES(?,?,?,?,?,?,?,?,?,?)", (ctx.application_id, ctx.job_id, ctx.canonical_url, "AWAITING_APPROVAL", H, H, 1, "secure-ref:SYNTHETIC01", "AWAITING_APPROVAL", now))
         connection.execute("INSERT INTO application_bindings VALUES(?,?,?,?)", (ctx.application_id, ctx.context_hash, json.dumps(ctx.as_dict(), sort_keys=True), now))
+
+
+def execution_plan(ctx: ApprovalContext) -> dict:
+    return build_application_execution_plan(
+        application_id=ctx.application_id,
+        source_route={"provider": "company", "route_hash": H, "guest_mode": "GUEST_SELECTED", "account_action": "NONE"},
+        form_snapshot_hash=H, browser_plan_hash=H, form_fields=[],
+        material_plan={
+            "status": "READY_FOR_REVIEW", "cover_letter": {"generation_status": "NOT_GENERATED"},
+            "portfolio_file": {"binding_status": "NOT_REQUESTED"},
+            "all_uploads_and_submission_blocked": True, "real_external_actions": 0,
+        }, pending_limit=10,
+    )
 
 
 class OfflineAdapterTests(unittest.TestCase):
@@ -117,7 +132,14 @@ class OfflineAdapterTests(unittest.TestCase):
             database = JobOpsDB(temp / "jobops.db"); database.initialize(); ctx = context(); seed_awaiting(database, ctx)
             gateway = ExternalActionGateway(database, ExternalActionPolicy.isolated_fake())
             gateway.persist_approval(issue_approval(context=ctx, user_confirmed=True), ctx)
-            gateway.begin_submission(ctx)
+            plan = execution_plan(ctx)
+            final_authorization = issue_final_submission_authorization(
+                context=ctx, execution_plan=plan, freshness_evidence_hash=H, user_confirmed=True,
+            )
+            gateway.persist_final_submission_authorization(
+                final_authorization, context=ctx, execution_plan=plan, freshness_evidence_hash=H,
+            )
+            gateway.begin_submission(ctx, execution_plan=plan, freshness_evidence_hash=H)
             gateway.mark_fake_submitted(ctx.application_id, fake_evidence={"transport": "memory-only"})
             receipt = {
                 "receipt_id": "RCP-ABCDEF123456", "application_id": ctx.application_id, "source": "fake-receipt",

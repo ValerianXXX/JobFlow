@@ -102,6 +102,11 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Approval expires_at must be later than issued_at.")
         if value.get("status") == "CONSUMED" and not value.get("consumed_at"):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Consumed approval requires consumed_at.")
+    if name == "final-submission-authorization":
+        if parse_iso(value["issued_at"]) >= parse_iso(value["expires_at"]):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Final submission authorization must expire after issuance.")
+        if value.get("status") == "CONSUMED" and not value.get("consumed_at"):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Consumed final submission authorization requires consumed_at.")
     if name == "source-route":
         history = value.get("navigation_history", [])
         if not history or history[-1] != value.get("current_url"):

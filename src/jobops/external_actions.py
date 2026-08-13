@@ -7,6 +7,10 @@ from dataclasses import dataclass
 from .approvals import ApprovalBinding, ApprovalContext, validate_approval
 from .db import JobOpsDB
 from .errors import JobOpsError
+from .final_submission import (
+    FinalSubmissionAuthorization,
+    validate_final_submission_authorization,
+)
 from .runtime_schema import validate_named
 from .util import canonical_json, iso_utc, project_root, sha256_bytes, stable_id
 
@@ -116,7 +120,93 @@ class ExternalActionGateway:
             status=str(row["status"]), consumed_at=row["consumed_at"],
         )
 
-    def begin_submission(self, context: ApprovalContext) -> dict[str, object]:
+    @staticmethod
+    def _final_authorization_from_row(row) -> FinalSubmissionAuthorization:
+        return FinalSubmissionAuthorization.from_dict(dict(row))
+
+    def persist_final_submission_authorization(
+        self,
+        authorization: FinalSubmissionAuthorization,
+        *,
+        context: ApprovalContext,
+        execution_plan: dict[str, object],
+        freshness_evidence_hash: str,
+    ) -> dict[str, object]:
+        normalized = context.normalized()
+        decision = validate_final_submission_authorization(
+            authorization,
+            context=normalized,
+            execution_plan=execution_plan,
+            freshness_evidence_hash=freshness_evidence_hash,
+        )
+        if decision != "FINAL_SUBMISSION_AUTHORIZATION_VALID":
+            raise JobOpsError(decision, "The fresh final-submission authorization does not match the current application.")
+        validate_named("final-submission-authorization", authorization.as_dict(), project_root() / "schemas")
+        with self.database.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            application = connection.execute(
+                "SELECT status FROM applications WHERE application_id=?", (normalized.application_id,),
+            ).fetchone()
+            binding = connection.execute(
+                "SELECT context_hash,context_json FROM application_bindings WHERE application_id=?", (normalized.application_id,),
+            ).fetchone()
+            review_approval = connection.execute(
+                "SELECT * FROM approvals WHERE application_id=? ORDER BY issued_at DESC LIMIT 1", (normalized.application_id,),
+            ).fetchone()
+            if application is None or binding is None:
+                raise JobOpsError("APPLICATION_BINDING_MISSING", "Application or persisted binding context is missing.")
+            if application["status"] != "APPROVED" or review_approval is None or review_approval["status"] != "APPROVED":
+                raise JobOpsError("REVIEW_PACKET_APPROVAL_REQUIRED", "Approve the current review packet before final submission authorization.")
+            review_decision = validate_approval(
+                self._approval_from_row(review_approval), context=normalized,
+                required_actions=("submit_application",),
+            )
+            if review_decision != "APPROVAL_VALID":
+                raise JobOpsError(review_decision, "The review-packet approval is no longer current.")
+            if binding["context_hash"] != normalized.context_hash or json.loads(binding["context_json"]) != normalized.as_dict():
+                raise JobOpsError("FINAL_SUBMISSION_AUTHORIZATION_INVALIDATED", "Application content changed before final confirmation.")
+            connection.execute(
+                "UPDATE final_submission_authorizations SET status='INVALIDATED' WHERE application_id=? AND status='AUTHORIZED'",
+                (normalized.application_id,),
+            )
+            connection.execute(
+                """INSERT INTO final_submission_authorizations(
+                authorization_id,application_id,application_context_hash,execution_plan_hash,review_packet_hash,
+                freshness_evidence_hash,source_route_hash,form_snapshot_hash,uploads_hash,action,bound_hash,
+                issued_at,expires_at,nonce,authorization_version,status,consumed_at
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    authorization.authorization_id, authorization.application_id,
+                    authorization.application_context_hash, authorization.execution_plan_hash,
+                    authorization.review_packet_hash, authorization.freshness_evidence_hash,
+                    authorization.source_route_hash, authorization.form_snapshot_hash,
+                    authorization.uploads_hash, authorization.action, authorization.bound_hash,
+                    authorization.issued_at, authorization.expires_at, authorization.nonce,
+                    authorization.authorization_version, authorization.status, authorization.consumed_at,
+                ),
+            )
+            connection.execute(
+                "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
+                (
+                    normalized.application_id, "FINAL_SUBMISSION_AUTHORIZATION_PERSISTED", "APPROVED", "APPROVED",
+                    json.dumps({"authorization_id": authorization.authorization_id, "bound_hash": authorization.bound_hash}),
+                    iso_utc(),
+                ),
+            )
+        return {
+            "status": "FINAL_SUBMISSION_AUTHORIZED",
+            "authorization_id": authorization.authorization_id,
+            "expires_at": authorization.expires_at,
+            "real_side_effect": False,
+        }
+
+    def begin_submission(
+        self,
+        context: ApprovalContext,
+        *,
+        execution_plan: dict[str, object] | None = None,
+        freshness_evidence_hash: str | None = None,
+    ) -> dict[str, object]:
         normalized = context.normalized()
         if not self.policy.phase5_authorized:
             self._raise_attempt(normalized, "PHASE_NOT_AUTHORIZED", "Phase 5 authorization is absent; submission cannot begin.")
@@ -128,6 +218,12 @@ class ExternalActionGateway:
             self._raise_attempt(normalized, "REAL_TRANSPORT_FORBIDDEN", "Only an isolated fake transport may enter synthetic submission.")
         if normalized.unresolved_stops or normalized.mandatory_unknowns:
             self._raise_attempt(normalized, "BLOCKING_FIELDS_UNRESOLVED", "STOP fields or mandatory UNKNOWN values remain unresolved.")
+        if not isinstance(execution_plan, dict) or not freshness_evidence_hash:
+            self._raise_attempt(
+                normalized,
+                "FINAL_SUBMISSION_AUTHORIZATION_REQUIRED",
+                "A fresh, plan-bound final-submission authorization is required.",
+            )
 
         try:
             with self.database.connect() as connection:
@@ -141,10 +237,16 @@ class ExternalActionGateway:
                 approval_row = connection.execute(
                     "SELECT * FROM approvals WHERE application_id=? ORDER BY issued_at DESC LIMIT 1", (normalized.application_id,)
                 ).fetchone()
+                final_row = connection.execute(
+                    "SELECT * FROM final_submission_authorizations WHERE application_id=? ORDER BY issued_at DESC LIMIT 1",
+                    (normalized.application_id,),
+                ).fetchone()
                 if application is None or binding is None:
                     raise JobOpsError("APPLICATION_BINDING_MISSING", "Application binding is missing.")
                 if approval_row is None:
                     raise JobOpsError("APPROVAL_REQUIRED", "A current persisted approval is required.")
+                if final_row is None:
+                    raise JobOpsError("FINAL_SUBMISSION_AUTHORIZATION_REQUIRED", "A fresh final-submission authorization is required.")
                 if approval_row["status"] == "CONSUMED" or application["status"] == "SUBMITTING":
                     raise JobOpsError("APPROVAL_REPLAYED", "The one-time approval has already been consumed.")
                 if application["status"] != "APPROVED":
@@ -155,7 +257,23 @@ class ExternalActionGateway:
                 decision = validate_approval(approval, context=normalized, required_actions=("submit_application",))
                 if decision != "APPROVAL_VALID":
                     raise JobOpsError(decision, "Approval is not valid for submit_application.")
+                final_authorization = self._final_authorization_from_row(final_row)
+                final_decision = validate_final_submission_authorization(
+                    final_authorization,
+                    context=normalized,
+                    execution_plan=execution_plan,
+                    freshness_evidence_hash=freshness_evidence_hash,
+                )
+                if final_decision != "FINAL_SUBMISSION_AUTHORIZATION_VALID":
+                    raise JobOpsError(final_decision, "Final submission authorization is no longer valid.")
                 now = iso_utc()
+                final_updated = connection.execute(
+                    """UPDATE final_submission_authorizations SET status='CONSUMED',consumed_at=?
+                       WHERE authorization_id=? AND status='AUTHORIZED' AND consumed_at IS NULL""",
+                    (now, final_authorization.authorization_id),
+                ).rowcount
+                if final_updated != 1:
+                    raise JobOpsError("FINAL_SUBMISSION_AUTHORIZATION_REPLAYED", "Final submission authorization lost a concurrent race.")
                 updated = connection.execute(
                     "UPDATE approvals SET status='CONSUMED',consumed_at=? WHERE approval_id=? AND status='APPROVED' AND consumed_at IS NULL",
                     (now, approval.approval_id),
@@ -170,7 +288,13 @@ class ExternalActionGateway:
                     raise JobOpsError("APPLICATION_STATE_RACE", "Application state changed during approval consumption.")
                 connection.execute(
                     "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
-                    (normalized.application_id, "APPROVAL_CONSUMED", "APPROVED", "SUBMITTING", json.dumps({"approval_id": approval.approval_id}), now),
+                    (
+                        normalized.application_id, "APPROVAL_CONSUMED", "APPROVED", "SUBMITTING",
+                        json.dumps({
+                            "approval_id": approval.approval_id,
+                            "final_authorization_id": final_authorization.authorization_id,
+                        }), now,
+                    ),
                 )
                 connection.execute(
                     """INSERT INTO external_action_attempts(

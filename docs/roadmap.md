@@ -13,6 +13,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] AI-to-paragraph mapping for ordinary DOCX masters with one-time applicant approval of hash-bound safe tailoring positions.
 - [x] Completed real-user onboarding context can produce an encrypted, rendered offline application review packet from explicitly saved JD, official-page and form evidence through the bilingual home page, with automatic route construction, one-time staging, failure rollback and zero live transport.
 - [x] Transactional pending-review queue with explicit approve/reject/revise/defer decisions.
+- [x] Separate short-lived one-time final-submit authorization bound to the exact execution plan, review packet, route, form, uploads and freshness evidence; review approval alone cannot submit.
 - [x] Offline company-careers discovery from saved HTML/page snapshots and saved Greenhouse/Lever job JSON.
 - [x] Fail-closed local ATS form and Workday saved-sequence analysis.
 - [x] Synthetic Greenhouse vertical to `AWAITING_APPROVAL`; Lever contract evidence.

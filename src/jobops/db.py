@@ -12,7 +12,7 @@ from .state_machine import BLOCKING_STATES, assert_transition
 from .util import iso_utc
 
 
-LATEST_SCHEMA_VERSION = 4
+LATEST_SCHEMA_VERSION = 5
 
 
 MIGRATION_001_SQL = """
@@ -192,6 +192,34 @@ COMMIT;
 """
 
 
+MIGRATION_005_SQL = """
+BEGIN IMMEDIATE;
+CREATE TABLE IF NOT EXISTS final_submission_authorizations (
+    authorization_id TEXT PRIMARY KEY,
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    application_context_hash TEXT NOT NULL,
+    execution_plan_hash TEXT NOT NULL,
+    review_packet_hash TEXT NOT NULL,
+    freshness_evidence_hash TEXT NOT NULL,
+    source_route_hash TEXT NOT NULL,
+    form_snapshot_hash TEXT NOT NULL,
+    uploads_hash TEXT NOT NULL,
+    action TEXT NOT NULL CHECK(action = 'submit_application'),
+    bound_hash TEXT NOT NULL,
+    issued_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    nonce TEXT NOT NULL,
+    authorization_version INTEGER NOT NULL CHECK(authorization_version >= 1),
+    status TEXT NOT NULL CHECK(status IN ('AUTHORIZED','CONSUMED','EXPIRED','INVALIDATED','REVOKED')),
+    consumed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_final_submission_authorizations_application
+ON final_submission_authorizations(application_id,issued_at DESC);
+INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','5');
+COMMIT;
+"""
+
+
 def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
@@ -268,6 +296,10 @@ class JobOpsDB:
             if version == 3:
                 connection.executescript(MIGRATION_004_SQL)
                 applied.append(4)
+                version = 4
+            if version == 4:
+                connection.executescript(MIGRATION_005_SQL)
+                applied.append(5)
         return applied
 
     def initialize(self) -> None:

@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Review approval and final submission authorization are now cryptographically separate. The final gate expires within 1–30 minutes, binds the current execution plan, packet, route, form, uploads and freshness evidence, rejects stale/replayed consent, and is consumed atomically with the review approval in isolated tests; production transport remains disabled.
+- 审阅批准与最终提交授权现在在技术上完全分离。最终门禁仅在 1—30 分钟内有效，绑定当前执行计划、审阅包、路线、表单、材料与新鲜度证据，拒绝过期、内容变化或重放，并在隔离测试中与审阅批准原子消费；生产传输仍关闭。
 - The bilingual home page can now prepare one real-profile offline application from three explicitly selected saved files. It constructs the company/ATS route locally, retains no input snapshot, opens the encrypted review packet, and rolls back both queue capacity and newly generated ciphertext if preparation fails; network and real external actions remain zero.
 - 中英双语首页现在可以从三份用户明确选择的本机文件准备一项真实资料离线申请：本机自动建立公司官网/ATS 路线，不保留输入快照，生成后直接打开加密审阅包；如中途失败，会同时释放队列容量并删除本轮新建密文，网络与真实外部动作仍为 0。
 - A completed non-synthetic onboarding profile can now drive the same local application pipeline as the demo: approved Claims are selected against a saved JD, only applicant-approved Master Resume positions are changed in a copy, Word renders the result for structural/visual QA, and the encrypted packet enters `AWAITING_APPROVAL`. Live transport remains absent.

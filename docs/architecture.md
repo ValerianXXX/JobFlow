@@ -40,6 +40,7 @@ flowchart LR
 | Offline application intake | Three explicitly selected saved inputs are framed in one localhost request, staged outside the project, never retained, and rolled back on preparation failure | 三份明确选择的本机输入通过单次 localhost 请求接入，只在项目外暂存，不保留；准备失败即回滚 |
 | Browser/ATS | Opaque field plans and zero-modification fake adapter | 不透明字段计划与零修改假适配器 |
 | Queue | Transactional capacity and FIFO deferred intake | 事务容量与延后任务 FIFO |
+| Final submission | Review approval is insufficient; a separate 1–30 minute, one-time authorization binds plan, packet, route, form, uploads and fresh evidence, then both approvals are consumed atomically | 审阅批准不足以提交；必须再取得绑定计划、审阅包、路线、表单、材料与新鲜证据的 1—30 分钟一次性授权，并原子消费两张授权 |
 | External actions | Production transport absent and fail-closed | 生产传输不存在且失败关闭 |
 
 ## Main packages / 主要模块
@@ -51,6 +52,7 @@ flowchart LR
 - `official_discovery`, `sourcing`, `ats_browser`, `ats_capabilities`: offline official-source and ATS safety framework.
 - `application_materials`, `orchestrator`, `queue_manager`, `continuous_intake`: one-master per-job material planning and content-bound processing to the bounded review queue. Both the synthetic tour and a completed DPAPI-backed user profile use this same offline pipeline; the latter accepts only explicit local snapshots and current applicant approvals.
 - `application_execution`: hash-bound six-step runbook for freshness, guest entry, prefill, upload, protected questions and final submission; every step remains planning-only until its exact approval boundary is separately enabled.
+- `final_submission`, `external_actions`: separate fresh final-confirmation artifact, database persistence, expiry/replay checks and atomic dual-approval consumption; only isolated fake transport can exercise the transition.
 - `public_release`, `release_candidate`, `release`: current-tree/history privacy gates and release evidence.
 
 Every persisted transition is content-bound or auditable. `SUBMISSION_UNKNOWN`, CAPTCHA, MFA, OTP, login and account creation do not have an automatic continuation path.

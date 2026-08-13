@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/final-submission-authorization.schema.json",
+  "title": "Fresh One-Time Final Submission Authorization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authorization_id", "application_id", "application_context_hash", "execution_plan_hash",
+    "review_packet_hash", "freshness_evidence_hash", "source_route_hash", "form_snapshot_hash",
+    "uploads_hash", "action", "bound_hash", "issued_at", "expires_at", "nonce",
+    "authorization_version", "status", "consumed_at"
+  ],
+  "properties": {
+    "authorization_id": {"type": "string", "pattern": "^FSA-[A-F0-9]{12}$"},
+    "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "application_context_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "execution_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "review_packet_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "freshness_evidence_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "uploads_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "action": {"const": "submit_application"},
+    "bound_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "nonce": {"type": "string", "pattern": "^nonce-[a-f0-9]{48}$"},
+    "authorization_version": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["AUTHORIZED", "CONSUMED", "EXPIRED", "INVALIDATED", "REVOKED"]},
+    "consumed_at": {"type": ["string", "null"], "format": "date-time"}
+  }
+}

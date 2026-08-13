@@ -113,6 +113,15 @@ def valid_fixtures() -> dict[str, dict]:
             "context_hash": H, "issued_at": T, "expires_at": FUTURE, "nonce": "nonce-" + "a" * 48,
             "approval_version": 2, "status": "APPROVED", "consumed_at": None,
         },
+        "final-submission-authorization": {
+            "authorization_id": "FSA-ABCDEF123456", "application_id": APP,
+            "application_context_hash": H, "execution_plan_hash": H,
+            "review_packet_hash": H, "freshness_evidence_hash": H,
+            "source_route_hash": H, "form_snapshot_hash": H, "uploads_hash": H,
+            "action": "submit_application", "bound_hash": H,
+            "issued_at": T, "expires_at": FUTURE, "nonce": "nonce-" + "b" * 48,
+            "authorization_version": 1, "status": "AUTHORIZED", "consumed_at": None,
+        },
         "audit-event": {"event_id": "EVT-ABCDEF123456", "application_id": APP, "event_type": "STATE_TRANSITION", "from_state": "FORM_VALIDATED", "to_state": "AWAITING_APPROVAL", "payload_hash": H, "created_at": T},
         "candidate-profile": {"profile_ref": "secure-ref:SYNTHETIC01", "profile_version": "1", "candidate_display_name": "Synthetic Candidate", "target_functions": ["analysis"], "target_levels": ["mid"], "locations": ["remote"], "remote_preference": "remote", "minimum_salary": None, "work_authorization": "UNKNOWN", "skills": ["Python"], "years_experience": 3},
         "candidate-profile-draft": {
