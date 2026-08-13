@@ -23,6 +23,7 @@ MAX_SNAPSHOT_BYTES = 32 * 1024 * 1024
 MAX_LINK_EVIDENCE = 20_000
 MAX_VISIBLE_TEXT_CHARACTERS = 4_000_000
 MAX_JOB_CANDIDATES = 5_000
+MAX_SNAPSHOT_HTML_EVENTS = 300_000
 PLAIN_HTTPS_URL = re.compile(r"https://[^\s<>\"']+", re.IGNORECASE)
 GENERIC_LINK_TEXT = {
     "", "apply", "apply now", "career", "careers", "career opportunities", "details", "job", "jobs",
@@ -58,6 +59,15 @@ class _SnapshotHTMLParser(HTMLParser):
         self._suppressed_depth = 0
         self.visible_text: list[str] = []
         self._visible_text_characters = 0
+        self._html_events = 0
+
+    def _count_event(self) -> None:
+        self._html_events += 1
+        if self._html_events > MAX_SNAPSHOT_HTML_EVENTS:
+            raise JobOpsError(
+                "OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT",
+                "The local careers snapshot exceeds the bounded HTML parsing event limit.",
+            )
 
     def _append_link(self, evidence: _LinkEvidence) -> None:
         if len(self.links) >= MAX_LINK_EVIDENCE:
@@ -68,6 +78,7 @@ class _SnapshotHTMLParser(HTMLParser):
         self.links.append(evidence)
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self._count_event()
         lowered = tag.casefold()
         values = {key.casefold(): (value or "") for key, value in attrs}
         if lowered in {"script", "style", "noscript", "template"}:
@@ -94,6 +105,7 @@ class _SnapshotHTMLParser(HTMLParser):
             )
 
     def handle_endtag(self, tag: str) -> None:
+        self._count_event()
         lowered = tag.casefold()
         if lowered in {"script", "style", "noscript", "template"}:
             if self._suppressed_depth:
@@ -122,6 +134,7 @@ class _SnapshotHTMLParser(HTMLParser):
             self._heading_text = []
 
     def handle_data(self, data: str) -> None:
+        self._count_event()
         if self._suppressed_depth:
             return
         if self._anchor is not None:

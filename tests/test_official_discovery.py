@@ -118,6 +118,17 @@ class OfflineOfficialDiscoveryTests(unittest.TestCase):
                 )
         self.assertEqual(complexity.exception.code, "OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT")
 
+        tag_flood = ("<html><body>" + ("<div></div>" * 20) + "</body></html>").encode()
+        with patch("jobops.official_discovery.MAX_SNAPSHOT_HTML_EVENTS", 20):
+            with self.assertRaises(JobOpsError) as event_limit:
+                discover_official_jobs(
+                    tag_flood,
+                    official_entry_url="https://example.com/careers",
+                    company_domain="example.com",
+                    approved_ats_hosts=APPROVED_ATS,
+                )
+        self.assertEqual(event_limit.exception.code, "OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT")
+
     def test_cli_emits_path_free_offline_report(self) -> None:
         command = [
             sys.executable,
