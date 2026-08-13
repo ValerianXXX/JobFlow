@@ -10,6 +10,18 @@ from jobops.release_candidate import run_source_candidate_smoke, verify_candidat
 
 
 class ReleaseCandidateTests(unittest.TestCase):
+    def test_archive_rejects_localized_powershell_without_utf8_bom(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-candidate-test-") as raw_temp:
+            path = Path(raw_temp) / "candidate.zip"
+            prefix = "JobFlow-v0.1.0/"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr(prefix + "scripts/start-jobflow-demo.ps1", "Write-Host '中文'")
+            result = verify_candidate_archive(PROJECT, path, prefix=prefix)
+            self.assertIn(
+                "windows_powershell_utf8_bom_missing",
+                {item["kind"] for item in result["findings"]},
+            )
+
     def test_archive_requires_complete_source_app_and_rejects_private_state(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-candidate-test-") as raw_temp:
             path = Path(raw_temp) / "candidate.zip"

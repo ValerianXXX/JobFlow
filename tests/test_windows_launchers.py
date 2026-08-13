@@ -10,6 +10,22 @@ from jobops import __version__
 
 
 class WindowsLauncherTests(unittest.TestCase):
+    def test_localized_powershell_scripts_have_windows_utf8_bom(self) -> None:
+        localized_scripts = (
+            "check-jobflow.ps1",
+            "check-release-readiness.ps1",
+            "install-jobflow.ps1",
+            "start-jobflow-demo.ps1",
+            "start-jobflow.ps1",
+        )
+        for name in localized_scripts:
+            with self.subTest(script=name):
+                payload = (PROJECT / "scripts" / name).read_bytes()
+                self.assertTrue(
+                    payload.startswith(b"\xef\xbb\xbf"),
+                    f"{name} must include a UTF-8 BOM for Windows PowerShell 5.1",
+                )
+
     def test_installer_discovers_python_without_hardcoding_one_minor(self) -> None:
         script = (PROJECT / "scripts" / "install-jobflow.ps1").read_text(encoding="utf-8-sig")
         self.assertIn('@{ Name = "python"; Prefix = @() }', script)

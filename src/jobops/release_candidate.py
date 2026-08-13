@@ -24,6 +24,15 @@ from .public_release import (
 from .util import sha256_file, write_json
 
 
+WINDOWS_POWERSHELL_UTF8_BOM_FILES = {
+    "scripts/check-jobflow.ps1",
+    "scripts/check-release-readiness.ps1",
+    "scripts/install-jobflow.ps1",
+    "scripts/start-jobflow-demo.ps1",
+    "scripts/start-jobflow.ps1",
+}
+
+
 def _git(project: Path, *arguments: str) -> bytes:
     completed = subprocess.run(["git", *arguments], cwd=project, capture_output=True, check=False)
     if completed.returncode != 0:
@@ -61,6 +70,8 @@ def verify_candidate_archive(project: Path, archive_path: Path, *, prefix: str) 
                     continue
                 relative_files.append(relative)
                 payload = archive.read(info)
+                if relative in WINDOWS_POWERSHELL_UTF8_BOM_FILES and not payload.startswith(b"\xef\xbb\xbf"):
+                    findings.append({"kind": "windows_powershell_utf8_bom_missing", "path": relative})
                 suffix = path.suffix.casefold()
                 if suffix in TEXT_SUFFIXES or path.name in {"LICENSE", ".jobops-root"}:
                     try:
