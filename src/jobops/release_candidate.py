@@ -100,8 +100,27 @@ def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Pa
         [sys.executable, str(entry), "--help"], cwd=candidate, env=environment,
         capture_output=True, text=True, timeout=30, check=False,
     )
-    if help_result.returncode != 0 or not all(command in help_result.stdout for command in ("onboarding-center", "demo")):
+    if help_result.returncode != 0 or not all(command in help_result.stdout for command in ("onboarding-center", "demo", "check-private-store")):
         raise JobOpsError("RELEASE_SMOKE_CLI_FAILED", "The extracted source candidate public CLI did not start correctly.")
+    private_check = subprocess.run(
+        [sys.executable, str(entry), "check-private-store"], cwd=candidate, env=environment,
+        capture_output=True, text=True, timeout=30, check=False,
+    )
+    try:
+        private_result = json.loads(private_check.stdout)
+    except json.JSONDecodeError as error:
+        raise JobOpsError("RELEASE_SMOKE_PRIVATE_CHECK_INVALID", "The extracted source candidate private-store check was invalid.") from error
+    if (
+        private_check.returncode != 0
+        or private_result.get("status") != "PRIVATE_STORE_HEALTHY"
+        or private_result.get("expected_ciphertext_files") != 0
+        or private_result.get("ciphertext_files") != 0
+        or private_result.get("private_values_read") != 0
+        or private_result.get("private_values_emitted") != 0
+        or private_result.get("network_actions") != 0
+        or private_result.get("real_external_actions") != 0
+    ):
+        raise JobOpsError("RELEASE_SMOKE_PRIVATE_CHECK_FAILED", "The extracted source candidate private-store boundary failed.")
     service_result = subprocess.run(
         [sys.executable, str(smoke)], cwd=candidate, env=environment,
         capture_output=True, text=True, timeout=45, check=False,
@@ -122,6 +141,8 @@ def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Pa
         raise JobOpsError("RELEASE_SMOKE_BOUNDARY_FAILED", "The extracted source candidate crossed a startup boundary.")
     return {
         **required,
+        "private_store_health": "PASS",
+        "private_ciphertext_files": 0,
         "loopback_requests": int(result.get("loopback_requests", 0)),
         "security_headers": result.get("security_headers"),
         "project_state_isolated": bool(result.get("project_state_isolated")),
