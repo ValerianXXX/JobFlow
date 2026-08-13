@@ -125,6 +125,8 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(dashboard["pending_applications"][0]["packet_hash_prefix"], "sha256:" + "4" * 8)
             self.assertEqual(dashboard["safety"]["real_external_actions"], 0)
             self.assertEqual(dashboard["safety"]["real_website_accesses"], 0)
+            self.assertFalse(dashboard["safety"]["external_action_control_enabled"])
+            self.assertEqual(dashboard["safety"]["external_action_control_mode"], "PRODUCTION_DISABLED")
             self.assertEqual(dashboard["deferred_intake"][0]["status"], "DEFERRED")
             self.assertTrue(dashboard["deferred_intake"][0]["safe_intake_id"].startswith("sha256:"))
             serialized = json.dumps(dashboard, ensure_ascii=False)
@@ -140,6 +142,13 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(recent[0]["packet_id"], "PKT-DASH-V2")
             self.assertEqual(recent[0]["packet_version"], 2)
             self.assertEqual(recent[0]["packet_status"], "REJECTED")
+
+            with self.assertRaises(JobOpsError) as unconfirmed:
+                service.disable_external_actions({"user_confirmed": False})
+            self.assertEqual(unconfirmed.exception.code, "EXPLICIT_CONFIRMATION_REQUIRED")
+            stopped = service.disable_external_actions({"user_confirmed": True})
+            self.assertEqual(stopped["status"], "EXTERNAL_ACTIONS_DISABLED")
+            self.assertEqual(stopped["real_external_actions"], 0)
 
     def test_bootstrap_discloses_only_truthful_offline_ats_capabilities(self) -> None:
         with project_temp() as root:
@@ -1633,6 +1642,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="deferredDashboardList"', html)
         self.assertIn('id="recentDashboardList"', html)
         self.assertIn('id="saveQueueLimit"', html)
+        self.assertIn('id="emergencyStop"', html)
         self.assertIn('id="reviewPacketPanel"', html)
         self.assertIn('id="officialSnapshotFile"', html)
         self.assertIn('id="analyzeOfficialSnapshot"', html)
@@ -1652,6 +1662,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('discover-official-jobs?official_url=', app)
         self.assertIn("function renderReviewPacket()", app)
         self.assertIn('api("queue-limit"', app)
+        self.assertIn('api("external-action-kill-switch"', app)
         self.assertIn('api("review-packet"', app)
         self.assertIn('api("queue-decision"', app)
         self.assertIn('api("approve-external-claims"', app)

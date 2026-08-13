@@ -257,7 +257,7 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                     ("RPK-PACKET-1", "APP-PACKET", HASH_A, "secure-ref:SYNTHETIC_PACKET_1", "AWAITING_APPROVAL", now),
                 )
 
-            self.assertEqual(database.migrate(), [4, 5, 6])
+            self.assertEqual(database.migrate(), [4, 5, 6, 7])
             with database.connect() as connection:
                 row = connection.execute(
                     "SELECT packet_id,packet_version,supersedes_packet_id,status FROM review_packets"
@@ -279,6 +279,10 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                 self.assertIsNotNone(connection.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name='application_execution_runs'"
                 ).fetchone())
+                control = connection.execute(
+                    "SELECT enabled,mode FROM external_action_control WHERE singleton_id=1"
+                ).fetchone()
+                self.assertEqual(tuple(control), (0, "PRODUCTION_DISABLED"))
 
 
 if __name__ == "__main__":

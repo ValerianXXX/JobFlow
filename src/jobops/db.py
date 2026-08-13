@@ -12,7 +12,7 @@ from .state_machine import BLOCKING_STATES, assert_transition
 from .util import iso_utc
 
 
-LATEST_SCHEMA_VERSION = 6
+LATEST_SCHEMA_VERSION = 7
 
 
 MIGRATION_001_SQL = """
@@ -264,6 +264,61 @@ COMMIT;
 """
 
 
+MIGRATION_007_SQL = """
+BEGIN IMMEDIATE;
+CREATE TABLE IF NOT EXISTS external_action_control (
+    singleton_id INTEGER PRIMARY KEY CHECK(singleton_id = 1),
+    enabled INTEGER NOT NULL CHECK(enabled IN (0,1)),
+    generation INTEGER NOT NULL CHECK(generation >= 1),
+    mode TEXT NOT NULL CHECK(mode IN ('PRODUCTION_DISABLED','ISOLATED_FAKE')),
+    updated_at TEXT NOT NULL
+);
+INSERT OR IGNORE INTO external_action_control(singleton_id,enabled,generation,mode,updated_at)
+VALUES(1,0,1,'PRODUCTION_DISABLED',datetime('now'));
+CREATE TABLE IF NOT EXISTS external_action_sessions (
+    session_id TEXT PRIMARY KEY,
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    application_context_hash TEXT NOT NULL,
+    source_route_hash TEXT NOT NULL,
+    form_snapshot_hash TEXT NOT NULL,
+    uploads_hash TEXT NOT NULL,
+    site_policy_version TEXT NOT NULL,
+    allowed_actions_json TEXT NOT NULL,
+    control_generation INTEGER NOT NULL CHECK(control_generation >= 1),
+    mode TEXT NOT NULL CHECK(mode IN ('PRODUCTION_DISABLED','ISOLATED_FAKE')),
+    bound_hash TEXT NOT NULL,
+    issued_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    nonce TEXT NOT NULL,
+    session_version INTEGER NOT NULL CHECK(session_version >= 1),
+    status TEXT NOT NULL CHECK(status IN ('AUTHORIZED','REVOKED','EXPIRED','INVALIDATED')),
+    revoked_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_external_action_sessions_application
+ON external_action_sessions(application_id,issued_at DESC);
+CREATE TABLE IF NOT EXISTS external_action_session_uses (
+    use_id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES external_action_sessions(session_id),
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    action TEXT NOT NULL,
+    request_hash TEXT NOT NULL,
+    adapter_kind TEXT NOT NULL,
+    result_code TEXT NOT NULL,
+    real_side_effect INTEGER NOT NULL CHECK(real_side_effect = 0),
+    used_at TEXT NOT NULL,
+    UNIQUE(session_id,action)
+);
+CREATE TRIGGER IF NOT EXISTS external_action_session_uses_append_only_update
+BEFORE UPDATE ON external_action_session_uses
+BEGIN SELECT RAISE(ABORT, 'external action session uses are append-only'); END;
+CREATE TRIGGER IF NOT EXISTS external_action_session_uses_append_only_delete
+BEFORE DELETE ON external_action_session_uses
+BEGIN SELECT RAISE(ABORT, 'external action session uses are append-only'); END;
+INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','7');
+COMMIT;
+"""
+
+
 def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
@@ -348,6 +403,10 @@ class JobOpsDB:
             if version == 5:
                 connection.executescript(MIGRATION_006_SQL)
                 applied.append(6)
+                version = 6
+            if version == 6:
+                connection.executescript(MIGRATION_007_SQL)
+                applied.append(7)
         return applied
 
     def initialize(self) -> None:

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/external-action-session.schema.json",
+  "title": "Scoped External Action Session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "session_id", "application_id", "application_context_hash", "source_route_hash",
+    "form_snapshot_hash", "uploads_hash", "site_policy_version", "allowed_actions",
+    "control_generation", "mode", "bound_hash", "issued_at", "expires_at", "nonce",
+    "session_version", "status", "revoked_at"
+  ],
+  "properties": {
+    "session_id": {"type": "string", "pattern": "^EAS-[A-F0-9]{12}$"},
+    "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "application_context_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "uploads_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "site_policy_version": {"type": "string", "minLength": 1},
+    "allowed_actions": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {
+        "enum": [
+          "read_official_job", "inspect_application_form", "prefill_application_form",
+          "upload_materials"
+        ]
+      }
+    },
+    "control_generation": {"type": "integer", "minimum": 1},
+    "mode": {"enum": ["PRODUCTION_DISABLED", "ISOLATED_FAKE"]},
+    "bound_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "nonce": {"type": "string", "pattern": "^nonce-[a-f0-9]{48}$"},
+    "session_version": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["AUTHORIZED", "REVOKED", "EXPIRED", "INVALIDATED"]},
+    "revoked_at": {"type": ["string", "null"], "format": "date-time"}
+  }
+}

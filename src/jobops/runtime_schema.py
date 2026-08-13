@@ -120,6 +120,15 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         pair = (value.get("phase"), value.get("status"))
         if pair not in expected.get(value.get("sequence"), set()):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Execution checkpoint phase and status do not match its fixed sequence.")
+    if name == "external-action-session":
+        if parse_iso(value["issued_at"]) >= parse_iso(value["expires_at"]):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "External action session must expire after issuance.")
+        if value.get("allowed_actions") != sorted(value.get("allowed_actions", [])):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "External action session scopes must be canonical and sorted.")
+        if value.get("status") == "REVOKED" and not value.get("revoked_at"):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "A revoked action session requires revoked_at.")
+        if value.get("status") != "REVOKED" and value.get("revoked_at"):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Only a revoked action session may contain revoked_at.")
     if name == "source-route":
         history = value.get("navigation_history", [])
         if not history or history[-1] != value.get("current_url"):

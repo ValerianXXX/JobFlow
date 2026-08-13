@@ -131,6 +131,15 @@ def valid_fixtures() -> dict[str, dict]:
             "freshness_evidence_hash": H, "evidence_hash": H, "created_at": T,
             "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
         },
+        "external-action-session": {
+            "session_id": "EAS-ABCDEF123456", "application_id": APP,
+            "application_context_hash": H, "source_route_hash": H,
+            "form_snapshot_hash": H, "uploads_hash": H, "site_policy_version": "1",
+            "allowed_actions": ["inspect_application_form", "read_official_job"],
+            "control_generation": 2, "mode": "ISOLATED_FAKE", "bound_hash": H,
+            "issued_at": T, "expires_at": FUTURE, "nonce": "nonce-" + "c" * 48,
+            "session_version": 1, "status": "AUTHORIZED", "revoked_at": None,
+        },
         "audit-event": {"event_id": "EVT-ABCDEF123456", "application_id": APP, "event_type": "STATE_TRANSITION", "from_state": "FORM_VALIDATED", "to_state": "AWAITING_APPROVAL", "payload_hash": H, "created_at": T},
         "candidate-profile": {"profile_ref": "secure-ref:SYNTHETIC01", "profile_version": "1", "candidate_display_name": "Synthetic Candidate", "target_functions": ["analysis"], "target_levels": ["mid"], "locations": ["remote"], "remote_preference": "remote", "minimum_salary": None, "work_authorization": "UNKNOWN", "skills": ["Python"], "years_experience": 3},
         "candidate-profile-draft": {
@@ -386,6 +395,7 @@ class RuntimeSchemaMatrixTests(unittest.TestCase):
             "ats-capability-report": ("provider_count", 2),
             "continuous-intake-plan": ("job_count", 4),
             "application-execution-checkpoint": ("sequence", 1),
+            "external-action-session": ("expires_at", T),
         }
         for name, (field, invalid) in conflicts.items():
             changed = copy.deepcopy(self.fixtures[name]); changed[field] = invalid

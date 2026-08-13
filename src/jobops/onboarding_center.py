@@ -40,6 +40,7 @@ from .external_claims import (
     validate_external_claim_set_integrity,
 )
 from .external_actions import ExternalActionGateway, ExternalActionPolicy
+from .external_action_sessions import ExternalActionSessionManager, ExternalActionSessionPolicy
 from .official_discovery import MAX_SNAPSHOT_BYTES, discover_official_jobs
 from .orchestrator import JobOpsOrchestrator, MAX_JD_SOURCE_BYTES, _read_jd
 from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, REQUIRED_FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
@@ -1149,6 +1150,9 @@ class OnboardingCenterService:
     def _pipeline_dashboard(self, state: dict[str, Any]) -> dict[str, Any]:
         queue = QueueManager(self.database).status()
         actions = audit_real_external_actions(self.database)
+        action_control = ExternalActionSessionManager(
+            self.database, ExternalActionSessionPolicy.production_disabled()
+        ).control_state()
         with self.database.connect() as connection:
             status_rows = connection.execute(
                 "SELECT status,COUNT(*) AS total FROM applications GROUP BY status ORDER BY status"
@@ -1232,9 +1236,19 @@ class OnboardingCenterService:
                 "external_action_attempts": int(actions["attempt_count"]),
                 "real_external_actions": int(actions["real_external_actions"]),
                 "knowledge_write_operations": 0,
+                "external_action_control_enabled": bool(action_control["enabled"]),
+                "external_action_control_mode": str(action_control["mode"]),
             },
             "generated_at": iso_utc(),
         }
+
+    @_synchronized
+    def disable_external_actions(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError("EXPLICIT_CONFIRMATION_REQUIRED", "The emergency stop requires an explicit user confirmation.")
+        return ExternalActionSessionManager(
+            self.database, ExternalActionSessionPolicy.production_disabled()
+        ).disable(reason="USER_EMERGENCY_STOP")
 
     @_synchronized
     def set_queue_limit(self, payload: dict[str, Any]) -> dict[str, Any]:

@@ -323,6 +323,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.save_review(self._json_body())
             elif route == "queue-limit":
                 result = self.server.service.set_queue_limit(self._json_body())
+            elif route == "external-action-kill-switch":
+                result = self.server.service.disable_external_actions(self._json_body())
             elif route == "review-packet":
                 result = self.server.service.review_packet(str(self._json_body().get("application_id", "")))
             elif route == "queue-decision":

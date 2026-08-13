@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Added expiring, one-use, per-action authorization sessions for live-read, form-inspection, prefill and upload contracts, with a generation-bound global emergency stop visible in the bilingual dashboard. Production activation remains structurally disabled.
+- 新增实时读取、表单检查、预填和上传的限时逐动作单次授权会话，并在双语首页显示绑定代际的总急停；生产动作仍在结构上保持不可启用。
 - Added an append-only isolated application execution controller that proves the complete dual-approval and receipt lifecycle without a browser, network call, upload, email, account, scheduler or real external side effect.
 - 新增仅含哈希的追加式隔离投递控制器；完整验证双重批准与回执链，且不调用浏览器、网络、上传、邮件、账号、调度或任何真实外部动作。
 - Review approval and final submission authorization are now cryptographically separate. The final gate expires within 1–30 minutes, binds the current execution plan, packet, route, form, uploads and freshness evidence, rejects stale/replayed consent, and is consumed atomically with the review approval in isolated tests; production transport remains disabled.

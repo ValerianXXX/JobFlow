@@ -41,6 +41,7 @@ flowchart LR
 | Browser/ATS | Opaque field plans and zero-modification fake adapter | 不透明字段计划与零修改假适配器 |
 | Queue | Transactional capacity and FIFO deferred intake | 事务容量与延后任务 FIFO |
 | Final submission | Review approval is insufficient; a separate 1–30 minute, one-time authorization binds plan, packet, route, form, uploads and fresh evidence, then both approvals are consumed atomically | 审阅批准不足以提交；必须再取得绑定计划、审阅包、路线、表单、材料与新鲜证据的 1—30 分钟一次性授权，并原子消费两张授权 |
+| Action sessions | Live read, form inspection, prefill and upload are separate, expiring, one-use scopes; the global kill switch invalidates all sessions immediately and defaults off | 实时读取、表单检查、预填与上传是分离的限时单次权限；总急停可立即使全部会话失效且默认关闭 |
 | External actions | Production transport absent and fail-closed | 生产传输不存在且失败关闭 |
 
 ## Main packages / 主要模块
@@ -54,6 +55,7 @@ flowchart LR
 - `application_execution`: hash-bound six-step runbook for freshness, guest entry, prefill, upload, protected questions and final submission; every step remains planning-only until its exact approval boundary is separately enabled.
 - `final_submission`, `external_actions`: separate fresh final-confirmation artifact, database persistence, expiry/replay checks and atomic dual-approval consumption; only isolated fake transport can exercise the transition.
 - `execution_controller`: append-only, hash-only checkpoints for the approved-plan lifecycle; the isolated controller proves the full stop/confirm/receipt path and forces missing receipt evidence into non-retryable `SUBMISSION_UNKNOWN` without registering a live transport.
+- `external_action_sessions`: exact per-action scopes, expiry, replay protection, revocation and a generation-bound global kill switch; production activation is structurally unavailable in the current build.
 - `public_release`, `release_candidate`, `release`: current-tree/history privacy gates and release evidence.
 
 Every persisted transition is content-bound or auditable. `SUBMISSION_UNKNOWN`, CAPTCHA, MFA, OTP, login and account creation do not have an automatic continuation path.
