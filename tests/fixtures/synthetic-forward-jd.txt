@@ -1,0 +1,19 @@
+SYNTHETIC TEST DATA - NOT A REAL JOB POSTING
+
+Company: Example Analytics Lab
+Role: Entry Level Data Analyst
+Location: Remote
+Compensation: $80,000 - $100,000
+Work authorization: Authorized candidates only
+
+Responsibilities:
+- Analyze synthetic datasets with reproducible methods.
+- Document assumptions and quality checks.
+
+Required:
+- Python and SQL
+- 2+ years of experience
+- Bachelor's degree
+
+Preferred:
+- Structured analysis

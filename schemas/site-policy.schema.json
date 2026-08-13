@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/site-policy.schema.json",
+  "title": "Site Policy", "type": "object", "additionalProperties": false,
+  "required": ["policy_version", "provider", "real_actions_enabled", "guest_first", "account_creation_enabled", "allowed_actions", "checked_at"],
+  "properties": {
+    "policy_version": {"type": "string", "minLength": 1}, "provider": {"enum": ["company", "workday", "greenhouse", "lever", "local_fixture"]},
+    "real_actions_enabled": {"const": false}, "guest_first": {"const": true}, "account_creation_enabled": {"const": false},
+    "allowed_actions": {"type": "array", "items": {"enum": ["local_snapshot", "offline_analyze", "fake_prefill"]}}, "checked_at": {"type": "string", "format": "date-time"}
+  }
+}

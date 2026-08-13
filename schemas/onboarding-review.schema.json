@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/onboarding-review.schema.json",
+  "title": "Redacted Onboarding Review Packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "packet_id", "status", "final_states", "selected_file",
+    "master_resume", "candidate_profile", "answer_bank", "claims", "unknown_hard_conditions",
+    "validation", "real_external_actions", "knowledge_bases", "created_at", "next_safe_action"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "packet_id": {"type": "string", "pattern": "^ONB-[A-F0-9]{12}$"},
+    "status": {"const": "AWAITING_USER_CLAIM_AND_PROFILE_APPROVAL"},
+    "final_states": {"type": "array", "minItems": 3, "items": {"type": "string"}},
+    "selected_file": {
+      "type": "object", "additionalProperties": false,
+      "required": ["safe_display_name", "source_type", "sha256_prefix", "size_bytes", "modified_at", "paired_pdf"],
+      "properties": {
+        "safe_display_name": {"type": "string", "minLength": 1},
+        "source_type": {"enum": ["docx", "pdf"]},
+        "sha256_prefix": {"type": "string", "pattern": "^sha256:[a-f0-9]{12}$"},
+        "size_bytes": {"type": "integer", "minimum": 1},
+        "modified_at": {"type": "string", "format": "date-time"},
+        "paired_pdf": {"type": "boolean"}
+      }
+    },
+    "master_resume": {
+      "type": "object", "additionalProperties": false,
+      "required": ["secure_ref", "pdf_reference_ref", "editable_master_status", "structure_status", "page_count", "template_fingerprint", "visual_status", "visual_record_ref"],
+      "properties": {
+        "secure_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
+        "pdf_reference_ref": {"type": ["string", "null"]},
+        "editable_master_status": {"enum": ["EDITABLE_MASTER_DOCX_AVAILABLE", "EDITABLE_MASTER_DOCX_MISSING"]},
+        "structure_status": {"enum": ["PASS", "LIMITED_PDF_REFERENCE", "FAIL"]},
+        "page_count": {"type": "integer", "minimum": 1},
+        "template_fingerprint": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "visual_status": {"enum": ["PASS", "FAIL"]},
+        "visual_record_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"}
+      }
+    },
+    "candidate_profile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["secure_ref", "completeness_percent", "provided_unconfirmed", "unknown", "confirmation_field_count"],
+      "properties": {
+        "secure_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
+        "completeness_percent": {"type": "number", "minimum": 0, "maximum": 100},
+        "provided_unconfirmed": {"type": "integer", "minimum": 0},
+        "unknown": {"type": "integer", "minimum": 0},
+        "confirmation_field_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "answer_bank": {
+      "type": "object", "additionalProperties": false,
+      "required": ["secure_ref", "unknown_field_count", "categories"],
+      "properties": {
+        "secure_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
+        "unknown_field_count": {"type": "integer", "minimum": 0},
+        "categories": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      }
+    },
+    "claims": {
+      "type": "object", "additionalProperties": false,
+      "required": ["secure_ref", "proposed", "resume_only", "optional", "conflicts", "auto_approved"],
+      "properties": {
+        "secure_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
+        "proposed": {"type": "integer", "minimum": 0},
+        "resume_only": {"type": "integer", "minimum": 0},
+        "optional": {"type": "integer", "minimum": 0},
+        "conflicts": {"type": "integer", "minimum": 0},
+        "auto_approved": {"const": 0}
+      }
+    },
+    "unknown_hard_conditions": {"type": "array", "items": {"type": "string"}},
+    "validation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["runtime_schema", "secure_roundtrip", "source_file_unchanged", "fingerprint_reverified", "leak_findings", "staging_residue", "database_consistent", "knowledge_write_operations", "project_boundary", "external_actions"],
+      "properties": {
+        "runtime_schema": {"const": "PASS"},
+        "secure_roundtrip": {"const": "PASS"},
+        "source_file_unchanged": {"type": "boolean"},
+        "fingerprint_reverified": {"type": "boolean"},
+        "leak_findings": {"const": 0},
+        "staging_residue": {"const": 0},
+        "database_consistent": {"const": "PASS"},
+        "knowledge_write_operations": {"const": 0},
+        "project_boundary": {"const": "PASS"},
+        "external_actions": {"const": 0}
+      }
+    },
+    "real_external_actions": {"const": 0},
+    "knowledge_bases": {"const": "UNCHANGED"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "next_safe_action": {"type": "string", "minLength": 1}
+  }
+}

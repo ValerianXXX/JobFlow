@@ -1,0 +1,68 @@
+from __future__ import annotations
+
+import os
+import sqlite3
+from pathlib import Path
+
+from .db import JobOpsDB
+from .security import assert_no_plaintext_secret
+from .util import iso_utc, sha256_bytes, stable_id
+
+
+class JobCollector:
+    def __init__(self, database: JobOpsDB, jobs_workspace: Path, project_root: Path | None = None) -> None:
+        self.database = database
+        self.jobs_workspace = jobs_workspace
+        self.project_root = project_root
+
+    def _stored_path(self, path: Path) -> str:
+        if self.project_root is not None:
+            try:
+                return path.resolve().relative_to(self.project_root.resolve()).as_posix()
+            except ValueError:
+                pass
+        return path.name
+
+    def collect_text(
+        self,
+        content: str,
+        *,
+        source_type: str = "manual",
+        source_locator: str = "manual-paste",
+        company: str = "UNKNOWN",
+        title: str = "UNKNOWN",
+        official_url: str | None = None,
+    ) -> dict[str, object]:
+        assert_no_plaintext_secret(content)
+        normalized = content.replace("\r\n", "\n").replace("\r", "\n").strip() + "\n"
+        content_hash = sha256_bytes(normalized.encode("utf-8"))
+        job_id = stable_id("JOB", content_hash, official_url or source_locator)
+        snapshot_id = stable_id("JDS", content_hash)
+        job_dir = self.jobs_workspace / job_id / "raw"
+        job_dir.mkdir(parents=True, exist_ok=True)
+        snapshot_path = job_dir / f"{snapshot_id}.txt"
+        created = False
+        with self.database.connect() as connection:
+            existing = connection.execute("SELECT job_id, snapshot_path FROM jd_snapshots WHERE content_hash=?", (content_hash,)).fetchone()
+            if existing:
+                return {"status": "DUPLICATE", "job_id": existing["job_id"], "snapshot_hash": content_hash, "snapshot_path": existing["snapshot_path"]}
+            now = iso_utc()
+            connection.execute(
+                "INSERT OR IGNORE INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)",
+                (job_id, source_type, source_locator, official_url, company, title, None, "DISCOVERED", now, now),
+            )
+            temporary = snapshot_path.with_suffix(".tmp")
+            temporary.write_text(normalized, encoding="utf-8")
+            os.replace(temporary, snapshot_path)
+            created = True
+            try:
+                connection.execute(
+                    "INSERT INTO jd_snapshots VALUES(?,?,?,?,?)",
+                    (snapshot_id, job_id, content_hash, self._stored_path(snapshot_path), now),
+                )
+                connection.execute("UPDATE jobs SET status='SNAPSHOTTED', updated_at=? WHERE job_id=?", (now, job_id))
+            except sqlite3.IntegrityError:
+                snapshot_path.unlink(missing_ok=True)
+                existing = connection.execute("SELECT job_id, snapshot_path FROM jd_snapshots WHERE content_hash=?", (content_hash,)).fetchone()
+                return {"status": "DUPLICATE", "job_id": existing["job_id"], "snapshot_hash": content_hash, "snapshot_path": existing["snapshot_path"]}
+        return {"status": "SNAPSHOTTED" if created else "DUPLICATE", "job_id": job_id, "snapshot_hash": content_hash, "snapshot_path": self._stored_path(snapshot_path)}

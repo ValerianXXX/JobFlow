@@ -1,0 +1,11 @@
+{
+  "profile_ref": "secure-ref:SYNTHETIC_PROFILE_001",
+  "target_functions": ["strategy", "analytics"],
+  "target_levels": ["entry", "senior"],
+  "locations": ["example city", "remote"],
+  "remote_preference": "flexible",
+  "minimum_salary": "UNKNOWN",
+  "work_authorization": "UNKNOWN",
+  "skills": ["analysis", "evidence", "ai product evaluation"],
+  "years_experience": "UNKNOWN"
+}

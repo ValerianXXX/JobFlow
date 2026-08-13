@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/queue-reservation.schema.json",
+  "title": "Queue Reservation", "type": "object", "additionalProperties": false,
+  "required": ["reservation_id", "intake_key", "application_id", "status", "pending_limit", "pending_count", "reserved_count", "created_at", "updated_at"],
+  "properties": {
+    "reservation_id": {"type": "string", "pattern": "^RSV-[A-F0-9]{12}$"}, "intake_key": {"type": "string", "minLength": 1},
+    "application_id": {"type": ["string", "null"], "pattern": "^APP-[A-F0-9]{12}$"}, "status": {"enum": ["RESERVED", "CONSUMED", "RELEASED"]},
+    "pending_limit": {"type": "integer", "minimum": 1, "maximum": 1000}, "pending_count": {"type": "integer", "minimum": 0}, "reserved_count": {"type": "integer", "minimum": 0},
+    "created_at": {"type": "string", "format": "date-time"}, "updated_at": {"type": "string", "format": "date-time"}
+  }
+}

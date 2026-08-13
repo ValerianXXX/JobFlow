@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/audit-event.schema.json",
+  "title": "Audit Event", "type": "object", "additionalProperties": false,
+  "required": ["event_id", "application_id", "event_type", "from_state", "to_state", "payload_hash", "created_at"],
+  "properties": {
+    "event_id": {"type": "string", "pattern": "^EVT-[A-F0-9]{12}$"}, "application_id": {"type": ["string", "null"], "pattern": "^APP-[A-F0-9]{12}$"},
+    "event_type": {"type": "string"}, "from_state": {"type": ["string", "null"]}, "to_state": {"type": ["string", "null"]},
+    "payload_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "created_at": {"type": "string", "format": "date-time"}
+  }
+}

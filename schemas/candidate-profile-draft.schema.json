@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/candidate-profile-draft.schema.json",
+  "title": "Secure Candidate Profile Draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "profile_version", "status", "master_resume_ref",
+    "candidate_display_name", "contact_fields_present", "resume_facts",
+    "target_preferences", "hard_conditions", "field_status_counts", "created_at"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "profile_version": {"type": "string", "minLength": 1},
+    "status": {"const": "AWAITING_USER_CLAIM_AND_PROFILE_APPROVAL"},
+    "master_resume_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
+    "candidate_display_name": {
+      "type": "object", "additionalProperties": false,
+      "required": ["value", "status"],
+      "properties": {
+        "value": {"type": ["string", "null"]},
+        "status": {"enum": ["APPLICANT_PROVIDED_UNCONFIRMED", "UNKNOWN"]}
+      }
+    },
+    "contact_fields_present": {
+      "type": "array", "uniqueItems": true,
+      "items": {"enum": ["email", "phone", "address", "linkedin", "website"]}
+    },
+    "resume_facts": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["fact_id", "category", "value", "status"],
+        "properties": {
+          "fact_id": {"type": "string", "pattern": "^RSM-[A-F0-9]{12}$"},
+          "category": {"enum": ["summary", "experience", "project", "education", "skill", "certification", "language", "achievement", "date", "contact"]},
+          "value": {"type": "string", "minLength": 1},
+          "status": {"const": "APPLICANT_PROVIDED_UNCONFIRMED"}
+        }
+      }
+    },
+    "target_preferences": {"type": "object"},
+    "hard_conditions": {"type": "object"},
+    "field_status_counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["applicant_provided_unconfirmed", "unknown"],
+      "properties": {
+        "applicant_provided_unconfirmed": {"type": "integer", "minimum": 0},
+        "unknown": {"type": "integer", "minimum": 0}
+      }
+    },
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

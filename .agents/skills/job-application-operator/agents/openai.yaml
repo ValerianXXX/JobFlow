@@ -1,0 +1,4 @@
+interface:
+  display_name: "Job Application Operator"
+  short_description: "离线分析岗位、安全生成材料并运行到待审批"
+  default_prompt: "Use $job-application-operator to process an offline job description through read-only evidence mapping, secure-ref materials, document QA, and AWAITING_APPROVAL. Do not perform real external actions."

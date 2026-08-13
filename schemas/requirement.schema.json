@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/requirement.schema.json",
+  "title": "Requirement", "type": "object", "additionalProperties": false,
+  "required": ["requirement_id", "category", "text", "logic", "items", "threshold"],
+  "properties": {
+    "requirement_id": {"type": "string", "pattern": "^REQ-[A-Z0-9_-]{1,64}$"},
+    "category": {"enum": ["skill", "years", "education", "certificate", "certification", "language", "work_authorization", "visa", "location", "level", "salary", "travel", "relocation", "other"]},
+    "text": {"type": "string", "minLength": 1}, "logic": {"enum": ["ALL", "ANY", "AT_LEAST", "SINGLE"]},
+    "items": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "threshold": {"type": ["integer", "null"], "minimum": 1}
+  }
+}

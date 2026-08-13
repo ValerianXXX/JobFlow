@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "manifest_id": "jobops-knowledge-sources-v1",
+  "candidate_root_markers": [
+    "AI测试实验室/00-导航/开始这里.md",
+    "AI测试实验室/06-技术与系统/AI系统栈索引.md",
+    "商业决策实验室/00-导航/开始这里.md",
+    "商业决策实验室/18-项目工作流与操作系统/项目工作流与操作系统索引.md",
+    "00-联合导航/00-AI与商业战略总入口.md",
+    "个人AI应用实验室/00-导航/个人AI应用-开始这里.md",
+    "个人AI应用实验室/00-导航/隐私来源与提炼规则.md",
+    "个人AI应用实验室/08-已完成事项实战档案",
+    "00-联合导航/个人实践桥接/00-个人实践桥接索引.md"
+  ],
+  "sources": [
+    {
+      "id": "ai_public_core",
+      "classification": "public-core",
+      "root_subpath": "AI测试实验室",
+      "markers": [
+        "00-导航/开始这里.md",
+        "06-技术与系统/AI系统栈索引.md"
+      ],
+      "allowed_prefixes": ["."],
+      "external_claim_policy": "context_only"
+    },
+    {
+      "id": "business_public_core",
+      "classification": "public-core",
+      "root_subpath": "商业决策实验室",
+      "markers": [
+        "00-导航/开始这里.md",
+        "18-项目工作流与操作系统/项目工作流与操作系统索引.md"
+      ],
+      "allowed_prefixes": ["."],
+      "external_claim_policy": "context_only"
+    },
+    {
+      "id": "joint_navigation",
+      "classification": "public-core",
+      "root_subpath": "00-联合导航",
+      "markers": ["00-AI与商业战略总入口.md"],
+      "allowed_prefixes": ["00-AI与商业战略总入口.md"],
+      "external_claim_policy": "context_only"
+    },
+    {
+      "id": "personal_redacted",
+      "classification": "personal-redacted",
+      "root_subpath": ".",
+      "markers": [
+        "个人AI应用实验室/00-导航/个人AI应用-开始这里.md",
+        "个人AI应用实验室/00-导航/隐私来源与提炼规则.md",
+        "个人AI应用实验室/08-已完成事项实战档案",
+        "00-联合导航/个人实践桥接/00-个人实践桥接索引.md"
+      ],
+      "allowed_prefixes": [
+        "个人AI应用实验室/00-导航",
+        "个人AI应用实验室/01-使用画像与演变",
+        "个人AI应用实验室/04-工作流与可复用资产",
+        "个人AI应用实验室/05-项目与成果",
+        "个人AI应用实验室/08-已完成事项实战档案",
+        "个人AI应用实验室/09-产物配置与运行状态",
+        "00-联合导航/个人实践桥接",
+        "00-联合导航/01-TikTok AI Strategic Analyst岗位桥接.md",
+        "00-联合导航/05-面试学习路线与证据矩阵.md"
+      ],
+      "question_only_prefixes": ["个人AI应用实验室/01-使用画像与演变"],
+      "external_claim_policy": "approved_claim_only"
+    }
+  ],
+  "readable_extensions": [".md", ".txt", ".json", ".yaml", ".yml", ".csv"],
+  "application_private": {
+    "classification": "application-private",
+    "project_storage": "opaque_reference_only",
+    "preferred_windows_store": "%LOCALAPPDATA%/JobOps"
+  },
+  "hard_excluded_segments": [
+    "数据导入区",
+    "原始chatgpt导出",
+    "chatgpt原始导出",
+    "原始hermes备份",
+    "hermes原始备份",
+    "原始附件",
+    "raw-attachments",
+    "attachments",
+    "会话日志原文",
+    "原始会话日志",
+    "browser cookies",
+    "cookies",
+    "cookie",
+    "login data",
+    "credentials",
+    "credential",
+    "passwords",
+    "tokens",
+    "验证码"
+  ],
+  "hard_excluded_filenames": [
+    ".env",
+    "cookies.sqlite",
+    "cookies.json",
+    "login data",
+    "credentials.json"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "fixture": true,
+  "provider_shape": "greenhouse-like",
+  "fields": [
+    {"label": "Portfolio URL", "value": "UNKNOWN", "expected_gate": "PREFILL_ALLOWED"},
+    {"label": "Work authorization", "value": "UNKNOWN", "expected_gate": "STOP_REQUIRED"},
+    {"label": "Electronic signature", "value": "UNKNOWN", "expected_gate": "STOP_REQUIRED"},
+    {"label": "Disability", "value": "UNANSWERED", "expected_gate": "STOP_REQUIRED"}
+  ],
+  "submit_control": {"present": true, "must_be_blocked": true}
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/onboarding-completion.schema.json",
+  "title": "Redacted onboarding completion record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "profile_ref", "answer_bank_ref", "claim_approvals_ref", "counts", "sources", "locale", "completed_at", "real_external_actions", "knowledge_write_operations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "ONBOARDING_COMPLETE"},
+    "profile_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
+    "answer_bank_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
+    "claim_approvals_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["answers_resolved", "answers_total", "claims_reviewed", "claims_total", "conflicts_resolved", "conflicts_total"],
+      "properties": {
+        "answers_resolved": {"type": "integer", "minimum": 0},
+        "answers_total": {"type": "integer", "minimum": 1},
+        "claims_reviewed": {"type": "integer", "minimum": 0},
+        "claims_total": {"type": "integer", "minimum": 0},
+        "conflicts_resolved": {"type": "integer", "minimum": 0},
+        "conflicts_total": {"type": "integer", "minimum": 0}
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resume_or_material", "ai", "direct_answers"],
+      "properties": {
+        "resume_or_material": {"type": "integer", "minimum": 0},
+        "ai": {"type": "integer", "minimum": 0},
+        "direct_answers": {"type": "integer", "minimum": 0}
+      }
+    },
+    "locale": {"enum": ["zh", "en"]},
+    "completed_at": {"type": "string", "format": "date-time"},
+    "real_external_actions": {"const": 0},
+    "knowledge_write_operations": {"const": 0}
+  }
+}

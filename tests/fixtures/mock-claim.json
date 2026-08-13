@@ -1,0 +1,21 @@
+{
+  "claim_id": "CLM-SYNTHETIC01",
+  "raw_fact": "Synthetic fixture fact; not about the user",
+  "allowed_wording": ["Completed one synthetic fixture analysis"],
+  "forbidden_wording": ["Led a real client engagement"],
+  "responsibility_boundary": {
+    "candidate": "performed the fixture action",
+    "team": "not applicable",
+    "ai": "generated synthetic inputs"
+  },
+  "evidence": [{"kind": "fixture_count", "value": 1}],
+  "source_refs": [{
+    "source_id": "personal_redacted",
+    "relative_path": "synthetic/case.md",
+    "fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }],
+  "approved_for_external": false,
+  "sensitivity": "personal-redacted",
+  "last_verified_at": "2026-08-12T00:00:00Z",
+  "expires_at": "2026-08-13T00:00:00Z"
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/approval.schema.json",
+  "title": "Fully Bound One-Time Approval",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "approval_id", "application_id", "job_id", "jd_snapshot_hash", "jd_freshness_hash",
+    "source_route_hash", "canonical_url", "ats_tenant", "ats_board", "ats_job_identity",
+    "profile_version", "claim_set_hash", "form_snapshot_hash", "answers_hash",
+    "review_packet_hash", "uploads", "external_actions", "site_policy_version",
+    "unresolved_stops", "mandatory_unknowns", "context_hash", "issued_at", "expires_at",
+    "nonce", "approval_version", "status", "consumed_at"
+  ],
+  "properties": {
+    "approval_id": {"type": "string", "pattern": "^APR-[A-F0-9]{12}$"},
+    "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "job_id": {"type": "string", "pattern": "^JOB-[A-F0-9]{12}$"},
+    "jd_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "jd_freshness_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "canonical_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "ats_tenant": {"type": "string", "minLength": 1},
+    "ats_board": {"type": "string", "minLength": 1},
+    "ats_job_identity": {"type": "string", "minLength": 1},
+    "profile_version": {"type": "string", "minLength": 1},
+    "claim_set_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "answers_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "review_packet_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "uploads": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["filename", "purpose", "sha256"],
+        "properties": {
+          "filename": {"type": "string", "minLength": 1},
+          "purpose": {"enum": ["resume", "cover_letter", "portfolio", "attachment"]},
+          "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "external_actions": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {"enum": ["create_recruiting_account", "upload_material", "submit_application", "send_email", "contact_recruiter", "withdraw_application", "accept_legal_terms", "electronic_signature"]}
+    },
+    "site_policy_version": {"type": "string", "minLength": 1},
+    "unresolved_stops": {"type": "array", "items": {"type": "string"}},
+    "mandatory_unknowns": {"type": "array", "items": {"type": "string"}},
+    "context_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "nonce": {"type": "string", "pattern": "^nonce-[a-f0-9]{48}$"},
+    "approval_version": {"type": "integer", "minimum": 2},
+    "status": {"enum": ["APPROVED", "EXPIRED", "INVALIDATED", "CONSUMED", "REVOKED"]},
+    "consumed_at": {"type": ["string", "null"], "format": "date-time"}
+  }
+}

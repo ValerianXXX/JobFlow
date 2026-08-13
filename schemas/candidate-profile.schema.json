@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/candidate-profile.schema.json",
+  "title": "Candidate Eligibility Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_ref", "profile_version", "candidate_display_name", "target_functions", "target_levels", "locations", "remote_preference", "minimum_salary", "work_authorization", "skills", "years_experience"],
+  "properties": {
+    "profile_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
+    "profile_version": {"type": "string", "minLength": 1},
+    "candidate_display_name": {"type": "string", "minLength": 1},
+    "target_functions": {"type": "array", "items": {"type": "string"}},
+    "target_levels": {"type": "array", "items": {"type": "string"}},
+    "locations": {"type": "array", "items": {"type": "string"}},
+    "remote_preference": {"enum": ["remote", "hybrid", "onsite", "flexible", "UNKNOWN"]},
+    "minimum_salary": {"type": ["number", "string", "null"]},
+    "work_authorization": {"enum": ["CONFIRMED", "NOT_AUTHORIZED", "REQUIRES_SPONSORSHIP", "UNKNOWN"]},
+    "skills": {"type": "array", "items": {"type": "string"}},
+    "languages": {"type": "array", "items": {"type": "string"}},
+    "certifications": {"type": "array", "items": {"type": "string"}},
+    "education": {"type": ["string", "null"]},
+    "target_industries": {"type": "array", "items": {"type": "string"}},
+    "years_experience": {"type": ["number", "string"]}
+  }
+}

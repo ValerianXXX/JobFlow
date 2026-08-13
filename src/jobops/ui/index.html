@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JobFlow · 找工流水线</title>
+  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v2">
+</head>
+<body>
+  <div class="envelope-backdrop" aria-hidden="true">
+    <svg viewBox="0 0 1600 1000" preserveAspectRatio="none" focusable="false">
+      <path d="M 10,18 C 115,105 150,286 326,493 C 404,585 468,672 548,820"></path>
+      <path d="M 1590,18 C 1485,105 1450,286 1274,493 C 1196,585 1132,672 1052,820"></path>
+    </svg>
+  </div>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="JobFlow home">
+      <span class="brand-mark">J</span>
+      <span><strong>JobFlow</strong><small data-i18n="brandSubtitle">找工流水线</small></span>
+    </a>
+    <div class="header-actions">
+      <span class="local-badge"><i></i><span data-i18n="localOnly">仅限本机 · DPAPI 加密</span></span>
+      <button id="aiConnectButton" class="ai-connect-button" type="button" aria-expanded="false" aria-controls="aiConnectionPanel" data-i18n="connectAi">连接 AI</button>
+      <div class="locale-switch" role="group" aria-label="Language">
+        <button type="button" data-locale="zh" class="active">中文</button>
+        <button type="button" data-locale="en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div>
+        <p class="eyebrow" data-i18n="eyebrow">JOBFLOW SETUP</p>
+        <h1 data-i18n="heroTitle">一次填写，连续投递</h1>
+        <p data-i18n="heroBody">从简历与项目材料、AI 资料和你的直接回答建立完整资料。所有私人内容只在本机解密，不写入普通项目文件。</p>
+      </div>
+      <div class="progress-card">
+        <div class="progress-copy"><span data-i18n="progressLabel">问卷完成度</span><strong id="progressText">0 / 25</strong></div>
+        <div class="progress-track"><span id="progressBar"></span></div>
+        <small id="statusText" data-i18n="draftSaved">草稿将直接加密保存</small>
+      </div>
+    </section>
+
+    <section id="blockingNotice" class="blocking-notice hidden" role="alert" aria-live="assertive">
+      <span class="blocking-notice-mark" aria-hidden="true">!</span>
+      <div><strong id="blockingNoticeTitle"></strong><p id="blockingNoticeBody"></p></div>
+    </section>
+
+    <section id="aiConnectionPanel" class="ai-connection-panel hidden" aria-live="polite">
+      <div class="ai-connection-heading">
+        <div><p class="eyebrow" data-i18n="aiConnectionEyebrow">AI CONNECTION</p><h2 data-i18n="aiConnectionTitle">连接已经准备好的 AI</h2><p data-i18n="aiConnectionBody">JobFlow 不要求再次填写模型密钥。它会自动检查 Windows 与 WSL，并通过仅限本机的通道建立连接。</p></div>
+        <button id="closeAiConnection" class="text-action" type="button" data-i18n="close">关闭</button>
+      </div>
+      <div class="ai-choice-grid">
+        <button class="ai-choice" type="button" data-ai-mode="agent">
+          <span class="ai-choice-mark">AG</span>
+          <strong data-i18n="existingAgentTitle">使用已有 Agent</strong>
+          <small data-i18n="existingAgentBody">自动检测 Windows 或 WSL 中的 Hermes / OpenClaw，并复用 Agent 已经配置好的模型。</small>
+          <b data-i18n="detectAndConnect">自动检测并连接</b>
+        </button>
+        <button class="ai-choice" type="button" data-ai-mode="local_model">
+          <span class="ai-choice-mark">LLM</span>
+          <strong data-i18n="localModelTitle">使用本地大模型</strong>
+          <small data-i18n="localModelBody">自动检测 Windows 或 WSL 中的 Ollama、LM Studio、LocalAI、llama.cpp 或 vLLM。</small>
+          <b data-i18n="detectAndConnect">自动检测并连接</b>
+        </button>
+        <div class="ai-choice reserved">
+          <span class="ai-choice-mark">API</span>
+          <strong data-i18n="customApiTitle">自定义 API / 适配器</strong>
+          <small data-i18n="customApiBody">保留给企业模型、私有网关和其他 Agent。普通用户无需配置。</small>
+          <b data-i18n="reserved">接口已预留</b>
+        </div>
+      </div>
+      <div id="aiConnectionStatus" class="ai-connection-status"></div>
+      <p class="ai-privacy-note" data-i18n="aiPrivacyNote">JobFlow 不读取或保存 Agent 的 API Key、Cookie 或登录令牌。WSL 连接不会暴露局域网端口，私人请求只经 stdin 或回环地址传递。</p>
+    </section>
+
+    <section id="stateBanner" class="state-banner hidden" aria-live="polite">
+      <div><strong data-i18n="completedSnapshotTitle">当前是已完成的只读快照</strong><p data-i18n="completedSnapshotBody">历史版本不会被覆盖。若要修改资料，请建立一个新的可编辑版本。</p></div>
+      <button id="startRevision" class="primary" type="button" data-i18n="startRevision">建立可编辑新版本</button>
+    </section>
+
+    <nav class="steps" aria-label="Onboarding steps">
+      <button class="step active" data-target="sources"><b>1</b><span data-i18n="stepSources">资料来源</span></button>
+      <button class="step" data-target="questionnaire"><b>2</b><span data-i18n="stepQuestions">完整问卷</span></button>
+      <button class="step" data-target="review"><b>3</b><span data-i18n="stepReview">资料与 Claim 审阅</span></button>
+      <button class="step" data-target="finish"><b>4</b><span data-i18n="stepFinish">确认完成</span></button>
+    </nav>
+
+    <section id="sources" class="panel active-panel">
+      <div class="section-heading">
+        <div><p class="section-no">01</p><h2 data-i18n="sourceTitle">把已有信息交给 JobFlow</h2></div>
+        <p data-i18n="sourceBody">资料必须先通过 AI 的实体归并、分类和完整性检查，才会进入 Claim；规则拆分结果不再显示。</p>
+      </div>
+      <div id="aiEngineBanner" class="ai-engine-banner">
+        <span class="ai-engine-dot" aria-hidden="true"></span>
+        <div><strong id="aiEngineTitle"></strong><p id="aiEngineBody"></p></div>
+      </div>
+      <div class="source-grid">
+        <article class="source-card">
+          <span class="source-icon">CV</span>
+          <h3 data-i18n="docsTitle">简历与项目材料</h3>
+          <p data-i18n="docsBody">DOCX、PDF、TXT、MD 或 JSON。适用于简历、案例、证书与补充材料。</p>
+          <label class="select-label"><span data-i18n="materialType">材料类型</span>
+            <select id="documentType">
+              <option value="resume" data-i18n="resume">简历</option>
+              <option value="project_case" data-i18n="projectCase">项目案例</option>
+              <option value="supporting_material" data-i18n="supporting">补充材料</option>
+            </select>
+          </label>
+          <label class="upload-button"><input id="documentFile" type="file" accept=".docx,.pdf,.txt,.md,.json"><span data-i18n="uploadAndAnalyze">选择并由 AI 分析</span></label>
+        </article>
+        <article class="source-card accent-card">
+          <span class="source-icon">AI</span>
+          <h3 data-i18n="aiTitle">AI 资料</h3>
+          <p data-i18n="aiBody">支持 ChatGPT 官方导出 ZIP 或你整理的 AI 总结；选择文件后会立即开始 AI 分析。官方导出原包不会被保留。</p>
+          <label class="select-label"><span data-i18n="aiType">AI 资料类型</span>
+            <select id="aiType">
+              <option value="chatgpt_export" data-i18n="chatgptExport">ChatGPT 官方导出</option>
+              <option value="chatgpt_export_large" data-i18n="chatgptExportLarge">雷霆大文件（超过 200 MB 请选择）</option>
+              <option value="ai_summary" data-i18n="aiSummary">AI 总结</option>
+            </select>
+          </label>
+          <label class="upload-button light"><input id="aiFile" type="file" accept=".zip,.txt,.md,.json"><span data-i18n="uploadAndAnalyze">选择并由 AI 分析</span></label>
+        </article>
+        <article class="source-card">
+          <span class="source-icon">25</span>
+          <h3 data-i18n="directTitle">一次性完整问卷</h3>
+          <p data-i18n="directBody">直接确认资格、偏好、法律策略和自愿披露，避免后续重复打断。</p>
+          <button type="button" class="secondary jump" data-target="questionnaire" data-i18n="startQuestions">开始填写</button>
+        </article>
+      </div>
+      <section id="sourcePreviewBox" class="source-preview-box hidden">
+        <div class="subheading"><div><h3 data-i18n="previewTitle">审阅 AI 归并结果</h3><p data-i18n="previewBody">每条都是 AI 重建后的完整 Claim，并绑定到唯一经历实体。</p></div><span id="previewCount">0</span></div>
+        <div id="sourcePreviewList"></div>
+      </section>
+      <div class="source-list-wrap">
+        <div class="subheading source-list-heading">
+          <div><h3 data-i18n="importedSources">已安全接入</h3><small id="bulkAnalysisHint" data-i18n="bulkAnalysisHint">一键重新分析全部已保留加密原件的资料；ChatGPT 官方导出需要重新上传原 ZIP。</small></div>
+          <div class="source-list-toolbar"><span id="sourceCount">0</span><button id="analyzeAllSources" class="secondary compact" type="button" data-i18n="analyzeAllSources">一键分析全部资料</button></div>
+        </div>
+        <div id="sourceList" class="source-list empty" data-i18n="noSources">尚未通过此页面添加资料；已有安全简历仍然保留。</div>
+      </div>
+      <div id="suggestionBox" class="suggestion-box hidden">
+        <div class="subheading"><h3 data-i18n="suggestions">待确认的自动预填建议</h3><span id="suggestionCount">0</span></div>
+        <div id="suggestionList"></div>
+      </div>
+      <div class="panel-footer"><button class="primary jump" data-target="questionnaire" data-i18n="continueQuestions">继续完整问卷</button></div>
+    </section>
+
+    <section id="questionnaire" class="panel">
+      <div class="section-heading">
+        <div><p class="section-no">02</p><h2 data-i18n="questionsTitle">一次性回答全部基础问题</h2></div>
+        <p data-i18n="questionsBody">可以明确回答、不适用或选择不披露。资格硬条件必须明确，法律与签名始终逐次确认。</p>
+      </div>
+      <div id="questionGroups"></div>
+      <div class="sticky-actions">
+        <span id="saveHint" data-i18n="saveHint">内容不会进入命令行或明文 JSON</span>
+        <button id="saveAnswers" class="primary" type="button" data-i18n="saveEncrypted">加密保存并继续</button>
+      </div>
+    </section>
+
+    <section id="review" class="panel">
+      <div class="section-heading">
+        <div><p class="section-no">03</p><h2 data-i18n="reviewTitle">集中处理资料与 Claim</h2></div>
+        <p data-i18n="reviewBody">只显示经过 AI 归并和完整性检查的 Claim。工作、实习、教育和项目分别归类。</p>
+      </div>
+      <div class="review-summary">
+        <div><span data-i18n="claimsReviewed">已审阅 Claim</span><strong id="claimProgress">0 / 0</strong></div>
+        <div><span data-i18n="conflictsResolved">已解决冲突</span><strong id="conflictProgress">0 / 0</strong></div>
+      </div>
+      <div id="claimQualityBanner" class="claim-quality-banner hidden"></div>
+      <div class="claim-tools">
+        <div><strong data-i18n="claimEditTitle">Claim 可编辑审阅</strong><small data-i18n="claimEditHelp">左侧勾选框只用于把同一实体中的多条 Claim 合并，不代表确认或采用。</small></div>
+        <button id="mergeClaims" class="secondary" type="button" data-i18n="mergeSelected">合并已勾选项</button>
+      </div>
+      <div id="conflictSection">
+        <div class="conflict-section-heading">
+          <span class="conflict-symbol" aria-hidden="true">!</span>
+          <div><h3 data-i18n="conflicts">需要单独解决的冲突</h3><p data-i18n="conflictsHelp">只有两个相关来源对同一事实给出不同答案时，才算冲突。</p></div>
+        </div>
+        <p id="conflictQualityNote" class="conflict-quality-note hidden"></p>
+        <div id="conflictList"></div>
+      </div>
+      <div id="claimGroups"></div>
+      <label class="profile-confirm"><input id="profileReview" type="checkbox"><span><strong data-i18n="profileConfirmTitle">我已审阅 Candidate Profile</strong><small data-i18n="profileConfirmBody">确认简历、项目、技能、教育及成果栏目；未解决冲突除外。</small></span></label>
+      <div class="panel-footer"><button id="saveReview" class="primary" type="button" data-i18n="saveReview">保存审阅结果</button></div>
+    </section>
+
+    <section id="finish" class="panel">
+      <div class="finish-card">
+        <p class="section-no">04</p>
+        <h2 data-i18n="finishTitle">完成一次性入职</h2>
+        <p data-i18n="finishBody">完成后，JobFlow 可连续处理离线岗位并生成待审批队列。真实网站、上传、邮件和最终提交仍保持关闭。</p>
+        <div id="readiness" class="readiness"></div>
+        <label class="final-confirm"><input id="finalConfirm" type="checkbox"><span data-i18n="finalConsent">我确认以上答案和审阅决定准确，并同意将其加密保存为当前 Candidate Profile 与 Answer Bank。</span></label>
+        <button id="completeOnboarding" class="primary large" type="button" data-i18n="completeButton">完成入职设置</button>
+        <p id="completionMessage" class="completion-message"></p>
+      </div>
+    </section>
+  </main>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="activityIndicator" class="activity-indicator hidden" role="status" aria-live="polite" aria-atomic="true">
+    <span class="activity-spinner" aria-hidden="true"></span>
+    <span class="activity-copy">
+      <strong id="activityTitle">正在加载…</strong>
+      <small id="activityStage"></small>
+      <small id="activityElapsed">已进行 0 秒 · 正在估算剩余时间</small>
+      <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
+    </span>
+  </div>
+  <script src="app.js?v=20260813-jobflow-v3"></script>
+</body>
+</html>

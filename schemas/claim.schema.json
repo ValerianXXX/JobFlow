@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/claim.schema.json",
+  "title": "Candidate Claim",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "claim_id", "raw_fact", "allowed_wording", "forbidden_wording",
+    "responsibility_boundary", "evidence", "source_refs",
+    "approved_for_external", "lifecycle_status", "sensitivity", "last_verified_at", "expires_at", "content_hash", "version"
+  ],
+  "properties": {
+    "claim_id": {"type": "string", "pattern": "^CLM-[A-Z0-9_-]{4,64}$"},
+    "raw_fact": {"type": "string", "minLength": 1},
+    "allowed_wording": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "forbidden_wording": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "responsibility_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate", "team", "ai"],
+      "properties": {
+        "candidate": {"type": "string"},
+        "team": {"type": "string"},
+        "ai": {"type": "string"}
+      }
+    },
+    "evidence": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": {"kind": {"type": "string"}, "value": {"type": ["string", "number"]}}}},
+    "source_refs": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["source_id", "relative_path", "fingerprint", "heading", "excerpt", "excerpt_fingerprint"], "properties": {"source_id": {"const": "personal_redacted"}, "relative_path": {"type": "string"}, "heading": {"type": "string"}, "excerpt": {"type": "string"}, "excerpt_fingerprint": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "fingerprint": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}}},
+    "approved_for_external": {"type": "boolean"},
+    "lifecycle_status": {"enum": ["proposed", "awaiting_review", "approved", "rejected", "revoked", "expired", "evidence_changed"]},
+    "sensitivity": {"enum": ["public", "internal", "personal-redacted", "application-private", "synthetic"]},
+    "last_verified_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "version": {"type": "integer", "minimum": 1}
+  }
+}

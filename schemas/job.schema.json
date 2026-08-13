@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/job.schema.json",
+  "title": "Job",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["job_id", "source_type", "source_locator", "company", "title", "status", "discovered_at"],
+  "properties": {
+    "job_id": {"type": "string", "pattern": "^JOB-[A-F0-9]{12}$"},
+    "source_type": {"enum": ["manual", "txt", "pdf", "html", "page_snapshot", "official_page"]},
+    "source_locator": {"type": "string"},
+    "official_url": {"type": ["string", "null"], "format": "uri", "pattern": "^https://"},
+    "company": {"type": "string"},
+    "title": {"type": "string"},
+    "location": {"type": ["string", "null"]},
+    "status": {"enum": ["DISCOVERED", "DEFERRED", "SNAPSHOTTED", "PARSED", "INELIGIBLE", "CLOSED"]},
+    "discovered_at": {"type": "string", "format": "date-time"}
+  }
+}

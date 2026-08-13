@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/research-finding.schema.json",
+  "title": "Research Finding", "type": "object", "additionalProperties": false,
+  "required": ["finding_id", "claim", "source_url", "source_type", "snapshot_hash", "published_at", "accessed_at", "evidence_excerpt", "evidence_sha256", "freshness", "official"],
+  "properties": {
+    "finding_id": {"type": "string", "pattern": "^RFN-[A-F0-9]{12}$"}, "claim": {"type": "string", "minLength": 1},
+    "source_url": {"type": "string", "format": "uri", "pattern": "^https://"}, "source_type": {"enum": ["official_company", "official_regulatory", "local_fixture"]},
+    "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "published_at": {"type": ["string", "null"], "format": "date-time"},
+    "accessed_at": {"type": "string", "format": "date-time"}, "evidence_excerpt": {"type": "string", "minLength": 1},
+    "evidence_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "freshness": {"enum": ["CURRENT", "STALE", "UNKNOWN"]}, "official": {"type": "boolean"}
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/review-packet.schema.json",
+  "title": "Application Review Packet",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "status", "packet_id", "application_id", "job", "jd_captured_at", "fit", "hard_gaps", "resume_bullets", "master_resume_diff", "form_questions", "sensitive_fields", "uploads", "external_actions", "source_route", "queue", "content_hash"],
+  "properties": {
+    "schema_version": {"const": 1}, "status": {"enum": ["AWAITING_APPROVAL", "APPROVED", "REJECTED", "NEEDS_REVISION"]},
+    "packet_id": {"type": "string", "pattern": "^RPK-[A-F0-9]{12}$"}, "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "job": {"type": "object"}, "jd_captured_at": {"type": "string", "format": "date-time"}, "fit": {"type": "object"},
+    "hard_gaps": {"type": "array"}, "resume_bullets": {"type": "array"}, "master_resume_diff": {"type": ["array", "object"]},
+    "form_questions": {"type": "array"}, "sensitive_fields": {"type": "array"}, "uploads": {"type": "array", "minItems": 1},
+    "external_actions": {"type": "array", "minItems": 1, "items": {"enum": ["create_recruiting_account", "upload_material", "submit_application", "send_email", "contact_recruiter", "withdraw_application", "accept_legal_terms", "electronic_signature"]}},
+    "source_route": {"type": "object"}, "queue": {"type": "object"}, "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/recovery-event.schema.json",
+  "title": "Recovery Event", "type": "object", "additionalProperties": false,
+  "required": ["recovery_id", "application_id", "blocked_state", "last_safe_state", "validation_hash", "decision", "created_at"],
+  "properties": {
+    "recovery_id": {"type": "string", "pattern": "^RCV-[A-F0-9]{12}$"}, "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "blocked_state": {"enum": ["NEEDS_USER_INPUT", "NEEDS_ACCOUNT_APPROVAL", "BLOCKED_LOGIN", "BLOCKED_CAPTCHA", "SITE_CHANGED", "APPROVAL_EXPIRED", "MATERIALS_NEEDS_CORRECTION", "INELIGIBLE", "SUBMISSION_UNKNOWN"]},
+    "last_safe_state": {"type": "string"}, "validation_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "decision": {"enum": ["RESUME_SAFE_STEP", "REPROCESS_REQUIRED", "REANALYZE_REQUIRED", "REVIEW_REQUIRED", "CLOSE", "NO_AUTO_RETRY", "REANALYZE"]}, "created_at": {"type": "string", "format": "date-time"}
+  }
+}

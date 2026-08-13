@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/material-version.schema.json",
+  "title": "Material Version", "type": "object", "additionalProperties": false,
+  "required": ["material_id", "application_id", "kind", "relative_path", "content_hash", "master_hash", "claim_set_hash", "version", "qa_status", "created_at"],
+  "properties": {
+    "material_id": {"type": "string", "pattern": "^MAT-[A-F0-9]{12}$"}, "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "kind": {"enum": ["resume_docx", "resume_pdf", "cover_letter_docx", "cover_letter_pdf", "application_narrative"]},
+    "relative_path": {"type": "string"}, "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "master_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "claim_set_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "version": {"type": "integer", "minimum": 1}, "qa_status": {"enum": ["PENDING", "PASS", "FAIL"]},
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

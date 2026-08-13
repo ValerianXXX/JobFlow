@@ -1,0 +1,56 @@
+# Runtime state is always local.  Only empty directory sentinels may be tracked.
+state/*
+!state/.gitkeep
+
+# Generated intake, job, review, mock-site and material files are never source.
+workspace/*
+!workspace/inbox/
+!workspace/jobs/
+!workspace/review-packets/
+workspace/inbox/*
+workspace/jobs/*
+workspace/review-packets/*
+!workspace/inbox/.gitkeep
+!workspace/jobs/.gitkeep
+!workspace/review-packets/.gitkeep
+
+# Release evidence is regenerated from synthetic inputs on every release.
+reports/*
+!reports/.gitkeep
+
+# Python and editor output
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+.ruff_cache/
+.mypy_cache/
+.DS_Store
+Thumbs.db
+*.log
+
+# Secrets are never project files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*cookie*
+*token*
+*credential*
+
+# Private exports and local release bundles must never be committed accidentally.
+*.dpapi
+*.sqlite
+*.sqlite3
+*.zip
+*.7z
+*.rar

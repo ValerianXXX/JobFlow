@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/jd.schema.json",
+  "title": "Normalized Job Description",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["job_id", "snapshot_hash", "captured_at", "company", "title", "responsibilities", "hard_requirements", "preferred_qualifications", "keywords"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "captured_at": {"type": "string", "format": "date-time"},
+    "company": {"type": ["string", "null"]},
+    "title": {"type": ["string", "null"]},
+    "location": {"type": ["string", "null"]},
+    "salary": {"type": ["string", "null"]},
+    "work_authorization": {"type": ["string", "null"]},
+    "deadline": {"type": ["string", "null"]},
+    "responsibilities": {"type": "array", "items": {"type": "string"}},
+    "hard_requirements": {"type": "array", "items": {"type": "string"}},
+    "preferred_qualifications": {"type": "array", "items": {"type": "string"}},
+    "keywords": {"type": "array", "items": {"type": "string"}}
+  }
+}

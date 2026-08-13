@@ -1,0 +1,30 @@
+name: JobFlow verification
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-tests:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install JobFlow
+        run: python -m pip install -e .
+      - name: Run regression suite
+        run: python -m unittest discover -s tests -v
+      - name: Check public tree boundary
+        run: python -m jobops.public_release
+      - name: Check CLI entry point
+        run: jobflow --help

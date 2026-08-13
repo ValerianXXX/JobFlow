@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/application.schema.json",
+  "title": "Application",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["application_id", "job_id", "status", "site", "resume_hash", "answers_hash", "dry_run"],
+  "properties": {
+    "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "job_id": {"type": "string"},
+    "status": {"enum": ["DISCOVERED", "SNAPSHOTTED", "PARSED", "ELIGIBILITY_CHECKED", "SCORED", "SHORTLISTED", "RESEARCHED", "MATERIALS_DRAFTED", "MATERIALS_VALIDATED", "FORM_PREFILLED", "FORM_VALIDATED", "AWAITING_APPROVAL", "APPROVED", "SUBMITTING", "SUBMITTED", "CONFIRMED", "NEEDS_USER_INPUT", "NEEDS_ACCOUNT_APPROVAL", "BLOCKED_LOGIN", "BLOCKED_CAPTCHA", "SITE_CHANGED", "APPROVAL_EXPIRED", "MATERIALS_NEEDS_CORRECTION", "INELIGIBLE", "SUBMISSION_UNKNOWN", "REJECTED", "CLOSED"]},
+    "site": {"type": "string"},
+    "resume_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "answers_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "dry_run": {"const": true},
+    "secure_profile_ref": {"type": ["string", "null"], "pattern": "^secure-ref:[A-Za-z0-9_-]+$"},
+    "sensitive_fields": {"type": "array", "items": {"type": "string"}},
+    "unknown_fields": {"type": "array", "items": {"type": "string"}}
+  }
+}

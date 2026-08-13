@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/source-route.schema.json",
+  "title": "Source Route", "type": "object", "additionalProperties": false,
+  "required": ["status", "company_domain", "official_entry_url", "current_url", "route_kind", "provider", "ats_tenant", "ats_board", "ats_job_identity", "guest_mode", "account_action", "official_page_hash", "jd_snapshot_hash", "route_hash", "navigation_history"],
+  "properties": {
+    "status": {"enum": ["ROUTE_APPROVED", "NEEDS_ACCOUNT_APPROVAL", "NEEDS_USER_INPUT"]}, "company_domain": {"type": "string"},
+    "official_entry_url": {"type": "string", "format": "uri", "pattern": "^https://"}, "current_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "route_kind": {"enum": ["OFFICIAL_DIRECT", "OFFICIAL_TO_APPROVED_ATS"]}, "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
+    "ats_tenant": {"type": "string"}, "ats_board": {"type": "string"}, "ats_job_identity": {"type": "string"},
+    "guest_mode": {"enum": ["GUEST_SELECTED", "GUEST_UNAVAILABLE", "UNKNOWN"]}, "account_action": {"enum": ["NONE", "NEEDS_ACCOUNT_APPROVAL", "NEEDS_USER_INPUT"]},
+    "official_page_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "jd_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "navigation_history": {"type": "array", "minItems": 1, "items": {"type": "string", "format": "uri", "pattern": "^https://"}}
+  }
+}

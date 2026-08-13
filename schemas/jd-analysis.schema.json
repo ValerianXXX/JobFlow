@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/jd-analysis.schema.json",
+  "title": "JD Analysis", "type": "object", "additionalProperties": false,
+  "required": ["analysis_id", "job_id", "snapshot_hash", "company", "title", "location", "level", "responsibilities", "requirements", "preferred_qualifications", "keywords", "untrusted_instruction_signals", "created_at"],
+  "properties": {
+    "analysis_id": {"type": "string", "pattern": "^JDA-[A-F0-9]{12}$"}, "job_id": {"type": "string", "pattern": "^JOB-[A-F0-9]{12}$"},
+    "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "company": {"type": "string"}, "title": {"type": "string"},
+    "location": {"type": "string"}, "level": {"type": "string"}, "responsibilities": {"type": "array", "items": {"type": "string"}},
+    "requirements": {"type": "array", "items": {"type": "object"}}, "preferred_qualifications": {"type": "array", "items": {"type": "string"}},
+    "keywords": {"type": "array", "items": {"type": "string"}}, "untrusted_instruction_signals": {"type": "array", "items": {"type": "string"}},
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

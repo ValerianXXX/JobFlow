@@ -1,0 +1,18 @@
+SYNTHETIC TEST DATA — NOT A REAL JOB POSTING
+
+Company: Example Analytics Lab
+Role: Strategy Analyst
+Location: Hybrid — Example City
+Compensation: UNKNOWN
+Work authorization: UNKNOWN
+
+Responsibilities:
+- Analyze synthetic market and product datasets.
+- Present recommendations with traceable evidence.
+
+Required:
+- Two years of analytical project experience.
+- Ability to explain assumptions and uncertainty.
+
+Preferred:
+- Familiarity with AI product evaluation.

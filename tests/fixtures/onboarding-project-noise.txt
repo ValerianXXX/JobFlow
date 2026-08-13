@@ -1,0 +1,5 @@
+PUBLIC-SAFE WORK SAMPLE PAGE 1
+WORKSTREAM DECISION DELIVERABLE VALUE CREATED
+I designed a synthetic workflow that connected research, approvals, and implementation.
+The model separates public facts and estimates.
+Built a 4,000-record synthetic evaluation set and improved review accuracy by 20%.

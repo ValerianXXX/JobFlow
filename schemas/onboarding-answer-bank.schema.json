@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/onboarding-answer-bank.schema.json",
+  "title": "Encrypted onboarding answer bank",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "locale", "answers", "completion", "updated_at"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "status": {"enum": ["IN_PROGRESS", "ONBOARDING_COMPLETE"]},
+    "locale": {"enum": ["zh", "en"]},
+    "answers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["value", "status", "source", "use_policy", "updated_at"],
+        "properties": {
+          "value": {"type": ["string", "array", "null"]},
+          "status": {"enum": ["UNKNOWN", "CONFIRMED", "PREFER_NOT_TO_ANSWER", "NOT_APPLICABLE"]},
+          "source": {"enum": ["UNKNOWN", "APPLICANT_CONFIRMED", "APPLICANT_PROVIDED_UNCONFIRMED", "AI_DERIVED_REQUIRES_CONFIRMATION"]},
+          "use_policy": {"enum": ["reuse", "confirm_each_application", "prefer_not_to_answer", "do_not_store"]},
+          "updated_at": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "completion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "resolved", "remaining", "percent"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 1},
+        "resolved": {"type": "integer", "minimum": 0},
+        "remaining": {"type": "integer", "minimum": 0},
+        "remaining_fields": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "percent": {"type": "number", "minimum": 0, "maximum": 100}
+      }
+    },
+    "updated_at": {"type": "string", "format": "date-time"}
+  }
+}

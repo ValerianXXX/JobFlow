@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/jd-snapshot.schema.json",
+  "title": "JD Snapshot", "type": "object", "additionalProperties": false,
+  "required": ["snapshot_id", "job_id", "source_format", "content_hash", "relative_path", "captured_at", "source_url"],
+  "properties": {
+    "snapshot_id": {"type": "string", "pattern": "^JDS-[A-F0-9]{12}$"}, "job_id": {"type": "string", "pattern": "^JOB-[A-F0-9]{12}$"},
+    "source_format": {"enum": ["txt", "html", "pdf", "page_snapshot"]}, "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "relative_path": {"type": "string", "minLength": 1}, "captured_at": {"type": "string", "format": "date-time"}, "source_url": {"type": ["string", "null"], "format": "uri"}
+  }
+}

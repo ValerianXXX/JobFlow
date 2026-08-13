@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://jobops.local/schemas/knowledge-evidence.schema.json",
+  "title": "Knowledge Evidence", "type": "object", "additionalProperties": false,
+  "required": ["source_id", "relative_path", "file_sha256", "heading", "excerpt", "excerpt_sha256", "last_verified_at", "expires_at"],
+  "properties": {
+    "source_id": {"const": "personal_redacted"}, "relative_path": {"type": "string", "minLength": 1},
+    "file_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "heading": {"type": "string", "minLength": 1},
+    "excerpt": {"type": "string", "minLength": 1}, "excerpt_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "last_verified_at": {"type": "string", "format": "date-time"}, "expires_at": {"type": "string", "format": "date-time"}
+  }
+}

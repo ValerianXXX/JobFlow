@@ -1,0 +1,9 @@
+{
+  "provider": "workday",
+  "page_context": "Synthetic local application fixture",
+  "fields": [
+    {"id": "full_name", "name": "full_name", "label": "Full name", "type": "text", "autocomplete": "name"},
+    {"id": "portfolio", "name": "portfolio", "label": "Portfolio URL", "type": "url"},
+    {"id": "submit", "name": "submit", "label": "Submit application", "type": "submit"}
+  ]
+}

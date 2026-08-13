@@ -1,0 +1,70 @@
+from __future__ import annotations
+
+import unittest
+from datetime import datetime, timedelta, timezone
+
+from _support import project_temp
+from jobops.document_builder import build_cover_letter, build_resume
+from jobops.errors import JobOpsError
+from jobops.evidence import map_evidence
+from jobops.materials import approved_wordings, master_diff
+from jobops.util import iso_utc
+
+
+def approved_claim(claim_id: str, wording: str, fact: str):
+    now = datetime.now(timezone.utc)
+    return {
+        "claim_id": claim_id,
+        "raw_fact": fact,
+        "allowed_wording": [wording],
+        "forbidden_wording": ["unverified outcome"],
+        "responsibility_boundary": {"candidate": "performed synthetic fixture action", "team": "reviewed", "ai": "generated fixture inputs"},
+        "evidence": [{"kind": "fixture", "value": 1}],
+        "source_refs": [{"source_id": "personal_redacted", "relative_path": "synthetic/case.md", "fingerprint": "sha256:" + "a" * 64}],
+        "approved_for_external": True,
+        "sensitivity": "personal-redacted",
+        "last_verified_at": iso_utc(now),
+        "expires_at": iso_utc(now + timedelta(days=30)),
+    }
+
+
+class MaterialTests(unittest.TestCase):
+    def test_evidence_mapping_uses_only_approved_claims(self) -> None:
+        claim = approved_claim("CLM-SYNTHETIC01", "Analyzed synthetic product evidence", "synthetic product analysis evidence")
+        mapping = map_evidence(["product analysis"], [claim])[0]
+        self.assertEqual(mapping.claim_id, "CLM-SYNTHETIC01")
+        self.assertIsNone(mapping.gap)
+        claim["approved_for_external"] = False
+        blocked = map_evidence(["product analysis"], [claim])[0]
+        self.assertEqual(blocked.gap, "NO_APPROVED_EVIDENCE")
+
+    def test_material_builder_rejects_unapproved_summary_and_unsourced_company_reason(self) -> None:
+        claim = approved_claim("CLM-SYNTHETIC01", "Analyzed synthetic product evidence", "synthetic product analysis evidence")
+        with project_temp() as temp:
+            with self.assertRaises(JobOpsError) as caught:
+                build_resume(temp / "resume.docx", candidate_display_name="Synthetic Candidate", target_role="Strategy Analyst", summary="Invented summary", claims=[claim], skills=["analysis"], education="Synthetic education fixture")
+            self.assertEqual(caught.exception.code, "SUMMARY_NOT_CLAIM_GATED")
+            with self.assertRaises(JobOpsError) as caught:
+                build_cover_letter(temp / "letter.docx", candidate_display_name="Synthetic Candidate", company="Example", target_role="Strategy Analyst", why_company="No source", why_role="Analyzed synthetic product evidence", claims=[claim])
+            self.assertEqual(caught.exception.code, "WHY_COMPANY_SOURCE_MISSING")
+
+    def test_docx_materials_contain_exact_approved_wording(self) -> None:
+        claim = approved_claim("CLM-SYNTHETIC01", "Analyzed synthetic product evidence", "synthetic product analysis evidence")
+        skill = approved_claim("CLM-SYNTHETIC02", "Synthetic analysis skill", "synthetic analysis skill")
+        education = approved_claim("CLM-SYNTHETIC03", "Synthetic education fixture", "synthetic education fixture")
+        with project_temp() as temp:
+            resume = build_resume(temp / "resume.docx", candidate_display_name="Synthetic Candidate", target_role="Strategy Analyst", summary=claim["allowed_wording"][0], claims=[claim, skill, education], skills=[skill["allowed_wording"][0]], education=education["allowed_wording"][0], bullet_claim_ids=[claim["claim_id"]])
+            letter = build_cover_letter(temp / "letter.docx", candidate_display_name="Synthetic Candidate", company="Example", target_role="Strategy Analyst", why_company="Example posted a synthetic role (https://example.com/news, accessed 2026-08-12).", why_role=claim["allowed_wording"][0], claims=[claim])
+            self.assertEqual(resume["claim_ids"], ["CLM-SYNTHETIC01", "CLM-SYNTHETIC02", "CLM-SYNTHETIC03"])
+            self.assertEqual(letter["claim_ids"], ["CLM-SYNTHETIC01"])
+            self.assertTrue((temp / "resume.docx").is_file())
+            self.assertTrue((temp / "letter.docx").is_file())
+
+    def test_master_diff_is_complete(self) -> None:
+        diff = master_diff("one\ntwo\n", "one\nthree\n")
+        self.assertIn("-two", diff)
+        self.assertIn("+three", diff)
+
+
+if __name__ == "__main__":
+    unittest.main()

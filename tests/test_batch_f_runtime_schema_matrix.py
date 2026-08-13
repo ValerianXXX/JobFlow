@@ -1,0 +1,176 @@
+from __future__ import annotations
+
+import copy
+import json
+import unittest
+
+from _support import PROJECT
+from jobops.errors import JobOpsError
+from jobops.runtime_schema import validate_named
+
+
+H = "sha256:" + "a" * 64
+T = "2026-08-12T00:00:00Z"
+FUTURE = "2099-01-01T00:00:00Z"
+JOB = "JOB-ABCDEF123456"
+APP = "APP-ABCDEF123456"
+
+
+def dimension() -> dict:
+    return {"score": 80, "evidence": ["synthetic fixture"], "calculation": "one local fixture", "gaps": [], "confidence": "MEDIUM", "decision_impact": "Does not override hard gates."}
+
+
+def valid_fixtures() -> dict[str, dict]:
+    route = {
+        "status": "ROUTE_APPROVED", "company_domain": "example.com", "official_entry_url": "https://example.com/careers/a",
+        "current_url": "https://example.com/careers/a", "route_kind": "OFFICIAL_DIRECT", "provider": "company",
+        "ats_tenant": "example.com", "ats_board": "official", "ats_job_identity": "a", "guest_mode": "GUEST_SELECTED",
+        "account_action": "NONE", "official_page_hash": H, "jd_snapshot_hash": H, "route_hash": H,
+        "navigation_history": ["https://example.com/careers/a"],
+    }
+    return {
+        "application": {"application_id": APP, "job_id": JOB, "status": "AWAITING_APPROVAL", "site": "example.com", "resume_hash": H, "answers_hash": H, "dry_run": True, "secure_profile_ref": "secure-ref:SYNTHETIC01", "sensitive_fields": [], "unknown_fields": []},
+        "approval": {
+            "approval_id": "APR-ABCDEF123456", "application_id": APP, "job_id": JOB, "jd_snapshot_hash": H, "jd_freshness_hash": H,
+            "source_route_hash": H, "canonical_url": "https://example.com/careers/a", "ats_tenant": "example", "ats_board": "official",
+            "ats_job_identity": "a", "profile_version": "1", "claim_set_hash": H, "form_snapshot_hash": H, "answers_hash": H,
+            "review_packet_hash": H, "uploads": [{"filename": "resume.pdf", "purpose": "resume", "sha256": H}],
+            "external_actions": ["upload_material"], "site_policy_version": "1", "unresolved_stops": [], "mandatory_unknowns": [],
+            "context_hash": H, "issued_at": T, "expires_at": FUTURE, "nonce": "nonce-" + "a" * 48,
+            "approval_version": 2, "status": "APPROVED", "consumed_at": None,
+        },
+        "audit-event": {"event_id": "EVT-ABCDEF123456", "application_id": APP, "event_type": "STATE_TRANSITION", "from_state": "FORM_VALIDATED", "to_state": "AWAITING_APPROVAL", "payload_hash": H, "created_at": T},
+        "candidate-profile": {"profile_ref": "secure-ref:SYNTHETIC01", "profile_version": "1", "candidate_display_name": "Synthetic Candidate", "target_functions": ["analysis"], "target_levels": ["mid"], "locations": ["remote"], "remote_preference": "remote", "minimum_salary": None, "work_authorization": "UNKNOWN", "skills": ["Python"], "years_experience": 3},
+        "candidate-profile-draft": {
+            "schema_version": 1, "profile_version": "draft-1", "status": "AWAITING_USER_CLAIM_AND_PROFILE_APPROVAL",
+            "master_resume_ref": "secure-ref:SYNTHETIC01",
+            "candidate_display_name": {"value": "Synthetic Candidate", "status": "APPLICANT_PROVIDED_UNCONFIRMED"},
+            "contact_fields_present": ["email"],
+            "resume_facts": [{"fact_id": "RSM-ABCDEF123456", "category": "skill", "value": "Python", "status": "APPLICANT_PROVIDED_UNCONFIRMED"}],
+            "target_preferences": {"target_roles": {"value": None, "status": "UNKNOWN"}},
+            "hard_conditions": {"work_authorization": {"value": None, "status": "UNKNOWN"}},
+            "field_status_counts": {"applicant_provided_unconfirmed": 2, "unknown": 2}, "created_at": T,
+        },
+        "onboarding-answer-bank": {
+            "schema_version": 2, "status": "IN_PROGRESS", "locale": "zh",
+            "answers": {
+                "target_roles": {
+                    "value": ["analysis"], "status": "CONFIRMED", "source": "APPLICANT_CONFIRMED",
+                    "use_policy": "reuse", "updated_at": T,
+                }
+            },
+            "completion": {"total": 25, "resolved": 1, "remaining": 24, "percent": 4.0},
+            "updated_at": T,
+        },
+        "onboarding-completion": {
+            "schema_version": 1, "status": "ONBOARDING_COMPLETE",
+            "profile_ref": "secure-ref:SYNTHETIC01", "answer_bank_ref": "secure-ref:SYNTHETIC02",
+            "claim_approvals_ref": "secure-ref:SYNTHETIC03",
+            "counts": {"answers_resolved": 25, "answers_total": 25, "claims_reviewed": 2, "claims_total": 2, "conflicts_resolved": 1, "conflicts_total": 1},
+            "sources": {"resume_or_material": 1, "ai": 1, "direct_answers": 25},
+            "locale": "en", "completed_at": T, "real_external_actions": 0, "knowledge_write_operations": 0,
+        },
+        "claim": {
+            "claim_id": "CLM-SYNTHETIC01", "raw_fact": "Synthetic fixture", "allowed_wording": ["Synthetic fixture"], "forbidden_wording": ["Real engagement"],
+            "responsibility_boundary": {"candidate": "fixture", "team": "none", "ai": "generated fixture"}, "evidence": [{"kind": "fixture", "value": 1}],
+            "source_refs": [{"source_id": "personal_redacted", "relative_path": "fixture.md", "heading": "Evidence", "excerpt": "Synthetic fixture", "excerpt_fingerprint": H, "fingerprint": H}],
+            "approved_for_external": True, "lifecycle_status": "approved", "sensitivity": "synthetic", "last_verified_at": T, "expires_at": FUTURE, "content_hash": H, "version": 1,
+        },
+        "fit-result": {"eligibility_status": "ELIGIBLE", "hard_gaps": [], "unknowns": [], "dimensions": {key: dimension() for key in ("function", "capability", "evidence", "industry", "level", "location", "preference")}, "overall_score": 80, "recommendation": "RECOMMEND", "explanation": ["All hard conditions passed."]},
+        "job": {"job_id": JOB, "source_type": "txt", "source_locator": "tests/fixtures/mock-jd.txt", "official_url": "https://example.com/careers/a", "company": "Example", "title": "Analyst", "location": "Remote", "status": "DISCOVERED", "discovered_at": T},
+        "jd": {"job_id": JOB, "snapshot_hash": H, "captured_at": T, "company": "Example", "title": "Analyst", "location": "Remote", "salary": None, "work_authorization": None, "deadline": None, "responsibilities": [], "hard_requirements": [], "preferred_qualifications": [], "keywords": []},
+        "jd-snapshot": {"snapshot_id": "JDS-ABCDEF123456", "job_id": JOB, "source_format": "txt", "content_hash": H, "relative_path": "workspace/jobs/a.txt", "captured_at": T, "source_url": None},
+        "jd-analysis": {"analysis_id": "JDA-ABCDEF123456", "job_id": JOB, "snapshot_hash": H, "company": "Example", "title": "Analyst", "location": "Remote", "level": "UNKNOWN", "responsibilities": [], "requirements": [], "preferred_qualifications": [], "keywords": [], "untrusted_instruction_signals": [], "created_at": T},
+        "knowledge-evidence": {"source_id": "personal_redacted", "relative_path": "fixture.md", "file_sha256": H, "heading": "Evidence", "excerpt": "Synthetic fixture", "excerpt_sha256": H, "last_verified_at": T, "expires_at": FUTURE},
+        "requirement": {"requirement_id": "REQ-SKILL1", "category": "skill", "text": "Python and SQL", "logic": "ALL", "items": ["Python", "SQL"], "threshold": None},
+        "research-finding": {"finding_id": "RFN-ABCDEF123456", "claim": "Synthetic launch", "source_url": "https://example.com/news", "source_type": "official_company", "snapshot_hash": H, "published_at": T, "accessed_at": T, "evidence_excerpt": "Synthetic launch", "evidence_sha256": H, "freshness": "CURRENT", "official": True},
+        "source-route": route,
+        "site-policy": {"policy_version": "1", "provider": "local_fixture", "real_actions_enabled": False, "guest_first": True, "account_creation_enabled": False, "allowed_actions": ["local_snapshot"], "checked_at": T},
+        "material-version": {"material_id": "MAT-ABCDEF123456", "application_id": APP, "kind": "resume_pdf", "relative_path": "reports/fixture.pdf", "content_hash": H, "master_hash": H, "claim_set_hash": H, "version": 1, "qa_status": "PASS", "created_at": T},
+        "application-field": {"field_id": "FLD-ABCDEF123456", "application_id": APP, "classification": "ordinary_fixed", "action": "PREFILL", "status": "READY", "secure_ref": None, "redacted_summary": None, "field_hash": H},
+        "queue-reservation": {"reservation_id": "RSV-ABCDEF123456", "intake_key": H, "application_id": APP, "status": "CONSUMED", "pending_limit": 3, "pending_count": 1, "reserved_count": 1, "created_at": T, "updated_at": T},
+        "recovery-event": {"recovery_id": "RCV-ABCDEF123456", "application_id": APP, "blocked_state": "SUBMISSION_UNKNOWN", "last_safe_state": "APPROVED", "validation_hash": H, "decision": "NO_AUTO_RETRY", "created_at": T},
+        "receipt": {"receipt_id": "RCP-ABCDEF123456", "application_id": APP, "source": "fake-receipt", "confirmation_type": "confirmation_number", "confirmation_hash": H, "verified": True, "verified_at": T},
+        "review-packet": {"schema_version": 1, "status": "AWAITING_APPROVAL", "packet_id": "RPK-ABCDEF123456", "application_id": APP, "job": {"job_id": JOB}, "jd_captured_at": T, "fit": {"overall_score": 80}, "hard_gaps": [], "resume_bullets": [], "master_resume_diff": {}, "form_questions": [], "sensitive_fields": [], "uploads": [{"filename": "resume.pdf", "sha256": H}], "external_actions": ["upload_material"], "source_route": route, "queue": {"pending_limit": 3}, "content_hash": H},
+        "onboarding-review": {
+            "schema_version": 1, "packet_id": "ONB-ABCDEF123456", "status": "AWAITING_USER_CLAIM_AND_PROFILE_APPROVAL",
+            "final_states": ["MASTER_RESUME_SECURELY_IMPORTED", "CANDIDATE_PROFILE_DRAFTED", "CLAIM_REVIEW_PACKET_READY"],
+            "selected_file": {"safe_display_name": "resume-2026-aug-reference.pdf", "source_type": "pdf", "sha256_prefix": "sha256:aaaaaaaaaaaa", "size_bytes": 100, "modified_at": T, "paired_pdf": False},
+            "master_resume": {"secure_ref": "secure-ref:SYNTHETIC01", "pdf_reference_ref": "secure-ref:SYNTHETIC01", "editable_master_status": "EDITABLE_MASTER_DOCX_MISSING", "structure_status": "LIMITED_PDF_REFERENCE", "page_count": 1, "template_fingerprint": H, "visual_status": "PASS", "visual_record_ref": "secure-ref:SYNTHETIC02"},
+            "candidate_profile": {"secure_ref": "secure-ref:SYNTHETIC03", "completeness_percent": 50, "provided_unconfirmed": 4, "unknown": 4, "confirmation_field_count": 8},
+            "answer_bank": {"secure_ref": "secure-ref:SYNTHETIC04", "unknown_field_count": 18, "categories": ["job_target"]},
+            "claims": {"secure_ref": "secure-ref:SYNTHETIC05", "proposed": 1, "resume_only": 2, "optional": 1, "conflicts": 0, "auto_approved": 0},
+            "unknown_hard_conditions": ["work_authorization"],
+            "validation": {"runtime_schema": "PASS", "secure_roundtrip": "PASS", "source_file_unchanged": True, "fingerprint_reverified": True, "leak_findings": 0, "staging_residue": 0, "database_consistent": "PASS", "knowledge_write_operations": 0, "project_boundary": "PASS", "external_actions": 0},
+            "real_external_actions": 0, "knowledge_bases": "UNCHANGED", "created_at": T,
+            "next_safe_action": "review-onboarding --packet-ref secure-ref:SYNTHETIC05",
+        },
+    }
+
+
+class RuntimeSchemaMatrixTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.schema_dir = PROJECT / "schemas"
+        self.fixtures = valid_fixtures()
+
+    def test_every_declared_runtime_schema_has_a_valid_fixture(self) -> None:
+        names = {path.name.removesuffix(".schema.json") for path in self.schema_dir.glob("*.schema.json")}
+        self.assertEqual(names, set(self.fixtures))
+        for name, value in self.fixtures.items():
+            with self.subTest(schema=name):
+                self.assertIs(validate_named(name, value, self.schema_dir), value)
+
+    def test_every_schema_rejects_missing_extra_and_wrong_type(self) -> None:
+        for name, value in self.fixtures.items():
+            required = json.loads((self.schema_dir / f"{name}.schema.json").read_text(encoding="utf-8"))["required"]
+            mutations = []
+            missing = copy.deepcopy(value); missing.pop(required[0]); mutations.append(missing)
+            extra = copy.deepcopy(value); extra["unexpected_field"] = True; mutations.append(extra)
+            wrong = copy.deepcopy(value); wrong[required[0]] = []; mutations.append(wrong)
+            for index, mutation in enumerate(mutations):
+                with self.subTest(schema=name, mutation=index), self.assertRaises(JobOpsError):
+                    validate_named(name, mutation, self.schema_dir)
+
+    def test_enums_hashes_secure_refs_urls_and_times_are_strict_where_present(self) -> None:
+        patterns = {
+            "enum": (lambda schema: "enum" in schema, "NOT_IN_ENUM"),
+            "sha": (lambda schema: str(schema.get("pattern", "")).startswith("^sha256:"), "sha256:bad"),
+            "secure": (lambda schema: "secure-ref" in str(schema.get("pattern", "")), "plaintext-profile"),
+            "url": (lambda schema: schema.get("format") == "uri", "not-a-url"),
+            "time": (lambda schema: schema.get("format") == "date-time", "not-a-time"),
+        }
+        coverage = {key: 0 for key in patterns}
+        for name, value in self.fixtures.items():
+            schema = json.loads((self.schema_dir / f"{name}.schema.json").read_text(encoding="utf-8"))
+            for category, (predicate, invalid) in patterns.items():
+                field = next((key for key, child in schema.get("properties", {}).items() if predicate(child) and key in value and value[key] is not None), None)
+                if field:
+                    coverage[category] += 1
+                    changed = copy.deepcopy(value); changed[field] = invalid
+                    with self.subTest(schema=name, category=category), self.assertRaises(JobOpsError):
+                        validate_named(name, changed, self.schema_dir)
+        self.assertTrue(all(count > 0 for count in coverage.values()), coverage)
+
+    def test_cross_field_semantic_conflicts_are_rejected(self) -> None:
+        conflicts = {
+            "approval": ("expires_at", T),
+            "claim": ("lifecycle_status", "revoked"),
+            "knowledge-evidence": ("expires_at", T),
+            "source-route": ("current_url", "https://example.com/careers/b"),
+            "queue-reservation": ("reserved_count", 3),
+            "requirement": ("threshold", 1),
+            "fit-result": ("eligibility_status", "INELIGIBLE"),
+            "research-finding": ("source_type", "local_fixture"),
+            "application-field": ("classification", "unknown_stop"),
+            "recovery-event": ("decision", "RESUME_SAFE_STEP"),
+            "receipt": ("verified", False),
+        }
+        for name, (field, invalid) in conflicts.items():
+            changed = copy.deepcopy(self.fixtures[name]); changed[field] = invalid
+            with self.subTest(schema=name), self.assertRaises(JobOpsError) as caught:
+                validate_named(name, changed, self.schema_dir)
+            self.assertEqual(caught.exception.code, "SCHEMA_SEMANTIC_CONFLICT")
+
+
+if __name__ == "__main__":
+    unittest.main()

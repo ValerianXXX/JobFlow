@@ -1,0 +1,142 @@
+from __future__ import annotations
+
+import contextlib
+import tempfile
+from pathlib import Path
+from typing import Iterator
+
+from .db import JobOpsDB
+from .errors import JobOpsError
+from .secure_store import WindowsDPAPIStore
+from .util import iso_utc, sha256_bytes
+
+
+PRIVATE_KINDS = {
+    "candidate_profile", "answer_bank", "master_resume_docx", "master_resume_pdf", "claim_approvals",
+    "generated_resume_docx", "generated_resume_pdf", "review_packet", "visual_evidence",
+    "resume_analysis", "claim_candidates", "onboarding_review_packet",
+    "onboarding_center_state", "onboarding_source_document", "onboarding_ai_derived",
+    "onboarding_completion_packet",
+}
+
+
+class PrivateOnboarding:
+    def __init__(self, database: JobOpsDB, store: WindowsDPAPIStore) -> None:
+        self.database = database
+        self.store = store
+
+    def import_bytes(self, kind: str, value: bytes, *, synthetic: bool = False) -> dict[str, object]:
+        if kind not in PRIVATE_KINDS:
+            raise JobOpsError("PRIVATE_KIND_INVALID", "Unsupported private onboarding kind.", kind=kind)
+        now = iso_utc()
+        display = kind.replace("_", "-")
+        content_hash = sha256_bytes(value)
+        with self.database.connect() as connection:
+            existing = connection.execute(
+                "SELECT * FROM private_refs WHERE kind=? AND content_sha256=? AND status='ACTIVE' AND synthetic=? ORDER BY version DESC LIMIT 1",
+                (kind, content_hash, int(synthetic)),
+            ).fetchone()
+        if existing is not None:
+            return {
+                "secure_ref": existing["secure_ref"], "kind": kind, "display_name": existing["display_name"],
+                "content_sha256": existing["content_sha256"], "ciphertext_sha256": existing["ciphertext_sha256"],
+                "version": int(existing["version"]), "status": "ACTIVE", "deduplicated": True,
+            }
+        stored = self.store.put_bytes(value)
+        secure_ref = str(stored["secure_ref"])
+        with self.database.connect() as connection:
+            connection.execute(
+                """INSERT INTO private_refs(
+                secure_ref,kind,display_name,ciphertext_sha256,content_sha256,version,status,synthetic,created_at,updated_at)
+                VALUES(?,?,?,?,?,1,'ACTIVE',?,?,?)""",
+                (secure_ref, kind, display, stored["ciphertext_sha256"], content_hash, int(synthetic), now, now),
+            )
+        return {"secure_ref": secure_ref, "kind": kind, "display_name": display, "content_sha256": content_hash, "ciphertext_sha256": stored["ciphertext_sha256"], "version": 1, "status": "ACTIVE", "deduplicated": False}
+
+    def import_file(self, kind: str, selected_path: Path, *, synthetic: bool = False) -> dict[str, object]:
+        if not selected_path.is_file():
+            raise JobOpsError("PRIVATE_IMPORT_FILE_MISSING", "The explicitly selected private import file does not exist.")
+        return self.import_bytes(kind, selected_path.read_bytes(), synthetic=synthetic)
+
+    def _record(self, reference: str):
+        with self.database.connect() as connection:
+            row = connection.execute("SELECT * FROM private_refs WHERE secure_ref=?", (reference,)).fetchone()
+        if row is None:
+            raise JobOpsError("SECURE_REFERENCE_MISSING", "Secure reference is not registered.")
+        return row
+
+    def read_bytes(self, reference: str) -> bytes:
+        row = self._record(reference)
+        if row["status"] != "ACTIVE":
+            raise JobOpsError("SECURE_REFERENCE_REVOKED", "Secure reference is not active.", status=row["status"])
+        value = self.store.get_bytes(reference)
+        if sha256_bytes(value) != row["content_sha256"]:
+            raise JobOpsError("SECURE_CONTENT_HASH_MISMATCH", "Decrypted private content failed integrity verification.")
+        return value
+
+    def rotate(self, reference: str, value: bytes) -> dict[str, object]:
+        row = self._record(reference)
+        if row["status"] != "ACTIVE":
+            raise JobOpsError("SECURE_REFERENCE_REVOKED", "Only an active secure reference can rotate.")
+        stored = self.store.put_bytes(value, reference=reference)
+        version = int(row["version"]) + 1
+        with self.database.connect() as connection:
+            connection.execute(
+                "UPDATE private_refs SET ciphertext_sha256=?,content_sha256=?,version=?,updated_at=? WHERE secure_ref=?",
+                (stored["ciphertext_sha256"], sha256_bytes(value), version, iso_utc(), reference),
+            )
+        return {"secure_ref": reference, "version": version, "status": "ACTIVE", "content_sha256": sha256_bytes(value)}
+
+    def revoke(self, reference: str) -> dict[str, object]:
+        self._record(reference)
+        with self.database.connect() as connection:
+            connection.execute("UPDATE private_refs SET status='REVOKED',updated_at=? WHERE secure_ref=?", (iso_utc(), reference))
+        return {"secure_ref": reference, "status": "REVOKED"}
+
+    def delete(self, reference: str, *, user_confirmed: bool) -> dict[str, object]:
+        if not user_confirmed:
+            raise JobOpsError("PRIVATE_DELETE_CONFIRMATION_REQUIRED", "Private deletion requires explicit user confirmation.")
+        self._record(reference)
+        if self.store.test(reference):
+            self.store.delete(reference)
+        with self.database.connect() as connection:
+            connection.execute("UPDATE private_refs SET status='DELETED',updated_at=? WHERE secure_ref=?", (iso_utc(), reference))
+        return {"secure_ref": reference, "status": "DELETED", "deleted": ["ciphertext", "reference", "staging_cache"], "secure_erase_claimed": False}
+
+    def purge_synthetic(self) -> dict[str, object]:
+        with self.database.connect() as connection:
+            refs = [row[0] for row in connection.execute("SELECT secure_ref FROM private_refs WHERE synthetic=1 AND status!='DELETED'")]
+        for reference in refs:
+            self.delete(reference, user_confirmed=True)
+        return {"status": "PURGED", "synthetic_refs_deleted": len(refs), "secure_erase_claimed": False}
+
+    @contextlib.contextmanager
+    def staged_file(self, reference: str, suffix: str) -> Iterator[Path]:
+        self.store.private_root.mkdir(parents=True, exist_ok=True)
+        staging = self.store.private_root / "staging"
+        staging.mkdir(parents=True, exist_ok=True)
+        directory = Path(tempfile.mkdtemp(prefix="jobops-stage-", dir=staging))
+        target = directory / ("material" + suffix)
+        try:
+            target.write_bytes(self.read_bytes(reference))
+            yield target
+        finally:
+            if target.exists():
+                target.unlink()
+            try:
+                directory.rmdir()
+            except OSError:
+                pass
+
+    @contextlib.contextmanager
+    def staging_directory(self) -> Iterator[Path]:
+        """Create a private, OneDrive-external working directory and always clean it."""
+        import shutil
+
+        staging = self.store.private_root / "staging"
+        staging.mkdir(parents=True, exist_ok=True)
+        directory = Path(tempfile.mkdtemp(prefix="jobops-stage-", dir=staging))
+        try:
+            yield directory
+        finally:
+            shutil.rmtree(directory, ignore_errors=True)
