@@ -52,6 +52,38 @@ class PrivateOnboarding:
             )
         return staging
 
+    def clear_staging_residue(self) -> dict[str, object]:
+        """Remove crash residue only after the caller holds the local instance lock."""
+        staging = self._staging_root()
+        entries: list[Path] = []
+        directories = [staging]
+        while directories:
+            directory = directories.pop()
+            for path in directory.iterdir():
+                entries.append(path)
+                if has_reparse_component(path, staging):
+                    raise JobOpsError(
+                        "PRIVATE_STAGING_REPARSE_FORBIDDEN",
+                        "Private staging residue contains a link or Windows reparse point and was not removed.",
+                    )
+                if path.is_dir():
+                    directories.append(path)
+        top_level = list(staging.iterdir())
+        deleted = len(entries)
+        for path in top_level:
+            if not is_relative_to(path.absolute(), staging.absolute()):
+                raise JobOpsError("PRIVATE_STAGING_BOUNDARY_INVALID", "Private staging cleanup left its controlled boundary.")
+            if path.is_dir():
+                shutil.rmtree(path)
+            else:
+                path.unlink()
+        return {
+            "status": "PRIVATE_STAGING_CLEAN",
+            "staging_items_deleted": deleted,
+            "private_values_emitted": 0,
+            "real_external_actions": 0,
+        }
+
     def import_bytes(self, kind: str, value: bytes, *, synthetic: bool = False) -> dict[str, object]:
         if kind not in PRIVATE_KINDS:
             raise JobOpsError("PRIVATE_KIND_INVALID", "Unsupported private onboarding kind.", kind=kind)

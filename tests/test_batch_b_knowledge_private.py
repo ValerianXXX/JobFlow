@@ -392,6 +392,24 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
                 staged.with_suffix(".sidecar").write_text("synthetic", encoding="utf-8")
                 staging_directory = staged.parent
             self.assertFalse(staging_directory.exists())
+
+            residue = safe.store.private_root / "staging" / "crashed-session" / "nested"
+            residue.mkdir(parents=True)
+            (residue / "material.txt").write_text(SENTINEL, encoding="utf-8")
+            cleaned = safe.clear_staging_residue()
+            self.assertEqual(cleaned["status"], "PRIVATE_STAGING_CLEAN")
+            self.assertGreaterEqual(cleaned["staging_items_deleted"], 3)
+            self.assertFalse(any((safe.store.private_root / "staging").iterdir()))
+
+            unsafe = safe.store.private_root / "staging" / "linked-session"
+            unsafe.mkdir()
+            (unsafe / "material.txt").write_text(SENTINEL, encoding="utf-8")
+            with patch("jobops.private_onboarding.has_reparse_component", side_effect=[False, True]):
+                with self.assertRaises(JobOpsError) as reparse:
+                    safe.clear_staging_residue()
+            self.assertEqual(reparse.exception.code, "PRIVATE_STAGING_REPARSE_FORBIDDEN")
+            self.assertTrue(unsafe.exists())
+            safe.clear_staging_residue()
             safe.delete(record["secure_ref"], user_confirmed=True)
 
 

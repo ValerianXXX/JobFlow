@@ -318,6 +318,9 @@ def create_server(service: OnboardingCenterService, *, port: int = 0, token: str
 
 
 def _run_server_unlocked(service: OnboardingCenterService, *, port: int = 0, open_browser: bool = True) -> dict[str, Any]:
+    # run_server holds the single-instance lock here, so residue cannot belong to
+    # another live onboarding process. Cleanup happens before a listening socket exists.
+    service.onboarding.clear_staging_residue()
     server = create_server(service, port=port)
     safe = {
         "status": "ONBOARDING_CENTER_READY", "url": server.url,
