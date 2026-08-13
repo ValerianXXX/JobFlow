@@ -42,6 +42,7 @@ from .util import canonical_json, iso_utc, load_json, sha256_bytes, stable_id, w
 IN_PROGRESS = "IN_PROGRESS"
 COMPLETE = "ONBOARDING_COMPLETE"
 MAX_UPLOAD_BYTES = 256 * 1024 * 1024
+MAX_RETAINED_SOURCE_BYTES = 64 * 1024 * 1024
 LARGE_EXPORT_THRESHOLD_BYTES = 200 * 1024 * 1024
 MAX_LARGE_EXPORT_BYTES = 8 * 1024 * 1024 * 1024
 MAX_DERIVED_TEXT_CHARS = 12_000_000
@@ -53,6 +54,9 @@ MAX_CHATGPT_MEMBER_COMPRESSION_RATIO = 1_000
 MAX_CHATGPT_CONVERSATION_CHARS = 64 * 1024 * 1024
 MAX_CHATGPT_FRAGMENT_CANDIDATES = 600
 MAX_CHATGPT_AI_SELECTION_CHARS = MAX_AI_INPUT_CHARS
+MAX_DOCX_MEMBERS = 10_000
+MAX_DOCX_XML_BYTES = 64 * 1024 * 1024
+MAX_DOCX_XML_COMPRESSION_RATIO = 200
 MAX_REVIEW_PACKET_BYTES = 2 * 1024 * 1024
 ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "ai_summary", "chatgpt_export"}
 ALLOWED_EXTENSIONS = {".docx", ".pdf", ".txt", ".md", ".json", ".zip"}
@@ -486,8 +490,32 @@ def extract_key_value_suggestions(text: str, *, source_id: str, source_status: s
 def _docx_text(data: bytes) -> str:
     try:
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
-            body = archive.read("word/document.xml")
-    except (zipfile.BadZipFile, KeyError) as exc:
+            members = archive.infolist()
+            if len(members) > MAX_DOCX_MEMBERS:
+                raise JobOpsError("ONBOARDING_DOCUMENT_TOO_LARGE", "The DOCX contains too many archive entries.")
+            documents = [item for item in members if item.filename == "word/document.xml" and not item.is_dir()]
+            if len(documents) != 1:
+                raise JobOpsError(
+                    "ONBOARDING_DOCUMENT_AMBIGUOUS",
+                    "The DOCX must contain exactly one Word main-document XML part.",
+                )
+            document = documents[0]
+            if document.file_size < 1 or document.file_size > MAX_DOCX_XML_BYTES:
+                raise JobOpsError("ONBOARDING_DOCUMENT_TOO_LARGE", "The DOCX main document exceeds the safe extraction limit.")
+            if document.flag_bits & 0x1:
+                raise JobOpsError("ONBOARDING_DOCUMENT_ENCRYPTED", "Password-protected DOCX files are not supported.")
+            if int(document.file_size) / max(1, int(document.compress_size)) > MAX_DOCX_XML_COMPRESSION_RATIO:
+                raise JobOpsError(
+                    "ONBOARDING_DOCUMENT_COMPRESSION_UNSAFE",
+                    "The DOCX main document has an unsafe compression ratio.",
+                )
+            with archive.open(document, "r") as stream:
+                body = stream.read(MAX_DOCX_XML_BYTES + 1)
+            if len(body) != int(document.file_size) or len(body) > MAX_DOCX_XML_BYTES:
+                raise JobOpsError("ONBOARDING_DOCUMENT_TOO_LARGE", "The DOCX main document did not match its bounded size.")
+    except JobOpsError:
+        raise
+    except (zipfile.BadZipFile, KeyError, RuntimeError) as exc:
         raise JobOpsError("ONBOARDING_DOCUMENT_INVALID", "The uploaded DOCX is not a readable Word document.") from exc
     try:
         root = ET.fromstring(body)
@@ -1296,6 +1324,11 @@ class OnboardingCenterService:
             raise JobOpsError("ONBOARDING_SOURCE_FORMAT_INVALID", "The onboarding source format is not supported.")
         if not data or len(data) > MAX_UPLOAD_BYTES:
             raise JobOpsError("ONBOARDING_SOURCE_SIZE_INVALID", "The onboarding source is empty or exceeds the local size limit.")
+        if source_type != "chatgpt_export" and len(data) > MAX_RETAINED_SOURCE_BYTES:
+            raise JobOpsError(
+                "ONBOARDING_SOURCE_SIZE_INVALID",
+                "Retained resume, project, supporting and AI-summary sources may not exceed 64 MiB.",
+            )
         if source_type == "chatgpt_export" and len(data) > LARGE_EXPORT_THRESHOLD_BYTES:
             raise JobOpsError(
                 "CHATGPT_EXPORT_LIGHTNING_REQUIRED",

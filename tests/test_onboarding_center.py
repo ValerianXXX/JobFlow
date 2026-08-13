@@ -10,6 +10,7 @@ import threading
 import unittest
 import urllib.error
 import urllib.request
+import warnings
 import zipfile
 from pathlib import Path
 from unittest import mock
@@ -21,7 +22,7 @@ from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
 from jobops.instance_lock import local_instance_lock
 from jobops.onboarding_catalog import FIELD_BY_ID, FIELD_IDS, public_catalog
-from jobops.onboarding_center import OnboardingCenterService, _evidence_preview
+from jobops.onboarding_center import OnboardingCenterService, _docx_text, _evidence_preview
 from jobops.onboarding_server import create_server
 from jobops.private_onboarding import PrivateOnboarding
 from jobops.util import canonical_json, sha256_bytes
@@ -423,6 +424,59 @@ class OnboardingCenterTests(unittest.TestCase):
                 with self.assertRaises(JobOpsError) as blocked:
                     service.preview_source("chatgpt_export", ".zip", buffer.getvalue())
             self.assertEqual(blocked.exception.code, "CHATGPT_EXPORT_LIGHTNING_REQUIRED")
+
+    def test_docx_extraction_is_bounded_and_rejects_ambiguous_main_parts(self) -> None:
+        namespace = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+        xml = (
+            f'<w:document xmlns:w="{namespace}"><w:body><w:p><w:r><w:t>'
+            + ("Synthetic resume text. " * 32)
+            + "</w:t></w:r></w:p></w:body></w:document>"
+        ).encode("utf-8")
+        document = io.BytesIO()
+        with zipfile.ZipFile(document, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("word/document.xml", xml)
+        self.assertIn("Synthetic resume text", _docx_text(document.getvalue()))
+
+        with mock.patch("jobops.onboarding_center.MAX_DOCX_XML_BYTES", 128):
+            with self.assertRaises(JobOpsError) as oversized:
+                _docx_text(document.getvalue())
+        self.assertEqual(oversized.exception.code, "ONBOARDING_DOCUMENT_TOO_LARGE")
+
+        with mock.patch("jobops.onboarding_center.MAX_DOCX_XML_COMPRESSION_RATIO", 1):
+            with self.assertRaises(JobOpsError) as unsafe_ratio:
+                _docx_text(document.getvalue())
+        self.assertEqual(unsafe_ratio.exception.code, "ONBOARDING_DOCUMENT_COMPRESSION_UNSAFE")
+
+        duplicate = io.BytesIO()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            with zipfile.ZipFile(duplicate, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("word/document.xml", xml)
+                archive.writestr("word/document.xml", xml)
+        with self.assertRaises(JobOpsError) as duplicate_main:
+            _docx_text(duplicate.getvalue())
+        self.assertEqual(duplicate_main.exception.code, "ONBOARDING_DOCUMENT_AMBIGUOUS")
+
+        ambiguous = io.BytesIO()
+        with mock.patch("jobops.onboarding_center.MAX_DOCX_MEMBERS", 1):
+            with zipfile.ZipFile(ambiguous, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("word/document.xml", xml[:100])
+                archive.writestr("word/styles.xml", b"<styles/>")
+            with self.assertRaises(JobOpsError) as too_many:
+                _docx_text(ambiguous.getvalue())
+        self.assertEqual(too_many.exception.code, "ONBOARDING_DOCUMENT_TOO_LARGE")
+
+    def test_retained_material_limit_does_not_reduce_chatgpt_export_transport_limit(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            with mock.patch("jobops.onboarding_center.MAX_RETAINED_SOURCE_BYTES", 8):
+                with self.assertRaises(JobOpsError) as retained:
+                    service._prepare_source("project_case", ".txt", b"123456789")
+                self.assertEqual(retained.exception.code, "ONBOARDING_SOURCE_SIZE_INVALID")
+
+                with self.assertRaises(JobOpsError) as export:
+                    service._prepare_source("chatgpt_export", ".zip", b"123456789")
+                self.assertNotEqual(export.exception.code, "ONBOARDING_SOURCE_SIZE_INVALID")
             self.assertEqual(service.bootstrap()["pending_sources"], [])
 
     def test_source_preview_prevents_unreviewed_line_claims(self) -> None:
@@ -1124,6 +1178,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('CONFLICT_REVIEW_INCOMPLETE:"conflictReviewIncomplete"', app)
         self.assertIn('SOURCE_PRIVATE_DELETE_FAILED:"privateDeleteRetry"', app)
         self.assertIn('SOURCE_DELETE_ROLLBACK_FAILED:"privateDeleteRepair"', app)
+        self.assertIn("const MAX_RETAINED_SOURCE_BYTES = 64 * 1024 * 1024;", app)
         self.assertIn('privateDeleteRetry: "本机加密副本暂时无法删除', app)
         self.assertIn('privateDeleteRetry: "The local encrypted copy could not be deleted', app)
         self.assertIn('id="blockingNotice"', html)

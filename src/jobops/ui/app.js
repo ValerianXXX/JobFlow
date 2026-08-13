@@ -75,6 +75,7 @@ const ACTIVITY_ESTIMATES = {
   discoveringJobs: 8
 };
 const STANDARD_CHATGPT_EXPORT_BYTES = 200 * 1024 * 1024;
+const MAX_RETAINED_SOURCE_BYTES = 64 * 1024 * 1024;
 const MAX_LIGHTNING_EXPORT_BYTES = 8 * 1024 * 1024 * 1024;
 const MAX_OFFICIAL_SNAPSHOT_BYTES = 32 * 1024 * 1024;
 
@@ -133,6 +134,8 @@ const LOCAL_ERROR_KEYS = {
   CONFLICT_REVIEW_INVALID:"conflictReviewIncomplete", ONBOARDING_SOURCE_TYPE_INVALID:"sourceTypeUnsupported",
   ONBOARDING_SOURCE_EXTENSION_INVALID:"sourceTypeUnsupported", CHATGPT_EXPORT_FORMAT_INVALID:"sourceTypeUnsupported",
   ONBOARDING_SOURCE_SIZE_INVALID:"sourceSizeInvalid", REQUEST_SIZE_INVALID:"sourceSizeInvalid",
+  ONBOARDING_DOCUMENT_TOO_LARGE:"sourceSizeInvalid", ONBOARDING_DOCUMENT_COMPRESSION_UNSAFE:"sourceSizeInvalid",
+  ONBOARDING_DOCUMENT_AMBIGUOUS:"sourceTypeUnsupported", ONBOARDING_DOCUMENT_ENCRYPTED:"sourceTypeUnsupported",
   REQUEST_CONTENT_TYPE_INVALID:"localRequestFailed", REQUEST_TRANSFER_ENCODING_FORBIDDEN:"localRequestFailed",
   ONBOARDING_UPLOAD_INTERRUPTED:"uploadInterrupted",
   SOURCE_PRIVATE_DELETE_FAILED:"privateDeleteRetry", SOURCE_PREVIEW_PRIVATE_DELETE_FAILED:"privateDeleteRetry",
@@ -734,6 +737,7 @@ async function upload(file, requestedType) {
     sourceType="chatgpt_export_large";
     document.querySelector("#aiType").value=sourceType;
   }
+  if(!sourceType.startsWith("chatgpt_export")&&file.size>MAX_RETAINED_SOURCE_BYTES){showToast(t("sourceSizeInvalid"),true);return;}
   const largeMode=sourceType==="chatgpt_export_large";
   if(largeMode&&extension!==".zip"){showToast(t("lightningZipOnly"),true);return;}
   if(largeMode&&file.size>MAX_LIGHTNING_EXPORT_BYTES){showToast(t("lightningTooLarge"),true);return;}

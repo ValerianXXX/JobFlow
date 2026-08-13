@@ -16,7 +16,12 @@ from urllib.parse import parse_qs, urlparse
 
 from .errors import JobOpsError
 from .instance_lock import local_instance_lock
-from .onboarding_center import MAX_LARGE_EXPORT_BYTES, MAX_UPLOAD_BYTES, OnboardingCenterService
+from .onboarding_center import (
+    MAX_LARGE_EXPORT_BYTES,
+    MAX_RETAINED_SOURCE_BYTES,
+    MAX_UPLOAD_BYTES,
+    OnboardingCenterService,
+)
 from .official_discovery import MAX_SNAPSHOT_BYTES
 
 
@@ -327,7 +332,13 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 query = parse_qs(parsed.query)
                 source_type = str(query.get("source_type", [""])[0])
                 extension = str(query.get("extension", [""])[0])
-                size_limit = MAX_LARGE_EXPORT_BYTES if source_type == "chatgpt_export_large" else MAX_UPLOAD_BYTES
+                size_limit = (
+                    MAX_LARGE_EXPORT_BYTES
+                    if source_type == "chatgpt_export_large"
+                    else MAX_UPLOAD_BYTES
+                    if source_type == "chatgpt_export"
+                    else MAX_RETAINED_SOURCE_BYTES
+                )
                 length = self._binary_body_length(
                     maximum=size_limit,
                     size_code="ONBOARDING_SOURCE_SIZE_INVALID",
