@@ -798,10 +798,15 @@ class OnboardingCenterService:
             pending_rows = connection.execute(
                 """SELECT a.application_id,a.job_id,a.status,a.updated_at,
                           j.company,j.title,j.location,j.official_url,
-                          r.packet_id,r.status AS packet_status,r.content_hash
+                          r.packet_id,r.packet_version,r.status AS packet_status,r.content_hash
                    FROM applications a
                    JOIN jobs j ON j.job_id=a.job_id
-                   LEFT JOIN review_packets r ON r.application_id=a.application_id
+                   LEFT JOIN review_packets r ON r.packet_id=(
+                       SELECT rp.packet_id FROM review_packets rp
+                       WHERE rp.application_id=a.application_id
+                         AND rp.status IN ('AWAITING_APPROVAL','APPROVED')
+                       ORDER BY rp.packet_version DESC LIMIT 1
+                   )
                    WHERE a.status='AWAITING_APPROVAL'
                    ORDER BY a.updated_at,a.application_id
                    LIMIT 100"""
@@ -813,12 +818,16 @@ class OnboardingCenterService:
             ).fetchall()
             recent_rows = connection.execute(
                 """SELECT a.application_id,a.status,a.updated_at,j.company,j.title,j.location,
-                          r.packet_id,r.status AS packet_status,
+                          r.packet_id,r.packet_version,r.status AS packet_status,
                           (SELECT expires_at FROM approvals p WHERE p.application_id=a.application_id
                            ORDER BY p.issued_at DESC LIMIT 1) AS approval_expires_at
                    FROM applications a
                    JOIN jobs j ON j.job_id=a.job_id
-                   LEFT JOIN review_packets r ON r.application_id=a.application_id
+                   LEFT JOIN review_packets r ON r.packet_id=(
+                       SELECT rp.packet_id FROM review_packets rp
+                       WHERE rp.application_id=a.application_id
+                       ORDER BY rp.packet_version DESC LIMIT 1
+                   )
                    WHERE a.status<>'AWAITING_APPROVAL'
                    ORDER BY a.updated_at DESC,a.application_id DESC LIMIT 30"""
             ).fetchall()
@@ -832,6 +841,7 @@ class OnboardingCenterService:
             "location": str(row["location"]) if row["location"] is not None else None,
             "official_url": str(row["official_url"]) if row["official_url"] is not None else None,
             "packet_id": str(row["packet_id"]) if row["packet_id"] is not None else None,
+            "packet_version": int(row["packet_version"]) if row["packet_version"] is not None else None,
             "packet_status": str(row["packet_status"]) if row["packet_status"] is not None else "MISSING",
             "packet_hash_prefix": str(row["content_hash"])[:15] if row["content_hash"] is not None else None,
         } for row in pending_rows]
@@ -847,6 +857,7 @@ class OnboardingCenterService:
             "title": str(row["title"]),
             "location": str(row["location"]) if row["location"] is not None else None,
             "packet_id": str(row["packet_id"]) if row["packet_id"] is not None else None,
+            "packet_version": int(row["packet_version"]) if row["packet_version"] is not None else None,
             "packet_status": str(row["packet_status"]) if row["packet_status"] is not None else "MISSING",
             "approval_expires_at": str(row["approval_expires_at"]) if row["approval_expires_at"] is not None else None,
         } for row in recent_rows]
@@ -885,13 +896,13 @@ class OnboardingCenterService:
             raise JobOpsError("APPLICATION_ID_INVALID", "The selected application identifier is invalid.")
         with self.database.connect() as connection:
             row = connection.execute(
-                """SELECT r.packet_id,r.content_hash,r.relative_path,r.status,r.created_at,
+                """SELECT r.packet_id,r.packet_version,r.content_hash,r.relative_path,r.status,r.created_at,
                           a.status AS application_status,j.company,j.title,j.location
                    FROM review_packets r
                    JOIN applications a ON a.application_id=r.application_id
                    JOIN jobs j ON j.job_id=a.job_id
                    WHERE r.application_id=?
-                   ORDER BY r.created_at DESC,r.rowid DESC LIMIT 1""",
+                    ORDER BY r.packet_version DESC LIMIT 1""",
                 (application_id,),
             ).fetchone()
             stopped_fields = int(connection.execute(
@@ -917,6 +928,7 @@ class OnboardingCenterService:
         return {
             "status": str(row["status"]), "application_status": str(row["application_status"]),
             "application_id": application_id, "packet_id": str(row["packet_id"]),
+            "packet_version": int(row["packet_version"]),
             "created_at": str(row["created_at"]), "stopped_fields": stopped_fields,
             "job_summary": {
                 "company": str(row["company"]), "title": str(row["title"]),

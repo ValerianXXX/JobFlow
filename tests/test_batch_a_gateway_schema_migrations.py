@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 from _support import PROJECT, project_temp
 from jobops.approvals import ApprovalContext, UploadBinding, issue_approval, validate_approval
-from jobops.db import JobOpsDB, MIGRATION_001_SQL
+from jobops.db import JobOpsDB, MIGRATION_001_SQL, MIGRATION_003_SQL
 from jobops.errors import JobOpsError
 from jobops.external_actions import ExternalActionGateway, ExternalActionPolicy
 from jobops.runtime_schema import validate_named
@@ -168,6 +168,47 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                 self.assertEqual(current.execute("SELECT COUNT(*) FROM applications WHERE application_id='APP-LEGACY'").fetchone()[0], 1)
                 with self.assertRaises(sqlite3.IntegrityError):
                     current.execute("INSERT INTO applications(application_id,job_id,site,status,dry_run,last_safe_state,updated_at) VALUES(?,?,?,?,?,?,?)", ("APP-UNSAFE", "JOB-LEGACY", "example.test", "DISCOVERED", 0, "DISCOVERED", now))
+
+    def test_v4_migration_preserves_packet_and_allows_versioned_history_only(self) -> None:
+        with project_temp() as temp:
+            path = temp / "review-history-v3.db"
+            database = JobOpsDB(path)
+            now = iso_utc()
+            with database.connect() as connection:
+                connection.executescript(MIGRATION_001_SQL)
+                connection.execute("INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','1')")
+                database._migrate_1_to_2(connection)
+                connection.executescript(MIGRATION_003_SQL)
+                connection.execute("INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','3')")
+                connection.execute(
+                    "INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("JOB-PACKET", "synthetic", "fixture", None, "Example", "Analyst", None, "FORM_VALIDATED", now, now),
+                )
+                connection.execute(
+                    "INSERT INTO applications VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("APP-PACKET", "JOB-PACKET", "example.test", "AWAITING_APPROVAL", HASH_A, HASH_B, 1, None, "AWAITING_APPROVAL", now),
+                )
+                connection.execute(
+                    "INSERT INTO review_packets(packet_id,application_id,content_hash,relative_path,status,created_at) VALUES(?,?,?,?,?,?)",
+                    ("RPK-PACKET-1", "APP-PACKET", HASH_A, "secure-ref:SYNTHETIC_PACKET_1", "AWAITING_APPROVAL", now),
+                )
+
+            self.assertEqual(database.migrate(), [4])
+            with database.connect() as connection:
+                row = connection.execute(
+                    "SELECT packet_id,packet_version,supersedes_packet_id,status FROM review_packets"
+                ).fetchone()
+                self.assertEqual(dict(row), {
+                    "packet_id": "RPK-PACKET-1", "packet_version": 1,
+                    "supersedes_packet_id": None, "status": "AWAITING_APPROVAL",
+                })
+                with self.assertRaises(sqlite3.IntegrityError):
+                    connection.execute(
+                        """INSERT INTO review_packets(
+                        packet_id,application_id,content_hash,relative_path,status,packet_version,created_at
+                        ) VALUES(?,?,?,?,?,?,?)""",
+                        ("RPK-PACKET-2", "APP-PACKET", HASH_B, "secure-ref:SYNTHETIC_PACKET_2", "AWAITING_APPROVAL", 2, now),
+                    )
 
 
 if __name__ == "__main__":

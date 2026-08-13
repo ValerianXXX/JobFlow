@@ -425,19 +425,24 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "list-pending":
             database = _database(project)
             with database.connect() as connection:
-                rows = connection.execute("SELECT a.application_id,a.job_id,a.status,r.packet_id,r.content_hash FROM applications a JOIN review_packets r ON r.application_id=a.application_id WHERE a.status='AWAITING_APPROVAL' ORDER BY a.updated_at").fetchall()
+                rows = connection.execute("""SELECT a.application_id,a.job_id,a.status,r.packet_id,r.packet_version,r.content_hash
+                    FROM applications a JOIN review_packets r ON r.packet_id=(
+                        SELECT rp.packet_id FROM review_packets rp
+                        WHERE rp.application_id=a.application_id AND rp.status='AWAITING_APPROVAL'
+                        ORDER BY rp.packet_version DESC LIMIT 1
+                    ) WHERE a.status='AWAITING_APPROVAL' ORDER BY a.updated_at""").fetchall()
             emit({"status": "PENDING_LIST", "applications": [dict(row) for row in rows], "queue": QueueManager(database).status(), "next_safe_action": "show-review-packet"}, project)
         elif args.command == "show-review-packet":
             if not args.application_id:
                 raise JobOpsError("APPLICATION_ID_REQUIRED", "Select an application review packet.")
             database = _database(project)
             with database.connect() as connection:
-                row = connection.execute("SELECT packet_id,content_hash,status,relative_path,created_at FROM review_packets WHERE application_id=? ORDER BY created_at DESC, rowid DESC LIMIT 1", (args.application_id,)).fetchone()
+                row = connection.execute("SELECT packet_id,packet_version,content_hash,status,relative_path,created_at FROM review_packets WHERE application_id=? ORDER BY packet_version DESC LIMIT 1", (args.application_id,)).fetchone()
                 job = connection.execute("SELECT company,title,official_url FROM jobs WHERE job_id=(SELECT job_id FROM applications WHERE application_id=?)", (args.application_id,)).fetchone()
                 counts = {"materials": connection.execute("SELECT COUNT(*) FROM materials WHERE application_id=?", (args.application_id,)).fetchone()[0], "stopped_fields": connection.execute("SELECT COUNT(*) FROM application_fields WHERE application_id=? AND status='STOP_REQUIRED'", (args.application_id,)).fetchone()[0]}
             if row is None:
                 raise JobOpsError("REVIEW_PACKET_NOT_FOUND", "Review packet does not exist.")
-            emit({"status": row["status"], "application_id": args.application_id, "packet_id": row["packet_id"], "content_hash": row["content_hash"], "secure_ref": row["relative_path"], "job": dict(job) if job else None, **counts, "private_values_emitted": 0, "next_safe_action": "approve-review-packet"}, project)
+            emit({"status": row["status"], "application_id": args.application_id, "packet_id": row["packet_id"], "packet_version": row["packet_version"], "content_hash": row["content_hash"], "secure_ref": row["relative_path"], "job": dict(job) if job else None, **counts, "private_values_emitted": 0, "next_safe_action": "approve-review-packet"}, project)
         elif args.command == "approve-review-packet":
             if not args.application_id:
                 raise JobOpsError("APPLICATION_ID_REQUIRED", "Select the reviewed application.")

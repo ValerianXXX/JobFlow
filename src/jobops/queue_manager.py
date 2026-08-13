@@ -130,6 +130,11 @@ class QueueManager:
         if not reservation_id:
             raise JobOpsError("QUEUE_RESERVATION_REQUIRED", "Admission to AWAITING_APPROVAL requires a live queue reservation.")
         binding = context.normalized()
+        if review_packet is not None and str(review_packet.get("content_hash")) != binding.review_packet_hash:
+            raise JobOpsError(
+                "REVIEW_PACKET_CONTEXT_MISMATCH",
+                "The review packet content hash must match the current approval context.",
+            )
         with self.database.connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             reservation = connection.execute("SELECT * FROM queue_reservations WHERE reservation_id=?", (reservation_id,)).fetchone()
@@ -242,17 +247,43 @@ class QueueManager:
                     ),
                 )
             if review_packet:
+                existing_packet = connection.execute(
+                    "SELECT application_id,content_hash,packet_version,supersedes_packet_id FROM review_packets WHERE packet_id=?",
+                    (review_packet["packet_id"],),
+                ).fetchone()
+                if existing_packet is not None and str(existing_packet["application_id"]) != binding.application_id:
+                    raise JobOpsError(
+                        "REVIEW_PACKET_ID_COLLISION",
+                        "A review packet identifier is already bound to another application.",
+                    )
+                if existing_packet is not None and str(existing_packet["content_hash"]) != str(review_packet["content_hash"]):
+                    raise JobOpsError(
+                        "REVIEW_PACKET_ID_COLLISION",
+                        "A review packet identifier cannot be reused for different content.",
+                    )
+                latest_packet = connection.execute(
+                    "SELECT packet_id,packet_version FROM review_packets WHERE application_id=? ORDER BY packet_version DESC LIMIT 1",
+                    (binding.application_id,),
+                ).fetchone()
+                if existing_packet is not None:
+                    packet_version = int(existing_packet["packet_version"])
+                    supersedes_packet_id = existing_packet["supersedes_packet_id"]
+                else:
+                    packet_version = int(latest_packet["packet_version"]) + 1 if latest_packet is not None else 1
+                    supersedes_packet_id = str(latest_packet["packet_id"]) if latest_packet is not None else None
                 connection.execute(
                     "UPDATE review_packets SET status='NEEDS_REVISION' WHERE application_id=? AND status IN ('AWAITING_APPROVAL','APPROVED')",
                     (binding.application_id,),
                 )
                 connection.execute(
-                    """INSERT INTO review_packets(packet_id,application_id,content_hash,relative_path,status,created_at)
-                    VALUES(?,?,?,?,?,?) ON CONFLICT(packet_id) DO UPDATE SET
+                    """INSERT INTO review_packets(
+                    packet_id,application_id,content_hash,relative_path,status,packet_version,supersedes_packet_id,created_at
+                    ) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(packet_id) DO UPDATE SET
                     content_hash=excluded.content_hash,relative_path=excluded.relative_path,status=excluded.status""",
                     (
                         review_packet["packet_id"], binding.application_id, review_packet["content_hash"],
-                        review_packet["secure_ref"], review_packet["status"], now,
+                        review_packet["secure_ref"], review_packet["status"], packet_version,
+                        supersedes_packet_id, now,
                     ),
                 )
             pipeline_states = [

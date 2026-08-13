@@ -92,6 +92,13 @@ class OnboardingCenterTests(unittest.TestCase):
                     "INSERT INTO review_packets(packet_id,application_id,content_hash,relative_path,status,created_at) VALUES(?,?,?,?,?,?)",
                     ("PKT-DASH", "APP-DASH", "sha256:" + "3" * 64, "secure-ref:SYNTHETIC_PACKET", "AWAITING_APPROVAL", now),
                 )
+                connection.execute("UPDATE review_packets SET status='NEEDS_REVISION' WHERE packet_id='PKT-DASH'")
+                connection.execute(
+                    """INSERT INTO review_packets(
+                    packet_id,application_id,content_hash,relative_path,status,packet_version,supersedes_packet_id,created_at
+                    ) VALUES(?,?,?,?,?,?,?,?)""",
+                    ("PKT-DASH-V2", "APP-DASH", "sha256:" + "4" * 64, "secure-ref:SYNTHETIC_PACKET_V2", "AWAITING_APPROVAL", 2, "PKT-DASH", now),
+                )
                 connection.execute(
                     "INSERT INTO intake_queue(intake_key,source_type,source_locator,status,reservation_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",
                     ("private-source-locator-key", "offline_snapshot", "private/source/path.txt", "DEFERRED", None, now, now),
@@ -100,7 +107,10 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(dashboard["queue"]["awaiting_approval"], 1)
             self.assertEqual(dashboard["queue"]["slots_available"], 9)
             self.assertEqual(dashboard["pending_applications"][0]["company"], "Synthetic Company")
-            self.assertEqual(dashboard["pending_applications"][0]["packet_hash_prefix"], "sha256:" + "3" * 8)
+            self.assertEqual(len(dashboard["pending_applications"]), 1)
+            self.assertEqual(dashboard["pending_applications"][0]["packet_id"], "PKT-DASH-V2")
+            self.assertEqual(dashboard["pending_applications"][0]["packet_version"], 2)
+            self.assertEqual(dashboard["pending_applications"][0]["packet_hash_prefix"], "sha256:" + "4" * 8)
             self.assertEqual(dashboard["safety"]["real_external_actions"], 0)
             self.assertEqual(dashboard["safety"]["real_website_accesses"], 0)
             self.assertEqual(dashboard["deferred_intake"][0]["status"], "DEFERRED")
@@ -113,7 +123,10 @@ class OnboardingCenterTests(unittest.TestCase):
                 connection.execute("UPDATE applications SET status='CLOSED' WHERE application_id='APP-DASH'")
                 connection.execute("UPDATE review_packets SET status='REJECTED' WHERE application_id='APP-DASH'")
             recent = service.bootstrap()["dashboard"]["recent_applications"]
+            self.assertEqual(len(recent), 1)
             self.assertEqual(recent[0]["application_id"], "APP-DASH")
+            self.assertEqual(recent[0]["packet_id"], "PKT-DASH-V2")
+            self.assertEqual(recent[0]["packet_version"], 2)
             self.assertEqual(recent[0]["packet_status"], "REJECTED")
 
     def test_local_interactive_service_has_a_single_instance_lock(self) -> None:

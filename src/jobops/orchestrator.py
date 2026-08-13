@@ -319,7 +319,12 @@ class JobOpsOrchestrator:
         uploads = [
             {"filename": "resume.pdf", "purpose": "resume", "sha256": pdf_ref["content_sha256"]},
         ]
-        packet_id = stable_id("RPK", application_id, intake_key, claim_set_hash, str(pdf_ref["content_sha256"]))
+        answers_hash = sha256_bytes(canonical_json(answers))
+        form_snapshot_hash = sha256_file(form_fixture)
+        packet_id = stable_id(
+            "RPK", application_id, intake_key, str(profile["profile_version"]), claim_set_hash,
+            str(pdf_ref["content_sha256"]), route.route_hash, form_snapshot_hash, answers_hash,
+        )
         packet: dict[str, Any] = {
             "schema_version": 1, "status": "AWAITING_APPROVAL", "packet_id": packet_id, "application_id": application_id,
             "job": {"job_id": job_id, "company": jd.company, "title": jd.title, "official_url": route.official_entry_url},
@@ -333,13 +338,12 @@ class JobOpsOrchestrator:
         packet["content_hash"] = sha256_bytes(canonical_json(packet))
         validate_named("review-packet", packet, self.schemas)
         packet_ref = self.onboarding.import_bytes("review_packet", canonical_json(packet), synthetic=True)
-        answers_hash = sha256_bytes(canonical_json(answers))
         context = ApprovalContext(
             application_id=application_id, job_id=job_id, jd_snapshot_hash=intake_key,
             jd_freshness_hash=sha256_bytes(canonical_json(freshness)), source_route_hash=route.route_hash,
             canonical_url=route.current_url, ats_tenant=route.ats_tenant, ats_board=route.ats_board,
             ats_job_identity=route.ats_job_identity, profile_version=str(profile["profile_version"]),
-            claim_set_hash=claim_set_hash, form_snapshot_hash=sha256_file(form_fixture), answers_hash=answers_hash,
+            claim_set_hash=claim_set_hash, form_snapshot_hash=form_snapshot_hash, answers_hash=answers_hash,
             review_packet_hash=packet["content_hash"], uploads=tuple(UploadBinding(item["filename"], item["purpose"], item["sha256"]) for item in uploads),
             external_actions=("upload_material", "submit_application"), site_policy_version=str(policy["schema_version"]),
             unresolved_stops=tuple(

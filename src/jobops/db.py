@@ -12,7 +12,7 @@ from .state_machine import BLOCKING_STATES, assert_transition
 from .util import iso_utc
 
 
-LATEST_SCHEMA_VERSION = 3
+LATEST_SCHEMA_VERSION = 4
 
 
 MIGRATION_001_SQL = """
@@ -163,6 +163,35 @@ CREATE INDEX IF NOT EXISTS idx_intake_queue_status_created ON intake_queue(statu
 """
 
 
+MIGRATION_004_SQL = """
+BEGIN IMMEDIATE;
+CREATE TABLE review_packets_v4 (
+    packet_id TEXT PRIMARY KEY,
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    content_hash TEXT NOT NULL,
+    relative_path TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('AWAITING_APPROVAL','APPROVED','NEEDS_REVISION','REJECTED')),
+    packet_version INTEGER NOT NULL DEFAULT 1 CHECK(packet_version >= 1),
+    supersedes_packet_id TEXT REFERENCES review_packets_v4(packet_id),
+    created_at TEXT NOT NULL,
+    UNIQUE(application_id,packet_version)
+);
+INSERT INTO review_packets_v4(
+    packet_id,application_id,content_hash,relative_path,status,packet_version,supersedes_packet_id,created_at
+)
+SELECT packet_id,application_id,content_hash,relative_path,status,1,NULL,created_at FROM review_packets;
+DROP TABLE review_packets;
+ALTER TABLE review_packets_v4 RENAME TO review_packets;
+CREATE UNIQUE INDEX idx_review_packets_one_active_application
+ON review_packets(application_id)
+WHERE status IN ('AWAITING_APPROVAL','APPROVED');
+CREATE INDEX idx_review_packets_application_version
+ON review_packets(application_id,packet_version DESC);
+INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','4');
+COMMIT;
+"""
+
+
 def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
@@ -235,6 +264,10 @@ class JobOpsDB:
                 connection.executescript(MIGRATION_003_SQL)
                 connection.execute("INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','3')")
                 applied.append(3)
+                version = 3
+            if version == 3:
+                connection.executescript(MIGRATION_004_SQL)
+                applied.append(4)
         return applied
 
     def initialize(self) -> None:

@@ -10,6 +10,7 @@ from dataclasses import replace
 from _support import PROJECT, project_temp
 from jobops.approvals import ApprovalContext, UploadBinding
 from jobops.db import JobOpsDB
+from jobops.errors import JobOpsError
 from jobops.queue_manager import QueueManager
 from jobops.util import sha256_bytes
 
@@ -33,6 +34,26 @@ def binding(index: int) -> ApprovalContext:
 
 
 class AtomicQueueTests(unittest.TestCase):
+    def test_review_packet_hash_must_match_current_approval_context(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            manager = QueueManager(database)
+            reservation = manager.enqueue("PACKET-MISMATCH", source_type="txt", source_locator="fixtures/mismatch.txt")
+            with self.assertRaises(JobOpsError) as blocked:
+                manager.admit_awaiting(
+                    reservation.reservation_id, binding(99), snapshot_relative_path="workspace/jobs/mismatch/jd.txt",
+                    review_packet={
+                        "packet_id": "RPK-MISMATCH", "content_hash": HASH_B,
+                        "secure_ref": "secure-ref:SYNTHETIC_PACKET_MISMATCH",
+                        "status": "AWAITING_APPROVAL",
+                    },
+                )
+            self.assertEqual(blocked.exception.code, "REVIEW_PACKET_CONTEXT_MISMATCH")
+            with database.connect() as connection:
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM applications").fetchone()[0], 0)
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM review_packets").fetchone()[0], 0)
+
     def test_twelve_jobs_limit_three_release_promotes_exactly_one(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")
@@ -124,7 +145,14 @@ class AtomicQueueTests(unittest.TestCase):
             original = binding(7)
             intake_key = "REVISION-HASH"
             first = manager.enqueue(intake_key, source_type="txt", source_locator="fixtures/revision.txt")
-            manager.admit_awaiting(first.reservation_id, original, snapshot_relative_path="workspace/jobs/revision/jd.txt")
+            manager.admit_awaiting(
+                first.reservation_id, original, snapshot_relative_path="workspace/jobs/revision/jd.txt",
+                review_packet={
+                    "packet_id": "RPK-REVISION-0001", "content_hash": HASH_A,
+                    "secure_ref": "secure-ref:SYNTHETIC_PACKET_REVISION_0001",
+                    "status": "AWAITING_APPROVAL",
+                },
+            )
             revision = manager.request_revision(original.application_id, reason="SYNTHETIC_TEST_REVISION")
             self.assertEqual(revision["status"], "MATERIALS_NEEDS_CORRECTION")
             self.assertTrue(revision["capacity_released"])
@@ -136,7 +164,14 @@ class AtomicQueueTests(unittest.TestCase):
                 uploads=(UploadBinding("resume-7-revised.pdf", "resume", HASH_C),),
                 review_packet_hash=HASH_B,
             )
-            manager.admit_awaiting(reopened.reservation_id, changed, snapshot_relative_path="workspace/jobs/revision/jd.txt")
+            manager.admit_awaiting(
+                reopened.reservation_id, changed, snapshot_relative_path="workspace/jobs/revision/jd.txt",
+                review_packet={
+                    "packet_id": "RPK-REVISION-0002", "content_hash": HASH_B,
+                    "secure_ref": "secure-ref:SYNTHETIC_PACKET_REVISION_0002",
+                    "status": "AWAITING_APPROVAL",
+                },
+            )
             with database.connect() as connection:
                 application = connection.execute(
                     "SELECT status,resume_hash FROM applications WHERE application_id=?", (original.application_id,)
@@ -145,9 +180,27 @@ class AtomicQueueTests(unittest.TestCase):
                     "SELECT context_hash FROM application_bindings WHERE application_id=?", (original.application_id,)
                 ).fetchone()[0]
                 count = connection.execute("SELECT COUNT(*) FROM applications").fetchone()[0]
+                packets = connection.execute(
+                    """SELECT packet_id,status,packet_version,supersedes_packet_id
+                    FROM review_packets WHERE application_id=? ORDER BY packet_version""",
+                    (original.application_id,),
+                ).fetchall()
             self.assertEqual(dict(application), {"status": "AWAITING_APPROVAL", "resume_hash": HASH_C})
             self.assertEqual(stored_hash, changed.context_hash)
             self.assertEqual(count, 1)
+            self.assertEqual(
+                [dict(item) for item in packets],
+                [
+                    {
+                        "packet_id": "RPK-REVISION-0001", "status": "NEEDS_REVISION",
+                        "packet_version": 1, "supersedes_packet_id": None,
+                    },
+                    {
+                        "packet_id": "RPK-REVISION-0002", "status": "AWAITING_APPROVAL",
+                        "packet_version": 2, "supersedes_packet_id": "RPK-REVISION-0001",
+                    },
+                ],
+            )
 
 
 class PublicCLIContractTests(unittest.TestCase):
