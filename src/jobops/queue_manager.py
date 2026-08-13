@@ -96,10 +96,21 @@ class QueueManager:
                 )
             limit, awaiting, reserved = self._capacity(connection)
             now = iso_utc()
+            connection.execute(
+                "UPDATE approvals SET status='INVALIDATED' WHERE application_id=? AND status='APPROVED'",
+                (application_id,),
+            )
             if awaiting + reserved >= limit:
                 connection.execute(
                     "UPDATE intake_queue SET status='DEFERRED',reservation_id=NULL,updated_at=? WHERE intake_key=?",
                     (now, intake_key),
+                )
+                connection.execute(
+                    "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
+                    (
+                        application_id, "REPROCESS_DEFERRED", application["status"], application["status"],
+                        json.dumps({"reason": "PENDING_APPROVAL_LIMIT"}), now,
+                    ),
                 )
                 return QueueAdmission(intake_key, "DEFERRED", None, "WAIT_FOR_APPROVAL_SLOT")
             reservation_id = stable_id("QRS", intake_key)
@@ -112,10 +123,6 @@ class QueueManager:
             connection.execute(
                 "UPDATE intake_queue SET status='RESERVED',reservation_id=?,updated_at=? WHERE intake_key=?",
                 (reservation_id, now, intake_key),
-            )
-            connection.execute(
-                "UPDATE approvals SET status='INVALIDATED' WHERE application_id=? AND status='APPROVED'",
-                (application_id,),
             )
             connection.execute(
                 "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",

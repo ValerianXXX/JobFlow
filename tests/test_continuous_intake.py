@@ -101,6 +101,52 @@ class ContinuousIntakeTests(unittest.TestCase):
                 deferred = [row[0] for row in connection.execute("SELECT intake_key FROM intake_queue WHERE status='DEFERRED'")]
             self.assertEqual(deferred, ["INTAKE-5"])
 
+    def test_deferred_reprocess_invalidates_old_approval_immediately(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            database.set_pending_limit(1)
+            now = "2026-08-13T00:00:00Z"
+            with database.connect() as connection:
+                connection.execute(
+                    "INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("JOB-BLOCKER", "synthetic", "blocker", None, "Synthetic", "Blocker", None, "FORM_VALIDATED", now, now),
+                )
+                connection.execute(
+                    "INSERT INTO applications VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("APP-BLOCKER", "JOB-BLOCKER", "example.test", "AWAITING_APPROVAL", H, H, 1, None, "AWAITING_APPROVAL", now),
+                )
+                connection.execute(
+                    "INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("JOB-REPROCESS", "synthetic", "reprocess", None, "Synthetic", "Changed", None, "SITE_CHANGED", now, now),
+                )
+                connection.execute(
+                    "INSERT INTO applications VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("APP-REPROCESS", "JOB-REPROCESS", "example.test", "SITE_CHANGED", H, H, 1, None, "APPROVED", now),
+                )
+                connection.execute(
+                    "INSERT INTO intake_queue VALUES(?,?,?,?,?,?,?)",
+                    ("INTAKE-REPROCESS", "txt", "synthetic.txt", "ACCEPTED", None, now, now),
+                )
+                connection.execute(
+                    """INSERT INTO approvals(
+                    approval_id,application_id,job_id,site,resume_hash,answers_hash,bound_at,expires_at,status,external_actions_json
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?)""",
+                    ("APR-OLD", "APP-REPROCESS", "JOB-REPROCESS", "example.test", H, H, now, "2026-08-14T00:00:00Z", "APPROVED", "[]"),
+                )
+
+            admission = QueueManager(database).reserve_reprocess("INTAKE-REPROCESS", "APP-REPROCESS")
+
+            self.assertEqual(admission.status, "DEFERRED")
+            self.assertEqual(admission.next_safe_action, "WAIT_FOR_APPROVAL_SLOT")
+            with database.connect() as connection:
+                self.assertEqual(connection.execute("SELECT status FROM approvals WHERE approval_id='APR-OLD'").fetchone()[0], "INVALIDATED")
+                event = connection.execute(
+                    "SELECT event_type,payload_json FROM events WHERE application_id='APP-REPROCESS' ORDER BY event_id DESC LIMIT 1"
+                ).fetchone()
+                self.assertEqual(event["event_type"], "REPROCESS_DEFERRED")
+                self.assertIn("PENDING_APPROVAL_LIMIT", event["payload_json"])
+
 
 if __name__ == "__main__":
     unittest.main()
