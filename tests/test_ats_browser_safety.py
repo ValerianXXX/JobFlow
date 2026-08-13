@@ -11,7 +11,7 @@ from unittest.mock import patch
 from _support import PROJECT
 from jobops.ats_browser import analyze_local_ats_form, assert_form_snapshot_current, build_browser_action_plan
 from jobops.errors import JobOpsError
-from jobops.sourcing import verify_source_route
+from jobops.sourcing import source_route_hash, verify_source_route
 
 
 H1 = "sha256:" + "a" * 64
@@ -109,6 +109,15 @@ class ATSBrowserSafetyTests(unittest.TestCase):
         with self.assertRaises(JobOpsError) as route_error:
             analyze_local_ats_form(self.snapshot, route=tampered, blocked_categories=[])
         self.assertEqual(route_error.exception.code, "SCHEMA_SEMANTIC_CONFLICT")
+
+        sensitive = verified_route()
+        sensitive_url = sensitive["current_url"] + "?session_token=private-value"
+        sensitive["current_url"] = sensitive_url
+        sensitive["navigation_history"][-1] = sensitive_url
+        sensitive["route_hash"] = source_route_hash(sensitive)
+        with self.assertRaises(JobOpsError) as sensitive_error:
+            analyze_local_ats_form(self.snapshot, route=sensitive, blocked_categories=[])
+        self.assertEqual(sensitive_error.exception.code, "ATS_ROUTE_SENSITIVE_QUERY")
 
         changed = analyze_local_ats_form(self.snapshot.replace(b"Synthetic application", b"Changed application"), route=verified_route(), blocked_categories=[])
         with self.assertRaises(JobOpsError) as changed_error:

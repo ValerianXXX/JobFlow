@@ -10,7 +10,7 @@ from .errors import JobOpsError
 from .forms import classify_application_field
 from .runtime_schema import validate_named
 from .security import validate_secure_reference
-from .sourcing import _canonical_url, _host, host_matches_registered
+from .sourcing import _canonical_url, _host, host_matches_registered, url_has_sensitive_query
 from .util import canonical_json, project_root, sha256_bytes, stable_id
 
 
@@ -294,6 +294,11 @@ def analyze_local_ats_form(
     if route.get("status") not in {"ROUTE_APPROVED", "NEEDS_ACCOUNT_APPROVAL", "NEEDS_USER_INPUT"}:
         raise JobOpsError("ATS_ROUTE_NOT_REVIEWABLE", "The form snapshot does not have a reviewable verified source route.")
     current_url = _canonical_url(str(route["current_url"]))
+    if url_has_sensitive_query(current_url):
+        raise JobOpsError(
+            "ATS_ROUTE_SENSITIVE_QUERY",
+            "The routed form URL contains a sensitive query field and cannot enter a local form report.",
+        )
     provider = str(route["provider"])
     if not _provider_host_matches(provider, urlparse(current_url).hostname or "", str(route["company_domain"])):
         raise JobOpsError("ATS_PROVIDER_HOST_MISMATCH", "The verified provider does not match the routed form host.")
