@@ -149,6 +149,18 @@ def valid_fixtures() -> dict[str, dict]:
             "navigation_performed": False, "entered_values_retained": False,
             "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
         },
+        "ats-capability-report": {
+            "schema_version": 1, "status": "OFFLINE_ATS_CAPABILITIES", "provider_count": 1,
+            "providers": [{
+                "provider": "lever", "offline_evidence_level": "SINGLE_SNAPSHOT_PASS",
+                "saved_snapshot_modes": ["single_html"], "route_shape": "OFFICIAL_TO_APPROVED_ATS",
+                "dynamic_control_strategy": "opaque_control_ref", "guest_first": True,
+                "account_creation_blocked": True, "upload_blocked": True, "submit_blocked": True,
+                "live_site_verified": False, "browser_actions": 0, "network_actions": 0,
+                "real_external_actions": 0, "contract_hash": H,
+            }],
+            "live_site_accessed": False, "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
+        },
         "queue-reservation": {"reservation_id": "RSV-ABCDEF123456", "intake_key": H, "application_id": APP, "status": "CONSUMED", "pending_limit": 3, "pending_count": 1, "reserved_count": 1, "created_at": T, "updated_at": T},
         "recovery-event": {"recovery_id": "RCV-ABCDEF123456", "application_id": APP, "blocked_state": "SUBMISSION_UNKNOWN", "last_safe_state": "APPROVED", "validation_hash": H, "decision": "NO_AUTO_RETRY", "created_at": T},
         "receipt": {"receipt_id": "RCP-ABCDEF123456", "application_id": APP, "source": "fake-receipt", "confirmation_type": "confirmation_number", "confirmation_hash": H, "verified": True, "verified_at": T},
@@ -230,6 +242,7 @@ class RuntimeSchemaMatrixTests(unittest.TestCase):
             "browser-action-plan": ("fillable_count", 0),
             "ats-vertical-evidence": ("fields_discovered", 3),
             "ats-form-sequence": ("step_count", 2),
+            "ats-capability-report": ("provider_count", 2),
         }
         for name, (field, invalid) in conflicts.items():
             changed = copy.deepcopy(self.fixtures[name]); changed[field] = invalid

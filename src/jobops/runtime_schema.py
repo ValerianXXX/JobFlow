@@ -176,6 +176,8 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         steps = value.get("steps", [])
         if value.get("step_count") != len(steps) or [item.get("step_index") for item in steps] != list(range(1, len(steps) + 1)):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS form sequence steps must be complete and monotonically numbered.")
+    if name == "ats-capability-report" and value.get("provider_count") != len(value.get("providers", [])):
+        raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS capability provider_count must match the provider list.")
 
 
 def validate_named(name: str, value: dict[str, Any], schema_dir: Path) -> dict[str, Any]:

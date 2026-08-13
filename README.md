@@ -53,6 +53,7 @@ JobFlow 的资料理解采用严格 AI 门：选择文件后会自动启动 AI �
 - `analyze-ats-form` 只读取项目内的本地 HTML 表单快照，并要求已经验证且哈希完整的官网→ATS 路线。它丢弃页面中已有的所有输入值，只输出字段/问题哈希、分类、停止原因和 opaque control reference；CAPTCHA、MFA、登录、账号、上传、跨域表单/iframe、敏感题、未知字段及最终提交全部保持关闭。由此生成的 browser action plan 只允许普通固定字段或 `secure-ref` 私人字段成为待审阅的 prefill proposal，当前适配器不会真正修改任何网页。 / The form analyzer is local-snapshot-only, value-redacting and fail-closed; its current adapter validates plans but performs zero browser actions.
 - Greenhouse 已有一条完整的合成离线纵向验收链：公司官网快照 → 官方到 Greenhouse 的租户/岗位路线 → JD 与 HTML 表单 → opaque/哈希化字段绑定 → 零修改的本机浏览器计划验证 → 材料渲染 QA → `AWAITING_APPROVAL` 审阅队列。路线、表单、计划、材料与审阅包由同一上下文哈希绑定；上传与提交仍为关闭能力。这是离线工程证据，不代表已连接或兼容真实 Greenhouse 网站。 / A synthetic Greenhouse vertical reaches the local review queue with one content-bound context and zero browser or external actions; it is not a claim of live-site compatibility.
 - Workday 已支持离线的多步骤保存页序列分析。`analyze-ats-sequence` 会把 1—20 个项目内 HTML 快照按顺序绑定到同一路线，识别个人信息、经历/教育、申请问题、自愿披露、Review 与账号/登录页面；动态 DOM ID 可以变化，但相同逻辑问题用独立逻辑哈希去重。Next/Continue、账号、登录、CAPTCHA、MFA、上传和 Submit 都仍是 STOP，报告明确 `navigation_performed=false`。 / Saved Workday steps can be analyzed and deduplicated offline, but JobFlow performs no navigation and makes no live-compatibility claim.
+- Lever 已通过相同的单页本地快照、opaque 字段计划和零修改适配器契约测试。`ats-capabilities` 会精确列出 company/Greenhouse/Lever/Workday 当前仅由合成证据支持到哪一层，并对每份能力声明做内容哈希；所有条目固定 `live_site_verified=false`，避免把离线测试误写成真实站点兼容。 / Lever reuses the same safe offline contract, while `ats-capabilities` distinguishes synthetic evidence from unverified live support.
 - 待审批上限默认 10，可设 1—1000；容量检查与 reservation 在同一事务中完成。
 - `ExternalActionGateway` 是受保护状态的唯一入口。生产策略始终先返回 `PHASE_NOT_AUTHORIZED`。
 - `SUBMISSION_UNKNOWN` 不自动重试；CAPTCHA、MFA、验证码、登录和账号创建均停给用户。
@@ -92,7 +93,7 @@ python .agents/skills/job-application-operator/scripts/jobops.py purge-synthetic
 - 环境与状态：`audit`、`locate`、`status`、`init-db`、`migrate-db`、`verify-release`
 - 私人资料：`onboarding-center`、`onboarding-status`、`secure-onboard`、`secure-onboard-resume`、`finalize-resume-onboarding`、`review-onboarding`、`secure-import-master-resume`、`secure-import-answer-bank`、`secure-store-status`、`purge-synthetic-private-data`
 - Claim：`propose-claims`、`list-claim-proposals`、`approve-claim`、`reject-claim`、`revoke-claim`、`revalidate-claims`
-- 岗位与队列：`discover-official-jobs`、`verify-route`、`analyze-ats-form`、`analyze-ats-sequence`、`import-jd`、`analyze-job`、`run-to-awaiting-approval`、`run-queue`、`queue`、`list-pending`
+- 岗位与队列：`ats-capabilities`、`discover-official-jobs`、`verify-route`、`analyze-ats-form`、`analyze-ats-sequence`、`import-jd`、`analyze-job`、`run-to-awaiting-approval`、`run-queue`、`queue`、`list-pending`
 - 审阅与恢复：`show-review-packet`、`revise-application`、`approve-review-packet`、`reject-review-packet`、`resume-blocked`、`retry-safe-step`、`explain`
 
 ## 真实使用前仍需的最小输入

@@ -10,6 +10,7 @@ from typing import Any
 from .audit import audit_environment
 from .adapters import audit_real_external_actions
 from .ats_browser import analyze_local_ats_form, analyze_local_ats_form_sequence
+from .ats_capabilities import offline_ats_capabilities
 from .approvals import ApprovalContext, issue_approval
 from .claim_registry import ClaimRegistry
 from .collector import JobCollector
@@ -112,6 +113,7 @@ def parser() -> argparse.ArgumentParser:
     form_sequence = sub.add_parser("analyze-ats-sequence")
     form_sequence.add_argument("--manifest", type=Path, required=True)
     form_sequence.add_argument("--route", type=Path, required=True)
+    sub.add_parser("ats-capabilities")
 
     onboard = sub.add_parser("secure-onboard")
     onboard.add_argument("--input-file", type=Path)
@@ -342,6 +344,8 @@ def main(argv: list[str] | None = None) -> int:
                 blocked_categories=policy["blocked_form_categories"],
             )
             emit({**result, "next_safe_action": "review-sequence-no-navigation-performed"}, project)
+        elif args.command == "ats-capabilities":
+            emit({**offline_ats_capabilities(), "next_safe_action": "analyze-project-local-snapshots-only"}, project)
         elif args.command == "secure-onboard":
             database = _database(project); onboarding = _onboarding(project, database)
             if args.synthetic:

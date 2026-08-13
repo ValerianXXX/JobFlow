@@ -240,6 +240,7 @@ class PublicCLIContractTests(unittest.TestCase):
             "discover-official-jobs",
             "analyze-ats-form",
             "analyze-ats-sequence",
+            "ats-capabilities",
         ):
             self.assertIn(command, completed.stdout)
 
