@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import subprocess
 import unittest
 
 from _support import PROJECT
@@ -26,11 +28,37 @@ class WindowsLauncherTests(unittest.TestCase):
     def test_launcher_messages_are_bilingual_and_external_actions_are_absent(self) -> None:
         install = (PROJECT / "scripts" / "install-jobflow.ps1").read_text(encoding="utf-8-sig")
         start = (PROJECT / "scripts" / "start-jobflow.ps1").read_text(encoding="utf-8-sig")
+        check = (PROJECT / "scripts" / "check-jobflow.ps1").read_text(encoding="utf-8-sig")
         self.assertIn(" / ", install)
         self.assertIn(" / ", start)
-        combined = (install + start).casefold()
+        self.assertIn(" / ", check)
+        combined = (install + start + check).casefold()
         for forbidden in ("invoke-webrequest", "start-bitstransfer", "git clone", "git push"):
             self.assertNotIn(forbidden, combined)
+
+    def test_one_click_health_check_is_redacted_local_only_and_passing(self) -> None:
+        completed = subprocess.run(
+            [
+                "powershell.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-File", str(PROJECT / "scripts" / "check-jobflow.ps1"), "-Json",
+            ],
+            cwd=PROJECT,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        result = json.loads(completed.stdout.lstrip("\ufeff"))
+        self.assertEqual(result["status"], "JOBFLOW_READY")
+        self.assertEqual(result["checks_passed"], result["checks_total"])
+        self.assertEqual(result["private_values_read"], 0)
+        self.assertEqual(result["private_values_emitted"], 0)
+        self.assertEqual(result["network_actions"], 0)
+        self.assertEqual(result["real_external_actions"], 0)
+        serialized = json.dumps(result)
+        self.assertNotIn(str(PROJECT), serialized)
+        self.assertNotIn("secure-ref:", serialized)
 
 
 if __name__ == "__main__":

@@ -39,7 +39,9 @@ REQUIRED_PUBLIC_FILES = {
     "MANIFEST.in",
     "README.md",
     "SECURITY.md",
+    "Check JobFlow.cmd",
     "Start JobFlow Demo.cmd",
+    "scripts/check-jobflow.ps1",
     "scripts/start-jobflow-demo.ps1",
     "pyproject.toml",
 }

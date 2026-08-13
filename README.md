@@ -22,6 +22,8 @@ JobFlow（内部工程代号 JobOps）是本地优先、证据驱动的求职工
 
 最简单的 Windows 使用方式：第一次双击 `Install JobFlow.cmd`，以后双击 `Start JobFlow.cmd`。不需要在 WSL 中运行，也不需要输入项目路径。
 
+如果启动异常或页面显示 `Failed to fetch`，先双击 `Check JobFlow.cmd`。它只检查公开程序组件与“真实动作关闭”策略，不联网、不读取私人资料，也不会显示用户路径；按第一条失败项给出的中英文提示修复即可。 / If startup fails, run `Check JobFlow.cmd` for a redacted, offline health check and follow the first failed item.
+
 想先体验而不接触真实简历时，安装后双击 `Start JobFlow Demo.cmd`。该入口只运行虚构资料，使用自动清理的临时数据库与 DPAPI 目录；文件上传和真实 AI 连接均被服务端拒绝，关闭窗口后演示状态即删除。/ To tour JobFlow without real data, run `Start JobFlow Demo.cmd`; it uses fictional data in an auto-cleaned temporary runtime and rejects file intake and real AI connections.
 
 如果希望使用 Windows PowerShell，则在项目根目录运行：
