@@ -269,8 +269,12 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
             self.assertEqual(failed_rotation.exception.code, "PRIVATE_ROTATION_DATABASE_FAILED")
             self.assertEqual(onboarding.read_bytes(record["secure_ref"]), original)
             with original_connect() as connection:
-                row = connection.execute("SELECT version,status FROM private_refs WHERE secure_ref=?", (record["secure_ref"],)).fetchone()
+                row = connection.execute(
+                    "SELECT version,status,ciphertext_sha256 FROM private_refs WHERE secure_ref=?",
+                    (record["secure_ref"],),
+                ).fetchone()
             self.assertEqual((row["version"], row["status"]), (1, "ACTIVE"))
+            self.assertEqual(row["ciphertext_sha256"], sha256_file(store.cipher_path(record["secure_ref"])))
             self.assertFalse(any(store.private_root.glob(".jobflow-write-*")))
             onboarding.delete(record["secure_ref"], user_confirmed=True)
 
@@ -385,8 +389,12 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
             self.assertEqual(interrupted_rotation.exception.code, "PRIVATE_ROTATION_WRITE_FAILED")
             self.assertEqual(onboarding.read_bytes(record["secure_ref"]), original)
             with database.connect() as connection:
-                row = connection.execute("SELECT version,status FROM private_refs WHERE secure_ref=?", (record["secure_ref"],)).fetchone()
+                row = connection.execute(
+                    "SELECT version,status,ciphertext_sha256 FROM private_refs WHERE secure_ref=?",
+                    (record["secure_ref"],),
+                ).fetchone()
             self.assertEqual((row["version"], row["status"]), (1, "ACTIVE"))
+            self.assertEqual(row["ciphertext_sha256"], sha256_file(store.cipher_path(record["secure_ref"])))
             self.assertFalse(any(store.private_root.glob(".jobflow-write-*")))
             onboarding.delete(record["secure_ref"], user_confirmed=True)
 

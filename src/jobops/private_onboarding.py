@@ -190,6 +190,33 @@ class PrivateOnboarding:
             raise JobOpsError("SECURE_CONTENT_HASH_MISMATCH", "Decrypted private content failed integrity verification.")
         return value
 
+    def _mark_corrupt(self, reference: str) -> None:
+        try:
+            with self.database.connect() as connection:
+                connection.execute(
+                    "UPDATE private_refs SET status='CORRUPT',updated_at=? WHERE secure_ref=?",
+                    (iso_utc(), reference),
+                )
+        except Exception:
+            # Preserve the original recovery failure. The caller already stops
+            # the operation and reports that the reference must be quarantined.
+            pass
+
+    def _restore_rotation(self, reference: str, previous: bytes, *, message: str) -> None:
+        try:
+            restored = self.store.put_bytes(previous, reference=reference)
+            # DPAPI encryption is randomized. Restoring identical plaintext
+            # creates a different ciphertext, so metadata must be rebound to
+            # the restored file before the reference can remain ACTIVE.
+            with self.database.connect() as connection:
+                connection.execute(
+                    "UPDATE private_refs SET ciphertext_sha256=?,content_sha256=?,updated_at=? WHERE secure_ref=?",
+                    (restored["ciphertext_sha256"], sha256_bytes(previous), iso_utc(), reference),
+                )
+        except Exception as rollback_error:
+            self._mark_corrupt(reference)
+            raise JobOpsError("PRIVATE_ROTATION_ROLLBACK_FAILED", message) from rollback_error
+
     def rotate(self, reference: str, value: bytes) -> dict[str, object]:
         row = self._record(reference)
         if row["status"] != "ACTIVE":
@@ -198,21 +225,11 @@ class PrivateOnboarding:
         try:
             stored = self.store.put_bytes(value, reference=reference)
         except Exception as exc:
-            try:
-                self.store.put_bytes(previous, reference=reference)
-            except Exception as rollback_error:
-                try:
-                    with self.database.connect() as connection:
-                        connection.execute(
-                            "UPDATE private_refs SET status='CORRUPT',updated_at=? WHERE secure_ref=?",
-                            (iso_utc(), reference),
-                        )
-                except Exception:
-                    pass
-                raise JobOpsError(
-                    "PRIVATE_ROTATION_ROLLBACK_FAILED",
-                    "Private storage could not restore its prior content after an interrupted ciphertext update.",
-                ) from rollback_error
+            self._restore_rotation(
+                reference,
+                previous,
+                message="Private storage could not restore its prior content after an interrupted ciphertext update.",
+            )
             raise JobOpsError(
                 "PRIVATE_ROTATION_WRITE_FAILED",
                 "Private storage restored its prior content after an interrupted ciphertext update.",
@@ -225,21 +242,11 @@ class PrivateOnboarding:
                     (stored["ciphertext_sha256"], sha256_bytes(value), version, iso_utc(), reference),
                 )
         except Exception as exc:
-            try:
-                self.store.put_bytes(previous, reference=reference)
-            except Exception as rollback_error:
-                try:
-                    with self.database.connect() as connection:
-                        connection.execute(
-                            "UPDATE private_refs SET status='CORRUPT',updated_at=? WHERE secure_ref=?",
-                            (iso_utc(), reference),
-                        )
-                except Exception:
-                    pass
-                raise JobOpsError(
-                    "PRIVATE_ROTATION_ROLLBACK_FAILED",
-                    "Private storage could not restore its prior content after a local metadata failure.",
-                ) from rollback_error
+            self._restore_rotation(
+                reference,
+                previous,
+                message="Private storage could not restore its prior content after a local metadata failure.",
+            )
             raise JobOpsError(
                 "PRIVATE_ROTATION_DATABASE_FAILED",
                 "Private storage restored its prior content after a local metadata failure.",
