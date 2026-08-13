@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import unittest
 
-from _support import PROJECT
+from _support import PROJECT, project_temp
+from jobops.release_readiness import github_release_gates
 
 
 class ReleaseReadinessContractTests(unittest.TestCase):
@@ -21,6 +23,50 @@ class ReleaseReadinessContractTests(unittest.TestCase):
         for requirement in ("author identity", "independent QA", "annotated or signed", "explicit user authorization"):
             self.assertIn(requirement, checklist)
         self.assertIn("Real external actions must remain 0", checklist)
+
+    def test_unconfirmed_github_release_decisions_remain_explicit_blockers(self) -> None:
+        gates = github_release_gates(PROJECT)
+        self.assertEqual(
+            gates,
+            {
+                "repository_metadata": "PENDING",
+                "private_vulnerability_reporting": "PENDING",
+                "sanitized_screenshots": "PENDING",
+                "clean_windows_profile": "PENDING",
+            },
+        )
+
+    def test_release_decisions_pass_only_with_complete_metadata_and_explicit_evidence(self) -> None:
+        with project_temp() as root:
+            config = root / "config"
+            config.mkdir()
+            (config / "github-release.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "repository_owner": "synthetic-owner",
+                        "repository_name": "JobFlow",
+                        "visibility": "PUBLIC",
+                        "description_zh": "合成发布测试",
+                        "description_en": "Synthetic release test",
+                        "topics": ["ai", "job-search", "privacy"],
+                        "metadata_confirmed_by_user": True,
+                        "private_vulnerability_reporting_confirmed": True,
+                        "sanitized_screenshots_approved": True,
+                        "clean_windows_profile_tested": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                github_release_gates(root),
+                {
+                    "repository_metadata": "CONFIRMED",
+                    "private_vulnerability_reporting": "CONFIRMED",
+                    "sanitized_screenshots": "APPROVED",
+                    "clean_windows_profile": "PASS",
+                },
+            )
 
 
 if __name__ == "__main__":

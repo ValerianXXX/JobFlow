@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import tomllib
 from pathlib import Path
@@ -20,6 +21,49 @@ def _git(project: Path, *arguments: str) -> str:
     if completed.returncode != 0:
         raise JobOpsError("RELEASE_GIT_FAILED", "The local Git status required for release readiness is unavailable.")
     return completed.stdout.strip()
+
+
+def github_release_gates(project: Path) -> dict[str, str]:
+    path = project / "config" / "github-release.json"
+    try:
+        loaded = load_json(path)
+        value = loaded if isinstance(loaded, dict) else {}
+    except (OSError, ValueError, TypeError):
+        value = {}
+    owner = str(value.get("repository_owner", "")).strip()
+    name = str(value.get("repository_name", "")).strip()
+    visibility = str(value.get("visibility", "")).strip().upper()
+    topics = value.get("topics", [])
+    metadata_shape_valid = (
+        value.get("schema_version") == 1
+        and re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})", owner) is not None
+        and re.fullmatch(r"[A-Za-z0-9._-]{1,100}", name) is not None
+        and visibility in {"PUBLIC", "PRIVATE"}
+        and bool(str(value.get("description_zh", "")).strip())
+        and bool(str(value.get("description_en", "")).strip())
+        and isinstance(topics, list)
+        and 3 <= len(topics) <= 20
+        and len({str(item) for item in topics}) == len(topics)
+        and all(re.fullmatch(r"[a-z0-9-]{1,50}", str(item)) for item in topics)
+    )
+    return {
+        "repository_metadata": (
+            "CONFIRMED"
+            if metadata_shape_valid and value.get("metadata_confirmed_by_user") is True
+            else "PENDING"
+        ),
+        "private_vulnerability_reporting": (
+            "CONFIRMED"
+            if value.get("private_vulnerability_reporting_confirmed") is True
+            else "PENDING"
+        ),
+        "sanitized_screenshots": (
+            "APPROVED" if value.get("sanitized_screenshots_approved") is True else "PENDING"
+        ),
+        "clean_windows_profile": (
+            "PASS" if value.get("clean_windows_profile_tested") is True else "PENDING"
+        ),
+    }
 
 
 def release_readiness(project: Path, database: JobOpsDB) -> dict[str, Any]:
@@ -61,6 +105,7 @@ def release_readiness(project: Path, database: JobOpsDB) -> dict[str, Any]:
     tags = {item for item in _git(project, "tag", "--points-at", "HEAD").splitlines() if item}
     expected_tag = f"v{version}"
     release_tag_status = "PRESENT" if expected_tag in tags else "MISMATCH" if tags else "MISSING"
+    manual_gates = github_release_gates(project)
     blockers: list[str] = []
     if not worktree_clean:
         blockers.append("GIT_WORKTREE_NOT_CLEAN")
@@ -73,6 +118,14 @@ def release_readiness(project: Path, database: JobOpsDB) -> dict[str, Any]:
     blockers.extend(repository.get("public_release_blockers", []))
     if candidate_status != "PASS":
         blockers.append(f"SOURCE_CANDIDATE_{candidate_status}")
+    if manual_gates["repository_metadata"] != "CONFIRMED":
+        blockers.append("GITHUB_REPOSITORY_METADATA_REQUIRED")
+    if manual_gates["private_vulnerability_reporting"] != "CONFIRMED":
+        blockers.append("PRIVATE_VULNERABILITY_REPORTING_UNCONFIRMED")
+    if manual_gates["sanitized_screenshots"] != "APPROVED":
+        blockers.append("SANITIZED_SCREENSHOTS_NOT_APPROVED")
+    if manual_gates["clean_windows_profile"] != "PASS":
+        blockers.append("CLEAN_WINDOWS_PROFILE_TEST_REQUIRED")
     if not independent_fresh:
         blockers.append("INDEPENDENT_QA_STALE_OR_MISSING")
     if release_tag_status != "PRESENT":
@@ -87,6 +140,10 @@ def release_readiness(project: Path, database: JobOpsDB) -> dict[str, Any]:
         "SOURCE_CANDIDATE_MISSING": "build the deterministic local source candidate",
         "SOURCE_CANDIDATE_STALE": "rebuild the deterministic local source candidate from HEAD",
         "SOURCE_CANDIDATE_FAIL": "review the local source candidate failure",
+        "GITHUB_REPOSITORY_METADATA_REQUIRED": "confirm the public repository owner, name, description, topics and visibility",
+        "PRIVATE_VULNERABILITY_REPORTING_UNCONFIRMED": "confirm private vulnerability reporting for the future repository",
+        "SANITIZED_SCREENSHOTS_NOT_APPROVED": "capture and approve synthetic Chinese and English screenshots",
+        "CLEAN_WINDOWS_PROFILE_TEST_REQUIRED": "test the candidate on a clean supported Windows user profile",
         "INDEPENDENT_QA_STALE_OR_MISSING": "run independent QA on the final frozen clean commit",
         "RELEASE_TAG_MISSING": "create the local signed or annotated release tag after QA",
         "RELEASE_TAG_MISMATCH": "review the local tag and version mismatch",
@@ -104,6 +161,7 @@ def release_readiness(project: Path, database: JobOpsDB) -> dict[str, Any]:
         "independent_qa_fresh": independent_fresh,
         "author_identity_status": repository["author_identity"]["status"],
         "release_tag_status": release_tag_status,
+        "manual_release_gates": manual_gates,
         "blockers": blockers,
         "upload_performed": False,
         "network_actions": 0,

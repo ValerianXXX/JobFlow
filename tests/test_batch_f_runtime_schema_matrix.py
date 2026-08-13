@@ -175,6 +175,10 @@ def valid_fixtures() -> dict[str, dict]:
             "local_verification_status": "PASS", "public_repository_status": "PASS",
             "source_candidate_status": "PASS", "independent_qa_fresh": False,
             "author_identity_status": "REVIEW_REQUIRED", "release_tag_status": "MISSING",
+            "manual_release_gates": {
+                "repository_metadata": "PENDING", "private_vulnerability_reporting": "PENDING",
+                "sanitized_screenshots": "PENDING", "clean_windows_profile": "PENDING",
+            },
             "blockers": ["GIT_AUTHOR_IDENTITY_REVIEW_REQUIRED", "INDEPENDENT_QA_STALE_OR_MISSING", "RELEASE_TAG_MISSING"],
             "upload_performed": False, "network_actions": 0, "real_external_actions": 0,
             "next_safe_action": "confirm a public GitHub noreply author identity policy",

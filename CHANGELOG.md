@@ -18,6 +18,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 - Offline official-careers discovery, fail-closed ATS form analysis, synthetic Greenhouse/Lever evidence and Workday saved-step analysis.
 - Manual-tick continuous intake planning with FIFO deferred promotion and user-selected approval capacity.
 - Current-tree and full-history privacy scanning, deterministic source candidates, isolated startup smoke and release-readiness reporting.
+- Auto-cleaned synthetic product tour with AI/Claim conflicts, a local review packet and zero-action approval decisions.
+- Explicit machine-readable gates for repository metadata, private vulnerability reporting, sanitized screenshots and clean-profile testing.
 
 ### Security / 安全
 

@@ -14,6 +14,7 @@ Run the following only on the final clean commit. Nothing in this checklist auth
 
 ## Human decisions / 人工决定
 
+- [ ] Review `config/github-release.json`; set a gate to `true` only after the named decision or evidence actually exists. / 审阅该配置；只有对应决定或证据真实存在后才可设为 `true`。
 - [ ] Confirm whether the existing Git author identity may be public; prefer a GitHub noreply identity.
 - [ ] Freeze the exact commit and run fresh independent QA on a clean copy.
 - [ ] Review sanitized Chinese and English screenshots; confirm they contain no personal data or user paths.

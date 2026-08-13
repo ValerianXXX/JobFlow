@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "repository_owner": "",
+  "repository_name": "JobFlow",
+  "visibility": "PUBLIC",
+  "description_zh": "本地优先、AI 核心、证据约束的求职工作流",
+  "description_en": "Local-first, AI-centered, evidence-gated job application workflow",
+  "topics": [
+    "ai",
+    "job-search",
+    "local-first",
+    "privacy",
+    "windows"
+  ],
+  "metadata_confirmed_by_user": false,
+  "private_vulnerability_reporting_confirmed": false,
+  "sanitized_screenshots_approved": false,
+  "clean_windows_profile_tested": false
+}

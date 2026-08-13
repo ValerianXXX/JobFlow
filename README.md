@@ -128,3 +128,5 @@ python .agents/skills/job-application-operator/scripts/jobops.py purge-synthetic
 ```
 
 该命令只在本地生成完整源码 ZIP，并从同一提交构建两次验证哈希一致；它会逐项扫描归档路径、文本、DOCX/PDF、私人运行目录与所需启动文件。结果写入被 Git 忽略的 `dist` 与 `reports`，不会联网或上传。Python wheel 仅用于 CI 的代码打包烟雾测试；当前 Windows 桌面应用应使用完整源码候选，因为运行还需要项目级 Schema、Skill、配置与启动脚本。真正上传前仍需确认 Git 作者身份策略并完成冻结源码上的新一轮独立 QA。
+
+`python -m jobops.release_readiness` 会同时报告代码门与人工发布门。`config/github-release.json` 只是公开发布决定模板；仓库资料、私密漏洞入口、脱敏截图和全新 Windows 用户测试未真实完成前，对应值必须保持 `false`。该检查不会创建仓库、标签、网络连接或上传任何内容。 / The readiness command reports both code and human release gates; its decision template must remain unconfirmed until the named evidence actually exists, and it never creates or uploads a repository.
