@@ -6,7 +6,7 @@ const STRINGS = {
     heroTitle: "一次填写，连续投递", heroBody: "从简历与项目材料、AI 资料和你的直接回答建立完整资料。所有私人内容只在本机解密，不写入普通项目文件。",
     progressLabel: "问卷完成度", draftSaved: "草稿保存时直接加密", stepSources: "资料来源", stepQuestions: "完整问卷", stepReview: "资料与 Claim 审阅", stepFinish: "确认完成",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "本地投递控制台", pipelineBody: "统一查看资料准备度、待审批容量和安全边界。这里不会打开招聘网站或执行外部动作。", refreshDashboard: "刷新状态", dashboardRefreshed: "本地控制台已刷新", profileReadiness: "资料准备", awaitingApproval: "待你审批", approvalQueueOnly: "只生成本地审阅包", availableSlots: "剩余容量", deferredJobs: "排队等待", continuesUntilLimit: "达到上限前继续处理其他岗位", pendingReviewTitle: "待审批申请", pendingReviewBody: "只显示安全岗位摘要；私人答案和材料正文不会出现在此处。", safetyBoardTitle: "当前安全边界", realSites: "真实网站访问", externalActions: "真实外部动作", knowledgeWrites: "知识库写入", networkMode: "运行模式", pipelineReady: "已完成", pipelineNeedsSetup: "待完成", aiReadyShort: "AI 已连接", aiMissingShort: "AI 未连接", queueLimit: "上限 {limit}", pendingEmpty: "目前没有等待你审批的申请。离线处理完成的岗位会出现在这里。", packetHash: "审阅包 {hash}", awaitingApprovalStatus: "等待你的决定", safetyGuardOn: "外部动作锁定", offlineMode: "仅限本地离线", refreshingDashboard: "刷新本地控制台…",
-    queuePreferences: "待审批数量上限", queuePreferencesBody: "JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。", pendingLimitLabel: "最多等待", saveLimit: "保存上限", limitSaved: "待审批上限已保存", viewPacket: "查看审阅包", closePacket: "关闭审阅包", reviewPacketEyebrow: "LOCAL REVIEW PACKET", loadingReviewPacket: "解密并核验本地审阅包…", packetJob: "岗位", packetFit: "匹配分析", packetGaps: "硬性缺口", packetBullets: "简历表述与证据", packetQuestions: "申请问题", packetSensitive: "必须停下确认的敏感字段", packetUploads: "待上传材料", packetActions: "审批将绑定的动作", packetRoute: "官网与 ATS 路径", packetNone: "无", packetOverall: "总体匹配", packetStatus: "状态", packetCreated: "生成时间", packetClaims: "Claim", packetEvidence: "证据", pendingLimitInvalid: "请输入 1 到 1000 之间的整数。", pendingLimitBelowActive: "上限不能低于当前已占用的审批位置。请先处理一项申请。", reviewPacketUnavailable: "无法安全打开这个审阅包；内容未被显示，请刷新后重试。",
+    queuePreferences: "待审批数量上限", queuePreferencesBody: "JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。", pendingLimitLabel: "最多等待", saveLimit: "保存上限", limitSaved: "待审批上限已保存", viewPacket: "查看审阅包", closePacket: "关闭审阅包", reviewPacketEyebrow: "LOCAL REVIEW PACKET", loadingReviewPacket: "解密并核验本地审阅包…", packetJob: "岗位", packetFit: "匹配分析", packetGaps: "硬性缺口", packetBullets: "简历表述与证据", packetQuestions: "申请问题", packetSensitive: "必须停下确认的敏感字段", packetUploads: "待上传材料", packetActions: "审批将绑定的动作", packetRoute: "官网与 ATS 路径", packetNone: "无", packetOverall: "总体匹配", packetStatus: "状态", packetCreated: "生成时间", packetClaims: "Claim", packetEvidence: "证据", pendingLimitInvalid: "请输入 1 到 1000 之间的整数。", pendingLimitBelowActive: "上限不能低于当前已占用的审批位置。请先处理一项申请。", reviewPacketUnavailable: "无法安全打开这个审阅包；内容未被显示，请刷新后重试。", packetDecisionTitle: "你对这份审阅包的决定", packetDecisionBody: "决定只保存在本机。当前不会打开网站、上传材料或提交申请。", decisionApprove: "批准这份审阅包", decisionApproveHelp: "保存与当前哈希绑定的一次性本地批准；真实外部动作仍锁定。", decisionRevise: "退回修改", decisionReviseHelp: "标记材料需要修订；任何旧批准都会失效。", decisionReject: "不申请这个岗位", decisionRejectHelp: "关闭这项申请并释放一个待审批位置。", decisionConfirm: "我确认这是我对当前审阅包的决定，并理解本轮真实外部动作仍为 0。", confirmDecision: "确认这个决定", chooseDecision: "请先选择批准、退回修改或不申请。", confirmDecisionFirst: "请勾选确认框后再保存决定。", decisionApproved: "审阅包已批准；真实外部动作仍为 0。", decisionRevised: "已退回修改；旧批准已失效。", decisionRejected: "已关闭这项申请并释放队列位置。", savingQueueDecision: "正在核验并保存队列决定…", reviewPacketStale: "这份审阅包已经变化。为防止误批，请重新打开并审阅最新版本。", reviewDecisionUnavailable: "当前申请已不在待审批状态，请刷新队列。",
     sourceTitle: "把已有信息交给 JobFlow", sourceBody: "资料必须先通过 AI 的实体归并、分类和完整性检查，才会进入 Claim；规则拆分结果不再显示。",
     docsTitle: "简历与项目材料", docsBody: "DOCX、PDF、TXT、MD 或 JSON。适用于简历、案例、证书与补充材料。", materialType: "材料类型", resume: "简历", projectCase: "项目案例", supporting: "补充材料",
     aiTitle: "AI 资料", aiBody: "支持 ChatGPT 官方导出 ZIP 或你整理的 AI 总结。超过 200 MB 的官方导出请选择“雷霆大文件”；原始 ZIP 不会被保留。", aiType: "AI 资料类型", chatgptExport: "ChatGPT 官方导出（不超过 200 MB）", chatgptExportLarge: "雷霆大文件（超过 200 MB 请选择）", aiSummary: "AI 总结", chooseFile: "选择本地文件", uploadAndAnalyze: "选择并由 AI 分析",
@@ -30,7 +30,7 @@ const STRINGS = {
     heroTitle: "Set it up once. Apply continuously.", heroBody: "Build a complete profile from resumes and project materials, AI sources, and your direct answers. Private content is decrypted only on this computer and never written to ordinary project files.",
     progressLabel: "Questionnaire progress", draftSaved: "Drafts are encrypted when saved", stepSources: "Sources", stepQuestions: "Full questionnaire", stepReview: "Profile & Claim review", stepFinish: "Finish",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "Local application control center", pipelineBody: "See profile readiness, approval capacity, and safety boundaries in one place. This screen never opens recruiting sites or performs external actions.", refreshDashboard: "Refresh status", dashboardRefreshed: "Local control center refreshed", profileReadiness: "Profile readiness", awaitingApproval: "Awaiting you", approvalQueueOnly: "Local review packets only", availableSlots: "Available capacity", deferredJobs: "Waiting in line", continuesUntilLimit: "Other jobs continue until the limit", pendingReviewTitle: "Applications awaiting approval", pendingReviewBody: "Only safe job summaries appear here; private answers and document bodies never do.", safetyBoardTitle: "Active safety boundary", realSites: "Real-site visits", externalActions: "Real external actions", knowledgeWrites: "Knowledge writes", networkMode: "Run mode", pipelineReady: "Complete", pipelineNeedsSetup: "Needs setup", aiReadyShort: "AI connected", aiMissingShort: "AI not connected", queueLimit: "limit {limit}", pendingEmpty: "No application currently needs your approval. Offline-processed roles will appear here.", packetHash: "packet {hash}", awaitingApprovalStatus: "Awaiting your decision", safetyGuardOn: "External actions locked", offlineMode: "Local offline only", refreshingDashboard: "Refreshing local control center…",
-    queuePreferences: "Pending-approval limit", queuePreferencesBody: "JobFlow pauses new intake at this number and continues after you resolve one item.", pendingLimitLabel: "Maximum waiting", saveLimit: "Save limit", limitSaved: "Pending-approval limit saved", viewPacket: "View review packet", closePacket: "Close packet", reviewPacketEyebrow: "LOCAL REVIEW PACKET", loadingReviewPacket: "Decrypting and validating local review packet…", packetJob: "Job", packetFit: "Fit analysis", packetGaps: "Hard gaps", packetBullets: "Resume wording and evidence", packetQuestions: "Application questions", packetSensitive: "Sensitive fields requiring a stop", packetUploads: "Pending uploads", packetActions: "Actions bound by approval", packetRoute: "Official-site and ATS route", packetNone: "None", packetOverall: "Overall fit", packetStatus: "Status", packetCreated: "Created", packetClaims: "Claim", packetEvidence: "Evidence", pendingLimitInvalid: "Enter a whole number from 1 to 1000.", pendingLimitBelowActive: "The limit cannot be below the number of occupied approval slots. Resolve one application first.", reviewPacketUnavailable: "This review packet could not be opened safely. No content was shown; refresh and retry.",
+    queuePreferences: "Pending-approval limit", queuePreferencesBody: "JobFlow pauses new intake at this number and continues after you resolve one item.", pendingLimitLabel: "Maximum waiting", saveLimit: "Save limit", limitSaved: "Pending-approval limit saved", viewPacket: "View review packet", closePacket: "Close packet", reviewPacketEyebrow: "LOCAL REVIEW PACKET", loadingReviewPacket: "Decrypting and validating local review packet…", packetJob: "Job", packetFit: "Fit analysis", packetGaps: "Hard gaps", packetBullets: "Resume wording and evidence", packetQuestions: "Application questions", packetSensitive: "Sensitive fields requiring a stop", packetUploads: "Pending uploads", packetActions: "Actions bound by approval", packetRoute: "Official-site and ATS route", packetNone: "None", packetOverall: "Overall fit", packetStatus: "Status", packetCreated: "Created", packetClaims: "Claim", packetEvidence: "Evidence", pendingLimitInvalid: "Enter a whole number from 1 to 1000.", pendingLimitBelowActive: "The limit cannot be below the number of occupied approval slots. Resolve one application first.", reviewPacketUnavailable: "This review packet could not be opened safely. No content was shown; refresh and retry.", packetDecisionTitle: "Your decision on this review packet", packetDecisionBody: "The decision is saved locally only. No site opens, material uploads, or application submission occurs now.", decisionApprove: "Approve this review packet", decisionApproveHelp: "Save a one-time local approval bound to this exact hash; real external actions remain locked.", decisionRevise: "Return for revision", decisionReviseHelp: "Mark materials for revision and invalidate any earlier approval.", decisionReject: "Do not apply", decisionRejectHelp: "Close this application and release one pending-review slot.", decisionConfirm: "I confirm this is my decision on the current packet and understand real external actions remain 0 in this run.", confirmDecision: "Confirm this decision", chooseDecision: "Choose approve, revise, or do not apply first.", confirmDecisionFirst: "Check the confirmation box before saving the decision.", decisionApproved: "Review packet approved; real external actions remain 0.", decisionRevised: "Returned for revision; prior approval invalidated.", decisionRejected: "Application closed and queue capacity released.", savingQueueDecision: "Validating and saving queue decision…", reviewPacketStale: "This packet changed. To prevent stale approval, reopen and review the current version.", reviewDecisionUnavailable: "This application is no longer awaiting a decision. Refresh the queue.",
     sourceTitle: "Bring your existing information into JobFlow", sourceBody: "A source must pass AI entity consolidation, classification, and completeness checks before anything can enter Claim review. Rule-split output is no longer shown.",
     docsTitle: "Resume & project materials", docsBody: "DOCX, PDF, TXT, MD, or JSON for resumes, cases, certificates, and supporting material.", materialType: "Material type", resume: "Resume", projectCase: "Project case", supporting: "Supporting material",
     aiTitle: "AI sources", aiBody: "Use an official ChatGPT export ZIP or a curated AI summary. For exports over 200 MB, pick ZIPzilla Express. The raw ZIP is never retained.", aiType: "AI source type", chatgptExport: "Official ChatGPT export (up to 200 MB)", chatgptExportLarge: "ZIPzilla Express (over 200 MB — unleash the beast)", aiSummary: "AI summary", chooseFile: "Choose local file", uploadAndAnalyze: "Choose & analyze with AI",
@@ -51,8 +51,8 @@ const STRINGS = {
   }
 };
 
-const UI_PROTOCOL_VERSION = 4;
-const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [] };
+const UI_PROTOCOL_VERSION = 5;
+const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, reviewDecision: "", reviewDecisionConfirmed: false, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [] };
 const sessionToken = location.pathname.split("/")[2];
 const base = `/session/${sessionToken}/`;
 let activitySequence = 0;
@@ -64,7 +64,7 @@ const ACTIVITY_ESTIMATES = {
   detectingAgent: 22, detectingLocalModel: 12, startingRevision: 8,
   committingSource: 7, includingAll: 7, discardingSource: 5,
   deletingSource: 7, transformingClaims: 8, reprocessing: 45,
-  reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5
+  reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5, savingQueueDecision: 7
 };
 const STANDARD_CHATGPT_EXPORT_BYTES = 200 * 1024 * 1024;
 const MAX_LIGHTNING_EXPORT_BYTES = 8 * 1024 * 1024 * 1024;
@@ -96,6 +96,9 @@ const LOCAL_ERROR_KEYS = {
   REVIEW_PACKET_INVALID:"reviewPacketUnavailable", REVIEW_PACKET_BINDING_INVALID:"reviewPacketUnavailable",
   REVIEW_PACKET_HASH_INVALID:"reviewPacketUnavailable", SECURE_REFERENCE_MISSING:"reviewPacketUnavailable",
   SECURE_REFERENCE_REVOKED:"reviewPacketUnavailable", SECURE_REFERENCE_HASH_MISMATCH:"reviewPacketUnavailable",
+  REVIEW_PACKET_STALE:"reviewPacketStale", REVIEW_DECISION_INVALID:"chooseDecision",
+  EXPLICIT_CONFIRMATION_REQUIRED:"confirmDecisionFirst", APPLICATION_NOT_AWAITING_APPROVAL:"reviewDecisionUnavailable",
+  APPLICATION_NOT_REVISABLE:"reviewDecisionUnavailable", APPLICATION_BINDING_MISSING:"reviewPacketUnavailable",
   PROFILE_REVIEW_REQUIRED:"profileReviewRequired", ONBOARDING_ANSWERS_INCOMPLETE:"answersIncomplete",
   ONBOARDING_HARD_CONDITIONS_UNRESOLVED:"hardConditionsUnresolved", SOURCE_PREVIEW_PENDING:"sourcePreviewPending",
   SOURCE_AI_REANALYSIS_REQUIRED:"sourceAiReanalysisRequired", CLAIM_REVIEW_INCOMPLETE:"claimReviewIncomplete",
@@ -334,6 +337,9 @@ function renderReviewPacket(){
     ["packetRoute",`<dl class="packet-kv"><dt>Route</dt><dd>${escapeHtml(packetValue(route.route_kind))}</dd><dt>Guest</dt><dd>${escapeHtml(packetValue(route.guest_mode))}</dd><dt>Account</dt><dd>${escapeHtml(packetValue(route.account_action))}</dd></dl>`,false]
   ];
   document.querySelector("#reviewPacketBody").innerHTML=sections.map(([key,body,wide])=>`<section class="packet-section${wide?" wide":""}"><h4>${escapeHtml(t(key))}</h4>${body}</section>`).join("");
+  document.querySelectorAll('input[name="packetDecision"]').forEach(input=>{input.checked=input.value===state.reviewDecision;});
+  const confirmation=document.querySelector("#packetDecisionConfirm");confirmation.checked=state.reviewDecisionConfirmed;
+  document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecision||!state.reviewDecisionConfirmed;
   const panel=document.querySelector("#reviewPacketPanel");panel.classList.remove("hidden");
 }
 
@@ -711,13 +717,33 @@ document.addEventListener("click", async event => {
         result=await api("review-packet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({application_id:openPacket.dataset.id})});
       });
       state.reviewPacket=result;
+      state.reviewDecision="";state.reviewDecisionConfirmed=false;
       renderReviewPacket();
       document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});
     }catch(error){state.reviewPacket=null;document.querySelector("#reviewPacketPanel").classList.add("hidden");handleUiError(error);}
     return;
   }
   const closePacket=event.target.closest("#closeReviewPacket");
-  if(closePacket){state.reviewPacket=null;document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#reviewPacketPanel").classList.add("hidden");return;}
+  if(closePacket){state.reviewPacket=null;state.reviewDecision="";state.reviewDecisionConfirmed=false;document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#reviewPacketPanel").classList.add("hidden");return;}
+  const confirmPacketDecision=event.target.closest("#confirmPacketDecision");
+  if(confirmPacketDecision){
+    if(!state.reviewDecision){showToast(t("chooseDecision"),true);return;}
+    if(!state.reviewDecisionConfirmed){showToast(t("confirmDecisionFirst"),true);return;}
+    const decision=state.reviewDecision,packet=state.reviewPacket?.packet;
+    if(!packet){showToast(t("reviewPacketUnavailable"),true);return;}
+    try{
+      await withActivity("savingQueueDecision",async()=>{
+        await api("queue-decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+          application_id:state.reviewPacket.application_id,decision,expected_packet_hash:packet.content_hash,user_confirmed:true
+        })});
+        state.reviewPacket=null;state.reviewDecision="";state.reviewDecisionConfirmed=false;
+        document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#reviewPacketPanel").classList.add("hidden");
+        await refreshLatest();
+      });
+      showToast(t(decision==="APPROVE"?"decisionApproved":decision==="REVISE"?"decisionRevised":"decisionRejected"));
+    }catch(error){handleUiError(error);}
+    return;
+  }
   const aiToggle=event.target.closest("#aiConnectButton");
   if(aiToggle){
     const panel=document.querySelector("#aiConnectionPanel"), opening=panel.classList.contains("hidden");
@@ -811,6 +837,8 @@ function syncAiFileType(){document.querySelector("#aiFile").accept=document.quer
 document.querySelector("#aiType").addEventListener("change",syncAiFileType);
 syncAiFileType();
 document.addEventListener("change",event=>{
+  if(event.target.matches('input[name="packetDecision"]')){state.reviewDecision=event.target.value;document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecisionConfirmed;}
+  if(event.target.matches("#packetDecisionConfirm")){state.reviewDecisionConfirmed=event.target.checked;document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecision||!state.reviewDecisionConfirmed;}
   if(event.target.matches(".answer-input")){
     const row=event.target.closest("[data-question]"), status=row?.querySelector(".status-select");
     const hasValue=Array.isArray(event.target.value)?event.target.value.length>0:String(event.target.value||"").trim().length>0;

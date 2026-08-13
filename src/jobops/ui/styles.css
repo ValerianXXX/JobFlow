@@ -103,6 +103,17 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .review-packet-panel h3 { margin: 0; font: 600 24px/1.2 Georgia, "Songti SC", serif; }
 .review-packet-panel header small { color: var(--muted); font-size: 10px; }
 .review-packet-body { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+.packet-decision-panel { margin: 18px 0 0; padding: 18px; border: 1px solid var(--line); background: var(--green-soft); }
+.packet-decision-panel legend { padding: 0 8px; font: 600 18px/1.2 Georgia, "Songti SC", serif; }
+.packet-decision-panel > p { margin: 0 0 12px; color: var(--muted); font-size: 11px; }
+.packet-decision-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
+.packet-decision-options label { display: flex; align-items: flex-start; gap: 9px; min-height: 92px; padding: 12px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+.packet-decision-options input { margin-top: 3px; accent-color: var(--green); }
+.packet-decision-options strong,.packet-decision-options small { display: block; }
+.packet-decision-options small { margin-top: 5px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.packet-decision-confirm { display: flex; align-items: flex-start; gap: 10px; margin: 14px 0; font-size: 12px; line-height: 1.5; }
+.packet-decision-confirm input { margin-top: 3px; accent-color: var(--green); }
+.packet-decision-panel > button { min-width: 220px; }
 .packet-section { min-width: 0; padding: 15px; border: 1px solid var(--line); background: #fafbf9; }
 .packet-section.wide { grid-column: 1 / -1; }
 .packet-section h4 { margin: 0 0 9px; font-size: 12px; }
@@ -360,6 +371,7 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .queue-preferences,.review-packet-panel > header { align-items: stretch; flex-direction: column; }
   .queue-preferences label { flex-wrap: wrap; }
   .review-packet-body { grid-template-columns: 1fr; }
+  .packet-decision-options { grid-template-columns: 1fr; }
   .packet-section.wide { grid-column: auto; }
   .ai-choice { min-height: 160px; }
   .source-grid { grid-template-columns: 1fr; }

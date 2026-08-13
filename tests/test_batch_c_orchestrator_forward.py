@@ -80,6 +80,47 @@ class OrchestratorForwardTests(unittest.TestCase):
                 service.review_packet(result["application_id"])
             self.assertEqual(caught.exception.code, "REVIEW_PACKET_HASH_INVALID")
 
+    def test_explicit_local_approval_is_hash_bound_and_performs_no_external_action(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, orchestrator = self.build(temp)
+            refs = orchestrator.secure_onboard_synthetic()
+            result = self.run_chain(orchestrator, refs)
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            displayed = service.review_packet(result["application_id"])
+            payload = {
+                "application_id": result["application_id"],
+                "decision": "APPROVE",
+                "expected_packet_hash": displayed["packet"]["content_hash"],
+            }
+
+            with self.assertRaises(JobOpsError) as unconfirmed:
+                service.decide_review_packet({**payload, "user_confirmed": False})
+            self.assertEqual(unconfirmed.exception.code, "EXPLICIT_CONFIRMATION_REQUIRED")
+            with self.assertRaises(JobOpsError) as stale:
+                service.decide_review_packet({
+                    **payload, "expected_packet_hash": "sha256:" + "0" * 64,
+                    "user_confirmed": True,
+                })
+            self.assertEqual(stale.exception.code, "REVIEW_PACKET_STALE")
+
+            decision = service.decide_review_packet({**payload, "user_confirmed": True})
+
+            self.assertEqual(decision["status"], "APPROVED")
+            self.assertEqual(decision["phase5_authorization"], "ABSENT")
+            self.assertEqual(decision["real_external_actions"], 0)
+            with database.connect() as connection:
+                application_status = connection.execute(
+                    "SELECT status FROM applications WHERE application_id=?", (result["application_id"],)
+                ).fetchone()[0]
+                packet_status = connection.execute(
+                    "SELECT status FROM review_packets WHERE application_id=?", (result["application_id"],)
+                ).fetchone()[0]
+                approval_count = connection.execute("SELECT COUNT(*) FROM approvals").fetchone()[0]
+                attempts = connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0]
+            self.assertEqual((application_status, packet_status), ("APPROVED", "APPROVED"))
+            self.assertEqual(approval_count, 1)
+            self.assertEqual(attempts, 0)
+
     def test_crash_before_admission_restarts_without_duplicate_job_packet_or_material(self) -> None:
         with project_temp() as temp:
             database, _, orchestrator = self.build(temp)

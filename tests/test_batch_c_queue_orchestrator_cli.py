@@ -44,7 +44,15 @@ class AtomicQueueTests(unittest.TestCase):
                 decision = manager.enqueue(f"INTAKE-{index:02d}", source_type="txt", source_locator=f"fixtures/jd-{index}.txt")
                 admissions.append(decision)
                 if decision.status == "RESERVED":
-                    manager.admit_awaiting(decision.reservation_id, binding(index), snapshot_relative_path=f"workspace/jobs/{index}/jd.txt")
+                    manager.admit_awaiting(
+                        decision.reservation_id, binding(index),
+                        snapshot_relative_path=f"workspace/jobs/{index}/jd.txt",
+                        review_packet={
+                            "packet_id": f"RPK-{index:012X}", "content_hash": HASH_A,
+                            "secure_ref": f"secure-ref:SYNTHETIC_PACKET_{index:04d}",
+                            "status": "AWAITING_APPROVAL",
+                        },
+                    )
             self.assertEqual(sum(item.status == "RESERVED" for item in admissions), 3)
             status = manager.status()
             self.assertEqual(status["awaiting_approval"], 3)
@@ -61,6 +69,11 @@ class AtomicQueueTests(unittest.TestCase):
             self.assertEqual(status["awaiting_approval"], 3)
             self.assertEqual(status["deferred_intake"], 8)
             self.assertEqual(status["closed_applications"], 1)
+            with database.connect() as connection:
+                rejected_packet = connection.execute(
+                    "SELECT status FROM review_packets WHERE application_id=?", (binding(0).application_id,)
+                ).fetchone()[0]
+            self.assertEqual(rejected_packet, "REJECTED")
 
     def test_duplicate_intake_is_idempotent(self) -> None:
         with project_temp() as temp:
@@ -112,12 +125,9 @@ class AtomicQueueTests(unittest.TestCase):
             intake_key = "REVISION-HASH"
             first = manager.enqueue(intake_key, source_type="txt", source_locator="fixtures/revision.txt")
             manager.admit_awaiting(first.reservation_id, original, snapshot_relative_path="workspace/jobs/revision/jd.txt")
-            with database.connect() as connection:
-                connection.execute("BEGIN IMMEDIATE")
-                connection.execute(
-                    "UPDATE applications SET status='MATERIALS_NEEDS_CORRECTION',last_safe_state='MATERIALS_DRAFTED' WHERE application_id=?",
-                    (original.application_id,),
-                )
+            revision = manager.request_revision(original.application_id, reason="SYNTHETIC_TEST_REVISION")
+            self.assertEqual(revision["status"], "MATERIALS_NEEDS_CORRECTION")
+            self.assertTrue(revision["capacity_released"])
             accepted = manager.enqueue(intake_key, source_type="txt", source_locator="fixtures/revision.txt")
             self.assertEqual(accepted.status, "ACCEPTED")
             reopened = manager.reserve_reprocess(intake_key, original.application_id)

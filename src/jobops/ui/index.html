@@ -75,6 +75,17 @@
       <section id="reviewPacketPanel" class="review-packet-panel hidden" aria-live="polite">
         <header><div><p class="eyebrow" data-i18n="reviewPacketEyebrow">LOCAL REVIEW PACKET</p><h3 id="reviewPacketTitle"></h3><small id="reviewPacketMeta"></small></div><button id="closeReviewPacket" class="text-action" type="button" data-i18n="closePacket">关闭审阅包</button></header>
         <div id="reviewPacketBody" class="review-packet-body"></div>
+        <fieldset class="packet-decision-panel">
+          <legend data-i18n="packetDecisionTitle">你对这份审阅包的决定</legend>
+          <p data-i18n="packetDecisionBody">决定只保存在本机。当前不会打开网站、上传材料或提交申请。</p>
+          <div class="packet-decision-options">
+            <label><input type="radio" name="packetDecision" value="APPROVE"><span><strong data-i18n="decisionApprove">批准这份审阅包</strong><small data-i18n="decisionApproveHelp">保存与当前哈希绑定的一次性本地批准；真实外部动作仍锁定。</small></span></label>
+            <label><input type="radio" name="packetDecision" value="REVISE"><span><strong data-i18n="decisionRevise">退回修改</strong><small data-i18n="decisionReviseHelp">标记材料需要修订；任何旧批准都会失效。</small></span></label>
+            <label><input type="radio" name="packetDecision" value="REJECT"><span><strong data-i18n="decisionReject">不申请这个岗位</strong><small data-i18n="decisionRejectHelp">关闭这项申请并释放一个待审批位置。</small></span></label>
+          </div>
+          <label class="packet-decision-confirm"><input id="packetDecisionConfirm" type="checkbox"><span data-i18n="decisionConfirm">我确认这是我对当前审阅包的决定，并理解本轮真实外部动作仍为 0。</span></label>
+          <button id="confirmPacketDecision" type="button" disabled data-i18n="confirmDecision">确认这个决定</button>
+        </fieldset>
       </section>
     </section>
 
@@ -246,6 +257,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260813-jobflow-v4"></script>
+  <script src="app.js?v=20260813-jobflow-v5"></script>
 </body>
 </html>

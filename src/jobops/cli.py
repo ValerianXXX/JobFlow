@@ -448,9 +448,8 @@ def main(argv: list[str] | None = None) -> int:
                 raise JobOpsError("APPLICATION_BINDING_MISSING", "The current approval binding is missing.")
             context = ApprovalContext.from_dict(json.loads(row[0])); approval = issue_approval(context=context, user_confirmed=True)
             result = ExternalActionGateway(database, ExternalActionPolicy.production_disabled()).persist_approval(approval, context)
-            with database.connect() as connection:
-                connection.execute("UPDATE review_packets SET status='APPROVED' WHERE application_id=?", (args.application_id,))
-            emit({**result, "phase5_authorization": "ABSENT", "next_safe_action": "NONE_EXTERNAL_ACTIONS_REMAIN_DISABLED"}, project)
+            promoted = QueueManager(database).promote_next_deferred()
+            emit({**result, "promoted": promoted.as_dict(), "phase5_authorization": "ABSENT", "next_safe_action": "NONE_EXTERNAL_ACTIONS_REMAIN_DISABLED"}, project)
         elif args.command == "reject-review-packet":
             if not args.application_id:
                 raise JobOpsError("APPLICATION_ID_REQUIRED", "Select the review packet to reject.")
@@ -461,17 +460,10 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "revise-application":
             if not args.application_id:
                 raise JobOpsError("APPLICATION_ID_REQUIRED", "Select the application to revise.")
-            database = _database(project); now = iso_utc()
-            with database.connect() as connection:
-                connection.execute("BEGIN IMMEDIATE")
-                row = connection.execute("SELECT status FROM applications WHERE application_id=?", (args.application_id,)).fetchone()
-                if row is None or row["status"] not in {"AWAITING_APPROVAL", "APPROVED"}:
-                    raise JobOpsError("APPLICATION_NOT_REVISABLE", "Only a pending or approved review packet can be revised.")
-                connection.execute("UPDATE applications SET status='MATERIALS_NEEDS_CORRECTION',last_safe_state='MATERIALS_DRAFTED',updated_at=? WHERE application_id=?", (now, args.application_id))
-                connection.execute("UPDATE approvals SET status='INVALIDATED' WHERE application_id=? AND status='APPROVED'", (args.application_id,))
-                connection.execute("UPDATE review_packets SET status='NEEDS_REVISION' WHERE application_id=?", (args.application_id,))
-                connection.execute("INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)", (args.application_id, "REVISION_REQUESTED", row["status"], "MATERIALS_NEEDS_CORRECTION", "{}", now))
-            emit({"status": "MATERIALS_NEEDS_CORRECTION", "application_id": args.application_id, "approval_invalidated": True, "next_safe_action": "run-to-awaiting-approval"}, project)
+            database = _database(project); manager = QueueManager(database)
+            result = manager.request_revision(args.application_id, reason="USER_REQUESTED_REVIEW_PACKET_REVISION")
+            promoted = manager.promote_next_deferred()
+            emit({**result, "promoted": promoted.as_dict(), "next_safe_action": "run-to-awaiting-approval"}, project)
         elif args.command in {"resume-blocked", "retry-safe-step", "explain"}:
             if not args.application_id:
                 raise JobOpsError("APPLICATION_ID_REQUIRED", "Select an application.")

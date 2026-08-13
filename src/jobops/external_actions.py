@@ -97,6 +97,10 @@ class ExternalActionGateway:
                 (now, normalized.application_id),
             )
             connection.execute(
+                "UPDATE review_packets SET status='APPROVED' WHERE application_id=? AND status='AWAITING_APPROVAL'",
+                (normalized.application_id,),
+            )
+            connection.execute(
                 "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
                 (normalized.application_id, "APPROVAL_PERSISTED", "AWAITING_APPROVAL", "APPROVED", json.dumps({"approval_id": approval.approval_id}), now),
             )

@@ -274,12 +274,53 @@ class QueueManager:
                 raise JobOpsError("APPLICATION_NOT_AWAITING_APPROVAL", "Only a pending review packet can release queue capacity.")
             now = iso_utc()
             connection.execute("UPDATE applications SET status='CLOSED',last_safe_state='AWAITING_APPROVAL',updated_at=? WHERE application_id=?", (now, application_id))
+            connection.execute(
+                "UPDATE review_packets SET status='REJECTED' WHERE application_id=? AND status='AWAITING_APPROVAL'",
+                (application_id,),
+            )
             connection.execute("UPDATE intake_queue SET status='CLOSED',updated_at=? WHERE reservation_id=(SELECT reservation_id FROM queue_reservations WHERE application_id=?)", (now, application_id))
             connection.execute(
                 "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
                 (application_id, "REVIEW_PACKET_REJECTED", "AWAITING_APPROVAL", "CLOSED", json.dumps({"reason": reason}), now),
             )
         return {"status": "CLOSED", "application_id": application_id, "capacity_released": True}
+
+    def request_revision(self, application_id: str, *, reason: str) -> dict[str, object]:
+        with self.database.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT status FROM applications WHERE application_id=?", (application_id,)
+            ).fetchone()
+            if row is None or row["status"] not in {"AWAITING_APPROVAL", "APPROVED"}:
+                raise JobOpsError(
+                    "APPLICATION_NOT_REVISABLE",
+                    "Only a pending or approved review packet can be revised.",
+                )
+            current = str(row["status"])
+            now = iso_utc()
+            connection.execute(
+                "UPDATE applications SET status='MATERIALS_NEEDS_CORRECTION',last_safe_state='MATERIALS_DRAFTED',updated_at=? WHERE application_id=?",
+                (now, application_id),
+            )
+            connection.execute(
+                "UPDATE approvals SET status='INVALIDATED' WHERE application_id=? AND status='APPROVED'",
+                (application_id,),
+            )
+            connection.execute(
+                "UPDATE review_packets SET status='NEEDS_REVISION' WHERE application_id=? AND status IN ('AWAITING_APPROVAL','APPROVED')",
+                (application_id,),
+            )
+            connection.execute(
+                "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
+                (
+                    application_id, "REVISION_REQUESTED", current, "MATERIALS_NEEDS_CORRECTION",
+                    json.dumps({"reason": reason}), now,
+                ),
+            )
+        return {
+            "status": "MATERIALS_NEEDS_CORRECTION", "application_id": application_id,
+            "approval_invalidated": True, "capacity_released": current == "AWAITING_APPROVAL",
+        }
 
     def promote_next_deferred(self) -> QueueAdmission:
         with self.database.connect() as connection:

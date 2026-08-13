@@ -15,6 +15,7 @@ from xml.etree import ElementTree as ET
 
 from . import UI_PROTOCOL_VERSION, __version__
 from .adapters import audit_real_external_actions
+from .approvals import ApprovalContext, issue_approval
 from .ai_runtime import (
     ALLOWED_CATEGORIES,
     ENTITY_CATEGORIES,
@@ -26,6 +27,7 @@ from .ai_connections import AIConnectionManager
 from .db import JobOpsDB
 from .document_qa import extract_pdf_text
 from .errors import JobOpsError
+from .external_actions import ExternalActionGateway, ExternalActionPolicy
 from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
 from .private_onboarding import PrivateOnboarding
 from .queue_manager import QueueManager
@@ -840,6 +842,54 @@ class OnboardingCenterService:
             },
             "packet": packet, "private_transport": "LOCAL_SESSION_ONLY",
             "private_values_persisted_to_project": 0, "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def decide_review_packet(self, payload: dict[str, Any]) -> dict[str, Any]:
+        application_id = str(payload.get("application_id", "")).strip()
+        decision = str(payload.get("decision", "")).strip().upper()
+        expected_hash = str(payload.get("expected_packet_hash", "")).strip()
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError("EXPLICIT_CONFIRMATION_REQUIRED", "The review decision requires explicit confirmation.")
+        if decision not in {"APPROVE", "REVISE", "REJECT"}:
+            raise JobOpsError("REVIEW_DECISION_INVALID", "Choose approve, revise, or reject.")
+        if not re.fullmatch(r"sha256:[a-f0-9]{64}", expected_hash):
+            raise JobOpsError("REVIEW_PACKET_HASH_INVALID", "The selected review packet hash is invalid.")
+
+        displayed = self.review_packet(application_id)
+        if displayed["packet"]["content_hash"] != expected_hash:
+            raise JobOpsError("REVIEW_PACKET_STALE", "The review packet changed after it was displayed. Review the current packet again.")
+
+        manager = QueueManager(self.database)
+        if decision == "APPROVE":
+            with self.database.connect() as connection:
+                row = connection.execute(
+                    "SELECT context_json FROM application_bindings WHERE application_id=?", (application_id,)
+                ).fetchone()
+            if row is None:
+                raise JobOpsError("APPLICATION_BINDING_MISSING", "The current approval binding is missing.")
+            context = ApprovalContext.from_dict(json.loads(row["context_json"]))
+            approval = issue_approval(context=context, user_confirmed=True)
+            outcome = ExternalActionGateway(
+                self.database, ExternalActionPolicy.production_disabled()
+            ).persist_approval(approval, context)
+        elif decision == "REVISE":
+            outcome = manager.request_revision(application_id, reason="USER_REQUESTED_REVIEW_PACKET_REVISION")
+        else:
+            outcome = manager.release_application(application_id, reason="USER_REJECTED_REVIEW_PACKET")
+
+        promoted = manager.promote_next_deferred()
+        return {
+            "status": str(outcome["status"]), "decision": decision,
+            "application_id": application_id, "promoted": promoted.as_dict(),
+            "queue": manager.status(), "phase5_authorization": "ABSENT",
+            "real_external_actions": 0,
+            "next_safe_action": (
+                "AWAIT_SEPARATE_EXTERNAL_ACTION_AUTHORIZATION"
+                if decision == "APPROVE" else
+                "REBUILD_OFFLINE_REVIEW_PACKET" if decision == "REVISE" else
+                promoted.next_safe_action
+            ),
         }
 
     @_synchronized

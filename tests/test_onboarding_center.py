@@ -702,6 +702,9 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("function renderReviewPacket()", app)
         self.assertIn('api("queue-limit"', app)
         self.assertIn('api("review-packet"', app)
+        self.assertIn('api("queue-decision"', app)
+        self.assertIn('id="packetDecisionConfirm"', html)
+        self.assertIn('id="confirmPacketDecision"', html)
         self.assertNotIn("showToast(e.message", app)
 
 
