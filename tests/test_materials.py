@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from _support import project_temp
-from jobops.document_builder import build_cover_letter, build_resume
+from jobops.document_builder import _save_document_atomic, build_cover_letter, build_resume
 from jobops.errors import JobOpsError
 from jobops.evidence import map_evidence
 from jobops.materials import approved_wordings, master_diff
@@ -29,6 +29,23 @@ def approved_claim(claim_id: str, wording: str, fact: str):
 
 
 class MaterialTests(unittest.TestCase):
+    def test_document_save_failure_preserves_existing_output(self) -> None:
+        class InterruptedDocument:
+            @staticmethod
+            def save(path: str) -> None:
+                from pathlib import Path
+                Path(path).write_bytes(b"partial private output")
+                raise OSError("synthetic interrupted save")
+
+        with project_temp() as temp:
+            output = temp / "resume.docx"
+            output.write_bytes(b"stable existing output")
+            with self.assertRaises(JobOpsError) as blocked:
+                _save_document_atomic(InterruptedDocument(), output)
+            self.assertEqual(blocked.exception.code, "DOCUMENT_OUTPUT_BUILD_FAILED")
+            self.assertEqual(output.read_bytes(), b"stable existing output")
+            self.assertEqual(list(temp.glob(".resume.docx.jobflow-*.tmp")), [])
+
     def test_evidence_mapping_uses_only_approved_claims(self) -> None:
         claim = approved_claim("CLM-SYNTHETIC01", "Analyzed synthetic product evidence", "synthetic product analysis evidence")
         mapping = map_evidence(["product analysis"], [claim])[0]

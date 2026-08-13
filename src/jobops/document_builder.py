@@ -335,6 +335,19 @@ def _configure_document(document) -> None:
     document.core_properties.comments = "Generated from approved synthetic claims during JobOps validation."
 
 
+def _save_document_atomic(document: Any, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.jobflow-{uuid.uuid4().hex}.tmp")
+    try:
+        document.save(str(temporary))
+        if not temporary.is_file() or temporary.stat().st_size < 1:
+            raise OSError("document writer produced no output")
+        os.replace(temporary, path)
+    except Exception as exc:
+        temporary.unlink(missing_ok=True)
+        raise JobOpsError("DOCUMENT_OUTPUT_BUILD_FAILED", "The generated document could not be committed atomically.") from exc
+
+
 def _add_numbering(document) -> int:
     _, _, _, _, OxmlElement, qn, _, _, _ = _modules()
     numbering = document.part.numbering_part.element
@@ -461,8 +474,7 @@ def build_resume(path: Path, *, candidate_display_name: str, target_role: str, s
     footer = document.sections[0].footer.paragraphs[0]
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
     _set_run(footer.add_run("JobOps generated - evidence gated"), size=8.5, color=GRAY)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    document.save(str(path))
+    _save_document_atomic(document, path)
     return {"path": str(path), "claim_ids": [item[0] for item in approved], "preset": "compact_reference_guide", "named_overrides": []}
 
 
@@ -494,8 +506,7 @@ def build_cover_letter(path: Path, *, candidate_display_name: str, company: str,
     footer = document.sections[0].footer.paragraphs[0]
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
     _set_run(footer.add_run("JobOps generated - evidence gated"), size=8.5, color=GRAY)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    document.save(str(path))
+    _save_document_atomic(document, path)
     return {"path": str(path), "claim_ids": [item[0] for item in approved], "preset": "compact_reference_guide", "named_overrides": []}
 
 
