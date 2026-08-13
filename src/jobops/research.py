@@ -7,7 +7,11 @@ from urllib.parse import urlparse
 from pathlib import Path
 
 from .errors import JobOpsError
-from .util import parse_iso, sha256_bytes, sha256_file
+from .sourcing import url_has_sensitive_query
+from .util import parse_iso, sha256_bytes
+
+
+MAX_RESEARCH_SNAPSHOT_BYTES = 16 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -53,6 +57,8 @@ def validate_research_sources(sources: Iterable[ResearchSource], *, now: datetim
         parsed = urlparse(source.url)
         if parsed.scheme != "https" or not parsed.hostname:
             raise JobOpsError("RESEARCH_SOURCE_INVALID", "Research sources require an HTTPS URL.", url=source.url)
+        if url_has_sensitive_query(source.url):
+            raise JobOpsError("RESEARCH_SOURCE_SENSITIVE_QUERY", "Research source URLs cannot contain private query parameters.")
         if not source.title.strip() or not source.supports.strip():
             raise JobOpsError("RESEARCH_SOURCE_INCOMPLETE", "Research sources need a title and the exact claim they support.")
         age = (current.astimezone(timezone.utc) - parse_iso(source.accessed_at)).days
@@ -87,12 +93,27 @@ def build_offline_research_packet(*, company: str, findings: list[dict[str, str]
         parsed = urlparse(source.url)
         if parsed.scheme != "https" or not parsed.hostname:
             raise JobOpsError("RESEARCH_SOURCE_INVALID", "Offline research metadata requires an HTTPS source URL.")
-        if not source.snapshot_path.is_file() or sha256_file(source.snapshot_path) != source.snapshot_hash:
+        if url_has_sensitive_query(source.url):
+            raise JobOpsError("RESEARCH_SOURCE_SENSITIVE_QUERY", "Research source URLs cannot contain private query parameters.")
+        if not source.snapshot_path.is_file():
+            raise JobOpsError("RESEARCH_SNAPSHOT_CHANGED", "Local research snapshot is missing or its SHA-256 changed.")
+        with source.snapshot_path.open("rb") as handle:
+            raw = handle.read(MAX_RESEARCH_SNAPSHOT_BYTES + 1)
+        if len(raw) > MAX_RESEARCH_SNAPSHOT_BYTES:
+            raise JobOpsError(
+                "RESEARCH_SNAPSHOT_TOO_LARGE",
+                "The local research snapshot exceeds the safe input limit.",
+                maximum_bytes=MAX_RESEARCH_SNAPSHOT_BYTES,
+            )
+        if sha256_bytes(raw) != source.snapshot_hash:
             raise JobOpsError("RESEARCH_SNAPSHOT_CHANGED", "Local research snapshot is missing or its SHA-256 changed.")
         age = (current - parse_iso(source.accessed_at)).days
         if age < 0 or age > max_age_days:
             raise JobOpsError("RESEARCH_ACCESS_DATE_STALE", "Research snapshot access date is outside the allowed window.")
-        text = source.snapshot_path.read_text(encoding="utf-8-sig")
+        try:
+            text = raw.decode("utf-8-sig")
+        except UnicodeDecodeError as exc:
+            raise JobOpsError("RESEARCH_SNAPSHOT_ENCODING_INVALID", "The local research snapshot must be valid UTF-8 text.") from exc
         excerpt = source.evidence_excerpt.strip()
         if not excerpt or excerpt not in text:
             raise JobOpsError("RESEARCH_EVIDENCE_MISSING", "The claimed evidence excerpt does not exist in the local snapshot.")

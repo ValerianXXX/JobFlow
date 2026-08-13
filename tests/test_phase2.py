@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from _support import PROJECT
 from jobops.eligibility import check_eligibility
+from jobops.errors import JobOpsError
 from jobops.fit import score_fit
 from jobops.jd_analyzer import UNKNOWN, analyze_jd
 from jobops.pipeline import analyze_offline_job
@@ -60,6 +61,10 @@ class Phase2Tests(unittest.TestCase):
         )
         packet = build_research_packet(company="Example Analytics Lab", industry="Synthetic analytics", findings=[{"claim": claim, "date": "2026-08-01"}], sources=[source])
         self.assertEqual(packet["source_count"], 1)
+        private_url = ResearchSource(**{**source.__dict__, "url": "https://example.com/news?auth_token=private"})
+        with self.assertRaises(JobOpsError) as sensitive:
+            build_research_packet(company="Example", industry="Synthetic", findings=[{"claim": claim}], sources=[private_url])
+        self.assertEqual(getattr(sensitive.exception, "code", None), "RESEARCH_SOURCE_SENSITIVE_QUERY")
 
 
 if __name__ == "__main__":

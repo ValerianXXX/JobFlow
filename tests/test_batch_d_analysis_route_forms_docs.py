@@ -148,6 +148,13 @@ class OfflineResearchAndFormTests(unittest.TestCase):
             forged = OfflineResearchSource(**{**source.__dict__, "evidence_excerpt": "Not in snapshot"})
             with self.assertRaises(JobOpsError):
                 build_offline_research_packet(company="Example", findings=[{"claim": "Not in snapshot"}], sources=[forged])
+            with mock.patch("jobops.research.MAX_RESEARCH_SNAPSHOT_BYTES", 4), self.assertRaises(JobOpsError) as too_large:
+                build_offline_research_packet(company="Example", findings=[{"claim": excerpt}], sources=[source])
+            self.assertEqual(too_large.exception.code, "RESEARCH_SNAPSHOT_TOO_LARGE")
+            private_url = OfflineResearchSource(**{**source.__dict__, "url": "https://example.com/news?session_token=private"})
+            with self.assertRaises(JobOpsError) as sensitive:
+                build_offline_research_packet(company="Example", findings=[{"claim": excerpt}], sources=[private_url])
+            self.assertEqual(sensitive.exception.code, "RESEARCH_SOURCE_SENSITIVE_QUERY")
 
     def test_form_classifier_uses_full_context_and_redacts_stop_values(self) -> None:
         fields = [
