@@ -22,6 +22,8 @@ JobFlow（内部工程代号 JobOps）是本地优先、证据驱动的求职工
 
 最简单的 Windows 使用方式：第一次双击 `Install JobFlow.cmd`，以后双击 `Start JobFlow.cmd`。不需要在 WSL 中运行，也不需要输入项目路径。
 
+想先体验而不接触真实简历时，安装后双击 `Start JobFlow Demo.cmd`。该入口只运行虚构资料，使用自动清理的临时数据库与 DPAPI 目录；文件上传和真实 AI 连接均被服务端拒绝，关闭窗口后演示状态即删除。/ To tour JobFlow without real data, run `Start JobFlow Demo.cmd`; it uses fictional data in an auto-cleaned temporary runtime and rejects file intake and real AI connections.
+
 如果希望使用 Windows PowerShell，则在项目根目录运行：
 
 ```powershell
@@ -106,7 +108,7 @@ python .agents/skills/job-application-operator/scripts/jobops.py purge-synthetic
 运行 `python .agents/skills/job-application-operator/scripts/jobops.py --help` 查看命令。核心分组包括：
 
 - 环境与状态：`audit`、`locate`、`status`、`init-db`、`migrate-db`、`verify-release`
-- 私人资料：`onboarding-center`、`onboarding-status`、`secure-onboard`、`secure-onboard-resume`、`finalize-resume-onboarding`、`review-onboarding`、`secure-import-master-resume`、`secure-import-answer-bank`、`secure-store-status`、`purge-synthetic-private-data`
+- 私人资料与演示：`demo`、`onboarding-center`、`onboarding-status`、`secure-onboard`、`secure-onboard-resume`、`finalize-resume-onboarding`、`review-onboarding`、`secure-import-master-resume`、`secure-import-answer-bank`、`secure-store-status`、`purge-synthetic-private-data`
 - Claim：`propose-claims`、`list-claim-proposals`、`approve-claim`、`reject-claim`、`revoke-claim`、`revalidate-claims`
 - 岗位与队列：`ats-capabilities`、`discover-official-jobs`、`verify-route`、`analyze-ats-form`、`analyze-ats-sequence`、`import-jd`、`analyze-job`、`run-to-awaiting-approval`、`plan-continuous-intake`、`run-queue`、`queue`、`list-pending`
 - 审阅与恢复：`show-review-packet`、`revise-application`、`approve-review-packet`、`reject-review-packet`、`resume-blocked`、`retry-safe-step`、`explain`

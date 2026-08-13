@@ -15,12 +15,13 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] Synthetic Greenhouse vertical to `AWAITING_APPROVAL`; Lever contract evidence.
 - [x] Manual-tick-only continuous intake planning with FIFO and user-selected capacity.
 - [x] Current-tree and full-Git-history privacy scanner; deterministic local source candidate.
+- [x] Auto-cleaned synthetic UI demo that rejects real file intake and real AI connections.
 
 ## Before a public GitHub release / GitHub 正式发布前
 
 - [ ] Confirm or replace the public Git author identity without exposing a private email.
 - [ ] Run fresh independent QA from a frozen clean copy of the final commit.
-- [ ] Capture sanitized bilingual screenshots and a short local-only demo.
+- [ ] Capture sanitized bilingual screenshots from the completed local-only synthetic demo.
 - [ ] Perform first-time installation on a clean supported Windows user profile.
 - [ ] Confirm repository name, owner, description, topics and private vulnerability reporting.
 - [ ] Create the repository and upload only after explicit user authorization.

@@ -57,6 +57,10 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
 .locale-switch button.active { background: var(--ink); color: #fff; }
 
 main { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 54px 28px 110px; }
+.demo-banner { margin: -18px 0 34px; padding: 16px 18px; border: 1px solid #d7a85d; border-left: 5px solid var(--amber); background: #fff8e9; box-shadow: var(--shadow); }
+.demo-banner strong { display: block; color: #69430e; font-size: 14px; }
+.demo-banner p { margin: 4px 0 0; color: #795b2c; font-size: 12px; }
+body.is-demo .upload-button { cursor: not-allowed; opacity: .58; }
 .hero { display: grid; grid-template-columns: 1.55fr .8fr; gap: 70px; align-items: end; margin-bottom: 46px; }
 .eyebrow, .section-no { margin: 0 0 12px; color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: .2em; }
 h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 Georgia, "Songti SC", serif; letter-spacing: -.035em; }

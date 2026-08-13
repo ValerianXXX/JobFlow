@@ -9,6 +9,7 @@ Run the following only on the final clean commit. Nothing in this checklist auth
 - [ ] `python .agents/skills/job-application-operator/scripts/run-release-verification.py` passes all tests, Schemas, leakage, knowledge and external-action checks.
 - [ ] `python -m jobops.public_release` reports 0 current-tree findings and 0 full-history findings.
 - [ ] `python -m jobops.release_candidate` builds two identical archives and passes the isolated local UI smoke.
+- [ ] `Start JobFlow Demo.cmd` opens the temporary synthetic-only tour; file intake and real AI connection remain blocked.
 - [ ] `python -m jobops.release_readiness` has no blockers.
 
 ## Human decisions / 人工决定

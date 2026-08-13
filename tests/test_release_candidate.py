@@ -18,7 +18,8 @@ class ReleaseCandidateTests(unittest.TestCase):
                 for required in (
                     ".github/workflows/ci.yml", ".gitignore", ".jobops-root", "AGENTS.md",
                     "CONTRIBUTING.md", "Install JobFlow.cmd", "LICENSE", "MANIFEST.in", "README.md",
-                    "SECURITY.md", "Start JobFlow.cmd", "pyproject.toml",
+                    "SECURITY.md", "Start JobFlow.cmd", "Start JobFlow Demo.cmd",
+                    "scripts/start-jobflow-demo.ps1", "pyproject.toml",
                 ):
                     archive.writestr(prefix + required, "synthetic safe text")
                 archive.writestr(prefix + "state/jobops.db", b"synthetic")

@@ -39,6 +39,8 @@ REQUIRED_PUBLIC_FILES = {
     "MANIFEST.in",
     "README.md",
     "SECURITY.md",
+    "Start JobFlow Demo.cmd",
+    "scripts/start-jobflow-demo.ps1",
     "pyproject.toml",
 }
 PUBLIC_EMAIL = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")

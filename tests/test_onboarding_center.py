@@ -208,6 +208,8 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("activity-spinner", styles)
         self.assertIn("activity-progress-scan", styles)
         self.assertIn('id="activityProgress"', html)
+        self.assertIn('id="demoBanner"', html)
+        self.assertIn("demo_mode", script)
         self.assertIn("elapsedWithEstimate", script)
         self.assertIn("updateActivity", script)
         self.assertIn("function learnedActivityEstimate", script)

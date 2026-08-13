@@ -139,6 +139,9 @@ def parser() -> argparse.ArgumentParser:
     center = sub.add_parser("onboarding-center")
     center.add_argument("--port", type=int, default=0)
     center.add_argument("--no-browser", action="store_true")
+    demo = sub.add_parser("demo")
+    demo.add_argument("--port", type=int, default=0)
+    demo.add_argument("--no-browser", action="store_true")
     sub.add_parser("onboarding-status")
 
     propose = sub.add_parser("propose-claims")
@@ -409,6 +412,9 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "onboarding-center":
             database = _database(project); onboarding = _onboarding(project, database)
             run_server(OnboardingCenterService(project, database, onboarding), port=args.port, open_browser=not args.no_browser)
+        elif args.command == "demo":
+            from .demo import run_demo
+            run_demo(project, port=args.port, open_browser=not args.no_browser)
         elif args.command == "onboarding-status":
             database = _database(project); onboarding = _onboarding(project, database)
             emit(OnboardingCenterService(project, database, onboarding).redacted_status(), project)

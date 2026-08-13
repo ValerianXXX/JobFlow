@@ -100,7 +100,7 @@ def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Pa
         [sys.executable, str(entry), "--help"], cwd=candidate, env=environment,
         capture_output=True, text=True, timeout=30, check=False,
     )
-    if help_result.returncode != 0 or "onboarding-center" not in help_result.stdout:
+    if help_result.returncode != 0 or not all(command in help_result.stdout for command in ("onboarding-center", "demo")):
         raise JobOpsError("RELEASE_SMOKE_CLI_FAILED", "The extracted source candidate public CLI did not start correctly.")
     service_result = subprocess.run(
         [sys.executable, str(smoke)], cwd=candidate, env=environment,
