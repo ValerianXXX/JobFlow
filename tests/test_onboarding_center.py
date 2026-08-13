@@ -5,6 +5,7 @@ import http.client
 import json
 import socket
 import shutil
+import struct
 import sys
 import threading
 import unittest
@@ -287,6 +288,15 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="activityProgress"', html)
         self.assertIn('id="demoBanner"', html)
         self.assertIn('id="atsCapabilityList"', html)
+        self.assertIn('id="prepareOfflineApplication"', html)
+        self.assertIn('id="applicationJdFile"', html)
+        self.assertIn('id="applicationOfficialFile"', html)
+        self.assertIn('id="applicationFormFile"', html)
+        self.assertIn("function buildOfflineApplicationBundle", script)
+        self.assertIn('uploadApi("prepare-offline-application"', script)
+        self.assertIn('withActivity("preparingOfflineApplication"', script)
+        self.assertIn("data-i18n-placeholder", html)
+        self.assertIn("dataset.i18nPlaceholder", script)
         self.assertIn("ats_capabilities", script)
         self.assertIn("atsLiveUnverified", script)
         self.assertIn("ats-capability-list", styles)
@@ -1543,6 +1553,64 @@ class OnboardingCenterTests(unittest.TestCase):
                 server.server_close()
                 thread.join(timeout=5)
 
+    def test_local_application_bundle_protocol_uses_only_manifest_metadata_and_file_bytes(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            server = create_server(service, token="synthetic-session-token")
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            host = f"http://127.0.0.1:{server.server_port}"
+            path = "/session/synthetic-session-token/api/prepare-offline-application"
+            manifest = {
+                "schema_version": 1,
+                "metadata": {
+                    "official_url": "https://example.com/careers/role",
+                    "application_url": "https://example.com/careers/role",
+                    "guest_available": True,
+                    "evidence_excerpt": "Synthetic company evidence.",
+                },
+                "files": [
+                    {"key": "jd", "extension": ".txt", "size": 2},
+                    {"key": "official", "extension": ".html", "size": 3},
+                    {"key": "form", "extension": ".html", "size": 4},
+                ],
+            }
+            encoded = json.dumps(manifest, separators=(",", ":")).encode("utf-8")
+            body = struct.pack(">I", len(encoded)) + encoded + b"jd" + b"off" + b"form"
+            try:
+                with mock.patch.object(service, "prepare_offline_application_bundle", return_value={
+                    "status": "AWAITING_APPROVAL", "real_external_actions": 0,
+                }) as prepare:
+                    connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                    connection.request("POST", path, body=body, headers={
+                        "X-JobOps-Session": "synthetic-session-token", "Origin": host,
+                        "Content-Type": "application/octet-stream",
+                    })
+                    response = connection.getresponse()
+                    result = json.loads(response.read())
+                    connection.close()
+                self.assertEqual(response.status, 200)
+                self.assertEqual(result["status"], "AWAITING_APPROVAL")
+                prepare.assert_called_once_with(
+                    metadata=manifest["metadata"],
+                    files={"jd": (".txt", b"jd"), "official": (".html", b"off"), "form": (".html", b"form")},
+                )
+
+                invalid = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                invalid.request("POST", path, body=struct.pack(">I", 1) + b"{", headers={
+                    "X-JobOps-Session": "synthetic-session-token", "Origin": host,
+                    "Content-Type": "application/octet-stream",
+                })
+                invalid_response = invalid.getresponse()
+                invalid_result = json.loads(invalid_response.read())
+                invalid.close()
+                self.assertEqual(invalid_response.status, 400)
+                self.assertEqual(invalid_result["code"], "APPLICATION_BUNDLE_PROTOCOL_INVALID")
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
     def test_ui_localizes_gate_errors_and_detects_stale_service(self) -> None:
         app = (PROJECT / "src" / "jobops" / "ui" / "app.js").read_text(encoding="utf-8")
         html = (PROJECT / "src" / "jobops" / "ui" / "index.html").read_text(encoding="utf-8")
@@ -1559,6 +1627,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('privateDeleteRetry: "The local encrypted copy could not be deleted', app)
         self.assertIn('ONBOARDING_COMPLETION_WRITE_FAILED:"privateWriteRetry"', app)
         self.assertIn('ONBOARDING_COMPLETION_ROLLBACK_FAILED:"privateWriteRepair"', app)
+        self.assertIn('APPLICATION_BUNDLE_PROTOCOL_INVALID:"applicationBundleInvalid"', app)
         self.assertIn('id="blockingNotice"', html)
         self.assertIn('id="pipelineDashboard"', html)
         self.assertIn('id="deferredDashboardList"', html)

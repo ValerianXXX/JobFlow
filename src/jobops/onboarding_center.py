@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 from typing import Any, Iterable
+from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
 
 from . import UI_PROTOCOL_VERSION, __version__
@@ -40,6 +41,7 @@ from .external_claims import (
 )
 from .external_actions import ExternalActionGateway, ExternalActionPolicy
 from .official_discovery import MAX_SNAPSHOT_BYTES, discover_official_jobs
+from .orchestrator import JobOpsOrchestrator, MAX_JD_SOURCE_BYTES, _read_jd
 from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, REQUIRED_FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
 from .private_onboarding import PrivateOnboarding
 from .queue_manager import QueueManager
@@ -51,6 +53,7 @@ from .resume_tailoring import (
 from .runtime_schema import validate_named
 from .security import assert_no_plaintext_secret
 from .source_quality import document_quality_rank, document_text_preflight, safe_ai_failure_category
+from .sourcing import _canonical_url, _host, _provider_and_tenant, host_matches_registered, registrable_domain
 from .util import canonical_json, iso_utc, load_json, sha256_bytes, sha256_file, stable_id, write_json
 
 
@@ -76,6 +79,7 @@ MAX_JSON_NODES = 250_000
 MAX_JSON_DEPTH = 100
 MAX_ONBOARDING_PDF_PAGES = 500
 MAX_REVIEW_PACKET_BYTES = 2 * 1024 * 1024
+MAX_OFFLINE_APPLICATION_BUNDLE_BYTES = MAX_JD_SOURCE_BYTES + MAX_SNAPSHOT_BYTES + 16 * 1024 * 1024 + 64 * 1024
 ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "portfolio", "ai_summary", "chatgpt_export"}
 ALLOWED_EXTENSIONS = {".docx", ".pdf", ".txt", ".md", ".json", ".zip"}
 AI_SOURCE_TYPES = {"ai_summary", "chatgpt_export"}
@@ -1468,6 +1472,90 @@ class OnboardingCenterService:
             "credentials_read": 0,
             "credentials_stored": 0,
             "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def prepare_offline_application_bundle(
+        self,
+        *,
+        metadata: dict[str, Any],
+        files: dict[str, tuple[str, bytes]],
+    ) -> dict[str, Any]:
+        """Create one encrypted review packet from explicit local snapshots only."""
+
+        if set(files) != {"jd", "official", "form"}:
+            raise JobOpsError(
+                "APPLICATION_BUNDLE_FILES_INVALID",
+                "Choose one saved JD, official job-page snapshot, and application-form snapshot.",
+            )
+        allowed_extensions = {
+            "jd": {".txt", ".html", ".htm", ".pdf", ".json"},
+            "official": {".html", ".htm", ".txt"},
+            "form": {".html", ".htm", ".json"},
+        }
+        size_limits = {"jd": MAX_JD_SOURCE_BYTES, "official": MAX_SNAPSHOT_BYTES, "form": 16 * 1024 * 1024}
+        for key, (extension, value) in files.items():
+            if extension.casefold() not in allowed_extensions[key] or not value or len(value) > size_limits[key]:
+                raise JobOpsError("APPLICATION_BUNDLE_FILE_INVALID", "One selected local application file has an unsupported format or size.", part=key)
+        total = sum(len(value) for _, value in files.values())
+        if not total or total > MAX_OFFLINE_APPLICATION_BUNDLE_BYTES:
+            raise JobOpsError("APPLICATION_BUNDLE_SIZE_INVALID", "The selected local application bundle exceeds the safe limit.")
+        official_url = _canonical_url(str(metadata.get("official_url", "")))
+        application_url = _canonical_url(str(metadata.get("application_url", "")))
+        excerpt = re.sub(r"\s+", " ", str(metadata.get("evidence_excerpt", ""))).strip()
+        if not 12 <= len(excerpt) <= 2_000:
+            raise JobOpsError("APPLICATION_RESEARCH_EXCERPT_INVALID", "Paste one exact 12–2000 character excerpt from the saved official page.")
+        guest_value = metadata.get("guest_available")
+        if guest_value not in {True, False, None}:
+            raise JobOpsError("APPLICATION_GUEST_STATUS_INVALID", "Guest availability must be yes, no, or unknown.")
+        company_domain = registrable_domain(_host(urlparse(official_url).hostname or ""))
+        navigation = [official_url] if application_url == official_url else [official_url, application_url]
+        route: dict[str, Any] = {
+            "official_entry_url": official_url, "current_url": application_url,
+            "navigation_history": navigation, "guest_available": guest_value,
+            "official_snapshot": "ONE_TIME_LOCAL_SNAPSHOT",
+            "research": {
+                "title": str(metadata.get("research_title") or "Official company information")[:500],
+                "url": official_url, "source_type": "official_company",
+                "published_at": metadata.get("published_at") or None,
+                "accessed_at": iso_utc(), "official": True, "evidence_excerpt": excerpt,
+            },
+        }
+        current_host = _host(urlparse(application_url).hostname or "")
+        if not host_matches_registered(current_host, company_domain):
+            provider, tenant, board, identity = _provider_and_tenant(current_host, application_url)
+            route["tenant_binding"] = {
+                "provider": provider, "company_registrable_domain": company_domain,
+                "ats_host": current_host, "tenant": tenant, "board": board, "job_identity": identity,
+            }
+        with self.onboarding.staging_directory() as staging:
+            paths: dict[str, Path] = {}
+            for name, (extension, value) in files.items():
+                target = staging / (name + extension.casefold())
+                target.write_bytes(value)
+                paths[name] = target
+            route_path = staging / "route.json"
+            route_path.write_bytes(canonical_json(route))
+            research_text, _, _ = _read_jd(paths["official"], files["official"][0].lstrip("."))
+            normalized_research = re.sub(r"\s+", " ", research_text).strip()
+            if excerpt not in normalized_research:
+                raise JobOpsError(
+                    "APPLICATION_RESEARCH_EXCERPT_MISSING",
+                    "The pasted company excerpt was not found in the selected saved official page.",
+                )
+            research_path = staging / "research.txt"
+            research_path.write_text(normalized_research, encoding="utf-8")
+            result = JobOpsOrchestrator(self.project, self.database, self.onboarding).run_to_awaiting(
+                paths["jd"], profile_ref=None, master_resume_ref=None, answer_bank_ref=None,
+                route_fixture=route_path, form_fixture=paths["form"],
+                research_fixture=research_path, official_snapshot_fixture=paths["official"],
+                synthetic=False,
+            )
+        return {
+            "status": str(result["status"]), "application_id": result.get("application_id"),
+            "review_packet_id": result.get("review_packet_id"), "queue": result.get("queue"),
+            "real_external_actions": 0, "network_actions": 0,
+            "next_safe_action": "OPEN_LOCAL_REVIEW_PACKET" if result.get("application_id") else result.get("next_safe_action"),
         }
 
     def close(self) -> None:

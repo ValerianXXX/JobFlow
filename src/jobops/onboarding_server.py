@@ -5,6 +5,7 @@ import json
 import os
 import secrets
 import shutil
+import struct
 import sys
 import threading
 import webbrowser
@@ -18,6 +19,7 @@ from .errors import JobOpsError
 from .instance_lock import local_instance_lock
 from .onboarding_center import (
     MAX_LARGE_EXPORT_BYTES,
+    MAX_OFFLINE_APPLICATION_BUNDLE_BYTES,
     MAX_RETAINED_SOURCE_BYTES,
     MAX_UPLOAD_BYTES,
     OnboardingCenterService,
@@ -26,6 +28,7 @@ from .official_discovery import MAX_SNAPSHOT_BYTES
 
 
 JSON_LIMIT = 2 * 1024 * 1024
+APPLICATION_BUNDLE_MANIFEST_LIMIT = 64 * 1024
 
 
 class OnboardingHTTPServer(ThreadingHTTPServer):
@@ -226,6 +229,38 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 upload_size=length,
             )
 
+    def _application_bundle_body(self, length: int) -> tuple[dict[str, Any], dict[str, tuple[str, bytes]]]:
+        raw = self._read_exact_body(length)
+        if len(raw) < 5:
+            raise JobOpsError("APPLICATION_BUNDLE_PROTOCOL_INVALID", "The local application bundle header is incomplete.")
+        manifest_length = struct.unpack(">I", raw[:4])[0]
+        if not 1 <= manifest_length <= APPLICATION_BUNDLE_MANIFEST_LIMIT or 4 + manifest_length > len(raw):
+            raise JobOpsError("APPLICATION_BUNDLE_PROTOCOL_INVALID", "The local application bundle manifest length is invalid.")
+        try:
+            manifest = json.loads(raw[4:4 + manifest_length].decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise JobOpsError("APPLICATION_BUNDLE_PROTOCOL_INVALID", "The local application bundle manifest is not valid JSON.") from exc
+        if not isinstance(manifest, dict) or manifest.get("schema_version") != 1:
+            raise JobOpsError("APPLICATION_BUNDLE_PROTOCOL_INVALID", "The local application bundle version is unsupported.")
+        metadata, descriptors = manifest.get("metadata"), manifest.get("files")
+        if not isinstance(metadata, dict) or not isinstance(descriptors, list) or len(descriptors) != 3:
+            raise JobOpsError("APPLICATION_BUNDLE_PROTOCOL_INVALID", "The local application bundle manifest is incomplete.")
+        offset = 4 + manifest_length
+        files: dict[str, tuple[str, bytes]] = {}
+        for descriptor in descriptors:
+            if not isinstance(descriptor, dict) or set(descriptor) != {"key", "extension", "size"}:
+                raise JobOpsError("APPLICATION_BUNDLE_PROTOCOL_INVALID", "A local application file descriptor is invalid.")
+            key, extension, size = descriptor.get("key"), descriptor.get("extension"), descriptor.get("size")
+            if key not in {"jd", "official", "form"} or key in files or not isinstance(extension, str):
+                raise JobOpsError("APPLICATION_BUNDLE_PROTOCOL_INVALID", "A local application file key or extension is invalid.")
+            if isinstance(size, bool) or not isinstance(size, int) or size < 1 or offset + size > len(raw):
+                raise JobOpsError("APPLICATION_BUNDLE_PROTOCOL_INVALID", "A local application file length is invalid.")
+            files[key] = (extension.casefold(), raw[offset:offset + size])
+            offset += size
+        if set(files) != {"jd", "official", "form"} or offset != len(raw):
+            raise JobOpsError("APPLICATION_BUNDLE_PROTOCOL_INVALID", "The local application bundle has missing or trailing bytes.")
+        return metadata, files
+
     def _dispatch_error(self, exc: Exception) -> None:
         # Error paths may intentionally reject a request before reading its body. Closing the
         # connection prevents unread bytes from becoming a second, ambiguous local request.
@@ -333,6 +368,14 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                     company_domain=company_domain,
                     source_format=source_format,
                 )
+            elif route == "prepare-offline-application":
+                length = self._binary_body_length(
+                    maximum=MAX_OFFLINE_APPLICATION_BUNDLE_BYTES + APPLICATION_BUNDLE_MANIFEST_LIMIT + 4,
+                    size_code="APPLICATION_BUNDLE_SIZE_INVALID",
+                    size_message="The selected local application bundle is empty or too large.",
+                )
+                metadata, files = self._application_bundle_body(length)
+                result = self.server.service.prepare_offline_application_bundle(metadata=metadata, files=files)
             elif route == "complete":
                 result = self.server.service.complete(user_confirmed=self._json_body().get("user_confirmed") is True)
             elif route == "import":

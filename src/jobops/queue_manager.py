@@ -112,7 +112,13 @@ class QueueManager:
             if existing and existing["status"] in {"RESERVED", "ACCEPTED"}:
                 return QueueAdmission(intake_key, str(existing["status"]), existing["reservation_id"], "CONTINUE_RESERVED_JOB" if existing["status"] == "RESERVED" else "NONE")
             if existing and existing["status"] == "CLOSED":
-                return QueueAdmission(intake_key, "CLOSED", None, "CREATE_NEW_INTAKE_ID")
+                released = connection.execute(
+                    """SELECT 1 FROM queue_reservations
+                       WHERE intake_key=? AND status='RELEASED' AND application_id IS NULL LIMIT 1""",
+                    (intake_key,),
+                ).fetchone()
+                if released is None:
+                    return QueueAdmission(intake_key, "CLOSED", None, "CREATE_NEW_INTAKE_ID")
             limit, awaiting, reserved = self._capacity(connection)
             now = iso_utc()
             if awaiting + reserved >= limit:
@@ -203,6 +209,45 @@ class QueueManager:
                 (application_id, "REPROCESS_RESERVED", application["status"], application["status"], "{}", now),
             )
             return QueueAdmission(intake_key, "RESERVED", reservation_id, "RUN_TO_AWAITING_APPROVAL")
+
+    def release_reservation(self, reservation_id: str | None, *, reason: str) -> dict[str, object]:
+        """Release an unconsumed local slot after a preparation failure.
+
+        This never changes an existing application and never promotes another job.
+        A later explicit enqueue may retry only this released, application-free input.
+        """
+
+        if not reservation_id or not re.fullmatch(r"QRS-[A-F0-9]{12}", reservation_id):
+            raise JobOpsError("QUEUE_RESERVATION_INVALID", "A valid queue reservation is required for release.")
+        safe_reason = re.sub(r"[^A-Z0-9_]+", "_", str(reason).upper()).strip("_")[:120]
+        if not safe_reason:
+            safe_reason = "LOCAL_PREPARATION_FAILED"
+        with self.database.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT intake_key,application_id,status FROM queue_reservations WHERE reservation_id=?",
+                (reservation_id,),
+            ).fetchone()
+            if row is None:
+                raise JobOpsError("QUEUE_RESERVATION_INVALID", "The queue reservation is missing.")
+            if row["status"] == "RELEASED":
+                return {"status": "RELEASED", "deduplicated": True, "real_external_actions": 0}
+            if row["status"] != "RESERVED" or row["application_id"] is not None:
+                raise JobOpsError("QUEUE_RESERVATION_RELEASE_FORBIDDEN", "A consumed queue reservation cannot be released.")
+            now = iso_utc()
+            connection.execute(
+                "UPDATE queue_reservations SET status='RELEASED',updated_at=? WHERE reservation_id=?",
+                (now, reservation_id),
+            )
+            connection.execute(
+                "UPDATE intake_queue SET status='CLOSED',reservation_id=NULL,updated_at=? WHERE intake_key=? AND status='RESERVED'",
+                (now, row["intake_key"]),
+            )
+            connection.execute(
+                "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(NULL,?,?,?,?,?)",
+                ("QUEUE_RESERVATION_RELEASED", "RESERVED", "CLOSED", json.dumps({"reason": safe_reason}), now),
+            )
+        return {"status": "RELEASED", "deduplicated": False, "real_external_actions": 0}
 
     def admit_awaiting(
         self,

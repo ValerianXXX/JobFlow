@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v14">
+  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v15">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -115,6 +115,22 @@
           <div id="recentDashboardList" class="compact-dashboard-list"></div>
         </section>
       </div>
+      <section class="offline-application-prep" aria-labelledby="offlineApplicationTitle">
+        <div class="subheading">
+          <div><h3 id="offlineApplicationTitle" data-i18n="offlineApplicationTitle">准备一个离线申请</h3><small data-i18n="offlineApplicationBody">选择你已经保存到电脑的岗位说明、公司官网岗位页和申请表。JobFlow 只在本机生成岗位材料与审阅包，不打开网站。</small></div>
+          <span class="guard-badge" data-i18n="offlineApplicationGuard">只到待审批</span>
+        </div>
+        <div class="offline-application-grid">
+          <label><span data-i18n="applicationOfficialUrl">公司官网岗位 URL</span><input id="applicationOfficialUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://example.com/careers/role"></label>
+          <label><span data-i18n="applicationFormUrl">申请表原始 URL</span><input id="applicationFormUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://boards.greenhouse.io/..."></label>
+          <label><span data-i18n="applicationGuestMode">是否可访客申请</span><select id="applicationGuestMode"><option value="unknown" data-i18n="guestUnknown">不确定</option><option value="yes" data-i18n="guestYes">可以</option><option value="no" data-i18n="guestNo">不可以</option></select></label>
+          <label><span data-i18n="applicationJdFile">岗位说明（JD）</span><input id="applicationJdFile" type="file" accept=".txt,.html,.htm,.pdf,.json"></label>
+          <label><span data-i18n="applicationOfficialFile">已保存的官网岗位页</span><input id="applicationOfficialFile" type="file" accept=".html,.htm,.txt"></label>
+          <label><span data-i18n="applicationFormFile">已保存的申请表</span><input id="applicationFormFile" type="file" accept=".html,.htm,.json"></label>
+          <label class="offline-application-excerpt"><span data-i18n="applicationEvidenceExcerpt">官网页中的一段公司原文</span><textarea id="applicationEvidenceExcerpt" rows="3" maxlength="2000" data-i18n-placeholder="applicationEvidencePlaceholder" placeholder="粘贴官网岗位页中一段至少 12 个字符的原文，用于有依据地生成求职信。"></textarea><small data-i18n="applicationEvidenceHelp">必须能在所选官网页中逐字找到；不会被当作你的个人经历。</small></label>
+        </div>
+        <div class="offline-application-actions"><small id="offlineApplicationStatus" data-i18n="offlineApplicationReadyHint">资料准备度全部通过后即可生成。</small><button id="prepareOfflineApplication" class="primary" type="button" data-i18n="prepareOfflineApplication" disabled>生成材料并加入待审批</button></div>
+      </section>
       <section class="ats-capability-board" aria-labelledby="atsCapabilityTitle">
         <div class="subheading">
           <div><h3 id="atsCapabilityTitle" data-i18n="atsCapabilityTitle">官网与 ATS 离线能力</h3><small data-i18n="atsCapabilityBody">这里显示本版本已经通过哪类本地快照测试；不代表已访问或兼容实时网站。</small></div>
@@ -326,6 +342,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260813-jobflow-v14"></script>
+  <script src="app.js?v=20260813-jobflow-v15"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from docx import Document
 
@@ -14,6 +15,7 @@ from jobops.document_builder import inspect_docx_text_blocks, template_fingerpri
 from jobops.errors import JobOpsError
 from jobops.external_claims import build_external_claim_set, claim_review_hash
 from jobops.orchestrator import JobOpsOrchestrator
+from jobops.onboarding_center import OnboardingCenterService
 from jobops.private_onboarding import PrivateOnboarding
 from jobops.resume_tailoring import build_resume_tailoring_manifest, build_tailoring_proposal
 from jobops.secure_store import WindowsDPAPIStore
@@ -170,6 +172,78 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 ).fetchone()[0]
             self.assertGreaterEqual(generated, 4)
             self.assertEqual(list((onboarding.store.private_root / "staging").iterdir()), [])
+
+    def test_local_ui_bundle_builds_route_and_review_packet_without_retaining_input_files(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            fixtures = PROJECT / "tests" / "fixtures"
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            result = service.prepare_offline_application_bundle(
+                metadata={
+                    "official_url": "https://example.com/careers/synthetic-data-analyst",
+                    "application_url": "https://boards.greenhouse.io/example/jobs/987654",
+                    "guest_available": True,
+                    "research_title": "Synthetic company role page",
+                    "evidence_excerpt": "Synthetic Data Analyst",
+                },
+                files={
+                    "jd": (".txt", (fixtures / "synthetic-forward-jd.txt").read_bytes()),
+                    "official": (".html", (fixtures / "synthetic-greenhouse-careers.html").read_bytes()),
+                    "form": (".html", (fixtures / "synthetic-greenhouse-form.html").read_bytes()),
+                },
+            )
+            self.assertEqual(result["status"], "AWAITING_APPROVAL")
+            self.assertEqual(result["real_external_actions"], 0)
+            self.assertEqual(result["network_actions"], 0)
+            displayed = service.review_packet(str(result["application_id"]))
+            self.assertEqual(displayed["packet"]["source_route"]["provider"], "greenhouse")
+            with database.connect() as connection:
+                kinds = {str(row[0]) for row in connection.execute("SELECT DISTINCT kind FROM private_refs")}
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0], 0)
+            self.assertFalse(any(kind.startswith("application_input_") for kind in kinds))
+            self.assertEqual(list((onboarding.store.private_root / "staging").iterdir()), [])
+
+    def test_failed_preparation_releases_slot_and_deletes_new_encrypted_materials(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, orchestrator = self.build(temp)
+            self.seed_completed_context(onboarding)
+            fixtures = PROJECT / "tests" / "fixtures"
+            route = json.loads((fixtures / "synthetic-forward-route.json").read_text(encoding="utf-8"))
+            route["research"] = {
+                "title": "Example Analytics Lab update", "url": "https://example.com/news/synthetic-update",
+                "source_type": "official_company", "published_at": "2026-08-12T00:00:00Z",
+                "accessed_at": iso_utc(), "official": True,
+                "evidence_excerpt": "Example Analytics Lab uses documented checks for synthetic dataset analysis.",
+            }
+            route_path = temp / "saved-route-failure.json"
+            route_path.write_text(json.dumps(route), encoding="utf-8")
+            original_import = onboarding.import_bytes
+
+            def fail_after_two_generated(kind: str, value: bytes, *, synthetic: bool = False):
+                if kind == "visual_evidence":
+                    raise JobOpsError("LOCAL_TEST_FAILURE", "Stop after encrypted output for rollback testing.")
+                return original_import(kind, value, synthetic=synthetic)
+
+            with mock.patch.object(onboarding, "import_bytes", side_effect=fail_after_two_generated):
+                with self.assertRaisesRegex(JobOpsError, "Stop after encrypted output"):
+                    orchestrator.run_to_awaiting(
+                        fixtures / "synthetic-forward-jd.txt",
+                        profile_ref=None, master_resume_ref=None, answer_bank_ref=None,
+                        route_fixture=route_path, form_fixture=fixtures / "synthetic-material-form.html",
+                        research_fixture=fixtures / "synthetic-research.html", synthetic=False,
+                    )
+            with database.connect() as connection:
+                active_generated = connection.execute(
+                    "SELECT COUNT(*) FROM private_refs WHERE kind LIKE 'generated_%' AND synthetic=0 AND status='ACTIVE'"
+                ).fetchone()[0]
+                active_visual_or_packet = connection.execute(
+                    "SELECT COUNT(*) FROM private_refs WHERE kind IN ('visual_evidence','review_packet') AND synthetic=0 AND status='ACTIVE'"
+                ).fetchone()[0]
+                reservation = connection.execute("SELECT status FROM queue_reservations ORDER BY created_at DESC LIMIT 1").fetchone()
+            self.assertEqual(active_generated, 0)
+            self.assertEqual(active_visual_or_packet, 0)
+            self.assertEqual(str(reservation["status"]), "RELEASED")
 
 
 if __name__ == "__main__":

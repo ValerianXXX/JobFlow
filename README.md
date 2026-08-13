@@ -57,6 +57,8 @@ JobFlow 的资料理解采用严格 AI 门：选择文件后会自动启动 AI �
 
 每份待审批申请还会生成一份不可静默更改的六步“自动投递步骤”：实时确认岗位仍开放、以访客方式进入、安全字段预填、上传岗位材料、处理敏感/未知问题、最终提交。审阅页会用中英文直接标出每一步当前是已规划、只生成建议还是已停止，以及需要哪一种单独批准；最终提交始终要求新鲜的明确批准。某一岗位停在用户面前时，队列仍会继续处理其他岗位，直到达到用户设置的待审批数量上限。该计划目前只包含哈希、计数和门禁状态，不注册实时传输。 / Every review packet includes a hash-bound six-step execution plan that explains exactly where automation pauses and confirms non-blocking queue behavior; it remains planning-only with no live transport.
 
+完成“自动投递准备度”后，首页的“准备一个离线申请”可直接接收用户保存到本机的 JD、公司官网岗位页与申请表，以及两个对应 HTTPS 地址和一段可在官网页逐字找到的公司原文。三份输入只进入项目外的单次受控临时目录；JobFlow 自动建立官网/ATS 路线、生成岗位简历与按需 Cover Letter、运行 Word/PDF QA，并把加密审阅包送入有上限队列。失败时会释放队列位置并删除本轮新建的加密材料；输入快照不保留，真实网站访问与外部动作均为 0。 / After readiness passes, the home-page offline-application control accepts three explicitly selected saved files and creates the local review packet without configuration files or command-line private values. Inputs are staged once outside the project and removed; failed preparation rolls back its slot and newly generated ciphertext.
+
 当前发布状态：
 
 - `PHASE_0_4_HARDENED`

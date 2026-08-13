@@ -7,6 +7,7 @@ const STRINGS = {
     demoTitle: "合成演示 · 不使用真实资料", demoBody: "这是自动清理的临时体验环境。所有示例均为虚构内容；文件上传和真实 AI 连接已关闭，请勿在这里输入个人信息。", demoReview: "查看 AI 与冲突审阅", demoQueue: "查看待审批申请",
     atsCapabilityTitle: "官网与 ATS 离线能力", atsCapabilityBody: "这里显示本版本已经通过哪类本地快照测试；不代表已访问或兼容实时网站。", atsLiveUnverified: "实时验证：否", atsActionsBlocked: "上传与提交：关闭", atsEvidenceDirect: "公司官网单页快照", atsEvidenceVertical: "完整合成纵向链", atsEvidenceSingle: "保存的单页表单", atsEvidenceSequence: "保存的多步骤序列",
     offlineDiscoveryTitle: "解析已保存的公司招聘页", offlineDiscoveryBody: "只读取你选择的本地 HTML、保存页面 JSON，或 Greenhouse / Lever 岗位 JSON；不执行页面代码、不保存快照、不联网。", companyDomainLabel: "公司官网域名", careersUrlLabel: "保存页面原始 URL", officialSnapshotLabel: "招聘页快照", analyzeOfficialSnapshot: "只读解析岗位", officialInputsRequired: "请填写官网域名与招聘页 URL，并选择本地快照。", officialSnapshotInvalid: "快照、官网域名或招聘页 URL 无法安全对应，请检查后重试。", officialDiscoveryComplete: "本地快照解析完成；候选仍需实时复验。", officialCandidatesTitle: "离线岗位候选", officialCandidateCount: "找到 {count} 个", officialNoCandidates: "没有找到符合官网/允许 ATS 边界的岗位链接。", officialLiveCheckRequired: "仍需另行授权后实时复验", officialNotQueued: "未加入申请队列",
+    offlineApplicationTitle: "准备一个离线申请", offlineApplicationBody: "选择已保存的岗位说明、公司官网岗位页和申请表；JobFlow 只在本机生成岗位材料与审阅包。", offlineApplicationGuard: "只到待审批", applicationOfficialUrl: "公司官网岗位 URL", applicationFormUrl: "申请表原始 URL", applicationGuestMode: "是否可访客申请", guestUnknown: "不确定", guestYes: "可以", guestNo: "不可以", applicationJdFile: "岗位说明（JD）", applicationOfficialFile: "已保存的官网岗位页", applicationFormFile: "已保存的申请表", applicationEvidenceExcerpt: "官网页中的一段公司原文", applicationEvidencePlaceholder: "粘贴官网岗位页中一段至少 12 个字符的原文，用于有依据地生成求职信。", applicationEvidenceHelp: "必须能在所选官网页中逐字找到；不会被当作你的个人经历。", offlineApplicationReadyHint: "资料准备度全部通过后即可生成。", offlineApplicationReady: "准备度已通过，可以选择本地岗位资料。", offlineApplicationNeedsReadiness: "先完成上方自动投递准备度中的所有项目。", offlineApplicationInputsRequired: "请填写两个 HTTPS URL、选择三个本地文件，并粘贴一段官网原文。", prepareOfflineApplication: "生成材料并加入待审批", preparingOfflineApplication: "正在分析岗位并生成本机材料…", offlineApplicationPrepared: "岗位材料已生成并加入待审批。", offlineApplicationDeferred: "待审批队列已满；该岗位已安全排队等待。", applicationBundleInvalid: "所选岗位文件或页面信息无法安全对应，请检查后重试。",
     progressLabel: "问卷完成度", draftSaved: "草稿保存时直接加密", stepSources: "资料来源", stepQuestions: "完整问卷", stepReview: "资料与 Claim 审阅", stepFinish: "确认完成",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "本地投递控制台", pipelineBody: "统一查看资料准备度、待审批容量和安全边界。这里不会打开招聘网站或执行外部动作。", refreshDashboard: "刷新状态", dashboardRefreshed: "本地控制台已刷新", profileReadiness: "资料准备", awaitingApproval: "待你审批", approvalQueueOnly: "只生成本地审阅包", availableSlots: "剩余容量", deferredJobs: "排队等待", continuesUntilLimit: "达到上限前继续处理其他岗位", pendingReviewTitle: "待审批申请", pendingReviewBody: "只显示安全岗位摘要；私人答案和材料正文不会出现在此处。", safetyBoardTitle: "当前安全边界", realSites: "真实网站访问", externalActions: "真实外部动作", knowledgeWrites: "知识库写入", networkMode: "运行模式", pipelineReady: "已完成", pipelineNeedsSetup: "待完成", aiReadyShort: "AI 已连接", aiMissingShort: "AI 未连接", queueLimit: "上限 {limit}", pendingEmpty: "目前没有等待你审批的申请。离线处理完成的岗位会出现在这里。", packetHash: "审阅包 {hash}", packetVersion: "第 {version} 版", awaitingApprovalStatus: "等待你的决定", safetyGuardOn: "外部动作锁定", offlineMode: "仅限本地离线", refreshingDashboard: "刷新本地控制台…", deferredListTitle: "等待处理的岗位", deferredListBody: "达到上限后进入这里；释放位置时按顺序继续。", deferredEmpty: "目前没有因容量而等待的岗位。", recentDecisionsTitle: "最近的队列决定", recentDecisionsBody: "显示本地状态变化；不会把批准当成已提交。", recentEmpty: "还没有已处理的队列决定。", safeQueueId: "安全队列编号", queuedAt: "进入时间", viewRecord: "查看记录", approvalExpiry: "本地批准有效至 {time}", statusApproved: "本地已批准", statusClosed: "已关闭", statusRevision: "等待修改", statusDeferred: "等待容量", statusOther: "本地状态：{status}",
     queuePreferences: "待审批数量上限", queuePreferencesBody: "JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。", pendingLimitLabel: "最多等待", saveLimit: "保存上限", limitSaved: "待审批上限已保存", viewPacket: "查看审阅包", closePacket: "关闭审阅包", reviewPacketEyebrow: "LOCAL REVIEW PACKET", reviewPacketTitlePlaceholder: "本地审阅包", loadingReviewPacket: "解密并核验本地审阅包…", packetJob: "岗位", packetFit: "匹配分析", packetGaps: "硬性缺口", packetBullets: "简历表述与证据", packetQuestions: "申请问题", packetSensitive: "必须停下确认的敏感字段", packetUploads: "待上传材料", packetActions: "审批将绑定的动作", packetRoute: "官网与 ATS 路径", packetNone: "无", packetOverall: "总体匹配", packetStatus: "状态", packetCreated: "生成时间", packetClaims: "Claim", packetEvidence: "证据", pendingLimitInvalid: "请输入 1 到 1000 之间的整数。", pendingLimitBelowActive: "上限不能低于当前已占用的审批位置。请先处理一项申请。", reviewPacketUnavailable: "无法安全打开这个审阅包；内容未被显示，请刷新后重试。", packetDecisionTitle: "你对这份审阅包的决定", packetDecisionBody: "决定只保存在本机。当前不会打开网站、上传材料或提交申请。", decisionApprove: "批准这份审阅包", decisionApproveHelp: "保存与当前哈希绑定的一次性本地批准；真实外部动作仍锁定。", decisionRevise: "退回修改", decisionReviseHelp: "标记材料需要修订；任何旧批准都会失效。", decisionReject: "不申请这个岗位", decisionRejectHelp: "关闭这项申请并释放一个待审批位置。", decisionConfirm: "我确认这是我对当前审阅包的决定，并理解本轮真实外部动作仍为 0。", confirmDecision: "确认这个决定", chooseDecision: "请先选择批准、退回修改或不申请。", confirmDecisionFirst: "请勾选确认框后再保存决定。", decisionApproved: "审阅包已批准；真实外部动作仍为 0。", decisionRevised: "已退回修改；旧批准已失效。", decisionRejected: "已关闭这项申请并释放队列位置。", savingQueueDecision: "正在核验并保存队列决定…", reviewPacketStale: "这份审阅包已经变化。为防止误批，请重新打开并审阅最新版本。", reviewDecisionUnavailable: "当前申请已不在待审批状态，请刷新队列。",
@@ -36,6 +37,7 @@ const STRINGS = {
     demoTitle: "Synthetic demo · no real data", demoBody: "This is a temporary, auto-cleaned tour using fictional content only. File intake and real AI connections are disabled; do not enter personal information here.", demoReview: "View AI and conflict review", demoQueue: "View pending application",
     atsCapabilityTitle: "Official-site and ATS offline evidence", atsCapabilityBody: "This shows which saved-snapshot tests the current release passes; it is not a claim of live access or compatibility.", atsLiveUnverified: "Live verified: no", atsActionsBlocked: "Upload and submit: closed", atsEvidenceDirect: "Company-site single snapshot", atsEvidenceVertical: "Complete synthetic vertical", atsEvidenceSingle: "Saved single-page form", atsEvidenceSequence: "Saved multi-step sequence",
     offlineDiscoveryTitle: "Parse a saved company careers page", offlineDiscoveryBody: "Reads only local HTML, a saved-page JSON envelope, or Greenhouse / Lever job JSON; page code is not executed, the snapshot is not retained, and no network is used.", companyDomainLabel: "Official company domain", careersUrlLabel: "Original URL of saved page", officialSnapshotLabel: "Careers-page snapshot", analyzeOfficialSnapshot: "Parse jobs read-only", officialInputsRequired: "Enter the official domain and careers-page URL, then choose a local snapshot.", officialSnapshotInvalid: "The snapshot, official domain, and careers-page URL could not be safely matched. Check them and retry.", officialDiscoveryComplete: "Local snapshot parsed; every candidate still needs a live freshness check.", officialCandidatesTitle: "Offline job candidates", officialCandidateCount: "{count} found", officialNoCandidates: "No job link matched the company/approved-ATS boundary.", officialLiveCheckRequired: "Separate authorization required for live verification", officialNotQueued: "Not added to application queue",
+    offlineApplicationTitle: "Prepare one offline application", offlineApplicationBody: "Choose a saved JD, official-company job page, and application form. JobFlow only creates local materials and a review packet.", offlineApplicationGuard: "Stops at review", applicationOfficialUrl: "Official company job URL", applicationFormUrl: "Original application-form URL", applicationGuestMode: "Guest application available", guestUnknown: "Unknown", guestYes: "Yes", guestNo: "No", applicationJdFile: "Job description (JD)", applicationOfficialFile: "Saved official job page", applicationFormFile: "Saved application form", applicationEvidenceExcerpt: "One exact company excerpt from the official page", applicationEvidencePlaceholder: "Paste an exact excerpt of at least 12 characters from the official page for grounded Cover Letter generation.", applicationEvidenceHelp: "It must occur in the selected official page and is never treated as personal experience.", offlineApplicationReadyHint: "Finish every readiness item above to enable generation.", offlineApplicationReady: "Readiness passed; choose the saved job files to continue.", offlineApplicationNeedsReadiness: "Complete every item in Application readiness first.", offlineApplicationInputsRequired: "Enter both HTTPS URLs, choose all three local files, and paste an exact official-page excerpt.", prepareOfflineApplication: "Generate materials and add to review", preparingOfflineApplication: "Analyzing the job and generating local materials…", offlineApplicationPrepared: "Job materials generated and added to pending review.", offlineApplicationDeferred: "The review queue is full; this job is safely waiting in order.", applicationBundleInvalid: "The selected job files or page metadata could not be safely matched. Check them and retry.",
     progressLabel: "Questionnaire progress", draftSaved: "Drafts are encrypted when saved", stepSources: "Sources", stepQuestions: "Full questionnaire", stepReview: "Profile & Claim review", stepFinish: "Finish",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "Local application control center", pipelineBody: "See profile readiness, approval capacity, and safety boundaries in one place. This screen never opens recruiting sites or performs external actions.", refreshDashboard: "Refresh status", dashboardRefreshed: "Local control center refreshed", profileReadiness: "Profile readiness", awaitingApproval: "Awaiting you", approvalQueueOnly: "Local review packets only", availableSlots: "Available capacity", deferredJobs: "Waiting in line", continuesUntilLimit: "Other jobs continue until the limit", pendingReviewTitle: "Applications awaiting approval", pendingReviewBody: "Only safe job summaries appear here; private answers and document bodies never do.", safetyBoardTitle: "Active safety boundary", realSites: "Real-site visits", externalActions: "Real external actions", knowledgeWrites: "Knowledge writes", networkMode: "Run mode", pipelineReady: "Complete", pipelineNeedsSetup: "Needs setup", aiReadyShort: "AI connected", aiMissingShort: "AI not connected", queueLimit: "limit {limit}", pendingEmpty: "No application currently needs your approval. Offline-processed roles will appear here.", packetHash: "packet {hash}", packetVersion: "version {version}", awaitingApprovalStatus: "Awaiting your decision", safetyGuardOn: "External actions locked", offlineMode: "Local offline only", refreshingDashboard: "Refreshing local control center…", deferredListTitle: "Waiting roles", deferredListBody: "Roles wait here at capacity and resume in order when a slot opens.", deferredEmpty: "No role is currently waiting for queue capacity.", recentDecisionsTitle: "Recent queue decisions", recentDecisionsBody: "Shows local state changes and never labels approval as submission.", recentEmpty: "No queue decision has been completed yet.", safeQueueId: "Safe queue ID", queuedAt: "Queued", viewRecord: "View record", approvalExpiry: "Local approval valid until {time}", statusApproved: "Locally approved", statusClosed: "Closed", statusRevision: "Revision needed", statusDeferred: "Waiting for capacity", statusOther: "Local state: {status}",
     queuePreferences: "Pending-approval limit", queuePreferencesBody: "JobFlow pauses new intake at this number and continues after you resolve one item.", pendingLimitLabel: "Maximum waiting", saveLimit: "Save limit", limitSaved: "Pending-approval limit saved", viewPacket: "View review packet", closePacket: "Close packet", reviewPacketEyebrow: "LOCAL REVIEW PACKET", reviewPacketTitlePlaceholder: "Local review packet", loadingReviewPacket: "Decrypting and validating local review packet…", packetJob: "Job", packetFit: "Fit analysis", packetGaps: "Hard gaps", packetBullets: "Resume wording and evidence", packetQuestions: "Application questions", packetSensitive: "Sensitive fields requiring a stop", packetUploads: "Pending uploads", packetActions: "Actions bound by approval", packetRoute: "Official-site and ATS route", packetNone: "None", packetOverall: "Overall fit", packetStatus: "Status", packetCreated: "Created", packetClaims: "Claim", packetEvidence: "Evidence", pendingLimitInvalid: "Enter a whole number from 1 to 1000.", pendingLimitBelowActive: "The limit cannot be below the number of occupied approval slots. Resolve one application first.", reviewPacketUnavailable: "This review packet could not be opened safely. No content was shown; refresh and retry.", packetDecisionTitle: "Your decision on this review packet", packetDecisionBody: "The decision is saved locally only. No site opens, material uploads, or application submission occurs now.", decisionApprove: "Approve this review packet", decisionApproveHelp: "Save a one-time local approval bound to this exact hash; real external actions remain locked.", decisionRevise: "Return for revision", decisionReviseHelp: "Mark materials for revision and invalidate any earlier approval.", decisionReject: "Do not apply", decisionRejectHelp: "Close this application and release one pending-review slot.", decisionConfirm: "I confirm this is my decision on the current packet and understand real external actions remain 0 in this run.", confirmDecision: "Confirm this decision", chooseDecision: "Choose approve, revise, or do not apply first.", confirmDecisionFirst: "Check the confirmation box before saving the decision.", decisionApproved: "Review packet approved; real external actions remain 0.", decisionRevised: "Returned for revision; prior approval invalidated.", decisionRejected: "Application closed and queue capacity released.", savingQueueDecision: "Validating and saving queue decision…", reviewPacketStale: "This packet changed. To prevent stale approval, reopen and review the current version.", reviewDecisionUnavailable: "This application is no longer awaiting a decision. Refresh the queue.",
@@ -61,7 +63,7 @@ const STRINGS = {
   }
 };
 
-const UI_PROTOCOL_VERSION = 14;
+const UI_PROTOCOL_VERSION = 15;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V4";
 const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, reviewDecision: "", reviewDecisionConfirmed: false, officialDiscovery: null, tailoringProposal: null, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [], activityDurations: {} };
 const sessionToken = location.pathname.split("/")[2];
@@ -76,12 +78,16 @@ const ACTIVITY_ESTIMATES = {
   committingSource: 7, includingAll: 7, discardingSource: 5,
   deletingSource: 7, transformingClaims: 8, reprocessing: 45,
   reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5, savingQueueDecision: 7,
-  discoveringJobs: 8, approvingExternalClaims: 7, loadingTailoringManifest: 8, approvingTailoringManifest: 7
+  discoveringJobs: 8, approvingExternalClaims: 7, loadingTailoringManifest: 8, approvingTailoringManifest: 7,
+  preparingOfflineApplication: 150
 };
 const STANDARD_CHATGPT_EXPORT_BYTES = 200 * 1024 * 1024;
 const MAX_RETAINED_SOURCE_BYTES = 64 * 1024 * 1024;
 const MAX_LIGHTNING_EXPORT_BYTES = 8 * 1024 * 1024 * 1024;
 const MAX_OFFICIAL_SNAPSHOT_BYTES = 32 * 1024 * 1024;
+const MAX_APPLICATION_JD_BYTES = 32 * 1024 * 1024;
+const MAX_APPLICATION_OFFICIAL_BYTES = 32 * 1024 * 1024;
+const MAX_APPLICATION_FORM_BYTES = 16 * 1024 * 1024;
 
 function t(key) { return (STRINGS[state.locale] || STRINGS.zh)[key] || key; }
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
@@ -178,7 +184,18 @@ const LOCAL_ERROR_KEYS = {
   TAILORING_PROPOSAL_EMPTY:"tailoringProposalEmpty", TAILORING_PROPOSAL_STALE:"tailoringProposalStale",
   TAILORING_PROPOSAL_HASH_INVALID:"tailoringProposalStale", TAILORING_SELECTION_INVALID:"tailoringSelectionInvalid",
   TAILORING_SELECTION_EMPTY:"tailoringSelectOne", TAILORING_CONFIRMATION_REQUIRED:"tailoringConfirmFirst",
-  EDITABLE_MASTER_DOCX_MISSING:"readinessNeedsEditableMaster"
+  EDITABLE_MASTER_DOCX_MISSING:"readinessNeedsEditableMaster",
+  APPLICATION_BUNDLE_FILES_INVALID:"applicationBundleInvalid", APPLICATION_BUNDLE_FILE_INVALID:"applicationBundleInvalid",
+  APPLICATION_BUNDLE_SIZE_INVALID:"applicationBundleInvalid", APPLICATION_BUNDLE_PROTOCOL_INVALID:"applicationBundleInvalid",
+  APPLICATION_RESEARCH_EXCERPT_INVALID:"applicationBundleInvalid", APPLICATION_RESEARCH_EXCERPT_MISSING:"applicationBundleInvalid",
+  APPLICATION_GUEST_STATUS_INVALID:"applicationBundleInvalid", APPLICATION_ONBOARDING_APPROVAL_REQUIRED:"offlineApplicationNeedsReadiness",
+  APPLICATION_ONBOARDING_BINDING_MISMATCH:"offlineApplicationNeedsReadiness", APPLICATION_PRIVATE_REFERENCE_INVALID:"offlineApplicationNeedsReadiness",
+  APPLICATION_PRIVATE_REFERENCE_HASH_INVALID:"offlineApplicationNeedsReadiness", APPLICATION_MASTER_BINDING_MISMATCH:"offlineApplicationNeedsReadiness",
+  APPLICATION_CLAIM_SOURCE_CHANGED:"offlineApplicationNeedsReadiness", TAILORING_MANIFEST_STALE:"readinessNeedsTemplate",
+  APPLICATION_PREPARATION_ROLLBACK_FAILED:"privateWriteRepair", OFFLINE_RESEARCH_METADATA_REQUIRED:"applicationBundleInvalid",
+  HTTPS_REQUIRED:"applicationBundleInvalid", ATS_PROVIDER_UNKNOWN:"applicationBundleInvalid",
+  UNSAFE_ROUTE_HOP:"applicationBundleInvalid", UNAPPROVED_APPLICATION_HOST:"applicationBundleInvalid",
+  SOURCE_ROUTE_INVALID:"applicationBundleInvalid", TAILORING_RELEVANCE_INSUFFICIENT:"applicationBundleInvalid"
 };
 const BLOCKING_CODES=new Set([
   "SERVICE_RESTART_REQUIRED","PROFILE_REVIEW_REQUIRED","ONBOARDING_ANSWERS_INCOMPLETE",
@@ -329,6 +346,26 @@ function uploadApi(path,file,{onProgress,onUploaded}={}){
   });
 }
 
+function fileExtension(file){
+  return (String(file?.name||"").match(/\.[^.]+$/)||[""])[0].toLowerCase();
+}
+
+function isHttpsUrl(value){
+  try{return new URL(String(value)).protocol==="https:";}catch(_){return false;}
+}
+
+function buildOfflineApplicationBundle(metadata,parts){
+  const manifest={
+    schema_version:1,
+    metadata,
+    files:parts.map(item=>({key:item.key,extension:fileExtension(item.file),size:item.file.size}))
+  };
+  const encoded=new TextEncoder().encode(JSON.stringify(manifest));
+  const header=new ArrayBuffer(4);
+  new DataView(header).setUint32(0,encoded.byteLength,false);
+  return new Blob([header,encoded,...parts.map(item=>item.file)],{type:"application/octet-stream"});
+}
+
 function aiConnectionErrorMessage(error) {
   if(error?.code==="SERVICE_RESTART_REQUIRED")return localizedErrorMessage(error);
   if(error?.code==="AI_STRUCTURED_CAPABILITY_FAILED")return t("aiCapabilityFailed");
@@ -379,6 +416,7 @@ function applyLocale() {
   document.documentElement.lang = state.locale === "zh" ? "zh" : "en";
   document.title=t("pageTitle");
   document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => { el.placeholder=t(el.dataset.i18nPlaceholder); });
   document.querySelectorAll("[data-locale]").forEach(el => {
     const active=el.dataset.locale === state.locale;
     el.classList.toggle("active",active);
@@ -488,6 +526,11 @@ function renderApplicationReadiness(){
       ?t("tailoringManifestCurrent").replace("{count}",String(Number(manifest.block_count)||0))
       :t("tailoringManifestNeeded");
     if(manifest.current){state.tailoringProposal=null;document.querySelector("#tailoringManifestProposal").classList.add("hidden");}
+  }
+  const prepareButton=document.querySelector("#prepareOfflineApplication"), prepareStatus=document.querySelector("#offlineApplicationStatus");
+  if(prepareButton&&prepareStatus){
+    prepareButton.disabled=!ready||state.data?.demo_mode===true;
+    prepareStatus.textContent=t(ready?"offlineApplicationReady":"offlineApplicationNeedsReadiness");
   }
 }
 
@@ -1046,6 +1089,53 @@ document.addEventListener("click", async event => {
       });
       showToast(t("tailoringManifestApproved"));
     }catch(error){handleUiError(error);}
+    return;
+  }
+  const prepareOfflineApplication=event.target.closest("#prepareOfflineApplication");
+  if(prepareOfflineApplication){
+    const ready=state.data?.application_readiness?.status==="READY_FOR_OFFLINE_APPLICATION_PREPARATION";
+    if(!ready){showToast(t("offlineApplicationNeedsReadiness"),true);return;}
+    const officialUrl=document.querySelector("#applicationOfficialUrl").value.trim();
+    const applicationUrl=document.querySelector("#applicationFormUrl").value.trim();
+    const evidenceExcerpt=document.querySelector("#applicationEvidenceExcerpt").value.replace(/\s+/g," ").trim();
+    const jdFile=document.querySelector("#applicationJdFile").files[0];
+    const officialFile=document.querySelector("#applicationOfficialFile").files[0];
+    const formFile=document.querySelector("#applicationFormFile").files[0];
+    const extensions={jd:[".txt",".html",".htm",".pdf",".json"],official:[".html",".htm",".txt"],form:[".html",".htm",".json"]};
+    const validFiles=jdFile&&officialFile&&formFile
+      &&extensions.jd.includes(fileExtension(jdFile))&&jdFile.size>=1&&jdFile.size<=MAX_APPLICATION_JD_BYTES
+      &&extensions.official.includes(fileExtension(officialFile))&&officialFile.size>=1&&officialFile.size<=MAX_APPLICATION_OFFICIAL_BYTES
+      &&extensions.form.includes(fileExtension(formFile))&&formFile.size>=1&&formFile.size<=MAX_APPLICATION_FORM_BYTES;
+    if(!isHttpsUrl(officialUrl)||!isHttpsUrl(applicationUrl)||!validFiles||evidenceExcerpt.length<12||evidenceExcerpt.length>2000){
+      showToast(t("offlineApplicationInputsRequired"),true);return;
+    }
+    const guestChoice=document.querySelector("#applicationGuestMode").value;
+    const guestAvailable=guestChoice==="yes"?true:guestChoice==="no"?false:null;
+    const parts=[{key:"jd",file:jdFile},{key:"official",file:officialFile},{key:"form",file:formFile}];
+    const bundle=buildOfflineApplicationBundle({
+      official_url:officialUrl,application_url:applicationUrl,
+      guest_available:guestAvailable,evidence_excerpt:evidenceExcerpt
+    },parts);
+    try{
+      let result=null, openedPacket=null;
+      await withActivity("preparingOfflineApplication",async activityId=>{
+        result=await uploadApi("prepare-offline-application",bundle,{
+          onProgress:(loaded,total)=>updateActivity(activityId,{phase:"uploading",loadedBytes:loaded,totalBytes:total||bundle.size}),
+          onUploaded:()=>updateActivity(activityId,{phase:"processing",phaseStarted:Date.now(),loadedBytes:bundle.size,totalBytes:bundle.size,estimatedSeconds:300})
+        });
+        await refreshLatest();
+        if(result?.application_id){
+          openedPacket=await api("review-packet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({application_id:result.application_id})});
+        }
+      },{estimatedSeconds:300});
+      if(result?.application_id){
+        state.reviewPacket=openedPacket;
+        state.reviewDecision="";state.reviewDecisionConfirmed=false;renderReviewPacket();
+        document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});
+        showToast(t("offlineApplicationPrepared"));
+      }else{showToast(t("offlineApplicationDeferred"));}
+      ["#applicationJdFile","#applicationOfficialFile","#applicationFormFile"].forEach(selector=>{document.querySelector(selector).value="";});
+    }catch(error){showToast(localizedErrorMessage(error),true,9000);}
     return;
   }
   const analyzeSnapshot=event.target.closest("#analyzeOfficialSnapshot");

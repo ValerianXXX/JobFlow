@@ -150,6 +150,28 @@ class AtomicQueueTests(unittest.TestCase):
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM intake_queue").fetchone()[0], 1)
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM queue_reservations").fetchone()[0], 1)
 
+    def test_failed_local_preparation_releases_capacity_without_creating_an_application(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            database.set_pending_limit(1)
+            manager = QueueManager(database)
+            admission = manager.enqueue("LOCAL-PREP-FAIL", source_type="txt", source_locator="saved/jd.txt")
+            released = manager.release_reservation(admission.reservation_id, reason="document qa failed: private detail")
+            self.assertEqual(released["status"], "RELEASED")
+            self.assertEqual(released["real_external_actions"], 0)
+            self.assertEqual(manager.status()["reserved_slots"], 0)
+            with database.connect() as connection:
+                self.assertEqual(connection.execute("SELECT status FROM intake_queue").fetchone()[0], "CLOSED")
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM applications").fetchone()[0], 0)
+                payload = json.loads(connection.execute(
+                    "SELECT payload_json FROM events WHERE event_type='QUEUE_RESERVATION_RELEASED'"
+                ).fetchone()[0])
+            self.assertEqual(payload["reason"], "DOCUMENT_QA_FAILED_PRIVATE_DETAIL")
+            retried = manager.enqueue("LOCAL-PREP-FAIL", source_type="txt", source_locator="saved/jd.txt")
+            self.assertEqual(retried.status, "RESERVED")
+            self.assertEqual(manager.status()["reserved_slots"], 1)
+
     def test_two_workers_cannot_take_the_last_slot(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")

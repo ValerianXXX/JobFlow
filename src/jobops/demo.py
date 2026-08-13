@@ -84,6 +84,11 @@ class SyntheticDemoService(OnboardingCenterService):
     ) -> dict[str, Any]:
         raise JobOpsError("DEMO_FILE_INTAKE_DISABLED", "Synthetic demo mode cannot ingest user files.")
 
+    def prepare_offline_application_bundle(
+        self, *, metadata: dict[str, Any], files: dict[str, tuple[str, bytes]],
+    ) -> dict[str, Any]:
+        raise JobOpsError("DEMO_FILE_INTAKE_DISABLED", "Synthetic demo mode cannot ingest user files.")
+
     def preview_large_chatgpt_export(
         self,
         path: Path,

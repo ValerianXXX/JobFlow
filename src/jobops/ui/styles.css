@@ -147,6 +147,15 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .ats-capability-item small { margin-top: 5px; color: var(--muted); font-size: 10px; }
 .ats-capability-item b { margin-top: 9px; color: var(--green-dark); font-size: 10px; }
 .offline-discovery { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.offline-application-prep { margin-top: 18px; padding: 20px; border: 1px solid #b9d0c8; background: rgba(247,251,249,.9); }
+.offline-application-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+.offline-application-grid label > span { display: block; margin-bottom: 6px; color: var(--muted); font-size: 10px; }
+.offline-application-grid input,.offline-application-grid select,.offline-application-grid textarea { width: 100%; }
+.offline-application-grid input[type="file"] { min-height: 42px; padding: 8px; background: #fff; font-size: 10px; }
+.offline-application-excerpt { grid-column: 1 / -1; }
+.offline-application-excerpt small { display: block; margin-top: 5px; color: var(--muted); }
+.offline-application-actions { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 14px; }
+.offline-application-actions small { color: var(--muted); }
 .offline-discovery h4,.official-discovery-results h4 { margin: 0; font-size: 14px; }
 .offline-discovery > div > p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
 .offline-discovery-controls { display: grid; grid-template-columns: .8fr 1.2fr 1fr auto; gap: 10px; align-items: end; margin-top: 14px; }
@@ -460,6 +469,7 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .queue-secondary-boards { grid-template-columns: 1fr; }
   .ats-capability-list { grid-template-columns: 1fr 1fr; }
   .offline-discovery-controls { grid-template-columns: 1fr 1fr; }
+  .offline-application-grid { grid-template-columns: 1fr 1fr; }
   .packet-section.wide { grid-column: auto; }
   .ai-choice { min-height: 160px; }
   .source-grid { grid-template-columns: 1fr; }
@@ -487,7 +497,9 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
 
 @media (max-width: 440px) {
   .ats-capability-list { grid-template-columns: 1fr; }
-  .offline-discovery-controls,.official-candidate-item { grid-template-columns: 1fr; }
+  .offline-discovery-controls,.offline-application-grid,.official-candidate-item { grid-template-columns: 1fr; }
+  .offline-application-excerpt { grid-column: auto; }
+  .offline-application-actions { align-items: stretch; flex-direction: column; }
   .official-candidate-item aside { text-align: left; }
   .topbar { padding: 0 14px; }
   .brand { gap: 8px; }

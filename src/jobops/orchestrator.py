@@ -48,6 +48,11 @@ MAX_JD_SOURCE_BYTES = 32 * 1024 * 1024
 MAX_JD_TEXT_CHARACTERS = 4_000_000
 MAX_JD_HTML_EVENTS = 300_000
 MAX_JD_PDF_PAGES = 200
+ROLLBACK_PRIVATE_KINDS = {
+    "generated_resume_docx", "generated_resume_pdf",
+    "generated_cover_letter_docx", "generated_cover_letter_pdf",
+    "visual_evidence", "review_packet",
+}
 
 
 class _HTMLText(HTMLParser):
@@ -161,6 +166,18 @@ class JobOpsOrchestrator:
         self.onboarding.assert_outside_project(self.project)
         self.queue = QueueManager(database)
         self.schemas = self.project / "schemas"
+
+    @staticmethod
+    def _remember_created_reference(record: dict[str, Any], created: set[str]) -> None:
+        if record.get("deduplicated") is not True:
+            created.add(str(record["secure_ref"]))
+
+    def _rollback_generated_references(self, created: set[str]) -> None:
+        for reference in sorted(created):
+            metadata = self.onboarding.reference_metadata(reference)
+            if metadata["kind"] not in ROLLBACK_PRIVATE_KINDS:
+                raise JobOpsError("APPLICATION_PREPARATION_ROLLBACK_SCOPE_INVALID", "Rollback encountered an unexpected private material kind.")
+            self.onboarding.delete(reference, user_confirmed=True)
 
     def secure_onboard_synthetic(self) -> dict[str, Any]:
         fixtures = self.project / "tests" / "fixtures"
@@ -336,6 +353,7 @@ class JobOpsOrchestrator:
         route_fixture: Path,
         form_fixture: Path,
         research_fixture: Path,
+        official_snapshot_fixture: Path | None = None,
         external_claim_set_ref: str | None = None,
         tailoring_manifest_ref: str | None = None,
         source_type: str | None = None,
@@ -381,21 +399,109 @@ class JobOpsOrchestrator:
             else:
                 return {"status": str(row["status"]), "application_id": str(row["application_id"]), "deduplicated": True, "real_external_actions": 0}
         self._crash(crash_after_step, "after_reservation")
+        return self._run_reserved_to_awaiting(
+            input_path=input_path, normalized=normalized, source_format=source_format,
+            snapshot_url=snapshot_url, intake_key=intake_key, locator=locator,
+            admission=admission, profile_ref=profile_ref,
+            master_resume_ref=master_resume_ref, answer_bank_ref=answer_bank_ref,
+            route_fixture=route_fixture, form_fixture=form_fixture,
+            research_fixture=research_fixture, official_snapshot_fixture=official_snapshot_fixture,
+            real_context=real_context,
+            synthetic=synthetic, crash_after_step=crash_after_step,
+        )
+
+    def _run_reserved_to_awaiting(
+        self,
+        *,
+        input_path: Path,
+        normalized: str,
+        source_format: str,
+        snapshot_url: str | None,
+        intake_key: str,
+        locator: str,
+        admission: Any,
+        profile_ref: str,
+        master_resume_ref: str,
+        answer_bank_ref: str,
+        route_fixture: Path,
+        form_fixture: Path,
+        research_fixture: Path,
+        official_snapshot_fixture: Path | None,
+        real_context: dict[str, Any] | None,
+        synthetic: bool,
+        crash_after_step: str | None,
+    ) -> dict[str, Any]:
+        created_references: set[str] = set()
+        try:
+            return self._prepare_reserved_application(
+                input_path=input_path, normalized=normalized, source_format=source_format,
+                snapshot_url=snapshot_url, intake_key=intake_key, locator=locator,
+                admission=admission, profile_ref=profile_ref,
+                master_resume_ref=master_resume_ref, answer_bank_ref=answer_bank_ref,
+                route_fixture=route_fixture, form_fixture=form_fixture,
+                research_fixture=research_fixture, official_snapshot_fixture=official_snapshot_fixture,
+                real_context=real_context,
+                synthetic=synthetic, crash_after_step=crash_after_step,
+                created_references=created_references,
+            )
+        except Exception as exc:
+            # A failed offline preparation must not consume the user's approval
+            # capacity. Crash-injection tests intentionally preserve the slot to
+            # exercise recovery semantics.
+            if not (isinstance(exc, JobOpsError) and exc.code == "SYNTHETIC_CRASH_INJECTED"):
+                try:
+                    self._rollback_generated_references(created_references)
+                    self.queue.release_reservation(
+                        admission.reservation_id,
+                        reason=exc.code if isinstance(exc, JobOpsError) else "LOCAL_PREPARATION_FAILED",
+                    )
+                except Exception as rollback_exc:
+                    raise JobOpsError(
+                        "APPLICATION_PREPARATION_ROLLBACK_FAILED",
+                        "A failed local preparation could not fully remove its newly generated encrypted materials.",
+                    ) from rollback_exc
+            raise
+
+    def _prepare_reserved_application(
+        self,
+        *,
+        input_path: Path,
+        normalized: str,
+        source_format: str,
+        snapshot_url: str | None,
+        intake_key: str,
+        locator: str,
+        admission: Any,
+        profile_ref: str,
+        master_resume_ref: str,
+        answer_bank_ref: str,
+        route_fixture: Path,
+        form_fixture: Path,
+        research_fixture: Path,
+        official_snapshot_fixture: Path | None,
+        real_context: dict[str, Any] | None,
+        synthetic: bool,
+        crash_after_step: str | None,
+        created_references: set[str],
+    ) -> dict[str, Any]:
 
         route_value = load_json(route_fixture)
-        official_path = assert_safe_path(
-            self.project / str(route_value["official_snapshot"]), self.project, (), (),
+        official_path = (
+            official_snapshot_fixture.resolve(strict=True)
+            if official_snapshot_fixture is not None
+            else assert_safe_path(self.project / str(route_value["official_snapshot"]), self.project, (), ())
         )
         if not official_path.is_file():
             raise JobOpsError("OFFICIAL_SNAPSHOT_MISSING", "The saved official-company snapshot is missing.")
         official_hash = sha256_file(official_path)
-        binding = dict(route_value["tenant_binding"])
-        binding.update({"official_page_hash": official_hash, "jd_snapshot_hash": intake_key})
+        binding = dict(route_value.get("tenant_binding") or {})
+        if binding:
+            binding.update({"official_page_hash": official_hash, "jd_snapshot_hash": intake_key})
         policy = load_json(self.project / "config" / "policy.json")
         route = verify_source_route(
             official_entry_url=route_value["official_entry_url"], current_url=route_value["current_url"],
             navigation_history=route_value["navigation_history"], approved_ats_hosts=policy["approved_ats_hosts"],
-            guest_available=route_value.get("guest_available"), tenant_binding=binding,
+            guest_available=route_value.get("guest_available"), tenant_binding=binding or None,
             official_page_hash=official_hash, jd_snapshot_hash=intake_key,
         )
         validate_named("source-route", route.as_dict(), self.schemas)
@@ -648,8 +754,11 @@ class JobOpsOrchestrator:
             if qa.status != "PASS":
                 raise JobOpsError("MATERIALS_NEEDS_CORRECTION", "Tailored resume failed structural or render QA.", qa=qa.as_dict())
             docx_ref = self.onboarding.import_bytes("generated_resume_docx", resume_docx.read_bytes(), synthetic=synthetic)
+            self._remember_created_reference(docx_ref, created_references)
             pdf_ref = self.onboarding.import_bytes("generated_resume_pdf", resume_pdf.read_bytes(), synthetic=synthetic)
+            self._remember_created_reference(pdf_ref, created_references)
             visual_ref = self.onboarding.import_bytes("visual_evidence", canonical_json(visual), synthetic=synthetic)
+            self._remember_created_reference(visual_ref, created_references)
             if cover_requested:
                 cover_docx = staging / "cover-letter.docx"
                 cover_pdf = staging / "cover-letter.pdf"
@@ -689,12 +798,15 @@ class JobOpsOrchestrator:
                 cover_docx_ref = self.onboarding.import_bytes(
                     "generated_cover_letter_docx", cover_docx.read_bytes(), synthetic=synthetic,
                 )
+                self._remember_created_reference(cover_docx_ref, created_references)
                 cover_pdf_ref = self.onboarding.import_bytes(
                     "generated_cover_letter_pdf", cover_pdf.read_bytes(), synthetic=synthetic,
                 )
+                self._remember_created_reference(cover_pdf_ref, created_references)
                 cover_visual_ref = self.onboarding.import_bytes(
                     "visual_evidence", canonical_json(cover_visual), synthetic=synthetic,
                 )
+                self._remember_created_reference(cover_visual_ref, created_references)
         self._crash(crash_after_step, "after_materials")
 
         freshness = assess_job_freshness(official_listing_present=True, application_form_available=True, checked_at=iso_utc())
@@ -795,6 +907,7 @@ class JobOpsOrchestrator:
         packet["content_hash"] = sha256_bytes(canonical_json(packet))
         validate_named("review-packet", packet, self.schemas)
         packet_ref = self.onboarding.import_bytes("review_packet", canonical_json(packet), synthetic=synthetic)
+        self._remember_created_reference(packet_ref, created_references)
         context = ApprovalContext(
             application_id=application_id, job_id=job_id, jd_snapshot_hash=intake_key,
             jd_freshness_hash=sha256_bytes(canonical_json(freshness)), source_route_hash=route.route_hash,

@@ -11,7 +11,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] AI-required entity reconstruction, source coverage, grounding and Claim quality gates.
 - [x] Encrypted Master Resume designation plus separate, exact-wording Claim-use approval and a bilingual blocker-by-blocker readiness board.
 - [x] AI-to-paragraph mapping for ordinary DOCX masters with one-time applicant approval of hash-bound safe tailoring positions.
-- [x] Completed real-user onboarding context can produce an encrypted, rendered offline application review packet from explicitly saved JD, route, form and research evidence, with zero live transport.
+- [x] Completed real-user onboarding context can produce an encrypted, rendered offline application review packet from explicitly saved JD, official-page and form evidence through the bilingual home page, with automatic route construction, one-time staging, failure rollback and zero live transport.
 - [x] Transactional pending-review queue with explicit approve/reject/revise/defer decisions.
 - [x] Offline company-careers discovery from saved HTML/page snapshots and saved Greenhouse/Lever job JSON.
 - [x] Fail-closed local ATS form and Workday saved-sequence analysis.

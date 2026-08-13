@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- The bilingual home page can now prepare one real-profile offline application from three explicitly selected saved files. It constructs the company/ATS route locally, retains no input snapshot, opens the encrypted review packet, and rolls back both queue capacity and newly generated ciphertext if preparation fails; network and real external actions remain zero.
+- 中英双语首页现在可以从三份用户明确选择的本机文件准备一项真实资料离线申请：本机自动建立公司官网/ATS 路线，不保留输入快照，生成后直接打开加密审阅包；如中途失败，会同时释放队列容量并删除本轮新建密文，网络与真实外部动作仍为 0。
 - A completed non-synthetic onboarding profile can now drive the same local application pipeline as the demo: approved Claims are selected against a saved JD, only applicant-approved Master Resume positions are changed in a copy, Word renders the result for structural/visual QA, and the encrypted packet enters `AWAITING_APPROVAL`. Live transport remains absent.
 - 已完成的真实用户资料现在可以进入与演示相同的本机投递流水线：系统按已保存 JD 选择获批 Claim，只在用户批准的母版位置生成副本改写，经 Word 实际渲染与结构/视觉检查后，将加密审阅包放入 `AWAITING_APPROVAL`；实时传输仍不存在。
 - Ordinary DOCX Master Resumes now receive AI-to-paragraph mapping and a bilingual one-time approval screen. Only applicant-approved, hash-bound positions can be changed in a copy; the encrypted manifest persists no resume paragraph text and any onboarding revision invalidates it.
