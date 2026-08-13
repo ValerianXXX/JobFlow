@@ -1,6 +1,9 @@
 from pathlib import Path
 import unittest
+from unittest import mock
 
+from _support import project_temp
+from jobops.errors import JobOpsError
 from jobops.orchestrator import _read_jd
 
 
@@ -25,6 +28,26 @@ class JDInputFormatsTests(unittest.TestCase):
                     self.assertEqual(source_url, "https://example.com/careers/entry-data-analyst")
                 else:
                     self.assertIsNone(source_url)
+
+    def test_local_jd_inputs_are_bounded_before_parsing(self):
+        with project_temp() as temp:
+            oversized = temp / "oversized.txt"
+            oversized.write_bytes(b"12345")
+            with mock.patch("jobops.orchestrator.MAX_JD_SOURCE_BYTES", 4), self.assertRaises(JobOpsError) as caught:
+                _read_jd(oversized, "txt")
+            self.assertEqual(caught.exception.code, "JD_INPUT_TOO_LARGE")
+
+            invalid = temp / "invalid.json"
+            invalid.write_text("[]", encoding="utf-8")
+            with self.assertRaises(JobOpsError) as caught:
+                _read_jd(invalid, "snapshot")
+            self.assertEqual(caught.exception.code, "JD_SNAPSHOT_INVALID")
+
+            many_events = temp / "many-events.html"
+            many_events.write_text("<p>one</p><p>two</p>", encoding="utf-8")
+            with mock.patch("jobops.orchestrator.MAX_JD_HTML_EVENTS", 2), self.assertRaises(JobOpsError) as caught:
+                _read_jd(many_events, "html")
+            self.assertEqual(caught.exception.code, "JD_HTML_EVENT_LIMIT_EXCEEDED")
 
 
 if __name__ == "__main__":

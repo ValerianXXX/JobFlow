@@ -31,13 +31,36 @@ from .sourcing import assess_job_freshness, verify_source_route
 from .util import canonical_json, iso_utc, load_json, sha256_bytes, sha256_file, stable_id
 
 
+MAX_JD_SOURCE_BYTES = 32 * 1024 * 1024
+MAX_JD_TEXT_CHARACTERS = 4_000_000
+MAX_JD_HTML_EVENTS = 300_000
+MAX_JD_PDF_PAGES = 200
+
+
 class _HTMLText(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
         self.parts: list[str] = []
+        self.events = 0
+        self.characters = 0
+
+    def _tick(self) -> None:
+        self.events += 1
+        if self.events > MAX_JD_HTML_EVENTS:
+            raise JobOpsError("JD_HTML_EVENT_LIMIT_EXCEEDED", "The local JD HTML exceeds the safe parser event limit.")
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self._tick()
+
+    def handle_endtag(self, tag: str) -> None:
+        self._tick()
 
     def handle_data(self, data: str) -> None:
+        self._tick()
         if data.strip():
+            self.characters += len(data)
+            if self.characters > MAX_JD_TEXT_CHARACTERS:
+                raise JobOpsError("JD_TEXT_LIMIT_EXCEEDED", "The local JD text exceeds the safe analysis limit.")
             self.parts.append(data.strip())
 
 
@@ -71,21 +94,45 @@ def _pdftoppm() -> str:
 
 def _read_jd(path: Path, source_type: str | None = None) -> tuple[str, str, str | None]:
     kind = (source_type or path.suffix.lstrip(".")).casefold()
+    try:
+        with path.open("rb") as handle:
+            raw = handle.read(MAX_JD_SOURCE_BYTES + 1)
+    except OSError as exc:
+        raise JobOpsError("JD_INPUT_UNREADABLE", "The selected local JD input could not be read.") from exc
+    if len(raw) > MAX_JD_SOURCE_BYTES:
+        raise JobOpsError("JD_INPUT_TOO_LARGE", "The local JD input exceeds the safe parser limit.", maximum_bytes=MAX_JD_SOURCE_BYTES)
     if kind in {"txt", "text"}:
-        return path.read_text(encoding="utf-8-sig"), "txt", None
+        try:
+            text = raw.decode("utf-8-sig")
+        except UnicodeDecodeError as exc:
+            raise JobOpsError("JD_INPUT_ENCODING_INVALID", "Text and HTML JD inputs must use UTF-8 encoding.") from exc
+        if len(text) > MAX_JD_TEXT_CHARACTERS:
+            raise JobOpsError("JD_TEXT_LIMIT_EXCEEDED", "The local JD text exceeds the safe analysis limit.")
+        return text, "txt", None
     if kind in {"html", "htm"}:
-        parser = _HTMLText(); parser.feed(path.read_text(encoding="utf-8-sig"))
+        try:
+            html = raw.decode("utf-8-sig")
+        except UnicodeDecodeError as exc:
+            raise JobOpsError("JD_INPUT_ENCODING_INVALID", "Text and HTML JD inputs must use UTF-8 encoding.") from exc
+        parser = _HTMLText(); parser.feed(html)
         return "\n".join(parser.parts), "html", None
     if kind == "pdf":
-        text, _ = extract_pdf_text(path)
+        text, _ = extract_pdf_text(path, page_limit=MAX_JD_PDF_PAGES, character_limit=MAX_JD_TEXT_CHARACTERS)
         if not text.strip():
             raise JobOpsError("JD_PDF_TEXT_MISSING", "The local PDF job description contains no extractable text.")
         return text, "pdf", None
     if kind in {"snapshot", "page_snapshot", "json"}:
-        value = load_json(path)
+        try:
+            value = json.loads(raw.decode("utf-8-sig"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise JobOpsError("JD_SNAPSHOT_INVALID", "A saved page snapshot must be valid UTF-8 JSON.") from exc
+        if not isinstance(value, dict):
+            raise JobOpsError("JD_SNAPSHOT_INVALID", "A saved page snapshot must be a JSON object.")
         material = value.get("text") or value.get("html") or value.get("content")
         if not isinstance(material, str) or not material.strip():
             raise JobOpsError("JD_SNAPSHOT_CONTENT_MISSING", "A saved page snapshot needs local text or HTML content.")
+        if len(material) > MAX_JD_TEXT_CHARACTERS:
+            raise JobOpsError("JD_TEXT_LIMIT_EXCEEDED", "The local JD text exceeds the safe analysis limit.")
         if value.get("html"):
             parser = _HTMLText(); parser.feed(material); material = "\n".join(parser.parts)
         return material, "page_snapshot", str(value.get("source_url")) if value.get("source_url") else None
