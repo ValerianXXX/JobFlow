@@ -808,15 +808,25 @@ class ResumeOnboardingManager:
                 "private_values_emitted": 0, "source_file_unchanged": True,
                 "real_external_actions": 0, "next_safe_action": "inspect every rendered page, then finalize-resume-onboarding",
             }
-        except Exception:
+        except Exception as exc:
+            cleanup_failures = 0
             if session_root is not None:
-                shutil.rmtree(session_root, ignore_errors=True)
+                try:
+                    self.onboarding.remove_staging_directory(session_root)
+                except Exception:
+                    cleanup_failures += 1
             for record in imported:
                 if not record.get("deduplicated"):
                     try:
                         self.onboarding.delete(str(record["secure_ref"]), user_confirmed=True)
                     except Exception:
-                        pass
+                        cleanup_failures += 1
+            if cleanup_failures:
+                raise JobOpsError(
+                    "RESUME_ONBOARDING_ROLLBACK_FAILED",
+                    "Resume onboarding failed and one or more private staging or reference cleanups did not complete.",
+                    failed_compensations=cleanup_failures,
+                ) from exc
             raise
 
     def visual_page_paths(self, session: str) -> list[Path]:
@@ -848,6 +858,7 @@ class ResumeOnboardingManager:
         )
         visual_status = validate_visual_record(visual, pages)
         visual_record = self.onboarding.import_bytes("visual_evidence", canonical_json(visual), synthetic=False)
+        packet_record: dict[str, Any] | None = None
         try:
             analysis = json.loads(self.onboarding.read_bytes(str(value["analysis_ref"])).decode("utf-8"))
             profile = json.loads(self.onboarding.read_bytes(str(value["profile_ref"])).decode("utf-8"))
@@ -908,7 +919,7 @@ class ResumeOnboardingManager:
             if visual_status != "PASS":
                 raise JobOpsError("MASTER_RESUME_VISUAL_QA_FAILED", "The resume did not pass original-resolution visual review.")
             validate_named("onboarding-review", packet, self.schemas)
-            shutil.rmtree(session_root)
+            self.onboarding.remove_staging_directory(session_root)
             staging_files = [path for path in _safe_staging_root(self.onboarding).rglob("*") if path.is_file()]
             if staging_files:
                 raise JobOpsError("PRIVATE_STAGING_RESIDUE", "Private staging contains residual files after onboarding.", count=len(staging_files))
@@ -950,18 +961,33 @@ class ResumeOnboardingManager:
                 "master_resume_analysis_ref": value["analysis_ref"],
                 "private_values_emitted": 0, "staging_residue": 0,
             }
-        except Exception:
-            shutil.rmtree(session_root, ignore_errors=True)
+        except Exception as exc:
+            cleanup_failures = 0
+            try:
+                self.onboarding.remove_staging_directory(session_root)
+            except Exception:
+                cleanup_failures += 1
+            if packet_record is not None and not packet_record.get("deduplicated"):
+                try:
+                    self.onboarding.delete(str(packet_record["secure_ref"]), user_confirmed=True)
+                except Exception:
+                    cleanup_failures += 1
             if not visual_record.get("deduplicated"):
                 try:
                     self.onboarding.delete(str(visual_record["secure_ref"]), user_confirmed=True)
                 except Exception:
-                    pass
+                    cleanup_failures += 1
             for reference in value.get("new_refs", []):
                 try:
                     self.onboarding.delete(str(reference), user_confirmed=True)
                 except Exception:
-                    pass
+                    cleanup_failures += 1
+            if cleanup_failures:
+                raise JobOpsError(
+                    "RESUME_ONBOARDING_ROLLBACK_FAILED",
+                    "Resume onboarding finalization failed and one or more private staging or reference cleanups did not complete.",
+                    failed_compensations=cleanup_failures,
+                ) from exc
             raise
 
     def show_review(self, packet_ref: str | None = None) -> dict[str, Any]:

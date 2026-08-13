@@ -7,6 +7,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from jobops.resume_onboarding import (
+    ResumeCandidate,
+    ResumeOnboardingManager,
     _answer_bank,
     _metric_signatures,
     _numeric_conflict,
@@ -16,7 +18,10 @@ from jobops.resume_onboarding import (
     select_resume,
     validate_claim_candidate_evidence,
 )
+from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
+from jobops.private_onboarding import PrivateOnboarding
+from jobops.secure_store import WindowsDPAPIStore
 from jobops.util import iso_utc, sha256_bytes, sha256_file
 
 
@@ -119,6 +124,48 @@ class ResumeOnboardingTests(unittest.TestCase):
             "Built a 4,000 merchant database",
             "Implemented 27 methods and 37 routes in an unrelated API project.",
         ))
+
+    def test_prepare_failure_cleans_staging_and_new_private_references(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            project = root / "project"
+            project.mkdir()
+            selected_path = root / "Resume 2026 Aug.pdf"
+            selected_path.write_bytes(b"not a valid PDF")
+            candidate = ResumeCandidate(
+                path=selected_path,
+                source_type="pdf",
+                sha256=sha256_file(selected_path),
+                size_bytes=selected_path.stat().st_size,
+                modified_at="2026-08-13T00:00:00Z",
+                filename_score=10,
+                completeness_score=1,
+                page_hint=1,
+                date_count=1,
+                structure_count=1,
+            )
+            database = JobOpsDB(root / "jobops.db")
+            database.initialize()
+            script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
+            onboarding = PrivateOnboarding(
+                database,
+                WindowsDPAPIStore(script, local_app_data=root / "localappdata"),
+            )
+            manager = ResumeOnboardingManager(project, database, onboarding)
+            with patch("jobops.resume_onboarding.discover_resume_candidates", return_value=[candidate]), patch(
+                "jobops.resume_onboarding.select_resume", return_value=(candidate, candidate, []),
+            ):
+                with self.assertRaises(JobOpsError):
+                    manager.prepare()
+            with database.connect() as connection:
+                self.assertEqual(
+                    connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='ACTIVE'").fetchone()[0],
+                    0,
+                )
+            staging = onboarding.store.private_root / "staging"
+            self.assertTrue(staging.is_dir())
+            self.assertEqual(list(staging.iterdir()), [])
+            self.assertEqual(list(onboarding.store.private_root.glob("*.dpapi")), [])
 
 
 if __name__ == "__main__":

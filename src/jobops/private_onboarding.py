@@ -322,7 +322,7 @@ class PrivateOnboarding:
             self.delete(reference, user_confirmed=True)
         return {"status": "PURGED", "synthetic_refs_deleted": len(refs), "secure_erase_claimed": False}
 
-    def _remove_staging_directory(self, directory: Path) -> None:
+    def remove_staging_directory(self, directory: Path) -> None:
         staging = self._staging_root()
         if not is_relative_to(directory.absolute(), staging.absolute()) or directory == staging:
             raise JobOpsError(
@@ -360,7 +360,7 @@ class PrivateOnboarding:
             target.write_bytes(self.read_bytes(reference))
             yield target
         finally:
-            self._remove_staging_directory(directory)
+            self.remove_staging_directory(directory)
 
     @contextlib.contextmanager
     def staging_directory(self) -> Iterator[Path]:
@@ -370,4 +370,4 @@ class PrivateOnboarding:
         try:
             yield directory
         finally:
-            self._remove_staging_directory(directory)
+            self.remove_staging_directory(directory)
