@@ -165,3 +165,96 @@ def validate_resume_tailoring_manifest_integrity(value: dict[str, Any]) -> None:
         raise JobOpsError("TAILORING_MANIFEST_COUNT_INVALID", "The tailoring block count is inconsistent.")
     if value.get("applicant_confirmed") is not True or any(item.get("applicant_confirmed") is not True for item in value.get("blocks", [])):
         raise JobOpsError("TAILORING_MANIFEST_APPROVAL_INVALID", "Every editable resume position requires applicant approval.")
+
+
+def choose_tailoring_replacements(
+    *, manifest: dict[str, Any], external_claim_set: dict[str, Any], job_text: str,
+) -> list[dict[str, str]]:
+    """Choose only exact approved Claim wording for approved paragraph categories.
+
+    This ranker does not rewrite text.  It selects a one-to-one subset whose wording
+    overlaps the saved JD; the selected Claim text is still shown in the review packet.
+    """
+
+    from .external_claims import approved_external_claims
+
+    validate_resume_tailoring_manifest_integrity(manifest)
+    claims = approved_external_claims(external_claim_set, use="resume")
+    job_tokens = _tokens(job_text)
+    if not job_tokens:
+        raise JobOpsError("TAILORING_JOB_TEXT_INVALID", "The saved job description has no usable relevance terms.")
+    by_category: dict[str, list[tuple[int, str, dict[str, Any]]]] = {}
+    for claim in claims:
+        wording = str(claim["allowed_wording"][0]).strip()
+        claim_tokens = _tokens(wording)
+        score = len(job_tokens & claim_tokens)
+        if score < 1:
+            continue
+        category = str(claim.get("category", ""))
+        by_category.setdefault(category, []).append((score, str(claim["claim_id"]), claim))
+    for values in by_category.values():
+        values.sort(key=lambda item: (-item[0], item[1]))
+
+    used: set[str] = set()
+    replacements: list[dict[str, str]] = []
+    for block in sorted(manifest.get("blocks", []), key=lambda item: (str(item["part_name"]), int(item["paragraph_index"]))):
+        candidates = [item for item in by_category.get(str(block["category"]), []) if item[1] not in used]
+        if not candidates:
+            continue
+        _, claim_id, claim = candidates[0]
+        wording = str(claim["allowed_wording"][0]).strip()
+        if len(wording) > int(block["maximum_characters"]):
+            continue
+        used.add(claim_id)
+        replacements.append({"block_ref": str(block["block_ref"]), "claim_id": claim_id})
+    if not replacements:
+        raise JobOpsError(
+            "TAILORING_RELEVANCE_INSUFFICIENT",
+            "No applicant-approved Claim both matches the saved job description and fits an approved resume position.",
+        )
+    return replacements
+
+
+def choose_template_replacements(
+    *, template_slots: list[str], external_claim_set: dict[str, Any], job_text: str,
+    candidate_display_name: str, target_role: str,
+) -> dict[str, str]:
+    """Fill legacy explicit slots with exact approved wording and public job context."""
+
+    from .external_claims import approved_external_claims
+
+    slots = set(template_slots)
+    output: dict[str, str] = {}
+    if "CANDIDATE_NAME" in slots:
+        output["CANDIDATE_NAME"] = candidate_display_name
+    if "TARGET_ROLE" in slots:
+        output["TARGET_ROLE"] = target_role
+    category_map = {
+        "SUMMARY": ("summary",), "EXPERIENCE_BULLET": ("work", "internship"),
+        "PROJECT": ("project",), "SKILLS": ("skill",), "EDUCATION": ("education",),
+    }
+    job_tokens = _tokens(job_text)
+    claims = approved_external_claims(external_claim_set, use="resume")
+    used: set[str] = set()
+    for slot, categories in category_map.items():
+        if slot not in slots:
+            continue
+        ranked: list[tuple[int, str, dict[str, Any]]] = []
+        for claim in claims:
+            claim_id = str(claim["claim_id"])
+            if claim_id in used or str(claim.get("category")) not in categories:
+                continue
+            score = len(job_tokens & _tokens(str(claim["allowed_wording"][0])))
+            if score:
+                ranked.append((score, claim_id, claim))
+        ranked.sort(key=lambda item: (-item[0], item[1]))
+        if not ranked:
+            raise JobOpsError(
+                "TAILORING_RELEVANCE_INSUFFICIENT",
+                "No applicant-approved Claim matches a required template slot and the saved job description.",
+                slot=slot,
+            )
+        _, claim_id, claim = ranked[0]
+        used.add(claim_id)
+        output[slot] = str(claim["allowed_wording"][0])
+    return output

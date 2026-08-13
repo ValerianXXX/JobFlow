@@ -173,9 +173,11 @@ def parser() -> argparse.ArgumentParser:
     analyze.add_argument("--profile-ref")
     run = sub.add_parser("run-to-awaiting-approval")
     run.add_argument("--input", type=Path, required=True)
-    run.add_argument("--profile-ref", required=True)
-    run.add_argument("--master-resume-ref", required=True)
-    run.add_argument("--answer-bank-ref", required=True)
+    run.add_argument("--profile-ref")
+    run.add_argument("--master-resume-ref")
+    run.add_argument("--answer-bank-ref")
+    run.add_argument("--external-claim-set-ref")
+    run.add_argument("--tailoring-manifest-ref")
     run.add_argument("--route", type=Path)
     run.add_argument("--form", type=Path)
     run.add_argument("--research", type=Path)
@@ -528,12 +530,19 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "run-to-awaiting-approval":
             database = _database(project); onboarding = _onboarding(project, database); orchestrator = JobOpsOrchestrator(project, database, onboarding)
             fixtures = project / "tests" / "fixtures"
+            if not args.synthetic and not all((args.route, args.form, args.research)):
+                raise JobOpsError(
+                    "OFFLINE_APPLICATION_INPUTS_REQUIRED",
+                    "Real-profile preparation requires explicitly selected local route, form and official-research snapshots.",
+                )
             route = _project_input(project, args.route or Path("tests/fixtures/synthetic-forward-route.json"))
             form = _project_input(project, args.form or Path("tests/fixtures/synthetic-forward-form.json"))
             research = _project_input(project, args.research or Path("tests/fixtures/synthetic-research.html"))
             result = orchestrator.run_to_awaiting(
                 _project_input(project, args.input), profile_ref=args.profile_ref, master_resume_ref=args.master_resume_ref,
                 answer_bank_ref=args.answer_bank_ref, route_fixture=route, form_fixture=form, research_fixture=research,
+                external_claim_set_ref=args.external_claim_set_ref,
+                tailoring_manifest_ref=args.tailoring_manifest_ref,
                 source_type=args.source_type, synthetic=args.synthetic,
             )
             emit(result, project)

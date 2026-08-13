@@ -11,6 +11,7 @@ from jobops.external_claims import build_external_claim_set, claim_review_hash
 from jobops.resume_tailoring import (
     build_resume_tailoring_manifest,
     build_tailoring_proposal,
+    choose_tailoring_replacements,
     validate_resume_tailoring_manifest_integrity,
 )
 from jobops.runtime_schema import validate_named
@@ -99,6 +100,38 @@ class ResumeTailoringManifestTests(unittest.TestCase):
             self.assertEqual(diff["block_changes"][0]["claim_id"], claim["claim_id"])
             self.assertNotIn(claim["statement"], json.dumps(diff))
         self.assertEqual(self.master.read_bytes(), original)
+
+    def test_job_ranker_selects_only_relevant_exact_claim_for_an_approved_block(self) -> None:
+        proposal, claim = self._proposal()
+        candidate = proposal["candidates"][0]
+        manifest = build_resume_tailoring_manifest(
+            onboarding_state_ref="secure-ref:SYNTHETIC_STATE", master_resume=self.master_descriptor,
+            proposal=proposal, selections=[{"block_ref": candidate["block_ref"], "category": "project"}],
+            expected_proposal_hash=proposal["proposal_hash"], user_confirmed=True,
+        )
+        external_input = [{
+            **claim, "claim_kind": "achievement",
+            "source_bindings": [{
+                "kind": "MASTER_RESUME", "secure_ref": "secure-ref:SYNTHETIC_MASTER",
+                "content_sha256": self.master_hash,
+            }],
+        }]
+        external = build_external_claim_set(
+            onboarding_state_ref="secure-ref:SYNTHETIC_STATE", profile_ref="secure-ref:SYNTHETIC_PROFILE",
+            master_resume=self.master_descriptor, claims=external_input, allowed_uses=["resume"],
+            expected_review_hash=claim_review_hash(external_input, self.master_hash),
+        )
+        selected = choose_tailoring_replacements(
+            manifest=manifest, external_claim_set=external,
+            job_text="The role builds a local application workflow with reviewed evidence.",
+        )
+        self.assertEqual(selected, [{"block_ref": candidate["block_ref"], "claim_id": claim["claim_id"]}])
+        with self.assertRaises(JobOpsError) as unrelated:
+            choose_tailoring_replacements(
+                manifest=manifest, external_claim_set=external,
+                job_text="Marine biology and aquarium maintenance",
+            )
+        self.assertEqual(unrelated.exception.code, "TAILORING_RELEVANCE_INSUFFICIENT")
 
     def test_unrelated_claim_cannot_create_or_fill_a_manifest_position(self) -> None:
         blocks = inspect_docx_text_blocks(self.master)

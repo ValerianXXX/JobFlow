@@ -187,6 +187,28 @@ class PrivateOnboarding:
             raise JobOpsError("SECURE_REFERENCE_MISSING", "Secure reference is not registered.")
         return row
 
+    def reference_metadata(self, reference: str) -> dict[str, object]:
+        """Return only non-plaintext registry metadata for an opaque reference."""
+
+        row = self._record(reference)
+        return {
+            "secure_ref": str(row["secure_ref"]), "kind": str(row["kind"]),
+            "content_sha256": str(row["content_sha256"]), "version": int(row["version"]),
+            "status": str(row["status"]), "synthetic": bool(row["synthetic"]),
+        }
+
+    def latest_active_reference(self, kind: str, *, synthetic: bool) -> str | None:
+        if kind not in PRIVATE_KINDS:
+            raise JobOpsError("PRIVATE_KIND_INVALID", "Unsupported private onboarding kind.", kind=kind)
+        with self.database.connect() as connection:
+            row = connection.execute(
+                """SELECT secure_ref FROM private_refs
+                   WHERE kind=? AND status='ACTIVE' AND synthetic=?
+                   ORDER BY updated_at DESC,version DESC,secure_ref DESC LIMIT 1""",
+                (kind, int(synthetic)),
+            ).fetchone()
+        return str(row["secure_ref"]) if row is not None else None
+
     def read_bytes(self, reference: str) -> bytes:
         row = self._record(reference)
         if row["status"] != "ACTIVE":

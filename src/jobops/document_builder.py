@@ -11,6 +11,8 @@ from pathlib import PurePosixPath
 from typing import Any
 from xml.etree import ElementTree as ET
 
+from lxml import etree as LET
+
 from .claims import external_use_decision
 from .errors import JobOpsError
 from .util import canonical_json, sha256_bytes, sha256_file, stable_id
@@ -25,6 +27,8 @@ W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 CORE_NS = "http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
 DC_NS = "http://purl.org/dc/elements/1.1/"
 CP_NS = "http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
+CUSTOM_PROPERTIES_NS = "http://schemas.openxmlformats.org/officeDocument/2006/custom-properties"
+VT_NS = "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
 MAX_DOCX_PACKAGE_MEMBERS = 10_000
 MAX_DOCX_PACKAGE_UNCOMPRESSED_BYTES = 256 * 1024 * 1024
 MAX_DOCX_PACKAGE_PART_BYTES = 64 * 1024 * 1024
@@ -33,6 +37,26 @@ ALLOWED_TEMPLATE_SLOTS = {
     "CANDIDATE_NAME", "TARGET_ROLE", "SUMMARY", "EXPERIENCE_BULLET",
     "PROJECT", "SKILLS", "EDUCATION", "COVER_LETTER", "APPLICATION_NARRATIVE",
 }
+
+
+def _empty_custom_properties() -> bytes:
+    ET.register_namespace("", CUSTOM_PROPERTIES_NS)
+    ET.register_namespace("vt", VT_NS)
+    return ET.tostring(ET.Element(f"{{{CUSTOM_PROPERTIES_NS}}}Properties"), encoding="utf-8", xml_declaration=True)
+
+
+def _parse_xml_preserving_namespaces(data: bytes) -> Any:
+    """Parse OOXML without renaming prefixes referenced by mc:Ignorable."""
+
+    try:
+        parser = LET.XMLParser(resolve_entities=False, no_network=True, recover=False, huge_tree=False)
+        return LET.fromstring(data, parser=parser)
+    except LET.XMLSyntaxError as exc:
+        raise JobOpsError("DOCX_XML_INVALID", "An OOXML document part could not be parsed safely.") from exc
+
+
+def _serialize_xml_preserving_namespaces(root: Any) -> bytes:
+    return LET.tostring(root, encoding="UTF-8", xml_declaration=True, standalone=True)
 
 
 @dataclass(frozen=True)
@@ -258,9 +282,10 @@ def tailor_master_resume_with_manifest(
                 name = info.filename
                 data = source.read(name)
                 if name == "docProps/custom.xml" and not synthetic:
-                    continue
+                    data = _empty_custom_properties()
+                    changed_parts.add(name)
                 if name == "word/document.xml":
-                    root = ET.fromstring(data)
+                    root = _parse_xml_preserving_namespaces(data)
                     paragraphs = [node for node in root.iter() if node.tag == f"{{{W_NS}}}p"]
                     for replacement in normalized:
                         index = int(replacement["paragraph_index"])
@@ -276,15 +301,15 @@ def tailor_master_resume_with_manifest(
                             "block_ref": replacement["block_ref"], "claim_id": replacement["claim_id"],
                             "replacement_sha256": sha256_bytes(replacement["replacement"].encode("utf-8")),
                         })
-                    data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+                    data = _serialize_xml_preserving_namespaces(root)
                     changed_parts.add(name)
                 if name == "docProps/core.xml" and not synthetic:
-                    root = ET.fromstring(data)
+                    root = _parse_xml_preserving_namespaces(data)
                     for tag in (f"{{{DC_NS}}}creator", f"{{{CP_NS}}}lastModifiedBy", f"{{{DC_NS}}}description"):
                         node = root.find(tag)
                         if node is not None:
                             node.text = ""
-                    data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+                    data = _serialize_xml_preserving_namespaces(root)
                     changed_parts.add(name)
                 target.writestr(info, data)
     except Exception:
@@ -332,7 +357,8 @@ def tailor_master_resume(
     output_path: Path,
     *,
     replacements: dict[str, str],
-    claims: list[dict[str, Any]],
+    claims: list[dict[str, Any]] | None = None,
+    external_claim_set: dict[str, Any] | None = None,
     synthetic: bool = False,
 ) -> dict[str, object]:
     """Patch explicit template slots in a copy while preserving unrelated OOXML parts.
@@ -350,7 +376,13 @@ def tailor_master_resume(
     if unknown:
         raise JobOpsError("UNKNOWN_TEMPLATE_SLOT", "Template replacement contains an unsupported slot.", slots=unknown)
     gated = {"SUMMARY", "EXPERIENCE_BULLET", "PROJECT", "SKILLS", "EDUCATION", "COVER_LETTER", "APPLICATION_NARRATIVE"}
-    wordings = _claim_wordings(claims)
+    if (claims is None) == (external_claim_set is None):
+        raise JobOpsError("MATERIAL_CLAIM_SOURCE_INVALID", "Choose exactly one approved Claim source for resume tailoring.")
+    wordings = (
+        _claim_wordings(claims or [])
+        if claims is not None
+        else {str(item["allowed_wording"][0]) for item in _assert_external_claims(external_claim_set or {}, use="resume")}
+    )
     unsupported = sorted(key for key in replacements if key in gated and replacements[key] not in wordings)
     if unsupported:
         raise JobOpsError("TEMPLATE_CONTENT_NOT_CLAIM_GATED", "Every tailored factual slot must use exact current approved Claim wording.", slots=unsupported)
@@ -368,7 +400,8 @@ def tailor_master_resume(
                 name = info.filename
                 data = source.read(name)
                 if name == "docProps/custom.xml" and not synthetic:
-                    continue
+                    data = _empty_custom_properties()
+                    changed_parts.add(name)
                 if (name == "word/document.xml" or name.startswith("word/header") or name.startswith("word/footer")) and name.endswith(".xml"):
                     original = data
                     for slot, value in replacements.items():
@@ -380,12 +413,12 @@ def tailor_master_resume(
                     if data != original:
                         changed_parts.add(name)
                 if name == "docProps/core.xml" and not synthetic:
-                    root = ET.fromstring(data)
+                    root = _parse_xml_preserving_namespaces(data)
                     for tag in (f"{{{DC_NS}}}creator", f"{{{CP_NS}}}lastModifiedBy", f"{{{DC_NS}}}description"):
                         node = root.find(tag)
                         if node is not None:
                             node.text = ""
-                    data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+                    data = _serialize_xml_preserving_namespaces(root)
                     changed_parts.add(name)
                 target.writestr(info, data)
     except Exception:
@@ -615,6 +648,15 @@ def _assert_claims(claims: list[dict[str, Any]]) -> list[tuple[str, str, list[di
     return approved
 
 
+def _assert_external_claims(value: dict[str, Any], *, use: str) -> list[tuple[str, str, list[dict[str, Any]]]]:
+    from .external_claims import approved_external_claims
+
+    return [
+        (str(item["claim_id"]), str(item["allowed_wording"][0]), list(item.get("source_bindings", [])))
+        for item in approved_external_claims(value, use=use)
+    ]
+
+
 def build_resume(path: Path, *, candidate_display_name: str, target_role: str, summary: str, claims: list[dict[str, Any]], skills: list[str], education: str, bullet_claim_ids: list[str] | None = None) -> dict[str, object]:
     Document, _, _, WD_ALIGN_PARAGRAPH, _, _, _, Pt, _ = _modules()
     approved = _assert_claims(claims)
@@ -662,9 +704,15 @@ def build_resume(path: Path, *, candidate_display_name: str, target_role: str, s
     return {"path": str(path), "claim_ids": [item[0] for item in approved], "preset": "compact_reference_guide", "named_overrides": []}
 
 
-def build_cover_letter(path: Path, *, candidate_display_name: str, company: str, target_role: str, why_company: str, why_role: str, claims: list[dict[str, Any]]) -> dict[str, object]:
+def build_cover_letter(
+    path: Path, *, candidate_display_name: str, company: str, target_role: str,
+    why_company: str, why_role: str, claims: list[dict[str, Any]] | None = None,
+    external_claim_set: dict[str, Any] | None = None,
+) -> dict[str, object]:
     Document, _, _, WD_ALIGN_PARAGRAPH, _, _, _, Pt, _ = _modules()
-    approved = _assert_claims(claims)
+    if (claims is None) == (external_claim_set is None):
+        raise JobOpsError("MATERIAL_CLAIM_SOURCE_INVALID", "Choose exactly one approved Claim source for the Cover Letter.")
+    approved = _assert_claims(claims or []) if claims is not None else _assert_external_claims(external_claim_set or {}, use="cover_letter")
     if why_role not in {item[1] for item in approved}:
         raise JobOpsError("WHY_ROLE_NOT_CLAIM_GATED", "Why Role must use an exact approved claim wording.")
     if "https://" not in why_company:

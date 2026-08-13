@@ -143,3 +143,56 @@ def validate_external_claim_set_integrity(value: dict[str, Any]) -> None:
         raise JobOpsError("EXTERNAL_CLAIM_APPROVAL_INVALID", "External Claim use must be explicitly approved by the applicant.")
     if parse_iso(str(value.get("expires_at"))) <= datetime.now(timezone.utc):
         raise JobOpsError("EXTERNAL_CLAIM_SET_EXPIRED", "The external Claim approval has expired.")
+
+
+def approved_external_claims(value: dict[str, Any], *, use: str) -> list[dict[str, Any]]:
+    """Return exact applicant-approved wordings for one declared material use."""
+
+    validate_external_claim_set_integrity(value)
+    if use not in ALLOWED_EXTERNAL_USES or use not in value.get("allowed_uses", []):
+        raise JobOpsError("EXTERNAL_CLAIM_USE_NOT_APPROVED", "The encrypted Claim set does not approve this material use.", use=use)
+    approved = [
+        item for item in value.get("claims", [])
+        if item.get("approved_for_external") is True
+        and item.get("applicant_confirmed") is True
+        and use in item.get("allowed_uses", [])
+        and len(item.get("allowed_wording", [])) == 1
+        and str(item["allowed_wording"][0]).strip()
+    ]
+    if not approved:
+        raise JobOpsError("NO_APPROVED_CLAIMS", "No applicant-approved Claim is available for this material use.", use=use)
+    return approved
+
+
+def map_external_claim_evidence(requirements: Iterable[str], value: dict[str, Any]) -> list[Any]:
+    """Map requirements to an already validated encrypted Claim set without inventing evidence."""
+
+    from .evidence import EvidenceMapping
+
+    claims = approved_external_claims(value, use="resume")
+    mappings: list[EvidenceMapping] = []
+    for requirement in requirements:
+        terms = {
+            term.casefold() for term in str(requirement).replace("/", " ").replace("-", " ").split()
+            if len(term) >= 3
+        }
+        ranked: list[tuple[int, str, dict[str, Any]]] = []
+        for claim in claims:
+            wording = str(claim["allowed_wording"][0])
+            score = sum(term in wording.casefold() for term in terms)
+            if score:
+                ranked.append((score, str(claim["claim_id"]), claim))
+        ranked.sort(key=lambda item: (-item[0], item[1]))
+        if not ranked:
+            mappings.append(EvidenceMapping(
+                str(requirement), None, None, (), "NO_APPROVED_EVIDENCE",
+                "No current applicant-approved Claim directly supports this requirement.",
+            ))
+            continue
+        score, _, claim = ranked[0]
+        mappings.append(EvidenceMapping(
+            str(requirement), str(claim["claim_id"]), str(claim["allowed_wording"][0]),
+            tuple(claim.get("source_bindings", [])), None,
+            f"Selected because {score} requirement term(s) matched an exact applicant-approved Claim.",
+        ))
+    return mappings

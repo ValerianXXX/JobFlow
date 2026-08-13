@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- A completed non-synthetic onboarding profile can now drive the same local application pipeline as the demo: approved Claims are selected against a saved JD, only applicant-approved Master Resume positions are changed in a copy, Word renders the result for structural/visual QA, and the encrypted packet enters `AWAITING_APPROVAL`. Live transport remains absent.
+- 已完成的真实用户资料现在可以进入与演示相同的本机投递流水线：系统按已保存 JD 选择获批 Claim，只在用户批准的母版位置生成副本改写，经 Word 实际渲染与结构/视觉检查后，将加密审阅包放入 `AWAITING_APPROVAL`；实时传输仍不存在。
 - Ordinary DOCX Master Resumes now receive AI-to-paragraph mapping and a bilingual one-time approval screen. Only applicant-approved, hash-bound positions can be changed in a copy; the encrypted manifest persists no resume paragraph text and any onboarding revision invalidates it.
 - 普通 DOCX 母版现在支持 AI 到原段落的映射与中英双语一次性确认；只有用户批准且哈希绑定的位置可在副本中改写，加密清单不保存简历段落正文，资料建新版后旧映射自动失效。
 - A resume uploaded through onboarding can now be designated as the encrypted Master Resume, while application-material use of confirmed Claims requires a separate, hash-bound applicant approval. The bilingual readiness board shows every remaining local blocker and automatically invalidates that approval after a revision.

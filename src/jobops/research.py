@@ -34,7 +34,7 @@ class OfflineResearchSource:
     source_type: str
     snapshot_path: Path
     snapshot_hash: str
-    published_at: str
+    published_at: str | None
     accessed_at: str
     evidence_excerpt: str
     evidence_fingerprint: str

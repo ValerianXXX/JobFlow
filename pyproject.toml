@@ -22,6 +22,7 @@ classifiers = [
   "Topic :: Office/Business",
 ]
 dependencies = [
+  "lxml>=5,<7",
   "Pillow>=10,<12",
   "pdfplumber>=0.11,<1",
   "pypdf>=4,<6",

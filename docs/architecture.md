@@ -46,7 +46,7 @@ flowchart LR
 - `secure_store`, `private_onboarding`, `resume_onboarding`, `external_claims`, `resume_tailoring`, `application_readiness`: DPAPI lifecycle, Master Resume designation, exact Claim-use approval, applicant-approved paragraph mappings and redacted local-readiness reporting.
 - `knowledge`, `claims`, `claim_registry`, `evidence`: read-only evidence and approval lifecycle.
 - `official_discovery`, `sourcing`, `ats_browser`, `ats_capabilities`: offline official-source and ATS safety framework.
-- `application_materials`, `orchestrator`, `queue_manager`, `continuous_intake`: one-master per-job material planning and content-bound processing to the bounded review queue.
+- `application_materials`, `orchestrator`, `queue_manager`, `continuous_intake`: one-master per-job material planning and content-bound processing to the bounded review queue. Both the synthetic tour and a completed DPAPI-backed user profile use this same offline pipeline; the latter accepts only explicit local snapshots and current applicant approvals.
 - `application_execution`: hash-bound six-step runbook for freshness, guest entry, prefill, upload, protected questions and final submission; every step remains planning-only until its exact approval boundary is separately enabled.
 - `public_release`, `release_candidate`, `release`: current-tree/history privacy gates and release evidence.
 

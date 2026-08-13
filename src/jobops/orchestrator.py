@@ -16,17 +16,28 @@ from .claim_registry import ClaimRegistry
 from .claims import verify_claim_evidence
 from .collector import JobCollector
 from .db import JobOpsDB
-from .document_builder import build_cover_letter, export_docx_to_pdf, render_pdf_to_pngs, tailor_master_resume
+from .document_builder import (
+    build_cover_letter, discover_template_slots, export_docx_to_pdf,
+    render_pdf_to_pngs, tailor_master_resume, tailor_master_resume_with_manifest,
+)
 from .document_qa import automated_visual_probe, extract_pdf_text, structural_qa
 from .eligibility import check_eligibility
 from .errors import JobOpsError
 from .evidence import map_evidence
+from .external_claims import (
+    approved_external_claims, map_external_claim_evidence,
+    validate_external_claim_set_integrity,
+)
 from .fit import compute_fit
 from .forms import map_fields
 from .jd_analyzer import analyze_jd
 from .private_onboarding import PrivateOnboarding
 from .queue_manager import QueueManager
 from .research import OfflineResearchSource, build_offline_research_packet
+from .resume_tailoring import (
+    choose_tailoring_replacements, choose_template_replacements,
+    validate_resume_tailoring_manifest_integrity,
+)
 from .runtime_schema import validate_named
 from .security import assert_safe_path
 from .sourcing import assess_job_freshness, verify_source_route
@@ -184,6 +195,98 @@ class JobOpsOrchestrator:
             raise JobOpsError("SECURE_JSON_INVALID", "Encrypted private JSON must contain an object.")
         return value
 
+    def _assert_private_reference(
+        self, reference: str, *, kinds: set[str], synthetic: bool,
+    ) -> dict[str, object]:
+        metadata = self.onboarding.reference_metadata(reference)
+        if metadata["status"] != "ACTIVE" or metadata["kind"] not in kinds or metadata["synthetic"] is not synthetic:
+            raise JobOpsError(
+                "APPLICATION_PRIVATE_REFERENCE_INVALID",
+                "An application input reference has the wrong kind, state, or synthetic boundary.",
+                expected_kinds=sorted(kinds),
+            )
+        value = self.onboarding.read_bytes(reference)
+        if sha256_bytes(value) != metadata["content_sha256"]:
+            raise JobOpsError("APPLICATION_PRIVATE_REFERENCE_HASH_INVALID", "An encrypted application input failed its content binding.")
+        return metadata
+
+    def _real_application_context(
+        self,
+        *,
+        profile_ref: str | None,
+        master_resume_ref: str | None,
+        answer_bank_ref: str | None,
+        external_claim_set_ref: str | None,
+        tailoring_manifest_ref: str | None,
+    ) -> dict[str, Any]:
+        claim_reference = external_claim_set_ref or self.onboarding.latest_active_reference("external_claim_set", synthetic=False)
+        completion_reference = self.onboarding.latest_active_reference("onboarding_completion_packet", synthetic=False)
+        if not claim_reference or not completion_reference:
+            raise JobOpsError(
+                "APPLICATION_ONBOARDING_APPROVAL_REQUIRED",
+                "Complete onboarding and approve exact Claim use before preparing a real-profile offline application.",
+            )
+        self._assert_private_reference(claim_reference, kinds={"external_claim_set"}, synthetic=False)
+        self._assert_private_reference(completion_reference, kinds={"onboarding_completion_packet"}, synthetic=False)
+        claim_set = self._load_json_ref(claim_reference)
+        completion = self._load_json_ref(completion_reference)
+        validate_named("external-claim-set", claim_set, self.schemas)
+        validate_external_claim_set_integrity(claim_set)
+        validate_named("onboarding-completion", completion, self.schemas)
+
+        resolved_profile = profile_ref or str(completion["profile_ref"])
+        resolved_answers = answer_bank_ref or str(completion["answer_bank_ref"])
+        resolved_master = master_resume_ref or str(claim_set["master_resume"]["secure_ref"])
+        if (
+            resolved_profile != completion["profile_ref"]
+            or resolved_profile != claim_set["profile_ref"]
+            or resolved_answers != completion["answer_bank_ref"]
+            or resolved_master != claim_set["master_resume"]["secure_ref"]
+        ):
+            raise JobOpsError(
+                "APPLICATION_ONBOARDING_BINDING_MISMATCH",
+                "Profile, Answer Bank, Master Resume and Claim approval must come from the same completed onboarding state.",
+            )
+        self._assert_private_reference(resolved_profile, kinds={"candidate_profile"}, synthetic=False)
+        self._assert_private_reference(resolved_answers, kinds={"answer_bank"}, synthetic=False)
+        master_metadata = self._assert_private_reference(resolved_master, kinds={"master_resume_docx"}, synthetic=False)
+        if master_metadata["content_sha256"] != claim_set["master_resume"]["sha256"]:
+            raise JobOpsError("APPLICATION_MASTER_BINDING_MISMATCH", "The Master Resume no longer matches the approved Claim set.")
+
+        claims_to_validate: dict[str, dict[str, Any]] = {}
+        for approved_use in claim_set.get("allowed_uses", []):
+            for claim in approved_external_claims(claim_set, use=str(approved_use)):
+                claims_to_validate[str(claim["claim_id"])] = claim
+        for claim in claims_to_validate.values():
+            for binding in claim.get("source_bindings", []):
+                reference = str(binding["secure_ref"])
+                kinds = {"master_resume_docx", "master_resume_pdf"} if binding["kind"] == "MASTER_RESUME" else {
+                    "onboarding_source_document", "onboarding_ai_derived",
+                }
+                source_metadata = self._assert_private_reference(reference, kinds=kinds, synthetic=False)
+                if source_metadata["content_sha256"] != binding["content_sha256"]:
+                    raise JobOpsError("APPLICATION_CLAIM_SOURCE_CHANGED", "An approved Claim source no longer matches its encrypted hash.")
+
+        manifest_reference = tailoring_manifest_ref or self.onboarding.latest_active_reference("resume_tailoring_manifest", synthetic=False)
+        manifest: dict[str, Any] | None = None
+        if manifest_reference:
+            self._assert_private_reference(manifest_reference, kinds={"resume_tailoring_manifest"}, synthetic=False)
+            manifest = self._load_json_ref(manifest_reference)
+            validate_named("resume-tailoring-manifest", manifest, self.schemas)
+            validate_resume_tailoring_manifest_integrity(manifest)
+            if (
+                manifest.get("onboarding_state_ref") != claim_set.get("onboarding_state_ref")
+                or manifest.get("master_resume_ref") != resolved_master
+                or manifest.get("master_resume_sha256") != master_metadata["content_sha256"]
+            ):
+                raise JobOpsError("TAILORING_MANIFEST_STALE", "The safe tailoring positions do not belong to the current approved onboarding state.")
+        return {
+            "profile_ref": resolved_profile, "answer_bank_ref": resolved_answers,
+            "master_resume_ref": resolved_master, "external_claim_set_ref": claim_reference,
+            "tailoring_manifest_ref": manifest_reference, "external_claim_set": claim_set,
+            "tailoring_manifest": manifest,
+        }
+
     def _synthetic_claims(self) -> list[dict[str, Any]]:
         root = self.project / "tests" / "fixtures" / "synthetic-knowledge"
         gateway = SyntheticKnowledgeGateway(root)
@@ -227,18 +330,37 @@ class JobOpsOrchestrator:
         self,
         input_path: Path,
         *,
-        profile_ref: str,
-        master_resume_ref: str,
-        answer_bank_ref: str,
+        profile_ref: str | None,
+        master_resume_ref: str | None,
+        answer_bank_ref: str | None,
         route_fixture: Path,
         form_fixture: Path,
         research_fixture: Path,
+        external_claim_set_ref: str | None = None,
+        tailoring_manifest_ref: str | None = None,
         source_type: str | None = None,
         synthetic: bool = False,
         crash_after_step: str | None = None,
     ) -> dict[str, Any]:
-        if not synthetic:
-            raise JobOpsError("REAL_PROFILE_FORWARD_TEST_REQUIRES_USER_REVIEW", "This build runs the unattended forward chain only with explicitly synthetic fixtures.")
+        real_context: dict[str, Any] | None = None
+        if synthetic:
+            if not profile_ref or not master_resume_ref or not answer_bank_ref:
+                raise JobOpsError("SYNTHETIC_ONBOARDING_REFERENCES_REQUIRED", "Synthetic orchestration requires all three synthetic onboarding references.")
+            for reference, kinds in (
+                (profile_ref, {"candidate_profile"}),
+                (master_resume_ref, {"master_resume_docx"}),
+                (answer_bank_ref, {"answer_bank"}),
+            ):
+                self._assert_private_reference(reference, kinds=kinds, synthetic=True)
+        else:
+            real_context = self._real_application_context(
+                profile_ref=profile_ref, master_resume_ref=master_resume_ref,
+                answer_bank_ref=answer_bank_ref, external_claim_set_ref=external_claim_set_ref,
+                tailoring_manifest_ref=tailoring_manifest_ref,
+            )
+            profile_ref = str(real_context["profile_ref"])
+            master_resume_ref = str(real_context["master_resume_ref"])
+            answer_bank_ref = str(real_context["answer_bank_ref"])
         input_path = input_path.resolve(strict=True)
         content, source_format, snapshot_url = _read_jd(input_path, source_type)
         normalized = content.replace("\r\n", "\n").replace("\r", "\n").strip() + "\n"
@@ -261,7 +383,11 @@ class JobOpsOrchestrator:
         self._crash(crash_after_step, "after_reservation")
 
         route_value = load_json(route_fixture)
-        official_path = self.project / str(route_value["official_snapshot"])
+        official_path = assert_safe_path(
+            self.project / str(route_value["official_snapshot"]), self.project, (), (),
+        )
+        if not official_path.is_file():
+            raise JobOpsError("OFFICIAL_SNAPSHOT_MISSING", "The saved official-company snapshot is missing.")
         official_hash = sha256_file(official_path)
         binding = dict(route_value["tenant_binding"])
         binding.update({"official_page_hash": official_hash, "jd_snapshot_hash": intake_key})
@@ -298,10 +424,19 @@ class JobOpsOrchestrator:
         profile["profile_ref"] = profile_ref
         validate_named("candidate-profile", profile, self.schemas)
         eligibility = check_eligibility(jd, profile)
-        if eligibility.status != "ELIGIBLE":
-            raise JobOpsError(eligibility.status, "The job cannot proceed to materials until every hard condition is confirmed.", hard_gaps=list(eligibility.hard_gaps), unknowns=list(eligibility.unknowns))
-        claims = self._synthetic_claims()
-        mappings = map_evidence(jd.hard_requirements, claims)
+        if eligibility.status == "INELIGIBLE":
+            raise JobOpsError(
+                "INELIGIBLE", "A confirmed hard condition conflicts with this saved job; no application material was generated.",
+                hard_gaps=list(eligibility.hard_gaps), unknowns=list(eligibility.unknowns),
+            )
+        if synthetic:
+            claims = self._synthetic_claims()
+            external_claim_set = None
+            mappings = map_evidence(jd.hard_requirements, claims)
+        else:
+            external_claim_set = dict(real_context["external_claim_set"] if real_context else {})
+            claims = approved_external_claims(external_claim_set, use="resume")
+            mappings = map_external_claim_evidence(jd.hard_requirements, external_claim_set)
         fit = compute_fit(jd, profile, eligibility, evidence_mappings=mappings)
         validate_named("fit-result", fit.as_dict(), self.schemas)
         for requirement in jd.requirements:
@@ -318,12 +453,32 @@ class JobOpsOrchestrator:
         analysis_hash = sha256_bytes(canonical_json(analysis))
         self._crash(crash_after_step, "after_analysis")
 
-        research_text = research_fixture.read_text(encoding="utf-8-sig")
-        excerpt = "Example Analytics Lab uses documented checks for synthetic dataset analysis."
+        if synthetic:
+            excerpt = "Example Analytics Lab uses documented checks for synthetic dataset analysis."
+            research_metadata = {
+                "title": "Synthetic Company Update", "url": "https://example.com/news/synthetic-update",
+                "source_type": "official_company", "published_at": "2026-08-12T00:00:00Z",
+                "accessed_at": iso_utc(), "official": True,
+            }
+        else:
+            research_metadata = route_value.get("research")
+            if not isinstance(research_metadata, dict):
+                raise JobOpsError(
+                    "OFFLINE_RESEARCH_METADATA_REQUIRED",
+                    "Real-profile offline preparation needs exact metadata for the user-saved official research snapshot.",
+                )
+            excerpt = str(research_metadata.get("evidence_excerpt", "")).strip()
+            if not excerpt:
+                raise JobOpsError("OFFLINE_RESEARCH_EXCERPT_REQUIRED", "Select one exact excerpt from the saved official research snapshot.")
         research_source = OfflineResearchSource(
-            title="Synthetic Company Update", url="https://example.com/news/synthetic-update", source_type="official_company",
-            snapshot_path=research_fixture, snapshot_hash=sha256_file(research_fixture), published_at="2026-08-12T00:00:00Z",
-            accessed_at=iso_utc(), evidence_excerpt=excerpt, evidence_fingerprint=sha256_bytes(excerpt.encode("utf-8")), official=True,
+            title=str(research_metadata.get("title", "")).strip(),
+            url=str(research_metadata.get("url", "")).strip(),
+            source_type=str(research_metadata.get("source_type", "official_company")),
+            snapshot_path=research_fixture, snapshot_hash=sha256_file(research_fixture),
+            published_at=str(research_metadata.get("published_at")) if research_metadata.get("published_at") else None,
+            accessed_at=str(research_metadata.get("accessed_at", iso_utc())),
+            evidence_excerpt=excerpt, evidence_fingerprint=sha256_bytes(excerpt.encode("utf-8")),
+            official=research_metadata.get("official") is True,
         )
         research = build_offline_research_packet(company=jd.company, findings=[{"claim": excerpt}], sources=[research_source])
         finding = {
@@ -334,7 +489,15 @@ class JobOpsOrchestrator:
         }
         validate_named("research-finding", finding, self.schemas)
 
-        answers = self._load_json_ref(answer_bank_ref)
+        answer_record = self._load_json_ref(answer_bank_ref)
+        if isinstance(answer_record.get("answers"), dict):
+            answers = {
+                str(key): item.get("value")
+                for key, item in answer_record["answers"].items()
+                if isinstance(item, dict) and item.get("status") in {"CONFIRMED", "NOT_APPLICABLE"}
+            }
+        else:
+            answers = dict(answer_record)
         answers["full_name"] = profile_ref
         public_answers = dict(answers)
         public_answers.update({
@@ -353,6 +516,8 @@ class JobOpsOrchestrator:
                 answer_key = str(item["answer_key"])
                 if item["classification"] == "private_fixed" and answer_key == "full_name" and profile.get("candidate_display_name"):
                     bindings[str(item["control_ref"])] = {"kind": "secure_ref", "value": profile_ref}
+                elif item["classification"] == "private_fixed" and answer_key in answers and answers[answer_key] not in (None, "", "UNKNOWN", "UNANSWERED"):
+                    bindings[str(item["control_ref"])] = {"kind": "secure_ref", "value": answer_bank_ref}
                 elif item["classification"] == "ordinary_fixed" and answer_key in public_answers:
                     candidate = str(public_answers[answer_key])
                     if candidate not in {"", "UNKNOWN", "UNANSWERED"}:
@@ -405,8 +570,6 @@ class JobOpsOrchestrator:
                 "form_snapshot_hash": form_snapshot_hash,
                 "fields": fields,
             }))
-        if fields["unknown_fields"]:
-            raise JobOpsError("UNKNOWN_FORM_FIELDS", "Unrecognized form fields must be reviewed before a packet can be prepared.", fields=fields["unknown_fields"])
         field_records = []
         for field in fields["fields"]:
             status = "READY" if str(field["action"]).startswith("PREFILL") else "STOP_REQUIRED"
@@ -419,12 +582,12 @@ class JobOpsOrchestrator:
             validate_named("application-field", record, self.schemas)
             field_records.append(record)
 
-        replacements = {
+        replacements = ({
             "CANDIDATE_NAME": str(profile["candidate_display_name"]), "TARGET_ROLE": jd.title,
             "SUMMARY": claims[0]["allowed_wording"][0], "EXPERIENCE_BULLET": claims[1]["allowed_wording"][0],
             "PROJECT": claims[2]["allowed_wording"][0], "SKILLS": claims[3]["allowed_wording"][0],
             "EDUCATION": claims[4]["allowed_wording"][0],
-        }
+        } if synthetic else {})
         material_requests = detect_material_requests(fields["fields"])
         cover_requested = any(item["purpose"] == "cover_letter" for item in material_requests["uploads"])
         cover_docx_ref: dict[str, Any] | None = None
@@ -438,27 +601,73 @@ class JobOpsOrchestrator:
             master_path.write_bytes(master_bytes)
             resume_docx = staging / "resume.docx"
             resume_pdf = staging / "resume.pdf"
-            diff = tailor_master_resume(master_path, resume_docx, replacements=replacements, claims=claims, synthetic=True)
+            selected_claim_ids: list[str]
+            if synthetic:
+                diff = tailor_master_resume(
+                    master_path, resume_docx, replacements=replacements, claims=claims, synthetic=True,
+                )
+                selected_claim_ids = [str(item["claim_id"]) for item in claims]
+            else:
+                manifest = real_context.get("tailoring_manifest") if real_context else None
+                if manifest is not None:
+                    replacement_plan = choose_tailoring_replacements(
+                        manifest=manifest, external_claim_set=external_claim_set,
+                        job_text=normalized,
+                    )
+                    diff = tailor_master_resume_with_manifest(
+                        master_path, resume_docx, manifest=manifest,
+                        replacements=replacement_plan, external_claim_set=external_claim_set,
+                        synthetic=False,
+                    )
+                    selected_claim_ids = [item["claim_id"] for item in replacement_plan]
+                else:
+                    slots = discover_template_slots(master_path)
+                    if not slots:
+                        raise JobOpsError(
+                            "TAILORING_MANIFEST_REQUIRED",
+                            "An ordinary DOCX needs applicant-approved safe tailoring positions before material generation.",
+                        )
+                    replacements = choose_template_replacements(
+                        template_slots=slots, external_claim_set=external_claim_set,
+                        job_text=normalized, candidate_display_name=str(profile["candidate_display_name"]),
+                        target_role=jd.title,
+                    )
+                    diff = tailor_master_resume(
+                        master_path, resume_docx, replacements=replacements,
+                        external_claim_set=external_claim_set, synthetic=False,
+                    )
+                    selected_wordings = set(replacements.values())
+                    selected_claim_ids = [
+                        str(item["claim_id"]) for item in claims
+                        if str(item["allowed_wording"][0]) in selected_wordings
+                    ]
             export_docx_to_pdf(resume_docx, resume_pdf, self.project / ".agents" / "skills" / "job-application-operator" / "scripts" / "export-docx-pdf.ps1")
             pages = render_pdf_to_pngs(resume_pdf, staging / "renders", _pdftoppm())
             visual = automated_visual_probe(pages)
             qa = structural_qa(resume_docx, resume_pdf, pages, visual_record=visual, page_limit=2)
             if qa.status != "PASS":
                 raise JobOpsError("MATERIALS_NEEDS_CORRECTION", "Tailored resume failed structural or render QA.", qa=qa.as_dict())
-            docx_ref = self.onboarding.import_bytes("generated_resume_docx", resume_docx.read_bytes(), synthetic=True)
-            pdf_ref = self.onboarding.import_bytes("generated_resume_pdf", resume_pdf.read_bytes(), synthetic=True)
-            visual_ref = self.onboarding.import_bytes("visual_evidence", canonical_json(visual), synthetic=True)
+            docx_ref = self.onboarding.import_bytes("generated_resume_docx", resume_docx.read_bytes(), synthetic=synthetic)
+            pdf_ref = self.onboarding.import_bytes("generated_resume_pdf", resume_pdf.read_bytes(), synthetic=synthetic)
+            visual_ref = self.onboarding.import_bytes("visual_evidence", canonical_json(visual), synthetic=synthetic)
             if cover_requested:
                 cover_docx = staging / "cover-letter.docx"
                 cover_pdf = staging / "cover-letter.pdf"
+                cover_claims = None if not synthetic else claims[:2]
+                cover_claim_set = external_claim_set if not synthetic else None
+                if synthetic:
+                    why_role = str(claims[0]["allowed_wording"][0])
+                else:
+                    cover_candidates = approved_external_claims(external_claim_set, use="cover_letter")
+                    selected = next((item for item in cover_candidates if item["claim_id"] in selected_claim_ids), cover_candidates[0])
+                    why_role = str(selected["allowed_wording"][0])
                 build_cover_letter(
                     cover_docx,
                     candidate_display_name=str(profile["candidate_display_name"]),
                     company=jd.company,
                     target_role=jd.title,
                     why_company=f"{excerpt} ({research_source.url}, accessed {research_source.accessed_at[:10]}).",
-                    why_role=claims[0]["allowed_wording"][0],
-                    claims=claims[:2],
+                    why_role=why_role, claims=cover_claims, external_claim_set=cover_claim_set,
                 )
                 export_docx_to_pdf(
                     cover_docx,
@@ -478,20 +687,25 @@ class JobOpsOrchestrator:
                     )
                 cover_qa = cover_qa_result.as_dict()
                 cover_docx_ref = self.onboarding.import_bytes(
-                    "generated_cover_letter_docx", cover_docx.read_bytes(), synthetic=True,
+                    "generated_cover_letter_docx", cover_docx.read_bytes(), synthetic=synthetic,
                 )
                 cover_pdf_ref = self.onboarding.import_bytes(
-                    "generated_cover_letter_pdf", cover_pdf.read_bytes(), synthetic=True,
+                    "generated_cover_letter_pdf", cover_pdf.read_bytes(), synthetic=synthetic,
                 )
                 cover_visual_ref = self.onboarding.import_bytes(
-                    "visual_evidence", canonical_json(cover_visual), synthetic=True,
+                    "visual_evidence", canonical_json(cover_visual), synthetic=synthetic,
                 )
         self._crash(crash_after_step, "after_materials")
 
         freshness = assess_job_freshness(official_listing_present=True, application_form_available=True, checked_at=iso_utc())
         if freshness["status"] != "CURRENT":
             raise JobOpsError("JD_FRESHNESS_REQUIRED", "Official listing freshness must be current before review packet generation.")
-        claim_set_hash = sha256_bytes(canonical_json([{"claim_id": item["claim_id"], "content_hash": item["content_hash"], "version": item["version"]} for item in claims]))
+        claim_set_hash = (
+            sha256_bytes(canonical_json([{
+                "claim_id": item["claim_id"], "content_hash": item["content_hash"], "version": item["version"],
+            } for item in claims]))
+            if synthetic else str(external_claim_set["content_hash"])
+        )
         public_values = {key: public_answers.get(key) for key in ("github", "portfolio", "website")}
         cover_binding = (
             {
@@ -511,6 +725,13 @@ class JobOpsOrchestrator:
             if all(profile.get(key) for key in ("portfolio_file_ref", "portfolio_file_sha256", "portfolio_file_display_name"))
             else None
         )
+        if portfolio_binding and not synthetic:
+            portfolio_metadata = self._assert_private_reference(
+                str(portfolio_binding["secure_ref"]),
+                kinds={"onboarding_source_document"}, synthetic=False,
+            )
+            if portfolio_metadata["content_sha256"] != portfolio_binding["sha256"]:
+                raise JobOpsError("APPLICATION_PORTFOLIO_BINDING_MISMATCH", "The encrypted portfolio file no longer matches the approved profile.")
         material_plan = build_material_plan(
             master_resume_ref=master_resume_ref,
             master_resume_sha256=master_sha256,
@@ -561,7 +782,10 @@ class JobOpsOrchestrator:
             "schema_version": 1, "status": "AWAITING_APPROVAL", "packet_id": packet_id, "application_id": application_id,
             "job": {"job_id": job_id, "company": jd.company, "title": jd.title, "official_url": route.official_entry_url},
             "jd_captured_at": analysis["created_at"], "fit": fit.as_dict(), "hard_gaps": list(eligibility.hard_gaps),
-            "resume_bullets": [{"text": item["allowed_wording"][0], "claim_id": item["claim_id"], "evidence": item["source_refs"]} for item in claims],
+            "resume_bullets": [{
+                "text": item["allowed_wording"][0], "claim_id": item["claim_id"],
+                "evidence": item["source_refs"] if synthetic else item["source_bindings"],
+            } for item in claims if synthetic or item["claim_id"] in selected_claim_ids],
             "master_resume_diff": diff, "form_questions": fields["fields"],
             "sensitive_fields": [item for item in fields["fields"] if item["action"] == "STOP"],
             "uploads": uploads, "material_plan": material_plan, "execution_plan": execution_plan,
@@ -570,7 +794,7 @@ class JobOpsOrchestrator:
         }
         packet["content_hash"] = sha256_bytes(canonical_json(packet))
         validate_named("review-packet", packet, self.schemas)
-        packet_ref = self.onboarding.import_bytes("review_packet", canonical_json(packet), synthetic=True)
+        packet_ref = self.onboarding.import_bytes("review_packet", canonical_json(packet), synthetic=synthetic)
         context = ApprovalContext(
             application_id=application_id, job_id=job_id, jd_snapshot_hash=intake_key,
             jd_freshness_hash=sha256_bytes(canonical_json(freshness)), source_route_hash=route.route_hash,
@@ -583,18 +807,21 @@ class JobOpsOrchestrator:
                 str(item["id"]) for item in fields["fields"]
                 if item["action"] == "STOP" and item["classification"] != "final_submit_stop"
             ),
-            mandatory_unknowns=tuple(str(item) for item in fields["unknown_fields"]),
+            mandatory_unknowns=tuple(
+                [str(item) for item in fields["unknown_fields"]]
+                + [str(item) for item in eligibility.unknowns]
+            ),
         ).normalized()
         self._crash(crash_after_step, "before_admission")
         materials = [
-            {"material_id": stable_id("MAT", application_id, "resume_docx", str(docx_ref["content_sha256"])), "kind": "resume_docx", "path": docx_ref["secure_ref"], "content_hash": docx_ref["content_sha256"], "claim_ids": [item["claim_id"] for item in claims]},
-            {"material_id": stable_id("MAT", application_id, "resume_pdf", str(pdf_ref["content_sha256"])), "kind": "resume_pdf", "path": pdf_ref["secure_ref"], "content_hash": pdf_ref["content_sha256"], "claim_ids": [item["claim_id"] for item in claims]},
+            {"material_id": stable_id("MAT", application_id, "resume_docx", str(docx_ref["content_sha256"])), "kind": "resume_docx", "path": docx_ref["secure_ref"], "content_hash": docx_ref["content_sha256"], "claim_ids": selected_claim_ids},
+            {"material_id": stable_id("MAT", application_id, "resume_pdf", str(pdf_ref["content_sha256"])), "kind": "resume_pdf", "path": pdf_ref["secure_ref"], "content_hash": pdf_ref["content_sha256"], "claim_ids": selected_claim_ids},
             {"material_id": stable_id("MAT", application_id, "visual_evidence", str(visual_ref["content_sha256"])), "kind": "visual_evidence", "path": visual_ref["secure_ref"], "content_hash": visual_ref["content_sha256"], "claim_ids": []},
         ]
         if cover_docx_ref and cover_pdf_ref and cover_visual_ref:
             materials.extend([
-                {"material_id": stable_id("MAT", application_id, "cover_letter_docx", str(cover_docx_ref["content_sha256"])), "kind": "cover_letter_docx", "path": cover_docx_ref["secure_ref"], "content_hash": cover_docx_ref["content_sha256"], "claim_ids": [item["claim_id"] for item in claims[:2]]},
-                {"material_id": stable_id("MAT", application_id, "cover_letter_pdf", str(cover_pdf_ref["content_sha256"])), "kind": "cover_letter_pdf", "path": cover_pdf_ref["secure_ref"], "content_hash": cover_pdf_ref["content_sha256"], "claim_ids": [item["claim_id"] for item in claims[:2]]},
+                {"material_id": stable_id("MAT", application_id, "cover_letter_docx", str(cover_docx_ref["content_sha256"])), "kind": "cover_letter_docx", "path": cover_docx_ref["secure_ref"], "content_hash": cover_docx_ref["content_sha256"], "claim_ids": selected_claim_ids[:2]},
+                {"material_id": stable_id("MAT", application_id, "cover_letter_pdf", str(cover_pdf_ref["content_sha256"])), "kind": "cover_letter_pdf", "path": cover_pdf_ref["secure_ref"], "content_hash": cover_pdf_ref["content_sha256"], "claim_ids": selected_claim_ids[:2]},
                 {"material_id": stable_id("MAT", application_id, "cover_visual_evidence", str(cover_visual_ref["content_sha256"])), "kind": "visual_evidence", "path": cover_visual_ref["secure_ref"], "content_hash": cover_visual_ref["content_sha256"], "claim_ids": []},
             ])
         if material_plan["portfolio_file"]["binding_status"] == "BOUND_SECURE_FILE":
