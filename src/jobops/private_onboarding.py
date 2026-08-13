@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import contextlib
+import os
 import re
 import shutil
+import stat
 import tempfile
 from pathlib import Path
 from typing import Iterator
@@ -20,6 +22,7 @@ PRIVATE_KINDS = {
     "onboarding_center_state", "onboarding_source_document", "onboarding_ai_derived",
     "onboarding_completion_packet",
 }
+MAX_PRIVATE_IMPORT_FILE_BYTES = 64 * 1024 * 1024
 
 
 class PrivateOnboarding:
@@ -126,9 +129,50 @@ class PrivateOnboarding:
         return {"secure_ref": secure_ref, "kind": kind, "display_name": display, "content_sha256": content_hash, "ciphertext_sha256": stored["ciphertext_sha256"], "version": 1, "status": "ACTIVE", "deduplicated": False}
 
     def import_file(self, kind: str, selected_path: Path, *, synthetic: bool = False) -> dict[str, object]:
-        if not selected_path.is_file():
-            raise JobOpsError("PRIVATE_IMPORT_FILE_MISSING", "The explicitly selected private import file does not exist.")
-        return self.import_bytes(kind, selected_path.read_bytes(), synthetic=synthetic)
+        selected_path = Path(selected_path).absolute()
+        if has_reparse_component(selected_path):
+            raise JobOpsError(
+                "PRIVATE_IMPORT_REPARSE_FORBIDDEN",
+                "The explicitly selected private import file cannot traverse a link or Windows reparse point.",
+            )
+        try:
+            path_before = selected_path.stat()
+            if not stat.S_ISREG(path_before.st_mode):
+                raise JobOpsError("PRIVATE_IMPORT_FILE_MISSING", "The explicitly selected private import file does not exist.")
+            if path_before.st_size <= 0:
+                raise JobOpsError("PRIVATE_IMPORT_FILE_EMPTY", "The explicitly selected private import file is empty.")
+            if path_before.st_size > MAX_PRIVATE_IMPORT_FILE_BYTES:
+                raise JobOpsError(
+                    "PRIVATE_IMPORT_FILE_TOO_LARGE",
+                    "The explicitly selected private import file exceeds the bounded local import limit.",
+                    maximum_bytes=MAX_PRIVATE_IMPORT_FILE_BYTES,
+                )
+            with selected_path.open("rb") as handle:
+                opened_before = os.fstat(handle.fileno())
+                value = handle.read(MAX_PRIVATE_IMPORT_FILE_BYTES + 1)
+                opened_after = os.fstat(handle.fileno())
+            path_after = selected_path.stat()
+        except JobOpsError:
+            raise
+        except OSError as exc:
+            raise JobOpsError(
+                "PRIVATE_IMPORT_FILE_UNAVAILABLE",
+                "The explicitly selected private import file could not be read safely.",
+            ) from exc
+        identity_fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns")
+        snapshots = (path_before, opened_before, opened_after, path_after)
+        if any(getattr(snapshot, field) != getattr(path_before, field) for snapshot in snapshots[1:] for field in identity_fields):
+            raise JobOpsError(
+                "PRIVATE_IMPORT_FILE_CHANGED",
+                "The explicitly selected private import file changed while it was being read; select it again.",
+            )
+        if len(value) > MAX_PRIVATE_IMPORT_FILE_BYTES:
+            raise JobOpsError(
+                "PRIVATE_IMPORT_FILE_TOO_LARGE",
+                "The explicitly selected private import file exceeds the bounded local import limit.",
+                maximum_bytes=MAX_PRIVATE_IMPORT_FILE_BYTES,
+            )
+        return self.import_bytes(kind, value, synthetic=synthetic)
 
     def _record(self, reference: str):
         with self.database.connect() as connection:

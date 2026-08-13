@@ -203,6 +203,29 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
             self.assertNotIn(SENTINEL, json.dumps(caught.exception.as_dict()))
             onboarding.delete(record["secure_ref"], user_confirmed=True)
 
+    def test_private_file_import_is_bounded_and_rejects_reparse_paths(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            local_app_data = temp / "localappdata"
+            script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
+            onboarding = PrivateOnboarding(database, WindowsDPAPIStore(script, local_app_data=local_app_data))
+            selected = temp / "selected.json"
+            selected.write_bytes(b"123456789")
+
+            with patch("jobops.private_onboarding.MAX_PRIVATE_IMPORT_FILE_BYTES", 8):
+                with self.assertRaises(JobOpsError) as oversized:
+                    onboarding.import_file("answer_bank", selected, synthetic=True)
+            self.assertEqual(oversized.exception.code, "PRIVATE_IMPORT_FILE_TOO_LARGE")
+
+            with patch("jobops.private_onboarding.has_reparse_component", return_value=True):
+                with self.assertRaises(JobOpsError) as reparse:
+                    onboarding.import_file("answer_bank", selected, synthetic=True)
+            self.assertEqual(reparse.exception.code, "PRIVATE_IMPORT_REPARSE_FORBIDDEN")
+            with database.connect() as connection:
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM private_refs").fetchone()[0], 0)
+            self.assertFalse(any(onboarding.store.private_root.glob("*.dpapi")))
+
     def test_private_import_and_rotation_roll_back_metadata_failures(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")
