@@ -6,7 +6,7 @@ import zipfile
 from pathlib import Path
 
 from _support import PROJECT
-from jobops.release_candidate import verify_candidate_archive
+from jobops.release_candidate import run_source_candidate_smoke, verify_candidate_archive
 
 
 class ReleaseCandidateTests(unittest.TestCase):
@@ -37,6 +37,16 @@ class ReleaseCandidateTests(unittest.TestCase):
             kinds = {item["kind"] for item in result["findings"]}
             self.assertIn("unsafe_archive_path", kinds)
             self.assertIn("openai_key", kinds)
+
+    def test_source_smoke_refuses_candidate_without_smoke_entry(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-candidate-test-") as raw_temp:
+            temporary = Path(raw_temp)
+            path = temporary / "candidate.zip"
+            prefix = "JobFlow-v0.1.0/"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr(prefix + ".jobops-root", "jobflow-root-v1")
+            with self.assertRaises(Exception):
+                run_source_candidate_smoke(path, prefix=prefix, temporary=temporary / "smoke")
 
 
 if __name__ == "__main__":

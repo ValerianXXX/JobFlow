@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import tomllib
 import zipfile
@@ -84,6 +85,48 @@ def verify_candidate_archive(project: Path, archive_path: Path, *, prefix: str) 
     }
 
 
+def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Path) -> dict[str, Any]:
+    extracted = temporary / "extracted"
+    with zipfile.ZipFile(archive_path) as archive:
+        archive.extractall(extracted)
+    candidate = extracted / prefix.rstrip("/")
+    entry = candidate / ".agents" / "skills" / "job-application-operator" / "scripts" / "jobops.py"
+    smoke = candidate / ".agents" / "skills" / "job-application-operator" / "scripts" / "smoke-source-candidate.py"
+    if not entry.is_file() or not smoke.is_file():
+        raise JobOpsError("RELEASE_SMOKE_ENTRY_MISSING", "The extracted source candidate is missing its local startup smoke entry.")
+    environment = os.environ.copy()
+    environment["LOCALAPPDATA"] = str(temporary / "local-app-data")
+    help_result = subprocess.run(
+        [sys.executable, str(entry), "--help"], cwd=candidate, env=environment,
+        capture_output=True, text=True, timeout=30, check=False,
+    )
+    if help_result.returncode != 0 or "onboarding-center" not in help_result.stdout:
+        raise JobOpsError("RELEASE_SMOKE_CLI_FAILED", "The extracted source candidate public CLI did not start correctly.")
+    service_result = subprocess.run(
+        [sys.executable, str(smoke)], cwd=candidate, env=environment,
+        capture_output=True, text=True, timeout=45, check=False,
+    )
+    if service_result.returncode != 0:
+        raise JobOpsError("RELEASE_SMOKE_UI_FAILED", "The extracted source candidate local UI smoke failed.")
+    try:
+        result = json.loads(service_result.stdout)
+    except json.JSONDecodeError as error:
+        raise JobOpsError("RELEASE_SMOKE_OUTPUT_INVALID", "The extracted source candidate smoke result was invalid.") from error
+    required = {
+        "status": "PASS", "binding": "127.0.0.1", "supported_locales": ["zh", "en"],
+        "private_values_emitted": 0, "external_network_actions": 0, "real_external_actions": 0,
+    }
+    if any(result.get(key) != value for key, value in required.items()):
+        raise JobOpsError("RELEASE_SMOKE_BOUNDARY_FAILED", "The extracted source candidate crossed a startup boundary.")
+    return {
+        **required,
+        "loopback_requests": int(result.get("loopback_requests", 0)),
+        "security_headers": result.get("security_headers"),
+        "project_state_isolated": bool(result.get("project_state_isolated")),
+        "local_app_data_isolated": bool(result.get("local_app_data_isolated")),
+    }
+
+
 def build_release_candidate(project: Path) -> dict[str, Any]:
     repository = verify_public_repository(project)
     if repository["status"] != "PASS":
@@ -114,6 +157,7 @@ def build_release_candidate(project: Path) -> dict[str, Any]:
         verification = verify_candidate_archive(project, first, prefix=prefix)
         if verification["status"] != "PASS":
             raise JobOpsError("RELEASE_ARCHIVE_UNSAFE", "The local release candidate failed its content boundary.", findings=verification["findings"])
+        source_smoke = run_source_candidate_smoke(first, prefix=prefix, temporary=temporary)
         os.replace(first, destination)
     result = {
         "schema_version": 1,
@@ -125,10 +169,11 @@ def build_release_candidate(project: Path) -> dict[str, Any]:
         "artifact_bytes": destination.stat().st_size,
         "reproducible_builds": 2,
         "archive": verification,
+        "source_smoke": source_smoke,
         "repository_content_status": repository["status"],
         "author_identity_status": repository["author_identity"]["status"],
         "uploaded": False,
-        "network_actions": 0,
+        "external_network_actions": 0,
         "real_external_actions": 0,
     }
     write_json(project / "reports" / "release-candidate.json", result)
