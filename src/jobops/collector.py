@@ -13,6 +13,10 @@ from .sourcing import _canonical_url, url_has_sensitive_query
 from .util import iso_utc, sha256_bytes, stable_id
 
 
+MAX_COLLECTED_JD_CHARACTERS = 4_000_000
+MAX_JOB_METADATA_CHARACTERS = 512
+
+
 class JobCollector:
     def __init__(self, database: JobOpsDB, jobs_workspace: Path, project_root: Path | None = None) -> None:
         self.database = database
@@ -37,6 +41,26 @@ class JobCollector:
         title: str = "UNKNOWN",
         official_url: str | None = None,
     ) -> dict[str, object]:
+        if not isinstance(content, str) or not content.strip():
+            raise JobOpsError("JOB_SNAPSHOT_CONTENT_INVALID", "A job snapshot must contain non-empty text.")
+        if len(content) > MAX_COLLECTED_JD_CHARACTERS:
+            raise JobOpsError(
+                "JOB_SNAPSHOT_CONTENT_TOO_LARGE",
+                "The normalized job snapshot exceeds the safe storage limit.",
+                maximum_characters=MAX_COLLECTED_JD_CHARACTERS,
+            )
+        for field_name, value in (("source_type", source_type), ("company", company), ("title", title)):
+            if (
+                not isinstance(value, str)
+                or not value.strip()
+                or len(value) > MAX_JOB_METADATA_CHARACTERS
+                or any(ord(character) < 32 for character in value)
+            ):
+                raise JobOpsError(
+                    "JOB_METADATA_INVALID",
+                    "Job metadata must be bounded, non-empty display text without control characters.",
+                    field=field_name,
+                )
         normalized_locator = source_locator.replace("\\", "/")
         locator_path = PurePosixPath(normalized_locator)
         if (

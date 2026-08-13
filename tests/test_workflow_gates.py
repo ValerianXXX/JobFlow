@@ -4,6 +4,7 @@ import json
 import sqlite3
 import unittest
 from datetime import datetime, timedelta, timezone
+from unittest import mock
 
 from _support import PROJECT, project_temp
 from jobops.approvals import ApprovalContext, UploadBinding, issue_approval, submission_confirmation_status, validate_approval
@@ -56,6 +57,15 @@ class WorkflowGateTests(unittest.TestCase):
                 with self.subTest(official_url=official_url), self.assertRaises(JobOpsError) as blocked:
                     collector.collect_text("Another synthetic description", official_url=official_url)
                 self.assertEqual(blocked.exception.code, code)
+            self.assertEqual(database.table_counts()["jobs"], 1)
+
+            for invalid_content, code in (("", "JOB_SNAPSHOT_CONTENT_INVALID"), ("12345", "JOB_SNAPSHOT_CONTENT_TOO_LARGE")):
+                with mock.patch("jobops.collector.MAX_COLLECTED_JD_CHARACTERS", 4), self.assertRaises(JobOpsError) as blocked:
+                    collector.collect_text(invalid_content)
+                self.assertEqual(blocked.exception.code, code)
+            with self.assertRaises(JobOpsError) as blocked:
+                collector.collect_text("Another synthetic description", title="bad\nmetadata")
+            self.assertEqual(blocked.exception.code, "JOB_METADATA_INVALID")
             self.assertEqual(database.table_counts()["jobs"], 1)
 
     def test_jd_snapshot_failure_rolls_back_database_and_files(self) -> None:
