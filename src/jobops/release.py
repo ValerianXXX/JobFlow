@@ -13,6 +13,7 @@ from .db import JobOpsDB
 from .errors import JobOpsError
 from .knowledge import KnowledgeGateway
 from .locator import locate_knowledge_root
+from .public_release import verify_public_repository
 from .util import load_json, sha256_file, write_json
 
 
@@ -55,7 +56,7 @@ def _scan_text(label: str, text: str, findings: list[dict[str, str]]) -> None:
         if pattern.search(text):
             findings.append({"kind": kind, "location": label})
     for email in re.findall(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", text):
-        if not email.casefold().endswith(("@example.test", "@jobops.local")):
+        if not email.casefold().endswith(("@example.test", "@jobops.local", "@users.noreply.github.com")):
             findings.append({"kind": "email", "location": label})
 
 
@@ -151,6 +152,7 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
     knowledge["write_operations"] = 0
     actions = audit_real_external_actions(database)
     scan = security_scan(project, database)
+    public_repository = verify_public_repository(project)
     with database.connect() as connection:
         active_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='ACTIVE'").fetchone()[0])
         active_real_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='ACTIVE' AND synthetic=0").fetchone()[0])
@@ -189,6 +191,7 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         "database": schema_version == JobOpsDB.LATEST_SCHEMA_VERSION and "CHECK(dry_run = 1)" in dry_run_sql,
         "synthetic_private_purged": active_synthetic_private == 0,
         "private_store_consistent": active_private == scan["private_ciphertext_file_count"],
+        "public_repository": public_repository["status"] == "PASS",
         "independent_qa": independent_fresh,
     }
     if require_independent and not checks["independent_qa"]:
@@ -198,12 +201,13 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
     public_release_blockers = []
     if not core_pass:
         public_release_blockers.append("CORE_RELEASE_CHECK_FAILED")
+    public_release_blockers.extend(public_repository.get("public_release_blockers", []))
     if not independent_fresh:
         public_release_blockers.append("INDEPENDENT_QA_STALE_OR_MISSING")
     result = {
         "schema_version": 1, "status": status,
         "verification_scope": "PUBLIC_RELEASE" if require_independent else "LOCAL_DEVELOPMENT",
-        "public_release_ready": core_pass and independent_fresh,
+        "public_release_ready": core_pass and independent_fresh and bool(public_repository["public_release_ready"]),
         "public_release_blockers": public_release_blockers,
         "final_states": [
             "PHASE_0_4_HARDENED", "PHASE_4_5_SECURE_ONBOARDING_READY",
@@ -213,7 +217,7 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         "phase_5_6_authorization": "ABSENT", "real_external_actions": actions["real_external_actions"],
         "checks": checks, "tests": tests, "skill_validation": skill_validation,
         "knowledge": knowledge, "database": {"schema_version": schema_version, "dry_run_constraint": True},
-        "security_scan": scan, "external_action_audit": actions,
+        "security_scan": scan, "public_repository": public_repository, "external_action_audit": actions,
         "private_data": {
             "active_references": active_private, "active_real_references": active_real_private,
             "active_synthetic_references": active_synthetic_private,
@@ -258,6 +262,7 @@ def write_release_reports(project: Path, result: dict[str, Any]) -> None:
             for name, item in result["knowledge"].get("collections", {}).items()
         ],
         f"- Security findings: {result['security_scan']['finding_count']}.",
+        f"- Public repository: {result['public_repository']['status']}; current-tree findings {result['public_repository']['tree']['finding_count']}; full-history findings {result['public_repository']['history']['finding_count']}; author identity {result['public_repository']['author_identity']['status']}.",
         f"- External-action audit: {result['external_action_audit']['attempt_count']} recorded attempts; {result['external_action_audit']['real_external_actions']} real side effects.",
         f"- Active private references: {result['private_data']['active_references']} (real: {result['private_data']['active_real_references']}; synthetic: {result['private_data']['active_synthetic_references']}); deleted synthetic metadata: {result['private_data']['deleted_synthetic_metadata_records']}; synthetic ciphertext residue: {result['private_data']['synthetic_ciphertext_residue']}; total ciphertext files: {result['private_data']['private_ciphertext_file_count']}; staging files: {result['private_data']['private_staging_file_count']}.",
         f"- P0/P1/must-fix open: {result['p0_open']}/{result['p1_open']}/{result['must_fix_open']}.",
