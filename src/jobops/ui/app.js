@@ -364,6 +364,13 @@ function renderOfficialDiscovery(report){
   document.querySelector("#officialDiscoveryResults").classList.remove("hidden");
 }
 
+function clearOfficialDiscovery(){
+  state.officialDiscovery=null;
+  document.querySelector("#officialCandidateCount").textContent="0";
+  document.querySelector("#officialCandidateList").replaceChildren();
+  document.querySelector("#officialDiscoveryResults").classList.add("hidden");
+}
+
 function renderDashboard(){
   const dashboard=state.data?.dashboard;
   if(!dashboard)return;
@@ -806,6 +813,7 @@ document.addEventListener("click", async event => {
   if(dashboardRefresh){try{await withActivity("refreshingDashboard",()=>refreshLatest());showToast(t("dashboardRefreshed"));}catch(error){handleUiError(error);}return;}
   const analyzeSnapshot=event.target.closest("#analyzeOfficialSnapshot");
   if(analyzeSnapshot){
+    clearOfficialDiscovery();
     const companyDomain=document.querySelector("#officialCompanyDomain").value.trim();
     const officialUrl=document.querySelector("#officialCareersUrl").value.trim();
     const file=document.querySelector("#officialSnapshotFile").files[0];
@@ -968,6 +976,10 @@ function syncAiFileType(){document.querySelector("#aiFile").accept=document.quer
 document.querySelector("#aiType").addEventListener("change",syncAiFileType);
 syncAiFileType();
 document.addEventListener("change",event=>{
+  if(event.target.matches("#officialCompanyDomain,#officialCareersUrl,#officialSnapshotFile")){
+    clearOfficialDiscovery();
+    return;
+  }
   if(event.target.matches('input[name="packetDecision"]')){state.reviewDecision=event.target.value;document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecisionConfirmed;}
   if(event.target.matches("#packetDecisionConfirm")){state.reviewDecisionConfirmed=event.target.checked;document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecision||!state.reviewDecisionConfirmed;}
   if(event.target.matches(".answer-input")){

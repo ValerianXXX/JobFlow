@@ -1005,6 +1005,8 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="officialCandidateList"', html)
         self.assertIn("function renderDashboard()", app)
         self.assertIn("function renderOfficialDiscovery", app)
+        self.assertIn("function clearOfficialDiscovery", app)
+        self.assertIn('event.target.matches("#officialCompanyDomain,#officialCareersUrl,#officialSnapshotFile")', app)
         self.assertIn('discover-official-jobs?official_url=', app)
         self.assertIn("function renderReviewPacket()", app)
         self.assertIn('api("queue-limit"', app)
