@@ -129,6 +129,7 @@ def parser() -> argparse.ArgumentParser:
     answers.add_argument("--synthetic", action="store_true")
     secure_status = sub.add_parser("secure-store-status")
     secure_status.add_argument("--ref")
+    sub.add_parser("check-private-store")
     sub.add_parser("purge-synthetic-private-data")
 
     sub.add_parser("secure-onboard-resume")
@@ -393,6 +394,36 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     rows = connection.execute("SELECT secure_ref,kind,display_name,version,status,synthetic,updated_at FROM private_refs ORDER BY kind,updated_at").fetchall()
             emit({"status": "SECURE_STORE_METADATA", "references": [dict(row) for row in rows], "private_values_emitted": 0, "next_safe_action": "NONE"}, project)
+        elif args.command == "check-private-store":
+            from .release import security_scan
+
+            database = _database(project)
+            scan = security_scan(project, database)
+            private_findings = [
+                item for item in scan["findings"]
+                if item["location"].startswith("$LOCALAPPDATA/JobOps/private")
+                or item["location"] == "state/jobops.db#private_refs"
+            ]
+            healthy = (
+                not private_findings
+                and scan["private_staging_file_count"] == 0
+                and scan["private_temporary_file_count"] == 0
+                and scan["private_ciphertext_integrity_failure_count"] == 0
+            )
+            emit({
+                "status": "PRIVATE_STORE_HEALTHY" if healthy else "PRIVATE_STORE_NEEDS_REPAIR",
+                "expected_ciphertext_files": scan["private_expected_ciphertext_file_count"],
+                "ciphertext_files": scan["private_ciphertext_file_count"],
+                "integrity_failures": scan["private_ciphertext_integrity_failure_count"],
+                "staging_files": scan["private_staging_file_count"],
+                "atomic_write_residue": scan["private_temporary_file_count"],
+                "issue_codes": [item["kind"] for item in private_findings],
+                "private_values_read": 0,
+                "private_values_emitted": 0,
+                "network_actions": 0,
+                "real_external_actions": 0,
+                "next_safe_action": "NONE" if healthy else "stop JobFlow and repair or re-import the affected private material",
+            }, project)
         elif args.command == "purge-synthetic-private-data":
             database = _database(project)
             result = _onboarding(project, database).purge_synthetic()

@@ -77,6 +77,30 @@ Add-JobFlowCheck "SCHEMAS" $schemasReady "核心 Schema 齐全" "Core Schemas pr
 $secureStoreReady = Test-Path -LiteralPath (Join-Path $projectRoot ".agents\skills\job-application-operator\scripts\secure-store.ps1") -PathType Leaf
 Add-JobFlowCheck "SECURE_STORE" $secureStoreReady "DPAPI 安全存储组件齐全" "DPAPI secure-store helper present" "重新解压完整源码包" "Extract the complete source package again"
 
+$privateStoreHealthy = $false
+$databasePath = Join-Path $projectRoot "state\jobops.db"
+if (-not (Test-Path -LiteralPath $databasePath -PathType Leaf)) {
+    $privateStoreHealthy = $true
+}
+elseif ($pythonReady -and $packageReady -and $secureStoreReady) {
+    $savedErrorPreference = $ErrorActionPreference
+    $ErrorActionPreference = "SilentlyContinue"
+    try {
+        $privateRaw = (& $venvPython -m jobops.cli check-private-store 2>$null | Out-String).Trim()
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($privateRaw)) {
+            $privateResult = $privateRaw | ConvertFrom-Json
+            $privateStoreHealthy = $privateResult.status -eq "PRIVATE_STORE_HEALTHY"
+        }
+    }
+    catch {
+        $privateStoreHealthy = $false
+    }
+    finally {
+        $ErrorActionPreference = $savedErrorPreference
+    }
+}
+Add-JobFlowCheck "PRIVATE_STORE_INTEGRITY" $privateStoreHealthy "私密引用、密文与临时区一致" "Private references, ciphertext and staging are consistent" "不要启动；先保留现状并运行发布就绪检查以查看脱敏原因" "Do not start; preserve the current state and run the release-readiness check for a redacted cause"
+
 $uiReady = @("index.html", "app.js", "styles.css") | ForEach-Object {
     Test-Path -LiteralPath (Join-Path $projectRoot "src\jobops\ui\$_") -PathType Leaf
 } | Where-Object { -not $_ } | Measure-Object | Select-Object -ExpandProperty Count

@@ -61,6 +61,8 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertEqual(result["private_values_emitted"], 0)
         self.assertEqual(result["network_actions"], 0)
         self.assertEqual(result["real_external_actions"], 0)
+        private_check = next(item for item in result["checks"] if item["id"] == "PRIVATE_STORE_INTEGRITY")
+        self.assertEqual(private_check["status"], "PASS")
         serialized = json.dumps(result)
         self.assertNotIn(str(PROJECT), serialized)
         self.assertNotIn("secure-ref:", serialized)
