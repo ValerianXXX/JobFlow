@@ -79,6 +79,45 @@ class OfflineOfficialDiscoveryTests(unittest.TestCase):
             )
         self.assertEqual(domain_error.exception.code, "COMPANY_DOMAIN_MISMATCH")
 
+    def test_scripts_external_links_and_credential_queries_never_escape(self) -> None:
+        snapshot = b"""<!doctype html><body>
+        <script><a href='https://example.com/careers/jobs/scripted'>Injected role</a></script>
+        <a href='https://unapproved.example.net/jobs/external'>External role</a>
+        <a href='https://example.com/careers/jobs/private?session_token=do-not-emit'>Private query</a>
+        <a href='/careers/jobs/safe?source=official&amp;keywords=analyst&amp;jobcode=42'>Synthetic Safe Role</a>
+        </body>"""
+        report = discover_official_jobs(
+            snapshot,
+            official_entry_url="https://example.com/careers",
+            company_domain="example.com",
+            approved_ats_hosts=APPROVED_ATS,
+        )
+        self.assertEqual(report["candidate_count"], 1)
+        self.assertEqual(report["candidates"][0]["title"], "Synthetic Safe Role")
+        self.assertNotIn("do-not-emit", json.dumps(report))
+        self.assertFalse(report["untrusted_page_content_executed"])
+        with self.assertRaises(JobOpsError) as sensitive_entry:
+            discover_official_jobs(
+                b"<a href='/careers/jobs/safe'>Safe</a>",
+                official_entry_url="https://example.com/careers?auth_token=do-not-emit",
+                company_domain="example.com",
+                approved_ats_hosts=APPROVED_ATS,
+            )
+        self.assertEqual(sensitive_entry.exception.code, "OFFICIAL_URL_SENSITIVE_QUERY")
+        self.assertNotIn("do-not-emit", str(sensitive_entry.exception))
+
+    def test_snapshot_complexity_is_bounded_before_results_are_emitted(self) -> None:
+        snapshot = b"<a href='/careers/jobs/one'>One</a><a href='/careers/jobs/two'>Two</a>"
+        with patch("jobops.official_discovery.MAX_LINK_EVIDENCE", 1):
+            with self.assertRaises(JobOpsError) as complexity:
+                discover_official_jobs(
+                    snapshot,
+                    official_entry_url="https://example.com/careers",
+                    company_domain="example.com",
+                    approved_ats_hosts=APPROVED_ATS,
+                )
+        self.assertEqual(complexity.exception.code, "OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT")
+
     def test_cli_emits_path_free_offline_report(self) -> None:
         command = [
             sys.executable,

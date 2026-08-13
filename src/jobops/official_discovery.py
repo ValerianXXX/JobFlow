@@ -4,7 +4,7 @@ import json
 import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
-from urllib.parse import urljoin, urlparse
+from urllib.parse import parse_qsl, urljoin, urlparse
 
 from .errors import JobOpsError
 from .sourcing import (
@@ -19,7 +19,19 @@ from .util import canonical_json, sha256_bytes, stable_id
 
 
 MAX_SNAPSHOT_BYTES = 32 * 1024 * 1024
+MAX_LINK_EVIDENCE = 20_000
+MAX_VISIBLE_TEXT_CHARACTERS = 4_000_000
+MAX_JOB_CANDIDATES = 5_000
 PLAIN_HTTPS_URL = re.compile(r"https://[^\s<>\"']+", re.IGNORECASE)
+SENSITIVE_QUERY_KEYS = {
+    "api_key", "apikey", "auth", "authorization", "code", "credential", "email", "id_token",
+    "login", "oauth_token", "password", "secret", "session", "session_id", "sig", "signature",
+    "token", "username",
+}
+SENSITIVE_QUERY_KEY_PARTS = re.compile(
+    r"(?:^|[_-])(?:auth|credential|email|password|secret|session|signature|token|username)(?:$|[_-])",
+    re.IGNORECASE,
+)
 GENERIC_LINK_TEXT = {
     "", "apply", "apply now", "career", "careers", "career opportunities", "details", "job", "jobs",
     "join us", "learn more", "open", "view", "view job", "view role", "申请", "招聘", "查看", "查看职位",
@@ -53,6 +65,15 @@ class _SnapshotHTMLParser(HTMLParser):
         self._heading_text: list[str] = []
         self._suppressed_depth = 0
         self.visible_text: list[str] = []
+        self._visible_text_characters = 0
+
+    def _append_link(self, evidence: _LinkEvidence) -> None:
+        if len(self.links) >= MAX_LINK_EVIDENCE:
+            raise JobOpsError(
+                "OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT",
+                "The local careers snapshot contains too many link records for bounded offline analysis.",
+            )
+        self.links.append(evidence)
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         lowered = tag.casefold()
@@ -70,7 +91,7 @@ class _SnapshotHTMLParser(HTMLParser):
             self._heading_text = []
         data_href = values.get("data-job-url") or values.get("data-apply-url")
         if data_href and lowered != "a":
-            self.links.append(
+            self._append_link(
                 _LinkEvidence(
                     href=data_href,
                     text="",
@@ -90,7 +111,7 @@ class _SnapshotHTMLParser(HTMLParser):
             return
         if lowered == "a" and self._anchor is not None:
             values = self._anchor
-            self.links.append(
+            self._append_link(
                 _LinkEvidence(
                     href=values.get("data-job-url") or values.get("data-apply-url") or values.get("href", ""),
                     text=_compact(" ".join(self._anchor_text)),
@@ -116,6 +137,12 @@ class _SnapshotHTMLParser(HTMLParser):
         if self._heading_tag is not None:
             self._heading_text.append(data)
         if data.strip():
+            self._visible_text_characters += len(data)
+            if self._visible_text_characters > MAX_VISIBLE_TEXT_CHARACTERS:
+                raise JobOpsError(
+                    "OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT",
+                    "The local careers snapshot contains too much visible text for bounded offline analysis.",
+                )
             self.visible_text.append(data)
 
 
@@ -132,6 +159,14 @@ def _is_allowed_ats(host: str, approved_ats_hosts: list[str]) -> bool:
     return any(candidate == _host(value) or candidate.endswith("." + _host(value)) for value in approved_ats_hosts)
 
 
+def _has_sensitive_query(url: str) -> bool:
+    try:
+        keys = (key.casefold() for key, _ in parse_qsl(urlparse(url).query, keep_blank_values=True))
+        return any(key in SENSITIVE_QUERY_KEYS or SENSITIVE_QUERY_KEY_PARTS.search(key) for key in keys)
+    except ValueError:
+        return True
+
+
 def _job_link(
     evidence: _LinkEvidence,
     *,
@@ -146,6 +181,8 @@ def _job_link(
     try:
         canonical = _canonical_url(urljoin(official_entry_url, href))
     except (JobOpsError, ValueError):
+        return None
+    if _has_sensitive_query(canonical):
         return None
     parsed = urlparse(canonical)
     host = _host(parsed.hostname or "")
@@ -220,6 +257,11 @@ def discover_official_jobs(
         raise JobOpsError("OFFICIAL_SNAPSHOT_ENCODING_INVALID", "The local snapshot must be UTF-8.") from exc
 
     entry_url = _canonical_url(official_entry_url)
+    if _has_sensitive_query(entry_url):
+        raise JobOpsError(
+            "OFFICIAL_URL_SENSITIVE_QUERY",
+            "The official careers URL contains a credential-like query field and cannot enter a local report.",
+        )
     entry_host = _host(urlparse(entry_url).hostname or "")
     registered = registrable_domain(company_domain)
     if not host_matches_registered(entry_host, registered):
@@ -246,6 +288,8 @@ def discover_official_jobs(
     try:
         parser.feed(html)
         parser.close()
+    except JobOpsError:
+        raise
     except Exception as exc:
         raise JobOpsError("OFFICIAL_SNAPSHOT_HTML_INVALID", "The local careers snapshot could not be parsed safely.") from exc
 
@@ -255,6 +299,11 @@ def discover_official_jobs(
     for match in PLAIN_HTTPS_URL.findall(visible):
         value = match.rstrip(".,);]}")
         if value not in existing_hrefs:
+            if len(evidences) >= MAX_LINK_EVIDENCE:
+                raise JobOpsError(
+                    "OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT",
+                    "The local careers snapshot contains too many link records for bounded offline analysis.",
+                )
             evidences.append(_LinkEvidence(value, "", "", "", "plain_url"))
 
     candidates_by_key: dict[str, dict[str, object]] = {}
@@ -282,6 +331,11 @@ def discover_official_jobs(
                 current["location"] = candidate["location"]
                 current["location_status"] = "EXTRACTED"
             continue
+        if len(candidates_by_key) >= MAX_JOB_CANDIDATES:
+            raise JobOpsError(
+                "OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT",
+                "The local careers snapshot contains too many distinct job candidates for bounded offline analysis.",
+            )
         candidates_by_key[key] = candidate
 
     candidates = sorted(candidates_by_key.values(), key=lambda item: (str(item["provider"]), str(item["ats_job_identity"]), str(item["discovered_url"])))
