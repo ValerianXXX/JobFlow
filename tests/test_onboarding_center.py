@@ -378,7 +378,10 @@ class OnboardingCenterTests(unittest.TestCase):
             original, _, _, _, _ = self.make_service(root)
             engine = LocalSubprocessAIEngine([sys.executable, str(PROJECT / "tests" / "fixtures" / "fake_jobops_ai.py")])
             service = OnboardingCenterService(original.project, original.database, original.onboarding, ai_engine=engine)
-            service.preview_source("project_case", ".txt", b"Synthetic source line one.\nSynthetic source line two.")
+            service.preview_source(
+                "project_case", ".txt",
+                b"Built a synthetic project and documented a source-grounded review workflow.",
+            )
             bootstrap = service.bootstrap()
             pending = bootstrap["pending_sources"][0]
             self.assertEqual(bootstrap["ai_engine"]["status"], "READY")
@@ -398,7 +401,7 @@ class OnboardingCenterTests(unittest.TestCase):
         candidates = []
         for index, (category, organization, role) in enumerate((
             ("work", "Alpha", "Analyst"), ("internship", "Beta", "Intern"),
-            ("education", "Gamma University", "Finance degree"), ("project", "Project Delta", "Project Lead"),
+            ("education", "Gamma University", "Finance degree"), ("project", "Project Delta", "Project"),
         ), start=1):
             key = f"entity-{index}"
             entities.append({
@@ -427,6 +430,90 @@ class OnboardingCenterTests(unittest.TestCase):
                     {"entity_key": "first", **duplicate}, {"entity_key": "second", **duplicate},
                 ], "candidates": []},
                 source_id="SRC-SYNTHETIC", source_lines=["Alpha Analyst 2020 to 2021."],
+            )
+        self.assertEqual(blocked.exception.code, "AI_RESPONSE_INVALID")
+
+    def test_ai_contract_rejects_obvious_internship_misclassification_and_header_fragments(self) -> None:
+        source = ["Worked as a Strategy Intern at Beta from April 2025 to July 2025."]
+        entity = {
+            "entity_key": "beta", "entity_type": "work", "organization": "Beta", "role": "Strategy Intern",
+            "start_date": "April 2025", "end_date": "July 2025", "line_start": 1, "line_end": 1,
+        }
+        with self.assertRaises(JobOpsError) as category_error:
+            LocalSubprocessAIEngine._validated_candidates(
+                {"schema_version": 2, "entities": [entity], "candidates": []},
+                source_id="SRC-CATEGORY", source_lines=source,
+            )
+        self.assertEqual(category_error.exception.code, "AI_RESPONSE_INVALID")
+
+        entity["entity_type"] = "internship"
+        header = {
+            "statement": "Strategy Intern at Beta, April 2025 to July 2025.", "category": "internship",
+            "claim_kind": "entity_summary", "entity_key": "beta", "confidence": "HIGH",
+            "line_start": 1, "line_end": 1, "reason": "Synthetic header.",
+        }
+        with self.assertRaises(JobOpsError) as fragment_error:
+            LocalSubprocessAIEngine._validated_candidates(
+                {"schema_version": 2, "entities": [entity], "candidates": [header]},
+                source_id="SRC-HEADER", source_lines=source,
+            )
+        self.assertEqual(fragment_error.exception.code, "AI_RESPONSE_INVALID")
+
+    def test_ai_contract_rejects_weak_grounding_and_merges_near_duplicate_claims(self) -> None:
+        weak_source = ["Led a merchant database project containing 4,000 records."]
+        entity = {
+            "entity_key": "merchant", "entity_type": "project", "organization": "merchant database",
+            "role": "project", "start_date": "", "end_date": "", "line_start": 1, "line_end": 1,
+        }
+        unsupported = {
+            "statement": "Led the merchant database project containing 4,000 records and independently increased global revenue across five markets.",
+            "category": "project", "claim_kind": "achievement", "entity_key": "merchant", "confidence": "HIGH",
+            "line_start": 1, "line_end": 1, "reason": "Synthetic overclaim.",
+        }
+        with self.assertRaises(JobOpsError) as grounding_error:
+            LocalSubprocessAIEngine._validated_candidates(
+                {"schema_version": 2, "entities": [entity], "candidates": [unsupported]},
+                source_id="SRC-GROUNDING", source_lines=weak_source,
+            )
+        self.assertEqual(grounding_error.exception.code, "AI_RESPONSE_INVALID")
+
+        duplicate_lines = [
+            "Led a synthetic project and improved review accuracy by 20%.",
+            "Successfully led a synthetic project and improved review accuracy by 20%.",
+        ]
+        duplicate_entity = {
+            "entity_key": "synthetic", "entity_type": "project", "organization": "synthetic",
+            "role": "project", "start_date": "", "end_date": "", "line_start": 1, "line_end": 2,
+        }
+        candidates = [{
+            "statement": "• Led a synthetic project and improved review accuracy by 20%.",
+            "category": "project", "claim_kind": "achievement", "entity_key": "synthetic", "confidence": "HIGH",
+            "line_start": 1, "line_end": 1, "reason": "Synthetic claim.",
+        }, {
+            "statement": "Successfully led a synthetic project and improved review accuracy by 20%.",
+            "category": "project", "claim_kind": "achievement", "entity_key": "synthetic", "confidence": "HIGH",
+            "line_start": 2, "line_end": 2, "reason": "Synthetic duplicate.",
+        }]
+        validated = LocalSubprocessAIEngine._validated_candidates(
+            {"schema_version": 2, "entities": [duplicate_entity], "candidates": candidates},
+            source_id="SRC-NEAR-DUPLICATE", source_lines=duplicate_lines,
+        )
+        self.assertEqual(len(validated), 1)
+        self.assertEqual(validated[0]["statement"], "Led a synthetic project and improved review accuracy by 20%.")
+
+    def test_ai_contract_canonicalizes_month_names_when_detecting_duplicate_entities(self) -> None:
+        lines = ["Alpha Analyst July 2020 to June 2021.", "Alpha Analyst Jul 2020 to Jun 2021."]
+        entities = [{
+            "entity_key": "first", "entity_type": "work", "organization": "Alpha", "role": "Analyst",
+            "start_date": "July 2020", "end_date": "June 2021", "line_start": 1, "line_end": 1,
+        }, {
+            "entity_key": "second", "entity_type": "work", "organization": "Alpha", "role": "Analyst",
+            "start_date": "Jul 2020", "end_date": "Jun 2021", "line_start": 2, "line_end": 2,
+        }]
+        with self.assertRaises(JobOpsError) as blocked:
+            LocalSubprocessAIEngine._validated_candidates(
+                {"schema_version": 2, "entities": entities, "candidates": []},
+                source_id="SRC-MONTHS", source_lines=lines,
             )
         self.assertEqual(blocked.exception.code, "AI_RESPONSE_INVALID")
 

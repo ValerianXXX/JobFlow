@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import subprocess
@@ -24,7 +25,24 @@ ALLOWED_CLAIM_KINDS = {
 }
 STOP_WORDS = {
     "and", "the", "for", "from", "with", "into", "that", "this", "was", "were", "are", "as", "at", "to", "of",
+    "applicant", "candidate", "provided", "statement", "source-grounded",
 }
+GROUNDING_RATIO = 0.50
+NEAR_DUPLICATE_RATIO = 0.85
+MONTH_ALIASES = {
+    "january": "jan", "february": "feb", "march": "mar", "april": "apr", "june": "jun",
+    "july": "jul", "august": "aug", "september": "sep", "sept": "sep", "october": "oct",
+    "november": "nov", "december": "dec",
+}
+ENTITY_VERB_RE = re.compile(
+    r"\b(?:am|is|are|was|were|be|been|being|worked|served|led|built|ran|drove|grew|founded|"
+    r"managed|created|developed|delivered|conducted|analyzed|analysed|launched|completed|earned|"
+    r"studied|graduated|supported|designed|implemented|improved|increased|reduced|produced|owned|"
+    r"coordinated|advised|consulted|researched|mapped|converted|translated|oversaw|performed|"
+    r"[a-z]{4,}(?:ed|ing|ized|ised|ated|ened))\b",
+    re.IGNORECASE,
+)
+CHINESE_ENTITY_VERBS = ("担任", "负责", "完成", "建立", "领导", "参与", "开发", "管理", "分析", "提升", "创建", "就读", "获得", "交付", "推动", "设计", "实施")
 
 
 def _compact(value: Any, *, limit: int) -> str:
@@ -47,12 +65,50 @@ def _numbers(value: str) -> set[str]:
     return {re.sub(r"[^0-9.]", "", item) for item in re.findall(r"\$?\d[\d,.]*", value)}
 
 
+def _identity_part(value: Any) -> str:
+    normalized = _compact(value, limit=200).casefold()
+    for source, target in MONTH_ALIASES.items():
+        normalized = re.sub(rf"\b{source}\b", target, normalized)
+    return re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", normalized)
+
+
 def _entity_signature(entity: dict[str, Any]) -> str:
     fields = (
         entity.get("entity_type"), entity.get("organization"), entity.get("role"),
         entity.get("start_date"), entity.get("end_date"),
     )
-    return "|".join(re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", _compact(item, limit=200).casefold()) for item in fields)
+    return "|".join(_identity_part(item) for item in fields)
+
+
+def _clean_candidate_statement(value: Any) -> str:
+    statement = _compact(value, limit=2_001)
+    return re.sub(r"^[\s\u2022\u2023\u25e6\u2043\u2219\uf0de\uf0b7▪▫●○◦‣·*—–-]+", "", statement).strip()
+
+
+def _field_is_grounded(value: str, source_excerpt: str) -> bool:
+    if not value:
+        return True
+    normalized_value = _identity_part(value)
+    normalized_source = _identity_part(source_excerpt)
+    if normalized_value and normalized_value in normalized_source:
+        return True
+    tokens = _tokens(value)
+    if not tokens:
+        return False
+    shared = len(tokens & _tokens(source_excerpt))
+    return shared >= max(1, math.ceil(len(tokens) * 0.75))
+
+
+def _has_entity_predicate(statement: str) -> bool:
+    return bool(ENTITY_VERB_RE.search(statement) or any(item in statement for item in CHINESE_ENTITY_VERBS))
+
+
+def _near_duplicate(left: str, right: str) -> bool:
+    if _numbers(left) != _numbers(right):
+        return False
+    left_tokens, right_tokens = _tokens(left), _tokens(right)
+    union = left_tokens | right_tokens
+    return bool(union) and len(left_tokens & right_tokens) / len(union) >= NEAR_DUPLICATE_RATIO
 
 
 def _statement_is_complete(statement: str, source_excerpt: str) -> bool:
@@ -68,7 +124,8 @@ def _statement_is_complete(statement: str, source_excerpt: str) -> bool:
         return False
     claim_tokens = _tokens(statement)
     source_tokens = _tokens(source_excerpt)
-    if claim_tokens and len(claim_tokens & source_tokens) < min(2, len(claim_tokens)):
+    required = max(1 if len(claim_tokens) == 1 else 2, math.ceil(len(claim_tokens) * GROUNDING_RATIO))
+    if claim_tokens and len(claim_tokens & source_tokens) < required:
         return False
     return True
 
@@ -116,7 +173,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "private_transport": "STDIN_STDOUT_MEMORY_ONLY",
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V2",
+            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
         }
 
     @staticmethod
@@ -249,12 +306,26 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 "line_end": line_end,
             }
             entity_excerpt = "\n".join(source_lines[line_start - 1:line_end])
-            identity_tokens = _tokens(f"{entity['organization']} {entity['role']}")
-            if not identity_tokens or not (identity_tokens & _tokens(entity_excerpt)):
+            if not (entity["organization"] or entity["role"]):
+                raise JobOpsError("AI_RESPONSE_INVALID", "An AI entity has no grounded organization or role identity.")
+            if not _field_is_grounded(entity["organization"], entity_excerpt) or not _field_is_grounded(entity["role"], entity_excerpt):
                 raise JobOpsError("AI_RESPONSE_INVALID", "An AI entity identity is not grounded in its cited lines.")
             entity_numbers = _numbers(f"{entity['start_date']} {entity['end_date']}")
             if entity_numbers - _numbers(entity_excerpt):
                 raise JobOpsError("AI_RESPONSE_INVALID", "An AI entity date is not grounded in its cited lines.")
+            context_excerpt = entity_excerpt
+            internship_explicit = bool(re.search(r"\b(?:intern|internship|trainee)\b|实习", context_excerpt, re.IGNORECASE))
+            education_explicit = bool(re.search(
+                r"\b(?:bachelor|master|ph\.?d|degree|university|college|student|graduat(?:e|ed|ion))\b|学士|硕士|博士|大学|学院|学历|学位|毕业",
+                context_excerpt,
+                re.IGNORECASE,
+            ))
+            if internship_explicit and entity_type != "internship":
+                raise JobOpsError("AI_RESPONSE_INVALID", "An explicitly identified internship was assigned to another experience category.")
+            if entity_type == "internship" and not internship_explicit:
+                raise JobOpsError("AI_RESPONSE_INVALID", "An internship entity is not explicitly supported by its cited context.")
+            if entity_type == "education" and not education_explicit:
+                raise JobOpsError("AI_RESPONSE_INVALID", "An education entity is not explicitly supported by its cited context.")
             signature = _entity_signature(entity)
             if not signature.replace("|", "") or signature in signatures:
                 raise JobOpsError("AI_RESPONSE_INVALID", "The AI returned a duplicate or unidentified real-world entity.")
@@ -267,10 +338,11 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             raise JobOpsError("AI_RESPONSE_INVALID", "The local AI response contains an invalid candidate list.")
         output: list[dict[str, Any]] = []
         seen: set[str] = set()
+        seen_candidates: list[tuple[str, str, str]] = []
         for candidate_index, raw in enumerate(raw_candidates, start=1):
             if not isinstance(raw, dict):
                 raise JobOpsError("AI_RESPONSE_INVALID", "A local AI candidate is not an object.")
-            statement = _compact(raw.get("statement"), limit=2_001)
+            statement = _clean_candidate_statement(raw.get("statement"))
             category = _compact(raw.get("category"), limit=81).casefold()
             claim_kind = _compact(raw.get("claim_kind"), limit=50).casefold()
             entity_key = _compact(raw.get("entity_key"), limit=120)
@@ -290,6 +362,8 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 raise JobOpsError("AI_RESPONSE_INVALID", "An experience Claim is not attached to exactly one matching entity.")
             if category not in ENTITY_CATEGORIES and entity_key:
                 raise JobOpsError("AI_RESPONSE_INVALID", "A non-entity Claim must not be attached to an experience entity.")
+            if category in ENTITY_CATEGORIES and not _has_entity_predicate(statement):
+                raise JobOpsError("AI_RESPONSE_INVALID", "An experience Claim is a heading or fragment without a complete action or relationship.")
             source_excerpt = "\n".join(source_lines[line_start - 1:line_end])
             if not _statement_is_complete(statement, source_excerpt):
                 unsupported_numbers = len(_numbers(statement) - _numbers(source_excerpt))
@@ -308,7 +382,14 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             signature = re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", statement.casefold())
             if signature in seen:
                 continue
+            entity_identity = str(entity.get("entity_fingerprint")) if entity else ""
+            if any(
+                prior_category == category and prior_entity == entity_identity and _near_duplicate(statement, prior_statement)
+                for prior_category, prior_entity, prior_statement in seen_candidates
+            ):
+                continue
             seen.add(signature)
+            seen_candidates.append((category, entity_identity, statement))
             output.append({
                 "candidate_id": stable_id("EXT", source_id, str(line_start), statement),
                 "statement": statement,
@@ -377,7 +458,10 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "ai_repair_attempted": repair_attempted,
             "ai_repair_succeeded": repair_attempted,
             "automatic_claim_selection": False,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V2",
+            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
+            "quality_gate_version": 3,
+            "grounding_ratio_minimum": GROUNDING_RATIO,
+            "near_duplicate_ratio": NEAR_DUPLICATE_RATIO,
         }
 
 

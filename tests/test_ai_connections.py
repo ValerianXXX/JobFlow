@@ -229,7 +229,7 @@ class AIConnectionTests(unittest.TestCase):
             self.assertEqual(commands[0][-3:], ["models", "status", "--json"])
 
     def test_wsl_hermes_uses_active_codex_provider_with_zero_tools_and_private_stdin(self) -> None:
-        private_value = "Synthetic private career statement for Hermes."
+        private_value = "Built a synthetic private career project for Hermes."
         adapter_calls: list[tuple[list[str], str]] = []
         adapter_scripts: list[str] = []
 
@@ -429,7 +429,7 @@ class AIConnectionTests(unittest.TestCase):
 
     def test_wsl_local_model_uses_stdin_bridge_for_private_content(self) -> None:
         curl_calls: list[tuple[list[str], str | None]] = []
-        private_value = "Synthetic private career statement."
+        private_value = "Built a synthetic private career project."
 
         def fake_runner(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[object]:
             if command[-2:] == ["--list", "--quiet"]:

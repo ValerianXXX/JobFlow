@@ -532,7 +532,7 @@ class AgentCLIEngine(AIAnalysisEngine):
             "tool_calls_required": 0,
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V2",
+            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
         }
 
     def _invoke(self, request: dict[str, Any]) -> Any:
@@ -596,7 +596,7 @@ class AgentCLIEngine(AIAnalysisEngine):
             "ai_repair_attempted": repair_attempted,
             "ai_repair_succeeded": repair_attempted,
             "automatic_claim_selection": False,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V2",
+            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
         }
 
 
@@ -710,7 +710,7 @@ class WSLHermesCLIEngine(AgentCLIEngine):
             "tool_calls_required": 0,
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V2",
+            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
         }
 
     def _invoke(self, request: dict[str, Any]) -> Any:
@@ -789,7 +789,7 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
             "data_route": self.data_route,
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V2",
+            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
         }
 
     def _complete(self, request: dict[str, Any]) -> Any:
@@ -858,7 +858,7 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
             "ai_repair_attempted": repair_attempted,
             "ai_repair_succeeded": repair_attempted,
             "automatic_claim_selection": False,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V2",
+            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
         }
 
 
