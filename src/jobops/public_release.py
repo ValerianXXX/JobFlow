@@ -33,6 +33,7 @@ MAX_HISTORY_TEXT_BYTES = 5_000_000
 REQUIRED_PUBLIC_FILES = {
     ".github/workflows/ci.yml",
     ".gitignore",
+    "CHANGELOG.md",
     "CONTRIBUTING.md",
     "LICENSE",
     "MANIFEST.in",

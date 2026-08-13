@@ -18,7 +18,7 @@ class ReleasePackagingTests(unittest.TestCase):
 
     def test_source_manifest_excludes_runtime_and_private_artifacts(self) -> None:
         manifest = (PROJECT / "MANIFEST.in").read_text(encoding="utf-8")
-        for required in ("LICENSE", "README.md", ".agents/skills/job-application-operator", "config", "schemas", "scripts"):
+        for required in ("LICENSE", "README.md", "CHANGELOG.md", ".agents/skills/job-application-operator", "config", "docs", "schemas", "scripts"):
             self.assertIn(required, manifest)
         for private_root in ("reports", "state", "workspace"):
             self.assertIn(f"prune {private_root}", manifest)

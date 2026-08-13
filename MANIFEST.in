@@ -1,5 +1,6 @@
 include LICENSE
 include README.md
+include CHANGELOG.md
 include SECURITY.md
 include CONTRIBUTING.md
 include AGENTS.md
@@ -7,6 +8,7 @@ include .jobops-root
 include *.cmd
 graft .agents/skills/job-application-operator
 graft config
+graft docs
 graft schemas
 graft scripts
 graft src/jobops/ui

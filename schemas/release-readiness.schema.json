@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/release-readiness.schema.json",
+  "title": "JobFlow Public Release Readiness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "version", "head_commit", "worktree_clean", "version_consistent", "local_verification_status", "public_repository_status", "source_candidate_status", "independent_qa_fresh", "author_identity_status", "release_tag_status", "blockers", "upload_performed", "network_actions", "real_external_actions", "next_safe_action"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["PUBLIC_RELEASE_READY", "PUBLIC_RELEASE_BLOCKED"]},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "head_commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "worktree_clean": {"type": "boolean"},
+    "version_consistent": {"type": "boolean"},
+    "local_verification_status": {"enum": ["PASS", "FAIL", "MISSING_OR_STALE"]},
+    "public_repository_status": {"enum": ["PASS", "FAIL"]},
+    "source_candidate_status": {"enum": ["PASS", "FAIL", "MISSING", "STALE"]},
+    "independent_qa_fresh": {"type": "boolean"},
+    "author_identity_status": {"enum": ["PASS", "REVIEW_REQUIRED"]},
+    "release_tag_status": {"enum": ["PRESENT", "MISSING", "MISMATCH"]},
+    "blockers": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z0-9_]+$"}, "uniqueItems": true},
+    "upload_performed": {"const": false},
+    "network_actions": {"const": 0},
+    "real_external_actions": {"const": 0},
+    "next_safe_action": {"type": "string", "minLength": 1}
+  }
+}

@@ -5,7 +5,7 @@ JobFlow（内部工程代号 JobOps）是本地优先、证据驱动的求职工
 > AI 负责理解与归并，证据门负责约束真实性，用户负责批准个人事实；真实外部动作保持关闭。
 > AI understands and consolidates, evidence gates constrain truthfulness, and the user approves personal facts; real external actions remain closed.
 
-[架构 / Architecture](docs/architecture.md) · [路线图 / Roadmap](docs/roadmap.md) · [安全 / Security](SECURITY.md) · [参与贡献 / Contributing](CONTRIBUTING.md) · [MIT License](LICENSE)
+[架构 / Architecture](docs/architecture.md) · [路线图 / Roadmap](docs/roadmap.md) · [发布清单 / Release checklist](docs/release-checklist.md) · [变更记录 / Changelog](CHANGELOG.md) · [安全 / Security](SECURITY.md) · [参与贡献 / Contributing](CONTRIBUTING.md) · [MIT License](LICENSE)
 
 | 能力 / Capability | 当前证据 / Current evidence | 真实动作 / Real action |
 |---|---|---|

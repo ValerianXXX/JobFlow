@@ -184,6 +184,12 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         expected = "MANUAL_TICK_READY" if value.get("slots_available", 0) else "PAUSED_AT_PENDING_LIMIT"
         if value.get("status") != expected:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Continuous plan status must match available queue capacity.")
+    if name == "release-readiness":
+        ready = not value.get("blockers")
+        if (value.get("status") == "PUBLIC_RELEASE_READY") != ready:
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Release readiness status must match blocker presence.")
+        if ready and not all((value.get("worktree_clean"), value.get("version_consistent"), value.get("independent_qa_fresh"))):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "A ready release must satisfy every final boolean gate.")
 
 
 def validate_named(name: str, value: dict[str, Any], schema_dir: Path) -> dict[str, Any]:
