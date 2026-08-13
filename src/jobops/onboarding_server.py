@@ -102,8 +102,22 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         return origin in {None, f"http://127.0.0.1:{self.server.server_port}", f"http://localhost:{self.server.server_port}"}
 
     def _json_body(self) -> dict[str, Any]:
+        if self.headers.get("Transfer-Encoding") is not None:
+            raise JobOpsError(
+                "REQUEST_TRANSFER_ENCODING_FORBIDDEN",
+                "Local JSON requests require one explicit Content-Length and do not accept transfer encodings.",
+            )
+        content_lengths = self.headers.get_all("Content-Length") or []
+        if len(content_lengths) != 1:
+            raise JobOpsError(
+                "REQUEST_LENGTH_INVALID",
+                "The local JSON request must contain exactly one Content-Length header.",
+            )
+        content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().casefold()
+        if content_type != "application/json":
+            raise JobOpsError("REQUEST_CONTENT_TYPE_INVALID", "Local JSON requests must use application/json.")
         try:
-            length = int(self.headers.get("Content-Length", "0"))
+            length = int(content_lengths[0])
         except ValueError as exc:
             raise JobOpsError("REQUEST_LENGTH_INVALID", "The local request length is invalid.") from exc
         if length < 1 or length > JSON_LIMIT:
@@ -117,8 +131,21 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         return value
 
     def _optional_json_body(self) -> dict[str, Any]:
-        if self.headers.get("Content-Length") in {None, "", "0"}:
+        if self.headers.get("Transfer-Encoding") is not None:
+            raise JobOpsError(
+                "REQUEST_TRANSFER_ENCODING_FORBIDDEN",
+                "Local JSON requests do not accept transfer encodings.",
+            )
+        content_lengths = self.headers.get_all("Content-Length") or []
+        if not content_lengths:
             return {}
+        if len(content_lengths) != 1:
+            raise JobOpsError("REQUEST_LENGTH_INVALID", "The local request must contain at most one Content-Length header.")
+        try:
+            if int(content_lengths[0]) == 0:
+                return {}
+        except ValueError as exc:
+            raise JobOpsError("REQUEST_LENGTH_INVALID", "The local request length is invalid.") from exc
         return self._json_body()
 
     def _binary_body_length(self, *, maximum: int, size_code: str, size_message: str) -> int:

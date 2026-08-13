@@ -977,6 +977,52 @@ class OnboardingCenterTests(unittest.TestCase):
                 self.assertEqual(chunked_payload["code"], "REQUEST_TRANSFER_ENCODING_FORBIDDEN")
                 self.assertTrue(chunked_response.will_close)
 
+                json_path = "/session/synthetic-session-token/api/save"
+                wrong_json_type = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                wrong_json_type.request(
+                    "POST", json_path, body=b"{}",
+                    headers={
+                        "X-JobOps-Session": "synthetic-session-token", "Origin": host,
+                        "Content-Type": "text/plain",
+                    },
+                )
+                wrong_json_response = wrong_json_type.getresponse()
+                wrong_json_payload = json.loads(wrong_json_response.read())
+                wrong_json_type.close()
+                self.assertEqual(wrong_json_response.status, 400)
+                self.assertEqual(wrong_json_payload["code"], "REQUEST_CONTENT_TYPE_INVALID")
+                self.assertTrue(wrong_json_response.will_close)
+
+                duplicate_length = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                duplicate_length.putrequest("POST", json_path)
+                duplicate_length.putheader("X-JobOps-Session", "synthetic-session-token")
+                duplicate_length.putheader("Origin", host)
+                duplicate_length.putheader("Content-Type", "application/json")
+                duplicate_length.putheader("Content-Length", "2")
+                duplicate_length.putheader("Content-Length", "2")
+                duplicate_length.endheaders(b"{}")
+                duplicate_response = duplicate_length.getresponse()
+                duplicate_payload = json.loads(duplicate_response.read())
+                duplicate_length.close()
+                self.assertEqual(duplicate_response.status, 400)
+                self.assertEqual(duplicate_payload["code"], "REQUEST_LENGTH_INVALID")
+                self.assertTrue(duplicate_response.will_close)
+
+                chunked_json = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                chunked_json.putrequest("POST", json_path)
+                chunked_json.putheader("X-JobOps-Session", "synthetic-session-token")
+                chunked_json.putheader("Origin", host)
+                chunked_json.putheader("Content-Type", "application/json")
+                chunked_json.putheader("Transfer-Encoding", "chunked")
+                chunked_json.endheaders()
+                chunked_json.send(b"2\r\n{}\r\n0\r\n\r\n")
+                chunked_json_response = chunked_json.getresponse()
+                chunked_json_payload = json.loads(chunked_json_response.read())
+                chunked_json.close()
+                self.assertEqual(chunked_json_response.status, 400)
+                self.assertEqual(chunked_json_payload["code"], "REQUEST_TRANSFER_ENCODING_FORBIDDEN")
+                self.assertTrue(chunked_json_response.will_close)
+
                 with service.database.connect() as connection:
                     self.assertEqual(connection.execute("SELECT COUNT(*) FROM jobs").fetchone()[0], 0)
                     self.assertEqual(connection.execute("SELECT COUNT(*) FROM intake_queue").fetchone()[0], 0)
