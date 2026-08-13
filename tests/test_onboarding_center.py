@@ -356,6 +356,29 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(len(after["pending_sources"]), 0)
             self.assertTrue(new_claims)
             self.assertTrue(any("reviewed workflow" in item["statement"] for item in new_claims))
+            source = after["sources"][0]
+            self.assertTrue(source["analysis_complete"])
+            self.assertEqual(source["ai_input_characters"], source["ai_covered_characters"])
+            self.assertFalse(source["ai_input_truncated"])
+            self.assertGreaterEqual(source["ai_chunks"], 1)
+
+    def test_incomplete_ai_coverage_cannot_enter_claim_review(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            preview = service.preview_source(
+                "project_case", ".txt",
+                b"Built a synthetic project and documented a complete review workflow.",
+            )
+            reference, state = service.ensure_state()
+            pending = state["pending_sources"][0]
+            pending["extraction_summary"]["ai_input_truncated"] = True
+            pending["extraction_summary"]["ai_covered_characters"] -= 1
+            service._save_state(reference, state)
+
+            with self.assertRaises(JobOpsError) as blocked:
+                service.commit_source(preview["source_id"], None)
+            self.assertEqual(blocked.exception.code, "AI_ANALYSIS_REQUIRED")
+            self.assertEqual(service.bootstrap()["sources"], [])
 
     def test_unconfigured_ai_blocks_import_and_emits_no_candidates(self) -> None:
         with project_temp() as root:

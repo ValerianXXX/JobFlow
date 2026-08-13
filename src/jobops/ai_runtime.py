@@ -13,8 +13,12 @@ from .util import stable_id
 
 
 AI_PROTOCOL_VERSION = 2
+AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V3"
 MAX_AI_INPUT_CHARS = 500_000
 MAX_AI_OUTPUT_BYTES = 5 * 1024 * 1024
+MAX_AI_CHUNK_CHARS = 450_000
+MAX_AI_LINE_CHARS = 50_000
+MAX_AI_CHUNKS = 64
 ALLOWED_CONFIDENCE = {"HIGH", "MEDIUM", "LOW"}
 ALLOWED_CATEGORIES = {
     "work", "internship", "education", "project", "skill", "certification", "language", "summary",
@@ -173,14 +177,23 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "private_transport": "STDIN_STDOUT_MEMORY_ONLY",
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
+            "quality_contract": AI_QUALITY_CONTRACT,
         }
 
     @staticmethod
-    def _request(text: str, *, source_id: str, source_type: str) -> tuple[dict[str, Any], bool]:
+    def _request(
+        text: str,
+        *,
+        source_id: str,
+        source_type: str,
+        line_number_start: int = 1,
+    ) -> tuple[dict[str, Any], bool]:
         truncated = len(text) > MAX_AI_INPUT_CHARS
         bounded = text[:MAX_AI_INPUT_CHARS]
-        numbered = [f"{index}\t{line}" for index, line in enumerate(bounded.splitlines(), start=1)]
+        numbered = [
+            f"{index}\t{line}"
+            for index, line in enumerate(bounded.splitlines() or [bounded], start=line_number_start)
+        ]
         rules = [
             "Reconstruct wrapped lines and page breaks before analysis. Never return a line fragment, heading, navigation, table row, URL, or contact value.",
             "Identify each real-world entity once. Merge repeated mentions of the same organization, role, and date range into one entity_key.",
@@ -233,6 +246,95 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "line_numbered_document": numbered,
         }, truncated
 
+    @classmethod
+    def _chunk_requests(
+        cls,
+        text: str,
+        *,
+        source_id: str,
+        source_type: str,
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+        raw_lines = text.splitlines() or [text]
+        source_lines: list[str] = []
+        segmented_lines = 0
+        for raw_line in raw_lines:
+            if len(raw_line) <= MAX_AI_LINE_CHARS:
+                source_lines.append(raw_line)
+                continue
+            segmented_lines += 1
+            source_lines.extend(
+                raw_line[index:index + MAX_AI_LINE_CHARS]
+                for index in range(0, len(raw_line), MAX_AI_LINE_CHARS)
+            )
+
+        chunks: list[tuple[int, list[str]]] = []
+        current: list[str] = []
+        current_chars = 0
+        current_start = 1
+        for line_number, line in enumerate(source_lines, start=1):
+            added = len(line) + (1 if current else 0)
+            if current and current_chars + added > MAX_AI_CHUNK_CHARS:
+                chunks.append((current_start, current))
+                current = []
+                current_chars = 0
+                current_start = line_number
+                added = len(line)
+            current.append(line)
+            current_chars += added
+        if current:
+            chunks.append((current_start, current))
+        if len(chunks) > MAX_AI_CHUNKS:
+            raise JobOpsError(
+                "AI_INPUT_TOO_LARGE_FOR_COMPLETE_ANALYSIS",
+                "The source exceeds the bounded complete-analysis chunk limit; no partial analysis was accepted.",
+                chunk_count=len(chunks), maximum_chunks=MAX_AI_CHUNKS,
+            )
+
+        requests: list[dict[str, Any]] = []
+        for index, (line_start, lines) in enumerate(chunks, start=1):
+            request, truncated = cls._request(
+                "\n".join(lines), source_id=source_id, source_type=source_type,
+                line_number_start=line_start,
+            )
+            if truncated:
+                raise JobOpsError("AI_CHUNK_BOUNDARY_INVALID", "An internal AI chunk exceeded its complete-analysis boundary.")
+            request["chunk"] = {
+                "index": index, "total": len(chunks), "line_start": line_start,
+                "line_end": line_start + len(lines) - 1,
+            }
+            requests.append(request)
+        return requests, {
+            "ai_chunks": len(requests), "ai_chunking_applied": len(requests) > 1,
+            "ai_input_characters": len(text), "ai_covered_characters": len(text),
+            "ai_input_truncated": False, "segmented_oversize_lines": segmented_lines,
+        }
+
+    @staticmethod
+    def _merge_candidate_batches(batches: list[list[dict[str, Any]]]) -> list[dict[str, Any]]:
+        merged: list[dict[str, Any]] = []
+        exact: set[tuple[str, str, str]] = set()
+        for batch in batches:
+            for candidate in batch:
+                statement = str(candidate.get("statement", ""))
+                category = str(candidate.get("category", ""))
+                entity_fingerprint = str((candidate.get("entity") or {}).get("entity_fingerprint") or "")
+                signature = (
+                    category, entity_fingerprint,
+                    re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", statement.casefold()),
+                )
+                if signature in exact:
+                    continue
+                if any(
+                    str(existing.get("category", "")) == category
+                    and str((existing.get("entity") or {}).get("entity_fingerprint") or "") == entity_fingerprint
+                    and _near_duplicate(statement, str(existing.get("statement", "")))
+                    for existing in merged
+                ):
+                    continue
+                exact.add(signature)
+                merged.append(candidate)
+        return merged
+
     @staticmethod
     def _repair_request(
         original_request: dict[str, Any],
@@ -261,6 +363,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 "Do not approve any Claim for external use.",
             ],
             "output_contract": original_request.get("output_contract", {}),
+            "chunk": original_request.get("chunk", {}),
             "line_numbered_document": original_request.get("line_numbered_document", []),
             "rejected_output": rejected_output,
         }
@@ -275,7 +378,13 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         )
 
     @staticmethod
-    def _validated_candidates(value: Any, *, source_id: str, source_lines: list[str]) -> list[dict[str, Any]]:
+    def _validated_candidates(
+        value: Any,
+        *,
+        source_id: str,
+        source_lines: list[str],
+        line_number_start: int = 1,
+    ) -> list[dict[str, Any]]:
         if not isinstance(value, dict) or int(value.get("schema_version", 0)) != AI_PROTOCOL_VERSION:
             raise JobOpsError("AI_RESPONSE_INVALID", "The local AI response did not match the JobOps protocol.")
         raw_entities = value.get("entities")
@@ -284,6 +393,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         entities: dict[str, dict[str, Any]] = {}
         signatures: set[str] = set()
         line_count = max(1, len(source_lines))
+        line_number_end = line_number_start + line_count - 1
         for raw in raw_entities:
             if not isinstance(raw, dict):
                 raise JobOpsError("AI_RESPONSE_INVALID", "A local AI entity is not an object.")
@@ -293,7 +403,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 line_start, line_end = int(raw.get("line_start")), int(raw.get("line_end"))
             except (TypeError, ValueError) as exc:
                 raise JobOpsError("AI_RESPONSE_INVALID", "A local AI entity has invalid provenance lines.") from exc
-            if not entity_key or entity_key in entities or entity_type not in ENTITY_CATEGORIES or not 1 <= line_start <= line_end <= line_count:
+            if not entity_key or entity_key in entities or entity_type not in ENTITY_CATEGORIES or not line_number_start <= line_start <= line_end <= line_number_end:
                 raise JobOpsError("AI_RESPONSE_INVALID", "A local AI entity has an invalid identity, type, or provenance.")
             entity = {
                 "entity_key": entity_key,
@@ -305,7 +415,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 "line_start": line_start,
                 "line_end": line_end,
             }
-            entity_excerpt = "\n".join(source_lines[line_start - 1:line_end])
+            entity_excerpt = "\n".join(source_lines[line_start - line_number_start:line_end - line_number_start + 1])
             if not (entity["organization"] or entity["role"]):
                 raise JobOpsError("AI_RESPONSE_INVALID", "An AI entity has no grounded organization or role identity.")
             if not _field_is_grounded(entity["organization"], entity_excerpt) or not _field_is_grounded(entity["role"], entity_excerpt):
@@ -355,7 +465,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 raise JobOpsError("AI_RESPONSE_INVALID", "A local AI candidate has invalid provenance lines.") from exc
             if category not in ALLOWED_CATEGORIES or claim_kind not in ALLOWED_CLAIM_KINDS:
                 raise JobOpsError("AI_RESPONSE_INVALID", "A local AI candidate contains an unsupported category or Claim kind.")
-            if confidence not in ALLOWED_CONFIDENCE or not 1 <= line_start <= line_end <= line_count:
+            if confidence not in ALLOWED_CONFIDENCE or not line_number_start <= line_start <= line_end <= line_number_end:
                 raise JobOpsError("AI_RESPONSE_INVALID", "A local AI candidate contains invalid confidence or provenance.")
             entity = entities.get(entity_key) if entity_key else None
             if category in ENTITY_CATEGORIES and (entity is None or entity["entity_type"] != category):
@@ -364,7 +474,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 raise JobOpsError("AI_RESPONSE_INVALID", "A non-entity Claim must not be attached to an experience entity.")
             if category in ENTITY_CATEGORIES and not _has_entity_predicate(statement):
                 raise JobOpsError("AI_RESPONSE_INVALID", "An experience Claim is a heading or fragment without a complete action or relationship.")
-            source_excerpt = "\n".join(source_lines[line_start - 1:line_end])
+            source_excerpt = "\n".join(source_lines[line_start - line_number_start:line_end - line_number_start + 1])
             if not _statement_is_complete(statement, source_excerpt):
                 unsupported_numbers = len(_numbers(statement) - _numbers(source_excerpt))
                 claim_tokens = _tokens(statement)
@@ -406,7 +516,6 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         return output
 
     def analyze_document(self, text: str, *, source_id: str, source_type: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-        request, truncated = self._request(text, source_id=source_id, source_type=source_type)
         def invoke(payload: dict[str, Any]) -> Any:
             creation_flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
             try:
@@ -432,33 +541,54 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             except json.JSONDecodeError as exc:
                 raise JobOpsError("AI_RESPONSE_INVALID", "The configured local AI engine did not return JSON.") from exc
 
-        source_lines = [item.split("\t", 1)[1] if "\t" in item else "" for item in request["line_numbered_document"]]
-        repair_attempted = False
-        value: Any = {"status": "REJECTED_BEFORE_STRUCTURED_PROTOCOL"}
-        try:
-            value = invoke(request)
-            candidates = self._validated_candidates(value, source_id=source_id, source_lines=source_lines)
-        except JobOpsError as first_error:
-            if first_error.code != "AI_RESPONSE_INVALID":
-                raise
-            repair_attempted = True
+        requests, coverage = self._chunk_requests(text, source_id=source_id, source_type=source_type)
+        batches: list[list[dict[str, Any]]] = []
+        values: list[dict[str, Any]] = []
+        repairs = 0
+        for request in requests:
+            numbered = request["line_numbered_document"]
+            source_lines = [item.split("\t", 1)[1] if "\t" in item else "" for item in numbered]
+            line_number_start = int(str(numbered[0]).split("\t", 1)[0]) if numbered else 1
+            value: Any = {"status": "REJECTED_BEFORE_STRUCTURED_PROTOCOL"}
             try:
-                repaired = invoke(self._repair_request(request, value, first_error))
-                candidates = self._validated_candidates(repaired, source_id=source_id, source_lines=source_lines)
-            except JobOpsError as repaired_error:
-                if repaired_error.code == "AI_RESPONSE_INVALID":
-                    raise self._repair_failed(repaired_error) from repaired_error
-                raise
-            value = repaired
+                value = invoke(request)
+                candidates = self._validated_candidates(
+                    value, source_id=source_id, source_lines=source_lines,
+                    line_number_start=line_number_start,
+                )
+            except JobOpsError as first_error:
+                if first_error.code != "AI_RESPONSE_INVALID":
+                    raise
+                repairs += 1
+                try:
+                    repaired = invoke(self._repair_request(request, value, first_error))
+                    candidates = self._validated_candidates(
+                        repaired, source_id=source_id, source_lines=source_lines,
+                        line_number_start=line_number_start,
+                    )
+                except JobOpsError as repaired_error:
+                    if repaired_error.code == "AI_RESPONSE_INVALID":
+                        raise self._repair_failed(repaired_error) from repaired_error
+                    raise
+                value = repaired
+            batches.append(candidates)
+            values.append(value)
+        candidates = self._merge_candidate_batches(batches)
+        entity_signatures = {
+            _entity_signature(entity)
+            for value in values for entity in value.get("entities", [])
+            if isinstance(entity, dict)
+        }
         return candidates, {
             "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
             "ai_candidates": len(candidates),
-            "ai_entities": len(value.get("entities", [])),
-            "ai_input_truncated": truncated,
-            "ai_repair_attempted": repair_attempted,
-            "ai_repair_succeeded": repair_attempted,
+            "ai_entities": len(entity_signatures),
+            **coverage,
+            "ai_repair_attempted": repairs > 0,
+            "ai_repair_succeeded": repairs > 0,
+            "ai_repair_count": repairs,
             "automatic_claim_selection": False,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
+            "quality_contract": AI_QUALITY_CONTRACT,
             "quality_gate_version": 3,
             "grounding_ratio_minimum": GROUNDING_RATIO,
             "near_duplicate_ratio": NEAR_DUPLICATE_RATIO,

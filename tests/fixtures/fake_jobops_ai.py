@@ -7,6 +7,8 @@ import sys
 request = json.load(sys.stdin)
 numbered = request.get("line_numbered_document", [])
 line_count = len(numbered)
+line_start = int(numbered[0].split("\t", 1)[0]) if numbered else 1
+line_end = int(numbered[-1].split("\t", 1)[0]) if numbered else line_start
 source_type = request.get("source", {}).get("source_type")
 source_text = " ".join(item.split("\t", 1)[1] if "\t" in item else "" for item in numbered).strip()
 statement = " ".join(source_text.split())
@@ -25,8 +27,8 @@ json.dump({
         "role": entity_role,
         "start_date": "",
         "end_date": "",
-        "line_start": 1,
-        "line_end": max(1, line_count),
+        "line_start": line_start,
+        "line_end": line_end,
     }] if entity_type else []),
     "candidates": [{
         "statement": statement,
@@ -34,8 +36,8 @@ json.dump({
         "claim_kind": "achievement" if entity_type else "summary",
         "entity_key": "synthetic-project-1" if entity_type else "",
         "confidence": "HIGH",
-        "line_start": 1,
-        "line_end": max(1, line_count),
+        "line_start": line_start,
+        "line_end": line_end,
         "reason": "Complete source-grounded statement reconstructed as one entity.",
     }],
 }, sys.stdout)

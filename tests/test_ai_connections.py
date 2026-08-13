@@ -10,6 +10,7 @@ import _support  # noqa: F401  # Adds the project src directory to sys.path.
 
 from jobops.ai_connections import (
     AIConnectionManager,
+    _analyze_all_chunks,
     _analyze_with_single_repair,
     _assert_loopback_url,
     _decode_wsl_distribution_output,
@@ -19,6 +20,89 @@ from jobops.errors import JobOpsError
 
 
 class AIConnectionTests(unittest.TestCase):
+    def test_complete_analysis_chunks_large_text_and_merges_cross_chunk_duplicates(self) -> None:
+        line = "Built a synthetic project workflow."
+        source_text = "\n".join(line for _ in range(14_000))
+        requests: list[dict[str, object]] = []
+
+        def valid_response(request: dict[str, object]) -> dict[str, object]:
+            requests.append(request)
+            numbered = request["line_numbered_document"]
+            assert isinstance(numbered, list) and numbered
+            line_number = int(str(numbered[0]).split("\t", 1)[0])
+            return {
+                "schema_version": 2,
+                "entities": [{
+                    "entity_key": "synthetic-project", "entity_type": "project",
+                    "organization": "Synthetic", "role": "Project",
+                    "start_date": "", "end_date": "",
+                    "line_start": line_number, "line_end": line_number,
+                }],
+                "candidates": [{
+                    "statement": line, "category": "project", "claim_kind": "achievement",
+                    "entity_key": "synthetic-project", "confidence": "HIGH",
+                    "line_start": line_number, "line_end": line_number,
+                    "reason": "Explicit source statement.",
+                }],
+            }
+
+        candidates, summary = _analyze_all_chunks(
+            valid_response,
+            source_text,
+            source_id="SRC-LARGE-SYNTHETIC",
+            source_type="project_case",
+        )
+
+        self.assertGreaterEqual(len(requests), 2)
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(summary["ai_chunks"], len(requests))
+        self.assertEqual(summary["ai_input_characters"], len(source_text))
+        self.assertEqual(summary["ai_covered_characters"], len(source_text))
+        self.assertFalse(summary["ai_input_truncated"])
+        starts = [int(str(item["line_numbered_document"][0]).split("\t", 1)[0]) for item in requests]
+        self.assertEqual(starts, sorted(starts))
+        self.assertEqual(len(starts), len(set(starts)))
+
+    def test_complete_analysis_discards_every_chunk_when_one_chunk_fails_validation(self) -> None:
+        line = "Built a synthetic project workflow."
+        source_text = "\n".join(line for _ in range(14_000))
+        calls = 0
+
+        def second_chunk_never_repairs(request: dict[str, object]) -> dict[str, object]:
+            nonlocal calls
+            calls += 1
+            chunk = request.get("chunk", {})
+            chunk_index = int(chunk.get("index", 1)) if isinstance(chunk, dict) else 1
+            numbered = request["line_numbered_document"]
+            assert isinstance(numbered, list) and numbered
+            line_number = int(str(numbered[0]).split("\t", 1)[0])
+            statement = line if chunk_index == 1 else "Unsupported result of 999 percent"
+            return {
+                "schema_version": 2,
+                "entities": [{
+                    "entity_key": "synthetic-project", "entity_type": "project",
+                    "organization": "Synthetic", "role": "Project",
+                    "start_date": "", "end_date": "",
+                    "line_start": line_number, "line_end": line_number,
+                }],
+                "candidates": [{
+                    "statement": statement, "category": "project", "claim_kind": "achievement",
+                    "entity_key": "synthetic-project", "confidence": "HIGH",
+                    "line_start": line_number, "line_end": line_number,
+                    "reason": "Synthetic validation case.",
+                }],
+            }
+
+        with self.assertRaises(JobOpsError) as caught:
+            _analyze_all_chunks(
+                second_chunk_never_repairs,
+                source_text,
+                source_id="SRC-LARGE-FAIL",
+                source_type="project_case",
+            )
+        self.assertEqual(caught.exception.code, "AI_RESPONSE_REPAIR_FAILED")
+        self.assertGreaterEqual(calls, 3)
+
     def test_ai_repair_fails_closed_when_replacement_remains_ungrounded(self) -> None:
         private_value = "Synthetic grounded project statement."
         request, _ = LocalSubprocessAIEngine._request(

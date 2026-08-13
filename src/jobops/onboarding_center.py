@@ -18,6 +18,7 @@ from .adapters import audit_real_external_actions
 from .approvals import ApprovalContext, issue_approval
 from .ai_runtime import (
     ALLOWED_CATEGORIES,
+    AI_QUALITY_CONTRACT,
     ENTITY_CATEGORIES,
     MAX_AI_INPUT_CHARS,
     AIAnalysisEngine,
@@ -65,6 +66,40 @@ EXPLICIT_HARD_FIELDS = {
 AMBIGUOUS_HARD_VALUES = {"UNKNOWN", "UNSURE", ""}
 ALWAYS_CONFIRM_FIELDS = {"background_check", "non_compete", "truthfulness_attestation", "electronic_signature"}
 VOLUNTARY_FIELDS = {"race_ethnicity", "gender", "disability", "veteran_status", "religion"}
+
+
+def _ai_analysis_is_complete(summary: Any) -> bool:
+    if not isinstance(summary, dict):
+        return False
+    try:
+        chunks = int(summary.get("ai_chunks", 0))
+        input_characters = int(summary.get("ai_input_characters", -1))
+        covered_characters = int(summary.get("ai_covered_characters", -2))
+    except (TypeError, ValueError):
+        return False
+    return (
+        summary.get("analysis_mode") == STRICT_AI_ANALYSIS_MODE
+        and summary.get("quality_contract") == AI_QUALITY_CONTRACT
+        and summary.get("ai_input_truncated") is False
+        and chunks >= 1
+        and input_characters > 0
+        and covered_characters == input_characters
+    )
+
+
+def _public_ai_analysis(summary: Any) -> dict[str, Any]:
+    value = summary if isinstance(summary, dict) else {}
+    fields = {
+        key: value[key]
+        for key in (
+            "ai_chunks", "ai_chunking_applied", "ai_input_characters",
+            "ai_covered_characters", "ai_input_truncated", "ai_repair_count",
+            "quality_contract", "quality_gate_version",
+        )
+        if key in value
+    }
+    fields["analysis_complete"] = _ai_analysis_is_complete(value)
+    return fields
 
 
 def _synchronized(method):
@@ -493,7 +528,22 @@ def _json_text(data: bytes) -> str:
         value = json.loads(data.decode("utf-8-sig"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise JobOpsError("ONBOARDING_JSON_INVALID", "The uploaded JSON is not valid UTF-8 JSON.") from exc
-    return "\n".join(_clean_text(item, limit=30_000) for item in _string_values(value))[:MAX_DERIVED_TEXT_CHARS]
+    parts: list[str] = []
+    used = 0
+    for item in _string_values(value):
+        cleaned = _clean_text(item, limit=30_000)
+        if not cleaned:
+            continue
+        added = len(cleaned) + (1 if parts else 0)
+        if used + added > MAX_DERIVED_TEXT_CHARS:
+            raise JobOpsError(
+                "ONBOARDING_DERIVED_TEXT_TOO_LARGE",
+                "The readable source exceeds the bounded complete-analysis limit; no partial source was imported.",
+                maximum_characters=MAX_DERIVED_TEXT_CHARS,
+            )
+        parts.append(cleaned)
+        used += added
+    return "\n".join(parts)
 
 
 class OnboardingCenterService:
@@ -944,7 +994,20 @@ class OnboardingCenterService:
             "revision_number": int(state.get("revision_number", 1)),
             "can_start_revision": state.get("status") == COMPLETE,
             "catalog": public_catalog(), "answers": deepcopy(state["answers"]), "completion": completion,
-            "sources": [{key: item[key] for key in ("source_id", "category", "extension", "safe_display_name", "source_status", "suggestion_count", "fact_count", "raw_retained", "analysis_mode", "imported_at") if key in item} for item in state.get("sources", [])],
+            "sources": [
+                {
+                    **{
+                        key: item[key]
+                        for key in (
+                            "source_id", "category", "extension", "safe_display_name", "source_status",
+                            "suggestion_count", "fact_count", "raw_retained", "analysis_mode", "imported_at",
+                        )
+                        if key in item
+                    },
+                    **_public_ai_analysis(item.get("extraction_summary")),
+                }
+                for item in state.get("sources", [])
+            ],
             "pending_sources": deepcopy(state.get("pending_sources", [])),
             "suggestions": deepcopy(active_suggestions), "claims": claims,
             "conflicts": conflicts, "profile_review": state.get("profile_review", "PENDING"),
@@ -1094,7 +1157,13 @@ class OnboardingCenterService:
                 "AI analysis is required before any extracted content may enter Claim review. No source content was imported.",
             )
         source_id = stable_id("SRC", source_type, source_hash)
-        text = _clean_text(text, limit=MAX_DERIVED_TEXT_CHARS)
+        text = _clean_text(text, limit=MAX_DERIVED_TEXT_CHARS + 1)
+        if len(text) > MAX_DERIVED_TEXT_CHARS:
+            raise JobOpsError(
+                "ONBOARDING_DERIVED_TEXT_TOO_LARGE",
+                "The readable source exceeds the bounded complete-analysis limit; no partial source was imported.",
+                maximum_characters=MAX_DERIVED_TEXT_CHARS,
+            )
         if not text:
             raise JobOpsError("ONBOARDING_SOURCE_TEXT_EMPTY", "The source did not contain readable text for AI analysis.")
         source_status = "AI_FILTERED_REQUIRES_CONFIRMATION"
@@ -1105,8 +1174,17 @@ class OnboardingCenterService:
         candidates, extraction_summary = self.ai_engine.analyze_document(
             text, source_id=source_id, source_type=source_type,
         )
-        if extraction_summary.get("analysis_mode") != STRICT_AI_ANALYSIS_MODE:
-            raise JobOpsError("AI_RESPONSE_INVALID", "The AI result did not pass the strict entity-analysis contract.")
+        if not _ai_analysis_is_complete(extraction_summary):
+            raise JobOpsError(
+                "AI_ANALYSIS_INCOMPLETE",
+                "The AI did not prove complete coverage of the bounded source, so no partial result was imported.",
+                analysis_mode=extraction_summary.get("analysis_mode"),
+                quality_contract=extraction_summary.get("quality_contract"),
+                ai_chunks=extraction_summary.get("ai_chunks"),
+                ai_input_characters=extraction_summary.get("ai_input_characters"),
+                ai_covered_characters=extraction_summary.get("ai_covered_characters"),
+                ai_input_truncated=extraction_summary.get("ai_input_truncated"),
+            )
         if source_type == "chatgpt_export":
             derived = {
                 "schema_version": 2, "source_id": source_id, "source_type": source_type,
@@ -1215,10 +1293,10 @@ class OnboardingCenterService:
 
     def _commit_pending_source(self, state: dict[str, Any], pending: dict[str, Any], selections: list[dict[str, Any]] | None) -> dict[str, int]:
         source_id = str(pending["source_id"])
-        if pending.get("extraction_summary", {}).get("analysis_mode") != STRICT_AI_ANALYSIS_MODE:
+        if not _ai_analysis_is_complete(pending.get("extraction_summary")):
             raise JobOpsError(
                 "AI_ANALYSIS_REQUIRED",
-                "Only content that passed strict AI entity analysis can enter Claim review.",
+                "Only content that passed strict AI entity analysis with complete source coverage can enter Claim review.",
             )
         by_id = {str(item["candidate_id"]): item for item in pending.get("candidates", [])}
         selected: list[dict[str, Any]] = []
@@ -1822,7 +1900,7 @@ class OnboardingCenterService:
             raise JobOpsError("SOURCE_PREVIEW_PENDING", "Every uploaded source preview must be confirmed or discarded before completion.")
         sources_requiring_ai = [
             str(item.get("source_id")) for item in state.get("sources", [])
-            if item.get("analysis_mode") != STRICT_AI_ANALYSIS_MODE
+            if not _ai_analysis_is_complete(item.get("extraction_summary"))
         ]
         if sources_requiring_ai:
             raise JobOpsError(

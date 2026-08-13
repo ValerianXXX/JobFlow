@@ -15,6 +15,7 @@ from typing import Any, Callable
 from urllib.parse import urlparse
 
 from .ai_runtime import (
+    AI_QUALITY_CONTRACT,
     MAX_AI_OUTPUT_BYTES,
     AIAnalysisEngine,
     LocalSubprocessAIEngine,
@@ -461,6 +462,10 @@ def _analyze_with_single_repair(
         item.split("\t", 1)[1] if "\t" in item else ""
         for item in request["line_numbered_document"]
     ]
+    line_number_start = (
+        int(str(request["line_numbered_document"][0]).split("\t", 1)[0])
+        if request["line_numbered_document"] else 1
+    )
     validation_error: JobOpsError | None = None
     try:
         first_response = invoke(request)
@@ -469,6 +474,7 @@ def _analyze_with_single_repair(
             value,
             source_id=source_id,
             source_lines=source_lines,
+            line_number_start=line_number_start,
         )
         return value, candidates, False
     except JobOpsError as first_error:
@@ -483,12 +489,43 @@ def _analyze_with_single_repair(
             repaired_value,
             source_id=source_id,
             source_lines=source_lines,
+            line_number_start=line_number_start,
         )
     except JobOpsError as repaired_error:
         if repaired_error.code == "AI_RESPONSE_INVALID":
             raise LocalSubprocessAIEngine._repair_failed(repaired_error) from repaired_error
         raise
     return repaired_value, repaired_candidates, True
+
+
+def _analyze_all_chunks(
+    invoke: Callable[[dict[str, Any]], Any],
+    text: str,
+    *,
+    source_id: str,
+    source_type: str,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    requests, coverage = LocalSubprocessAIEngine._chunk_requests(
+        text, source_id=source_id, source_type=source_type,
+    )
+    batches: list[list[dict[str, Any]]] = []
+    repairs = 0
+    for request in requests:
+        _, candidates, repaired = _analyze_with_single_repair(
+            invoke, request, source_id=source_id,
+        )
+        batches.append(candidates)
+        repairs += int(repaired)
+    merged = LocalSubprocessAIEngine._merge_candidate_batches(batches)
+    entity_fingerprints = {
+        str((candidate.get("entity") or {}).get("entity_fingerprint"))
+        for candidate in merged if candidate.get("entity")
+    }
+    return merged, {
+        "ai_candidates": len(merged), "ai_entities": len(entity_fingerprints),
+        **coverage, "ai_repair_attempted": repairs > 0,
+        "ai_repair_succeeded": repairs > 0, "ai_repair_count": repairs,
+    }
 
 
 class AgentCLIEngine(AIAnalysisEngine):
@@ -532,7 +569,7 @@ class AgentCLIEngine(AIAnalysisEngine):
             "tool_calls_required": 0,
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
+            "quality_contract": AI_QUALITY_CONTRACT,
         }
 
     def _invoke(self, request: dict[str, Any]) -> Any:
@@ -582,21 +619,14 @@ class AgentCLIEngine(AIAnalysisEngine):
             raise JobOpsError("AI_AGENT_HANDSHAKE_FAILED", "The detected Agent did not complete the JobOps connection test.")
 
     def analyze_document(self, text: str, *, source_id: str, source_type: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-        request, truncated = LocalSubprocessAIEngine._request(text, source_id=source_id, source_type=source_type)
-        value, candidates, repair_attempted = _analyze_with_single_repair(
-            self._invoke,
-            request,
-            source_id=source_id,
+        candidates, details = _analyze_all_chunks(
+            self._invoke, text, source_id=source_id, source_type=source_type,
         )
         return candidates, {
             "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
-            "ai_candidates": len(candidates),
-            "ai_entities": len(value.get("entities", [])),
-            "ai_input_truncated": truncated,
-            "ai_repair_attempted": repair_attempted,
-            "ai_repair_succeeded": repair_attempted,
+            **details,
             "automatic_claim_selection": False,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
+            "quality_contract": AI_QUALITY_CONTRACT,
         }
 
 
@@ -710,7 +740,7 @@ class WSLHermesCLIEngine(AgentCLIEngine):
             "tool_calls_required": 0,
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
+            "quality_contract": AI_QUALITY_CONTRACT,
         }
 
     def _invoke(self, request: dict[str, Any]) -> Any:
@@ -789,7 +819,7 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
             "data_route": self.data_route,
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
+            "quality_contract": AI_QUALITY_CONTRACT,
         }
 
     def _complete(self, request: dict[str, Any]) -> Any:
@@ -844,21 +874,14 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
             raise JobOpsError("AI_LOCAL_HANDSHAKE_FAILED", "The selected local model did not complete the JobOps connection test.")
 
     def analyze_document(self, text: str, *, source_id: str, source_type: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-        request, truncated = LocalSubprocessAIEngine._request(text, source_id=source_id, source_type=source_type)
-        value, candidates, repair_attempted = _analyze_with_single_repair(
-            self._complete,
-            request,
-            source_id=source_id,
+        candidates, details = _analyze_all_chunks(
+            self._complete, text, source_id=source_id, source_type=source_type,
         )
         return candidates, {
             "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
-            "ai_candidates": len(candidates),
-            "ai_entities": len(value.get("entities", [])),
-            "ai_input_truncated": truncated,
-            "ai_repair_attempted": repair_attempted,
-            "ai_repair_succeeded": repair_attempted,
+            **details,
             "automatic_claim_selection": False,
-            "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V3",
+            "quality_contract": AI_QUALITY_CONTRACT,
         }
 
 
