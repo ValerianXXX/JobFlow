@@ -4,6 +4,7 @@ import json
 import os
 import secrets
 import sqlite3
+import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -318,6 +319,48 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
             self.assertEqual(report["status"], "FAIL")
             self.assertEqual(report["private_temporary_file_count"], 1)
             self.assertIn("private_atomic_write_residue", {item["kind"] for item in report["findings"]})
+
+    def test_release_scan_binds_each_active_reference_to_its_ciphertext_hash(self) -> None:
+        with project_temp() as temp, tempfile.TemporaryDirectory(prefix="jobflow-private-integrity-") as private_base:
+            project = temp / "project"
+            project.mkdir()
+            database = JobOpsDB(project / "state" / "jobops.db")
+            database.initialize()
+            script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
+            store = WindowsDPAPIStore(script, local_app_data=Path(private_base))
+            onboarding = PrivateOnboarding(database, store)
+            record = onboarding.import_bytes("answer_bank", SENTINEL.encode("utf-8"), synthetic=True)
+            cipher = store.cipher_path(record["secure_ref"])
+            original_ciphertext = cipher.read_bytes()
+
+            with patch.dict(os.environ, {"LOCALAPPDATA": private_base}):
+                clean = security_scan(project, database)
+                self.assertEqual(clean["status"], "PASS", clean)
+                self.assertEqual(clean["private_ciphertext_integrity_failure_count"], 0)
+
+                cipher.write_bytes(b"synthetic-corruption")
+                mismatch = security_scan(project, database)
+                self.assertEqual(mismatch["private_ciphertext_integrity_failure_count"], 1)
+                self.assertIn("private_ciphertext_hash_mismatch", {item["kind"] for item in mismatch["findings"]})
+
+                cipher.write_bytes(original_ciphertext)
+                cipher.unlink()
+                missing = security_scan(project, database)
+                self.assertEqual(missing["private_ciphertext_integrity_failure_count"], 1)
+                self.assertIn("missing_private_ciphertext", {item["kind"] for item in missing["findings"]})
+
+                cipher.write_bytes(original_ciphertext)
+                orphan = store.private_root / "orphan-ciphertext.dpapi"
+                orphan.write_bytes(b"synthetic-orphan")
+                extra = security_scan(project, database)
+                self.assertEqual(extra["private_ciphertext_integrity_failure_count"], 1)
+                self.assertIn("orphan_private_ciphertext", {item["kind"] for item in extra["findings"]})
+                orphan.unlink()
+
+                restored = security_scan(project, database)
+                self.assertEqual(restored["status"], "PASS")
+                self.assertEqual(restored["private_ciphertext_integrity_failure_count"], 0)
+            onboarding.delete(record["secure_ref"], user_confirmed=True)
 
     def test_private_staging_rejects_project_overlap_and_unsafe_suffixes(self) -> None:
         with project_temp() as temp:
