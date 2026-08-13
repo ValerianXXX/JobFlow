@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 
 from .approvals import ApprovalContext
 from .db import JobOpsDB
@@ -34,6 +35,20 @@ class QueueManager:
     def enqueue(self, intake_key: str, *, source_type: str, source_locator: str) -> QueueAdmission:
         if not intake_key or not source_type or not source_locator:
             raise JobOpsError("INTAKE_INVALID", "Intake key, source type and safe source locator are required.")
+        normalized_locator = source_locator.replace("\\", "/")
+        locator_path = PurePosixPath(normalized_locator)
+        if (
+            len(source_locator) > 512
+            or "\x00" in source_locator
+            or ":" in source_locator
+            or locator_path.is_absolute()
+            or ".." in locator_path.parts
+            or any(ord(character) < 32 for character in source_locator)
+        ):
+            raise JobOpsError(
+                "INTAKE_SOURCE_LOCATOR_INVALID",
+                "The intake source locator must be a bounded project-relative display value.",
+            )
         with self.database.connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             existing = connection.execute("SELECT * FROM intake_queue WHERE intake_key=?", (intake_key,)).fetchone()

@@ -34,6 +34,18 @@ def binding(index: int) -> ApprovalContext:
 
 
 class AtomicQueueTests(unittest.TestCase):
+    def test_queue_rejects_absolute_traversing_and_stream_locators(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            manager = QueueManager(database)
+            for index, locator in enumerate(("C:\\Users\\private\\job.txt", "../outside.txt", "jobs/../../outside.txt", "job.txt:private")):
+                with self.subTest(locator=locator), self.assertRaises(JobOpsError) as blocked:
+                    manager.enqueue(f"UNSAFE-{index}", source_type="txt", source_locator=locator)
+                self.assertEqual(blocked.exception.code, "INTAKE_SOURCE_LOCATOR_INVALID")
+            with database.connect() as connection:
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM intake_queue").fetchone()[0], 0)
+
     def test_review_packet_hash_must_match_current_approval_context(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")
