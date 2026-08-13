@@ -43,6 +43,13 @@ class AtomicQueueTests(unittest.TestCase):
                 with self.subTest(locator=locator), self.assertRaises(JobOpsError) as blocked:
                     manager.enqueue(f"UNSAFE-{index}", source_type="txt", source_locator=locator)
                 self.assertEqual(blocked.exception.code, "INTAKE_SOURCE_LOCATOR_INVALID")
+            for intake_key, source_type, code in (
+                ("private/path", "txt", "INTAKE_KEY_INVALID"),
+                ("SAFE-KEY", "C:\\private", "JOB_SOURCE_TYPE_INVALID"),
+            ):
+                with self.subTest(code=code), self.assertRaises(JobOpsError) as blocked:
+                    manager.enqueue(intake_key, source_type=source_type, source_locator="fixtures/safe.txt")
+                self.assertEqual(blocked.exception.code, code)
             with database.connect() as connection:
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM intake_queue").fetchone()[0], 0)
 

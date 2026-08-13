@@ -31,10 +31,20 @@ def _validate_relative_display(value: object, code: str) -> str:
     return normalized
 
 
+def _validate_source_type(value: object) -> str:
+    if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", value):
+        raise JobOpsError("JOB_SOURCE_TYPE_INVALID", "The job source type must be a short safe identifier.")
+    return value
+
+
+def _validate_intake_key(value: object) -> str:
+    if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9:_-]{0,127}", value):
+        raise JobOpsError("INTAKE_KEY_INVALID", "The intake key must be a bounded opaque identifier or content hash.")
+    return value
+
+
 def _validate_job_details(details: dict[str, object], fallback_locator: str, fallback_url: str) -> dict[str, object]:
-    source_type = details.get("source_type", "synthetic")
-    if not isinstance(source_type, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", source_type):
-        raise JobOpsError("JOB_SOURCE_TYPE_INVALID", "The queue job source type must be a short safe identifier.")
+    source_type = _validate_source_type(details.get("source_type", "synthetic"))
     source_locator = _validate_relative_display(details.get("source_locator", fallback_locator), "JOB_SOURCE_LOCATOR_INVALID")
     official_url = _canonical_url(str(details.get("official_url", fallback_url)))
     if url_has_sensitive_query(official_url):
@@ -86,6 +96,8 @@ class QueueManager:
     def enqueue(self, intake_key: str, *, source_type: str, source_locator: str) -> QueueAdmission:
         if not intake_key or not source_type or not source_locator:
             raise JobOpsError("INTAKE_INVALID", "Intake key, source type and safe source locator are required.")
+        intake_key = _validate_intake_key(intake_key)
+        source_type = _validate_source_type(source_type)
         _validate_relative_display(source_locator, "INTAKE_SOURCE_LOCATOR_INVALID")
         with self.database.connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
