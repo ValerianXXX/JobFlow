@@ -20,6 +20,11 @@
     "certifications": {"type": "array", "items": {"type": "string"}},
     "education": {"type": ["string", "null"]},
     "target_industries": {"type": "array", "items": {"type": "string"}},
-    "years_experience": {"type": ["number", "string"]}
+    "years_experience": {"type": ["number", "string"]},
+    "github_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "portfolio_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "portfolio_file_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
+    "portfolio_file_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "portfolio_file_display_name": {"type": "string", "pattern": "^[^\\\\/:*?\"<>|]{1,160}$"}
   }
 }

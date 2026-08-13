@@ -473,7 +473,7 @@ def build_resume(path: Path, *, candidate_display_name: str, target_role: str, s
     _set_run(p.add_run(education), size=10.5)
     footer = document.sections[0].footer.paragraphs[0]
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _set_run(footer.add_run("JobOps generated - evidence gated"), size=8.5, color=GRAY)
+    _set_run(footer.add_run("Prepared from applicant-approved evidence"), size=8.5, color=GRAY)
     _save_document_atomic(document, path)
     return {"path": str(path), "claim_ids": [item[0] for item in approved], "preset": "compact_reference_guide", "named_overrides": []}
 
@@ -505,7 +505,7 @@ def build_cover_letter(path: Path, *, candidate_display_name: str, company: str,
     _set_run(signoff.add_run(f"Sincerely,\n{candidate_display_name}"), size=11)
     footer = document.sections[0].footer.paragraphs[0]
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _set_run(footer.add_run("JobOps generated - evidence gated"), size=8.5, color=GRAY)
+    _set_run(footer.add_run("Prepared from applicant-approved evidence"), size=8.5, color=GRAY)
     _save_document_atomic(document, path)
     return {"path": str(path), "claim_ids": [item[0] for item in approved], "preset": "compact_reference_guide", "named_overrides": []}
 

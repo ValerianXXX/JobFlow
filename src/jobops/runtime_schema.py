@@ -184,6 +184,37 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         expected = "MANUAL_TICK_READY" if value.get("slots_available", 0) else "PAUSED_AT_PENDING_LIMIT"
         if value.get("status") != expected:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Continuous plan status must match available queue capacity.")
+    if name == "material-plan":
+        cover = value.get("cover_letter", {})
+        cover_requested = cover.get("request_status") != "NOT_REQUESTED"
+        cover_generated = cover.get("generation_status") == "GENERATED_ON_DEMAND"
+        cover_values = [
+            cover.get("docx_secure_ref"), cover.get("docx_sha256"),
+            cover.get("pdf_secure_ref"), cover.get("pdf_sha256"),
+        ]
+        if cover_requested != cover_generated or cover_generated != all(cover_values):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Cover Letter generation must exactly follow the detected form request.")
+        for link in value.get("public_links", []):
+            bound = link.get("binding_status") == "BOUND_CONFIRMED_PUBLIC_VALUE"
+            if bound != bool(link.get("value_sha256")):
+                raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "A public-link binding must contain only its confirmed value hash.")
+        portfolio = value.get("portfolio_file", {})
+        portfolio_requested = portfolio.get("request_status") != "NOT_REQUESTED"
+        portfolio_bound = portfolio.get("binding_status") == "BOUND_SECURE_FILE"
+        portfolio_values = [portfolio.get("secure_ref"), portfolio.get("sha256"), portfolio.get("safe_filename")]
+        if portfolio_bound != all(portfolio_values):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "A bound portfolio file must include one complete secure binding.")
+        if not portfolio_requested and portfolio.get("binding_status") != "NOT_REQUESTED":
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "An unrequested portfolio file must not be attached.")
+        required_missing = any(
+            item.get("required") and item.get("binding_status") == "MISSING_USER_VALUE"
+            for item in value.get("public_links", [])
+        ) or (
+            portfolio.get("request_status") == "REQUESTED_REQUIRED" and not portfolio_bound
+        )
+        expected_status = "NEEDS_USER_MATERIAL" if required_missing else "READY_FOR_REVIEW"
+        if value.get("status") != expected_status:
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "The material-plan status must match its required missing bindings.")
     if name == "release-readiness":
         ready = not value.get("blockers")
         if (value.get("status") == "PUBLIC_RELEASE_READY") != ready:

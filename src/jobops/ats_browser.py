@@ -52,6 +52,11 @@ def _suggest_answer_key(field: dict[str, Any]) -> str:
             "identifier", "name", "type", "autocomplete", "label", "placeholder", "aria_label", "section_heading",
         )
     ).casefold().replace("-", "_").replace(" ", "_")
+    if str(field.get("type", "")).casefold() == "file":
+        if any(signal in material for signal in ("cover_letter", "motivation_letter", "求职信", "动机信")):
+            return "cover_letter"
+        if any(signal in material for signal in ("portfolio", "work_sample", "作品集", "工作样本")):
+            return "portfolio_file"
     candidates = (
         ("first_name", ("first_name", "given_name", "given-name", "名_")),
         ("last_name", ("last_name", "family_name", "family-name", "姓_")),

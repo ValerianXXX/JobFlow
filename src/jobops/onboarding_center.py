@@ -31,11 +31,12 @@ from .document_qa import extract_pdf_text
 from .errors import JobOpsError
 from .external_actions import ExternalActionGateway, ExternalActionPolicy
 from .official_discovery import MAX_SNAPSHOT_BYTES, discover_official_jobs
-from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
+from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, REQUIRED_FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
 from .private_onboarding import PrivateOnboarding
 from .queue_manager import QueueManager
 from .runtime_schema import validate_named
 from .security import assert_no_plaintext_secret
+from .source_quality import document_quality_rank, document_text_preflight, safe_ai_failure_category
 from .util import canonical_json, iso_utc, load_json, sha256_bytes, stable_id, write_json
 
 
@@ -61,7 +62,7 @@ MAX_JSON_NODES = 250_000
 MAX_JSON_DEPTH = 100
 MAX_ONBOARDING_PDF_PAGES = 500
 MAX_REVIEW_PACKET_BYTES = 2 * 1024 * 1024
-ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "ai_summary", "chatgpt_export"}
+ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "portfolio", "ai_summary", "chatgpt_export"}
 ALLOWED_EXTENSIONS = {".docx", ".pdf", ".txt", ".md", ".json", ".zip"}
 AI_SOURCE_TYPES = {"ai_summary", "chatgpt_export"}
 STRICT_AI_ANALYSIS_MODE = "AI_CORE_ENTITY_ANALYSIS"
@@ -109,6 +110,7 @@ def _public_ai_analysis(summary: Any) -> dict[str, Any]:
             "safe_fragments_considered", "ai_selected_fragments", "ai_omitted_fragments",
             "ai_selection_bounded", "ai_selection_mode", "ai_selection_character_limit",
             "ai_selected_characters",
+            "document_quality",
         )
         if key in value
     }
@@ -746,9 +748,9 @@ class OnboardingCenterService:
         return reference, state
 
     def _completion(self, answers: dict[str, Any]) -> dict[str, Any]:
-        resolved = sum(item.get("status") != "UNKNOWN" for item in answers.values())
-        total = len(FIELD_IDS)
-        remaining_fields = [field_id for field_id in FIELD_IDS if answers[field_id].get("status") == "UNKNOWN"]
+        resolved = sum(answers[field_id].get("status") != "UNKNOWN" for field_id in REQUIRED_FIELD_IDS)
+        total = len(REQUIRED_FIELD_IDS)
+        remaining_fields = [field_id for field_id in REQUIRED_FIELD_IDS if answers[field_id].get("status") == "UNKNOWN"]
         return {
             "total": total, "resolved": resolved, "remaining": total - resolved,
             "remaining_fields": remaining_fields, "percent": round(100 * resolved / total, 1),
@@ -1240,6 +1242,13 @@ class OnboardingCenterService:
             answer = _split_values(answer)
         if status == "CONFIRMED" and answer in (None, "", []):
             raise JobOpsError("ONBOARDING_ANSWER_REQUIRED", "A confirmed onboarding answer needs a value.", field_id=field_id)
+        if field_id in {"github_url", "portfolio_url"} and status == "CONFIRMED":
+            if not isinstance(answer, str) or not re.fullmatch(r"https://[^\s]{3,2000}", answer):
+                raise JobOpsError(
+                    "ONBOARDING_PUBLIC_URL_INVALID",
+                    "A public profile link must be a complete HTTPS URL.",
+                    field_id=field_id,
+                )
         if status in {"PREFER_NOT_TO_ANSWER", "NOT_APPLICABLE", "UNKNOWN"}:
             answer = None
         if field_id in ALWAYS_CONFIRM_FIELDS:
@@ -1333,19 +1342,47 @@ class OnboardingCenterService:
                 raise JobOpsError("CHATGPT_EXPORT_FORMAT_INVALID", "The official ChatGPT export must be uploaded as ZIP.")
             return _chatgpt_export_text(data)
         if extension == ".docx":
-            return _docx_text(data), 0, {}
+            return _docx_text(data), 0, {"document_page_count": None}
         if extension == ".pdf":
             with self.onboarding.staging_directory() as staging:
                 target = staging / "source.pdf"
                 target.write_bytes(data)
-                # Upload review needs spatial separation before block reconstruction.
-                text, _ = extract_pdf_text(
-                    target,
-                    layout=True,
-                    page_limit=MAX_ONBOARDING_PDF_PAGES,
-                    character_limit=MAX_DERIVED_TEXT_CHARS,
-                )
-                return text, 0, {}
+                # PDF generators vary widely: a spatial extraction can preserve
+                # columns, while a logical extraction is often better for AI
+                # grounding.  Compare both locally and keep only the safer text.
+                # No extracted content or original path enters the diagnostics.
+                attempts: list[tuple[str, str, int, dict[str, Any]]] = []
+                errors: list[JobOpsError] = []
+                for mode, layout in (("LOGICAL_READING_ORDER", False), ("SPATIAL_LAYOUT", True)):
+                    try:
+                        candidate_text, page_count = extract_pdf_text(
+                            target,
+                            layout=layout,
+                            page_limit=MAX_ONBOARDING_PDF_PAGES,
+                            character_limit=MAX_DERIVED_TEXT_CHARS,
+                        )
+                    except JobOpsError as exc:
+                        errors.append(exc)
+                        continue
+                    report = document_text_preflight(
+                        candidate_text,
+                        extension=extension,
+                        page_count=page_count,
+                    )
+                    attempts.append((mode, candidate_text, page_count, report))
+                if not attempts:
+                    raise errors[0] if errors else JobOpsError(
+                        "ONBOARDING_PDF_EXTRACTION_FAILED",
+                        "The PDF could not be read by the bounded local extractors.",
+                    )
+                selected = max(attempts, key=lambda item: document_quality_rank(item[3]))
+                mode, text, page_count, report = selected
+                return text, 0, {
+                    "document_page_count": page_count,
+                    "pdf_extraction_strategy": mode,
+                    "pdf_extraction_candidates_compared": len(attempts),
+                    "document_quality": report,
+                }
         if extension == ".json":
             return _json_text(data), 0, {}
         try:
@@ -1385,9 +1422,23 @@ class OnboardingCenterService:
         raw_retained = source_type != "chatgpt_export"
         if source_type != "chatgpt_export":
             assert_no_plaintext_secret(text)
-        candidates, extraction_summary = self.ai_engine.analyze_document(
-            text, source_id=source_id, source_type=source_type,
-        )
+        document_quality = (source_selection or {}).get("document_quality")
+        try:
+            candidates, extraction_summary = self.ai_engine.analyze_document(
+                text, source_id=source_id, source_type=source_type,
+            )
+        except JobOpsError as exc:
+            if exc.code.startswith("AI_"):
+                raise JobOpsError(
+                    exc.code,
+                    exc.message,
+                    **{
+                        **exc.details,
+                        "failure_category": safe_ai_failure_category(exc.code, exc.details),
+                        "document_quality": document_quality,
+                    },
+                ) from exc
+            raise
         if not _ai_analysis_is_complete(extraction_summary):
             raise JobOpsError(
                 "AI_ANALYSIS_INCOMPLETE",
@@ -1455,6 +1506,18 @@ class OnboardingCenterService:
             )
         source_hash = sha256_bytes(data)
         text, excluded_secret_fragments, source_selection = self._extract_text(data, extension, source_type)
+        if source_type != "chatgpt_export":
+            source_selection = dict(source_selection or {})
+            quality = source_selection.get("document_quality") or document_text_preflight(
+                text, extension=extension, page_count=source_selection.get("document_page_count"),
+            )
+            source_selection["document_quality"] = quality
+            if quality["status"] == "FAIL":
+                raise JobOpsError(
+                    "ONBOARDING_DOCUMENT_QUALITY_FAILED",
+                    "The local document extraction quality is too low for grounded AI analysis. Nothing was imported.",
+                    document_quality=quality,
+                )
         return self._analyze_prepared_text(
             source_type=source_type,
             extension=extension,
@@ -2175,6 +2238,23 @@ class OnboardingCenterService:
             "skills": skills, "languages": languages, "certifications": certifications, "education": education,
             "years_experience": years_experience,
         }
+        github_url = self._answer_value(answers, "github_url")
+        portfolio_url = self._answer_value(answers, "portfolio_url")
+        if github_url:
+            profile["github_url"] = str(github_url)
+        if portfolio_url:
+            profile["portfolio_url"] = str(portfolio_url)
+        portfolio_sources = [
+            item for item in state.get("sources", [])
+            if item.get("category") == "portfolio" and item.get("raw_retained")
+        ]
+        if portfolio_sources:
+            selected_portfolio = portfolio_sources[-1]
+            profile.update({
+                "portfolio_file_ref": str(selected_portfolio["secure_ref"]),
+                "portfolio_file_sha256": str(selected_portfolio["sha256"]),
+                "portfolio_file_display_name": str(selected_portfolio["safe_display_name"]),
+            })
         validate_named("candidate-profile", profile, self.schemas)
         return profile
 

@@ -13,7 +13,9 @@ flowchart LR
   K["Read-only knowledge / 只读知识库"] --> E["Evidence gateway / 证据网关"]
   P --> E
   E --> R["Human review / 人工审阅"]
-  R --> Q["Bounded approval queue / 有上限审批队列"]
+  R --> M["Per-job material plan / 岗位材料计划"]
+  M --> Q
+  Q["Bounded approval queue / 有上限审批队列"]
   O["Saved official-page snapshots / 已保存官网快照"] --> D["Offline discovery and ATS analysis / 离线找岗与 ATS 分析"]
   D --> Q
   Q --> X["AWAITING_APPROVAL"]
@@ -25,7 +27,9 @@ flowchart LR
 | Boundary | Enforced behavior | 强制行为 |
 |---|---|---|
 | Private values | DPAPI outside the project; ordinary records keep opaque `secure-ref` only | 项目外 DPAPI；普通记录只存不透明 `secure-ref` |
-| AI output | Entity completeness, provenance and grounding validation; fail closed | 实体完整性、来源和依据校验；失败关闭 |
+| AI output | Entity completeness, provenance and grounding validation; format-only numeric equivalence and bounded same-sentence wraps are review-flagged, while calculations fail closed | 实体完整性、来源和依据校验；仅数字显示等价与同句有限换行可带标记进入审阅，计算仍失败关闭 |
+| AI readiness | Synthetic full-contract test before private intake; handshake alone is insufficient | 私人资料接入前通过合成全契约测试；简单握手不算就绪 |
+| Per-job materials | One immutable approved master; conditional Cover Letter and portfolio/link bindings | 同一不可变母版；求职信与作品集/链接按字段需要生成或绑定 |
 | Personal claims | Always proposed first; never externally approved automatically | 始终先作为候选；绝不自动批准对外使用 |
 | Knowledge | Read-only fingerprints and zero-write verification | 只读指纹与零写入验证 |
 | Job discovery | Saved company/ATS snapshots only; no live freshness claim | 只读已保存官网/ATS 快照；不声称实时有效 |
@@ -36,11 +40,11 @@ flowchart LR
 ## Main packages / 主要模块
 
 - `onboarding_center`, `onboarding_server`, `ui/`: bilingual one-time profile and Claim review.
-- `ai_runtime`, `ai_connections`, `onboarding_extraction`: local/Agent AI connection and strict extraction.
+- `ai_runtime`, `ai_connections`, `source_quality`, `onboarding_extraction`: capability-tested local/Agent AI connection and multi-mode extraction quality gates.
 - `secure_store`, `private_onboarding`, `resume_onboarding`: DPAPI lifecycle and master-resume onboarding.
 - `knowledge`, `claims`, `claim_registry`, `evidence`: read-only evidence and approval lifecycle.
 - `official_discovery`, `sourcing`, `ats_browser`, `ats_capabilities`: offline official-source and ATS safety framework.
-- `orchestrator`, `queue_manager`, `continuous_intake`: content-bound processing to the bounded review queue.
+- `application_materials`, `orchestrator`, `queue_manager`, `continuous_intake`: one-master per-job material planning and content-bound processing to the bounded review queue.
 - `public_release`, `release_candidate`, `release`: current-tree/history privacy gates and release evidence.
 
 Every persisted transition is content-bound or auditable. `SUBMISSION_UNKNOWN`, CAPTCHA, MFA, OTP, login and account creation do not have an automatic continuation path.

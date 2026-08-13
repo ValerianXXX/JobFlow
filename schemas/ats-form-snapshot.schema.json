@@ -29,7 +29,7 @@
           "control_type": {"enum": ["text", "email", "tel", "url", "number", "date", "datetime-local", "radio", "checkbox", "select", "textarea", "file", "password", "submit", "button", "image", "other"]},
           "required": {"type": "boolean"},
           "classification": {"enum": ["ordinary_fixed", "private_fixed", "sensitive_review", "work_authorization_stop", "compensation_stop", "legal_declaration_stop", "signature_stop", "voluntary_disclosure_stop", "account_creation_stop", "file_upload_stop", "navigation_control_stop", "final_submit_stop", "unknown_stop"]},
-          "answer_key": {"enum": ["UNKNOWN", "first_name", "last_name", "full_name", "email", "phone", "linkedin", "github", "portfolio", "website", "address", "work_authorization", "salary", "resume"]},
+          "answer_key": {"enum": ["UNKNOWN", "first_name", "last_name", "full_name", "email", "phone", "linkedin", "github", "portfolio", "portfolio_file", "website", "address", "work_authorization", "salary", "resume", "cover_letter"]},
           "logical_field_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
           "reason_code": {"enum": ["KNOWN_PUBLIC_BINDING_REQUIRED", "SECURE_REFERENCE_REQUIRED", "FILE_UPLOAD_EXTERNAL_ACTION", "NAVIGATION_ACTION_REVIEW", "FINAL_SUBMIT_EXTERNAL_ACTION", "ACCOUNT_CREATION_REQUIRES_APPROVAL", "UNKNOWN_FIELD_FAIL_CLOSED", "PROTECTED_OR_SENSITIVE_FIELD"]},
           "prompt_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},

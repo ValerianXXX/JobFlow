@@ -14,6 +14,7 @@ from pathlib import Path
 import _support  # noqa: F401  # Adds the project src directory to sys.path.
 
 from jobops.ai_connections import (
+    AI_CAPABILITY_TEST_TEXT,
     AIConnectionManager,
     _analyze_all_chunks,
     _analyze_with_single_repair,
@@ -25,6 +26,32 @@ from jobops.ai_connections import (
 )
 from jobops.ai_runtime import AIAnalysisEngine, LocalSubprocessAIEngine
 from jobops.errors import JobOpsError
+
+
+def _capability_payload() -> dict[str, object]:
+    return {
+        "schema_version": 2,
+        "entities": [{
+            "entity_key": "jobflow-capability-project",
+            "entity_type": "project",
+            "organization": "Synthetic Evidence Lab",
+            "role": "Project Analyst",
+            "start_date": "",
+            "end_date": "",
+            "line_start": 1,
+            "line_end": 1,
+        }],
+        "candidates": [{
+            "statement": AI_CAPABILITY_TEST_TEXT,
+            "category": "project",
+            "claim_kind": "achievement",
+            "entity_key": "jobflow-capability-project",
+            "confidence": "HIGH",
+            "line_start": 1,
+            "line_end": 1,
+            "reason": "Grounded synthetic capability fixture.",
+        }],
+    }
 
 
 class AIConnectionTests(unittest.TestCase):
@@ -227,11 +254,18 @@ class AIConnectionTests(unittest.TestCase):
     def test_local_model_is_detected_and_preference_contains_no_credentials_or_paths(self) -> None:
         calls: list[str] = []
 
-        def fake_http(url: str, **_: object) -> dict[str, object]:
+        def fake_http(url: str, **kwargs: object) -> dict[str, object]:
             calls.append(url)
             if url == "http://127.0.0.1:11434/api/tags":
                 return {"models": [{"name": "synthetic-local-model"}]}
             if url == "http://127.0.0.1:11434/api/chat":
+                payload = kwargs.get("payload")
+                if isinstance(payload, dict):
+                    messages = payload.get("messages")
+                    if isinstance(messages, list) and messages:
+                        request = json.loads(str(messages[-1]["content"]))
+                        if request.get("task") == "JOBOPS_STRUCTURED_CAPABILITY_TEST_V1":
+                            return {"message": {"content": json.dumps(_capability_payload())}}
                 return {"message": {"content": '{"status":"READY","protocol":1}'}}
             raise JobOpsError("AI_LOCAL_ENDPOINT_UNAVAILABLE", "not running")
 
@@ -249,12 +283,41 @@ class AIConnectionTests(unittest.TestCase):
             self.assertEqual(status["connection_id"], "ollama")
             self.assertEqual(status["model"], "synthetic-local-model")
             self.assertEqual(status["data_route"], "LOCAL_MACHINE_ONLY")
-            self.assertEqual(calls, ["http://127.0.0.1:11434/api/tags", "http://127.0.0.1:11434/api/chat"])
+            self.assertEqual(calls, [
+                "http://127.0.0.1:11434/api/tags",
+                "http://127.0.0.1:11434/api/chat",
+                "http://127.0.0.1:11434/api/chat",
+            ])
             saved = config.read_text(encoding="utf-8")
             self.assertNotIn(str(root), saved)
             self.assertNotIn("api_key", saved.casefold())
             self.assertNotIn("token", saved.casefold())
             self.assertFalse(json.loads(saved)["contains_credentials"])
+
+    def test_simple_handshake_model_is_rejected_until_structured_grounding_passes(self) -> None:
+        calls: list[str] = []
+
+        def fake_http(url: str, **_kwargs: object) -> dict[str, object]:
+            calls.append(url)
+            if url.endswith("/api/tags"):
+                return {"models": [{"name": "handshake-only-model"}]}
+            if url.endswith("/api/chat"):
+                return {"message": {"content": '{"status":"READY","protocol":1}'}}
+            raise JobOpsError("AI_LOCAL_ENDPOINT_UNAVAILABLE", "not running")
+
+        with tempfile.TemporaryDirectory(prefix="jobops-ai-capability-") as directory:
+            config = Path(directory) / "JobOps" / "ai-connection.json"
+            manager = AIConnectionManager(
+                config,
+                initial_engine=AIAnalysisEngine(),
+                command_resolver=lambda _: None,
+                http_json=fake_http,
+            )
+            with self.assertRaises(JobOpsError) as caught:
+                manager.connect("local_model")
+            self.assertEqual(caught.exception.code, "AI_STRUCTURED_CAPABILITY_FAILED")
+            self.assertGreaterEqual(calls.count("http://127.0.0.1:11434/api/chat"), 2)
+            self.assertFalse(config.exists())
 
     def test_openclaw_uses_ephemeral_stdin_and_never_places_private_text_in_arguments(self) -> None:
         invocations: list[tuple[list[str], str]] = []
@@ -281,6 +344,8 @@ class AIConnectionTests(unittest.TestCase):
             request = json.loads(body)
             if request.get("task") == "JOBOPS_AI_CONNECTION_TEST":
                 output = {"toolSummary": {"calls": 0, "tools": []}, "result": {"content": '{"status":"READY","protocol":1}'}}
+            elif request.get("task") == "JOBOPS_STRUCTURED_CAPABILITY_TEST_V1":
+                output = {"toolSummary": {"calls": 0, "tools": []}, "result": {"message": {"content": json.dumps(_capability_payload())}}}
             else:
                 payload = {
                     "schema_version": 2,
@@ -416,6 +481,8 @@ class AIConnectionTests(unittest.TestCase):
                 request = json.loads(body)
                 if request.get("task") == "JOBOPS_AI_CONNECTION_TEST":
                     content = '{"status":"READY","protocol":1}'
+                elif request.get("task") == "JOBOPS_STRUCTURED_CAPABILITY_TEST_V1":
+                    content = json.dumps(_capability_payload())
                 else:
                     statement = (
                         private_value
@@ -467,7 +534,13 @@ class AIConnectionTests(unittest.TestCase):
             self.assertEqual(status["tool_policy"], "NO_TOOLS")
             self.assertEqual(candidates[0]["statement"], private_value)
             self.assertTrue(summary["ai_repair_attempted"])
-            analysis_requests = [json.loads(body) for _, body in adapter_calls if json.loads(body).get("schema_version") == 2]
+            analysis_requests = [
+                json.loads(body) for _, body in adapter_calls
+                if json.loads(body).get("task") in {
+                    "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+                    "JOBOPS_REPAIR_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+                }
+            ]
             self.assertEqual(
                 [item["task"] for item in analysis_requests],
                 ["JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2", "JOBOPS_REPAIR_PRIVATE_DOCUMENT_UNDERSTANDING_V2"],
@@ -534,12 +607,19 @@ class AIConnectionTests(unittest.TestCase):
             def poll(self) -> None:
                 return None
 
-        def fake_http(url: str, **_: object) -> dict[str, object]:
+        def fake_http(url: str, **kwargs: object) -> dict[str, object]:
             if not launched:
                 raise JobOpsError("AI_LOCAL_ENDPOINT_UNAVAILABLE", "not running")
             if url == "http://127.0.0.1:8645/v1/models":
                 return {"data": [{"id": "synthetic/hermes-model"}]}
             if url == "http://127.0.0.1:8645/v1/chat/completions":
+                payload = kwargs.get("payload")
+                if isinstance(payload, dict):
+                    messages = payload.get("messages")
+                    if isinstance(messages, list) and messages:
+                        request = json.loads(str(messages[-1]["content"]))
+                        if request.get("task") == "JOBOPS_STRUCTURED_CAPABILITY_TEST_V1":
+                            return {"choices": [{"message": {"content": json.dumps(_capability_payload())}}]}
                 return {"choices": [{"message": {"content": '{"status":"READY","protocol":1}'}}]}
             raise JobOpsError("AI_LOCAL_ENDPOINT_UNAVAILABLE", "not running")
 
@@ -605,7 +685,10 @@ class AIConnectionTests(unittest.TestCase):
                 if "/api/chat" in command[-1]:
                     request = json.loads(str(body))
                     user_content = request["messages"][1]["content"]
-                    if private_value in user_content:
+                    structured_request = json.loads(user_content)
+                    if structured_request.get("task") == "JOBOPS_STRUCTURED_CAPABILITY_TEST_V1":
+                        content = json.dumps(_capability_payload())
+                    elif private_value in user_content:
                         content = json.dumps({
                             "schema_version": 2,
                             "entities": [{
@@ -671,6 +754,8 @@ class AIConnectionTests(unittest.TestCase):
                 request = json.loads(body)
                 if request.get("task") == "JOBOPS_AI_CONNECTION_TEST":
                     result = {"toolSummary": {"calls": 0}, "result": {"content": '{"status":"READY","protocol":1}'}}
+                elif request.get("task") == "JOBOPS_STRUCTURED_CAPABILITY_TEST_V1":
+                    result = {"toolSummary": {"calls": 0}, "result": {"content": json.dumps(_capability_payload())}}
                 else:
                     payload = {
                         "schema_version": 2,

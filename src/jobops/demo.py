@@ -148,6 +148,19 @@ def _seed_demo_review_queue(database: JobOpsDB, onboarding: PrivateOnboarding, *
             }
         ],
         "uploads": [upload.as_dict()],
+        "material_plan": {
+            "schema_version": 1,
+            "status": "READY_FOR_REVIEW",
+            "resume": {
+                "derivation": "TAILORED_COPY_OF_SINGLE_APPROVED_MASTER",
+                "generated_before_application": True,
+            },
+            "cover_letter": {"request_status": "NOT_REQUESTED", "generation_status": "NOT_GENERATED"},
+            "public_links": [],
+            "portfolio_file": {"request_status": "NOT_REQUESTED", "binding_status": "NOT_REQUESTED"},
+            "all_uploads_and_submission_blocked": True,
+            "real_external_actions": 0,
+        },
         "external_actions": ["upload_material", "submit_application"],
         "source_route": {
             "route_kind": "OFFICIAL_TO_APPROVED_ATS",

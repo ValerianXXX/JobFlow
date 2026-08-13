@@ -24,12 +24,18 @@ from .ai_runtime import (
 )
 from .errors import JobOpsError
 from .util import iso_utc
+from .source_quality import safe_ai_failure_category
 
 
 MAX_CONNECTION_RESPONSE_BYTES = 8 * 1024 * 1024
 MAX_WSL_DISCOVERY_BYTES = 64 * 1024
 MAX_WSL_DISTRIBUTIONS = 16
 MAX_EMBEDDED_JSON_STARTS = 32
+AI_CAPABILITY_TEST_VERSION = 1
+AI_CAPABILITY_TEST_TEXT = (
+    "At Synthetic Evidence Lab, a Project Analyst built a 120-row review tracker in 2024 "
+    "and reduced review time by 20%."
+)
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 AGENT_CONNECTORS = {
     "hermes_proxy",
@@ -563,6 +569,64 @@ def _analyze_all_chunks(
     }
 
 
+def _verify_structured_capability(invoke: Callable[[dict[str, Any]], Any]) -> dict[str, Any]:
+    """Verify the full JobFlow output contract with non-private synthetic evidence."""
+
+    request, truncated = LocalSubprocessAIEngine._request(
+        AI_CAPABILITY_TEST_TEXT,
+        source_id="SRC-JOBFLOW-CAPABILITY",
+        source_type="project_case",
+    )
+    if truncated:
+        raise JobOpsError("AI_STRUCTURED_CAPABILITY_FAILED", "The internal AI capability fixture was truncated.")
+    request["task"] = "JOBOPS_STRUCTURED_CAPABILITY_TEST_V1"
+    request["rules"] = [
+        "This is a non-private capability fixture. Return its one real-world entity and at least one complete achievement Claim.",
+        "The returned achievement must preserve 120, 2024, and 20% exactly and cite line 1.",
+        *request["rules"],
+    ]
+    try:
+        _, candidates, repaired = _analyze_with_single_repair(
+            invoke,
+            request,
+            source_id="SRC-JOBFLOW-CAPABILITY",
+        )
+        if not candidates:
+            raise JobOpsError(
+                "AI_RESPONSE_INVALID",
+                "The AI capability fixture returned no grounded Claim.",
+                failure_category="CAPABILITY_OMISSION",
+            )
+        candidate = next(
+            (
+                item for item in candidates
+                if {"120", "2024", "20"}.issubset(set(re.findall(r"\d+", str(item.get("statement", "")))))
+                and item.get("entity")
+            ),
+            None,
+        )
+        if candidate is None:
+            raise JobOpsError(
+                "AI_RESPONSE_INVALID",
+                "The AI capability fixture did not preserve its grounded entity and metrics.",
+                failure_category="CAPABILITY_GROUNDING",
+            )
+    except JobOpsError as exc:
+        raise JobOpsError(
+            "AI_STRUCTURED_CAPABILITY_FAILED",
+            "The detected AI answered a simple connection check but did not pass JobFlow's structured evidence test.",
+            failure_category=safe_ai_failure_category(exc.code, exc.details),
+            quality_contract=AI_QUALITY_CONTRACT,
+            capability_test_version=AI_CAPABILITY_TEST_VERSION,
+        ) from exc
+    return {
+        "structured_capability_status": "VERIFIED",
+        "capability_test_version": AI_CAPABILITY_TEST_VERSION,
+        "capability_repair_required": repaired,
+        "capability_private_content_sent": False,
+    }
+
+
 class AgentCLIEngine(AIAnalysisEngine):
     """Ephemeral agent bridge. Private source text travels through stdin only."""
 
@@ -588,10 +652,16 @@ class AgentCLIEngine(AIAnalysisEngine):
         self.working_directory = working_directory
         self.timeout_seconds = max(30, min(int(timeout_seconds), 600))
         self.process_runner = process_runner
+        self._capability = {
+            "structured_capability_status": "NOT_TESTED",
+            "capability_test_version": AI_CAPABILITY_TEST_VERSION,
+            "capability_repair_required": False,
+            "capability_private_content_sent": False,
+        }
 
     def public_status(self) -> dict[str, Any]:
         return {
-            "status": "READY",
+            "status": "READY" if self._capability["structured_capability_status"] == "VERIFIED" else "CONNECTED_UNVERIFIED",
             "mode": "AI_CORE_STRUCTURED_ANALYSIS",
             "provider": "OPENCLAW_AGENT",
             "connection_kind": "EXISTING_AGENT",
@@ -605,6 +675,7 @@ class AgentCLIEngine(AIAnalysisEngine):
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
             "quality_contract": AI_QUALITY_CONTRACT,
+            **self._capability,
         }
 
     def _invoke(self, request: dict[str, Any]) -> Any:
@@ -660,6 +731,7 @@ class AgentCLIEngine(AIAnalysisEngine):
         })
         if _handshake_payload(result) is None:
             raise JobOpsError("AI_AGENT_HANDSHAKE_FAILED", "The detected Agent did not complete the JobOps connection test.")
+        self._capability = _verify_structured_capability(self._invoke)
 
     def analyze_document(self, text: str, *, source_id: str, source_type: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         candidates, details = _analyze_all_chunks(
@@ -694,6 +766,12 @@ class WSLAgentCLIEngine(AgentCLIEngine):
         self.model = model
         self.timeout_seconds = max(30, min(int(timeout_seconds), 600))
         self.process_runner = process_runner
+        self._capability = {
+            "structured_capability_status": "NOT_TESTED",
+            "capability_test_version": AI_CAPABILITY_TEST_VERSION,
+            "capability_repair_required": False,
+            "capability_private_content_sent": False,
+        }
 
     def public_status(self) -> dict[str, Any]:
         status = super().public_status()
@@ -773,11 +851,17 @@ class WSLHermesCLIEngine(AgentCLIEngine):
         self.provider_id = provider_id
         self.timeout_seconds = max(30, min(int(timeout_seconds), 600))
         self.process_runner = process_runner
+        self._capability = {
+            "structured_capability_status": "NOT_TESTED",
+            "capability_test_version": AI_CAPABILITY_TEST_VERSION,
+            "capability_repair_required": False,
+            "capability_private_content_sent": False,
+        }
 
     def public_status(self) -> dict[str, Any]:
         provider_label = "OpenAI Codex" if self.provider_id == "openai-codex" else self.provider_id
         return {
-            "status": "READY",
+            "status": "READY" if self._capability["structured_capability_status"] == "VERIFIED" else "CONNECTED_UNVERIFIED",
             "mode": "AI_CORE_STRUCTURED_ANALYSIS",
             "provider": "HERMES_AGENT_WSL",
             "connection_kind": "EXISTING_AGENT",
@@ -791,6 +875,7 @@ class WSLHermesCLIEngine(AgentCLIEngine):
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
             "quality_contract": AI_QUALITY_CONTRACT,
+            **self._capability,
         }
 
     def _invoke(self, request: dict[str, Any]) -> Any:
@@ -862,10 +947,16 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
         self.private_transport = private_transport
         self.http_json = http_json
         self.timeout_seconds = max(30, min(int(timeout_seconds), 600))
+        self._capability = {
+            "structured_capability_status": "NOT_TESTED",
+            "capability_test_version": AI_CAPABILITY_TEST_VERSION,
+            "capability_repair_required": False,
+            "capability_private_content_sent": False,
+        }
 
     def public_status(self) -> dict[str, Any]:
         return {
-            "status": "READY",
+            "status": "READY" if self._capability["structured_capability_status"] == "VERIFIED" else "CONNECTED_UNVERIFIED",
             "mode": "AI_CORE_STRUCTURED_ANALYSIS",
             "provider": self.connector_id.upper(),
             "connection_kind": self.connection_kind,
@@ -877,6 +968,7 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
             "quality_contract": AI_QUALITY_CONTRACT,
+            **self._capability,
         }
 
     def _complete(self, request: dict[str, Any]) -> Any:
@@ -929,6 +1021,7 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
         })
         if _handshake_payload(result) is None:
             raise JobOpsError("AI_LOCAL_HANDSHAKE_FAILED", "The selected local model did not complete the JobOps connection test.")
+        self._capability = _verify_structured_capability(self._complete)
 
     def analyze_document(self, text: str, *, source_id: str, source_type: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         candidates, details = _analyze_all_chunks(
@@ -965,12 +1058,19 @@ class AIConnectionManager:
         if not self.current_engine.ready:
             restored = self._restore()
             if restored is not None:
-                self.current_engine = restored
+                try:
+                    restored.connection_test()  # type: ignore[attr-defined]
+                except (AttributeError, JobOpsError):
+                    restored = None
+                if restored is not None:
+                    self.current_engine = restored
 
     def public_state(self) -> dict[str, Any]:
         status = self.current_engine.public_status()
         return {
             "status": status.get("status", "NOT_CONFIGURED"),
+            "structured_capability_status": status.get("structured_capability_status", "VALIDATED_ON_USE" if status.get("status") == "READY" else "NOT_TESTED"),
+            "quality_contract": status.get("quality_contract"),
             "selected": {
                 key: status.get(key)
                 for key in ("connection_id", "connection_kind", "display_name", "model", "data_route")
@@ -1702,7 +1802,11 @@ class AIConnectionManager:
                 ),
                 None,
             )
-            raise security_failure or failures[0]
+            capability_failure = next(
+                (failure for failure in failures if failure.code == "AI_STRUCTURED_CAPABILITY_FAILED"),
+                None,
+            )
+            raise security_failure or capability_failure or failures[0]
         return None
 
     def _connect_wsl_local_model(self) -> LoopbackModelAIEngine | None:
@@ -1710,6 +1814,7 @@ class AIConnectionManager:
         if not executable:
             return None
         found_service_without_curl = False
+        capability_failures: list[JobOpsError] = []
         for distribution in self._wsl_distributions(executable):
             if not self._wsl_has_command(executable, distribution, "curl"):
                 found_service_without_curl = True
@@ -1725,9 +1830,13 @@ class AIConnectionManager:
                 engine = self._wsl_local_engine(connector_id, models[0], http_json=transport)
                 try:
                     engine.connection_test()
-                except JobOpsError:
+                except JobOpsError as exc:
+                    if exc.code == "AI_STRUCTURED_CAPABILITY_FAILED":
+                        capability_failures.append(exc)
                     continue
                 return engine
+        if capability_failures:
+            raise capability_failures[0]
         if found_service_without_curl:
             raise JobOpsError(
                 "AI_WSL_LOCAL_BRIDGE_MISSING",
@@ -1736,6 +1845,7 @@ class AIConnectionManager:
         return None
 
     def _connect_local_model(self) -> LoopbackModelAIEngine | None:
+        capability_failures: list[JobOpsError] = []
         for connector_id in LOCAL_CONNECTORS:
             try:
                 models = self._models(connector_id)
@@ -1745,10 +1855,24 @@ class AIConnectionManager:
                 engine = self._local_engine(connector_id, models[0])
                 try:
                     engine.connection_test()
-                except JobOpsError:
+                except JobOpsError as exc:
+                    if exc.code == "AI_STRUCTURED_CAPABILITY_FAILED":
+                        capability_failures.append(exc)
                     continue
                 return engine
-        return self._connect_wsl_local_model()
+        try:
+            wsl_engine = self._connect_wsl_local_model()
+        except JobOpsError as exc:
+            if exc.code == "AI_STRUCTURED_CAPABILITY_FAILED":
+                capability_failures.append(exc)
+            elif not capability_failures:
+                raise
+        else:
+            if wsl_engine is not None:
+                return wsl_engine
+        if capability_failures:
+            raise capability_failures[0]
+        return None
 
     def connect(self, mode: str) -> AIAnalysisEngine:
         if mode not in {"agent", "local_model", "auto"}:

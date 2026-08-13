@@ -17,7 +17,7 @@ from .util import has_reparse_component, is_relative_to, iso_utc, sha256_bytes
 
 PRIVATE_KINDS = {
     "candidate_profile", "answer_bank", "master_resume_docx", "master_resume_pdf", "claim_approvals",
-    "generated_resume_docx", "generated_resume_pdf", "review_packet", "visual_evidence",
+    "generated_resume_docx", "generated_resume_pdf", "generated_cover_letter_docx", "generated_cover_letter_pdf", "review_packet", "visual_evidence",
     "resume_analysis", "claim_candidates", "onboarding_review_packet",
     "onboarding_center_state", "onboarding_source_document", "onboarding_ai_derived",
     "onboarding_completion_packet",

@@ -6,6 +6,14 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- PDF numeric grounding now accepts only provably equivalent presentation changes (digit grouping, full-width digits, harmless decimal zeros) and bounded adjacent wrapped lines; calculations, scaling, rounding and unrelated-line borrowing still fail closed, while every accepted adjustment is flagged for human review.
+- PDF 数字依据现在只放行可证明等价的显示差异（数字分组、全角数字、无意义小数零）及有限相邻换行；计算、单位缩放、四舍五入和借用无关行仍会失败关闭，所有放宽项都会明确要求人工复核。
+- AI readiness now requires a non-private full structured entity, metric and provenance test; a simple JSON handshake no longer unlocks document intake.
+- PDF intake compares logical and spatial extraction modes and fails closed with content-free OCR/editable-DOCX diagnostics when neither is reliable.
+- Each application now carries a validated material plan: one immutable approved Master Resume produces the tailored copy, Cover Letters are generated only when requested, and GitHub/portfolio links or files are bound only to matching fields.
+- AI 就绪现在必须通过不含私人资料的完整实体、数字与行号验证；简单 JSON 握手不再开放资料接入。
+- PDF 接入会比较逻辑与空间两种本机提取结果；两者均不可靠时，以不含正文的 OCR/可编辑 DOCX 提示失败关闭。
+- 每个申请现在都有经验证的材料计划：岗位简历只从同一不可变母版派生，求职信仅按需生成，GitHub/作品集链接或文件仅绑定到对应字段。
 - Public GitHub upload and all real recruiting-site actions remain unperformed.
 - GitHub 上传与所有真实招聘网站动作均未执行。
 

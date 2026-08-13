@@ -24,11 +24,15 @@ After installation, double-click `Start JobFlow.cmd`. The local page opens on `1
 
 Use the page in this order:
 
-1. Connect an already configured Agent or local model. / 连接已经配置好的 Agent 或本地模型。
-2. Add a resume, project material, AI summary, or ChatGPT official export. / 添加简历、项目材料、AI 总结或 ChatGPT 官方导出。
-3. Answer the 25 one-time questions, including explicit unknown or prefer-not-to-answer choices. / 一次完成 25 个问题；可明确选择未知或不愿披露。
+1. Connect an already configured Agent or local model. The page unlocks intake only after a non-private structured capability test passes; a simple connection response is not enough. / 连接已经配置好的 Agent 或本地模型；页面只有在不含私人资料的结构化能力测试通过后才开放接入，简单连接响应不算完成。
+2. Add a resume, project material, portfolio file, AI summary, or ChatGPT official export. PDF text quality is checked locally before the AI receives it. / 添加简历、项目材料、作品集文件、AI 总结或 ChatGPT 官方导出；PDF 会先在本机检查提取质量。
+3. Answer the 25 required one-time questions, including explicit unknown or prefer-not-to-answer choices; GitHub and portfolio URLs are optional. / 一次完成 25 个必答问题；可明确选择未知或不愿披露，GitHub 与作品集链接为可选项。
 4. Review every AI-proposed entity, Claim and conflict. Nothing becomes externally approved automatically. / 审阅每个 AI 候选实体、Claim 与冲突；系统不会自动批准对外使用。
 5. Complete the local profile and review future offline application packets in the bounded queue. / 完成本机资料，并在有上限的队列中审阅后续离线申请包。
+
+When PDF extraction changes only numeric presentation or an obvious sentence wrap, the Claim preview labels that adjustment and still leaves the Claim unchecked for the user. New, calculated, rounded, scaled or unrelated-line numbers remain blocked. / PDF 仅出现数字显示格式或明显同句换行差异时，预览会标出调整且 Claim 仍保持未选择；新增、计算、四舍五入、单位缩放或无关行数字仍被拒绝。
+
+For each offline application packet, JobFlow derives a job-specific DOCX/PDF from the same approved Master Resume and leaves the master unchanged. A Cover Letter is generated only when the saved form contains a matching upload field. Confirmed GitHub/portfolio URLs and an encrypted portfolio file are bound only when corresponding fields exist; the ordinary packet shows hashes/statuses instead of the URL value or file body. / 每份离线申请包都从同一份已批准 Master Resume 派生岗位版 DOCX/PDF，母版保持不变；只有保存的表单含对应字段时才生成求职信或绑定 GitHub/作品集链接及加密作品集文件，普通审阅包只显示哈希与状态。
 
 Real website prefill, upload, submit, account creation, email, recruiter contact and scheduling are not present in this release. A local approval is not a submission.
 

@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import threading
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +15,7 @@ from .util import stable_id
 
 
 AI_PROTOCOL_VERSION = 2
-AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V3"
+AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V4"
 MAX_AI_INPUT_CHARS = 500_000
 MAX_AI_OUTPUT_BYTES = 5 * 1024 * 1024
 MAX_AI_CHUNK_CHARS = 450_000
@@ -34,6 +35,7 @@ STOP_WORDS = {
 }
 GROUNDING_RATIO = 0.50
 NEAR_DUPLICATE_RATIO = 0.85
+MAX_GROUNDING_ADJACENT_LINES = 2
 MONTH_ALIASES = {
     "january": "jan", "february": "feb", "march": "mar", "april": "apr", "june": "jun",
     "july": "jul", "august": "aug", "september": "sep", "sept": "sep", "october": "oct",
@@ -48,6 +50,14 @@ ENTITY_VERB_RE = re.compile(
     re.IGNORECASE,
 )
 CHINESE_ENTITY_VERBS = ("担任", "负责", "完成", "建立", "领导", "参与", "开发", "管理", "分析", "提升", "创建", "就读", "获得", "交付", "推动", "设计", "实施")
+BULLET_PREFIX_RE = re.compile(
+    r"^\s*(?:[\u2022\u2023\u25e6\u2043\u2219\uf0de\uf0b7▪▫●○◦‣·*]|[-–—]\s+|\d{1,3}[.)]\s+)"
+)
+SENTENCE_END_RE = re.compile(r"[.?!。！？][\"'’)）\]]*\s*$")
+NUMBER_TOKEN_RE = re.compile(
+    r"(?<![A-Za-z0-9])(?:[$£€¥]\s*)?"
+    r"(?:\d{1,3}(?:(?:,[ \t]*|[ '\u00a0\u2009\u202f])\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
+)
 
 
 def _run_bounded_ai_command(
@@ -161,8 +171,80 @@ def _tokens(value: str) -> set[str]:
     return output
 
 
+def _looks_like_wrapped_pair(left: str, right: str) -> bool:
+    """Return true only for a bounded, same-sentence-looking physical line wrap."""
+
+    left_value = unicodedata.normalize("NFKC", left).strip()
+    right_value = unicodedata.normalize("NFKC", right).strip()
+    if not left_value or not right_value or BULLET_PREFIX_RE.match(right_value):
+        return False
+    if SENTENCE_END_RE.search(left_value):
+        return False
+    if (
+        re.search(r"(?<!\d)\d{1,3},?\s*$", left_value)
+        and re.match(r"^\d{3}(?:\D|$)", right_value)
+    ):
+        return True
+    if re.search(r"[,;:/\-–—]\s*$", left_value):
+        return True
+    if re.search(r"\b(?:and|or|to|for|with|into|of|in|at|by|from)\s*$", left_value, re.IGNORECASE):
+        return True
+    if left_value.endswith(("并", "及", "与", "和", "为", "在", "将")):
+        return True
+    return right_value[:1].islower()
+
+
+def _numeric_text(value: str) -> str:
+    """Normalize Unicode and rejoin only obvious physical line wraps for numeric parsing."""
+
+    normalized = unicodedata.normalize("NFKC", value)
+    lines = normalized.splitlines()
+    if len(lines) <= 1:
+        return normalized
+    output = [lines[0]]
+    previous = lines[0]
+    for line in lines[1:]:
+        if _looks_like_wrapped_pair(previous, line):
+            output[-1] = output[-1].rstrip() + " " + line.lstrip()
+        else:
+            output.append(line)
+        previous = line
+    return "\n".join(output)
+
+
+def _canonical_number(value: str) -> str:
+    cleaned = re.sub(r"[$£€¥, '\t\u00a0\u2009\u202f]", "", value)
+    integer, separator, fraction = cleaned.partition(".")
+    integer = integer.lstrip("0") or "0"
+    fraction = fraction.rstrip("0")
+    return integer + ("." + fraction if separator and fraction else "")
+
+
+def _number_tokens(value: str) -> list[tuple[str, str]]:
+    tokens: list[tuple[str, str]] = []
+    for match in NUMBER_TOKEN_RE.finditer(_numeric_text(value)):
+        raw = re.sub(r"\s+", " ", match.group(0)).strip().casefold()
+        canonical = _canonical_number(raw)
+        if canonical:
+            tokens.append((canonical, raw))
+    return tokens
+
+
 def _numbers(value: str) -> set[str]:
-    return {re.sub(r"[^0-9.]", "", item) for item in re.findall(r"\$?\d[\d,.]*", value)}
+    return {canonical for canonical, _ in _number_tokens(value)}
+
+
+def _numeric_format_normalization_count(statement: str, source_excerpt: str) -> int:
+    source_forms: dict[str, set[str]] = {}
+    for canonical, raw in _number_tokens(source_excerpt):
+        source_forms.setdefault(canonical, set()).add(raw)
+    normalized: set[str] = set()
+    for canonical, raw in _number_tokens(statement):
+        if canonical in source_forms and raw not in source_forms[canonical]:
+            normalized.add(canonical)
+    if unicodedata.normalize("NFKC", source_excerpt) != source_excerpt:
+        normalized.update(_numbers(statement) & _numbers(source_excerpt))
+    return len(normalized)
 
 
 def _identity_part(value: Any) -> str:
@@ -211,23 +293,98 @@ def _near_duplicate(left: str, right: str) -> bool:
     return bool(union) and len(left_tokens & right_tokens) / len(union) >= NEAR_DUPLICATE_RATIO
 
 
-def _statement_is_complete(statement: str, source_excerpt: str) -> bool:
-    if not 20 <= len(statement) <= 2_000 or statement[-1:] not in ".?!。！？":
-        return False
+def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str, Any]:
+    format_complete = bool(20 <= len(statement) <= 2_000 and statement[-1:] in ".?!。！？")
     if statement.endswith((",", ";", ":", "-", "–", "—")) or "|" in statement or "http://" in statement.casefold() or "https://" in statement.casefold():
-        return False
+        format_complete = False
     letters = "".join(character for character in statement if character.isalpha())
     if len(letters) >= 8 and letters == letters.upper():
-        return False
+        format_complete = False
     statement_numbers = _numbers(statement)
-    if statement_numbers - _numbers(source_excerpt):
-        return False
+    unsupported_numbers = statement_numbers - _numbers(source_excerpt)
     claim_tokens = _tokens(statement)
     source_tokens = _tokens(source_excerpt)
     required = max(1 if len(claim_tokens) == 1 else 2, math.ceil(len(claim_tokens) * GROUNDING_RATIO))
-    if claim_tokens and len(claim_tokens & source_tokens) < required:
-        return False
-    return True
+    shared_tokens = len(claim_tokens & source_tokens)
+    return {
+        "valid": bool(format_complete and not unsupported_numbers and (not claim_tokens or shared_tokens >= required)),
+        "statement_format_complete": format_complete,
+        "unsupported_number_count": len(unsupported_numbers),
+        "shared_grounding_token_count": shared_tokens,
+        "required_grounding_token_count": required,
+        "numeric_format_normalization_count": _numeric_format_normalization_count(statement, source_excerpt),
+    }
+
+
+def _statement_is_complete(statement: str, source_excerpt: str) -> bool:
+    return bool(_statement_grounding_report(statement, source_excerpt)["valid"])
+
+
+def _bounded_statement_grounding(
+    statement: str,
+    source_lines: list[str],
+    *,
+    line_start: int,
+    line_end: int,
+    line_number_start: int,
+) -> dict[str, Any]:
+    """Validate one statement and, only for obvious wraps, widen its cited lines.
+
+    The statement is never rewritten.  Expansion stays inside the current AI
+    chunk, never crosses a blank line or bullet boundary, and is limited to two
+    adjacent physical lines on each side.  Any accepted adjustment is persisted
+    for the user's Claim review.
+    """
+
+    start_index = line_start - line_number_start
+    end_index = line_end - line_number_start
+    original_excerpt = "\n".join(source_lines[start_index:end_index + 1])
+    original = _statement_grounding_report(statement, original_excerpt)
+    original.update({
+        "line_start": line_start,
+        "line_end": line_end,
+        "citation_adjustment": None,
+        "adjacent_line_expansion_attempted": False,
+    })
+    if original["valid"] or not original["statement_format_complete"]:
+        return original
+
+    expanded_start, expanded_end = start_index, end_index
+    before = after = 0
+    while before < MAX_GROUNDING_ADJACENT_LINES and expanded_start > 0:
+        if not _looks_like_wrapped_pair(source_lines[expanded_start - 1], source_lines[expanded_start]):
+            break
+        expanded_start -= 1
+        before += 1
+    while after < MAX_GROUNDING_ADJACENT_LINES and expanded_end + 1 < len(source_lines):
+        if not _looks_like_wrapped_pair(source_lines[expanded_end], source_lines[expanded_end + 1]):
+            break
+        expanded_end += 1
+        after += 1
+    if expanded_start == start_index and expanded_end == end_index:
+        return original
+
+    expanded_excerpt = "\n".join(source_lines[expanded_start:expanded_end + 1])
+    expanded = _statement_grounding_report(statement, expanded_excerpt)
+    expanded.update({
+        "line_start": line_number_start + expanded_start,
+        "line_end": line_number_start + expanded_end,
+        "citation_adjustment": "ADJACENT_WRAPPED_LINES" if expanded["valid"] else None,
+        "adjacent_line_expansion_attempted": True,
+        "original_line_start": line_start,
+        "original_line_end": line_end,
+    })
+    return expanded if expanded["valid"] else {**original, **{
+        "adjacent_line_expansion_attempted": True,
+        "expanded_line_start": line_number_start + expanded_start,
+        "expanded_line_end": line_number_start + expanded_end,
+        "unsupported_number_count": expanded["unsupported_number_count"],
+        "shared_grounding_token_count": expanded["shared_grounding_token_count"],
+    }}
+
+
+def _invalid_ai_response(category: str, message: str, **details: object) -> JobOpsError:
+    return JobOpsError("AI_RESPONSE_INVALID", message, failure_category=category, **details)
 
 
 class AIAnalysisEngine:
@@ -296,6 +453,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "Classify paid or professional work as work, roles explicitly described as intern/internship as internship, degree study as education, and bounded case/engagement/build work as project.",
             "Every candidate must be a complete standalone sentence ending in punctuation. Achievements and responsibilities inherit the category and entity_key of their parent entity.",
             "Preserve company, role, date, number, and responsibility boundaries exactly; never infer missing facts.",
+            "Numeric formatting may differ only by commas, digit-grouping spaces, full-width digits, or physical PDF line wraps. Never calculate, round, scale, convert, or infer a value.",
             "Treat team and AI work as separate from sole applicant ownership.",
             "Every candidate must cite inclusive source line_start and line_end.",
             "Before returning, verify that every candidate ends in punctuation and that its cited line range contains every stated identity, date, number, responsibility, and outcome. Expand across wrapped source lines when needed; omit anything that cannot be grounded exactly.",
@@ -453,7 +611,8 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 "Re-check every entity and candidate against the numbered source. A cited range must include every stated company, role, date, number, responsibility, and outcome.",
                 "Every candidate must be a complete standalone sentence of 20-2000 characters ending in . ? ! 。 ？ or ！. Never return headings, labels, table rows, URLs, contact values, or sentence fragments.",
                 "When a source sentence wraps across lines, cite the full inclusive range. Do not cite nearby unrelated lines merely to gain token overlap.",
-                "Preserve responsibility boundaries and exact numbers. Do not add a subject, result, date, role, or relationship that the cited lines do not support.",
+            "Preserve responsibility boundaries and exact numbers. Do not add a subject, result, date, role, or relationship that the cited lines do not support.",
+            "A comma, thin space, full-width digit, or physical PDF line wrap may change numeric formatting, but never calculate, round, scale, convert, or infer a numeric value.",
                 "Omit an unsupported candidate instead of guessing. Do not preserve the rejected candidate count.",
                 "Identify each real-world work, internship, education, or project entity once and attach each experience Claim to exactly one matching entity.",
                 "Do not approve any Claim for external use.",
@@ -466,11 +625,19 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
 
     @staticmethod
     def _repair_failed(error: JobOpsError) -> JobOpsError:
+        safe_detail_keys = {
+            "failure_category", "candidate_index", "cited_line_start", "cited_line_end",
+            "unsupported_number_count", "shared_grounding_token_count", "statement_format_complete",
+            "required_grounding_token_count", "adjacent_line_expansion_attempted",
+            "expanded_line_start", "expanded_line_end", "numeric_matching_policy",
+        }
+        diagnostics = {key: value for key, value in error.details.items() if key in safe_detail_keys}
         return JobOpsError(
             "AI_RESPONSE_REPAIR_FAILED",
             "The AI result still contained an incomplete or unsupported Claim after one automatic correction. Nothing from this attempt was imported.",
             validation_code=error.code,
             automatic_repair_attempts=1,
+            **diagnostics,
         )
 
     @staticmethod
@@ -482,31 +649,31 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         line_number_start: int = 1,
     ) -> list[dict[str, Any]]:
         if not isinstance(value, dict):
-            raise JobOpsError("AI_RESPONSE_INVALID", "The local AI response did not match the JobOps protocol.")
+            raise _invalid_ai_response("RESPONSE_FORMAT", "The local AI response did not match the JobOps protocol.")
         try:
             protocol_version = int(value.get("schema_version", 0))
         except (TypeError, ValueError) as exc:
-            raise JobOpsError("AI_RESPONSE_INVALID", "The local AI response did not match the JobOps protocol.") from exc
+            raise _invalid_ai_response("RESPONSE_FORMAT", "The local AI response did not match the JobOps protocol.") from exc
         if protocol_version != AI_PROTOCOL_VERSION:
-            raise JobOpsError("AI_RESPONSE_INVALID", "The local AI response did not match the JobOps protocol.")
+            raise _invalid_ai_response("RESPONSE_FORMAT", "The local AI response did not match the JobOps protocol.")
         raw_entities = value.get("entities")
         if not isinstance(raw_entities, list) or len(raw_entities) > 100:
-            raise JobOpsError("AI_RESPONSE_INVALID", "The local AI response contains an invalid entity list.")
+            raise _invalid_ai_response("RESPONSE_FORMAT", "The local AI response contains an invalid entity list.")
         entities: dict[str, dict[str, Any]] = {}
         signatures: set[str] = set()
         line_count = max(1, len(source_lines))
         line_number_end = line_number_start + line_count - 1
         for raw in raw_entities:
             if not isinstance(raw, dict):
-                raise JobOpsError("AI_RESPONSE_INVALID", "A local AI entity is not an object.")
+                raise _invalid_ai_response("RESPONSE_FORMAT", "A local AI entity is not an object.")
             entity_key = _compact(raw.get("entity_key"), limit=120)
             entity_type = _compact(raw.get("entity_type"), limit=30).casefold()
             try:
                 line_start, line_end = int(raw.get("line_start")), int(raw.get("line_end"))
             except (TypeError, ValueError) as exc:
-                raise JobOpsError("AI_RESPONSE_INVALID", "A local AI entity has invalid provenance lines.") from exc
+                raise _invalid_ai_response("PROVENANCE_LINES", "A local AI entity has invalid provenance lines.") from exc
             if not entity_key or entity_key in entities or entity_type not in ENTITY_CATEGORIES or not line_number_start <= line_start <= line_end <= line_number_end:
-                raise JobOpsError("AI_RESPONSE_INVALID", "A local AI entity has an invalid identity, type, or provenance.")
+                raise _invalid_ai_response("ENTITY_IDENTITY", "A local AI entity has an invalid identity, type, or provenance.")
             entity = {
                 "entity_key": entity_key,
                 "entity_type": entity_type,
@@ -519,12 +686,12 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             }
             entity_excerpt = "\n".join(source_lines[line_start - line_number_start:line_end - line_number_start + 1])
             if not (entity["organization"] or entity["role"]):
-                raise JobOpsError("AI_RESPONSE_INVALID", "An AI entity has no grounded organization or role identity.")
+                raise _invalid_ai_response("ENTITY_IDENTITY", "An AI entity has no grounded organization or role identity.")
             if not _field_is_grounded(entity["organization"], entity_excerpt) or not _field_is_grounded(entity["role"], entity_excerpt):
-                raise JobOpsError("AI_RESPONSE_INVALID", "An AI entity identity is not grounded in its cited lines.")
+                raise _invalid_ai_response("ENTITY_IDENTITY", "An AI entity identity is not grounded in its cited lines.")
             entity_numbers = _numbers(f"{entity['start_date']} {entity['end_date']}")
             if entity_numbers - _numbers(entity_excerpt):
-                raise JobOpsError("AI_RESPONSE_INVALID", "An AI entity date is not grounded in its cited lines.")
+                raise _invalid_ai_response("ENTITY_DATE", "An AI entity date is not grounded in its cited lines.")
             context_excerpt = entity_excerpt
             internship_explicit = bool(re.search(r"\b(?:intern|internship|trainee)\b|实习", context_excerpt, re.IGNORECASE))
             education_explicit = bool(re.search(
@@ -533,27 +700,27 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 re.IGNORECASE,
             ))
             if internship_explicit and entity_type != "internship":
-                raise JobOpsError("AI_RESPONSE_INVALID", "An explicitly identified internship was assigned to another experience category.")
+                raise _invalid_ai_response("EXPERIENCE_CLASSIFICATION", "An explicitly identified internship was assigned to another experience category.")
             if entity_type == "internship" and not internship_explicit:
-                raise JobOpsError("AI_RESPONSE_INVALID", "An internship entity is not explicitly supported by its cited context.")
+                raise _invalid_ai_response("EXPERIENCE_CLASSIFICATION", "An internship entity is not explicitly supported by its cited context.")
             if entity_type == "education" and not education_explicit:
-                raise JobOpsError("AI_RESPONSE_INVALID", "An education entity is not explicitly supported by its cited context.")
+                raise _invalid_ai_response("EXPERIENCE_CLASSIFICATION", "An education entity is not explicitly supported by its cited context.")
             signature = _entity_signature(entity)
             if not signature.replace("|", "") or signature in signatures:
-                raise JobOpsError("AI_RESPONSE_INVALID", "The AI returned a duplicate or unidentified real-world entity.")
+                raise _invalid_ai_response("DUPLICATE_ENTITY", "The AI returned a duplicate or unidentified real-world entity.")
             signatures.add(signature)
             entity["entity_fingerprint"] = stable_id("ENTKEY", signature)
             entity["entity_id"] = stable_id("ENT", source_id, signature)
             entities[entity_key] = entity
         raw_candidates = value.get("candidates")
         if not isinstance(raw_candidates, list) or len(raw_candidates) > 300:
-            raise JobOpsError("AI_RESPONSE_INVALID", "The local AI response contains an invalid candidate list.")
+            raise _invalid_ai_response("RESPONSE_FORMAT", "The local AI response contains an invalid candidate list.")
         output: list[dict[str, Any]] = []
         seen: set[str] = set()
         seen_candidates: list[tuple[str, str, str]] = []
         for candidate_index, raw in enumerate(raw_candidates, start=1):
             if not isinstance(raw, dict):
-                raise JobOpsError("AI_RESPONSE_INVALID", "A local AI candidate is not an object.")
+                raise _invalid_ai_response("RESPONSE_FORMAT", "A local AI candidate is not an object.")
             statement = _clean_candidate_statement(raw.get("statement"))
             category = _compact(raw.get("category"), limit=81).casefold()
             claim_kind = _compact(raw.get("claim_kind"), limit=50).casefold()
@@ -564,33 +731,48 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 line_start = int(raw.get("line_start"))
                 line_end = int(raw.get("line_end"))
             except (TypeError, ValueError) as exc:
-                raise JobOpsError("AI_RESPONSE_INVALID", "A local AI candidate has invalid provenance lines.") from exc
+                raise _invalid_ai_response("PROVENANCE_LINES", "A local AI candidate has invalid provenance lines.") from exc
             if category not in ALLOWED_CATEGORIES or claim_kind not in ALLOWED_CLAIM_KINDS:
-                raise JobOpsError("AI_RESPONSE_INVALID", "A local AI candidate contains an unsupported category or Claim kind.")
+                raise _invalid_ai_response("CATEGORY_CONTRACT", "A local AI candidate contains an unsupported category or Claim kind.")
             if confidence not in ALLOWED_CONFIDENCE or not line_number_start <= line_start <= line_end <= line_number_end:
-                raise JobOpsError("AI_RESPONSE_INVALID", "A local AI candidate contains invalid confidence or provenance.")
+                raise _invalid_ai_response("PROVENANCE_LINES", "A local AI candidate contains invalid confidence or provenance.")
             entity = entities.get(entity_key) if entity_key else None
             if category in ENTITY_CATEGORIES and (entity is None or entity["entity_type"] != category):
-                raise JobOpsError("AI_RESPONSE_INVALID", "An experience Claim is not attached to exactly one matching entity.")
+                raise _invalid_ai_response("ENTITY_RELATION", "An experience Claim is not attached to exactly one matching entity.")
             if category not in ENTITY_CATEGORIES and entity_key:
-                raise JobOpsError("AI_RESPONSE_INVALID", "A non-entity Claim must not be attached to an experience entity.")
+                raise _invalid_ai_response("ENTITY_RELATION", "A non-entity Claim must not be attached to an experience entity.")
             if category in ENTITY_CATEGORIES and not _has_entity_predicate(statement):
-                raise JobOpsError("AI_RESPONSE_INVALID", "An experience Claim is a heading or fragment without a complete action or relationship.")
-            source_excerpt = "\n".join(source_lines[line_start - line_number_start:line_end - line_number_start + 1])
-            if not _statement_is_complete(statement, source_excerpt):
-                unsupported_numbers = len(_numbers(statement) - _numbers(source_excerpt))
-                claim_tokens = _tokens(statement)
-                shared_tokens = len(claim_tokens & _tokens(source_excerpt))
-                raise JobOpsError(
-                    "AI_RESPONSE_INVALID",
+                raise _invalid_ai_response("STATEMENT_FRAGMENT", "An experience Claim is a heading or fragment without a complete action or relationship.")
+            grounding = _bounded_statement_grounding(
+                statement,
+                source_lines,
+                line_start=line_start,
+                line_end=line_end,
+                line_number_start=line_number_start,
+            )
+            if not grounding["valid"]:
+                failure_category = (
+                    "UNSUPPORTED_NUMBER" if grounding["unsupported_number_count"]
+                    else "STATEMENT_FRAGMENT" if not grounding["statement_format_complete"]
+                    else "CITED_LINE_GROUNDING"
+                )
+                raise _invalid_ai_response(
+                    failure_category,
                     "The AI returned a fragment or a statement that is not grounded in its cited lines.",
                     candidate_index=candidate_index,
                     cited_line_start=line_start,
                     cited_line_end=line_end,
-                    unsupported_number_count=unsupported_numbers,
-                    shared_grounding_token_count=shared_tokens,
-                    statement_format_complete=bool(20 <= len(statement) <= 2_000 and statement[-1:] in ".?!。！？"),
+                    unsupported_number_count=grounding["unsupported_number_count"],
+                    shared_grounding_token_count=grounding["shared_grounding_token_count"],
+                    required_grounding_token_count=grounding["required_grounding_token_count"],
+                    statement_format_complete=grounding["statement_format_complete"],
+                    adjacent_line_expansion_attempted=grounding["adjacent_line_expansion_attempted"],
+                    expanded_line_start=grounding.get("expanded_line_start"),
+                    expanded_line_end=grounding.get("expanded_line_end"),
+                    numeric_matching_policy="FORMAT_EQUIVALENT_ONLY_NO_CALCULATION",
                 )
+            accepted_line_start = int(grounding["line_start"])
+            accepted_line_end = int(grounding["line_end"])
             signature = re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", statement.casefold())
             if signature in seen:
                 continue
@@ -603,7 +785,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             seen.add(signature)
             seen_candidates.append((category, entity_identity, statement))
             output.append({
-                "candidate_id": stable_id("EXT", source_id, str(line_start), statement),
+                "candidate_id": stable_id("EXT", source_id, str(accepted_line_start), statement),
                 "statement": statement,
                 "category": category,
                 "claim_kind": claim_kind,
@@ -611,7 +793,15 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 "selected": False,
                 "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
                 "ai_reason": reason,
-                "provenance": {"line_start": line_start, "line_end": line_end},
+                "provenance": {
+                    "line_start": accepted_line_start,
+                    "line_end": accepted_line_end,
+                    "ai_line_start": line_start,
+                    "ai_line_end": line_end,
+                    "citation_adjustment": grounding.get("citation_adjustment"),
+                    "numeric_format_normalizations": grounding["numeric_format_normalization_count"],
+                    "human_confirmation_required": True,
+                },
                 "entity_id": entity.get("entity_id") if entity else None,
                 "entity": entity,
             })

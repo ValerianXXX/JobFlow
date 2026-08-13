@@ -6,6 +6,7 @@ from typing import Any, Iterable
 
 from .security import normalized_name, validate_secure_reference
 from .util import sha256_bytes, write_json
+from .application_materials import field_answer_key
 
 
 PROVIDERS = ("greenhouse", "lever", "workday")
@@ -73,7 +74,11 @@ def map_fields(fields: Iterable[dict[str, Any]], known_answers: dict[str, str], 
         field_id = str(field.get("id") or field.get("name") or "unknown_field")
         classification, reason = classify_application_field(field, page_context=page_context, blocked_categories=blocked_categories)
         answer = known_answers.get(field_id)
-        record: dict[str, Any] = {"id": field_id, "label": label, "classification": classification, "reason": reason}
+        record: dict[str, Any] = {
+            "id": field_id, "label": label, "classification": classification, "reason": reason,
+            "required": bool(field.get("required", False)),
+        }
+        record["answer_key"] = field_answer_key({**field, "classification": classification})
         if classification == "ordinary_fixed" and answer not in (None, "", "UNKNOWN"):
             record.update({"gate": "PREFILL_ALLOWED", "action": "PREFILL", "value": answer})
         elif classification == "private_fixed" and answer and str(answer).startswith("secure-ref:"):

@@ -8,13 +8,14 @@ from pathlib import Path
 from typing import Any
 
 from .adapters import FakeBrowserPrefillAdapter
+from .application_materials import build_material_plan, detect_material_requests
 from .approvals import ApprovalContext, UploadBinding
 from .ats_browser import analyze_local_ats_form, build_browser_action_plan
 from .claim_registry import ClaimRegistry
 from .claims import verify_claim_evidence
 from .collector import JobCollector
 from .db import JobOpsDB
-from .document_builder import export_docx_to_pdf, render_pdf_to_pngs, tailor_master_resume
+from .document_builder import build_cover_letter, export_docx_to_pdf, render_pdf_to_pngs, tailor_master_resume
 from .document_qa import automated_visual_probe, extract_pdf_text, structural_qa
 from .eligibility import check_eligibility
 from .errors import JobOpsError
@@ -151,7 +152,18 @@ class JobOpsOrchestrator:
 
     def secure_onboard_synthetic(self) -> dict[str, Any]:
         fixtures = self.project / "tests" / "fixtures"
-        profile = self.onboarding.import_file("candidate_profile", fixtures / "synthetic-forward-profile.json", synthetic=True)
+        portfolio = self.onboarding.import_file(
+            "onboarding_source_document", fixtures / "synthetic-forward-jd.pdf", synthetic=True,
+        )
+        profile_value = load_json(fixtures / "synthetic-forward-profile.json")
+        profile_value.update({
+            "github_url": "https://github.com/synthetic-candidate",
+            "portfolio_url": "https://portfolio.example.test/synthetic-candidate",
+            "portfolio_file_ref": portfolio["secure_ref"],
+            "portfolio_file_sha256": portfolio["content_sha256"],
+            "portfolio_file_display_name": "synthetic-portfolio.pdf",
+        })
+        profile = self.onboarding.import_bytes("candidate_profile", canonical_json(profile_value), synthetic=True)
         answers = self.onboarding.import_file("answer_bank", fixtures / "synthetic-forward-answer-bank.json", synthetic=True)
         master = self.onboarding.import_file("master_resume_docx", fixtures / "complex-master-resume.docx", synthetic=True)
         return {
@@ -323,6 +335,12 @@ class JobOpsOrchestrator:
 
         answers = self._load_json_ref(answer_bank_ref)
         answers["full_name"] = profile_ref
+        public_answers = dict(answers)
+        public_answers.update({
+            "github": profile.get("github_url") or answers.get("github"),
+            "portfolio": profile.get("portfolio_url") or answers.get("portfolio"),
+            "website": answers.get("website"),
+        })
         ats_safe_prefill: dict[str, Any] | None = None
         if form_fixture.suffix.casefold() in {".html", ".htm"}:
             form_analysis = analyze_local_ats_form(
@@ -333,8 +351,8 @@ class JobOpsOrchestrator:
                 answer_key = str(item["answer_key"])
                 if item["classification"] == "private_fixed" and answer_key == "full_name" and profile.get("candidate_display_name"):
                     bindings[str(item["control_ref"])] = {"kind": "secure_ref", "value": profile_ref}
-                elif item["classification"] == "ordinary_fixed" and answer_key in answers:
-                    candidate = str(answers[answer_key])
+                elif item["classification"] == "ordinary_fixed" and answer_key in public_answers:
+                    candidate = str(public_answers[answer_key])
                     if candidate not in {"", "UNKNOWN", "UNANSWERED"}:
                         bindings[str(item["control_ref"])] = {"kind": "public_value", "value": candidate}
             browser_plan = build_browser_action_plan(form_analysis, bindings)
@@ -349,6 +367,7 @@ class JobOpsOrchestrator:
                 safe_questions.append({
                     "id": item["control_ref"], "label": item["answer_key"], "answer_key": item["answer_key"],
                     "prompt_hash": item["prompt_hash"], "control_type": item["control_type"],
+                    "required": bool(item.get("required", False)),
                     "classification": item["classification"], "reason": item["reason_code"],
                     "gate": "PREFILL_ALLOWED" if action["action"] == "PROPOSE_PREFILL" else "STOP_REQUIRED",
                     "action": "PREFILL_FROM_SECURE_STORE" if action["binding_kind"] == "SECURE_REF" else ("PREFILL" if action["action"] == "PROPOSE_PREFILL" else "STOP"),
@@ -398,9 +417,17 @@ class JobOpsOrchestrator:
             "PROJECT": claims[2]["allowed_wording"][0], "SKILLS": claims[3]["allowed_wording"][0],
             "EDUCATION": claims[4]["allowed_wording"][0],
         }
+        material_requests = detect_material_requests(fields["fields"])
+        cover_requested = any(item["purpose"] == "cover_letter" for item in material_requests["uploads"])
+        cover_docx_ref: dict[str, Any] | None = None
+        cover_pdf_ref: dict[str, Any] | None = None
+        cover_visual_ref: dict[str, Any] | None = None
+        cover_qa: dict[str, Any] | None = None
         with self.onboarding.staging_directory() as staging:
             master_path = staging / "master.docx"
-            master_path.write_bytes(self.onboarding.read_bytes(master_resume_ref))
+            master_bytes = self.onboarding.read_bytes(master_resume_ref)
+            master_sha256 = sha256_bytes(master_bytes)
+            master_path.write_bytes(master_bytes)
             resume_docx = staging / "resume.docx"
             resume_pdf = staging / "resume.pdf"
             diff = tailor_master_resume(master_path, resume_docx, replacements=replacements, claims=claims, synthetic=True)
@@ -413,19 +440,105 @@ class JobOpsOrchestrator:
             docx_ref = self.onboarding.import_bytes("generated_resume_docx", resume_docx.read_bytes(), synthetic=True)
             pdf_ref = self.onboarding.import_bytes("generated_resume_pdf", resume_pdf.read_bytes(), synthetic=True)
             visual_ref = self.onboarding.import_bytes("visual_evidence", canonical_json(visual), synthetic=True)
+            if cover_requested:
+                cover_docx = staging / "cover-letter.docx"
+                cover_pdf = staging / "cover-letter.pdf"
+                build_cover_letter(
+                    cover_docx,
+                    candidate_display_name=str(profile["candidate_display_name"]),
+                    company=jd.company,
+                    target_role=jd.title,
+                    why_company=f"{excerpt} ({research_source.url}, accessed {research_source.accessed_at[:10]}).",
+                    why_role=claims[0]["allowed_wording"][0],
+                    claims=claims[:2],
+                )
+                export_docx_to_pdf(
+                    cover_docx,
+                    cover_pdf,
+                    self.project / ".agents" / "skills" / "job-application-operator" / "scripts" / "export-docx-pdf.ps1",
+                )
+                cover_pages = render_pdf_to_pngs(cover_pdf, staging / "cover-renders", _pdftoppm())
+                cover_visual = automated_visual_probe(cover_pages)
+                cover_qa_result = structural_qa(
+                    cover_docx, cover_pdf, cover_pages, visual_record=cover_visual, page_limit=2,
+                )
+                if cover_qa_result.status != "PASS":
+                    raise JobOpsError(
+                        "MATERIALS_NEEDS_CORRECTION",
+                        "The on-demand Cover Letter failed structural or render QA.",
+                        qa=cover_qa_result.as_dict(),
+                    )
+                cover_qa = cover_qa_result.as_dict()
+                cover_docx_ref = self.onboarding.import_bytes(
+                    "generated_cover_letter_docx", cover_docx.read_bytes(), synthetic=True,
+                )
+                cover_pdf_ref = self.onboarding.import_bytes(
+                    "generated_cover_letter_pdf", cover_pdf.read_bytes(), synthetic=True,
+                )
+                cover_visual_ref = self.onboarding.import_bytes(
+                    "visual_evidence", canonical_json(cover_visual), synthetic=True,
+                )
         self._crash(crash_after_step, "after_materials")
 
         freshness = assess_job_freshness(official_listing_present=True, application_form_available=True, checked_at=iso_utc())
         if freshness["status"] != "CURRENT":
             raise JobOpsError("JD_FRESHNESS_REQUIRED", "Official listing freshness must be current before review packet generation.")
         claim_set_hash = sha256_bytes(canonical_json([{"claim_id": item["claim_id"], "content_hash": item["content_hash"], "version": item["version"]} for item in claims]))
-        uploads = [
-            {"filename": "resume.pdf", "purpose": "resume", "sha256": pdf_ref["content_sha256"]},
-        ]
+        public_values = {key: public_answers.get(key) for key in ("github", "portfolio", "website")}
+        cover_binding = (
+            {
+                "docx_secure_ref": str(cover_docx_ref["secure_ref"]),
+                "docx_sha256": str(cover_docx_ref["content_sha256"]),
+                "pdf_secure_ref": str(cover_pdf_ref["secure_ref"]),
+                "pdf_sha256": str(cover_pdf_ref["content_sha256"]),
+            }
+            if cover_docx_ref and cover_pdf_ref else None
+        )
+        portfolio_binding = (
+            {
+                "secure_ref": str(profile["portfolio_file_ref"]),
+                "sha256": str(profile["portfolio_file_sha256"]),
+                "safe_filename": str(profile["portfolio_file_display_name"]),
+            }
+            if all(profile.get(key) for key in ("portfolio_file_ref", "portfolio_file_sha256", "portfolio_file_display_name"))
+            else None
+        )
+        material_plan = build_material_plan(
+            master_resume_ref=master_resume_ref,
+            master_resume_sha256=master_sha256,
+            tailored_docx_ref=str(docx_ref["secure_ref"]),
+            tailored_docx_sha256=str(docx_ref["content_sha256"]),
+            tailored_pdf_ref=str(pdf_ref["secure_ref"]),
+            tailored_pdf_sha256=str(pdf_ref["content_sha256"]),
+            fields=fields["fields"],
+            public_values=public_values,
+            cover_letter=cover_binding,
+            portfolio_file=portfolio_binding,
+        )
+        validate_named("material-plan", material_plan, self.schemas)
+        safe_suffix = application_id.rsplit("-", 1)[-1].casefold()
+        uploads = [{
+            "filename": f"jobflow-resume-{safe_suffix}.pdf",
+            "purpose": "resume",
+            "sha256": pdf_ref["content_sha256"],
+        }]
+        if cover_pdf_ref:
+            uploads.append({
+                "filename": f"jobflow-cover-letter-{safe_suffix}.pdf",
+                "purpose": "cover_letter",
+                "sha256": cover_pdf_ref["content_sha256"],
+            })
+        if material_plan["portfolio_file"]["binding_status"] == "BOUND_SECURE_FILE":
+            uploads.append({
+                "filename": material_plan["portfolio_file"]["safe_filename"],
+                "purpose": "portfolio",
+                "sha256": material_plan["portfolio_file"]["sha256"],
+            })
         answers_hash = sha256_bytes(canonical_json(answers))
         packet_id = stable_id(
             "RPK", application_id, intake_key, str(profile["profile_version"]), claim_set_hash,
-            str(pdf_ref["content_sha256"]), route.route_hash, form_snapshot_hash, answers_hash,
+            str(pdf_ref["content_sha256"]), sha256_bytes(canonical_json(material_plan)),
+            route.route_hash, form_snapshot_hash, answers_hash,
         )
         packet: dict[str, Any] = {
             "schema_version": 1, "status": "AWAITING_APPROVAL", "packet_id": packet_id, "application_id": application_id,
@@ -434,7 +547,8 @@ class JobOpsOrchestrator:
             "resume_bullets": [{"text": item["allowed_wording"][0], "claim_id": item["claim_id"], "evidence": item["source_refs"]} for item in claims],
             "master_resume_diff": diff, "form_questions": fields["fields"],
             "sensitive_fields": [item for item in fields["fields"] if item["action"] == "STOP"],
-            "uploads": uploads, "external_actions": ["upload_material", "submit_application"],
+            "uploads": uploads, "material_plan": material_plan,
+            "external_actions": ["upload_material", "submit_application"],
             "source_route": route.as_dict(), "queue": self.queue.status(),
         }
         packet["content_hash"] = sha256_bytes(canonical_json(packet))
@@ -460,6 +574,18 @@ class JobOpsOrchestrator:
             {"material_id": stable_id("MAT", application_id, "resume_pdf", str(pdf_ref["content_sha256"])), "kind": "resume_pdf", "path": pdf_ref["secure_ref"], "content_hash": pdf_ref["content_sha256"], "claim_ids": [item["claim_id"] for item in claims]},
             {"material_id": stable_id("MAT", application_id, "visual_evidence", str(visual_ref["content_sha256"])), "kind": "visual_evidence", "path": visual_ref["secure_ref"], "content_hash": visual_ref["content_sha256"], "claim_ids": []},
         ]
+        if cover_docx_ref and cover_pdf_ref and cover_visual_ref:
+            materials.extend([
+                {"material_id": stable_id("MAT", application_id, "cover_letter_docx", str(cover_docx_ref["content_sha256"])), "kind": "cover_letter_docx", "path": cover_docx_ref["secure_ref"], "content_hash": cover_docx_ref["content_sha256"], "claim_ids": [item["claim_id"] for item in claims[:2]]},
+                {"material_id": stable_id("MAT", application_id, "cover_letter_pdf", str(cover_pdf_ref["content_sha256"])), "kind": "cover_letter_pdf", "path": cover_pdf_ref["secure_ref"], "content_hash": cover_pdf_ref["content_sha256"], "claim_ids": [item["claim_id"] for item in claims[:2]]},
+                {"material_id": stable_id("MAT", application_id, "cover_visual_evidence", str(cover_visual_ref["content_sha256"])), "kind": "visual_evidence", "path": cover_visual_ref["secure_ref"], "content_hash": cover_visual_ref["content_sha256"], "claim_ids": []},
+            ])
+        if material_plan["portfolio_file"]["binding_status"] == "BOUND_SECURE_FILE":
+            materials.append({
+                "material_id": stable_id("MAT", application_id, "portfolio_file", str(material_plan["portfolio_file"]["sha256"])),
+                "kind": "portfolio_file", "path": material_plan["portfolio_file"]["secure_ref"],
+                "content_hash": material_plan["portfolio_file"]["sha256"], "claim_ids": [],
+            })
         admitted = self.queue.admit_awaiting(
             admission.reservation_id, context, snapshot_relative_path=str(collected["snapshot_path"]),
             job_details={"source_type": source_format, "source_locator": locator, "official_url": route.official_entry_url, "company": jd.company, "title": jd.title, "location": jd.location},
@@ -469,6 +595,7 @@ class JobOpsOrchestrator:
         )
         return {
             **admitted, "job_id": job_id, "review_packet_id": packet_id, "review_packet_ref": packet_ref["secure_ref"],
-            "fit_recommendation": fit.recommendation, "document_qa": qa.as_dict(), "queue": self.queue.status(),
+            "fit_recommendation": fit.recommendation, "document_qa": qa.as_dict(), "cover_letter_qa": cover_qa,
+            "material_plan": material_plan, "queue": self.queue.status(),
             "ats_safe_prefill": ats_safe_prefill, "real_external_actions": 0, "next_safe_action": "show-review-packet",
         }

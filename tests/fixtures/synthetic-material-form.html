@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>Synthetic material application</title></head>
+  <body>
+    <main data-provider="greenhouse">
+      <h1>Synthetic material application</h1>
+      <form action="/example/jobs/987654">
+        <h2>Candidate details</h2>
+        <label for="full_name">Full name</label>
+        <input id="full_name" name="full_name" type="text" autocomplete="name" required>
+        <label for="github">GitHub URL</label>
+        <input id="github" name="github" type="url" required>
+        <label for="portfolio_url">Portfolio URL</label>
+        <input id="portfolio_url" name="portfolio" type="url">
+        <h2>Documents</h2>
+        <label for="resume">Resume</label>
+        <input id="resume" name="resume" type="file" required>
+        <label for="cover_letter">Cover Letter</label>
+        <input id="cover_letter" name="cover_letter" type="file" required>
+        <label for="portfolio_file">Portfolio work sample</label>
+        <input id="portfolio_file" name="portfolio_file" type="file">
+        <button id="submit" type="submit">Submit application</button>
+      </form>
+    </main>
+  </body>
+</html>

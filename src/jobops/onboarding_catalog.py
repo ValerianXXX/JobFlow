@@ -19,6 +19,7 @@ def _field(
     options: tuple[tuple[str, str, str], ...] = (),
     sensitive: bool = False,
     policy: str = "reuse",
+    required_resolution: bool = True,
 ) -> dict[str, Any]:
     return {
         "id": field_id,
@@ -32,7 +33,7 @@ def _field(
         ],
         "sensitive": sensitive,
         "default_policy": policy,
-        "required_resolution": True,
+        "required_resolution": required_resolution,
     }
 
 
@@ -43,6 +44,7 @@ GROUPS = (
     {"id": "compensation", "label": {"zh": "薪资", "en": "Compensation"}},
     {"id": "availability", "label": {"zh": "入职时间", "en": "Availability"}},
     {"id": "standard_application", "label": {"zh": "标准申请题", "en": "Standard application questions"}},
+    {"id": "public_links", "label": {"zh": "公开链接与作品集", "en": "Public links & portfolio"}},
     {"id": "sensitive_or_legal", "label": {"zh": "敏感或法律题", "en": "Sensitive or legal questions"}},
     {"id": "voluntary_disclosure", "label": {"zh": "自愿披露", "en": "Voluntary disclosure"}},
 )
@@ -70,6 +72,8 @@ FIELDS = (
     _field("why_role", "standard_application", "选择岗位的主要原因", "Why this type of role", input_type="textarea"),
     _field("referral_source", "standard_application", "常见申请来源", "Typical application source", input_type="select", options=(("OFFICIAL_CAREERS", "公司官网", "Company careers site"), ("REFERRAL", "推荐", "Referral"), ("RECRUITER", "招聘者", "Recruiter"), ("OTHER", "其他", "Other"))),
     _field("previous_employment", "standard_application", "是否曾在目标公司任职", "Previously employed by target company", input_type="select", options=YES_NO_UNKNOWN),
+    _field("github_url", "public_links", "GitHub 公开链接（可选）", "Public GitHub URL (optional)", help_zh="仅在申请表提供对应字段时使用；每份审阅包都会显示绑定状态。", help_en="Used only when the form offers a matching field; each review packet shows its binding status.", required_resolution=False),
+    _field("portfolio_url", "public_links", "作品集公开链接（可选）", "Public portfolio URL (optional)", help_zh="作品集文件可在资料区选择“作品集文件”安全上传。", help_en="Upload a portfolio file securely from Sources by choosing Portfolio file.", required_resolution=False),
     _field("background_check", "sensitive_or_legal", "是否愿意依法接受背景调查", "Consent to a lawful background check", input_type="select", options=YES_NO_UNKNOWN, sensitive=True, policy="confirm_each_application"),
     _field("non_compete", "sensitive_or_legal", "是否受竞业或其他限制", "Subject to non-compete or other restrictions", input_type="select", options=YES_NO_UNKNOWN, sensitive=True, policy="confirm_each_application"),
     _field("truthfulness_attestation", "sensitive_or_legal", "真实性声明处理方式", "Truthfulness attestation policy", input_type="select", options=(("CONFIRM_EACH", "每次申请前确认", "Confirm before every application"), ("DO_NOT_ACCEPT", "不自动接受", "Do not accept automatically")), sensitive=True, policy="confirm_each_application"),
@@ -84,6 +88,7 @@ FIELDS = (
 
 FIELD_BY_ID = {str(item["id"]): item for item in FIELDS}
 FIELD_IDS = tuple(FIELD_BY_ID)
+REQUIRED_FIELD_IDS = tuple(field_id for field_id in FIELD_IDS if FIELD_BY_ID[field_id]["required_resolution"])
 
 
 def empty_answers() -> dict[str, dict[str, Any]]:
@@ -107,4 +112,5 @@ def public_catalog() -> dict[str, Any]:
         "use_policies": list(USE_POLICIES),
         "supported_locales": ["zh", "en"],
         "field_count": len(FIELDS),
+        "required_field_count": len(REQUIRED_FIELD_IDS),
     }

@@ -104,6 +104,31 @@ def valid_fixtures() -> dict[str, dict]:
         "source-route": route,
         "site-policy": {"policy_version": "1", "provider": "local_fixture", "real_actions_enabled": False, "guest_first": True, "account_creation_enabled": False, "allowed_actions": ["local_snapshot"], "checked_at": T},
         "material-version": {"material_id": "MAT-ABCDEF123456", "application_id": APP, "kind": "resume_pdf", "relative_path": "reports/fixture.pdf", "content_hash": H, "master_hash": H, "claim_set_hash": H, "version": 1, "qa_status": "PASS", "created_at": T},
+        "material-plan": {
+            "schema_version": 1, "status": "READY_FOR_REVIEW",
+            "resume": {
+                "derivation": "TAILORED_COPY_OF_SINGLE_APPROVED_MASTER",
+                "master_secure_ref": "secure-ref:SYNTHETIC01", "master_sha256": H,
+                "generated_before_application": True,
+                "docx_secure_ref": "secure-ref:SYNTHETIC02", "docx_sha256": H,
+                "pdf_secure_ref": "secure-ref:SYNTHETIC03", "pdf_sha256": H,
+            },
+            "cover_letter": {
+                "request_status": "NOT_REQUESTED", "generation_status": "NOT_GENERATED",
+                "docx_secure_ref": None, "docx_sha256": None,
+                "pdf_secure_ref": None, "pdf_sha256": None,
+            },
+            "public_links": [{
+                "field_id": "github", "kind": "github", "required": False,
+                "binding_status": "BOUND_CONFIRMED_PUBLIC_VALUE", "value_sha256": H,
+                "value_exposed_in_packet": False,
+            }],
+            "portfolio_file": {
+                "request_status": "NOT_REQUESTED", "binding_status": "NOT_REQUESTED",
+                "secure_ref": None, "sha256": None, "safe_filename": None,
+            },
+            "all_uploads_and_submission_blocked": True, "real_external_actions": 0,
+        },
         "application-field": {"field_id": "FLD-ABCDEF123456", "application_id": APP, "classification": "ordinary_fixed", "action": "PREFILL", "status": "READY", "secure_ref": None, "redacted_summary": None, "field_hash": H},
         "ats-form-snapshot": {
             "schema_version": 1, "status": "FORM_SNAPSHOT_ANALYZED", "source_mode": "LOCAL_SNAPSHOT_ONLY",
@@ -186,7 +211,7 @@ def valid_fixtures() -> dict[str, dict]:
         "queue-reservation": {"reservation_id": "RSV-ABCDEF123456", "intake_key": H, "application_id": APP, "status": "CONSUMED", "pending_limit": 3, "pending_count": 1, "reserved_count": 1, "created_at": T, "updated_at": T},
         "recovery-event": {"recovery_id": "RCV-ABCDEF123456", "application_id": APP, "blocked_state": "SUBMISSION_UNKNOWN", "last_safe_state": "APPROVED", "validation_hash": H, "decision": "NO_AUTO_RETRY", "created_at": T},
         "receipt": {"receipt_id": "RCP-ABCDEF123456", "application_id": APP, "source": "fake-receipt", "confirmation_type": "confirmation_number", "confirmation_hash": H, "verified": True, "verified_at": T},
-        "review-packet": {"schema_version": 1, "status": "AWAITING_APPROVAL", "packet_id": "RPK-ABCDEF123456", "application_id": APP, "job": {"job_id": JOB}, "jd_captured_at": T, "fit": {"overall_score": 80}, "hard_gaps": [], "resume_bullets": [], "master_resume_diff": {}, "form_questions": [], "sensitive_fields": [], "uploads": [{"filename": "resume.pdf", "sha256": H}], "external_actions": ["upload_material"], "source_route": route, "queue": {"pending_limit": 3}, "content_hash": H},
+        "review-packet": {"schema_version": 1, "status": "AWAITING_APPROVAL", "packet_id": "RPK-ABCDEF123456", "application_id": APP, "job": {"job_id": JOB}, "jd_captured_at": T, "fit": {"overall_score": 80}, "hard_gaps": [], "resume_bullets": [], "master_resume_diff": {}, "form_questions": [], "sensitive_fields": [], "uploads": [{"filename": "resume.pdf", "sha256": H}], "material_plan": {"status": "READY_FOR_REVIEW"}, "external_actions": ["upload_material"], "source_route": route, "queue": {"pending_limit": 3}, "content_hash": H},
         "onboarding-review": {
             "schema_version": 1, "packet_id": "ONB-ABCDEF123456", "status": "AWAITING_USER_CLAIM_AND_PROFILE_APPROVAL",
             "final_states": ["MASTER_RESUME_SECURELY_IMPORTED", "CANDIDATE_PROFILE_DRAFTED", "CLAIM_REVIEW_PACKET_READY"],

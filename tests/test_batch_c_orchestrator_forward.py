@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import tempfile
 import unittest
@@ -12,6 +13,7 @@ from jobops.onboarding_center import OnboardingCenterService
 from jobops.orchestrator import JobOpsOrchestrator
 from jobops.private_onboarding import PrivateOnboarding
 from jobops.secure_store import WindowsDPAPIStore
+from jobops.util import sha256_bytes
 
 
 class OrchestratorForwardTests(unittest.TestCase):
@@ -27,12 +29,12 @@ class OrchestratorForwardTests(unittest.TestCase):
         onboarding = PrivateOnboarding(database, store)
         return database, onboarding, JobOpsOrchestrator(PROJECT, database, onboarding)
 
-    def run_chain(self, orchestrator, refs, *, crash=None):
+    def run_chain(self, orchestrator, refs, *, crash=None, form_name="synthetic-forward-form.json"):
         fixtures = PROJECT / "tests" / "fixtures"
         return orchestrator.run_to_awaiting(
             fixtures / "synthetic-forward-jd.txt", profile_ref=refs["profile_ref"], master_resume_ref=refs["master_resume_ref"],
             answer_bank_ref=refs["answer_bank_ref"], route_fixture=fixtures / "synthetic-forward-route.json",
-            form_fixture=fixtures / "synthetic-forward-form.json", research_fixture=fixtures / "synthetic-research.html",
+            form_fixture=fixtures / form_name, research_fixture=fixtures / "synthetic-research.html",
             synthetic=True, crash_after_step=crash,
         )
 
@@ -145,6 +147,48 @@ class OrchestratorForwardTests(unittest.TestCase):
             self.assertEqual(counts["materials"], 3)
             repeated = self.run_chain(orchestrator, refs)
             self.assertTrue(repeated["deduplicated"])
+
+    def test_job_materials_derive_from_one_master_and_generate_only_requested_extras(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, orchestrator = self.build(temp)
+            refs = orchestrator.secure_onboard_synthetic()
+            master_before = onboarding.read_bytes(refs["master_resume_ref"])
+
+            result = self.run_chain(
+                orchestrator, refs, form_name="synthetic-material-form.html",
+            )
+
+            master_after = onboarding.read_bytes(refs["master_resume_ref"])
+            plan = result["material_plan"]
+            self.assertEqual(master_after, master_before)
+            self.assertEqual(plan["resume"]["master_secure_ref"], refs["master_resume_ref"])
+            self.assertEqual(plan["resume"]["master_sha256"], sha256_bytes(master_before))
+            self.assertEqual(plan["resume"]["derivation"], "TAILORED_COPY_OF_SINGLE_APPROVED_MASTER")
+            self.assertEqual(plan["cover_letter"]["request_status"], "REQUESTED_REQUIRED")
+            self.assertEqual(plan["cover_letter"]["generation_status"], "GENERATED_ON_DEMAND")
+            self.assertEqual(result["cover_letter_qa"]["status"], "PASS")
+            self.assertEqual(plan["portfolio_file"]["binding_status"], "BOUND_SECURE_FILE")
+            self.assertEqual({item["kind"] for item in plan["public_links"]}, {"github", "portfolio"})
+            self.assertTrue(all(item["binding_status"] == "BOUND_CONFIRMED_PUBLIC_VALUE" for item in plan["public_links"]))
+            self.assertEqual(result["ats_safe_prefill"]["fields_discovered"], 7)
+            self.assertEqual(result["ats_safe_prefill"]["fields_proposed"], 3)
+            self.assertEqual(result["ats_safe_prefill"]["fields_stopped"], 4)
+            with database.connect() as connection:
+                kinds = [row[0] for row in connection.execute(
+                    "SELECT kind FROM materials WHERE application_id=? ORDER BY kind",
+                    (result["application_id"],),
+                ).fetchall()]
+                binding = json.loads(connection.execute(
+                    "SELECT context_json FROM application_bindings WHERE application_id=?",
+                    (result["application_id"],),
+                ).fetchone()[0])
+            self.assertEqual(len(kinds), 7)
+            self.assertIn("cover_letter_docx", kinds)
+            self.assertIn("cover_letter_pdf", kinds)
+            self.assertIn("portfolio_file", kinds)
+            self.assertEqual({item["purpose"] for item in binding["uploads"]}, {"resume", "cover_letter", "portfolio"})
+            self.assertTrue(plan["all_uploads_and_submission_blocked"])
+            self.assertEqual(plan["real_external_actions"], 0)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/material-plan.schema.json",
+  "title": "Per-job material plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "resume", "cover_letter", "public_links", "portfolio_file", "all_uploads_and_submission_blocked", "real_external_actions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["READY_FOR_REVIEW", "NEEDS_USER_MATERIAL"]},
+    "resume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["derivation", "master_secure_ref", "master_sha256", "generated_before_application", "docx_secure_ref", "docx_sha256", "pdf_secure_ref", "pdf_sha256"],
+      "properties": {
+        "derivation": {"const": "TAILORED_COPY_OF_SINGLE_APPROVED_MASTER"},
+        "master_secure_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+        "master_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "generated_before_application": {"const": true},
+        "docx_secure_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+        "docx_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "pdf_secure_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+        "pdf_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+      }
+    },
+    "cover_letter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request_status", "generation_status", "docx_secure_ref", "docx_sha256", "pdf_secure_ref", "pdf_sha256"],
+      "properties": {
+        "request_status": {"enum": ["NOT_REQUESTED", "REQUESTED_OPTIONAL", "REQUESTED_REQUIRED"]},
+        "generation_status": {"enum": ["NOT_GENERATED", "GENERATED_ON_DEMAND"]},
+        "docx_secure_ref": {"type": ["string", "null"], "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+        "docx_sha256": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"},
+        "pdf_secure_ref": {"type": ["string", "null"], "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+        "pdf_sha256": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"}
+      }
+    },
+    "public_links": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field_id", "kind", "required", "binding_status", "value_sha256", "value_exposed_in_packet"],
+        "properties": {
+          "field_id": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["github", "portfolio", "website"]},
+          "required": {"type": "boolean"},
+          "binding_status": {"enum": ["BOUND_CONFIRMED_PUBLIC_VALUE", "MISSING_USER_VALUE"]},
+          "value_sha256": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"},
+          "value_exposed_in_packet": {"const": false}
+        }
+      }
+    },
+    "portfolio_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request_status", "binding_status", "secure_ref", "sha256", "safe_filename"],
+      "properties": {
+        "request_status": {"enum": ["NOT_REQUESTED", "REQUESTED_OPTIONAL", "REQUESTED_REQUIRED"]},
+        "binding_status": {"enum": ["NOT_REQUESTED", "MISSING_USER_MATERIAL", "BOUND_SECURE_FILE"]},
+        "secure_ref": {"type": ["string", "null"], "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+        "sha256": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"},
+        "safe_filename": {"type": ["string", "null"], "pattern": "^[^/\\\\]{1,160}$"}
+      }
+    },
+    "all_uploads_and_submission_blocked": {"const": true},
+    "real_external_actions": {"const": 0}
+  }
+}

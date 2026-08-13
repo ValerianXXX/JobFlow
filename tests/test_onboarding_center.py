@@ -22,7 +22,7 @@ from jobops.db import JobOpsDB
 from jobops.document_qa import extract_pdf_text
 from jobops.errors import JobOpsError
 from jobops.instance_lock import local_instance_lock
-from jobops.onboarding_catalog import FIELD_BY_ID, FIELD_IDS, public_catalog
+from jobops.onboarding_catalog import FIELD_BY_ID, FIELD_IDS, REQUIRED_FIELD_IDS, public_catalog
 from jobops.onboarding_center import OnboardingCenterService, _docx_text, _evidence_preview, _json_text, _string_values
 from jobops.onboarding_server import create_server
 from jobops.private_onboarding import PrivateOnboarding
@@ -72,6 +72,10 @@ def full_answers() -> dict[str, dict[str, object]]:
             value = "100000"
         elif field_id == "available_start_date":
             value = "2026-09-01"
+        elif field_id == "github_url":
+            value = "https://github.com/synthetic-candidate"
+        elif field_id == "portfolio_url":
+            value = "https://portfolio.example.test/synthetic-candidate"
         answers[field_id] = {
             "value": value,
             "status": "CONFIRMED",
@@ -203,14 +207,49 @@ class OnboardingCenterTests(unittest.TestCase):
 
     def test_catalog_is_complete_and_bilingual(self) -> None:
         catalog = public_catalog()
-        self.assertEqual(len(catalog["fields"]), 25)
-        self.assertEqual(len(set(FIELD_IDS)), 25)
+        self.assertEqual(len(catalog["fields"]), 27)
+        self.assertEqual(len(set(FIELD_IDS)), 27)
+        self.assertEqual(catalog["required_field_count"], 25)
+        self.assertEqual(len(set(REQUIRED_FIELD_IDS)), 25)
         for group in catalog["groups"]:
             self.assertTrue(group["label"]["zh"])
             self.assertTrue(group["label"]["en"])
         for field in catalog["fields"]:
             self.assertTrue(field["label"]["zh"])
             self.assertTrue(field["label"]["en"])
+
+    def test_pdf_import_compares_local_extraction_modes_and_selects_cleaner_grounding_text(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+
+            def extraction(_path: Path, *, layout: bool, **_kwargs: object) -> tuple[str, int]:
+                if layout:
+                    return "\ue001\n\ue002\n\ue003\nA\nB\nC\n" * 10, 1
+                return "At Synthetic Studio, a Project Analyst built a complete local workflow.", 1
+
+            with mock.patch("jobops.onboarding_center.extract_pdf_text", side_effect=extraction):
+                text, excluded, selection = service._extract_text(b"synthetic-pdf", ".pdf", "resume")
+
+            self.assertIn("complete local workflow", text)
+            self.assertEqual(excluded, 0)
+            self.assertEqual(selection["pdf_extraction_strategy"], "LOGICAL_READING_ORDER")
+            self.assertEqual(selection["pdf_extraction_candidates_compared"], 2)
+            self.assertEqual(selection["document_quality"]["status"], "PASS")
+            self.assertFalse(selection["document_quality"]["contains_document_text"])
+
+    def test_unreadable_pdf_fails_before_ai_or_private_import(self) -> None:
+        with project_temp() as root:
+            service, _, store, _, _ = self.make_service(root)
+            before = set(store.values)
+            with mock.patch.object(
+                service, "_extract_text", return_value=("", 0, {"document_page_count": 2}),
+            ):
+                with self.assertRaises(JobOpsError) as caught:
+                    service._prepare_source("resume", ".pdf", b"synthetic-pdf")
+            self.assertEqual(caught.exception.code, "ONBOARDING_DOCUMENT_QUALITY_FAILED")
+            self.assertEqual(caught.exception.details["document_quality"]["status"], "FAIL")
+            self.assertIn("OCR_REQUIRED", caught.exception.details["document_quality"]["reason_codes"])
+            self.assertEqual(set(store.values), before)
 
     def test_ui_prioritizes_conflicts_and_wraps_every_long_operation(self) -> None:
         html = (PROJECT / "src" / "jobops" / "ui" / "index.html").read_text(encoding="utf-8")
@@ -300,6 +339,11 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("AI_WSL_LOCAL_BRIDGE_MISSING", script)
         self.assertIn("aiConnectionErrorMessage", script)
         self.assertIn("sourceAnalysisErrorMessage", script)
+        self.assertIn("aiNumberFailureDetailed", script)
+        self.assertIn("numericFormatReview", script)
+        self.assertIn("adjacentWrapReview", script)
+        self.assertIn("expanded_line_start", script)
+        self.assertIn("numeric_format_normalizations", script)
         self.assertIn("aiRepairApplied", script)
         self.assertIn("AI_RESPONSE_REPAIR_FAILED", script)
         self.assertIn('SECURE_CIPHERTEXT_HASH_MISMATCH:"privateWriteRepair"', script)
@@ -969,7 +1013,7 @@ class OnboardingCenterTests(unittest.TestCase):
                 service.complete(user_confirmed=True)
             self.assertEqual(caught.exception.code, "ONBOARDING_ANSWERS_INCOMPLETE")
             self.assertEqual(caught.exception.details["remaining"], 25)
-            self.assertEqual(caught.exception.details["fields"], list(FIELD_IDS))
+            self.assertEqual(caught.exception.details["fields"], list(REQUIRED_FIELD_IDS))
 
             service.save_answers({"locale": "zh", "answers": full_answers()})
             bootstrap = service.bootstrap()
@@ -1165,7 +1209,8 @@ class OnboardingCenterTests(unittest.TestCase):
                         "ui_protocol": UI_PROTOCOL_VERSION,
                     })
                     self.assertEqual(payload["real_external_actions"], 0)
-                    self.assertEqual(len(payload["catalog"]["fields"]), 25)
+                    self.assertEqual(len(payload["catalog"]["fields"]), 27)
+                    self.assertEqual(payload["catalog"]["required_field_count"], 25)
                 connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
                 session_path = "/session/synthetic-session-token/"
                 headers = {
