@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import http.server
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 
@@ -15,6 +17,7 @@ from jobops.ai_connections import (
     _analyze_with_single_repair,
     _assert_loopback_url,
     _decode_wsl_distribution_output,
+    _loopback_json,
     _run_bounded_agent_command,
 )
 from jobops.ai_runtime import AIAnalysisEngine, LocalSubprocessAIEngine
@@ -22,6 +25,49 @@ from jobops.errors import JobOpsError
 
 
 class AIConnectionTests(unittest.TestCase):
+    def test_loopback_bridge_does_not_follow_redirects(self) -> None:
+        destination_hits: list[str] = []
+
+        class Destination(http.server.BaseHTTPRequestHandler):
+            def do_GET(self) -> None:  # noqa: N802
+                destination_hits.append(self.path)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"status":"unexpected"}')
+
+            def log_message(self, *_args: object) -> None:
+                return
+
+        destination = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Destination)
+
+        class Redirect(http.server.BaseHTTPRequestHandler):
+            def do_GET(self) -> None:  # noqa: N802
+                self.send_response(302)
+                self.send_header("Location", f"http://127.0.0.1:{destination.server_port}/redirected")
+                self.end_headers()
+
+            def log_message(self, *_args: object) -> None:
+                return
+
+        source = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Redirect)
+        threads = [
+            threading.Thread(target=server.serve_forever, daemon=True)
+            for server in (source, destination)
+        ]
+        for thread in threads:
+            thread.start()
+        try:
+            with self.assertRaises(JobOpsError) as blocked:
+                _loopback_json(f"http://127.0.0.1:{source.server_port}/models")
+            self.assertEqual(blocked.exception.code, "AI_LOCAL_ENDPOINT_UNAVAILABLE")
+            self.assertEqual(destination_hits, [])
+        finally:
+            source.shutdown()
+            destination.shutdown()
+            source.server_close()
+            destination.server_close()
+
     def test_agent_bridge_stops_unbounded_output_during_generation(self) -> None:
         command = [
             sys.executable,

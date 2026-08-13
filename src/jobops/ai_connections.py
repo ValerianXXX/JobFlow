@@ -262,6 +262,11 @@ def _assert_loopback_url(value: str) -> None:
         raise JobOpsError("AI_LOOPBACK_REQUIRED", "AI auto-connection accepts only an unauthenticated local loopback endpoint.")
 
 
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[no-untyped-def]
+        return None
+
+
 def _loopback_json(
     url: str,
     *,
@@ -278,7 +283,7 @@ def _loopback_json(
     if body is not None:
         headers["Content-Type"] = "application/json"
     request = urllib.request.Request(url, data=body, headers=headers, method=method)
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirectHandler())
     try:
         with opener.open(request, timeout=max(0.2, min(float(timeout), 600.0))) as response:
             raw = response.read(MAX_CONNECTION_RESPONSE_BYTES + 1)
