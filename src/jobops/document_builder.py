@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import uuid
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -174,43 +175,52 @@ def tailor_master_resume(
         raise JobOpsError("INTERNAL_MARKER_FORBIDDEN", "Real-mode material cannot contain internal workflow markers.")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_output = output_path.with_name(f".{output_path.name}.jobflow-{uuid.uuid4().hex}.tmp")
     replaced: list[dict[str, str]] = []
     changed_parts: set[str] = set()
-    with zipfile.ZipFile(master_path, "r") as source, zipfile.ZipFile(output_path, "w") as target:
-        for info in source.infolist():
-            name = info.filename
-            data = source.read(name)
-            if name == "docProps/custom.xml" and not synthetic:
-                continue
-            if (name == "word/document.xml" or name.startswith("word/header") or name.startswith("word/footer")) and name.endswith(".xml"):
-                original = data
-                for slot, value in replacements.items():
-                    marker = "{{" + slot + "}}"
-                    count = data.count(marker.encode("utf-8"))
-                    if count:
-                        data = data.replace(marker.encode("utf-8"), value.encode("utf-8"))
-                        replaced.append({"slot": slot, "part": name, "occurrences": str(count), "replacement_sha256": sha256_bytes(value.encode("utf-8"))})
-                if data != original:
+    try:
+        with zipfile.ZipFile(master_path, "r") as source, zipfile.ZipFile(temporary_output, "x") as target:
+            for info in source.infolist():
+                name = info.filename
+                data = source.read(name)
+                if name == "docProps/custom.xml" and not synthetic:
+                    continue
+                if (name == "word/document.xml" or name.startswith("word/header") or name.startswith("word/footer")) and name.endswith(".xml"):
+                    original = data
+                    for slot, value in replacements.items():
+                        marker = "{{" + slot + "}}"
+                        count = data.count(marker.encode("utf-8"))
+                        if count:
+                            data = data.replace(marker.encode("utf-8"), value.encode("utf-8"))
+                            replaced.append({"slot": slot, "part": name, "occurrences": str(count), "replacement_sha256": sha256_bytes(value.encode("utf-8"))})
+                    if data != original:
+                        changed_parts.add(name)
+                if name == "docProps/core.xml" and not synthetic:
+                    root = ET.fromstring(data)
+                    for tag in (f"{{{DC_NS}}}creator", f"{{{CP_NS}}}lastModifiedBy", f"{{{DC_NS}}}description"):
+                        node = root.find(tag)
+                        if node is not None:
+                            node.text = ""
+                    data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
                     changed_parts.add(name)
-            if name == "docProps/core.xml" and not synthetic:
-                root = ET.fromstring(data)
-                for tag in (f"{{{DC_NS}}}creator", f"{{{CP_NS}}}lastModifiedBy", f"{{{DC_NS}}}description"):
-                    node = root.find(tag)
-                    if node is not None:
-                        node.text = ""
-                data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
-                changed_parts.add(name)
-            target.writestr(info, data)
+                target.writestr(info, data)
+    except Exception:
+        temporary_output.unlink(missing_ok=True)
+        raise
     missing = sorted(set(replacements) - {item["slot"] for item in replaced})
     if missing:
-        output_path.unlink(missing_ok=True)
+        temporary_output.unlink(missing_ok=True)
         raise JobOpsError("TEMPLATE_SLOT_NOT_FOUND", "Every requested slot must exist as a stable literal template marker.", slots=missing)
     if sha256_file(master_path) != before.master_sha256:
-        output_path.unlink(missing_ok=True)
+        temporary_output.unlink(missing_ok=True)
         raise JobOpsError("MASTER_CHANGED_DURING_TAILORING", "The retained master resume changed while the copy was being tailored.")
-    after = template_fingerprint(output_path)
+    try:
+        after = template_fingerprint(temporary_output)
+    except Exception:
+        temporary_output.unlink(missing_ok=True)
+        raise
     if after.page_geometry != before.page_geometry or after.style_ids != before.style_ids or after.table_grids != before.table_grids or after.hyperlinks != before.hyperlinks:
-        output_path.unlink(missing_ok=True)
+        temporary_output.unlink(missing_ok=True)
         raise JobOpsError("TEMPLATE_STRUCTURE_CHANGED", "Page geometry, styles, tables, or hyperlinks changed outside the approved text slots.")
     before_parts = {name: (size, digest) for name, size, digest in before.package_parts}
     after_parts = {name: (size, digest) for name, size, digest in after.package_parts}
@@ -220,11 +230,11 @@ def tailor_master_resume(
         if before_parts.get(name) != after_parts.get(name) and name not in expected_changes
     )
     if unexplained:
-        output_path.unlink(missing_ok=True)
+        temporary_output.unlink(missing_ok=True)
         raise JobOpsError("UNEXPLAINED_PACKAGE_CHANGE", "A preserve-only package part changed.", parts=unexplained)
     diff = {
         "master_sha256": before.master_sha256,
-        "output_sha256": sha256_file(output_path),
+        "output_sha256": sha256_file(temporary_output),
         "changed_parts": sorted(changed_parts),
         "removed_metadata_parts": sorted(expected_changes - changed_parts),
         "slot_changes": replaced,
@@ -235,6 +245,11 @@ def tailor_master_resume(
         },
     }
     diff["diff_sha256"] = sha256_bytes(canonical_json(diff))
+    try:
+        os.replace(temporary_output, output_path)
+    except OSError as exc:
+        temporary_output.unlink(missing_ok=True)
+        raise JobOpsError("DOCUMENT_OUTPUT_COMMIT_FAILED", "The validated tailored document could not be committed atomically.") from exc
     return diff
 
 

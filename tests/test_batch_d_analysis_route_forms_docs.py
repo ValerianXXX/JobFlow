@@ -5,6 +5,7 @@ import shutil
 import unittest
 import zipfile
 from datetime import datetime, timezone
+from unittest import mock
 
 from _support import PROJECT, project_temp
 from jobops.document_builder import tailor_master_resume, template_fingerprint
@@ -180,6 +181,26 @@ class VisualRecordTests(unittest.TestCase):
             with self.assertRaises(JobOpsError) as blocked:
                 template_fingerprint(unsafe)
             self.assertEqual(blocked.exception.code, "DOCX_PACKAGE_COMPRESSION_UNSAFE")
+
+    def test_tailoring_failure_preserves_existing_output_and_cleans_temporary_copy(self) -> None:
+        master = PROJECT / "tests" / "fixtures" / "complex-master-resume.docx"
+        with project_temp() as temp:
+            output = temp / "tailored.docx"
+            original_output = b"existing output must survive"
+            output.write_bytes(original_output)
+            with mock.patch("jobops.document_builder._claim_wordings", return_value=set()), mock.patch(
+                "jobops.document_builder.zipfile.ZipFile.writestr", side_effect=OSError("synthetic write failure")
+            ):
+                with self.assertRaises(OSError):
+                    tailor_master_resume(
+                        master,
+                        output,
+                        replacements={"CANDIDATE_NAME": "Synthetic Candidate"},
+                        claims=[],
+                        synthetic=True,
+                    )
+            self.assertEqual(output.read_bytes(), original_output)
+            self.assertEqual(list(temp.glob(".tailored.docx.jobflow-*.tmp")), [])
 
     def test_complex_master_is_copied_and_preserves_structure_links_and_tables(self) -> None:
         master = PROJECT / "tests" / "fixtures" / "complex-master-resume.docx"
