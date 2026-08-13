@@ -1632,7 +1632,28 @@ class OnboardingCenterService:
         }
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != prepared["source_id"]]
         state["pending_sources"].append(pending)
-        self._save_state(reference, state)
+        prepared_reference = str(prepared["secure_ref"])
+        try:
+            self._save_state(reference, state)
+        except Exception as exc:
+            if isinstance(exc, JobOpsError) and exc.code in {
+                "ONBOARDING_STATE_INDEX_ROLLBACK_FAILED", "PRIVATE_ROTATION_ROLLBACK_FAILED",
+            }:
+                raise JobOpsError(
+                    "SOURCE_PREVIEW_ROLLBACK_FAILED",
+                    "The source preview stopped with an indeterminate encrypted-state commit; its private reference was retained for repair.",
+                ) from exc
+            try:
+                self._rollback_private_writes([prepared_reference])
+            except Exception as rollback_error:
+                raise JobOpsError(
+                    "SOURCE_PREVIEW_ROLLBACK_FAILED",
+                    "The source preview failed and its partial encrypted reference could not be removed.",
+                ) from rollback_error
+            raise JobOpsError(
+                "SOURCE_PREVIEW_SAVE_FAILED",
+                "The source preview did not commit, so its new encrypted reference was removed.",
+            ) from exc
         return {
             "status": "SOURCE_PREVIEW_READY", "source_id": prepared["source_id"],
             "safe_display_name": metadata["safe_display_name"],
@@ -1813,7 +1834,28 @@ class OnboardingCenterService:
             {"candidate_id": item["candidate_id"], "selected": True, "statement": item["statement"], "category": item["category"]}
             for item in prepared["candidates"]
         ])
-        self._save_state(reference, state)
+        prepared_reference = str(prepared["secure_ref"])
+        try:
+            self._save_state(reference, state)
+        except Exception as exc:
+            if isinstance(exc, JobOpsError) and exc.code in {
+                "ONBOARDING_STATE_INDEX_ROLLBACK_FAILED", "PRIVATE_ROTATION_ROLLBACK_FAILED",
+            }:
+                raise JobOpsError(
+                    "SOURCE_IMPORT_ROLLBACK_FAILED",
+                    "The source import stopped with an indeterminate encrypted-state commit; its private reference was retained for repair.",
+                ) from exc
+            try:
+                self._rollback_private_writes([prepared_reference])
+            except Exception as rollback_error:
+                raise JobOpsError(
+                    "SOURCE_IMPORT_ROLLBACK_FAILED",
+                    "The source import failed and its partial encrypted reference could not be removed.",
+                ) from rollback_error
+            raise JobOpsError(
+                "SOURCE_IMPORT_SAVE_FAILED",
+                "The source import did not commit, so its new encrypted reference was removed.",
+            ) from exc
         return {
             "status": "SOURCE_SECURELY_IMPORTED", "source_id": prepared["source_id"], "source_type": source_type,
             "safe_display_name": existing_source["safe_display_name"] if existing_source else metadata["safe_display_name"],

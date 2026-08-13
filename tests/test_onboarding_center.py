@@ -584,6 +584,26 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertFalse(source["ai_input_truncated"])
             self.assertGreaterEqual(source["ai_chunks"], 1)
 
+    def test_source_preview_and_compatibility_import_remove_refs_when_state_save_fails(self) -> None:
+        with project_temp() as root:
+            service, _, store, _, _ = self.make_service(root)
+            service.ensure_state()
+            baseline_refs = set(store.values)
+            content = b"Built a synthetic workflow with a documented review boundary."
+            with mock.patch.object(service, "_save_state", side_effect=OSError("synthetic preview state failure")):
+                with self.assertRaises(JobOpsError) as preview_failure:
+                    service.preview_source("project_case", ".txt", content)
+            self.assertEqual(preview_failure.exception.code, "SOURCE_PREVIEW_SAVE_FAILED")
+            self.assertEqual(set(store.values), baseline_refs)
+            self.assertEqual(service.bootstrap()["pending_sources"], [])
+
+            with mock.patch.object(service, "_save_state", side_effect=OSError("synthetic import state failure")):
+                with self.assertRaises(JobOpsError) as import_failure:
+                    service.import_source("project_case", ".txt", content)
+            self.assertEqual(import_failure.exception.code, "SOURCE_IMPORT_SAVE_FAILED")
+            self.assertEqual(set(store.values), baseline_refs)
+            self.assertEqual(service.bootstrap()["sources"], [])
+
     def test_incomplete_ai_coverage_cannot_enter_claim_review(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
