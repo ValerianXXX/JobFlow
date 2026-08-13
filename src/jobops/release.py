@@ -62,7 +62,7 @@ def _scan_text(label: str, text: str, findings: list[dict[str, str]]) -> None:
 
 def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
     findings: list[dict[str, str]] = []
-    active_private_rows: list[tuple[str, str]] = []
+    private_reference_rows: list[tuple[str, str, str]] = []
     roots = [
         project / "src", project / "config", project / "schemas", project / ".agents",
         project / "state", project / "reports", project / "workspace", project / "tests",
@@ -109,10 +109,10 @@ def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
                 for row in connection.execute(f'SELECT * FROM "{table}"'):
                     _scan_text(f"state/jobops.db#{table}", json.dumps(list(row), ensure_ascii=False, default=str), findings)
             if "private_refs" in tables:
-                active_private_rows = [
-                    (str(row[0]), str(row[1]))
+                private_reference_rows = [
+                    (str(row[0]), str(row[1]), str(row[2]))
                     for row in connection.execute(
-                        "SELECT secure_ref,ciphertext_sha256 FROM private_refs WHERE status='ACTIVE'"
+                        "SELECT secure_ref,ciphertext_sha256,status FROM private_refs"
                     )
                 ]
     local_app_data = os.environ.get("LOCALAPPDATA")
@@ -121,9 +121,10 @@ def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
     ciphertext_residue = []
     private_temporary_residue = []
     private_ciphertext_integrity_failures = 0
+    retained_private_rows = [row for row in private_reference_rows if row[2] != "DELETED"]
     if private_root and has_reparse_component(private_root):
         findings.append({"kind": "private_store_reparse_forbidden", "location": "$LOCALAPPDATA/JobOps/private"})
-        private_ciphertext_integrity_failures += max(1, len(active_private_rows))
+        private_ciphertext_integrity_failures += max(1, len(retained_private_rows))
     elif private_root and private_root.is_dir():
         staging = private_root / "staging"
         if has_reparse_component(staging, private_root):
@@ -145,7 +146,7 @@ def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
         findings.extend({"kind": "private_staging_residue", "location": "$LOCALAPPDATA/JobOps/private/staging"} for _ in staging_residue)
         findings.extend({"kind": "private_atomic_write_residue", "location": "$LOCALAPPDATA/JobOps/private"} for _ in private_temporary_residue)
         expected: dict[str, str] = {}
-        for reference, ciphertext_sha256 in active_private_rows:
+        for reference, ciphertext_sha256, status in retained_private_rows:
             match = re.fullmatch(r"secure-ref:([A-Za-z0-9_-]{8,128})", reference)
             if match is None:
                 findings.append({"kind": "invalid_private_reference_metadata", "location": "state/jobops.db#private_refs"})
@@ -156,6 +157,9 @@ def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
                 private_ciphertext_integrity_failures += 1
                 continue
             expected[match.group(1) + ".dpapi"] = ciphertext_sha256.casefold()
+            if status == "CORRUPT":
+                findings.append({"kind": "corrupt_private_reference", "location": "state/jobops.db#private_refs"})
+                private_ciphertext_integrity_failures += 1
 
         discovered = {path.name: path for path in ciphertext_residue}
         unsafe_names: set[str] = set()
@@ -186,10 +190,10 @@ def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
                 private_ciphertext_integrity_failures += 1
     elif private_root and private_root.exists():
         findings.append({"kind": "invalid_private_store_type", "location": "$LOCALAPPDATA/JobOps/private"})
-        private_ciphertext_integrity_failures += max(1, len(active_private_rows))
-    elif active_private_rows:
+        private_ciphertext_integrity_failures += max(1, len(retained_private_rows))
+    elif retained_private_rows:
         findings.append({"kind": "missing_private_ciphertext", "location": "$LOCALAPPDATA/JobOps/private"})
-        private_ciphertext_integrity_failures += len(active_private_rows)
+        private_ciphertext_integrity_failures += len(retained_private_rows)
     unique = sorted({(item["kind"], item["location"]) for item in findings})
     return {
         "status": "PASS" if not unique else "FAIL", "finding_count": len(unique),
@@ -202,6 +206,7 @@ def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
         "private_staging_file_count": len(staging_residue),
         "private_temporary_file_count": len(private_temporary_residue),
         "private_ciphertext_file_count": len(ciphertext_residue),
+        "private_expected_ciphertext_file_count": len(retained_private_rows),
         "private_ciphertext_integrity_failure_count": private_ciphertext_integrity_failures,
     }
 
@@ -229,6 +234,10 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         active_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='ACTIVE'").fetchone()[0])
         active_real_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='ACTIVE' AND synthetic=0").fetchone()[0])
         active_synthetic_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='ACTIVE' AND synthetic=1").fetchone()[0])
+        retained_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status!='DELETED'").fetchone()[0])
+        retained_synthetic_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status!='DELETED' AND synthetic=1").fetchone()[0])
+        revoked_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='REVOKED'").fetchone()[0])
+        corrupt_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='CORRUPT'").fetchone()[0])
         active_onboarding_packets = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='ACTIVE' AND synthetic=0 AND kind='onboarding_review_packet'").fetchone()[0])
         deleted_synthetic = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='DELETED' AND synthetic=1").fetchone()[0])
         schema_version = database.schema_version()
@@ -261,9 +270,9 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         "security": scan["status"] == "PASS",
         "external_actions": actions["real_external_actions"] == 0,
         "database": schema_version == JobOpsDB.LATEST_SCHEMA_VERSION and "CHECK(dry_run = 1)" in dry_run_sql,
-        "synthetic_private_purged": active_synthetic_private == 0,
+        "synthetic_private_purged": retained_synthetic_private == 0,
         "private_store_consistent": (
-            active_private == scan["private_ciphertext_file_count"]
+            scan["private_expected_ciphertext_file_count"] == scan["private_ciphertext_file_count"]
             and scan["private_temporary_file_count"] == 0
             and scan["private_staging_file_count"] == 0
             and scan["private_ciphertext_integrity_failure_count"] == 0
@@ -298,9 +307,14 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         "private_data": {
             "active_references": active_private, "active_real_references": active_real_private,
             "active_synthetic_references": active_synthetic_private,
+            "retained_references": retained_private,
+            "revoked_references": revoked_private,
+            "corrupt_references": corrupt_private,
+            "retained_synthetic_references": retained_synthetic_private,
             "deleted_synthetic_metadata_records": deleted_synthetic,
-            "synthetic_ciphertext_residue": active_synthetic_private,
+            "synthetic_ciphertext_residue": retained_synthetic_private,
             "private_ciphertext_file_count": scan["private_ciphertext_file_count"],
+            "private_expected_ciphertext_file_count": scan["private_expected_ciphertext_file_count"],
             "private_staging_file_count": scan["private_staging_file_count"],
             "private_temporary_file_count": scan["private_temporary_file_count"],
             "private_ciphertext_integrity_failure_count": scan["private_ciphertext_integrity_failure_count"],
@@ -343,7 +357,7 @@ def write_release_reports(project: Path, result: dict[str, Any]) -> None:
         f"- Security findings: {result['security_scan']['finding_count']}.",
         f"- Public repository: {result['public_repository']['status']}; current-tree findings {result['public_repository']['tree']['finding_count']}; full-history findings {result['public_repository']['history']['finding_count']}; author identity {result['public_repository']['author_identity']['status']}.",
         f"- External-action audit: {result['external_action_audit']['attempt_count']} recorded attempts; {result['external_action_audit']['real_external_actions']} real side effects.",
-        f"- Active private references: {result['private_data']['active_references']} (real: {result['private_data']['active_real_references']}; synthetic: {result['private_data']['active_synthetic_references']}); deleted synthetic metadata: {result['private_data']['deleted_synthetic_metadata_records']}; synthetic ciphertext residue: {result['private_data']['synthetic_ciphertext_residue']}; total ciphertext files: {result['private_data']['private_ciphertext_file_count']}; ciphertext integrity failures: {result['private_data']['private_ciphertext_integrity_failure_count']}; staging files: {result['private_data']['private_staging_file_count']}; atomic-write temporary files: {result['private_data']['private_temporary_file_count']}.",
+        f"- Private references: {result['private_data']['active_references']} active, {result['private_data']['revoked_references']} revoked, {result['private_data']['corrupt_references']} corrupt, {result['private_data']['retained_references']} retained total (real active: {result['private_data']['active_real_references']}; synthetic retained: {result['private_data']['retained_synthetic_references']}); deleted synthetic metadata: {result['private_data']['deleted_synthetic_metadata_records']}; total/expected ciphertext files: {result['private_data']['private_ciphertext_file_count']}/{result['private_data']['private_expected_ciphertext_file_count']}; ciphertext integrity failures: {result['private_data']['private_ciphertext_integrity_failure_count']}; staging files: {result['private_data']['private_staging_file_count']}; atomic-write temporary files: {result['private_data']['private_temporary_file_count']}.",
         f"- P0/P1/must-fix open: {result['p0_open']}/{result['p1_open']}/{result['must_fix_open']}.",
         f"- Independent QA: {'PASS (fresh)' if result['checks']['independent_qa'] else 'STALE OR MISSING'}.", "",
         "## Implemented", "",

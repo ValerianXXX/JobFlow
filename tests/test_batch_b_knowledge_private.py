@@ -360,6 +360,21 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
                 restored = security_scan(project, database)
                 self.assertEqual(restored["status"], "PASS")
                 self.assertEqual(restored["private_ciphertext_integrity_failure_count"], 0)
+
+                onboarding.revoke(record["secure_ref"])
+                revoked = security_scan(project, database)
+                self.assertEqual(revoked["status"], "PASS", revoked)
+                self.assertEqual(revoked["private_expected_ciphertext_file_count"], 1)
+                self.assertEqual(revoked["private_ciphertext_file_count"], 1)
+
+                with database.connect() as connection:
+                    connection.execute(
+                        "UPDATE private_refs SET status='CORRUPT' WHERE secure_ref=?",
+                        (record["secure_ref"],),
+                    )
+                corrupt = security_scan(project, database)
+                self.assertEqual(corrupt["status"], "FAIL")
+                self.assertIn("corrupt_private_reference", {item["kind"] for item in corrupt["findings"]})
             onboarding.delete(record["secure_ref"], user_confirmed=True)
 
     def test_private_staging_rejects_project_overlap_and_unsafe_suffixes(self) -> None:
