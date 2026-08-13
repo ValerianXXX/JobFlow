@@ -4,12 +4,13 @@
   "title": "Local ATS Form Snapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "status", "source_mode", "provider", "canonical_url", "source_route_hash", "page_content_hash", "form_snapshot_hash", "field_count", "ignored_hidden_control_count", "classification_counts", "fields", "blockers", "form_action_statuses", "iframe_statuses", "entered_values_retained", "submit_blocked", "upload_blocked", "account_creation_blocked", "untrusted_page_content_executed", "browser_actions", "network_actions", "real_external_actions"],
+  "required": ["schema_version", "status", "source_mode", "provider", "step_kind", "canonical_url", "source_route_hash", "page_content_hash", "form_snapshot_hash", "field_count", "ignored_hidden_control_count", "classification_counts", "fields", "blockers", "form_action_statuses", "iframe_statuses", "entered_values_retained", "submit_blocked", "upload_blocked", "account_creation_blocked", "untrusted_page_content_executed", "browser_actions", "network_actions", "real_external_actions"],
   "properties": {
     "schema_version": {"const": 1},
     "status": {"const": "FORM_SNAPSHOT_ANALYZED"},
     "source_mode": {"const": "LOCAL_SNAPSHOT_ONLY"},
     "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
+    "step_kind": {"enum": ["MY_INFORMATION", "EXPERIENCE_EDUCATION", "APPLICATION_QUESTIONS", "VOLUNTARY_DISCLOSURE", "REVIEW", "ACCOUNT_OR_LOGIN", "UNKNOWN"]},
     "canonical_url": {"type": "string", "format": "uri", "pattern": "^https://"},
     "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "page_content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
@@ -22,14 +23,15 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["control_ref", "control_type", "required", "classification", "answer_key", "reason_code", "prompt_hash", "option_count", "existing_value_discarded", "binding_status", "action"],
+        "required": ["control_ref", "control_type", "required", "classification", "answer_key", "logical_field_hash", "reason_code", "prompt_hash", "option_count", "existing_value_discarded", "binding_status", "action"],
         "properties": {
           "control_ref": {"type": "string", "pattern": "^CTL-[A-F0-9]{12}$"},
           "control_type": {"enum": ["text", "email", "tel", "url", "number", "date", "datetime-local", "radio", "checkbox", "select", "textarea", "file", "password", "submit", "button", "image", "other"]},
           "required": {"type": "boolean"},
-          "classification": {"enum": ["ordinary_fixed", "private_fixed", "sensitive_review", "work_authorization_stop", "compensation_stop", "legal_declaration_stop", "signature_stop", "voluntary_disclosure_stop", "account_creation_stop", "file_upload_stop", "final_submit_stop", "unknown_stop"]},
+          "classification": {"enum": ["ordinary_fixed", "private_fixed", "sensitive_review", "work_authorization_stop", "compensation_stop", "legal_declaration_stop", "signature_stop", "voluntary_disclosure_stop", "account_creation_stop", "file_upload_stop", "navigation_control_stop", "final_submit_stop", "unknown_stop"]},
           "answer_key": {"enum": ["UNKNOWN", "first_name", "last_name", "full_name", "email", "phone", "linkedin", "github", "portfolio", "website", "address", "work_authorization", "salary", "resume"]},
-          "reason_code": {"enum": ["KNOWN_PUBLIC_BINDING_REQUIRED", "SECURE_REFERENCE_REQUIRED", "FILE_UPLOAD_EXTERNAL_ACTION", "FINAL_SUBMIT_EXTERNAL_ACTION", "ACCOUNT_CREATION_REQUIRES_APPROVAL", "UNKNOWN_FIELD_FAIL_CLOSED", "PROTECTED_OR_SENSITIVE_FIELD"]},
+          "logical_field_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "reason_code": {"enum": ["KNOWN_PUBLIC_BINDING_REQUIRED", "SECURE_REFERENCE_REQUIRED", "FILE_UPLOAD_EXTERNAL_ACTION", "NAVIGATION_ACTION_REVIEW", "FINAL_SUBMIT_EXTERNAL_ACTION", "ACCOUNT_CREATION_REQUIRES_APPROVAL", "UNKNOWN_FIELD_FAIL_CLOSED", "PROTECTED_OR_SENSITIVE_FIELD"]},
           "prompt_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
           "option_count": {"type": "integer", "minimum": 0, "maximum": 200},
           "existing_value_discarded": {"type": "boolean"},
@@ -38,7 +40,7 @@
         }
       }
     },
-    "blockers": {"type": "array", "uniqueItems": true, "items": {"enum": ["CAPTCHA_STOP", "MFA_STOP", "LOGIN_STOP", "ACCOUNT_CREATION_STOP", "FILE_UPLOAD_STOP", "FINAL_SUBMIT_STOP", "FORM_ACTION_HOST_STOP", "CROSS_ORIGIN_IFRAME_STOP"]}},
+    "blockers": {"type": "array", "uniqueItems": true, "items": {"enum": ["CAPTCHA_STOP", "MFA_STOP", "LOGIN_STOP", "ACCOUNT_CREATION_STOP", "FILE_UPLOAD_STOP", "NAVIGATION_ACTION_STOP", "FINAL_SUBMIT_STOP", "FORM_ACTION_HOST_STOP", "CROSS_ORIGIN_IFRAME_STOP"]}},
     "form_action_statuses": {"type": "array", "items": {"enum": ["ABSENT", "SAME_ORIGIN", "CROSS_ORIGIN_STOP", "UNSAFE"]}},
     "iframe_statuses": {"type": "array", "items": {"enum": ["SAME_ORIGIN_IFRAME", "CROSS_ORIGIN_IFRAME_STOP", "UNSAFE_IFRAME"]}},
     "entered_values_retained": {"const": false},

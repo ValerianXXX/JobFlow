@@ -9,7 +9,7 @@ from typing import Any
 
 from .audit import audit_environment
 from .adapters import audit_real_external_actions
-from .ats_browser import analyze_local_ats_form
+from .ats_browser import analyze_local_ats_form, analyze_local_ats_form_sequence
 from .approvals import ApprovalContext, issue_approval
 from .claim_registry import ClaimRegistry
 from .collector import JobCollector
@@ -109,6 +109,9 @@ def parser() -> argparse.ArgumentParser:
     form_snapshot = sub.add_parser("analyze-ats-form")
     form_snapshot.add_argument("--input", type=Path, required=True)
     form_snapshot.add_argument("--route", type=Path, required=True)
+    form_sequence = sub.add_parser("analyze-ats-sequence")
+    form_sequence.add_argument("--manifest", type=Path, required=True)
+    form_sequence.add_argument("--route", type=Path, required=True)
 
     onboard = sub.add_parser("secure-onboard")
     onboard.add_argument("--input-file", type=Path)
@@ -311,6 +314,34 @@ def main(argv: list[str] | None = None) -> int:
                 input_path.read_bytes(), route=route, blocked_categories=policy["blocked_form_categories"]
             )
             emit({**result, "next_safe_action": "review-form-bindings-no-real-browser"}, project)
+        elif args.command == "analyze-ats-sequence":
+            manifest_path = _project_input(project, args.manifest, operation="read")
+            route_path = _project_input(project, args.route, operation="read")
+            manifest = load_json(manifest_path)
+            if not isinstance(manifest, dict) or set(manifest) != {"provider", "pages"} or not isinstance(manifest.get("pages"), list):
+                raise JobOpsError("ATS_FORM_SEQUENCE_MANIFEST_INVALID", "The local sequence manifest must contain only provider and pages.")
+            pages = manifest["pages"]
+            if not pages or len(pages) > 20 or not all(isinstance(item, str) and item for item in pages):
+                raise JobOpsError("ATS_FORM_SEQUENCE_MANIFEST_INVALID", "The local sequence manifest must list 1 to 20 project-local HTML pages.")
+            page_paths = [_project_input(project, Path(item), operation="read") for item in pages]
+            if any(path.suffix.casefold() not in {".html", ".htm"} for path in page_paths):
+                raise JobOpsError("ATS_FORM_SNAPSHOT_FORMAT_UNSUPPORTED", "Every form sequence page must be local HTML.")
+            request = load_json(route_path)
+            policy = load_json(project / "config" / "policy.json")
+            route = verify_source_route(
+                company_domain=request.get("company_domain"), official_entry_url=request["official_entry_url"],
+                current_url=request["current_url"], navigation_history=request["navigation_history"],
+                approved_ats_hosts=policy["approved_ats_hosts"], guest_available=request.get("guest_available"),
+                tenant_binding=request.get("tenant_binding"), official_page_hash=request.get("official_page_hash"),
+                jd_snapshot_hash=request.get("jd_snapshot_hash"), approved_intermediary_hosts=request.get("approved_intermediary_hosts"),
+            ).as_dict()
+            if manifest["provider"] != route["provider"]:
+                raise JobOpsError("ATS_SEQUENCE_PROVIDER_MISMATCH", "The sequence manifest provider does not match the verified route.")
+            result = analyze_local_ats_form_sequence(
+                [path.read_bytes() for path in page_paths], route=route,
+                blocked_categories=policy["blocked_form_categories"],
+            )
+            emit({**result, "next_safe_action": "review-sequence-no-navigation-performed"}, project)
         elif args.command == "secure-onboard":
             database = _database(project); onboarding = _onboarding(project, database)
             if args.synthetic:

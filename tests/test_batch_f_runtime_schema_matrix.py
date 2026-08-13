@@ -107,12 +107,13 @@ def valid_fixtures() -> dict[str, dict]:
         "application-field": {"field_id": "FLD-ABCDEF123456", "application_id": APP, "classification": "ordinary_fixed", "action": "PREFILL", "status": "READY", "secure_ref": None, "redacted_summary": None, "field_hash": H},
         "ats-form-snapshot": {
             "schema_version": 1, "status": "FORM_SNAPSHOT_ANALYZED", "source_mode": "LOCAL_SNAPSHOT_ONLY",
-            "provider": "company", "canonical_url": "https://example.com/careers/a", "source_route_hash": route["route_hash"],
+            "provider": "company", "step_kind": "MY_INFORMATION", "canonical_url": "https://example.com/careers/a", "source_route_hash": route["route_hash"],
             "page_content_hash": H, "form_snapshot_hash": H, "field_count": 1, "ignored_hidden_control_count": 1,
             "classification_counts": {"private_fixed": 1},
             "fields": [{
                 "control_ref": "CTL-ABCDEF123456", "control_type": "email", "required": True,
-                "classification": "private_fixed", "answer_key": "email", "reason_code": "SECURE_REFERENCE_REQUIRED", "prompt_hash": H,
+                "classification": "private_fixed", "answer_key": "email", "logical_field_hash": H,
+                "reason_code": "SECURE_REFERENCE_REQUIRED", "prompt_hash": H,
                 "option_count": 0, "existing_value_discarded": True, "binding_status": "UNBOUND", "action": "STOP",
             }],
             "blockers": [], "form_action_statuses": ["SAME_ORIGIN"], "iframe_statuses": [],
@@ -137,6 +138,15 @@ def valid_fixtures() -> dict[str, dict]:
             "fields_discovered": 2, "fields_proposed": 1, "fields_stopped": 1,
             "browser_adapter_status": "FAKE_PLAN_VALIDATED", "fields_modified": 0,
             "submit_blocked": True, "upload_blocked": True, "account_creation_blocked": True,
+            "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
+        },
+        "ats-form-sequence": {
+            "schema_version": 1, "status": "LOCAL_FORM_SEQUENCE_ANALYZED", "source_mode": "LOCAL_SNAPSHOT_SEQUENCE_ONLY",
+            "provider": "workday", "canonical_url": "https://example.wd5.myworkdayjobs.com/careers/job/a",
+            "source_route_hash": route["route_hash"], "step_count": 1,
+            "steps": [{"step_index": 1, "step_kind": "MY_INFORMATION", "form_snapshot_hash": H, "page_content_hash": H, "field_count": 1, "blocker_count": 0}],
+            "unique_field_count": 1, "duplicate_field_count": 0, "blockers": [], "sequence_hash": H,
+            "navigation_performed": False, "entered_values_retained": False,
             "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
         },
         "queue-reservation": {"reservation_id": "RSV-ABCDEF123456", "intake_key": H, "application_id": APP, "status": "CONSUMED", "pending_limit": 3, "pending_count": 1, "reserved_count": 1, "created_at": T, "updated_at": T},
@@ -219,6 +229,7 @@ class RuntimeSchemaMatrixTests(unittest.TestCase):
             "ats-form-snapshot": ("field_count", 2),
             "browser-action-plan": ("fillable_count", 0),
             "ats-vertical-evidence": ("fields_discovered", 3),
+            "ats-form-sequence": ("step_count", 2),
         }
         for name, (field, invalid) in conflicts.items():
             changed = copy.deepcopy(self.fixtures[name]); changed[field] = invalid

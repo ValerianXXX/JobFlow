@@ -1,0 +1,8 @@
+{
+  "provider": "workday",
+  "pages": [
+    "tests/fixtures/synthetic-workday-step-1.html",
+    "tests/fixtures/synthetic-workday-step-2.html",
+    "tests/fixtures/synthetic-workday-step-3.html"
+  ]
+}

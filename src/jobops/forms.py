@@ -46,6 +46,8 @@ def classify_application_field(field: dict[str, Any], *, page_context: str = "",
         return "file_upload_stop", "File selection is an external upload action and remains blocked."
     if normalized_name(str(field.get("type", ""))) in {"submit", "image"}:
         return "final_submit_stop", "Final submit controls always require the external action gateway."
+    if normalized_name(str(field.get("type", ""))) == "button":
+        return "navigation_control_stop", "Page navigation remains a reviewed browser action in this build."
     section = normalized_name(str(field.get("section_heading", "")) + " " + page_context)
     if any(term in section for term in ("eeo", "self-identification", "self identification", "voluntary", "自愿披露", "平等就业")):
         return "voluntary_disclosure_stop", "The entire EEO/self-identification section is stopped by default."

@@ -239,6 +239,7 @@ class PublicCLIContractTests(unittest.TestCase):
             "retry-safe-step", "explain", "verify-release",
             "discover-official-jobs",
             "analyze-ats-form",
+            "analyze-ats-sequence",
         ):
             self.assertIn(command, completed.stdout)
 

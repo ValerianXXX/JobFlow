@@ -17,6 +17,8 @@ from .util import canonical_json, project_root, sha256_bytes, stable_id
 MAX_FORM_SNAPSHOT_BYTES = 16 * 1024 * 1024
 MAX_FORM_CONTROLS = 500
 MAX_OPTIONS_PER_CONTROL = 200
+MAX_FORM_SEQUENCE_PAGES = 20
+MAX_FORM_SEQUENCE_BYTES = 64 * 1024 * 1024
 CONTROL_TYPES = {
     "text", "email", "tel", "url", "number", "date", "datetime-local", "radio", "checkbox",
     "select", "textarea", "file", "password", "submit", "button", "image", "other",
@@ -67,6 +69,23 @@ def _suggest_answer_key(field: dict[str, Any]) -> str:
     for answer_key, signals in candidates:
         if any(signal in material for signal in signals):
             return answer_key
+    return "UNKNOWN"
+
+
+def _infer_step_kind(material: str) -> str:
+    value = material.casefold()
+    if any(signal in value for signal in ("voluntary self-identification", "self identification", "eeo", "gender", "disability", "veteran", "自愿披露")):
+        return "VOLUNTARY_DISCLOSURE"
+    if any(signal in value for signal in ("review application", "review and submit", "confirm your application", "检查申请", "确认申请")):
+        return "REVIEW"
+    if any(signal in value for signal in ("work authorization", "visa sponsorship", "application questions", "salary", "工作授权", "签证", "申请问题")):
+        return "APPLICATION_QUESTIONS"
+    if any(signal in value for signal in ("work experience", "education", "employment history", "工作经历", "教育经历")):
+        return "EXPERIENCE_EDUCATION"
+    if any(signal in value for signal in ACCOUNT_SIGNALS + LOGIN_SIGNALS) or "password" in value:
+        return "ACCOUNT_OR_LOGIN"
+    if any(signal in value for signal in ("my information", "contact information", "full name", "email address", "个人信息", "联系信息")):
+        return "MY_INFORMATION"
     return "UNKNOWN"
 
 
@@ -163,7 +182,7 @@ class _FormHTMLParser(HTMLParser):
             elif lowered == "button":
                 self._active_button = index
         elif lowered == "option" and self._active_select is not None:
-            self._option_selected = "selected" in values or bool(values.get("value"))
+            self._option_selected = "selected" in values
             if self._option_selected:
                 self.controls[self._active_select]["existing_value_discarded"] = True
         self._security_material.extend(value for key, value in values.items() if key in {"id", "name", "class", "role", "aria-label"} and value)
@@ -304,6 +323,7 @@ def analyze_local_ats_form(
             "ordinary_fixed": "KNOWN_PUBLIC_BINDING_REQUIRED",
             "private_fixed": "SECURE_REFERENCE_REQUIRED",
             "file_upload_stop": "FILE_UPLOAD_EXTERNAL_ACTION",
+            "navigation_control_stop": "NAVIGATION_ACTION_REVIEW",
             "final_submit_stop": "FINAL_SUBMIT_EXTERNAL_ACTION",
             "account_creation_stop": "ACCOUNT_CREATION_REQUIRES_APPROVAL",
             "unknown_stop": "UNKNOWN_FIELD_FAIL_CLOSED",
@@ -316,15 +336,22 @@ def analyze_local_ats_form(
             "label": raw["label"], "placeholder": raw["placeholder"], "aria_label": raw["aria_label"],
             "section": raw["section_heading"], "options": raw["options"],
         }
+        prompt_hash = sha256_bytes(canonical_json(prompt_material))
+        answer_key = _suggest_answer_key(raw)
         control_ref = stable_id("CTL", page_hash, canonical_json(semantic_material).decode("utf-8"))
+        logical_field_hash = sha256_bytes(canonical_json({
+            "provider": provider, "answer_key": answer_key, "classification": classification,
+            "control_type": raw["type"], "prompt_hash": prompt_hash,
+        }))
         safe_fields.append({
             "control_ref": control_ref,
             "control_type": raw["type"],
             "required": bool(raw["required"]),
             "classification": classification,
-            "answer_key": _suggest_answer_key(raw),
+            "answer_key": answer_key,
+            "logical_field_hash": logical_field_hash,
             "reason_code": reason_code,
-            "prompt_hash": sha256_bytes(canonical_json(prompt_material)),
+            "prompt_hash": prompt_hash,
             "option_count": len(raw["options"]),
             "existing_value_discarded": bool(raw["existing_value_discarded"]),
             "binding_status": "UNBOUND",
@@ -344,6 +371,8 @@ def analyze_local_ats_form(
         blockers.append("ACCOUNT_CREATION_STOP")
     if classification_counts.get("file_upload_stop", 0):
         blockers.append("FILE_UPLOAD_STOP")
+    if classification_counts.get("navigation_control_stop", 0):
+        blockers.append("NAVIGATION_ACTION_STOP")
     if classification_counts.get("final_submit_stop", 0):
         blockers.append("FINAL_SUBMIT_STOP")
 
@@ -354,10 +383,11 @@ def analyze_local_ats_form(
     if any(value in {"UNSAFE_IFRAME", "CROSS_ORIGIN_IFRAME_STOP"} for value in frame_statuses):
         blockers.append("CROSS_ORIGIN_IFRAME_STOP")
     blockers = sorted(set(blockers))
+    step_kind = _infer_step_kind(security_material)
 
     material = {
         "route_hash": route["route_hash"], "current_url": current_url, "provider": provider,
-        "page_content_hash": page_hash, "fields": safe_fields, "blockers": blockers,
+        "page_content_hash": page_hash, "step_kind": step_kind, "fields": safe_fields, "blockers": blockers,
         "form_action_statuses": action_statuses, "iframe_statuses": frame_statuses,
     }
     form_hash = sha256_bytes(canonical_json(material))
@@ -366,6 +396,7 @@ def analyze_local_ats_form(
         "status": "FORM_SNAPSHOT_ANALYZED",
         "source_mode": "LOCAL_SNAPSHOT_ONLY",
         "provider": provider,
+        "step_kind": step_kind,
         "canonical_url": current_url,
         "source_route_hash": route["route_hash"],
         "page_content_hash": page_hash,
@@ -394,7 +425,7 @@ def analyze_local_ats_form(
 def _form_snapshot_hash(value: dict[str, Any]) -> str:
     material = {
         "route_hash": value["source_route_hash"], "current_url": value["canonical_url"], "provider": value["provider"],
-        "page_content_hash": value["page_content_hash"], "fields": value["fields"], "blockers": value["blockers"],
+        "page_content_hash": value["page_content_hash"], "step_kind": value["step_kind"], "fields": value["fields"], "blockers": value["blockers"],
         "form_action_statuses": value["form_action_statuses"], "iframe_statuses": value["iframe_statuses"],
     }
     return sha256_bytes(canonical_json(material))
@@ -493,3 +524,70 @@ def assert_form_snapshot_current(expected: dict[str, Any], current_snapshot: dic
         raise JobOpsError("FORM_ROUTE_BINDING_CHANGED", "The ATS form no longer matches the verified source route.")
     if expected["form_snapshot_hash"] != current_snapshot["form_snapshot_hash"]:
         raise JobOpsError("SITE_CHANGED", "The ATS form changed; rebuild field analysis, review packet and approval before continuing.")
+
+
+def _form_sequence_hash(value: dict[str, Any]) -> str:
+    material = {
+        "provider": value["provider"], "canonical_url": value["canonical_url"],
+        "source_route_hash": value["source_route_hash"], "steps": value["steps"],
+        "unique_field_count": value["unique_field_count"], "duplicate_field_count": value["duplicate_field_count"],
+        "blockers": value["blockers"],
+    }
+    return sha256_bytes(canonical_json(material))
+
+
+def validate_ats_form_sequence_integrity(value: dict[str, Any]) -> None:
+    validate_named("ats-form-sequence", value, project_root() / "schemas")
+    if value["sequence_hash"] != _form_sequence_hash(value):
+        raise JobOpsError("FORM_SEQUENCE_INTEGRITY_FAILED", "The ATS form sequence hash does not bind its current steps.")
+    if len({step["form_snapshot_hash"] for step in value["steps"]}) != len(value["steps"]):
+        raise JobOpsError("FORM_SEQUENCE_DUPLICATE_PAGE", "The same ATS form snapshot cannot be counted as two steps.")
+
+
+def analyze_local_ats_form_sequence(
+    snapshots: list[bytes],
+    *,
+    route: dict[str, Any],
+    blocked_categories: list[str],
+) -> dict[str, Any]:
+    if not snapshots or len(snapshots) > MAX_FORM_SEQUENCE_PAGES:
+        raise JobOpsError("ATS_FORM_SEQUENCE_SIZE_INVALID", "A local ATS form sequence must contain 1 to 20 saved pages.")
+    if sum(len(item) for item in snapshots) > MAX_FORM_SEQUENCE_BYTES:
+        raise JobOpsError("ATS_FORM_SEQUENCE_BYTES_EXCEEDED", "The local ATS form sequence exceeds the total byte limit.")
+    reports = [analyze_local_ats_form(item, route=route, blocked_categories=blocked_categories) for item in snapshots]
+    logical_fields = [str(field["logical_field_hash"]) for report in reports for field in report["fields"]]
+    unique_fields = set(logical_fields)
+    blockers = sorted({str(blocker) for report in reports for blocker in report["blockers"]})
+    steps = [
+        {
+            "step_index": index,
+            "step_kind": report["step_kind"],
+            "form_snapshot_hash": report["form_snapshot_hash"],
+            "page_content_hash": report["page_content_hash"],
+            "field_count": report["field_count"],
+            "blocker_count": len(report["blockers"]),
+        }
+        for index, report in enumerate(reports, 1)
+    ]
+    result = {
+        "schema_version": 1,
+        "status": "LOCAL_FORM_SEQUENCE_ANALYZED",
+        "source_mode": "LOCAL_SNAPSHOT_SEQUENCE_ONLY",
+        "provider": route["provider"],
+        "canonical_url": route["current_url"],
+        "source_route_hash": route["route_hash"],
+        "step_count": len(steps),
+        "steps": steps,
+        "unique_field_count": len(unique_fields),
+        "duplicate_field_count": len(logical_fields) - len(unique_fields),
+        "blockers": blockers,
+        "sequence_hash": "",
+        "navigation_performed": False,
+        "entered_values_retained": False,
+        "browser_actions": 0,
+        "network_actions": 0,
+        "real_external_actions": 0,
+    }
+    result["sequence_hash"] = _form_sequence_hash(result)
+    validate_ats_form_sequence_integrity(result)
+    return result

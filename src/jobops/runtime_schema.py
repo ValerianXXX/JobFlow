@@ -172,6 +172,10 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
     if name == "ats-vertical-evidence":
         if value.get("fields_discovered") != value.get("fields_proposed", 0) + value.get("fields_stopped", 0):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS vertical field counts must cover every discovered control.")
+    if name == "ats-form-sequence":
+        steps = value.get("steps", [])
+        if value.get("step_count") != len(steps) or [item.get("step_index") for item in steps] != list(range(1, len(steps) + 1)):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS form sequence steps must be complete and monotonically numbered.")
 
 
 def validate_named(name: str, value: dict[str, Any], schema_dir: Path) -> dict[str, Any]:

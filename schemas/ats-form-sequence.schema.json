@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/ats-form-sequence.schema.json",
+  "title": "Local ATS Form Sequence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "source_mode", "provider", "canonical_url", "source_route_hash", "step_count", "steps", "unique_field_count", "duplicate_field_count", "blockers", "sequence_hash", "navigation_performed", "entered_values_retained", "browser_actions", "network_actions", "real_external_actions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "LOCAL_FORM_SEQUENCE_ANALYZED"},
+    "source_mode": {"const": "LOCAL_SNAPSHOT_SEQUENCE_ONLY"},
+    "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
+    "canonical_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "step_count": {"type": "integer", "minimum": 1, "maximum": 20},
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step_index", "step_kind", "form_snapshot_hash", "page_content_hash", "field_count", "blocker_count"],
+        "properties": {
+          "step_index": {"type": "integer", "minimum": 1},
+          "step_kind": {"enum": ["MY_INFORMATION", "EXPERIENCE_EDUCATION", "APPLICATION_QUESTIONS", "VOLUNTARY_DISCLOSURE", "REVIEW", "ACCOUNT_OR_LOGIN", "UNKNOWN"]},
+          "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "page_content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "field_count": {"type": "integer", "minimum": 0, "maximum": 500},
+          "blocker_count": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "unique_field_count": {"type": "integer", "minimum": 0},
+    "duplicate_field_count": {"type": "integer", "minimum": 0},
+    "blockers": {"type": "array", "uniqueItems": true, "items": {"enum": ["CAPTCHA_STOP", "MFA_STOP", "LOGIN_STOP", "ACCOUNT_CREATION_STOP", "FILE_UPLOAD_STOP", "NAVIGATION_ACTION_STOP", "FINAL_SUBMIT_STOP", "FORM_ACTION_HOST_STOP", "CROSS_ORIGIN_IFRAME_STOP"]}},
+    "sequence_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "navigation_performed": {"const": false},
+    "entered_values_retained": {"const": false},
+    "browser_actions": {"const": 0},
+    "network_actions": {"const": 0},
+    "real_external_actions": {"const": 0}
+  }
+}

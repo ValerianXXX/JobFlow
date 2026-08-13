@@ -14,6 +14,7 @@
 | `voluntary_disclosure_stop` | EEO, race, gender, disability, veteran | Stop entire section |
 | `account_creation_stop` | registration or password | `NEEDS_ACCOUNT_APPROVAL` |
 | `file_upload_stop` | resume, cover letter or other file input | Separate external upload approval; blocked in this build |
+| `navigation_control_stop` | Next, Continue or other multi-step navigation | Reviewed browser action; never clicked by offline analysis |
 | `final_submit_stop` | submit/image control | Always gated |
 | `unknown_stop` | unrecognized field | Fail closed |
 
@@ -22,6 +23,8 @@ Classification uses label, id, name, type, autocomplete, options, placeholder, h
 `analyze-ats-form` accepts only a project-local UTF-8 HTML snapshot bound to a verified source-route hash. It never starts a browser or network request. Existing input/textarea/select values and hidden controls are discarded; the ordinary report contains no raw labels or selectors, only opaque control references, prompt hashes, counts and classifications. Form actions and iframes crossing the verified host become STOP blockers. CAPTCHA, MFA, login, account creation, upload and final-submit signals also stop.
 
 A browser action plan binds the exact route hash, canonical URL, semantic form snapshot hash and each opaque control reference. It may propose only `ordinary_fixed` values represented by content hash or `private_fixed` values represented by `secure-ref`; protected and unknown controls cannot be changed into prefill actions even if a plan is tampered with. The offline adapter validates this plan against the current snapshot and performs zero field modifications, uploads, browser actions or network actions.
+
+Workday-style multi-step forms use an ordered local snapshot sequence. Each saved page is independently hashed and classified, the sequence hash binds its exact order, and duplicate page snapshots fail closed. DOM-specific control references may change after a React re-render; a separate logical-field hash based on provider, semantic answer key, classification, control type and prompt hash deduplicates the same question across steps without retaining selectors or labels. Sequence analysis performs no Next/Continue navigation.
 
 ## Approval binding matrix
 

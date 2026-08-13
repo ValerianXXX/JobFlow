@@ -22,11 +22,11 @@
         "required": ["control_ref", "classification", "action", "binding_kind", "binding_ref", "reason_code"],
         "properties": {
           "control_ref": {"type": "string", "pattern": "^CTL-[A-F0-9]{12}$"},
-          "classification": {"enum": ["ordinary_fixed", "private_fixed", "sensitive_review", "work_authorization_stop", "compensation_stop", "legal_declaration_stop", "signature_stop", "voluntary_disclosure_stop", "account_creation_stop", "file_upload_stop", "final_submit_stop", "unknown_stop"]},
+          "classification": {"enum": ["ordinary_fixed", "private_fixed", "sensitive_review", "work_authorization_stop", "compensation_stop", "legal_declaration_stop", "signature_stop", "voluntary_disclosure_stop", "account_creation_stop", "file_upload_stop", "navigation_control_stop", "final_submit_stop", "unknown_stop"]},
           "action": {"enum": ["PROPOSE_PREFILL", "STOP"]},
           "binding_kind": {"enum": ["NONE", "PUBLIC_VALUE_HASH", "SECURE_REF"]},
           "binding_ref": {"type": ["string", "null"], "pattern": "^(?:sha256:[a-f0-9]{64}|secure-ref:[A-Za-z0-9_-]{8,128})$"},
-          "reason_code": {"enum": ["KNOWN_PUBLIC_BINDING_REQUIRED", "SECURE_REFERENCE_REQUIRED", "FILE_UPLOAD_EXTERNAL_ACTION", "FINAL_SUBMIT_EXTERNAL_ACTION", "ACCOUNT_CREATION_REQUIRES_APPROVAL", "UNKNOWN_FIELD_FAIL_CLOSED", "PROTECTED_OR_SENSITIVE_FIELD"]}
+          "reason_code": {"enum": ["KNOWN_PUBLIC_BINDING_REQUIRED", "SECURE_REFERENCE_REQUIRED", "FILE_UPLOAD_EXTERNAL_ACTION", "NAVIGATION_ACTION_REVIEW", "FINAL_SUBMIT_EXTERNAL_ACTION", "ACCOUNT_CREATION_REQUIRES_APPROVAL", "UNKNOWN_FIELD_FAIL_CLOSED", "PROTECTED_OR_SENSITIVE_FIELD"]}
         }
       }
     },
