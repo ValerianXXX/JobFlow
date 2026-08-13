@@ -203,6 +203,21 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
             self.assertNotIn(SENTINEL, json.dumps(caught.exception.as_dict()))
             onboarding.delete(record["secure_ref"], user_confirmed=True)
 
+    def test_private_deduplication_rechecks_ciphertext_before_reporting_success(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            script = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
+            store = WindowsDPAPIStore(script, local_app_data=temp / "localappdata")
+            onboarding = PrivateOnboarding(database, store)
+            value = SENTINEL.encode("utf-8")
+            record = onboarding.import_bytes("answer_bank", value, synthetic=True)
+            store.cipher_path(record["secure_ref"]).write_bytes(b"corrupt")
+            with self.assertRaises(JobOpsError) as blocked:
+                onboarding.import_bytes("answer_bank", value, synthetic=True)
+            self.assertEqual(blocked.exception.code, "SECURE_CIPHERTEXT_HASH_MISMATCH")
+            onboarding.delete(record["secure_ref"], user_confirmed=True)
+
     def test_private_file_import_is_bounded_and_rejects_reparse_paths(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")

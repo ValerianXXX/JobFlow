@@ -99,6 +99,12 @@ class PrivateOnboarding:
                 (kind, content_hash, int(synthetic)),
             ).fetchone()
         if existing is not None:
+            recovered = self.read_bytes(str(existing["secure_ref"]))
+            if recovered != value:
+                raise JobOpsError(
+                    "SECURE_CONTENT_HASH_MISMATCH",
+                    "The deduplicated private value did not exactly match its registered content.",
+                )
             return {
                 "secure_ref": existing["secure_ref"], "kind": kind, "display_name": existing["display_name"],
                 "content_sha256": existing["content_sha256"], "ciphertext_sha256": existing["ciphertext_sha256"],
