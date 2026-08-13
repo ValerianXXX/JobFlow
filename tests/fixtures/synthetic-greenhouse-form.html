@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>Synthetic Greenhouse form</title></head>
+  <body>
+    <main data-provider="greenhouse">
+      <h1>Synthetic Data Analyst application</h1>
+      <form action="/example/jobs/987654">
+        <input type="hidden" name="authenticity_token" value="DO_NOT_RETAIN_SYNTHETIC_TOKEN">
+        <h2>Candidate details</h2>
+        <label for="full_name">Full name</label>
+        <input id="full_name" name="full_name" type="text" autocomplete="name" required>
+        <label for="portfolio">Portfolio URL</label>
+        <input id="portfolio" name="portfolio" type="url">
+        <h2>Eligibility</h2>
+        <label for="work_authorization">Are you legally authorized to work in this location?</label>
+        <select id="work_authorization" name="work_authorization" required><option>Select</option><option>Yes</option><option>No</option></select>
+        <h2>Documents</h2>
+        <label for="resume">Resume</label>
+        <input id="resume" name="resume" type="file" required>
+        <button id="submit" type="submit">Submit application</button>
+      </form>
+      <script>throw new Error('DO_NOT_EXECUTE_SYNTHETIC_SCRIPT');</script>
+    </main>
+  </body>
+</html>

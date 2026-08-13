@@ -51,6 +51,7 @@ JobFlow 的资料理解采用严格 AI 门：选择文件后会自动启动 AI �
 - 招聘入口必须来自公司 HTTPS 官网。官网导航到 Workday、Greenhouse 或 Lever 时，还要验证公司、租户、board、岗位、官方页面和 JD 快照的绑定。
 - `discover-official-jobs` 只分析用户保存到项目内的公司招聘页 HTML/JSON 快照（local snapshot only）。它可提出公司官网、Workday、Greenhouse 或 Lever 岗位候选，但不联网、不确认岗位仍开放，也不把候选视为已验证路线；每条结果都必须在以后取得单独授权后重新做实时新鲜度与路线验证。 / It parses only a project-local saved careers-page snapshot, performs zero network actions, and leaves every candidate pending a separately authorized live freshness and route check.
 - `analyze-ats-form` 只读取项目内的本地 HTML 表单快照，并要求已经验证且哈希完整的官网→ATS 路线。它丢弃页面中已有的所有输入值，只输出字段/问题哈希、分类、停止原因和 opaque control reference；CAPTCHA、MFA、登录、账号、上传、跨域表单/iframe、敏感题、未知字段及最终提交全部保持关闭。由此生成的 browser action plan 只允许普通固定字段或 `secure-ref` 私人字段成为待审阅的 prefill proposal，当前适配器不会真正修改任何网页。 / The form analyzer is local-snapshot-only, value-redacting and fail-closed; its current adapter validates plans but performs zero browser actions.
+- Greenhouse 已有一条完整的合成离线纵向验收链：公司官网快照 → 官方到 Greenhouse 的租户/岗位路线 → JD 与 HTML 表单 → opaque/哈希化字段绑定 → 零修改的本机浏览器计划验证 → 材料渲染 QA → `AWAITING_APPROVAL` 审阅队列。路线、表单、计划、材料与审阅包由同一上下文哈希绑定；上传与提交仍为关闭能力。这是离线工程证据，不代表已连接或兼容真实 Greenhouse 网站。 / A synthetic Greenhouse vertical reaches the local review queue with one content-bound context and zero browser or external actions; it is not a claim of live-site compatibility.
 - 待审批上限默认 10，可设 1—1000；容量检查与 reservation 在同一事务中完成。
 - `ExternalActionGateway` 是受保护状态的唯一入口。生产策略始终先返回 `PHASE_NOT_AUTHORIZED`。
 - `SUBMISSION_UNKNOWN` 不自动重试；CAPTCHA、MFA、验证码、登录和账号创建均停给用户。

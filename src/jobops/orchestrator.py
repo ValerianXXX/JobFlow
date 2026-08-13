@@ -7,7 +7,9 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
+from .adapters import FakeBrowserPrefillAdapter
 from .approvals import ApprovalContext, UploadBinding
+from .ats_browser import analyze_local_ats_form, build_browser_action_plan
 from .claim_registry import ClaimRegistry
 from .claims import verify_claim_evidence
 from .collector import JobCollector
@@ -273,8 +275,61 @@ class JobOpsOrchestrator:
 
         answers = self._load_json_ref(answer_bank_ref)
         answers["full_name"] = profile_ref
-        form_value = load_json(form_fixture)
-        fields = map_fields(form_value["fields"], {str(k): str(v) for k, v in answers.items()}, policy["blocked_form_categories"], page_context=str(form_value.get("page_context", "")))
+        ats_safe_prefill: dict[str, Any] | None = None
+        if form_fixture.suffix.casefold() in {".html", ".htm"}:
+            form_analysis = analyze_local_ats_form(
+                form_fixture.read_bytes(), route=route.as_dict(), blocked_categories=policy["blocked_form_categories"]
+            )
+            bindings: dict[str, dict[str, str]] = {}
+            for item in form_analysis["fields"]:
+                answer_key = str(item["answer_key"])
+                if item["classification"] == "private_fixed" and answer_key == "full_name" and profile.get("candidate_display_name"):
+                    bindings[str(item["control_ref"])] = {"kind": "secure_ref", "value": profile_ref}
+                elif item["classification"] == "ordinary_fixed" and answer_key in answers:
+                    candidate = str(answers[answer_key])
+                    if candidate not in {"", "UNKNOWN", "UNANSWERED"}:
+                        bindings[str(item["control_ref"])] = {"kind": "public_value", "value": candidate}
+            browser_plan = build_browser_action_plan(form_analysis, bindings)
+            fake_browser = FakeBrowserPrefillAdapter().prefill({
+                "plan": browser_plan, "current_form_snapshot_hash": form_analysis["form_snapshot_hash"],
+                "isolation_policy": "ISOLATED_FAKE_ONLY",
+            })
+            action_by_ref = {str(item["control_ref"]): item for item in browser_plan["actions"]}
+            safe_questions = []
+            for item in form_analysis["fields"]:
+                action = action_by_ref[str(item["control_ref"])]
+                safe_questions.append({
+                    "id": item["control_ref"], "label": item["answer_key"], "answer_key": item["answer_key"],
+                    "prompt_hash": item["prompt_hash"], "control_type": item["control_type"],
+                    "classification": item["classification"], "reason": item["reason_code"],
+                    "gate": "PREFILL_ALLOWED" if action["action"] == "PROPOSE_PREFILL" else "STOP_REQUIRED",
+                    "action": "PREFILL_FROM_SECURE_STORE" if action["binding_kind"] == "SECURE_REF" else ("PREFILL" if action["action"] == "PROPOSE_PREFILL" else "STOP"),
+                    "status": "READY" if action["action"] == "PROPOSE_PREFILL" else "STOPPED",
+                    "secure_ref": action["binding_ref"] if action["binding_kind"] == "SECURE_REF" else None,
+                    "redacted_summary": "PRIVATE_VALUE_PRESENT" if action["binding_kind"] == "SECURE_REF" else ("PUBLIC_VALUE_HASH_PRESENT" if action["binding_kind"] == "PUBLIC_VALUE_HASH" else "UNANSWERED"),
+                })
+            fields = {
+                "fields": safe_questions,
+                "sensitive_fields": [item["id"] for item in safe_questions if item["action"] == "STOP"],
+                "unknown_fields": [item["id"] for item in safe_questions if item["classification"] == "unknown_stop"],
+                "submit_blocked": True,
+            }
+            form_snapshot_hash = str(form_analysis["form_snapshot_hash"])
+            ats_safe_prefill = {
+                "schema_version": 1, "status": "LOCAL_ATS_PLAN_VALIDATED", "provider": form_analysis["provider"],
+                "source_route_hash": route.route_hash, "form_snapshot_hash": form_snapshot_hash,
+                "browser_plan_hash": browser_plan["plan_hash"], "fields_discovered": form_analysis["field_count"],
+                "fields_proposed": browser_plan["fillable_count"], "fields_stopped": browser_plan["stopped_count"],
+                "browser_adapter_status": fake_browser["status"], "fields_modified": fake_browser["fields_modified"],
+                "submit_blocked": True, "upload_blocked": True, "account_creation_blocked": True,
+                "browser_actions": fake_browser["browser_actions"], "network_actions": fake_browser["network_actions"],
+                "real_external_actions": fake_browser["real_side_effects"],
+            }
+            validate_named("ats-vertical-evidence", ats_safe_prefill, self.schemas)
+        else:
+            form_value = load_json(form_fixture)
+            fields = map_fields(form_value["fields"], {str(k): str(v) for k, v in answers.items()}, policy["blocked_form_categories"], page_context=str(form_value.get("page_context", "")))
+            form_snapshot_hash = sha256_file(form_fixture)
         if fields["unknown_fields"]:
             raise JobOpsError("UNKNOWN_FORM_FIELDS", "Unrecognized form fields must be reviewed before a packet can be prepared.", fields=fields["unknown_fields"])
         field_records = []
@@ -320,7 +375,6 @@ class JobOpsOrchestrator:
             {"filename": "resume.pdf", "purpose": "resume", "sha256": pdf_ref["content_sha256"]},
         ]
         answers_hash = sha256_bytes(canonical_json(answers))
-        form_snapshot_hash = sha256_file(form_fixture)
         packet_id = stable_id(
             "RPK", application_id, intake_key, str(profile["profile_version"]), claim_set_hash,
             str(pdf_ref["content_sha256"]), route.route_hash, form_snapshot_hash, answers_hash,
@@ -368,5 +422,5 @@ class JobOpsOrchestrator:
         return {
             **admitted, "job_id": job_id, "review_packet_id": packet_id, "review_packet_ref": packet_ref["secure_ref"],
             "fit_recommendation": fit.recommendation, "document_qa": qa.as_dict(), "queue": self.queue.status(),
-            "real_external_actions": 0, "next_safe_action": "show-review-packet",
+            "ats_safe_prefill": ats_safe_prefill, "real_external_actions": 0, "next_safe_action": "show-review-packet",
         }

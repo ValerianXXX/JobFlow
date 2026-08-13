@@ -169,6 +169,9 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
             is_fill = item.get("action") == "PROPOSE_PREFILL"
             if is_fill != (item.get("binding_kind") != "NONE" and item.get("binding_ref") is not None):
                 raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Only bound controls may be proposed for prefill.")
+    if name == "ats-vertical-evidence":
+        if value.get("fields_discovered") != value.get("fields_proposed", 0) + value.get("fields_stopped", 0):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS vertical field counts must cover every discovered control.")
 
 
 def validate_named(name: str, value: dict[str, Any], schema_dir: Path) -> dict[str, Any]:

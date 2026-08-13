@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/ats-vertical-evidence.schema.json",
+  "title": "Offline ATS Vertical Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "provider", "source_route_hash", "form_snapshot_hash", "browser_plan_hash", "fields_discovered", "fields_proposed", "fields_stopped", "browser_adapter_status", "fields_modified", "submit_blocked", "upload_blocked", "account_creation_blocked", "browser_actions", "network_actions", "real_external_actions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "LOCAL_ATS_PLAN_VALIDATED"},
+    "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
+    "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "browser_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "fields_discovered": {"type": "integer", "minimum": 0},
+    "fields_proposed": {"type": "integer", "minimum": 0},
+    "fields_stopped": {"type": "integer", "minimum": 0},
+    "browser_adapter_status": {"const": "FAKE_PLAN_VALIDATED"},
+    "fields_modified": {"const": 0},
+    "submit_blocked": {"const": true},
+    "upload_blocked": {"const": true},
+    "account_creation_blocked": {"const": true},
+    "browser_actions": {"const": 0},
+    "network_actions": {"const": 0},
+    "real_external_actions": {"const": 0}
+  }
+}

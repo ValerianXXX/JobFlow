@@ -112,7 +112,7 @@ def valid_fixtures() -> dict[str, dict]:
             "classification_counts": {"private_fixed": 1},
             "fields": [{
                 "control_ref": "CTL-ABCDEF123456", "control_type": "email", "required": True,
-                "classification": "private_fixed", "reason_code": "SECURE_REFERENCE_REQUIRED", "prompt_hash": H,
+                "classification": "private_fixed", "answer_key": "email", "reason_code": "SECURE_REFERENCE_REQUIRED", "prompt_hash": H,
                 "option_count": 0, "existing_value_discarded": True, "binding_status": "UNBOUND", "action": "STOP",
             }],
             "blockers": [], "form_action_statuses": ["SAME_ORIGIN"], "iframe_statuses": [],
@@ -128,6 +128,14 @@ def valid_fixtures() -> dict[str, dict]:
                 "control_ref": "CTL-ABCDEF123456", "classification": "private_fixed", "action": "PROPOSE_PREFILL",
                 "binding_kind": "SECURE_REF", "binding_ref": "secure-ref:SYNTHETIC01", "reason_code": "SECURE_REFERENCE_REQUIRED",
             }],
+            "submit_blocked": True, "upload_blocked": True, "account_creation_blocked": True,
+            "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
+        },
+        "ats-vertical-evidence": {
+            "schema_version": 1, "status": "LOCAL_ATS_PLAN_VALIDATED", "provider": "greenhouse",
+            "source_route_hash": route["route_hash"], "form_snapshot_hash": H, "browser_plan_hash": H,
+            "fields_discovered": 2, "fields_proposed": 1, "fields_stopped": 1,
+            "browser_adapter_status": "FAKE_PLAN_VALIDATED", "fields_modified": 0,
             "submit_blocked": True, "upload_blocked": True, "account_creation_blocked": True,
             "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
         },
@@ -210,6 +218,7 @@ class RuntimeSchemaMatrixTests(unittest.TestCase):
             "official-discovery": ("candidate_count", 2),
             "ats-form-snapshot": ("field_count", 2),
             "browser-action-plan": ("fillable_count", 0),
+            "ats-vertical-evidence": ("fields_discovered", 3),
         }
         for name, (field, invalid) in conflicts.items():
             changed = copy.deepcopy(self.fixtures[name]); changed[field] = invalid

@@ -43,6 +43,33 @@ def _safe_control_type(tag: str, raw_type: str) -> str:
     return value if value in CONTROL_TYPES else "other"
 
 
+def _suggest_answer_key(field: dict[str, Any]) -> str:
+    material = " ".join(
+        str(field.get(key, "")) for key in (
+            "identifier", "name", "type", "autocomplete", "label", "placeholder", "aria_label", "section_heading",
+        )
+    ).casefold().replace("-", "_").replace(" ", "_")
+    candidates = (
+        ("first_name", ("first_name", "given_name", "given-name", "名_")),
+        ("last_name", ("last_name", "family_name", "family-name", "姓_")),
+        ("full_name", ("full_name", "legal_name", "candidate_name", "姓名", "type_name")),
+        ("email", ("email", "邮箱")),
+        ("phone", ("phone", "telephone", "mobile", "电话", "手机")),
+        ("linkedin", ("linkedin",)),
+        ("github", ("github",)),
+        ("portfolio", ("portfolio", "作品集")),
+        ("website", ("website", "personal_site", "个人网站")),
+        ("address", ("address", "street", "地址")),
+        ("work_authorization", ("work_authorization", "authorized_to_work", "工作授权", "工作资格")),
+        ("salary", ("salary", "compensation", "薪资", "薪酬")),
+        ("resume", ("resume", "cv", "简历")),
+    )
+    for answer_key, signals in candidates:
+        if any(signal in material for signal in signals):
+            return answer_key
+    return "UNKNOWN"
+
+
 class _FormHTMLParser(HTMLParser):
     """Extract form semantics while intentionally discarding every entered value."""
 
@@ -295,6 +322,7 @@ def analyze_local_ats_form(
             "control_type": raw["type"],
             "required": bool(raw["required"]),
             "classification": classification,
+            "answer_key": _suggest_answer_key(raw),
             "reason_code": reason_code,
             "prompt_hash": sha256_bytes(canonical_json(prompt_material)),
             "option_count": len(raw["options"]),
