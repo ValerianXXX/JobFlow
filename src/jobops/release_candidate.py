@@ -114,6 +114,8 @@ def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Pa
         raise JobOpsError("RELEASE_SMOKE_OUTPUT_INVALID", "The extracted source candidate smoke result was invalid.") from error
     required = {
         "status": "PASS", "binding": "127.0.0.1", "supported_locales": ["zh", "en"],
+        "offline_discovery": "PASS", "offline_candidates": 2, "snapshot_persisted": False,
+        "candidate_queue_mutations": 0,
         "private_values_emitted": 0, "external_network_actions": 0, "real_external_actions": 0,
     }
     if any(result.get(key) != value for key, value in required.items()):

@@ -40,8 +40,10 @@ REQUIRED_PUBLIC_FILES = {
     "README.md",
     "SECURITY.md",
     "Check JobFlow.cmd",
+    "Check Release Readiness.cmd",
     "Start JobFlow Demo.cmd",
     "scripts/check-jobflow.ps1",
+    "scripts/check-release-readiness.ps1",
     "scripts/start-jobflow-demo.ps1",
     "pyproject.toml",
 }
