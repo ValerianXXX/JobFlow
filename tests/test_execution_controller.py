@@ -16,6 +16,7 @@ from jobops.approvals import ApprovalContext, UploadBinding, issue_approval
 from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
 from jobops.execution_controller import IsolatedApplicationExecutionController
+from jobops.external_action_sessions import ExternalActionSessionManager, ExternalActionSessionPolicy
 from jobops.external_actions import ExternalActionGateway, ExternalActionPolicy
 from jobops.util import canonical_json, iso_utc, sha256_bytes
 
@@ -37,22 +38,25 @@ def context() -> ApprovalContext:
     )
 
 
-def browser_plan() -> dict:
+def browser_plan(*, prefill: bool = False) -> dict:
     actions = [{
-        "control_ref": "CTL-ABCDEF123456", "classification": "final_submit_stop",
-        "action": "STOP", "binding_kind": "NONE", "binding_ref": None,
-        "reason_code": "FINAL_SUBMIT_EXTERNAL_ACTION",
+        "control_ref": "CTL-ABCDEF123456",
+        "classification": "ordinary_fixed" if prefill else "final_submit_stop",
+        "action": "PROPOSE_PREFILL" if prefill else "STOP",
+        "binding_kind": "PUBLIC_VALUE_HASH" if prefill else "NONE",
+        "binding_ref": H if prefill else None,
+        "reason_code": "KNOWN_PUBLIC_BINDING_REQUIRED" if prefill else "FINAL_SUBMIT_EXTERNAL_ACTION",
     }]
     material = {
         "form_snapshot_hash": H, "source_route_hash": H,
         "canonical_url": "https://example.com/careers/a", "actions": actions,
     }
     return {
-        "schema_version": 1, "status": "NO_FIELDS_BOUND",
+        "schema_version": 1, "status": "LOCAL_PLAN_READY" if prefill else "NO_FIELDS_BOUND",
         "form_snapshot_hash": H, "source_route_hash": H,
         "canonical_url": "https://example.com/careers/a",
         "plan_hash": sha256_bytes(canonical_json(material)),
-        "fillable_count": 0, "stopped_count": 1, "actions": actions,
+        "fillable_count": 1 if prefill else 0, "stopped_count": 0 if prefill else 1, "actions": actions,
         "submit_blocked": True, "upload_blocked": True,
         "account_creation_blocked": True, "browser_actions": 0,
         "network_actions": 0, "real_external_actions": 0,
@@ -104,6 +108,17 @@ def seed_approved(database: JobOpsDB, ctx: ApprovalContext) -> None:
     )
 
 
+def action_session(database: JobOpsDB, ctx: ApprovalContext, *, prefill: bool = False) -> str:
+    manager = ExternalActionSessionManager(database, ExternalActionSessionPolicy.isolated_fake())
+    manager.enable(user_confirmed=True)
+    actions = ["upload_materials"]
+    if prefill:
+        actions.append("prefill_application_form")
+    session = manager.issue(context=ctx, allowed_actions=actions, user_confirmed=True)
+    manager.persist(session, context=ctx)
+    return session.session_id
+
+
 class IsolatedExecutionControllerTests(unittest.TestCase):
     def test_complete_fake_lifecycle_requires_two_approvals_and_never_uses_transport(self) -> None:
         def forbidden(*args, **kwargs):
@@ -114,16 +129,20 @@ class IsolatedExecutionControllerTests(unittest.TestCase):
             database.initialize()
             ctx = context()
             seed_approved(database, ctx)
-            browser = browser_plan()
+            browser = browser_plan(prefill=True)
             plan = execution_plan(browser["plan_hash"])
             controller = IsolatedApplicationExecutionController(database)
+            session_id = action_session(database, ctx, prefill=True)
 
             with patch.object(socket, "socket", forbidden), patch.object(socket, "getaddrinfo", forbidden), patch.object(socket, "create_connection", forbidden), patch.object(urllib.request, "urlopen", forbidden), patch.object(smtplib, "SMTP", forbidden), patch.object(subprocess, "Popen", forbidden):
                 prepared = controller.prepare_until_final_authorization(
                     context=ctx, execution_plan=plan, browser_plan=browser,
                     current_form_snapshot_hash=H, freshness_evidence_hash=H,
+                    action_session_id=session_id,
                 )
                 self.assertEqual(prepared["status"], "AWAITING_FINAL_AUTHORIZATION")
+                self.assertEqual(prepared["checkpoint_count"], 5)
+                self.assertEqual(prepared["proposed_field_count"], 1)
                 self.assertEqual(prepared["fields_modified"], 0)
                 self.assertEqual(prepared["real_external_actions"], 0)
                 with self.assertRaises(JobOpsError) as unconfirmed:
@@ -142,7 +161,7 @@ class IsolatedExecutionControllerTests(unittest.TestCase):
                 )
 
             self.assertEqual(completed["status"], "CONFIRMED")
-            self.assertEqual(completed["checkpoint_count"], 7)
+            self.assertEqual(completed["checkpoint_count"], 8)
             self.assertEqual(completed["real_external_actions"], 0)
             audit = audit_real_external_actions(database)
             self.assertEqual(audit["real_external_actions"], 0)
@@ -167,8 +186,9 @@ class IsolatedExecutionControllerTests(unittest.TestCase):
                     (ctx.application_id,),
                 ).fetchone()[0]
             self.assertEqual(application, "CONFIRMED")
-            self.assertEqual(tuple(run), ("CONFIRMED", 7))
-            self.assertEqual(phases[-3:], [
+            self.assertEqual(tuple(run), ("CONFIRMED", 8))
+            self.assertEqual(phases[-5:], [
+                "SCOPED_ACTIONS_VALIDATED", "AWAITING_FINAL_AUTHORIZATION",
                 "FINAL_AUTHORIZATION_CONSUMED", "FAKE_SUBMISSION_RECORDED", "RECEIPT_VERIFIED",
             ])
             self.assertEqual(approval_status, "CONSUMED")
@@ -191,9 +211,11 @@ class IsolatedExecutionControllerTests(unittest.TestCase):
             browser = browser_plan()
             plan = execution_plan(browser["plan_hash"])
             controller = IsolatedApplicationExecutionController(database)
+            session_id = action_session(database, ctx)
             prepared = controller.prepare_until_final_authorization(
                 context=ctx, execution_plan=plan, browser_plan=browser,
                 current_form_snapshot_hash=H, freshness_evidence_hash=H,
+                action_session_id=session_id,
             )
             outcome = controller.complete_with_fresh_authorization(
                 run_id=prepared["run_id"], context=ctx,
@@ -222,16 +244,18 @@ class IsolatedExecutionControllerTests(unittest.TestCase):
             browser = browser_plan()
             plan = execution_plan(browser["plan_hash"])
             controller = IsolatedApplicationExecutionController(database)
+            session_id = action_session(database, ctx)
             with self.assertRaises(JobOpsError) as changed:
                 controller.prepare_until_final_authorization(
                     context=ctx, execution_plan=plan, browser_plan=browser,
                     current_form_snapshot_hash="sha256:" + "b" * 64,
-                    freshness_evidence_hash=H,
+                    freshness_evidence_hash=H, action_session_id=session_id,
                 )
             self.assertEqual(changed.exception.code, "SITE_CHANGED")
             prepared = controller.prepare_until_final_authorization(
                 context=ctx, execution_plan=plan, browser_plan=browser,
                 current_form_snapshot_hash=H, freshness_evidence_hash=H,
+                action_session_id=session_id,
             )
             with self.assertRaises(sqlite3.IntegrityError):
                 with database.connect() as connection:

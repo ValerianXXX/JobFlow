@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Integrated scoped prefill/upload authorization into the isolated execution chain. The hash-only fake upload adapter rejects filenames, paths, secure references and file bodies, and reports zero files opened/uploaded and zero network actions.
+- 将预填/上传的精确授权接入隔离执行链；仅哈希的上传假适配器拒绝文件名、路径、secure-ref 与正文，并报告打开/上传文件 0、网络动作 0。
 - Added expiring, one-use, per-action authorization sessions for live-read, form-inspection, prefill and upload contracts, with a generation-bound global emergency stop visible in the bilingual dashboard. Production activation remains structurally disabled.
 - 新增实时读取、表单检查、预填和上传的限时逐动作单次授权会话，并在双语首页显示绑定代际的总急停；生产动作仍在结构上保持不可启用。
 - Added an append-only isolated application execution controller that proves the complete dual-approval and receipt lifecycle without a browser, network call, upload, email, account, scheduler or real external side effect.

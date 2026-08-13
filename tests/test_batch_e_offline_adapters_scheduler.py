@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from _support import project_temp
-from jobops.adapters import AdapterRegistry, DisabledAdapter, FakeBrowserPrefillAdapter, FakeOfficialSourceAdapter, FakeOutboxAdapter, FakeReceiptAdapter, FakeSubmissionAdapter, audit_real_external_actions
+from jobops.adapters import AdapterRegistry, DisabledAdapter, FakeBrowserPrefillAdapter, FakeMaterialUploadAdapter, FakeOfficialSourceAdapter, FakeOutboxAdapter, FakeReceiptAdapter, FakeSubmissionAdapter, audit_real_external_actions
 from jobops.application_execution import build_application_execution_plan
 from jobops.approvals import ApprovalContext, UploadBinding, issue_approval
 from jobops.db import JobOpsDB
@@ -106,6 +106,11 @@ class OfflineAdapterTests(unittest.TestCase):
                 lambda: FakeBrowserPrefillAdapter().prefill({
                     "plan": safe_browser_plan(), "current_form_snapshot_hash": H, "isolation_policy": "ISOLATED_FAKE_ONLY",
                 }),
+                lambda: FakeMaterialUploadAdapter().upload({
+                    "application_id": "APP-ABCDEF123456",
+                    "upload_bindings": [{"purpose": "resume", "sha256": H}],
+                    "isolation_policy": "ISOLATED_FAKE_ONLY",
+                }),
                 lambda: FakeSubmissionAdapter(database).submit({"application_id": None, "isolation_policy": "ISOLATED_FAKE_ONLY"}),
                 lambda: FakeOutboxAdapter().send_email({"to": "synthetic@example.test", "body": "fixture"}),
                 lambda: FakeReceiptAdapter().verify({"source": "fake-receipt", "confirmation_number": "SYN-1"}),
@@ -126,6 +131,13 @@ class OfflineAdapterTests(unittest.TestCase):
             FakeBrowserPrefillAdapter().prefill({"plan": plan, "current_form_snapshot_hash": H, "isolation_policy": "ISOLATED_FAKE_ONLY"})
         self.assertEqual(caught.exception.code, "BROWSER_PLAN_PROTECTED_FIELD")
         self.assertEqual(FakeReceiptAdapter().verify({"source": "fake-receipt"})["status"], "SUBMISSION_UNKNOWN")
+        with self.assertRaises(JobOpsError) as plaintext_upload:
+            FakeMaterialUploadAdapter().upload({
+                "application_id": "APP-ABCDEF123456",
+                "upload_bindings": [{"purpose": "resume", "sha256": H, "filename": "private.pdf"}],
+                "isolation_policy": "ISOLATED_FAKE_ONLY",
+            })
+        self.assertEqual(plaintext_upload.exception.code, "FAKE_UPLOAD_BINDINGS_INVALID")
 
     def test_only_verified_fake_receipt_can_confirm_after_fake_submission(self) -> None:
         with project_temp() as temp:

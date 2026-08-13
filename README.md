@@ -59,6 +59,8 @@ JobFlow 的资料理解采用严格 AI 门：选择文件后会自动启动 AI �
 
 未来外部动作不会共用一个模糊的总授权：实时岗位读取、申请表检查、安全预填和材料上传分别使用限时、逐动作、单次会话；最终提交、账号、邮件和调度不能混入这类会话。首页安全面板显示外部动作总开关，并预留可立即使全部会话失效的双语急停按钮。当前构建的总开关默认关闭且无法启用生产动作。 / Future live read, inspection, prefill, and upload use separate expiring one-use scopes. Final submit, account, messaging, and scheduling cannot be folded into them. The bilingual dashboard exposes a global emergency stop; production activation remains unavailable and off by default.
 
+隔离纵向测试现在会在最终确认之前消费精确的预填/上传会话。上传假适配器只接收用途与 SHA-256，不接收文件名、路径、secure-ref 或文件正文，并明确报告打开文件 0、上传文件 0、网络动作 0；它验证的是未来传输接口和顺序，而不是伪装成真实上传。 / The isolated vertical now consumes exact prefill/upload scopes before final confirmation. Its fake upload adapter accepts purpose and SHA-256 only, opens and uploads zero files, and validates sequencing without pretending a real upload occurred.
+
 完成“自动投递准备度”后，首页的“准备一个离线申请”可直接接收用户保存到本机的 JD、公司官网岗位页与申请表，以及两个对应 HTTPS 地址和一段可在官网页逐字找到的公司原文。三份输入只进入项目外的单次受控临时目录；JobFlow 自动建立官网/ATS 路线、生成岗位简历与按需 Cover Letter、运行 Word/PDF QA，并把加密审阅包送入有上限队列。失败时会释放队列位置并删除本轮新建的加密材料；输入快照不保留，真实网站访问与外部动作均为 0。 / After readiness passes, the home-page offline-application control accepts three explicitly selected saved files and creates the local review packet without configuration files or command-line private values. Inputs are staged once outside the project and removed; failed preparation rolls back its slot and newly generated ciphertext.
 
 当前发布状态：

@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from .adapters import FakeBrowserPrefillAdapter, FakeReceiptAdapter, FakeSubmissionAdapter
+from .adapters import FakeBrowserPrefillAdapter, FakeMaterialUploadAdapter, FakeReceiptAdapter, FakeSubmissionAdapter
 from .application_execution import validate_application_execution_plan_integrity
 from .approvals import ApprovalContext, validate_approval
 from .ats_browser import validate_browser_action_plan_integrity
@@ -12,6 +12,7 @@ from .db import JobOpsDB
 from .errors import JobOpsError
 from .external_actions import ExternalActionGateway, ExternalActionPolicy
 from .final_submission import issue_final_submission_authorization
+from .external_action_sessions import ExternalActionSessionManager, ExternalActionSessionPolicy
 from .runtime_schema import validate_named
 from .util import canonical_json, iso_utc, project_root, sha256_bytes, stable_id
 
@@ -48,8 +49,10 @@ class IsolatedApplicationExecutionController:
         self.database = database
         self.gateway = ExternalActionGateway(database, ExternalActionPolicy.isolated_fake())
         self.browser = FakeBrowserPrefillAdapter()
+        self.upload = FakeMaterialUploadAdapter()
         self.submission = FakeSubmissionAdapter(database)
         self.receipt = FakeReceiptAdapter()
+        self.action_sessions = ExternalActionSessionManager(database, ExternalActionSessionPolicy.isolated_fake())
         self.schemas = project_root() / "schemas"
 
     def _validate_inputs(
@@ -187,6 +190,7 @@ class IsolatedApplicationExecutionController:
         browser_plan: dict[str, Any],
         current_form_snapshot_hash: str,
         freshness_evidence_hash: str,
+        action_session_id: str,
     ) -> dict[str, Any]:
         checked = self._validate_inputs(
             context=context,
@@ -195,6 +199,48 @@ class IsolatedApplicationExecutionController:
             current_form_snapshot_hash=current_form_snapshot_hash,
             freshness_evidence_hash=freshness_evidence_hash,
         )
+        upload_bindings = [
+            {"purpose": item.purpose, "sha256": item.sha256}
+            for item in checked.context.uploads
+        ]
+        action_uses: list[dict[str, Any]] = []
+        if int(checked.browser_plan.get("fillable_count", 0)):
+            action_uses.append(self.action_sessions.record_isolated_use(
+                session_id=action_session_id, context=checked.context,
+                action="prefill_application_form",
+                request_hash=sha256_bytes(canonical_json({
+                    "browser_plan_hash": checked.browser_plan["plan_hash"],
+                    "form_snapshot_hash": checked.context.form_snapshot_hash,
+                })),
+                result_code="AUTHORIZED_FAKE_PREFILL_INTENT",
+            ))
+            prefill_after_authorization = self.browser.prefill({
+                "plan": checked.browser_plan,
+                "current_form_snapshot_hash": checked.context.form_snapshot_hash,
+                "isolation_policy": "ISOLATED_FAKE_ONLY",
+            })
+            if prefill_after_authorization.get("fields_modified") != 0:
+                raise JobOpsError("FAKE_PREFILL_EVIDENCE_INVALID", "The isolated prefill adapter modified a field.")
+        action_uses.append(self.action_sessions.record_isolated_use(
+            session_id=action_session_id, context=checked.context,
+            action="upload_materials",
+            request_hash=sha256_bytes(canonical_json(upload_bindings)),
+            result_code="AUTHORIZED_FAKE_UPLOAD_INTENT",
+        ))
+        upload_evidence = self.upload.upload({
+            "application_id": checked.context.application_id,
+            "upload_bindings": upload_bindings,
+            "isolation_policy": "ISOLATED_FAKE_ONLY",
+        })
+        if (
+            upload_evidence.get("status") != "FAKE_UPLOAD_PLAN_VALIDATED"
+            or upload_evidence.get("files_opened") != 0
+            or upload_evidence.get("files_uploaded") != 0
+            or upload_evidence.get("uploaded_files") != []
+            or upload_evidence.get("network_actions") != 0
+            or upload_evidence.get("real_side_effects") != 0
+        ):
+            raise JobOpsError("FAKE_UPLOAD_EVIDENCE_INVALID", "The isolated upload adapter reported a file or external action.")
         now = iso_utc()
         run_id = stable_id(
             "RUN", checked.context.application_id, checked.context.context_hash,
@@ -225,7 +271,15 @@ class IsolatedApplicationExecutionController:
                 "proposed_field_count": checked.prefill_evidence["proposed_field_count"],
                 "fields_modified": 0,
             }, **common),
-            self._checkpoint(sequence=4, phase="AWAITING_FINAL_AUTHORIZATION", status="AWAITING_USER", evidence={
+            self._checkpoint(sequence=4, phase="SCOPED_ACTIONS_VALIDATED", status="CONSUMED", evidence={
+                "action_session_id": action_session_id,
+                "action_use_ids": [item["use_id"] for item in action_uses],
+                "upload_binding_hash": upload_evidence["binding_hash"],
+                "planned_file_count": upload_evidence["planned_file_count"],
+                "files_opened": 0,
+                "files_uploaded": 0,
+            }, **common),
+            self._checkpoint(sequence=5, phase="AWAITING_FINAL_AUTHORIZATION", status="AWAITING_USER", evidence={
                 "review_packet_hash": checked.context.review_packet_hash,
                 "upload_hashes": [item.sha256 for item in checked.context.uploads],
                 "required_gate": "FRESH_EXPLICIT_SUBMISSION_APPROVAL",
@@ -247,7 +301,7 @@ class IsolatedApplicationExecutionController:
                     run_id, checked.context.application_id, checked.context.context_hash,
                     checked.execution_plan["plan_hash"], checked.browser_plan["plan_hash"],
                     checked.context.form_snapshot_hash, checked.freshness_evidence_hash,
-                    "AWAITING_FINAL_AUTHORIZATION", 4, now, now,
+                    "AWAITING_FINAL_AUTHORIZATION", 5, now, now,
                 ),
             )
             for checkpoint in checkpoints:
@@ -263,7 +317,7 @@ class IsolatedApplicationExecutionController:
             "status": "AWAITING_FINAL_AUTHORIZATION",
             "run_id": run_id,
             "application_id": checked.context.application_id,
-            "checkpoint_count": 4,
+            "checkpoint_count": 5,
             "proposed_field_count": checked.prefill_evidence["proposed_field_count"],
             "fields_modified": 0,
             "uploaded_files": 0,
@@ -396,7 +450,7 @@ class IsolatedApplicationExecutionController:
             )
             submission_started = True
             self._append_checkpoint(
-                run_id=run_id, checked=checked, sequence=5,
+                run_id=run_id, checked=checked, sequence=6,
                 phase="FINAL_AUTHORIZATION_CONSUMED", checkpoint_status="CONSUMED",
                 run_status="SUBMISSION_STARTED",
                 evidence={"authorization_id": authorization.authorization_id, "bound_hash": authorization.bound_hash},
@@ -414,7 +468,7 @@ class IsolatedApplicationExecutionController:
                 fake_evidence={"run_id": run_id, "attempt_id": transport["attempt_id"], "adapter": "fake"},
             )
             self._append_checkpoint(
-                run_id=run_id, checked=checked, sequence=6,
+                run_id=run_id, checked=checked, sequence=7,
                 phase="FAKE_SUBMISSION_RECORDED", checkpoint_status="RECORDED",
                 run_status="SUBMITTED",
                 evidence={"attempt_id": transport["attempt_id"], "adapter_kind": "fake"},
@@ -430,7 +484,7 @@ class IsolatedApplicationExecutionController:
                     evidence={"run_id": run_id, "reason": "VERIFIED_RECEIPT_MISSING"},
                 )
                 self._append_checkpoint(
-                    run_id=run_id, checked=checked, sequence=7,
+                    run_id=run_id, checked=checked, sequence=8,
                     phase="SUBMISSION_UNKNOWN", checkpoint_status="UNKNOWN",
                     run_status="SUBMISSION_UNKNOWN",
                     evidence={"reason": "VERIFIED_RECEIPT_MISSING"},
@@ -457,7 +511,7 @@ class IsolatedApplicationExecutionController:
             validate_named("receipt", receipt, self.schemas)
             confirmed = self.gateway.confirm_with_receipt(checked.context.application_id, receipt)
             self._append_checkpoint(
-                run_id=run_id, checked=checked, sequence=7,
+                run_id=run_id, checked=checked, sequence=8,
                 phase="RECEIPT_VERIFIED", checkpoint_status="CONFIRMED",
                 run_status="CONFIRMED",
                 evidence={"receipt_id": confirmed["receipt_id"], "confirmation_hash": receipt["confirmation_hash"]},
@@ -467,7 +521,7 @@ class IsolatedApplicationExecutionController:
                 "run_id": run_id,
                 "application_id": checked.context.application_id,
                 "receipt_id": confirmed["receipt_id"],
-                "checkpoint_count": 7,
+                "checkpoint_count": 8,
                 "automatic_retry": False,
                 "browser_actions": 0,
                 "network_actions": 0,

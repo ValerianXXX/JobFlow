@@ -16,6 +16,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] Separate short-lived one-time final-submit authorization bound to the exact execution plan, review packet, route, form, uploads and freshness evidence; review approval alone cannot submit.
 - [x] Append-only isolated execution checkpoints from approved plan through fake receipt confirmation, including fail-closed site drift and non-retryable unknown-submission recovery evidence.
 - [x] Per-application, expiring, one-use action sessions for live read/form inspection/prefill/upload contracts, plus a user-visible global emergency stop that defaults off and invalidates every active session.
+- [x] Hash-only fake material-upload contract integrated into the isolated execution chain after scoped prefill/upload authorization and before fresh final-submit confirmation; it opens and uploads zero files.
 - [x] Offline company-careers discovery from saved HTML/page snapshots and saved Greenhouse/Lever job JSON.
 - [x] Fail-closed local ATS form and Workday saved-sequence analysis.
 - [x] Synthetic Greenhouse vertical to `AWAITING_APPROVAL`; Lever contract evidence.

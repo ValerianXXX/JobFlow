@@ -23,6 +23,10 @@ class BrowserPrefillAdapter(Protocol):
     def prefill(self, request: dict[str, Any]) -> dict[str, Any]: ...
 
 
+class MaterialUploadAdapter(Protocol):
+    def upload(self, request: dict[str, Any]) -> dict[str, Any]: ...
+
+
 class SubmissionAdapter(Protocol):
     def submit(self, request: dict[str, Any]) -> dict[str, Any]: ...
 
@@ -76,6 +80,7 @@ class DisabledAdapter:
 
     def discover(self, request: dict[str, Any]) -> dict[str, Any]: return self._deny("discover_official_jobs", request)
     def prefill(self, request: dict[str, Any]) -> dict[str, Any]: return self._deny("prefill_real_form", request)
+    def upload(self, request: dict[str, Any]) -> dict[str, Any]: return self._deny("upload_materials", request)
     def submit(self, request: dict[str, Any]) -> dict[str, Any]: return self._deny("submit_application", request)
     def create_account(self, request: dict[str, Any]) -> dict[str, Any]: return self._deny("create_recruiting_account", request)
     def send_email(self, request: dict[str, Any]) -> dict[str, Any]: return self._deny("send_email", request)
@@ -131,6 +136,51 @@ class FakeBrowserPrefillAdapter:
 
 
 @dataclass
+class FakeMaterialUploadAdapter:
+    kind: str = "fake"
+
+    def upload(self, request: dict[str, Any]) -> dict[str, Any]:
+        if set(request) != {"application_id", "upload_bindings", "isolation_policy"}:
+            raise JobOpsError(
+                "FAKE_UPLOAD_REQUEST_INVALID",
+                "The fake upload adapter accepts only an application ID and hash-only upload bindings.",
+            )
+        if request.get("isolation_policy") != "ISOLATED_FAKE_ONLY":
+            raise JobOpsError("FAKE_ISOLATION_REQUIRED", "Synthetic upload validation requires isolated fake mode.")
+        application_id = str(request.get("application_id", ""))
+        bindings = request.get("upload_bindings")
+        if not application_id.startswith("APP-") or not isinstance(bindings, list) or not bindings:
+            raise JobOpsError("FAKE_UPLOAD_BINDINGS_INVALID", "Synthetic upload validation requires bound material hashes.")
+        purposes: list[str] = []
+        for item in bindings:
+            if not isinstance(item, dict) or set(item) != {"purpose", "sha256"}:
+                raise JobOpsError("FAKE_UPLOAD_BINDINGS_INVALID", "Upload bindings may contain purpose and SHA-256 only.")
+            purpose = str(item.get("purpose", ""))
+            digest = str(item.get("sha256", ""))
+            if purpose not in {"resume", "cover_letter", "portfolio", "attachment"}:
+                raise JobOpsError("FAKE_UPLOAD_BINDINGS_INVALID", "An upload binding has an unsupported purpose.")
+            if len(digest) != 71 or not digest.startswith("sha256:"):
+                raise JobOpsError("FAKE_UPLOAD_BINDINGS_INVALID", "An upload binding requires a SHA-256 value.")
+            try:
+                int(digest[7:], 16)
+            except ValueError as exc:
+                raise JobOpsError("FAKE_UPLOAD_BINDINGS_INVALID", "An upload binding requires a SHA-256 value.") from exc
+            purposes.append(purpose)
+        binding_hash = sha256_bytes(canonical_json(bindings))
+        return {
+            "status": "FAKE_UPLOAD_PLAN_VALIDATED",
+            "binding_hash": binding_hash,
+            "planned_file_count": len(bindings),
+            "files_opened": 0,
+            "files_uploaded": 0,
+            "uploaded_files": [],
+            "browser_actions": 0,
+            "network_actions": 0,
+            "real_side_effects": 0,
+        }
+
+
+@dataclass
 class FakeSubmissionAdapter:
     database: JobOpsDB
     kind: str = "fake"
@@ -181,6 +231,7 @@ class AdapterRegistry:
         return cls({
             "official_source": FakeOfficialSourceAdapter(fixture_root),
             "browser_prefill": FakeBrowserPrefillAdapter(),
+            "material_upload": FakeMaterialUploadAdapter(),
             "submission": DisabledAdapter("submission", database),
             "account_creation": DisabledAdapter("account_creation", database),
             "email": DisabledAdapter("email", database),

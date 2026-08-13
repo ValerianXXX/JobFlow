@@ -112,10 +112,11 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
             1: {("PLAN_VALIDATED", "PASS")},
             2: {("FRESHNESS_BOUND", "PASS")},
             3: {("PREFILL_PROPOSAL_VALIDATED", "PASS")},
-            4: {("AWAITING_FINAL_AUTHORIZATION", "AWAITING_USER")},
-            5: {("FINAL_AUTHORIZATION_CONSUMED", "CONSUMED")},
-            6: {("FAKE_SUBMISSION_RECORDED", "RECORDED")},
-            7: {("RECEIPT_VERIFIED", "CONFIRMED"), ("SUBMISSION_UNKNOWN", "UNKNOWN")},
+            4: {("SCOPED_ACTIONS_VALIDATED", "CONSUMED")},
+            5: {("AWAITING_FINAL_AUTHORIZATION", "AWAITING_USER")},
+            6: {("FINAL_AUTHORIZATION_CONSUMED", "CONSUMED")},
+            7: {("FAKE_SUBMISSION_RECORDED", "RECORDED")},
+            8: {("RECEIPT_VERIFIED", "CONFIRMED"), ("SUBMISSION_UNKNOWN", "UNKNOWN")},
         }
         pair = (value.get("phase"), value.get("status"))
         if pair not in expected.get(value.get("sequence"), set()):

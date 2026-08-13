@@ -54,7 +54,7 @@ flowchart LR
 - `application_materials`, `orchestrator`, `queue_manager`, `continuous_intake`: one-master per-job material planning and content-bound processing to the bounded review queue. Both the synthetic tour and a completed DPAPI-backed user profile use this same offline pipeline; the latter accepts only explicit local snapshots and current applicant approvals.
 - `application_execution`: hash-bound six-step runbook for freshness, guest entry, prefill, upload, protected questions and final submission; every step remains planning-only until its exact approval boundary is separately enabled.
 - `final_submission`, `external_actions`: separate fresh final-confirmation artifact, database persistence, expiry/replay checks and atomic dual-approval consumption; only isolated fake transport can exercise the transition.
-- `execution_controller`: append-only, hash-only checkpoints for the approved-plan lifecycle; the isolated controller proves the full stop/confirm/receipt path and forces missing receipt evidence into non-retryable `SUBMISSION_UNKNOWN` without registering a live transport.
+- `execution_controller`: append-only, hash-only checkpoints for the approved-plan lifecycle; scoped prefill/upload intent must be consumed before the final-confirmation gate, the fake upload adapter accepts hashes only and opens/uploads zero files, and missing receipt evidence becomes non-retryable `SUBMISSION_UNKNOWN`.
 - `external_action_sessions`: exact per-action scopes, expiry, replay protection, revocation and a generation-bound global kill switch; production activation is structurally unavailable in the current build.
 - `public_release`, `release_candidate`, `release`: current-tree/history privacy gates and release evidence.
 

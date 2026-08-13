@@ -124,7 +124,7 @@ def valid_fixtures() -> dict[str, dict]:
         },
         "application-execution-checkpoint": {
             "schema_version": 1, "checkpoint_id": "ECP-ABCDEF123456",
-            "run_id": "RUN-ABCDEF123456", "application_id": APP, "sequence": 4,
+            "run_id": "RUN-ABCDEF123456", "application_id": APP, "sequence": 5,
             "phase": "AWAITING_FINAL_AUTHORIZATION", "status": "AWAITING_USER",
             "application_context_hash": H, "execution_plan_hash": H,
             "browser_plan_hash": H, "form_snapshot_hash": H,
