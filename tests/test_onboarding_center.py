@@ -923,6 +923,68 @@ class OnboardingCenterTests(unittest.TestCase):
                 server.server_close()
                 thread.join(timeout=5)
 
+    def test_local_binary_upload_transport_fails_closed(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            server = create_server(service, token="synthetic-session-token")
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            host = f"http://127.0.0.1:{server.server_port}"
+            path = "/session/synthetic-session-token/api/discover-official-jobs?official_url=https%3A%2F%2Fexample.com%2Fcareers&company_domain=example.com&source_format=html"
+            try:
+                wrong_type = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                wrong_type.request(
+                    "POST", path, body=b"<p>safe</p>",
+                    headers={
+                        "X-JobOps-Session": "synthetic-session-token", "Origin": host,
+                        "Content-Type": "text/html",
+                    },
+                )
+                wrong_type_response = wrong_type.getresponse()
+                wrong_type_payload = json.loads(wrong_type_response.read())
+                wrong_type.close()
+                self.assertEqual(wrong_type_response.status, 400)
+                self.assertEqual(wrong_type_payload["code"], "REQUEST_CONTENT_TYPE_INVALID")
+                self.assertTrue(wrong_type_response.will_close)
+
+                cross_origin = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                cross_origin.request(
+                    "POST", path, body=b"<p>safe</p>",
+                    headers={
+                        "X-JobOps-Session": "synthetic-session-token", "Origin": "https://untrusted.example.test",
+                        "Content-Type": "application/octet-stream",
+                    },
+                )
+                cross_origin_response = cross_origin.getresponse()
+                cross_origin_payload = json.loads(cross_origin_response.read())
+                cross_origin.close()
+                self.assertEqual(cross_origin_response.status, 403)
+                self.assertEqual(cross_origin_payload["code"], "LOCAL_SESSION_REQUIRED")
+                self.assertTrue(cross_origin_response.will_close)
+
+                chunked = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                chunked.putrequest("POST", path)
+                chunked.putheader("X-JobOps-Session", "synthetic-session-token")
+                chunked.putheader("Origin", host)
+                chunked.putheader("Content-Type", "application/octet-stream")
+                chunked.putheader("Transfer-Encoding", "chunked")
+                chunked.endheaders()
+                chunked.send(b"b\r\n<p>safe</p>\r\n0\r\n\r\n")
+                chunked_response = chunked.getresponse()
+                chunked_payload = json.loads(chunked_response.read())
+                chunked.close()
+                self.assertEqual(chunked_response.status, 400)
+                self.assertEqual(chunked_payload["code"], "REQUEST_TRANSFER_ENCODING_FORBIDDEN")
+                self.assertTrue(chunked_response.will_close)
+
+                with service.database.connect() as connection:
+                    self.assertEqual(connection.execute("SELECT COUNT(*) FROM jobs").fetchone()[0], 0)
+                    self.assertEqual(connection.execute("SELECT COUNT(*) FROM intake_queue").fetchone()[0], 0)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
     def test_ui_localizes_gate_errors_and_detects_stale_service(self) -> None:
         app = (PROJECT / "src" / "jobops" / "ui" / "app.js").read_text(encoding="utf-8")
         html = (PROJECT / "src" / "jobops" / "ui" / "index.html").read_text(encoding="utf-8")

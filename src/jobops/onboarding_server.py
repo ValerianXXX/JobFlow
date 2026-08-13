@@ -76,6 +76,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
     def _send_bytes(self, status: int, data: bytes, content_type: str) -> None:
         self.send_response(status)
         self._security_headers(content_type)
+        if self.close_connection:
+            self.send_header("Connection", "close")
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
@@ -119,6 +121,32 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             return {}
         return self._json_body()
 
+    def _binary_body_length(self, *, maximum: int, size_code: str, size_message: str) -> int:
+        if self.headers.get("Transfer-Encoding") is not None:
+            raise JobOpsError(
+                "REQUEST_TRANSFER_ENCODING_FORBIDDEN",
+                "Local binary uploads require one explicit Content-Length and do not accept transfer encodings.",
+            )
+        content_lengths = self.headers.get_all("Content-Length") or []
+        if len(content_lengths) != 1:
+            raise JobOpsError(
+                "REQUEST_LENGTH_INVALID",
+                "The local binary request must contain exactly one Content-Length header.",
+            )
+        content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().casefold()
+        if content_type != "application/octet-stream":
+            raise JobOpsError(
+                "REQUEST_CONTENT_TYPE_INVALID",
+                "Local binary uploads must use application/octet-stream.",
+            )
+        try:
+            length = int(content_lengths[0])
+        except ValueError as exc:
+            raise JobOpsError("REQUEST_LENGTH_INVALID", "The local binary request length is invalid.") from exc
+        if length < 1 or length > maximum:
+            raise JobOpsError(size_code, size_message)
+        return length
+
     def _stream_large_export(self, length: int, extension: str) -> dict[str, Any]:
         if extension.casefold() != ".zip":
             raise JobOpsError("CHATGPT_EXPORT_FORMAT_INVALID", "The streaming large-file option accepts ZIP exports only.")
@@ -156,6 +184,9 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             )
 
     def _dispatch_error(self, exc: Exception) -> None:
+        # Error paths may intentionally reject a request before reading its body. Closing the
+        # connection prevents unread bytes from becoming a second, ambiguous local request.
+        self.close_connection = True
         if isinstance(exc, JobOpsError):
             self._send_json(HTTPStatus.BAD_REQUEST, exc.as_dict())
         else:
@@ -170,6 +201,7 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             self._send_json(HTTPStatus.OK, {"status": "READY", "binding": "127.0.0.1", "real_external_actions": 0})
             return
         if not self._authorized(parsed):
+            self.close_connection = True
             self._send_json(HTTPStatus.FORBIDDEN, {"status": "BLOCKED", "code": "LOCAL_SESSION_REQUIRED"})
             return
         session_prefix = f"/session/{self.server.session_token}/"
@@ -198,6 +230,7 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         if not self._authorized(parsed) or not self._origin_allowed():
+            self.close_connection = True
             self._send_json(HTTPStatus.FORBIDDEN, {"status": "BLOCKED", "code": "LOCAL_SESSION_REQUIRED"})
             return
         route = parsed.path.split("/api/", 1)[-1] if "/api/" in parsed.path else ""
@@ -239,15 +272,11 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 official_entry_url = str(query.get("official_url", [""])[0])
                 company_domain = str(query.get("company_domain", [""])[0])
                 source_format = str(query.get("source_format", [""])[0])
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError as exc:
-                    raise JobOpsError("REQUEST_LENGTH_INVALID", "The local snapshot length is invalid.") from exc
-                if length < 1 or length > MAX_SNAPSHOT_BYTES:
-                    raise JobOpsError(
-                        "OFFICIAL_SNAPSHOT_SIZE_INVALID",
-                        "The local official-careers snapshot is empty or too large.",
-                    )
+                length = self._binary_body_length(
+                    maximum=MAX_SNAPSHOT_BYTES,
+                    size_code="OFFICIAL_SNAPSHOT_SIZE_INVALID",
+                    size_message="The local official-careers snapshot is empty or too large.",
+                )
                 result = self.server.service.discover_official_jobs(
                     self.rfile.read(length),
                     official_entry_url=official_entry_url,
@@ -260,13 +289,12 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 query = parse_qs(parsed.query)
                 source_type = str(query.get("source_type", [""])[0])
                 extension = str(query.get("extension", [""])[0])
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError as exc:
-                    raise JobOpsError("REQUEST_LENGTH_INVALID", "The local upload length is invalid.") from exc
                 size_limit = MAX_LARGE_EXPORT_BYTES if source_type == "chatgpt_export_large" else MAX_UPLOAD_BYTES
-                if length < 1 or length > size_limit:
-                    raise JobOpsError("ONBOARDING_SOURCE_SIZE_INVALID", "The onboarding upload is empty or too large.")
+                length = self._binary_body_length(
+                    maximum=size_limit,
+                    size_code="ONBOARDING_SOURCE_SIZE_INVALID",
+                    size_message="The onboarding upload is empty or too large.",
+                )
                 if source_type == "chatgpt_export_large":
                     result = self._stream_large_export(length, extension)
                 else:
