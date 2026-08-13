@@ -3,8 +3,10 @@ from __future__ import annotations
 import os
 import sqlite3
 from pathlib import Path
+from pathlib import PurePosixPath
 
 from .db import JobOpsDB
+from .errors import JobOpsError
 from .security import assert_no_plaintext_secret
 from .util import iso_utc, sha256_bytes, stable_id
 
@@ -33,6 +35,21 @@ class JobCollector:
         title: str = "UNKNOWN",
         official_url: str | None = None,
     ) -> dict[str, object]:
+        normalized_locator = source_locator.replace("\\", "/")
+        locator_path = PurePosixPath(normalized_locator)
+        if (
+            not source_locator
+            or len(source_locator) > 512
+            or "\x00" in source_locator
+            or ":" in source_locator
+            or locator_path.is_absolute()
+            or ".." in locator_path.parts
+            or any(ord(character) < 32 for character in source_locator)
+        ):
+            raise JobOpsError(
+                "JOB_SOURCE_LOCATOR_INVALID",
+                "The job source locator must be a bounded project-relative display value.",
+            )
         assert_no_plaintext_secret(content)
         normalized = content.replace("\r\n", "\n").replace("\r", "\n").strip() + "\n"
         content_hash = sha256_bytes(normalized.encode("utf-8"))

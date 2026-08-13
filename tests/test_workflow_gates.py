@@ -44,6 +44,12 @@ class WorkflowGateTests(unittest.TestCase):
             self.assertEqual(database.table_counts()["jobs"], 1)
             self.assertEqual(database.table_counts()["jd_snapshots"], 1)
 
+            for locator in ("C:\\Users\\private\\job.txt", "../outside.txt", "job.txt:private"):
+                with self.subTest(locator=locator), self.assertRaises(JobOpsError) as blocked:
+                    collector.collect_text("Another synthetic description", source_locator=locator)
+                self.assertEqual(blocked.exception.code, "JOB_SOURCE_LOCATOR_INVALID")
+            self.assertEqual(database.table_counts()["jobs"], 1)
+
     def test_plaintext_secrets_and_invalid_private_values_are_rejected(self) -> None:
         with self.assertRaises(SecurityBoundaryError):
             assert_no_plaintext_secret("pass" + "word = synthetic-fixture-value")
