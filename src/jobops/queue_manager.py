@@ -39,6 +39,8 @@ class QueueManager:
             existing = connection.execute("SELECT * FROM intake_queue WHERE intake_key=?", (intake_key,)).fetchone()
             if existing and existing["status"] in {"RESERVED", "ACCEPTED"}:
                 return QueueAdmission(intake_key, str(existing["status"]), existing["reservation_id"], "CONTINUE_RESERVED_JOB" if existing["status"] == "RESERVED" else "NONE")
+            if existing and existing["status"] == "CLOSED":
+                return QueueAdmission(intake_key, "CLOSED", None, "CREATE_NEW_INTAKE_ID")
             limit, awaiting, reserved = self._capacity(connection)
             now = iso_utc()
             if awaiting + reserved >= limit:

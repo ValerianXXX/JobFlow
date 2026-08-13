@@ -94,6 +94,11 @@ class ContinuousIntakeTests(unittest.TestCase):
             manager.release_application(context(0).application_id, reason="SYNTHETIC_REVIEW")
             manager.release_application(context(1).application_id, reason="SYNTHETIC_REVIEW")
 
+            closed_retry = manager.enqueue("INTAKE-0", source_type="txt", source_locator="job-0.txt")
+            self.assertEqual(closed_retry.status, "CLOSED")
+            self.assertIsNone(closed_retry.reservation_id)
+            self.assertEqual(closed_retry.next_safe_action, "CREATE_NEW_INTAKE_ID")
+
             newcomer = manager.enqueue("INTAKE-5", source_type="txt", source_locator="job-5.txt")
             self.assertEqual(newcomer.status, "DEFERRED")
             self.assertEqual(newcomer.next_safe_action, "WAIT_FOR_OLDER_DEFERRED_INTAKE")
