@@ -22,6 +22,7 @@ from .locator import locate_knowledge_root
 from .orchestrator import JobOpsOrchestrator, _read_jd
 from .onboarding_center import OnboardingCenterService
 from .onboarding_server import run_server
+from .official_discovery import discover_official_jobs
 from .private_onboarding import PrivateOnboarding
 from .queue_manager import QueueManager
 from .recovery import RecoveryManager
@@ -100,6 +101,10 @@ def parser() -> argparse.ArgumentParser:
     queue.add_argument("--set-limit", type=int)
     route = sub.add_parser("verify-route")
     route.add_argument("--input", type=Path, required=True)
+    discovery = sub.add_parser("discover-official-jobs")
+    discovery.add_argument("--input", type=Path, required=True)
+    discovery.add_argument("--company-domain", required=True)
+    discovery.add_argument("--official-url", required=True)
 
     onboard = sub.add_parser("secure-onboard")
     onboard.add_argument("--input-file", type=Path)
@@ -272,6 +277,18 @@ def main(argv: list[str] | None = None) -> int:
                 jd_snapshot_hash=value.get("jd_snapshot_hash"), approved_intermediary_hosts=value.get("approved_intermediary_hosts"),
             )
             emit({**result.as_dict(), "next_safe_action": "run-to-awaiting-approval"}, project)
+        elif args.command == "discover-official-jobs":
+            input_path = _project_input(project, args.input, operation="read")
+            source_format = "page_snapshot" if input_path.suffix.casefold() == ".json" else "html"
+            if input_path.suffix.casefold() not in {".html", ".htm", ".json"}:
+                raise JobOpsError("OFFICIAL_SNAPSHOT_FORMAT_UNSUPPORTED", "Select a project-local HTML or saved-page JSON snapshot.")
+            policy = load_json(project / "config" / "policy.json")
+            result = discover_official_jobs(
+                input_path.read_bytes(), official_entry_url=args.official_url, company_domain=args.company_domain,
+                approved_ats_hosts=policy["approved_ats_hosts"], source_format=source_format,
+            )
+            validate_named("official-discovery", result, project / "schemas")
+            emit({**result, "next_safe_action": "verify-route-after-fresh-authorization"}, project)
         elif args.command == "secure-onboard":
             database = _database(project); onboarding = _onboarding(project, database)
             if args.synthetic:

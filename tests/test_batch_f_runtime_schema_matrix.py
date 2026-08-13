@@ -78,6 +78,21 @@ def valid_fixtures() -> dict[str, dict]:
         },
         "fit-result": {"eligibility_status": "ELIGIBLE", "hard_gaps": [], "unknowns": [], "dimensions": {key: dimension() for key in ("function", "capability", "evidence", "industry", "level", "location", "preference")}, "overall_score": 80, "recommendation": "RECOMMEND", "explanation": ["All hard conditions passed."]},
         "job": {"job_id": JOB, "source_type": "txt", "source_locator": "tests/fixtures/mock-jd.txt", "official_url": "https://example.com/careers/a", "company": "Example", "title": "Analyst", "location": "Remote", "status": "DISCOVERED", "discovered_at": T},
+        "official-discovery": {
+            "schema_version": 1, "status": "LOCAL_SNAPSHOT_PARSED", "source_mode": "LOCAL_SNAPSHOT_ONLY",
+            "source_format": "html", "company_domain": "example.com", "official_entry_url": "https://example.com/careers",
+            "snapshot_hash": H, "candidate_count": 1, "ignored_link_count": 0, "deduplicated_link_count": 0,
+            "candidates": [{
+                "candidate_id": "JDC-ABCDEF123456", "status": "NEEDS_LIVE_FRESHNESS_CHECK",
+                "discovered_url": "https://example.com/careers/jobs/a", "route_kind": "OFFICIAL_DIRECT_DISCOVERED",
+                "provider": "company", "ats_tenant": "example.com", "ats_board": "official", "ats_job_identity": "a",
+                "title": "Analyst", "title_status": "EXTRACTED", "location": "UNKNOWN", "location_status": "UNKNOWN",
+                "evidence_kind": "anchor", "snapshot_hash": H, "requires_live_freshness_check": True,
+                "requires_route_verification": True, "network_actions": 0, "real_external_actions": 0,
+            }],
+            "untrusted_page_content_executed": False, "network_actions": 0, "real_external_actions": 0,
+            "knowledge_write_operations": 0,
+        },
         "jd": {"job_id": JOB, "snapshot_hash": H, "captured_at": T, "company": "Example", "title": "Analyst", "location": "Remote", "salary": None, "work_authorization": None, "deadline": None, "responsibilities": [], "hard_requirements": [], "preferred_qualifications": [], "keywords": []},
         "jd-snapshot": {"snapshot_id": "JDS-ABCDEF123456", "job_id": JOB, "source_format": "txt", "content_hash": H, "relative_path": "workspace/jobs/a.txt", "captured_at": T, "source_url": None},
         "jd-analysis": {"analysis_id": "JDA-ABCDEF123456", "job_id": JOB, "snapshot_hash": H, "company": "Example", "title": "Analyst", "location": "Remote", "level": "UNKNOWN", "responsibilities": [], "requirements": [], "preferred_qualifications": [], "keywords": [], "untrusted_instruction_signals": [], "created_at": T},
@@ -164,6 +179,7 @@ class RuntimeSchemaMatrixTests(unittest.TestCase):
             "application-field": ("classification", "unknown_stop"),
             "recovery-event": ("decision", "RESUME_SAFE_STEP"),
             "receipt": ("verified", False),
+            "official-discovery": ("candidate_count", 2),
         }
         for name, (field, invalid) in conflicts.items():
             changed = copy.deepcopy(self.fixtures[name]); changed[field] = invalid

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/official-discovery.schema.json",
+  "title": "Offline Official Job Discovery",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "source_mode", "source_format", "company_domain", "official_entry_url", "snapshot_hash", "candidate_count", "ignored_link_count", "deduplicated_link_count", "candidates", "untrusted_page_content_executed", "network_actions", "real_external_actions", "knowledge_write_operations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "LOCAL_SNAPSHOT_PARSED"},
+    "source_mode": {"const": "LOCAL_SNAPSHOT_ONLY"},
+    "source_format": {"enum": ["html", "page_snapshot"]},
+    "company_domain": {"type": "string", "minLength": 3},
+    "official_entry_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "candidate_count": {"type": "integer", "minimum": 0},
+    "ignored_link_count": {"type": "integer", "minimum": 0},
+    "deduplicated_link_count": {"type": "integer", "minimum": 0},
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidate_id", "status", "discovered_url", "route_kind", "provider", "ats_tenant", "ats_board", "ats_job_identity", "title", "title_status", "location", "location_status", "evidence_kind", "snapshot_hash", "requires_live_freshness_check", "requires_route_verification", "network_actions", "real_external_actions"],
+        "properties": {
+          "candidate_id": {"type": "string", "pattern": "^JDC-[A-F0-9]{12}$"},
+          "status": {"const": "NEEDS_LIVE_FRESHNESS_CHECK"},
+          "discovered_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+          "route_kind": {"enum": ["OFFICIAL_DIRECT_DISCOVERED", "OFFICIAL_TO_APPROVED_ATS_DISCOVERED"]},
+          "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
+          "ats_tenant": {"type": "string", "minLength": 1},
+          "ats_board": {"type": "string", "minLength": 1},
+          "ats_job_identity": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "title_status": {"enum": ["EXTRACTED", "UNKNOWN"]},
+          "location": {"type": "string", "minLength": 1},
+          "location_status": {"enum": ["EXTRACTED", "UNKNOWN"]},
+          "evidence_kind": {"enum": ["anchor", "data_attribute", "plain_url"]},
+          "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "requires_live_freshness_check": {"const": true},
+          "requires_route_verification": {"const": true},
+          "network_actions": {"const": 0},
+          "real_external_actions": {"const": 0}
+        }
+      }
+    },
+    "untrusted_page_content_executed": {"const": false},
+    "network_actions": {"const": 0},
+    "real_external_actions": {"const": 0},
+    "knowledge_write_operations": {"const": 0}
+  }
+}

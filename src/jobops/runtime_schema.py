@@ -142,6 +142,12 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Application records retain the dry-run constraint in this schema version.")
     if name == "receipt" and value.get("verified") is not True:
         raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Only verified evidence may be persisted as a receipt.")
+    if name == "official-discovery":
+        candidates = value.get("candidates", [])
+        if value.get("candidate_count") != len(candidates):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Official discovery candidate_count must match the candidate list.")
+        if any(item.get("snapshot_hash") != value.get("snapshot_hash") for item in candidates):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Every discovered candidate must retain the same local snapshot hash.")
 
 
 def validate_named(name: str, value: dict[str, Any], schema_dir: Path) -> dict[str, Any]:

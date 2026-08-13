@@ -34,7 +34,7 @@ class SourceRouteHardeningTests(unittest.TestCase):
     def test_registrable_domain_rejects_public_suffixes(self) -> None:
         self.assertEqual(registrable_domain("careers.example.co.uk"), "example.co.uk")
         self.assertEqual(registrable_domain("jobs.example.com"), "example.com")
-        for value in ("com", "co.uk", "localhost"):
+        for value in ("com", "co.uk", "localhost", "127.0.0.1", "::1"):
             with self.subTest(value=value), self.assertRaises(JobOpsError):
                 registrable_domain(value)
 

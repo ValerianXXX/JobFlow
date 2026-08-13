@@ -237,6 +237,7 @@ class PublicCLIContractTests(unittest.TestCase):
             "run-to-awaiting-approval", "run-queue", "list-pending", "show-review-packet",
             "revise-application", "approve-review-packet", "reject-review-packet", "resume-blocked",
             "retry-safe-step", "explain", "verify-release",
+            "discover-official-jobs",
         ):
             self.assertIn(command, completed.stdout)
 

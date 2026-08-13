@@ -49,6 +49,7 @@ JobFlow 的资料理解采用严格 AI 门：选择文件后会自动启动 AI �
 - 私人资料以 `secure-ref:*` 进入 Windows DPAPI 存储，默认位于 `%LOCALAPPDATA%\JobOps\private`；项目数据库只保留不透明引用和非敏感元数据。
 - 只有来源文件、标题、片段和哈希均通过 Knowledge Gateway 复验的已批准 Claim 能进入材料。
 - 招聘入口必须来自公司 HTTPS 官网。官网导航到 Workday、Greenhouse 或 Lever 时，还要验证公司、租户、board、岗位、官方页面和 JD 快照的绑定。
+- `discover-official-jobs` 只分析用户保存到项目内的公司招聘页 HTML/JSON 快照（local snapshot only）。它可提出公司官网、Workday、Greenhouse 或 Lever 岗位候选，但不联网、不确认岗位仍开放，也不把候选视为已验证路线；每条结果都必须在以后取得单独授权后重新做实时新鲜度与路线验证。 / It parses only a project-local saved careers-page snapshot, performs zero network actions, and leaves every candidate pending a separately authorized live freshness and route check.
 - 待审批上限默认 10，可设 1—1000；容量检查与 reservation 在同一事务中完成。
 - `ExternalActionGateway` 是受保护状态的唯一入口。生产策略始终先返回 `PHASE_NOT_AUTHORIZED`。
 - `SUBMISSION_UNKNOWN` 不自动重试；CAPTCHA、MFA、验证码、登录和账号创建均停给用户。
@@ -88,7 +89,7 @@ python .agents/skills/job-application-operator/scripts/jobops.py purge-synthetic
 - 环境与状态：`audit`、`locate`、`status`、`init-db`、`migrate-db`、`verify-release`
 - 私人资料：`onboarding-center`、`onboarding-status`、`secure-onboard`、`secure-onboard-resume`、`finalize-resume-onboarding`、`review-onboarding`、`secure-import-master-resume`、`secure-import-answer-bank`、`secure-store-status`、`purge-synthetic-private-data`
 - Claim：`propose-claims`、`list-claim-proposals`、`approve-claim`、`reject-claim`、`revoke-claim`、`revalidate-claims`
-- 岗位与队列：`import-jd`、`analyze-job`、`run-to-awaiting-approval`、`run-queue`、`queue`、`list-pending`
+- 岗位与队列：`discover-official-jobs`、`verify-route`、`import-jd`、`analyze-job`、`run-to-awaiting-approval`、`run-queue`、`queue`、`list-pending`
 - 审阅与恢复：`show-review-packet`、`revise-application`、`approve-review-packet`、`reject-review-packet`、`resume-blocked`、`retry-safe-step`、`explain`
 
 ## 真实使用前仍需的最小输入

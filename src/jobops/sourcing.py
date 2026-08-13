@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 from dataclasses import dataclass
 from urllib.parse import urlparse, urlunparse
 
@@ -18,6 +19,12 @@ def _host(value: str) -> str:
 def registrable_domain(host: str) -> str:
     """Conservative PSL-equivalent extraction for ICANN-style domains and common ccTLD SLDs."""
     value = _host(host)
+    try:
+        ipaddress.ip_address(value)
+    except ValueError:
+        pass
+    else:
+        raise JobOpsError("PUBLIC_SUFFIX_NOT_COMPANY", "An IP address cannot establish a company-domain identity.", host=value)
     labels = [label for label in value.split(".") if label]
     if len(labels) < 2 or any(not label.replace("-", "").isalnum() for label in labels):
         raise JobOpsError("PUBLIC_SUFFIX_NOT_COMPANY", "A company domain must contain a registrable label above a public suffix.", host=value)
