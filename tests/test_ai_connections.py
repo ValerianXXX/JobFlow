@@ -17,6 +17,7 @@ from jobops.ai_connections import (
     _analyze_with_single_repair,
     _assert_loopback_url,
     _decode_wsl_distribution_output,
+    _json_from_text,
     _loopback_json,
     _run_bounded_agent_command,
 )
@@ -25,6 +26,12 @@ from jobops.errors import JobOpsError
 
 
 class AIConnectionTests(unittest.TestCase):
+    def test_embedded_json_search_is_bounded_against_structural_prefix_floods(self) -> None:
+        hostile = "noise " + ("{" * 40) + '{"status":"READY"}'
+        with self.assertRaises(JobOpsError) as blocked:
+            _json_from_text(hostile)
+        self.assertEqual(blocked.exception.code, "AI_RESPONSE_INVALID")
+
     def test_loopback_bridge_does_not_follow_redirects(self) -> None:
         destination_hits: list[str] = []
 
@@ -67,6 +74,8 @@ class AIConnectionTests(unittest.TestCase):
             destination.shutdown()
             source.server_close()
             destination.server_close()
+            for thread in threads:
+                thread.join(timeout=2)
 
     def test_agent_bridge_stops_unbounded_output_during_generation(self) -> None:
         command = [

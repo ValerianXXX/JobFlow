@@ -29,6 +29,7 @@ from .util import iso_utc
 MAX_CONNECTION_RESPONSE_BYTES = 8 * 1024 * 1024
 MAX_WSL_DISCOVERY_BYTES = 64 * 1024
 MAX_WSL_DISTRIBUTIONS = 16
+MAX_EMBEDDED_JSON_STARTS = 32
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 AGENT_CONNECTORS = {
     "hermes_proxy",
@@ -309,9 +310,13 @@ def _json_from_text(value: str) -> Any:
         return json.loads(text)
     except json.JSONDecodeError:
         decoder = json.JSONDecoder()
+        attempts = 0
         for index, character in enumerate(text):
             if character not in "[{":
                 continue
+            attempts += 1
+            if attempts > MAX_EMBEDDED_JSON_STARTS:
+                break
             try:
                 candidate, _ = decoder.raw_decode(text[index:])
                 return candidate
