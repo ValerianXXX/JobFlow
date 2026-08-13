@@ -129,6 +129,23 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(recent[0]["packet_version"], 2)
             self.assertEqual(recent[0]["packet_status"], "REJECTED")
 
+    def test_bootstrap_discloses_only_truthful_offline_ats_capabilities(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            report = service.bootstrap()["ats_capabilities"]
+            self.assertEqual(report["provider_count"], 4)
+            self.assertEqual(
+                {item["provider"] for item in report["providers"]},
+                {"company", "greenhouse", "lever", "workday"},
+            )
+            self.assertFalse(report["live_site_accessed"])
+            self.assertEqual(report["network_actions"], 0)
+            self.assertEqual(report["real_external_actions"], 0)
+            for provider in report["providers"]:
+                self.assertFalse(provider["live_site_verified"])
+                self.assertTrue(provider["upload_blocked"])
+                self.assertTrue(provider["submit_blocked"])
+
     def test_local_interactive_service_has_a_single_instance_lock(self) -> None:
         with project_temp() as root:
             with local_instance_lock(root / "locks"):
@@ -209,6 +226,10 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("activity-progress-scan", styles)
         self.assertIn('id="activityProgress"', html)
         self.assertIn('id="demoBanner"', html)
+        self.assertIn('id="atsCapabilityList"', html)
+        self.assertIn("ats_capabilities", script)
+        self.assertIn("atsLiveUnverified", script)
+        self.assertIn("ats-capability-list", styles)
         self.assertIn("demo_mode", script)
         self.assertIn("elapsedWithEstimate", script)
         self.assertIn("updateActivity", script)

@@ -107,6 +107,13 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .safety-board dt { color: var(--muted); }
 .safety-board dd { margin: 0; color: var(--green-dark); font-weight: 800; text-align: right; }
 .queue-secondary-boards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.ats-capability-board { margin-top: 12px; padding: 18px; border: 1px solid var(--line); background: #fff; }
+.ats-capability-list { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin-top: 14px; }
+.ats-capability-item { min-width: 0; padding: 14px; border: 1px solid var(--line); background: var(--paper); }
+.ats-capability-item strong,.ats-capability-item small,.ats-capability-item b { display: block; overflow-wrap: anywhere; }
+.ats-capability-item strong { text-transform: capitalize; }
+.ats-capability-item small { margin-top: 5px; color: var(--muted); font-size: 10px; }
+.ats-capability-item b { margin-top: 9px; color: var(--green-dark); font-size: 10px; }
 .queue-list-board { min-width: 0; padding: 18px; border: 1px solid var(--line); background: #fff; }
 .compact-dashboard-list.empty { padding: 18px 4px 4px; color: var(--muted); font-size: 11px; }
 .compact-dashboard-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; padding: 11px 0; border-top: 1px solid #edf0f1; }
@@ -399,6 +406,7 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .review-packet-body { grid-template-columns: 1fr; }
   .packet-decision-options { grid-template-columns: 1fr; }
   .queue-secondary-boards { grid-template-columns: 1fr; }
+  .ats-capability-list { grid-template-columns: 1fr 1fr; }
   .packet-section.wide { grid-column: auto; }
   .ai-choice { min-height: 160px; }
   .source-grid { grid-template-columns: 1fr; }
@@ -423,6 +431,7 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
 }
 
 @media (max-width: 440px) {
+  .ats-capability-list { grid-template-columns: 1fr; }
   .topbar { padding: 0 14px; }
   .brand { gap: 8px; }
   .brand-mark { width: 36px; height: 36px; }

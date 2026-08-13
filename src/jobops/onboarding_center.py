@@ -16,6 +16,7 @@ from xml.etree import ElementTree as ET
 from . import UI_PROTOCOL_VERSION, __version__
 from .adapters import audit_real_external_actions
 from .approvals import ApprovalContext, issue_approval
+from .ats_capabilities import offline_ats_capabilities
 from .ai_runtime import (
     ALLOWED_CATEGORIES,
     AI_QUALITY_CONTRACT,
@@ -1023,6 +1024,7 @@ class OnboardingCenterService:
                 "ui_protocol": UI_PROTOCOL_VERSION,
             },
             "dashboard": self._pipeline_dashboard(state),
+            "ats_capabilities": offline_ats_capabilities(),
             "status": state.get("status", IN_PROGRESS), "locale": state.get("locale", "zh"),
             "revision_number": int(state.get("revision_number", 1)),
             "can_start_revision": state.get("status") == COMPLETE,
