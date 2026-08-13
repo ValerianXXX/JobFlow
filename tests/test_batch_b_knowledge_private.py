@@ -494,6 +494,15 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
                 staging_directory = staged.parent
             self.assertFalse(staging_directory.exists())
 
+            with self.assertRaises(JobOpsError) as cleanup_failed:
+                with patch("jobops.private_onboarding.shutil.rmtree", side_effect=PermissionError("synthetic lock")):
+                    with safe.staging_directory() as locked_staging:
+                        (locked_staging / "private.txt").write_text(SENTINEL, encoding="utf-8")
+            self.assertEqual(cleanup_failed.exception.code, "PRIVATE_STAGING_CLEANUP_FAILED")
+            self.assertTrue(locked_staging.exists())
+            safe.clear_staging_residue()
+            self.assertFalse(locked_staging.exists())
+
             residue = safe.store.private_root / "staging" / "crashed-session" / "nested"
             residue.mkdir(parents=True)
             (residue / "material.txt").write_text(SENTINEL, encoding="utf-8")

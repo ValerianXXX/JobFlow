@@ -322,6 +322,33 @@ class PrivateOnboarding:
             self.delete(reference, user_confirmed=True)
         return {"status": "PURGED", "synthetic_refs_deleted": len(refs), "secure_erase_claimed": False}
 
+    def _remove_staging_directory(self, directory: Path) -> None:
+        staging = self._staging_root()
+        if not is_relative_to(directory.absolute(), staging.absolute()) or directory == staging:
+            raise JobOpsError(
+                "PRIVATE_STAGING_BOUNDARY_INVALID",
+                "Private staging cleanup refused a directory outside its controlled session boundary.",
+            )
+        if directory.exists() and has_reparse_component(directory, staging):
+            raise JobOpsError(
+                "PRIVATE_STAGING_REPARSE_FORBIDDEN",
+                "Private staging cleanup found a link or Windows reparse point and stopped.",
+            )
+        try:
+            shutil.rmtree(directory)
+        except FileNotFoundError:
+            return
+        except OSError as exc:
+            raise JobOpsError(
+                "PRIVATE_STAGING_CLEANUP_FAILED",
+                "A private staging session could not be completely removed; restart JobFlow to retry locked cleanup.",
+            ) from exc
+        if directory.exists():
+            raise JobOpsError(
+                "PRIVATE_STAGING_CLEANUP_FAILED",
+                "A private staging session still exists after cleanup and must not be treated as cleared.",
+            )
+
     @contextlib.contextmanager
     def staged_file(self, reference: str, suffix: str) -> Iterator[Path]:
         if re.fullmatch(r"\.[A-Za-z0-9]{1,12}", suffix) is None:
@@ -333,7 +360,7 @@ class PrivateOnboarding:
             target.write_bytes(self.read_bytes(reference))
             yield target
         finally:
-            shutil.rmtree(directory, ignore_errors=True)
+            self._remove_staging_directory(directory)
 
     @contextlib.contextmanager
     def staging_directory(self) -> Iterator[Path]:
@@ -343,4 +370,4 @@ class PrivateOnboarding:
         try:
             yield directory
         finally:
-            shutil.rmtree(directory, ignore_errors=True)
+            self._remove_staging_directory(directory)
