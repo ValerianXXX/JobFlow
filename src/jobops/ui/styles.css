@@ -98,6 +98,16 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .safety-board dl div { display: flex; justify-content: space-between; gap: 15px; padding: 9px 0; border-top: 1px solid #edf0f1; font-size: 11px; }
 .safety-board dt { color: var(--muted); }
 .safety-board dd { margin: 0; color: var(--green-dark); font-weight: 800; text-align: right; }
+.queue-secondary-boards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.queue-list-board { min-width: 0; padding: 18px; border: 1px solid var(--line); background: #fff; }
+.compact-dashboard-list.empty { padding: 18px 4px 4px; color: var(--muted); font-size: 11px; }
+.compact-dashboard-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; padding: 11px 0; border-top: 1px solid #edf0f1; }
+.compact-dashboard-item:first-child { border-top: 0; }
+.compact-dashboard-item strong,.compact-dashboard-item small { display: block; overflow-wrap: anywhere; }
+.compact-dashboard-item small { margin-top: 2px; color: var(--muted); font-size: 9px; }
+.compact-dashboard-item aside { text-align: right; }
+.compact-dashboard-item aside b { display: block; color: var(--green); font-size: 9px; }
+.compact-dashboard-item aside button { margin-top: 5px; }
 .review-packet-panel { margin-top: 14px; padding: 20px; border: 1px solid var(--green); background: #fff; }
 .review-packet-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .review-packet-panel h3 { margin: 0; font: 600 24px/1.2 Georgia, "Songti SC", serif; }
@@ -372,6 +382,7 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .queue-preferences label { flex-wrap: wrap; }
   .review-packet-body { grid-template-columns: 1fr; }
   .packet-decision-options { grid-template-columns: 1fr; }
+  .queue-secondary-boards { grid-template-columns: 1fr; }
   .packet-section.wide { grid-column: auto; }
   .ai-choice { min-height: 160px; }
   .source-grid { grid-template-columns: 1fr; }

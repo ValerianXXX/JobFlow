@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v2">
+  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v6">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -72,10 +72,20 @@
           </dl>
         </aside>
       </div>
+      <div class="queue-secondary-boards">
+        <section class="queue-list-board">
+          <div class="subheading"><div><h3 data-i18n="deferredListTitle">等待处理的岗位</h3><small data-i18n="deferredListBody">达到上限后进入这里；释放位置时按顺序继续。</small></div><span id="deferredDashboardCount">0</span></div>
+          <div id="deferredDashboardList" class="compact-dashboard-list"></div>
+        </section>
+        <section class="queue-list-board">
+          <div class="subheading"><div><h3 data-i18n="recentDecisionsTitle">最近的队列决定</h3><small data-i18n="recentDecisionsBody">显示本地状态变化；不会把批准当成已提交。</small></div><span id="recentDashboardCount">0</span></div>
+          <div id="recentDashboardList" class="compact-dashboard-list"></div>
+        </section>
+      </div>
       <section id="reviewPacketPanel" class="review-packet-panel hidden" aria-live="polite">
         <header><div><p class="eyebrow" data-i18n="reviewPacketEyebrow">LOCAL REVIEW PACKET</p><h3 id="reviewPacketTitle"></h3><small id="reviewPacketMeta"></small></div><button id="closeReviewPacket" class="text-action" type="button" data-i18n="closePacket">关闭审阅包</button></header>
         <div id="reviewPacketBody" class="review-packet-body"></div>
-        <fieldset class="packet-decision-panel">
+        <fieldset id="packetDecisionPanel" class="packet-decision-panel">
           <legend data-i18n="packetDecisionTitle">你对这份审阅包的决定</legend>
           <p data-i18n="packetDecisionBody">决定只保存在本机。当前不会打开网站、上传材料或提交申请。</p>
           <div class="packet-decision-options">
@@ -257,6 +267,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260813-jobflow-v5"></script>
+  <script src="app.js?v=20260813-jobflow-v6"></script>
 </body>
 </html>

@@ -756,6 +756,22 @@ class OnboardingCenterService:
                    ORDER BY a.updated_at,a.application_id
                    LIMIT 100"""
             ).fetchall()
+            deferred_rows = connection.execute(
+                """SELECT intake_key,source_type,created_at,updated_at
+                   FROM intake_queue WHERE status='DEFERRED'
+                   ORDER BY created_at,intake_key LIMIT 100"""
+            ).fetchall()
+            recent_rows = connection.execute(
+                """SELECT a.application_id,a.status,a.updated_at,j.company,j.title,j.location,
+                          r.packet_id,r.status AS packet_status,
+                          (SELECT expires_at FROM approvals p WHERE p.application_id=a.application_id
+                           ORDER BY p.issued_at DESC LIMIT 1) AS approval_expires_at
+                   FROM applications a
+                   JOIN jobs j ON j.job_id=a.job_id
+                   LEFT JOIN review_packets r ON r.application_id=a.application_id
+                   WHERE a.status<>'AWAITING_APPROVAL'
+                   ORDER BY a.updated_at DESC,a.application_id DESC LIMIT 30"""
+            ).fetchall()
         applications = [{
             "application_id": str(row["application_id"]),
             "job_id": str(row["job_id"]),
@@ -769,12 +785,28 @@ class OnboardingCenterService:
             "packet_status": str(row["packet_status"]) if row["packet_status"] is not None else "MISSING",
             "packet_hash_prefix": str(row["content_hash"])[:15] if row["content_hash"] is not None else None,
         } for row in pending_rows]
+        deferred = [{
+            "safe_intake_id": sha256_bytes(str(row["intake_key"]).encode("utf-8"))[:15],
+            "source_type": str(row["source_type"]),
+            "created_at": str(row["created_at"]), "updated_at": str(row["updated_at"]),
+            "status": "DEFERRED",
+        } for row in deferred_rows]
+        recent = [{
+            "application_id": str(row["application_id"]), "status": str(row["status"]),
+            "updated_at": str(row["updated_at"]), "company": str(row["company"]),
+            "title": str(row["title"]),
+            "location": str(row["location"]) if row["location"] is not None else None,
+            "packet_id": str(row["packet_id"]) if row["packet_id"] is not None else None,
+            "packet_status": str(row["packet_status"]) if row["packet_status"] is not None else "MISSING",
+            "approval_expires_at": str(row["approval_expires_at"]) if row["approval_expires_at"] is not None else None,
+        } for row in recent_rows]
         return {
             "status": "LOCAL_PIPELINE_READY",
             "onboarding_status": str(state.get("status", IN_PROGRESS)),
             "queue": queue,
             "application_status_counts": {str(row["status"]): int(row["total"]) for row in status_rows},
             "pending_applications": applications,
+            "deferred_intake": deferred, "recent_applications": recent,
             "safety": {
                 "network_mode": "LOCAL_OFFLINE_ONLY",
                 "real_website_accesses": 0,

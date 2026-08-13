@@ -92,6 +92,10 @@ class OnboardingCenterTests(unittest.TestCase):
                     "INSERT INTO review_packets(packet_id,application_id,content_hash,relative_path,status,created_at) VALUES(?,?,?,?,?,?)",
                     ("PKT-DASH", "APP-DASH", "sha256:" + "3" * 64, "secure-ref:SYNTHETIC_PACKET", "AWAITING_APPROVAL", now),
                 )
+                connection.execute(
+                    "INSERT INTO intake_queue(intake_key,source_type,source_locator,status,reservation_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",
+                    ("private-source-locator-key", "offline_snapshot", "private/source/path.txt", "DEFERRED", None, now, now),
+                )
             dashboard = service.bootstrap()["dashboard"]
             self.assertEqual(dashboard["queue"]["awaiting_approval"], 1)
             self.assertEqual(dashboard["queue"]["slots_available"], 9)
@@ -99,9 +103,18 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(dashboard["pending_applications"][0]["packet_hash_prefix"], "sha256:" + "3" * 8)
             self.assertEqual(dashboard["safety"]["real_external_actions"], 0)
             self.assertEqual(dashboard["safety"]["real_website_accesses"], 0)
+            self.assertEqual(dashboard["deferred_intake"][0]["status"], "DEFERRED")
+            self.assertTrue(dashboard["deferred_intake"][0]["safe_intake_id"].startswith("sha256:"))
             serialized = json.dumps(dashboard, ensure_ascii=False)
-            for forbidden in ("secure_profile_ref", "answers_hash", "resume_hash", "relative_path", "context_json"):
+            for forbidden in ("secure_profile_ref", "answers_hash", "resume_hash", "relative_path", "context_json", "private/source/path.txt", "private-source-locator-key"):
                 self.assertNotIn(forbidden, serialized)
+
+            with service.database.connect() as connection:
+                connection.execute("UPDATE applications SET status='CLOSED' WHERE application_id='APP-DASH'")
+                connection.execute("UPDATE review_packets SET status='REJECTED' WHERE application_id='APP-DASH'")
+            recent = service.bootstrap()["dashboard"]["recent_applications"]
+            self.assertEqual(recent[0]["application_id"], "APP-DASH")
+            self.assertEqual(recent[0]["packet_status"], "REJECTED")
 
     def test_local_interactive_service_has_a_single_instance_lock(self) -> None:
         with project_temp() as root:
@@ -187,7 +200,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v2", html)
+        self.assertIn(f"jobflow-v{UI_PROTOCOL_VERSION}", html)
         self.assertIn('value="chatgpt_export_large"', html)
         self.assertIn("雷霆大文件", script)
         self.assertIn("ZIPzilla Express", script)
@@ -696,6 +709,8 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('CONFLICT_REVIEW_INCOMPLETE:"conflictReviewIncomplete"', app)
         self.assertIn('id="blockingNotice"', html)
         self.assertIn('id="pipelineDashboard"', html)
+        self.assertIn('id="deferredDashboardList"', html)
+        self.assertIn('id="recentDashboardList"', html)
         self.assertIn('id="saveQueueLimit"', html)
         self.assertIn('id="reviewPacketPanel"', html)
         self.assertIn("function renderDashboard()", app)
