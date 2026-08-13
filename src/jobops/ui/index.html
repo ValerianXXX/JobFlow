@@ -96,6 +96,19 @@
           <span id="atsCapabilityCount">0</span>
         </div>
         <div id="atsCapabilityList" class="ats-capability-list"></div>
+        <div class="offline-discovery">
+          <div><h4 data-i18n="offlineDiscoveryTitle">解析已保存的公司招聘页</h4><p data-i18n="offlineDiscoveryBody">只读取你选择的本地 HTML/JSON 快照；不执行页面代码、不保存快照、不联网。</p></div>
+          <div class="offline-discovery-controls">
+            <label><span data-i18n="companyDomainLabel">公司官网域名</span><input id="officialCompanyDomain" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="example.com"></label>
+            <label><span data-i18n="careersUrlLabel">保存页面原始 URL</span><input id="officialCareersUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://example.com/careers"></label>
+            <label><span data-i18n="officialSnapshotLabel">招聘页快照</span><input id="officialSnapshotFile" type="file" accept=".html,.htm,.json" aria-label="Saved careers-page HTML or JSON"></label>
+            <button id="analyzeOfficialSnapshot" class="primary" type="button" data-i18n="analyzeOfficialSnapshot">只读解析岗位</button>
+          </div>
+          <section id="officialDiscoveryResults" class="official-discovery-results hidden" aria-live="polite">
+            <div class="subheading"><h4 data-i18n="officialCandidatesTitle">离线岗位候选</h4><span id="officialCandidateCount">0</span></div>
+            <div id="officialCandidateList" class="official-candidate-list"></div>
+          </section>
+        </div>
       </section>
       <section id="reviewPacketPanel" class="review-packet-panel hidden" aria-live="polite">
         <header><div><p class="eyebrow" data-i18n="reviewPacketEyebrow">LOCAL REVIEW PACKET</p><h3 id="reviewPacketTitle" data-i18n="reviewPacketTitlePlaceholder">本地审阅包</h3><small id="reviewPacketMeta"></small></div><button id="closeReviewPacket" class="text-action" type="button" data-i18n="closePacket">关闭审阅包</button></header>

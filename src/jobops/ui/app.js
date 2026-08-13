@@ -6,6 +6,7 @@ const STRINGS = {
     heroTitle: "一次填写，连续投递", heroBody: "从简历与项目材料、AI 资料和你的直接回答建立完整资料。所有私人内容只在本机解密，不写入普通项目文件。",
     demoTitle: "合成演示 · 不使用真实资料", demoBody: "这是自动清理的临时体验环境。所有示例均为虚构内容；文件上传和真实 AI 连接已关闭，请勿在这里输入个人信息。", demoReview: "查看 AI 与冲突审阅", demoQueue: "查看待审批申请",
     atsCapabilityTitle: "官网与 ATS 离线能力", atsCapabilityBody: "这里显示本版本已经通过哪类本地快照测试；不代表已访问或兼容实时网站。", atsLiveUnverified: "实时验证：否", atsActionsBlocked: "上传与提交：关闭", atsEvidenceDirect: "公司官网单页快照", atsEvidenceVertical: "完整合成纵向链", atsEvidenceSingle: "保存的单页表单", atsEvidenceSequence: "保存的多步骤序列",
+    offlineDiscoveryTitle: "解析已保存的公司招聘页", offlineDiscoveryBody: "只读取你选择的本地 HTML/JSON 快照；不执行页面代码、不保存快照、不联网。", companyDomainLabel: "公司官网域名", careersUrlLabel: "保存页面原始 URL", officialSnapshotLabel: "招聘页快照", analyzeOfficialSnapshot: "只读解析岗位", officialInputsRequired: "请填写官网域名与招聘页 URL，并选择本地快照。", officialSnapshotInvalid: "快照、官网域名或招聘页 URL 无法安全对应，请检查后重试。", officialDiscoveryComplete: "本地快照解析完成；候选仍需实时复验。", officialCandidatesTitle: "离线岗位候选", officialCandidateCount: "找到 {count} 个", officialNoCandidates: "没有找到符合官网/允许 ATS 边界的岗位链接。", officialLiveCheckRequired: "仍需另行授权后实时复验", officialNotQueued: "未加入申请队列",
     progressLabel: "问卷完成度", draftSaved: "草稿保存时直接加密", stepSources: "资料来源", stepQuestions: "完整问卷", stepReview: "资料与 Claim 审阅", stepFinish: "确认完成",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "本地投递控制台", pipelineBody: "统一查看资料准备度、待审批容量和安全边界。这里不会打开招聘网站或执行外部动作。", refreshDashboard: "刷新状态", dashboardRefreshed: "本地控制台已刷新", profileReadiness: "资料准备", awaitingApproval: "待你审批", approvalQueueOnly: "只生成本地审阅包", availableSlots: "剩余容量", deferredJobs: "排队等待", continuesUntilLimit: "达到上限前继续处理其他岗位", pendingReviewTitle: "待审批申请", pendingReviewBody: "只显示安全岗位摘要；私人答案和材料正文不会出现在此处。", safetyBoardTitle: "当前安全边界", realSites: "真实网站访问", externalActions: "真实外部动作", knowledgeWrites: "知识库写入", networkMode: "运行模式", pipelineReady: "已完成", pipelineNeedsSetup: "待完成", aiReadyShort: "AI 已连接", aiMissingShort: "AI 未连接", queueLimit: "上限 {limit}", pendingEmpty: "目前没有等待你审批的申请。离线处理完成的岗位会出现在这里。", packetHash: "审阅包 {hash}", packetVersion: "第 {version} 版", awaitingApprovalStatus: "等待你的决定", safetyGuardOn: "外部动作锁定", offlineMode: "仅限本地离线", refreshingDashboard: "刷新本地控制台…", deferredListTitle: "等待处理的岗位", deferredListBody: "达到上限后进入这里；释放位置时按顺序继续。", deferredEmpty: "目前没有因容量而等待的岗位。", recentDecisionsTitle: "最近的队列决定", recentDecisionsBody: "显示本地状态变化；不会把批准当成已提交。", recentEmpty: "还没有已处理的队列决定。", safeQueueId: "安全队列编号", queuedAt: "进入时间", viewRecord: "查看记录", approvalExpiry: "本地批准有效至 {time}", statusApproved: "本地已批准", statusClosed: "已关闭", statusRevision: "等待修改", statusDeferred: "等待容量", statusOther: "本地状态：{status}",
     queuePreferences: "待审批数量上限", queuePreferencesBody: "JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。", pendingLimitLabel: "最多等待", saveLimit: "保存上限", limitSaved: "待审批上限已保存", viewPacket: "查看审阅包", closePacket: "关闭审阅包", reviewPacketEyebrow: "LOCAL REVIEW PACKET", reviewPacketTitlePlaceholder: "本地审阅包", loadingReviewPacket: "解密并核验本地审阅包…", packetJob: "岗位", packetFit: "匹配分析", packetGaps: "硬性缺口", packetBullets: "简历表述与证据", packetQuestions: "申请问题", packetSensitive: "必须停下确认的敏感字段", packetUploads: "待上传材料", packetActions: "审批将绑定的动作", packetRoute: "官网与 ATS 路径", packetNone: "无", packetOverall: "总体匹配", packetStatus: "状态", packetCreated: "生成时间", packetClaims: "Claim", packetEvidence: "证据", pendingLimitInvalid: "请输入 1 到 1000 之间的整数。", pendingLimitBelowActive: "上限不能低于当前已占用的审批位置。请先处理一项申请。", reviewPacketUnavailable: "无法安全打开这个审阅包；内容未被显示，请刷新后重试。", packetDecisionTitle: "你对这份审阅包的决定", packetDecisionBody: "决定只保存在本机。当前不会打开网站、上传材料或提交申请。", decisionApprove: "批准这份审阅包", decisionApproveHelp: "保存与当前哈希绑定的一次性本地批准；真实外部动作仍锁定。", decisionRevise: "退回修改", decisionReviseHelp: "标记材料需要修订；任何旧批准都会失效。", decisionReject: "不申请这个岗位", decisionRejectHelp: "关闭这项申请并释放一个待审批位置。", decisionConfirm: "我确认这是我对当前审阅包的决定，并理解本轮真实外部动作仍为 0。", confirmDecision: "确认这个决定", chooseDecision: "请先选择批准、退回修改或不申请。", confirmDecisionFirst: "请勾选确认框后再保存决定。", decisionApproved: "审阅包已批准；真实外部动作仍为 0。", decisionRevised: "已退回修改；旧批准已失效。", decisionRejected: "已关闭这项申请并释放队列位置。", savingQueueDecision: "正在核验并保存队列决定…", reviewPacketStale: "这份审阅包已经变化。为防止误批，请重新打开并审阅最新版本。", reviewDecisionUnavailable: "当前申请已不在待审批状态，请刷新队列。",
@@ -32,6 +33,7 @@ const STRINGS = {
     heroTitle: "Set it up once. Apply continuously.", heroBody: "Build a complete profile from resumes and project materials, AI sources, and your direct answers. Private content is decrypted only on this computer and never written to ordinary project files.",
     demoTitle: "Synthetic demo · no real data", demoBody: "This is a temporary, auto-cleaned tour using fictional content only. File intake and real AI connections are disabled; do not enter personal information here.", demoReview: "View AI and conflict review", demoQueue: "View pending application",
     atsCapabilityTitle: "Official-site and ATS offline evidence", atsCapabilityBody: "This shows which saved-snapshot tests the current release passes; it is not a claim of live access or compatibility.", atsLiveUnverified: "Live verified: no", atsActionsBlocked: "Upload and submit: closed", atsEvidenceDirect: "Company-site single snapshot", atsEvidenceVertical: "Complete synthetic vertical", atsEvidenceSingle: "Saved single-page form", atsEvidenceSequence: "Saved multi-step sequence",
+    offlineDiscoveryTitle: "Parse a saved company careers page", offlineDiscoveryBody: "Reads only the selected local HTML/JSON snapshot; page code is not executed, the snapshot is not retained, and no network is used.", companyDomainLabel: "Official company domain", careersUrlLabel: "Original URL of saved page", officialSnapshotLabel: "Careers-page snapshot", analyzeOfficialSnapshot: "Parse jobs read-only", officialInputsRequired: "Enter the official domain and careers-page URL, then choose a local snapshot.", officialSnapshotInvalid: "The snapshot, official domain, and careers-page URL could not be safely matched. Check them and retry.", officialDiscoveryComplete: "Local snapshot parsed; every candidate still needs a live freshness check.", officialCandidatesTitle: "Offline job candidates", officialCandidateCount: "{count} found", officialNoCandidates: "No job link matched the company/approved-ATS boundary.", officialLiveCheckRequired: "Separate authorization required for live verification", officialNotQueued: "Not added to application queue",
     progressLabel: "Questionnaire progress", draftSaved: "Drafts are encrypted when saved", stepSources: "Sources", stepQuestions: "Full questionnaire", stepReview: "Profile & Claim review", stepFinish: "Finish",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "Local application control center", pipelineBody: "See profile readiness, approval capacity, and safety boundaries in one place. This screen never opens recruiting sites or performs external actions.", refreshDashboard: "Refresh status", dashboardRefreshed: "Local control center refreshed", profileReadiness: "Profile readiness", awaitingApproval: "Awaiting you", approvalQueueOnly: "Local review packets only", availableSlots: "Available capacity", deferredJobs: "Waiting in line", continuesUntilLimit: "Other jobs continue until the limit", pendingReviewTitle: "Applications awaiting approval", pendingReviewBody: "Only safe job summaries appear here; private answers and document bodies never do.", safetyBoardTitle: "Active safety boundary", realSites: "Real-site visits", externalActions: "Real external actions", knowledgeWrites: "Knowledge writes", networkMode: "Run mode", pipelineReady: "Complete", pipelineNeedsSetup: "Needs setup", aiReadyShort: "AI connected", aiMissingShort: "AI not connected", queueLimit: "limit {limit}", pendingEmpty: "No application currently needs your approval. Offline-processed roles will appear here.", packetHash: "packet {hash}", packetVersion: "version {version}", awaitingApprovalStatus: "Awaiting your decision", safetyGuardOn: "External actions locked", offlineMode: "Local offline only", refreshingDashboard: "Refreshing local control center…", deferredListTitle: "Waiting roles", deferredListBody: "Roles wait here at capacity and resume in order when a slot opens.", deferredEmpty: "No role is currently waiting for queue capacity.", recentDecisionsTitle: "Recent queue decisions", recentDecisionsBody: "Shows local state changes and never labels approval as submission.", recentEmpty: "No queue decision has been completed yet.", safeQueueId: "Safe queue ID", queuedAt: "Queued", viewRecord: "View record", approvalExpiry: "Local approval valid until {time}", statusApproved: "Locally approved", statusClosed: "Closed", statusRevision: "Revision needed", statusDeferred: "Waiting for capacity", statusOther: "Local state: {status}",
     queuePreferences: "Pending-approval limit", queuePreferencesBody: "JobFlow pauses new intake at this number and continues after you resolve one item.", pendingLimitLabel: "Maximum waiting", saveLimit: "Save limit", limitSaved: "Pending-approval limit saved", viewPacket: "View review packet", closePacket: "Close packet", reviewPacketEyebrow: "LOCAL REVIEW PACKET", reviewPacketTitlePlaceholder: "Local review packet", loadingReviewPacket: "Decrypting and validating local review packet…", packetJob: "Job", packetFit: "Fit analysis", packetGaps: "Hard gaps", packetBullets: "Resume wording and evidence", packetQuestions: "Application questions", packetSensitive: "Sensitive fields requiring a stop", packetUploads: "Pending uploads", packetActions: "Actions bound by approval", packetRoute: "Official-site and ATS route", packetNone: "None", packetOverall: "Overall fit", packetStatus: "Status", packetCreated: "Created", packetClaims: "Claim", packetEvidence: "Evidence", pendingLimitInvalid: "Enter a whole number from 1 to 1000.", pendingLimitBelowActive: "The limit cannot be below the number of occupied approval slots. Resolve one application first.", reviewPacketUnavailable: "This review packet could not be opened safely. No content was shown; refresh and retry.", packetDecisionTitle: "Your decision on this review packet", packetDecisionBody: "The decision is saved locally only. No site opens, material uploads, or application submission occurs now.", decisionApprove: "Approve this review packet", decisionApproveHelp: "Save a one-time local approval bound to this exact hash; real external actions remain locked.", decisionRevise: "Return for revision", decisionReviseHelp: "Mark materials for revision and invalidate any earlier approval.", decisionReject: "Do not apply", decisionRejectHelp: "Close this application and release one pending-review slot.", decisionConfirm: "I confirm this is my decision on the current packet and understand real external actions remain 0 in this run.", confirmDecision: "Confirm this decision", chooseDecision: "Choose approve, revise, or do not apply first.", confirmDecisionFirst: "Check the confirmation box before saving the decision.", decisionApproved: "Review packet approved; real external actions remain 0.", decisionRevised: "Returned for revision; prior approval invalidated.", decisionRejected: "Application closed and queue capacity released.", savingQueueDecision: "Validating and saving queue decision…", reviewPacketStale: "This packet changed. To prevent stale approval, reopen and review the current version.", reviewDecisionUnavailable: "This application is no longer awaiting a decision. Refresh the queue.",
@@ -57,7 +59,7 @@ const STRINGS = {
 
 const UI_PROTOCOL_VERSION = 9;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V3";
-const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, reviewDecision: "", reviewDecisionConfirmed: false, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [], activityDurations: {} };
+const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, reviewDecision: "", reviewDecisionConfirmed: false, officialDiscovery: null, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [], activityDurations: {} };
 const sessionToken = location.pathname.split("/")[2];
 const base = `/session/${sessionToken}/`;
 let activitySequence = 0;
@@ -69,10 +71,12 @@ const ACTIVITY_ESTIMATES = {
   detectingAgent: 22, detectingLocalModel: 12, startingRevision: 8,
   committingSource: 7, includingAll: 7, discardingSource: 5,
   deletingSource: 7, transformingClaims: 8, reprocessing: 45,
-  reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5, savingQueueDecision: 7
+  reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5, savingQueueDecision: 7,
+  discoveringJobs: 8
 };
 const STANDARD_CHATGPT_EXPORT_BYTES = 200 * 1024 * 1024;
 const MAX_LIGHTNING_EXPORT_BYTES = 8 * 1024 * 1024 * 1024;
+const MAX_OFFICIAL_SNAPSHOT_BYTES = 32 * 1024 * 1024;
 
 function t(key) { return (STRINGS[state.locale] || STRINGS.zh)[key] || key; }
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
@@ -128,7 +132,11 @@ const LOCAL_ERROR_KEYS = {
   CLAIM_EDIT_INVALID:"invalidClaim", CLAIM_REVIEW_INVALID:"invalidClaim", CLAIM_TRANSFORM_INVALID:"invalidClaim",
   CONFLICT_REVIEW_INVALID:"conflictReviewIncomplete", ONBOARDING_SOURCE_TYPE_INVALID:"sourceTypeUnsupported",
   ONBOARDING_SOURCE_EXTENSION_INVALID:"sourceTypeUnsupported", CHATGPT_EXPORT_FORMAT_INVALID:"sourceTypeUnsupported",
-  ONBOARDING_SOURCE_SIZE_INVALID:"sourceSizeInvalid", REQUEST_SIZE_INVALID:"sourceSizeInvalid"
+  ONBOARDING_SOURCE_SIZE_INVALID:"sourceSizeInvalid", REQUEST_SIZE_INVALID:"sourceSizeInvalid",
+  OFFICIAL_SNAPSHOT_SIZE_INVALID:"sourceSizeInvalid", OFFICIAL_SNAPSHOT_FORMAT_UNSUPPORTED:"sourceTypeUnsupported",
+  OFFICIAL_SNAPSHOT_ENCODING_INVALID:"officialSnapshotInvalid", OFFICIAL_PAGE_SNAPSHOT_INVALID:"officialSnapshotInvalid",
+  OFFICIAL_PAGE_SOURCE_MISMATCH:"officialSnapshotInvalid", COMPANY_DOMAIN_MISMATCH:"officialSnapshotInvalid",
+  OFFICIAL_CAREERS_PATH_NOT_PROVEN:"officialSnapshotInvalid", OFFICIAL_SNAPSHOT_HTML_INVALID:"officialSnapshotInvalid"
 };
 const BLOCKING_CODES=new Set([
   "SERVICE_RESTART_REQUIRED","PROFILE_REVIEW_REQUIRED","ONBOARDING_ANSWERS_INCOMPLETE",
@@ -314,6 +322,7 @@ function applyLocale() {
     const number=el.querySelector("b")?.textContent||"";
     el.setAttribute("aria-label",`${number} ${t(el.dataset.stepLabel)}`.trim());
   });
+  document.querySelector("#officialSnapshotFile").setAttribute("aria-label",t("officialSnapshotLabel"));
   if(state.lastBlockingError&&!document.querySelector("#blockingNotice").classList.contains("hidden")){
     document.querySelector("#blockingNoticeTitle").textContent=t("attentionRequired");
     document.querySelector("#blockingNoticeBody").textContent=localizedErrorMessage(state.lastBlockingError);
@@ -336,6 +345,21 @@ function atsEvidenceLabel(level){
     SAVED_SEQUENCE_PASS:"atsEvidenceSequence"
   };
   return keys[level]?t(keys[level]):String(level||"—");
+}
+
+function safeJobLocator(value){
+  try{
+    const parsed=new URL(String(value));
+    return `${parsed.hostname}${parsed.pathname}`.slice(0,300);
+  }catch(_){return "—";}
+}
+
+function renderOfficialDiscovery(report){
+  const candidates=Array.isArray(report?.candidates)?report.candidates:[];
+  document.querySelector("#officialCandidateCount").textContent=t("officialCandidateCount").replace("{count}",String(candidates.length));
+  const list=document.querySelector("#officialCandidateList");
+  list.innerHTML=candidates.length?candidates.map(item=>`<article class="official-candidate-item"><div><strong>${escapeHtml(item.title||"UNKNOWN")} · ${escapeHtml(item.provider||"—")}</strong><small>${escapeHtml(item.location||"UNKNOWN")} · ${escapeHtml(safeJobLocator(item.discovered_url))}</small><small>${escapeHtml(t("officialNotQueued"))}</small></div><aside>${escapeHtml(t("officialLiveCheckRequired"))}</aside></article>`).join(""):`<p>${escapeHtml(t("officialNoCandidates"))}</p>`;
+  document.querySelector("#officialDiscoveryResults").classList.remove("hidden");
 }
 
 function renderDashboard(){
@@ -648,6 +672,10 @@ function renderStateMode(){
   document.querySelector("#demoBanner").classList.toggle("hidden",!demo);
   document.body.classList.toggle("is-demo",demo);
   document.querySelector("#aiConnectButton").disabled=demo;
+  document.querySelector("#officialCompanyDomain").disabled=demo;
+  document.querySelector("#officialCareersUrl").disabled=demo;
+  document.querySelector("#officialSnapshotFile").disabled=demo;
+  document.querySelector("#analyzeOfficialSnapshot").disabled=demo;
   document.querySelector("#documentFile").disabled=demo||readonly||!aiReady;
   document.querySelector("#aiFile").disabled=demo||readonly||!aiReady;
   document.querySelector("#documentType").disabled=demo||readonly||!aiReady;
@@ -774,6 +802,28 @@ function previewSelections(sourceId, forceSelected=null){
 document.addEventListener("click", async event => {
   const dashboardRefresh=event.target.closest("#refreshDashboard");
   if(dashboardRefresh){try{await withActivity("refreshingDashboard",()=>refreshLatest());showToast(t("dashboardRefreshed"));}catch(error){handleUiError(error);}return;}
+  const analyzeSnapshot=event.target.closest("#analyzeOfficialSnapshot");
+  if(analyzeSnapshot){
+    const companyDomain=document.querySelector("#officialCompanyDomain").value.trim();
+    const officialUrl=document.querySelector("#officialCareersUrl").value.trim();
+    const file=document.querySelector("#officialSnapshotFile").files[0];
+    if(!companyDomain||!officialUrl||!file){showToast(t("officialInputsRequired"),true);return;}
+    const extension=(file.name.match(/\.[^.]+$/)||[""])[0].toLowerCase();
+    if(![".html",".htm",".json"].includes(extension)){showToast(t("sourceTypeUnsupported"),true);return;}
+    if(file.size<1||file.size>MAX_OFFICIAL_SNAPSHOT_BYTES){showToast(t("sourceSizeInvalid"),true);return;}
+    const sourceFormat=extension===".json"?"page_snapshot":"html";
+    try{
+      let report=null;
+      await withActivity("discoveringJobs",async()=>{
+        const query=`discover-official-jobs?official_url=${encodeURIComponent(officialUrl)}&company_domain=${encodeURIComponent(companyDomain)}&source_format=${encodeURIComponent(sourceFormat)}`;
+        report=await uploadApi(query,file);
+      });
+      state.officialDiscovery=report;
+      renderOfficialDiscovery(state.officialDiscovery);
+      showToast(t("officialDiscoveryComplete"));
+    }catch(error){showToast(localizedErrorMessage(error),true);}
+    return;
+  }
   const saveQueueLimit=event.target.closest("#saveQueueLimit");
   if(saveQueueLimit){
     const input=document.querySelector("#pendingLimitInput"),limit=Number(input.value);
@@ -849,6 +899,7 @@ document.addEventListener("click", async event => {
     collectClaimEdits();
     Object.assign(state.data.answers,draft);
     state.locale=locale.dataset.locale; applyLocale(); renderSources(); renderQuestions(); renderClaims(); renderReadiness(); renderStateMode();
+    if(state.officialDiscovery)renderOfficialDiscovery(state.officialDiscovery);
     if(!isReadonly()){try { await withActivity("savingLanguage",()=>api("save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({locale:state.locale,answers:{}})})); } catch(e) { handleUiError(e); }}
     return;
   }

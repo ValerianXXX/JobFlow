@@ -114,6 +114,19 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .ats-capability-item strong { text-transform: capitalize; }
 .ats-capability-item small { margin-top: 5px; color: var(--muted); font-size: 10px; }
 .ats-capability-item b { margin-top: 9px; color: var(--green-dark); font-size: 10px; }
+.offline-discovery { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.offline-discovery h4,.official-discovery-results h4 { margin: 0; font-size: 14px; }
+.offline-discovery > div > p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+.offline-discovery-controls { display: grid; grid-template-columns: .8fr 1.2fr 1fr auto; gap: 10px; align-items: end; margin-top: 14px; }
+.offline-discovery-controls label span { display: block; margin-bottom: 5px; color: var(--muted); font-size: 10px; }
+.offline-discovery-controls input { width: 100%; min-height: 42px; }
+.offline-discovery-controls input[type="file"] { padding: 8px; background: #fff; font-size: 10px; }
+.official-discovery-results { margin-top: 18px; }
+.official-candidate-list { display: grid; gap: 8px; margin-top: 10px; }
+.official-candidate-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px; padding: 13px; border: 1px solid var(--line); background: var(--paper); }
+.official-candidate-item strong,.official-candidate-item small { display: block; overflow-wrap: anywhere; }
+.official-candidate-item small { margin-top: 4px; color: var(--muted); font-size: 10px; }
+.official-candidate-item aside { color: var(--amber); font-size: 10px; font-weight: 800; text-align: right; }
 .queue-list-board { min-width: 0; padding: 18px; border: 1px solid var(--line); background: #fff; }
 .compact-dashboard-list.empty { padding: 18px 4px 4px; color: var(--muted); font-size: 11px; }
 .compact-dashboard-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; padding: 11px 0; border-top: 1px solid #edf0f1; }
@@ -407,6 +420,7 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .packet-decision-options { grid-template-columns: 1fr; }
   .queue-secondary-boards { grid-template-columns: 1fr; }
   .ats-capability-list { grid-template-columns: 1fr 1fr; }
+  .offline-discovery-controls { grid-template-columns: 1fr 1fr; }
   .packet-section.wide { grid-column: auto; }
   .ai-choice { min-height: 160px; }
   .source-grid { grid-template-columns: 1fr; }
@@ -432,6 +446,8 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
 
 @media (max-width: 440px) {
   .ats-capability-list { grid-template-columns: 1fr; }
+  .offline-discovery-controls,.official-candidate-item { grid-template-columns: 1fr; }
+  .official-candidate-item aside { text-align: left; }
   .topbar { padding: 0 14px; }
   .brand { gap: 8px; }
   .brand-mark { width: 36px; height: 36px; }

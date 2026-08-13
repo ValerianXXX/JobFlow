@@ -34,6 +34,12 @@ Real website prefill, upload, submit, account creation, email, recruiter contact
 
 本版本不存在真实网站预填、上传、提交、账号创建、邮件、招聘者联系或定时任务。批准本机审阅包不等于已经投递。
 
+## Saved careers pages / 已保存招聘页
+
+In the local dashboard, **Parse a saved company careers page / 解析已保存的公司招聘页** accepts a saved UTF-8 `.html`, `.htm`, or JobFlow page-snapshot `.json` file up to 32 MB. Enter the matching official company domain and original careers-page HTTPS URL. JobFlow parses the selected file in memory, does not execute its scripts, does not retain the snapshot, and does not add results to the application queue. Results are offline candidates only and still require separately authorized live freshness and route verification.
+
+在本地主界面中，“解析已保存的公司招聘页”可读取不超过 32 MB 的 UTF-8 `.html`、`.htm` 或 JobFlow 页面快照 `.json`。请同时填写相符的公司官网域名和原始招聘页 HTTPS 地址。JobFlow 只在内存中解析所选文件，不执行其中的脚本、不保留快照、不把结果加入申请队列。解析结果只是离线候选；以后如需实时复验，仍须取得单独授权。
+
 ## If the page says `Failed to fetch` / 页面显示 `Failed to fetch`
 
 1. Close the stale browser tab. / 关闭旧浏览器标签页。

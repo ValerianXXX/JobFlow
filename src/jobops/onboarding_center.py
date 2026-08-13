@@ -30,12 +30,13 @@ from .db import JobOpsDB
 from .document_qa import extract_pdf_text
 from .errors import JobOpsError
 from .external_actions import ExternalActionGateway, ExternalActionPolicy
+from .official_discovery import MAX_SNAPSHOT_BYTES, discover_official_jobs
 from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
 from .private_onboarding import PrivateOnboarding
 from .queue_manager import QueueManager
 from .runtime_schema import validate_named
 from .security import assert_no_plaintext_secret
-from .util import canonical_json, iso_utc, sha256_bytes, stable_id, write_json
+from .util import canonical_json, iso_utc, load_json, sha256_bytes, stable_id, write_json
 
 
 IN_PROGRESS = "IN_PROGRESS"
@@ -909,6 +910,36 @@ class OnboardingCenterService:
         return {
             "status": "QUEUE_LIMIT_UPDATED", "queue": QueueManager(self.database).status(),
             "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def discover_official_jobs(
+        self,
+        snapshot: bytes,
+        *,
+        official_entry_url: str,
+        company_domain: str,
+        source_format: str,
+    ) -> dict[str, Any]:
+        if len(snapshot) > MAX_SNAPSHOT_BYTES:
+            raise JobOpsError(
+                "OFFICIAL_SNAPSHOT_SIZE_INVALID",
+                "The local official-careers snapshot exceeds the offline parser limit.",
+            )
+        policy = load_json(self.project / "config" / "policy.json")
+        report = discover_official_jobs(
+            snapshot,
+            official_entry_url=official_entry_url,
+            company_domain=company_domain,
+            approved_ats_hosts=policy["approved_ats_hosts"],
+            source_format=source_format,
+        )
+        validate_named("official-discovery", report, self.schemas)
+        return {
+            **report,
+            "snapshot_persisted": False,
+            "candidate_queue_mutations": 0,
+            "next_safe_action": "review candidates; obtain separate authorization before any live freshness check",
         }
 
     @_synchronized

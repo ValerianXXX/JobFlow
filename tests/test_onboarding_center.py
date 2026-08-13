@@ -160,8 +160,10 @@ class OnboardingCenterTests(unittest.TestCase):
         project = root / "project"
         (project / "schemas").mkdir(parents=True)
         (project / "state").mkdir()
-        for name in ("candidate-profile", "onboarding-answer-bank", "onboarding-completion"):
+        for name in ("candidate-profile", "onboarding-answer-bank", "onboarding-completion", "official-discovery"):
             shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
+        (project / "config").mkdir()
+        shutil.copy2(PROJECT / "config" / "policy.json", project / "config" / "policy.json")
         database = JobOpsDB(project / "state" / "jobops.db")
         database.initialize()
         store = MemorySecureStore(root / "local" / "JobOps" / "private")
@@ -892,6 +894,29 @@ class OnboardingCenterTests(unittest.TestCase):
                 self.assertEqual(upload_response.status, 200)
                 self.assertEqual(upload_payload["status"], "SOURCE_PREVIEW_READY")
                 self.assertEqual(list((service.onboarding.store.private_root / "staging").glob("*")), [])
+                snapshot = (PROJECT / "tests" / "fixtures" / "synthetic-official-job-list.html").read_bytes()
+                connection.request(
+                    "POST",
+                    session_path + "api/discover-official-jobs?official_url=https%3A%2F%2Fexample.com%2Fcareers&company_domain=example.com&source_format=html",
+                    body=snapshot,
+                    headers={
+                        "X-JobOps-Session": "synthetic-session-token",
+                        "Origin": host,
+                        "Content-Type": "application/octet-stream",
+                    },
+                )
+                discovery_response = connection.getresponse()
+                discovery_payload = json.loads(discovery_response.read())
+                self.assertEqual(discovery_response.status, 200)
+                self.assertEqual(discovery_payload["status"], "LOCAL_SNAPSHOT_PARSED")
+                self.assertEqual(discovery_payload["candidate_count"], 2)
+                self.assertFalse(discovery_payload["snapshot_persisted"])
+                self.assertEqual(discovery_payload["candidate_queue_mutations"], 0)
+                self.assertEqual(discovery_payload["network_actions"], 0)
+                self.assertEqual(discovery_payload["real_external_actions"], 0)
+                with service.database.connect() as database_connection:
+                    self.assertEqual(database_connection.execute("SELECT COUNT(*) FROM jobs").fetchone()[0], 0)
+                    self.assertEqual(database_connection.execute("SELECT COUNT(*) FROM intake_queue").fetchone()[0], 0)
                 connection.close()
             finally:
                 server.shutdown()
@@ -913,7 +938,12 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="recentDashboardList"', html)
         self.assertIn('id="saveQueueLimit"', html)
         self.assertIn('id="reviewPacketPanel"', html)
+        self.assertIn('id="officialSnapshotFile"', html)
+        self.assertIn('id="analyzeOfficialSnapshot"', html)
+        self.assertIn('id="officialCandidateList"', html)
         self.assertIn("function renderDashboard()", app)
+        self.assertIn("function renderOfficialDiscovery", app)
+        self.assertIn('discover-official-jobs?official_url=', app)
         self.assertIn("function renderReviewPacket()", app)
         self.assertIn('api("queue-limit"', app)
         self.assertIn('api("review-packet"', app)

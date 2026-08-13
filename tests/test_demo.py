@@ -67,6 +67,14 @@ class SyntheticDemoTests(unittest.TestCase):
             with self.assertRaises(JobOpsError) as direct_intake:
                 service.import_source("resume", ".txt", b"real user data")
             self.assertEqual(direct_intake.exception.code, "DEMO_FILE_INTAKE_DISABLED")
+            with self.assertRaises(JobOpsError) as discovery_intake:
+                service.discover_official_jobs(
+                    b"<html>real saved page</html>",
+                    official_entry_url="https://example.test/careers",
+                    company_domain="example.test",
+                    source_format="html",
+                )
+            self.assertEqual(discovery_intake.exception.code, "DEMO_FILE_INTAKE_DISABLED")
             with self.assertRaises(JobOpsError) as connection:
                 service.connect_ai({"mode": "agent"})
             self.assertEqual(connection.exception.code, "DEMO_AI_CONNECTION_DISABLED")

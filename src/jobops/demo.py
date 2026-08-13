@@ -70,6 +70,16 @@ class SyntheticDemoService(OnboardingCenterService):
     def import_source(self, source_type: str, extension: str, data: bytes) -> dict[str, Any]:
         raise JobOpsError("DEMO_FILE_INTAKE_DISABLED", "Synthetic demo mode cannot ingest user files.")
 
+    def discover_official_jobs(
+        self,
+        snapshot: bytes,
+        *,
+        official_entry_url: str,
+        company_domain: str,
+        source_format: str,
+    ) -> dict[str, Any]:
+        raise JobOpsError("DEMO_FILE_INTAKE_DISABLED", "Synthetic demo mode cannot ingest user files.")
+
     def preview_large_chatgpt_export(
         self,
         path: Path,

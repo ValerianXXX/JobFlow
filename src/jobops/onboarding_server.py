@@ -17,6 +17,7 @@ from urllib.parse import parse_qs, urlparse
 from .errors import JobOpsError
 from .instance_lock import local_instance_lock
 from .onboarding_center import MAX_LARGE_EXPORT_BYTES, MAX_UPLOAD_BYTES, OnboardingCenterService
+from .official_discovery import MAX_SNAPSHOT_BYTES
 
 
 JSON_LIMIT = 2 * 1024 * 1024
@@ -233,6 +234,26 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 )
             elif route == "reprocess-source":
                 result = self.server.service.reprocess_source(str(self._json_body().get("source_id", "")))
+            elif route == "discover-official-jobs":
+                query = parse_qs(parsed.query)
+                official_entry_url = str(query.get("official_url", [""])[0])
+                company_domain = str(query.get("company_domain", [""])[0])
+                source_format = str(query.get("source_format", [""])[0])
+                try:
+                    length = int(self.headers.get("Content-Length", "0"))
+                except ValueError as exc:
+                    raise JobOpsError("REQUEST_LENGTH_INVALID", "The local snapshot length is invalid.") from exc
+                if length < 1 or length > MAX_SNAPSHOT_BYTES:
+                    raise JobOpsError(
+                        "OFFICIAL_SNAPSHOT_SIZE_INVALID",
+                        "The local official-careers snapshot is empty or too large.",
+                    )
+                result = self.server.service.discover_official_jobs(
+                    self.rfile.read(length),
+                    official_entry_url=official_entry_url,
+                    company_domain=company_domain,
+                    source_format=source_format,
+                )
             elif route == "complete":
                 result = self.server.service.complete(user_confirmed=self._json_body().get("user_confirmed") is True)
             elif route == "import":
