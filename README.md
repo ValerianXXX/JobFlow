@@ -55,6 +55,7 @@ JobFlow 的资料理解采用严格 AI 门：选择文件后会自动启动 AI �
 - Workday 已支持离线的多步骤保存页序列分析。`analyze-ats-sequence` 会把 1—20 个项目内 HTML 快照按顺序绑定到同一路线，识别个人信息、经历/教育、申请问题、自愿披露、Review 与账号/登录页面；动态 DOM ID 可以变化，但相同逻辑问题用独立逻辑哈希去重。Next/Continue、账号、登录、CAPTCHA、MFA、上传和 Submit 都仍是 STOP，报告明确 `navigation_performed=false`。 / Saved Workday steps can be analyzed and deduplicated offline, but JobFlow performs no navigation and makes no live-compatibility claim.
 - Lever 已通过相同的单页本地快照、opaque 字段计划和零修改适配器契约测试。`ats-capabilities` 会精确列出 company/Greenhouse/Lever/Workday 当前仅由合成证据支持到哪一层，并对每份能力声明做内容哈希；所有条目固定 `live_site_verified=false`，避免把离线测试误写成真实站点兼容。 / Lever reuses the same safe offline contract, while `ats-capabilities` distinguishes synthetic evidence from unverified live support.
 - 待审批上限默认 10，可设 1—1000；容量检查与 reservation 在同一事务中完成。
+- 连续接入当前采用 `MANUAL_TICK_ONLY`：`plan-continuous-intake` 只计算本次本地批次与剩余容量，`run-queue` 必须由用户明确运行。它不会注册 Windows 任务、Codex 自动化、后台服务或浏览器动作。队列严格优先恢复最早的 `DEFERRED` 项；新岗位不会越过旧岗位抢占空位，释放多个名额时可在同一事务中按 FIFO 填满。 / Continuous intake is an explicitly invoked local tick, not a scheduler. It preserves FIFO fairness and never registers a background task or external action.
 - `ExternalActionGateway` 是受保护状态的唯一入口。生产策略始终先返回 `PHASE_NOT_AUTHORIZED`。
 - `SUBMISSION_UNKNOWN` 不自动重试；CAPTCHA、MFA、验证码、登录和账号创建均停给用户。
 
@@ -93,7 +94,7 @@ python .agents/skills/job-application-operator/scripts/jobops.py purge-synthetic
 - 环境与状态：`audit`、`locate`、`status`、`init-db`、`migrate-db`、`verify-release`
 - 私人资料：`onboarding-center`、`onboarding-status`、`secure-onboard`、`secure-onboard-resume`、`finalize-resume-onboarding`、`review-onboarding`、`secure-import-master-resume`、`secure-import-answer-bank`、`secure-store-status`、`purge-synthetic-private-data`
 - Claim：`propose-claims`、`list-claim-proposals`、`approve-claim`、`reject-claim`、`revoke-claim`、`revalidate-claims`
-- 岗位与队列：`ats-capabilities`、`discover-official-jobs`、`verify-route`、`analyze-ats-form`、`analyze-ats-sequence`、`import-jd`、`analyze-job`、`run-to-awaiting-approval`、`run-queue`、`queue`、`list-pending`
+- 岗位与队列：`ats-capabilities`、`discover-official-jobs`、`verify-route`、`analyze-ats-form`、`analyze-ats-sequence`、`import-jd`、`analyze-job`、`run-to-awaiting-approval`、`plan-continuous-intake`、`run-queue`、`queue`、`list-pending`
 - 审阅与恢复：`show-review-packet`、`revise-application`、`approve-review-packet`、`reject-review-packet`、`resume-blocked`、`retry-safe-step`、`explain`
 
 ## 真实使用前仍需的最小输入

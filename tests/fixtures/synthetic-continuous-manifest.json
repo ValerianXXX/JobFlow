@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mode": "MANUAL_TICK_ONLY",
+  "jobs": [
+    {
+      "input": "tests/fixtures/synthetic-forward-jd.txt",
+      "profile_ref": "secure-ref:SYNTHETIC_PROFILE_01",
+      "master_resume_ref": "secure-ref:SYNTHETIC_MASTER_01",
+      "answer_bank_ref": "secure-ref:SYNTHETIC_ANSWERS_01",
+      "route": "tests/fixtures/synthetic-forward-route.json",
+      "form": "tests/fixtures/synthetic-forward-form.json",
+      "research": "tests/fixtures/synthetic-research.html",
+      "source_type": "txt",
+      "synthetic": true
+    }
+  ]
+}

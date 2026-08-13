@@ -241,6 +241,7 @@ class PublicCLIContractTests(unittest.TestCase):
             "analyze-ats-form",
             "analyze-ats-sequence",
             "ats-capabilities",
+            "plan-continuous-intake",
         ):
             self.assertIn(command, completed.stdout)
 

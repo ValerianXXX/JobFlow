@@ -14,6 +14,7 @@ from .ats_capabilities import offline_ats_capabilities
 from .approvals import ApprovalContext, issue_approval
 from .claim_registry import ClaimRegistry
 from .collector import JobCollector
+from .continuous_intake import build_continuous_intake_plan, validate_continuous_manifest
 from .db import JobOpsDB
 from .errors import JobOpsError
 from .external_actions import ExternalActionGateway, ExternalActionPolicy
@@ -165,6 +166,8 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--synthetic", action="store_true")
     run_queue = sub.add_parser("run-queue")
     run_queue.add_argument("--manifest", type=Path)
+    continuous_plan = sub.add_parser("plan-continuous-intake")
+    continuous_plan.add_argument("--manifest", type=Path, required=True)
     sub.add_parser("list-pending")
     show = sub.add_parser("show-review-packet")
     show.add_argument("--application-id")
@@ -475,13 +478,23 @@ def main(argv: list[str] | None = None) -> int:
                 source_type=args.source_type, synthetic=args.synthetic,
             )
             emit(result, project)
+        elif args.command == "plan-continuous-intake":
+            raw_manifest = load_json(_project_input(project, args.manifest))
+            if isinstance(raw_manifest, dict) and set(raw_manifest) == {"jobs"}:
+                raw_manifest = {"schema_version": 1, "mode": "MANUAL_TICK_ONLY", "jobs": raw_manifest["jobs"]}
+            manifest = validate_continuous_manifest(raw_manifest)
+            database = _database(project)
+            emit({**build_continuous_intake_plan(manifest, QueueManager(database).status()), "next_safe_action": "run-queue --manifest <same-file>"}, project)
         elif args.command == "run-queue":
             if not args.manifest:
                 raise JobOpsError("QUEUE_MANIFEST_REQUIRED", "run-queue requires a project-bounded JSON manifest.")
-            manifest = load_json(_project_input(project, args.manifest)); jobs = manifest.get("jobs", [])
-            if not isinstance(jobs, list):
-                raise JobOpsError("QUEUE_MANIFEST_INVALID", "Queue manifest jobs must be a list.")
-            database = _database(project); onboarding = _onboarding(project, database); orchestrator = JobOpsOrchestrator(project, database, onboarding)
+            raw_manifest = load_json(_project_input(project, args.manifest))
+            if isinstance(raw_manifest, dict) and set(raw_manifest) == {"jobs"}:
+                raw_manifest = {"schema_version": 1, "mode": "MANUAL_TICK_ONLY", "jobs": raw_manifest["jobs"]}
+            manifest = validate_continuous_manifest(raw_manifest); jobs = manifest["jobs"]
+            database = _database(project); manager = QueueManager(database)
+            plan = build_continuous_intake_plan(manifest, manager.status())
+            onboarding = _onboarding(project, database); orchestrator = JobOpsOrchestrator(project, database, onboarding)
             results = []
             for item in jobs:
                 try:
@@ -495,7 +508,7 @@ def main(argv: list[str] | None = None) -> int:
                     ))
                 except JobOpsError as exc:
                     results.append(exc.as_dict())
-            emit({"status": "QUEUE_RUN_COMPLETE", "results": results, "queue": QueueManager(database).status(), "real_external_actions": 0, "next_safe_action": "list-pending"}, project)
+            emit({"status": "QUEUE_RUN_COMPLETE", "plan_hash": plan["plan_hash"], "mode": "MANUAL_TICK_ONLY", "results": results, "queue": manager.status(), "background_service_started": False, "system_tasks_registered": 0, "real_external_actions": 0, "next_safe_action": "list-pending"}, project)
         elif args.command == "list-pending":
             database = _database(project)
             with database.connect() as connection:

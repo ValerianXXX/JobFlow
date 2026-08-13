@@ -161,6 +161,14 @@ def valid_fixtures() -> dict[str, dict]:
             }],
             "live_site_accessed": False, "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
         },
+        "continuous-intake-plan": {
+            "schema_version": 1, "status": "MANUAL_TICK_READY", "mode": "MANUAL_TICK_ONLY", "plan_hash": H,
+            "job_count": 3, "pending_limit": 5, "awaiting_approval": 2, "reserved_slots": 1,
+            "existing_deferred": 4, "slots_available": 2, "jobs_eligible_this_tick": 2,
+            "jobs_expected_to_defer": 1, "requires_explicit_invocation": True,
+            "background_service_started": False, "system_tasks_registered": 0,
+            "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
+        },
         "queue-reservation": {"reservation_id": "RSV-ABCDEF123456", "intake_key": H, "application_id": APP, "status": "CONSUMED", "pending_limit": 3, "pending_count": 1, "reserved_count": 1, "created_at": T, "updated_at": T},
         "recovery-event": {"recovery_id": "RCV-ABCDEF123456", "application_id": APP, "blocked_state": "SUBMISSION_UNKNOWN", "last_safe_state": "APPROVED", "validation_hash": H, "decision": "NO_AUTO_RETRY", "created_at": T},
         "receipt": {"receipt_id": "RCP-ABCDEF123456", "application_id": APP, "source": "fake-receipt", "confirmation_type": "confirmation_number", "confirmation_hash": H, "verified": True, "verified_at": T},
@@ -243,6 +251,7 @@ class RuntimeSchemaMatrixTests(unittest.TestCase):
             "ats-vertical-evidence": ("fields_discovered", 3),
             "ats-form-sequence": ("step_count", 2),
             "ats-capability-report": ("provider_count", 2),
+            "continuous-intake-plan": ("job_count", 4),
         }
         for name, (field, invalid) in conflicts.items():
             changed = copy.deepcopy(self.fixtures[name]); changed[field] = invalid

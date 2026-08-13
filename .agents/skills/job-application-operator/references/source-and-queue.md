@@ -6,7 +6,9 @@ Before real-site authorization, `discover-official-jobs` may inspect only a user
 
 Prefer guest. Missing guest flow becomes `NEEDS_ACCOUNT_APPROVAL`; no account is created in this release. Recheck official listing/form freshness before analysis, fake prefill and any future submit attempt.
 
-Queue capacity is `AWAITING_APPROVAL + RESERVED <= pending_limit`, where the user limit is 1—1000. Reservation and capacity check use one immediate transaction. At capacity, intake remains `DEFERRED` and creates no Job, JD snapshot or Application. Releasing/rejecting a packet promotes the oldest deferred item. Content hashes make repeated intake idempotent.
+Queue capacity is `AWAITING_APPROVAL + RESERVED <= pending_limit`, where the user limit is 1—1000. Reservation and capacity check use one immediate transaction. At capacity, intake remains `DEFERRED` and creates no Job, JD snapshot or Application. Older deferred intake has strict FIFO priority over a new arrival, and released capacity can reserve every available slot atomically. Content hashes make repeated intake idempotent.
+
+Continuous intake is `MANUAL_TICK_ONLY`. A strict project-relative manifest may contain only local synthetic job inputs and opaque `secure-ref` values. `plan-continuous-intake` reports the queue-bound plan without processing it; `run-queue` requires an explicit invocation for every tick. Neither command registers a Windows task, Codex automation, background service, browser action or network action. Real or unattended job intake remains unauthorized.
 
 Phase 5—6 define Official Source, Browser Prefill, Submission, Account Creation, Email, Recruiter, Scheduler and Receipt protocols. Registered implementations are only fake/mock/dry-run/disabled. The browser framework can parse redacted local form snapshots and validate content-bound plans, but its adapter performs zero field modifications. Fake scheduling uses an in-memory clock; no Windows task, Codex Automation, HTTP, browser, SMTP, upload or background service is registered. Disabled adapters record a zero-side-effect attempt and raise `PHASE_NOT_AUTHORIZED` before transport.
 

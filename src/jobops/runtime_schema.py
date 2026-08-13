@@ -178,6 +178,12 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS form sequence steps must be complete and monotonically numbered.")
     if name == "ats-capability-report" and value.get("provider_count") != len(value.get("providers", [])):
         raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS capability provider_count must match the provider list.")
+    if name == "continuous-intake-plan":
+        if value.get("job_count") != value.get("jobs_eligible_this_tick", 0) + value.get("jobs_expected_to_defer", 0):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Continuous plan must account for every job in the manual tick.")
+        expected = "MANUAL_TICK_READY" if value.get("slots_available", 0) else "PAUSED_AT_PENDING_LIMIT"
+        if value.get("status") != expected:
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Continuous plan status must match available queue capacity.")
 
 
 def validate_named(name: str, value: dict[str, Any], schema_dir: Path) -> dict[str, Any]:

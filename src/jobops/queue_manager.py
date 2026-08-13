@@ -49,6 +49,17 @@ class QueueManager:
                     (intake_key, source_type, source_locator, now, now),
                 )
                 return QueueAdmission(intake_key, "DEFERRED", None, "WAIT_FOR_APPROVAL_SLOT")
+            oldest = connection.execute(
+                "SELECT intake_key FROM intake_queue WHERE status='DEFERRED' ORDER BY created_at,intake_key LIMIT 1"
+            ).fetchone()
+            if oldest is not None and str(oldest["intake_key"]) != intake_key:
+                connection.execute(
+                    """INSERT INTO intake_queue(intake_key,source_type,source_locator,status,reservation_id,created_at,updated_at)
+                    VALUES(?,?,?,'DEFERRED',NULL,?,?) ON CONFLICT(intake_key) DO UPDATE SET
+                    status='DEFERRED',reservation_id=NULL,updated_at=excluded.updated_at""",
+                    (intake_key, source_type, source_locator, now, now),
+                )
+                return QueueAdmission(intake_key, "DEFERRED", None, "WAIT_FOR_OLDER_DEFERRED_INTAKE")
             reservation_id = stable_id("QRS", intake_key)
             connection.execute(
                 """INSERT INTO queue_reservations(reservation_id,intake_key,application_id,status,created_at,updated_at)
@@ -354,24 +365,43 @@ class QueueManager:
         }
 
     def promote_next_deferred(self) -> QueueAdmission:
+        promoted = self.promote_available(maximum=1)
+        if promoted:
+            return promoted[0]
+        status = self.status()
+        if status["slots_available"] <= 0:
+            return QueueAdmission("", "NO_CAPACITY", None, "WAIT_FOR_APPROVAL_SLOT")
+        return QueueAdmission("", "EMPTY", None, "NONE")
+
+    def promote_available(self, *, maximum: int | None = None) -> list[QueueAdmission]:
+        if maximum is not None and maximum < 1:
+            raise JobOpsError("PROMOTION_LIMIT_INVALID", "Promotion maximum must be positive when provided.")
         with self.database.connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
-            limit, awaiting, reserved = self._capacity(connection)
-            if awaiting + reserved >= limit:
-                return QueueAdmission("", "NO_CAPACITY", None, "WAIT_FOR_APPROVAL_SLOT")
-            row = connection.execute("SELECT * FROM intake_queue WHERE status='DEFERRED' ORDER BY created_at,intake_key LIMIT 1").fetchone()
-            if row is None:
-                return QueueAdmission("", "EMPTY", None, "NONE")
-            reservation_id = stable_id("QRS", str(row["intake_key"]))
-            now = iso_utc()
-            connection.execute(
-                """INSERT INTO queue_reservations(reservation_id,intake_key,application_id,status,created_at,updated_at)
-                VALUES(?,?,NULL,'RESERVED',?,?) ON CONFLICT(intake_key) DO UPDATE SET
-                status='RESERVED',application_id=NULL,updated_at=excluded.updated_at""",
-                (reservation_id, row["intake_key"], now, now),
-            )
-            connection.execute("UPDATE intake_queue SET status='RESERVED',reservation_id=?,updated_at=? WHERE intake_key=?", (reservation_id, now, row["intake_key"]))
-            return QueueAdmission(str(row["intake_key"]), "RESERVED", reservation_id, "RUN_TO_AWAITING_APPROVAL")
+            results: list[QueueAdmission] = []
+            while maximum is None or len(results) < maximum:
+                limit, awaiting, reserved = self._capacity(connection)
+                if awaiting + reserved >= limit:
+                    break
+                row = connection.execute(
+                    "SELECT * FROM intake_queue WHERE status='DEFERRED' ORDER BY created_at,intake_key LIMIT 1"
+                ).fetchone()
+                if row is None:
+                    break
+                reservation_id = stable_id("QRS", str(row["intake_key"]))
+                now = iso_utc()
+                connection.execute(
+                    """INSERT INTO queue_reservations(reservation_id,intake_key,application_id,status,created_at,updated_at)
+                    VALUES(?,?,NULL,'RESERVED',?,?) ON CONFLICT(intake_key) DO UPDATE SET
+                    status='RESERVED',application_id=NULL,updated_at=excluded.updated_at""",
+                    (reservation_id, row["intake_key"], now, now),
+                )
+                connection.execute(
+                    "UPDATE intake_queue SET status='RESERVED',reservation_id=?,updated_at=? WHERE intake_key=?",
+                    (reservation_id, now, row["intake_key"]),
+                )
+                results.append(QueueAdmission(str(row["intake_key"]), "RESERVED", reservation_id, "RUN_TO_AWAITING_APPROVAL"))
+            return results
 
     def status(self) -> dict[str, int]:
         with self.database.connect() as connection:
