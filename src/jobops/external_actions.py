@@ -324,6 +324,45 @@ class ExternalActionGateway:
             )
         return {"status": "SUBMITTED", "fake_evidence_hash": evidence_hash, "real_side_effect": False}
 
+    def mark_submission_unknown(self, application_id: str, *, evidence: dict[str, object]) -> dict[str, object]:
+        if not self.policy.isolated_test_mode or self.policy.adapter_kind not in {"fake", "mock", "dry-run"}:
+            raise JobOpsError("REAL_TRANSPORT_FORBIDDEN", "Only isolated fake submission evidence may enter the unknown state.")
+        evidence_hash = sha256_bytes(canonical_json(evidence))
+        with self.database.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT status,last_safe_state FROM applications WHERE application_id=?", (application_id,),
+            ).fetchone()
+            if row is None:
+                raise JobOpsError("APPLICATION_NOT_FOUND", "The application does not exist.")
+            if row["status"] == "SUBMISSION_UNKNOWN":
+                return {
+                    "status": "SUBMISSION_UNKNOWN", "evidence_hash": evidence_hash,
+                    "automatic_retry": False, "real_side_effect": False,
+                }
+            if row["status"] not in {"SUBMITTING", "SUBMITTED"}:
+                raise JobOpsError(
+                    "APPLICATION_NOT_IN_SUBMISSION",
+                    "Only an in-progress or submitted application can become submission-unknown.",
+                )
+            previous = str(row["status"])
+            now = iso_utc()
+            connection.execute(
+                "UPDATE applications SET status='SUBMISSION_UNKNOWN',last_safe_state='APPROVED',updated_at=? WHERE application_id=?",
+                (now, application_id),
+            )
+            connection.execute(
+                "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
+                (
+                    application_id, "SUBMISSION_EVIDENCE_UNKNOWN", previous, "SUBMISSION_UNKNOWN",
+                    json.dumps({"evidence_hash": evidence_hash, "automatic_retry": False}), now,
+                ),
+            )
+        return {
+            "status": "SUBMISSION_UNKNOWN", "evidence_hash": evidence_hash,
+            "automatic_retry": False, "real_side_effect": False,
+        }
+
     def confirm_with_receipt(self, application_id: str, receipt: dict[str, object]) -> dict[str, object]:
         if not self.policy.isolated_test_mode:
             raise JobOpsError("REAL_RECEIPT_ADAPTER_DISABLED", "Only isolated fake receipt verification is implemented.")

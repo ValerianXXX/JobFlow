@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Added an append-only isolated application execution controller that proves the complete dual-approval and receipt lifecycle without a browser, network call, upload, email, account, scheduler or real external side effect.
+- 新增仅含哈希的追加式隔离投递控制器；完整验证双重批准与回执链，且不调用浏览器、网络、上传、邮件、账号、调度或任何真实外部动作。
 - Review approval and final submission authorization are now cryptographically separate. The final gate expires within 1–30 minutes, binds the current execution plan, packet, route, form, uploads and freshness evidence, rejects stale/replayed consent, and is consumed atomically with the review approval in isolated tests; production transport remains disabled.
 - 审阅批准与最终提交授权现在在技术上完全分离。最终门禁仅在 1—30 分钟内有效，绑定当前执行计划、审阅包、路线、表单、材料与新鲜度证据，拒绝过期、内容变化或重放，并在隔离测试中与审阅批准原子消费；生产传输仍关闭。
 - The bilingual home page can now prepare one real-profile offline application from three explicitly selected saved files. It constructs the company/ATS route locally, retains no input snapshot, opens the encrypted review packet, and rolls back both queue capacity and newly generated ciphertext if preparation fails; network and real external actions remain zero.

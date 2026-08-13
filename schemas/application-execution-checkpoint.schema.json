@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/application-execution-checkpoint.schema.json",
+  "title": "Application Execution Checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "checkpoint_id", "run_id", "application_id", "sequence",
+    "phase", "status", "application_context_hash", "execution_plan_hash",
+    "browser_plan_hash", "form_snapshot_hash", "freshness_evidence_hash",
+    "evidence_hash", "created_at", "browser_actions", "network_actions",
+    "real_external_actions"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "checkpoint_id": {"type": "string", "pattern": "^ECP-[A-F0-9]{12}$"},
+    "run_id": {"type": "string", "pattern": "^RUN-[A-F0-9]{12}$"},
+    "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "sequence": {"type": "integer", "minimum": 1},
+    "phase": {
+      "enum": [
+        "PLAN_VALIDATED", "FRESHNESS_BOUND", "PREFILL_PROPOSAL_VALIDATED",
+        "AWAITING_FINAL_AUTHORIZATION", "FINAL_AUTHORIZATION_CONSUMED",
+        "FAKE_SUBMISSION_RECORDED", "RECEIPT_VERIFIED", "SUBMISSION_UNKNOWN"
+      ]
+    },
+    "status": {
+      "enum": [
+        "PASS", "AWAITING_USER", "CONSUMED", "RECORDED", "CONFIRMED", "UNKNOWN"
+      ]
+    },
+    "application_context_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "execution_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "browser_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "freshness_evidence_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "evidence_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "browser_actions": {"const": 0},
+    "network_actions": {"const": 0},
+    "real_external_actions": {"const": 0}
+  }
+}

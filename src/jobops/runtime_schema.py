@@ -107,6 +107,19 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Final submission authorization must expire after issuance.")
         if value.get("status") == "CONSUMED" and not value.get("consumed_at"):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Consumed final submission authorization requires consumed_at.")
+    if name == "application-execution-checkpoint":
+        expected = {
+            1: {("PLAN_VALIDATED", "PASS")},
+            2: {("FRESHNESS_BOUND", "PASS")},
+            3: {("PREFILL_PROPOSAL_VALIDATED", "PASS")},
+            4: {("AWAITING_FINAL_AUTHORIZATION", "AWAITING_USER")},
+            5: {("FINAL_AUTHORIZATION_CONSUMED", "CONSUMED")},
+            6: {("FAKE_SUBMISSION_RECORDED", "RECORDED")},
+            7: {("RECEIPT_VERIFIED", "CONFIRMED"), ("SUBMISSION_UNKNOWN", "UNKNOWN")},
+        }
+        pair = (value.get("phase"), value.get("status"))
+        if pair not in expected.get(value.get("sequence"), set()):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Execution checkpoint phase and status do not match its fixed sequence.")
     if name == "source-route":
         history = value.get("navigation_history", [])
         if not history or history[-1] != value.get("current_url"):

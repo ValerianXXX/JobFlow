@@ -12,7 +12,7 @@ from .state_machine import BLOCKING_STATES, assert_transition
 from .util import iso_utc
 
 
-LATEST_SCHEMA_VERSION = 5
+LATEST_SCHEMA_VERSION = 6
 
 
 MIGRATION_001_SQL = """
@@ -220,6 +220,50 @@ COMMIT;
 """
 
 
+MIGRATION_006_SQL = """
+BEGIN IMMEDIATE;
+CREATE TABLE IF NOT EXISTS application_execution_runs (
+    run_id TEXT PRIMARY KEY,
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    application_context_hash TEXT NOT NULL,
+    execution_plan_hash TEXT NOT NULL,
+    browser_plan_hash TEXT NOT NULL,
+    form_snapshot_hash TEXT NOT NULL,
+    freshness_evidence_hash TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN (
+        'AWAITING_FINAL_AUTHORIZATION','SUBMISSION_STARTED','SUBMITTED',
+        'CONFIRMED','SUBMISSION_UNKNOWN','INVALIDATED'
+    )),
+    checkpoint_sequence INTEGER NOT NULL CHECK(checkpoint_sequence >= 1),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_application_execution_runs_application
+ON application_execution_runs(application_id,created_at DESC);
+CREATE TABLE IF NOT EXISTS application_execution_checkpoints (
+    checkpoint_id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL REFERENCES application_execution_runs(run_id),
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    sequence INTEGER NOT NULL CHECK(sequence >= 1),
+    phase TEXT NOT NULL,
+    status TEXT NOT NULL,
+    evidence_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    UNIQUE(run_id,sequence)
+);
+CREATE INDEX IF NOT EXISTS idx_application_execution_checkpoints_run
+ON application_execution_checkpoints(run_id,sequence);
+CREATE TRIGGER IF NOT EXISTS execution_checkpoints_append_only_update
+BEFORE UPDATE ON application_execution_checkpoints
+BEGIN SELECT RAISE(ABORT, 'application execution checkpoints are append-only'); END;
+CREATE TRIGGER IF NOT EXISTS execution_checkpoints_append_only_delete
+BEFORE DELETE ON application_execution_checkpoints
+BEGIN SELECT RAISE(ABORT, 'application execution checkpoints are append-only'); END;
+INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','6');
+COMMIT;
+"""
+
+
 def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
@@ -300,6 +344,10 @@ class JobOpsDB:
             if version == 4:
                 connection.executescript(MIGRATION_005_SQL)
                 applied.append(5)
+                version = 5
+            if version == 5:
+                connection.executescript(MIGRATION_006_SQL)
+                applied.append(6)
         return applied
 
     def initialize(self) -> None:
