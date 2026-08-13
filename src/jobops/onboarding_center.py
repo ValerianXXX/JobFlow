@@ -59,6 +59,7 @@ MAX_DOCX_XML_BYTES = 64 * 1024 * 1024
 MAX_DOCX_XML_COMPRESSION_RATIO = 200
 MAX_JSON_NODES = 250_000
 MAX_JSON_DEPTH = 100
+MAX_ONBOARDING_PDF_PAGES = 500
 MAX_REVIEW_PACKET_BYTES = 2 * 1024 * 1024
 ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "ai_summary", "chatgpt_export"}
 ALLOWED_EXTENSIONS = {".docx", ".pdf", ".txt", ".md", ".json", ".zip"}
@@ -1249,7 +1250,12 @@ class OnboardingCenterService:
                 target = staging / "source.pdf"
                 target.write_bytes(data)
                 # Upload review needs spatial separation before block reconstruction.
-                text, _ = extract_pdf_text(target, layout=True)
+                text, _ = extract_pdf_text(
+                    target,
+                    layout=True,
+                    page_limit=MAX_ONBOARDING_PDF_PAGES,
+                    character_limit=MAX_DERIVED_TEXT_CHARS,
+                )
                 return text, 0, {}
         if extension == ".json":
             return _json_text(data), 0, {}

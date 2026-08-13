@@ -54,12 +54,61 @@ def extract_docx_text(path: Path) -> str:
     return "\n".join(parts)
 
 
-def extract_pdf_text(path: Path, *, layout: bool = False) -> tuple[str, int]:
+def _bounded_pdf_result(
+    text: str,
+    page_count: int,
+    *,
+    page_limit: int | None,
+    character_limit: int | None,
+) -> tuple[str, int]:
+    if page_limit is not None and (page_count < 1 or page_count > page_limit):
+        raise JobOpsError(
+            "PDF_PAGE_LIMIT_EXCEEDED",
+            "The PDF page count exceeds the bounded local extraction limit.",
+            page_count=page_count,
+            page_limit=page_limit,
+        )
+    if character_limit is not None and len(text) > character_limit:
+        raise JobOpsError(
+            "PDF_TEXT_LIMIT_EXCEEDED",
+            "The extracted PDF text exceeds the bounded complete-analysis limit.",
+            character_limit=character_limit,
+        )
+    return text, page_count
+
+
+def extract_pdf_text(
+    path: Path,
+    *,
+    layout: bool = False,
+    page_limit: int | None = None,
+    character_limit: int | None = None,
+) -> tuple[str, int]:
+    if page_limit is not None and page_limit < 1:
+        raise JobOpsError("PDF_PAGE_LIMIT_INVALID", "The PDF extraction page limit must be positive.")
+    if character_limit is not None and character_limit < 1:
+        raise JobOpsError("PDF_TEXT_LIMIT_INVALID", "The PDF extraction character limit must be positive.")
     try:
         import pdfplumber
         with pdfplumber.open(str(path)) as pdf:
-            text = "\n".join(page.extract_text(layout=layout) or "" for page in pdf.pages)
-            return text, len(pdf.pages)
+            page_count = len(pdf.pages)
+            if page_limit is not None and (page_count < 1 or page_count > page_limit):
+                return _bounded_pdf_result(
+                    "", page_count, page_limit=page_limit, character_limit=character_limit,
+                )
+            parts: list[str] = []
+            used = 0
+            for page in pdf.pages:
+                part = page.extract_text(layout=layout) or ""
+                used += len(part) + (1 if parts else 0)
+                if character_limit is not None and used > character_limit:
+                    raise JobOpsError(
+                        "PDF_TEXT_LIMIT_EXCEEDED",
+                        "The extracted PDF text exceeds the bounded complete-analysis limit.",
+                        character_limit=character_limit,
+                    )
+                parts.append(part)
+            return "\n".join(parts), page_count
     except ModuleNotFoundError:
         from .util import project_root
         project = project_root()
@@ -78,13 +127,27 @@ def extract_pdf_text(path: Path, *, layout: bool = False) -> tuple[str, int]:
             if completed.returncode == 0:
                 try:
                     result = json.loads(completed.stdout)
-                    return base64.b64decode(result["text_base64"]).decode("utf-8"), int(result["page_count"])
+                    return _bounded_pdf_result(
+                        base64.b64decode(result["text_base64"]).decode("utf-8"),
+                        int(result["page_count"]),
+                        page_limit=page_limit,
+                        character_limit=character_limit,
+                    )
+                except JobOpsError:
+                    raise
                 except Exception:
                     continue
         raise JobOpsError(
             "PDF_TEXT_EXTRACTION_FAILED",
             "PDF text extraction requires the bundled local PDF runtime; interactive Office conversion is never attempted.",
         )
+    except JobOpsError:
+        raise
+    except Exception as exc:
+        raise JobOpsError(
+            "PDF_TEXT_EXTRACTION_FAILED",
+            "The PDF could not be parsed by the bounded local extraction runtime.",
+        ) from exc
 
 
 def normalized_tokens(text: str) -> list[str]:

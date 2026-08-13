@@ -19,6 +19,7 @@ from _support import PROJECT, project_temp
 from jobops import UI_PROTOCOL_VERSION, __version__
 from jobops.ai_runtime import AIAnalysisEngine, LocalSubprocessAIEngine
 from jobops.db import JobOpsDB
+from jobops.document_qa import extract_pdf_text
 from jobops.errors import JobOpsError
 from jobops.instance_lock import local_instance_lock
 from jobops.onboarding_catalog import FIELD_BY_ID, FIELD_IDS, public_catalog
@@ -490,6 +491,21 @@ class OnboardingCenterTests(unittest.TestCase):
             with self.assertRaises(JobOpsError) as wide:
                 _json_text(b'["one","two","three"]')
         self.assertEqual(wide.exception.code, "ONBOARDING_JSON_COMPLEXITY_LIMIT")
+
+    def test_pdf_extraction_rejects_page_count_before_text_analysis(self) -> None:
+        from pypdf import PdfWriter
+
+        with project_temp() as root:
+            path = root / "synthetic-pages.pdf"
+            writer = PdfWriter()
+            writer.add_blank_page(width=612, height=792)
+            writer.add_blank_page(width=612, height=792)
+            with path.open("wb") as handle:
+                writer.write(handle)
+            with self.assertRaises(JobOpsError) as too_many_pages:
+                extract_pdf_text(path, page_limit=1, character_limit=1_000)
+        self.assertEqual(too_many_pages.exception.code, "PDF_PAGE_LIMIT_EXCEEDED")
+        self.assertEqual(too_many_pages.exception.details["page_count"], 2)
 
     def test_source_preview_prevents_unreviewed_line_claims(self) -> None:
         with project_temp() as root:
