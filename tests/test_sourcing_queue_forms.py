@@ -85,6 +85,10 @@ class SourcingQueueFormTests(unittest.TestCase):
             decision = database.pending_queue_decision()
             self.assertEqual(decision.pending_count, 2)
             self.assertFalse(decision.continue_intake)
+            with self.assertRaises(JobOpsError) as blocked:
+                database.set_pending_limit(1)
+            self.assertEqual(blocked.exception.code, "PENDING_LIMIT_BELOW_ACTIVE")
+            self.assertEqual(database.pending_queue_decision().pending_limit, 2)
 
     def test_all_sensitive_fields_and_submit_are_blocked(self) -> None:
         blocked = ["work_authorization", "signature", "disability", "salary"]

@@ -325,6 +325,16 @@ class JobOpsDB:
         from .queueing import validate_pending_limit
         validate_pending_limit(limit)
         with self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            awaiting = int(connection.execute("SELECT COUNT(*) FROM applications WHERE status='AWAITING_APPROVAL'").fetchone()[0])
+            reserved = int(connection.execute("SELECT COUNT(*) FROM queue_reservations WHERE status='RESERVED'").fetchone()[0])
+            active = awaiting + reserved
+            if limit < active:
+                raise JobOpsError(
+                    "PENDING_LIMIT_BELOW_ACTIVE",
+                    "The pending limit cannot be lower than the number of occupied approval slots.",
+                    occupied_slots=active,
+                )
             connection.execute("UPDATE queue_settings SET pending_approval_limit=?,updated_at=? WHERE singleton_id=1", (limit, iso_utc()))
 
     def pending_queue_decision(self):

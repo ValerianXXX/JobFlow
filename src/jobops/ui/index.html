@@ -53,6 +53,10 @@
         <article><span data-i18n="availableSlots">剩余容量</span><strong id="metricSlots">0</strong><small id="metricLimit"></small></article>
         <article><span data-i18n="deferredJobs">排队等待</span><strong id="metricDeferred">0</strong><small data-i18n="continuesUntilLimit">达到上限前继续处理其他岗位</small></article>
       </div>
+      <div class="queue-preferences">
+        <div><strong data-i18n="queuePreferences">待审批数量上限</strong><small data-i18n="queuePreferencesBody">JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。</small></div>
+        <label><span data-i18n="pendingLimitLabel">最多等待</span><input id="pendingLimitInput" type="number" min="1" max="1000" step="1" inputmode="numeric"><button id="saveQueueLimit" class="secondary compact" type="button" data-i18n="saveLimit">保存上限</button></label>
+      </div>
       <div class="pipeline-columns">
         <section class="pending-board">
           <div class="subheading"><div><h3 data-i18n="pendingReviewTitle">待审批申请</h3><small data-i18n="pendingReviewBody">只显示安全岗位摘要；私人答案和材料正文不会出现在此处。</small></div><span id="pendingDashboardCount">0</span></div>
@@ -68,6 +72,10 @@
           </dl>
         </aside>
       </div>
+      <section id="reviewPacketPanel" class="review-packet-panel hidden" aria-live="polite">
+        <header><div><p class="eyebrow" data-i18n="reviewPacketEyebrow">LOCAL REVIEW PACKET</p><h3 id="reviewPacketTitle"></h3><small id="reviewPacketMeta"></small></div><button id="closeReviewPacket" class="text-action" type="button" data-i18n="closePacket">关闭审阅包</button></header>
+        <div id="reviewPacketBody" class="review-packet-body"></div>
+      </section>
     </section>
 
     <section id="blockingNotice" class="blocking-notice hidden" role="alert" aria-live="assertive">
@@ -238,6 +246,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260813-jobflow-v3"></script>
+  <script src="app.js?v=20260813-jobflow-v4"></script>
 </body>
 </html>

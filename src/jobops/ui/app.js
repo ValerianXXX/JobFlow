@@ -6,6 +6,7 @@ const STRINGS = {
     heroTitle: "一次填写，连续投递", heroBody: "从简历与项目材料、AI 资料和你的直接回答建立完整资料。所有私人内容只在本机解密，不写入普通项目文件。",
     progressLabel: "问卷完成度", draftSaved: "草稿保存时直接加密", stepSources: "资料来源", stepQuestions: "完整问卷", stepReview: "资料与 Claim 审阅", stepFinish: "确认完成",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "本地投递控制台", pipelineBody: "统一查看资料准备度、待审批容量和安全边界。这里不会打开招聘网站或执行外部动作。", refreshDashboard: "刷新状态", dashboardRefreshed: "本地控制台已刷新", profileReadiness: "资料准备", awaitingApproval: "待你审批", approvalQueueOnly: "只生成本地审阅包", availableSlots: "剩余容量", deferredJobs: "排队等待", continuesUntilLimit: "达到上限前继续处理其他岗位", pendingReviewTitle: "待审批申请", pendingReviewBody: "只显示安全岗位摘要；私人答案和材料正文不会出现在此处。", safetyBoardTitle: "当前安全边界", realSites: "真实网站访问", externalActions: "真实外部动作", knowledgeWrites: "知识库写入", networkMode: "运行模式", pipelineReady: "已完成", pipelineNeedsSetup: "待完成", aiReadyShort: "AI 已连接", aiMissingShort: "AI 未连接", queueLimit: "上限 {limit}", pendingEmpty: "目前没有等待你审批的申请。离线处理完成的岗位会出现在这里。", packetHash: "审阅包 {hash}", awaitingApprovalStatus: "等待你的决定", safetyGuardOn: "外部动作锁定", offlineMode: "仅限本地离线", refreshingDashboard: "刷新本地控制台…",
+    queuePreferences: "待审批数量上限", queuePreferencesBody: "JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。", pendingLimitLabel: "最多等待", saveLimit: "保存上限", limitSaved: "待审批上限已保存", viewPacket: "查看审阅包", closePacket: "关闭审阅包", reviewPacketEyebrow: "LOCAL REVIEW PACKET", loadingReviewPacket: "解密并核验本地审阅包…", packetJob: "岗位", packetFit: "匹配分析", packetGaps: "硬性缺口", packetBullets: "简历表述与证据", packetQuestions: "申请问题", packetSensitive: "必须停下确认的敏感字段", packetUploads: "待上传材料", packetActions: "审批将绑定的动作", packetRoute: "官网与 ATS 路径", packetNone: "无", packetOverall: "总体匹配", packetStatus: "状态", packetCreated: "生成时间", packetClaims: "Claim", packetEvidence: "证据", pendingLimitInvalid: "请输入 1 到 1000 之间的整数。", pendingLimitBelowActive: "上限不能低于当前已占用的审批位置。请先处理一项申请。", reviewPacketUnavailable: "无法安全打开这个审阅包；内容未被显示，请刷新后重试。",
     sourceTitle: "把已有信息交给 JobFlow", sourceBody: "资料必须先通过 AI 的实体归并、分类和完整性检查，才会进入 Claim；规则拆分结果不再显示。",
     docsTitle: "简历与项目材料", docsBody: "DOCX、PDF、TXT、MD 或 JSON。适用于简历、案例、证书与补充材料。", materialType: "材料类型", resume: "简历", projectCase: "项目案例", supporting: "补充材料",
     aiTitle: "AI 资料", aiBody: "支持 ChatGPT 官方导出 ZIP 或你整理的 AI 总结。超过 200 MB 的官方导出请选择“雷霆大文件”；原始 ZIP 不会被保留。", aiType: "AI 资料类型", chatgptExport: "ChatGPT 官方导出（不超过 200 MB）", chatgptExportLarge: "雷霆大文件（超过 200 MB 请选择）", aiSummary: "AI 总结", chooseFile: "选择本地文件", uploadAndAnalyze: "选择并由 AI 分析",
@@ -29,6 +30,7 @@ const STRINGS = {
     heroTitle: "Set it up once. Apply continuously.", heroBody: "Build a complete profile from resumes and project materials, AI sources, and your direct answers. Private content is decrypted only on this computer and never written to ordinary project files.",
     progressLabel: "Questionnaire progress", draftSaved: "Drafts are encrypted when saved", stepSources: "Sources", stepQuestions: "Full questionnaire", stepReview: "Profile & Claim review", stepFinish: "Finish",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "Local application control center", pipelineBody: "See profile readiness, approval capacity, and safety boundaries in one place. This screen never opens recruiting sites or performs external actions.", refreshDashboard: "Refresh status", dashboardRefreshed: "Local control center refreshed", profileReadiness: "Profile readiness", awaitingApproval: "Awaiting you", approvalQueueOnly: "Local review packets only", availableSlots: "Available capacity", deferredJobs: "Waiting in line", continuesUntilLimit: "Other jobs continue until the limit", pendingReviewTitle: "Applications awaiting approval", pendingReviewBody: "Only safe job summaries appear here; private answers and document bodies never do.", safetyBoardTitle: "Active safety boundary", realSites: "Real-site visits", externalActions: "Real external actions", knowledgeWrites: "Knowledge writes", networkMode: "Run mode", pipelineReady: "Complete", pipelineNeedsSetup: "Needs setup", aiReadyShort: "AI connected", aiMissingShort: "AI not connected", queueLimit: "limit {limit}", pendingEmpty: "No application currently needs your approval. Offline-processed roles will appear here.", packetHash: "packet {hash}", awaitingApprovalStatus: "Awaiting your decision", safetyGuardOn: "External actions locked", offlineMode: "Local offline only", refreshingDashboard: "Refreshing local control center…",
+    queuePreferences: "Pending-approval limit", queuePreferencesBody: "JobFlow pauses new intake at this number and continues after you resolve one item.", pendingLimitLabel: "Maximum waiting", saveLimit: "Save limit", limitSaved: "Pending-approval limit saved", viewPacket: "View review packet", closePacket: "Close packet", reviewPacketEyebrow: "LOCAL REVIEW PACKET", loadingReviewPacket: "Decrypting and validating local review packet…", packetJob: "Job", packetFit: "Fit analysis", packetGaps: "Hard gaps", packetBullets: "Resume wording and evidence", packetQuestions: "Application questions", packetSensitive: "Sensitive fields requiring a stop", packetUploads: "Pending uploads", packetActions: "Actions bound by approval", packetRoute: "Official-site and ATS route", packetNone: "None", packetOverall: "Overall fit", packetStatus: "Status", packetCreated: "Created", packetClaims: "Claim", packetEvidence: "Evidence", pendingLimitInvalid: "Enter a whole number from 1 to 1000.", pendingLimitBelowActive: "The limit cannot be below the number of occupied approval slots. Resolve one application first.", reviewPacketUnavailable: "This review packet could not be opened safely. No content was shown; refresh and retry.",
     sourceTitle: "Bring your existing information into JobFlow", sourceBody: "A source must pass AI entity consolidation, classification, and completeness checks before anything can enter Claim review. Rule-split output is no longer shown.",
     docsTitle: "Resume & project materials", docsBody: "DOCX, PDF, TXT, MD, or JSON for resumes, cases, certificates, and supporting material.", materialType: "Material type", resume: "Resume", projectCase: "Project case", supporting: "Supporting material",
     aiTitle: "AI sources", aiBody: "Use an official ChatGPT export ZIP or a curated AI summary. For exports over 200 MB, pick ZIPzilla Express. The raw ZIP is never retained.", aiType: "AI source type", chatgptExport: "Official ChatGPT export (up to 200 MB)", chatgptExportLarge: "ZIPzilla Express (over 200 MB — unleash the beast)", aiSummary: "AI summary", chooseFile: "Choose local file", uploadAndAnalyze: "Choose & analyze with AI",
@@ -49,8 +51,8 @@ const STRINGS = {
   }
 };
 
-const UI_PROTOCOL_VERSION = 3;
-const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [] };
+const UI_PROTOCOL_VERSION = 4;
+const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [] };
 const sessionToken = location.pathname.split("/")[2];
 const base = `/session/${sessionToken}/`;
 let activitySequence = 0;
@@ -62,7 +64,7 @@ const ACTIVITY_ESTIMATES = {
   detectingAgent: 22, detectingLocalModel: 12, startingRevision: 8,
   committingSource: 7, includingAll: 7, discardingSource: 5,
   deletingSource: 7, transformingClaims: 8, reprocessing: 45,
-  reprocessingAll: 45, refreshingDashboard: 5
+  reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5
 };
 const STANDARD_CHATGPT_EXPORT_BYTES = 200 * 1024 * 1024;
 const MAX_LIGHTNING_EXPORT_BYTES = 8 * 1024 * 1024 * 1024;
@@ -89,6 +91,11 @@ function assertUiCompatibility(payload) {
 
 const LOCAL_ERROR_KEYS = {
   SERVICE_RESTART_REQUIRED:"serviceRestartRequired", LOCAL_RESPONSE_INVALID:"invalidLocalResponse",
+  PENDING_LIMIT_INVALID:"pendingLimitInvalid", PENDING_LIMIT_BELOW_ACTIVE:"pendingLimitBelowActive",
+  REVIEW_PACKET_NOT_FOUND:"reviewPacketUnavailable", REVIEW_PACKET_SIZE_INVALID:"reviewPacketUnavailable",
+  REVIEW_PACKET_INVALID:"reviewPacketUnavailable", REVIEW_PACKET_BINDING_INVALID:"reviewPacketUnavailable",
+  REVIEW_PACKET_HASH_INVALID:"reviewPacketUnavailable", SECURE_REFERENCE_MISSING:"reviewPacketUnavailable",
+  SECURE_REFERENCE_REVOKED:"reviewPacketUnavailable", SECURE_REFERENCE_HASH_MISMATCH:"reviewPacketUnavailable",
   PROFILE_REVIEW_REQUIRED:"profileReviewRequired", ONBOARDING_ANSWERS_INCOMPLETE:"answersIncomplete",
   ONBOARDING_HARD_CONDITIONS_UNRESOLVED:"hardConditionsUnresolved", SOURCE_PREVIEW_PENDING:"sourcePreviewPending",
   SOURCE_AI_REANALYSIS_REQUIRED:"sourceAiReanalysisRequired", CLAIM_REVIEW_INCOMPLETE:"claimReviewIncomplete",
@@ -274,6 +281,7 @@ function applyLocale() {
     document.querySelector("#blockingNoticeBody").textContent=localizedErrorMessage(state.lastBlockingError);
   }
   if(state.data)renderDashboard();
+  if(state.reviewPacket)renderReviewPacket();
   renderActivity();
 }
 
@@ -287,6 +295,7 @@ function renderDashboard(){
   document.querySelector("#metricSlots").textContent=String(queue.slots_available||0);
   document.querySelector("#metricLimit").textContent=t("queueLimit").replace("{limit}",queue.pending_limit||0);
   document.querySelector("#metricDeferred").textContent=String(queue.deferred_intake||0);
+  const limitInput=document.querySelector("#pendingLimitInput");if(document.activeElement!==limitInput)limitInput.value=String(queue.pending_limit||10);
   document.querySelector("#pendingDashboardCount").textContent=String(pending.length);
   const safe=safety.real_website_accesses===0&&safety.real_external_actions===0&&safety.knowledge_write_operations===0;
   const guard=document.querySelector("#pipelineGuard");guard.textContent=t("safetyGuardOn");guard.classList.toggle("unsafe",!safe);
@@ -296,7 +305,36 @@ function renderDashboard(){
   document.querySelector("#safetyMode").textContent=t("offlineMode");
   const list=document.querySelector("#pendingDashboardList");
   list.classList.toggle("empty",!pending.length);
-  list.innerHTML=pending.length?pending.map(item=>`<article class="pending-dashboard-item" data-application="${escapeHtml(item.application_id)}"><div><strong>${escapeHtml(item.title)} · ${escapeHtml(item.company)}</strong><small>${escapeHtml([item.location,item.application_id].filter(Boolean).join(" · "))}</small></div><div class="pending-dashboard-item-meta"><b>${escapeHtml(t("awaitingApprovalStatus"))}</b><small>${escapeHtml(t("packetHash").replace("{hash}",item.packet_hash_prefix||"—"))}</small></div></article>`).join(""):`<p>${escapeHtml(t("pendingEmpty"))}</p>`;
+  list.innerHTML=pending.length?pending.map(item=>`<article class="pending-dashboard-item" data-application="${escapeHtml(item.application_id)}"><div><strong>${escapeHtml(item.title)} · ${escapeHtml(item.company)}</strong><small>${escapeHtml([item.location,item.application_id].filter(Boolean).join(" · "))}</small></div><div class="pending-dashboard-item-meta"><b>${escapeHtml(t("awaitingApprovalStatus"))}</b><small>${escapeHtml(t("packetHash").replace("{hash}",item.packet_hash_prefix||"—"))}</small><button class="secondary compact open-review-packet" type="button" data-id="${escapeHtml(item.application_id)}">${escapeHtml(t("viewPacket"))}</button></div></article>`).join(""):`<p>${escapeHtml(t("pendingEmpty"))}</p>`;
+}
+
+function packetValue(value){
+  if(value===null||value===undefined||value==="")return t("packetNone");
+  if(Array.isArray(value))return value.map(packetValue).join(", ");
+  if(typeof value==="object")return String(value.label||value.name||value.id||value.status||JSON.stringify(value)).slice(0,500);
+  return String(value).slice(0,500);
+}
+function packetList(items,renderer){
+  return Array.isArray(items)&&items.length?`<ul>${items.map(item=>`<li>${renderer(item)}</li>`).join("")}</ul>`:`<p>${escapeHtml(t("packetNone"))}</p>`;
+}
+function renderReviewPacket(){
+  const result=state.reviewPacket;if(!result)return;
+  const packet=result.packet||{},job=packet.job||result.job_summary||{},fit=packet.fit||{},route=packet.source_route||{};
+  document.querySelector("#reviewPacketTitle").textContent=`${packetValue(job.title)} · ${packetValue(job.company)}`;
+  document.querySelector("#reviewPacketMeta").textContent=`${result.application_id} · ${t("packetStatus")}: ${result.status} · ${t("packetCreated")}: ${result.created_at}`;
+  const sections=[
+    ["packetJob",`<dl class="packet-kv"><dt>ID</dt><dd>${escapeHtml(packetValue(job.job_id))}</dd><dt>${escapeHtml(t("packetStatus"))}</dt><dd>${escapeHtml(result.application_status)}</dd><dt>URL</dt><dd>${escapeHtml(packetValue(job.official_url))}</dd></dl>`,false],
+    ["packetFit",`<dl class="packet-kv"><dt>${escapeHtml(t("packetOverall"))}</dt><dd>${escapeHtml(packetValue(fit.overall_score))}</dd><dt>${escapeHtml(t("packetStatus"))}</dt><dd>${escapeHtml(packetValue(fit.recommendation||fit.eligibility_status))}</dd></dl>${packetList(fit.explanation,item=>escapeHtml(packetValue(item)))}`,false],
+    ["packetGaps",packetList(packet.hard_gaps,item=>escapeHtml(packetValue(item))),false],
+    ["packetBullets",packetList(packet.resume_bullets,item=>`<strong>${escapeHtml(packetValue(item.text))}</strong><br><small>${escapeHtml(t("packetClaims"))}: ${escapeHtml(packetValue(item.claim_id))} · ${escapeHtml(t("packetEvidence"))}: ${escapeHtml(packetValue(item.evidence))}</small>`),true],
+    ["packetQuestions",packetList(packet.form_questions,item=>`${escapeHtml(packetValue(item.label||item.id))} · ${escapeHtml(packetValue(item.classification||item.action||item.status))}`),false],
+    ["packetSensitive",packetList(packet.sensitive_fields,item=>`${escapeHtml(packetValue(item.label||item.id))} · ${escapeHtml(packetValue(item.classification||item.action||item.status))}`),false],
+    ["packetUploads",packetList(packet.uploads,item=>`${escapeHtml(packetValue(item.filename))} · ${escapeHtml(packetValue(item.purpose))} · ${escapeHtml(packetValue(item.sha256).slice(0,15))}`),false],
+    ["packetActions",packetList(packet.external_actions,item=>escapeHtml(packetValue(item))),false],
+    ["packetRoute",`<dl class="packet-kv"><dt>Route</dt><dd>${escapeHtml(packetValue(route.route_kind))}</dd><dt>Guest</dt><dd>${escapeHtml(packetValue(route.guest_mode))}</dd><dt>Account</dt><dd>${escapeHtml(packetValue(route.account_action))}</dd></dl>`,false]
+  ];
+  document.querySelector("#reviewPacketBody").innerHTML=sections.map(([key,body,wide])=>`<section class="packet-section${wide?" wide":""}"><h4>${escapeHtml(t(key))}</h4>${body}</section>`).join("");
+  const panel=document.querySelector("#reviewPacketPanel");panel.classList.remove("hidden");
 }
 
 function navigate(target) {
@@ -652,6 +690,34 @@ function previewSelections(sourceId, forceSelected=null){
 document.addEventListener("click", async event => {
   const dashboardRefresh=event.target.closest("#refreshDashboard");
   if(dashboardRefresh){try{await withActivity("refreshingDashboard",()=>refreshLatest());showToast(t("dashboardRefreshed"));}catch(error){handleUiError(error);}return;}
+  const saveQueueLimit=event.target.closest("#saveQueueLimit");
+  if(saveQueueLimit){
+    const input=document.querySelector("#pendingLimitInput"),limit=Number(input.value);
+    if(!Number.isInteger(limit)||limit<1||limit>1000){showToast(t("pendingLimitInvalid"),true);input.focus();return;}
+    try{
+      await withActivity("refreshingDashboard",async()=>{
+        await api("queue-limit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({limit})});
+        await refreshLatest();
+      });
+      showToast(t("limitSaved"));
+    }catch(error){handleUiError(error);}
+    return;
+  }
+  const openPacket=event.target.closest(".open-review-packet");
+  if(openPacket){
+    try{
+      let result=null;
+      await withActivity("loadingReviewPacket",async()=>{
+        result=await api("review-packet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({application_id:openPacket.dataset.id})});
+      });
+      state.reviewPacket=result;
+      renderReviewPacket();
+      document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(error){state.reviewPacket=null;document.querySelector("#reviewPacketPanel").classList.add("hidden");handleUiError(error);}
+    return;
+  }
+  const closePacket=event.target.closest("#closeReviewPacket");
+  if(closePacket){state.reviewPacket=null;document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#reviewPacketPanel").classList.add("hidden");return;}
   const aiToggle=event.target.closest("#aiConnectButton");
   if(aiToggle){
     const panel=document.querySelector("#aiConnectionPanel"), opening=panel.classList.contains("hidden");

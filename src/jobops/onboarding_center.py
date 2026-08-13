@@ -47,6 +47,7 @@ MAX_LARGE_CONVERSATIONS_BYTES = 8 * 1024 * 1024 * 1024
 MAX_CHATGPT_MEMBER_COMPRESSION_RATIO = 1_000
 MAX_CHATGPT_CONVERSATION_CHARS = 64 * 1024 * 1024
 MAX_CHATGPT_FRAGMENT_CANDIDATES = 600
+MAX_REVIEW_PACKET_BYTES = 2 * 1024 * 1024
 ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "ai_summary", "chatgpt_export"}
 ALLOWED_EXTENSIONS = {".docx", ".pdf", ".txt", ".md", ".json", ".zip"}
 AI_SOURCE_TYPES = {"ai_summary", "chatgpt_export"}
@@ -780,6 +781,65 @@ class OnboardingCenterService:
                 "knowledge_write_operations": 0,
             },
             "generated_at": iso_utc(),
+        }
+
+    @_synchronized
+    def set_queue_limit(self, payload: dict[str, Any]) -> dict[str, Any]:
+        limit = payload.get("limit")
+        if isinstance(limit, bool) or not isinstance(limit, int):
+            raise JobOpsError("PENDING_LIMIT_INVALID", "The pending approval limit must be a whole number.")
+        self.database.set_pending_limit(limit)
+        return {
+            "status": "QUEUE_LIMIT_UPDATED", "queue": QueueManager(self.database).status(),
+            "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def review_packet(self, application_id: str) -> dict[str, Any]:
+        application_id = str(application_id).strip()
+        if not re.fullmatch(r"[A-Za-z0-9._:-]{1,200}", application_id):
+            raise JobOpsError("APPLICATION_ID_INVALID", "The selected application identifier is invalid.")
+        with self.database.connect() as connection:
+            row = connection.execute(
+                """SELECT r.packet_id,r.content_hash,r.relative_path,r.status,r.created_at,
+                          a.status AS application_status,j.company,j.title,j.location
+                   FROM review_packets r
+                   JOIN applications a ON a.application_id=r.application_id
+                   JOIN jobs j ON j.job_id=a.job_id
+                   WHERE r.application_id=?
+                   ORDER BY r.created_at DESC,r.rowid DESC LIMIT 1""",
+                (application_id,),
+            ).fetchone()
+            stopped_fields = int(connection.execute(
+                "SELECT COUNT(*) FROM application_fields WHERE application_id=? AND status='STOP_REQUIRED'",
+                (application_id,),
+            ).fetchone()[0])
+        if row is None:
+            raise JobOpsError("REVIEW_PACKET_NOT_FOUND", "The selected review packet does not exist.")
+        raw = self.onboarding.read_bytes(str(row["relative_path"]))
+        if len(raw) > MAX_REVIEW_PACKET_BYTES:
+            raise JobOpsError("REVIEW_PACKET_SIZE_INVALID", "The encrypted review packet exceeds the local display limit.")
+        try:
+            packet = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise JobOpsError("REVIEW_PACKET_INVALID", "The encrypted review packet is not valid JSON.") from exc
+        if not isinstance(packet, dict):
+            raise JobOpsError("REVIEW_PACKET_INVALID", "The encrypted review packet must be an object.")
+        validate_named("review-packet", packet, self.schemas)
+        if packet.get("application_id") != application_id or packet.get("packet_id") != row["packet_id"]:
+            raise JobOpsError("REVIEW_PACKET_BINDING_INVALID", "The review packet is not bound to the selected application.")
+        if packet.get("content_hash") != row["content_hash"]:
+            raise JobOpsError("REVIEW_PACKET_HASH_INVALID", "The review packet hash does not match the active queue record.")
+        return {
+            "status": str(row["status"]), "application_status": str(row["application_status"]),
+            "application_id": application_id, "packet_id": str(row["packet_id"]),
+            "created_at": str(row["created_at"]), "stopped_fields": stopped_fields,
+            "job_summary": {
+                "company": str(row["company"]), "title": str(row["title"]),
+                "location": str(row["location"]) if row["location"] is not None else None,
+            },
+            "packet": packet, "private_transport": "LOCAL_SESSION_ONLY",
+            "private_values_persisted_to_project": 0, "real_external_actions": 0,
         }
 
     @_synchronized

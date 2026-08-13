@@ -77,6 +77,11 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .pipeline-metrics article { min-width: 0; padding: 17px; border: 1px solid var(--line); background: #fff; }
 .pipeline-metrics span,.pipeline-metrics small { display: block; color: var(--muted); font-size: 10px; }
 .pipeline-metrics strong { display: block; margin: 5px 0 2px; color: var(--ink); font-size: 24px; }
+.queue-preferences { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 0 0 18px; padding: 13px 15px; border: 1px solid var(--line); background: #fff; }
+.queue-preferences strong,.queue-preferences small { display: block; }
+.queue-preferences small { margin-top: 2px; color: var(--muted); font-size: 10px; }
+.queue-preferences label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+.queue-preferences input { width: 86px; min-height: 36px; padding: 6px 9px; border: 1px solid var(--line); }
 .pipeline-columns { display: grid; grid-template-columns: minmax(0,1.8fr) minmax(230px,.7fr); gap: 12px; }
 .pending-board,.safety-board { padding: 18px; border: 1px solid var(--line); background: #fff; }
 .pending-board .subheading { margin-bottom: 8px; }
@@ -87,11 +92,25 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .pending-dashboard-item small { margin-top: 2px; color: var(--muted); font-size: 10px; }
 .pending-dashboard-item-meta { text-align: right; }
 .pending-dashboard-item-meta b { display: block; color: var(--green); font-size: 10px; }
+.pending-dashboard-item-meta button { margin-top: 6px; }
 .safety-board h3 { margin: 0 0 12px; font-size: 14px; }
 .safety-board dl { margin: 0; }
 .safety-board dl div { display: flex; justify-content: space-between; gap: 15px; padding: 9px 0; border-top: 1px solid #edf0f1; font-size: 11px; }
 .safety-board dt { color: var(--muted); }
 .safety-board dd { margin: 0; color: var(--green-dark); font-weight: 800; text-align: right; }
+.review-packet-panel { margin-top: 14px; padding: 20px; border: 1px solid var(--green); background: #fff; }
+.review-packet-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.review-packet-panel h3 { margin: 0; font: 600 24px/1.2 Georgia, "Songti SC", serif; }
+.review-packet-panel header small { color: var(--muted); font-size: 10px; }
+.review-packet-body { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+.packet-section { min-width: 0; padding: 15px; border: 1px solid var(--line); background: #fafbf9; }
+.packet-section.wide { grid-column: 1 / -1; }
+.packet-section h4 { margin: 0 0 9px; font-size: 12px; }
+.packet-section ul { margin: 0; padding-left: 18px; }
+.packet-section li { margin: 5px 0; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.packet-kv { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; margin: 0; font-size: 11px; }
+.packet-kv dt { color: var(--muted); }
+.packet-kv dd { margin: 0; overflow-wrap: anywhere; }
 .blocking-notice { display: flex; align-items: flex-start; gap: 13px; margin: -20px 0 34px; padding: 16px 18px; border: 1px solid #b65d51; background: #fff1ee; box-shadow: var(--shadow); scroll-margin-top: 94px; }
 .blocking-notice-mark { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; color: #fff; background: #8d3e34; font-weight: 800; }
 .blocking-notice strong { display: block; color: #742f27; }
@@ -338,6 +357,10 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .pipeline-heading-actions { width: 100%; justify-content: space-between; }
   .pipeline-metrics { grid-template-columns: 1fr 1fr; }
   .pipeline-columns { grid-template-columns: 1fr; }
+  .queue-preferences,.review-packet-panel > header { align-items: stretch; flex-direction: column; }
+  .queue-preferences label { flex-wrap: wrap; }
+  .review-packet-body { grid-template-columns: 1fr; }
+  .packet-section.wide { grid-column: auto; }
   .ai-choice { min-height: 160px; }
   .source-grid { grid-template-columns: 1fr; }
   .source-card { min-height: 0; }

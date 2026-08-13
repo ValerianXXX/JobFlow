@@ -696,7 +696,12 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('CONFLICT_REVIEW_INCOMPLETE:"conflictReviewIncomplete"', app)
         self.assertIn('id="blockingNotice"', html)
         self.assertIn('id="pipelineDashboard"', html)
+        self.assertIn('id="saveQueueLimit"', html)
+        self.assertIn('id="reviewPacketPanel"', html)
         self.assertIn("function renderDashboard()", app)
+        self.assertIn("function renderReviewPacket()", app)
+        self.assertIn('api("queue-limit"', app)
+        self.assertIn('api("review-packet"', app)
         self.assertNotIn("showToast(e.message", app)
 
 

@@ -5,6 +5,7 @@ import unittest
 from _support import PROJECT, project_temp
 from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
+from jobops.onboarding_center import OnboardingCenterService
 from jobops.orchestrator import JobOpsOrchestrator
 from jobops.private_onboarding import PrivateOnboarding
 from jobops.secure_store import WindowsDPAPIStore
@@ -48,6 +49,36 @@ class OrchestratorForwardTests(unittest.TestCase):
             packet = onboarding.read_bytes(packet_path)
             self.assertIn(b'"status":"AWAITING_APPROVAL"', packet)
             self.assertEqual(onboarding.purge_synthetic()["synthetic_refs_deleted"], counts["private_refs"])
+
+    def test_local_review_packet_is_decrypted_validated_and_bound_to_queue_record(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, orchestrator = self.build(temp)
+            refs = orchestrator.secure_onboard_synthetic()
+            result = self.run_chain(orchestrator, refs)
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+
+            displayed = service.review_packet(result["application_id"])
+
+            self.assertEqual(displayed["application_id"], result["application_id"])
+            self.assertEqual(displayed["packet_id"], result["review_packet_id"])
+            self.assertEqual(displayed["packet"]["status"], "AWAITING_APPROVAL")
+            self.assertEqual(displayed["private_transport"], "LOCAL_SESSION_ONLY")
+            self.assertEqual(displayed["private_values_persisted_to_project"], 0)
+            self.assertEqual(displayed["real_external_actions"], 0)
+
+            with database.connect() as connection:
+                stored_hash = connection.execute(
+                    "SELECT content_hash FROM review_packets WHERE application_id=?",
+                    (result["application_id"],),
+                ).fetchone()[0]
+                self.assertEqual(displayed["packet"]["content_hash"], stored_hash)
+                connection.execute(
+                    "UPDATE review_packets SET content_hash=? WHERE application_id=?",
+                    ("sha256:" + "0" * 64, result["application_id"]),
+                )
+            with self.assertRaises(JobOpsError) as caught:
+                service.review_packet(result["application_id"])
+            self.assertEqual(caught.exception.code, "REVIEW_PACKET_HASH_INVALID")
 
     def test_crash_before_admission_restarts_without_duplicate_job_packet_or_material(self) -> None:
         with project_temp() as temp:

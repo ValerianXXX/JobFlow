@@ -209,6 +209,10 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.accept_suggestion(str(self._json_body().get("suggestion_id", "")))
             elif route == "review":
                 result = self.server.service.save_review(self._json_body())
+            elif route == "queue-limit":
+                result = self.server.service.set_queue_limit(self._json_body())
+            elif route == "review-packet":
+                result = self.server.service.review_packet(str(self._json_body().get("application_id", "")))
             elif route == "claim-transform":
                 result = self.server.service.transform_claims(self._json_body())
             elif route == "start-revision":
