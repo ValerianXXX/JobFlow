@@ -8,9 +8,10 @@ from pathlib import PurePosixPath
 from .approvals import ApprovalContext
 from .db import JobOpsDB
 from .errors import JobOpsError
+from .runtime_schema import validate_named
 from .security import assert_no_plaintext_secret, validate_secure_reference
 from .sourcing import _canonical_url, url_has_sensitive_query
-from .util import iso_utc, stable_id
+from .util import iso_utc, project_root, stable_id
 
 
 def _validate_relative_display(value: object, code: str) -> str:
@@ -224,11 +225,28 @@ class QueueManager:
         validate_secure_reference(secure_profile_ref)
         if review_packet is not None:
             validate_secure_reference(str(review_packet.get("secure_ref", "")))
+            if review_packet.get("status") != "AWAITING_APPROVAL":
+                raise JobOpsError("REVIEW_PACKET_STATUS_INVALID", "A queue admission accepts only an awaiting-approval review packet.")
         for material in material_records or []:
             validate_secure_reference(str(material.get("path", "")))
         for field in field_records or []:
             if field.get("secure_ref") is not None:
                 validate_secure_reference(str(field["secure_ref"]))
+            validate_named("application-field", field, project_root() / "schemas")
+        if analysis_record is not None:
+            validate_named("jd-analysis", analysis_record.get("analysis"), project_root() / "schemas")
+        for finding in research_records or []:
+            validate_named("research-finding", finding, project_root() / "schemas")
+        if source_route is not None:
+            if (
+                source_route.get("route_hash") != binding.source_route_hash
+                or source_route.get("current_url") != binding.canonical_url
+                or source_route.get("ats_tenant") != binding.ats_tenant
+                or source_route.get("ats_board") != binding.ats_board
+                or source_route.get("ats_job_identity") != binding.ats_job_identity
+            ):
+                raise JobOpsError("SOURCE_ROUTE_CONTEXT_MISMATCH", "The source route must exactly match the current approval context.")
+            validate_named("source-route", source_route, project_root() / "schemas")
         with self.database.connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             reservation = connection.execute("SELECT * FROM queue_reservations WHERE reservation_id=?", (reservation_id,)).fetchone()

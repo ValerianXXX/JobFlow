@@ -83,6 +83,8 @@ class AtomicQueueTests(unittest.TestCase):
                 ({"snapshot_relative_path": "C:\\Users\\private\\jd.txt"}, "JOB_SNAPSHOT_PATH_INVALID"),
                 ({"snapshot_relative_path": "workspace/jobs/safe.txt", "job_details": {"official_url": "https://example.test/job?session_token=private"}}, "JOB_SOURCE_URL_SENSITIVE_QUERY"),
                 ({"snapshot_relative_path": "workspace/jobs/safe.txt", "material_records": [{"path": "C:\\private.docx"}]}, "INVALID_SECURE_REFERENCE"),
+                ({"snapshot_relative_path": "workspace/jobs/safe.txt", "review_packet": {"content_hash": HASH_A, "secure_ref": "secure-ref:SYNTHETIC_PACKET_0098", "status": "APPROVED"}}, "REVIEW_PACKET_STATUS_INVALID"),
+                ({"snapshot_relative_path": "workspace/jobs/safe.txt", "source_route": {"route_hash": HASH_A}}, "SOURCE_ROUTE_CONTEXT_MISMATCH"),
             )
             for kwargs, code in attempts:
                 with self.subTest(code=code), self.assertRaises(JobOpsError) as blocked:
