@@ -17,6 +17,7 @@ from .util import canonical_json, project_root, sha256_bytes, stable_id
 MAX_FORM_SNAPSHOT_BYTES = 16 * 1024 * 1024
 MAX_FORM_CONTROLS = 500
 MAX_OPTIONS_PER_CONTROL = 200
+MAX_FORM_HTML_EVENTS = 200_000
 MAX_FORM_SEQUENCE_PAGES = 20
 MAX_FORM_SEQUENCE_BYTES = 64 * 1024 * 1024
 CONTROL_TYPES = {
@@ -111,6 +112,16 @@ class _FormHTMLParser(HTMLParser):
         self._option_selected = False
         self._suppressed_depth = 0
         self._security_material: list[str] = []
+        self._html_events = 0
+
+    def _count_event(self) -> None:
+        self._html_events += 1
+        if self._html_events > MAX_FORM_HTML_EVENTS:
+            raise JobOpsError(
+                "ATS_FORM_COMPLEXITY_LIMIT",
+                "The local form snapshot exceeds the bounded HTML parsing event limit.",
+                maximum=MAX_FORM_HTML_EVENTS,
+            )
 
     @property
     def security_material(self) -> str:
@@ -155,6 +166,7 @@ class _FormHTMLParser(HTMLParser):
         return index
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self._count_event()
         lowered = tag.casefold()
         values = {key.casefold(): (value or "") for key, value in attrs}
         if lowered in {"script", "style", "noscript", "template"}:
@@ -192,6 +204,7 @@ class _FormHTMLParser(HTMLParser):
         self.handle_endtag(tag)
 
     def handle_endtag(self, tag: str) -> None:
+        self._count_event()
         lowered = tag.casefold()
         if lowered in {"script", "style", "noscript", "template"}:
             if self._suppressed_depth:
@@ -227,6 +240,7 @@ class _FormHTMLParser(HTMLParser):
             self._option_selected = False
 
     def handle_data(self, data: str) -> None:
+        self._count_event()
         if self._suppressed_depth:
             return
         compact = _compact(data)

@@ -77,6 +77,13 @@ class ATSBrowserSafetyTests(unittest.TestCase):
         self.assertEqual(report["network_actions"], 0)
         self.assertEqual(report["real_external_actions"], 0)
 
+    def test_form_parser_rejects_tag_floods_at_the_event_boundary(self) -> None:
+        snapshot = ("<html><body>" + ("<div></div>" * 20) + "</body></html>").encode("utf-8")
+        with patch("jobops.ats_browser.MAX_FORM_HTML_EVENTS", 20):
+            with self.assertRaises(JobOpsError) as blocked:
+                analyze_local_ats_form(snapshot, route=verified_route(), blocked_categories=[])
+        self.assertEqual(blocked.exception.code, "ATS_FORM_COMPLEXITY_LIMIT")
+
     def test_action_plan_keeps_plaintext_out_and_never_plans_protected_actions(self) -> None:
         report = analyze_local_ats_form(self.snapshot, route=verified_route(), blocked_categories=[])
         private_control = next(item for item in report["fields"] if item["classification"] == "private_fixed")
