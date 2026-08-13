@@ -5,6 +5,7 @@ import subprocess
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
+from pathlib import PurePosixPath
 from typing import Any
 from xml.etree import ElementTree as ET
 
@@ -22,6 +23,10 @@ W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 CORE_NS = "http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
 DC_NS = "http://purl.org/dc/elements/1.1/"
 CP_NS = "http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
+MAX_DOCX_PACKAGE_MEMBERS = 10_000
+MAX_DOCX_PACKAGE_UNCOMPRESSED_BYTES = 256 * 1024 * 1024
+MAX_DOCX_PACKAGE_PART_BYTES = 64 * 1024 * 1024
+MAX_DOCX_PACKAGE_COMPRESSION_RATIO = 200
 
 
 @dataclass(frozen=True)
@@ -45,10 +50,48 @@ class TemplateFingerprint:
 
 
 def _zip_inventory(path: Path) -> tuple[tuple[str, int, str], ...]:
-    with zipfile.ZipFile(path) as archive:
-        return tuple(
-            sorted((info.filename, info.file_size, sha256_bytes(archive.read(info.filename))) for info in archive.infolist())
-        )
+    try:
+        with zipfile.ZipFile(path) as archive:
+            members = archive.infolist()
+            if not members or len(members) > MAX_DOCX_PACKAGE_MEMBERS:
+                raise JobOpsError("DOCX_PACKAGE_UNSAFE", "The DOCX package contains an invalid number of parts.")
+            names: set[str] = set()
+            total = 0
+            document_parts = 0
+            for info in members:
+                normalized = PurePosixPath(info.filename.replace("\\", "/"))
+                folded = normalized.as_posix().casefold()
+                if (
+                    normalized.is_absolute()
+                    or ".." in normalized.parts
+                    or "\\" in info.filename
+                    or not normalized.parts
+                    or folded in names
+                ):
+                    raise JobOpsError("DOCX_PACKAGE_UNSAFE", "The DOCX package contains an unsafe or duplicate part name.")
+                names.add(folded)
+                if info.is_dir():
+                    continue
+                if info.flag_bits & 0x1:
+                    raise JobOpsError("DOCX_PACKAGE_ENCRYPTED", "Encrypted DOCX package parts are not supported.")
+                if info.file_size < 0 or info.file_size > MAX_DOCX_PACKAGE_PART_BYTES:
+                    raise JobOpsError("DOCX_PACKAGE_UNSAFE", "A DOCX package part exceeds the bounded size limit.")
+                total += int(info.file_size)
+                if total > MAX_DOCX_PACKAGE_UNCOMPRESSED_BYTES:
+                    raise JobOpsError("DOCX_PACKAGE_UNSAFE", "The DOCX package exceeds the bounded expanded-size limit.")
+                if int(info.file_size) / max(1, int(info.compress_size)) > MAX_DOCX_PACKAGE_COMPRESSION_RATIO:
+                    raise JobOpsError("DOCX_PACKAGE_COMPRESSION_UNSAFE", "A DOCX package part has an unsafe compression ratio.")
+                if info.filename == "word/document.xml":
+                    document_parts += 1
+            if document_parts != 1 or "[content_types].xml" not in names:
+                raise JobOpsError("DOCX_PACKAGE_INVALID", "The DOCX package is missing its unique main document structure.")
+            return tuple(
+                sorted((info.filename, info.file_size, sha256_bytes(archive.read(info))) for info in members if not info.is_dir())
+            )
+    except JobOpsError:
+        raise
+    except (OSError, RuntimeError, zipfile.BadZipFile, zipfile.LargeZipFile) as exc:
+        raise JobOpsError("DOCX_PACKAGE_INVALID", "The DOCX package could not be read safely.") from exc
 
 
 def template_fingerprint(path: Path) -> TemplateFingerprint:
@@ -56,7 +99,11 @@ def template_fingerprint(path: Path) -> TemplateFingerprint:
     from docx import Document
     from docx.oxml.ns import qn
 
-    document = Document(str(path))
+    package_inventory = _zip_inventory(path)
+    try:
+        document = Document(str(path))
+    except Exception as exc:
+        raise JobOpsError("DOCX_PACKAGE_INVALID", "The validated DOCX package could not be opened as an editable document.") from exc
     geometry = tuple(
         (
             int(section.page_width or 0), int(section.page_height or 0),
@@ -83,7 +130,7 @@ def template_fingerprint(path: Path) -> TemplateFingerprint:
     return TemplateFingerprint(
         master_sha256=sha256_file(path), page_geometry=geometry, style_ids=styles,
         table_grids=tuple(grids), headers=headers, footers=footers,
-        hyperlinks=tuple(sorted(hyperlinks)), package_parts=_zip_inventory(path),
+        hyperlinks=tuple(sorted(hyperlinks)), package_parts=package_inventory,
     )
 
 

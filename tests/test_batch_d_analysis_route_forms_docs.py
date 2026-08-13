@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import shutil
 import unittest
+import zipfile
 from datetime import datetime, timezone
 
 from _support import PROJECT, project_temp
@@ -168,6 +170,16 @@ class VisualRecordTests(unittest.TestCase):
         with self.assertRaises(JobOpsError) as caught:
             validate_visual_record({"visual_inspection": "PASS"}, [])
         self.assertEqual(caught.exception.code, "VISUAL_RECORD_INVALID")
+
+    def test_template_fingerprint_rejects_unsafe_compressed_parts_before_word_parsing(self) -> None:
+        with project_temp() as temp:
+            unsafe = temp / "unsafe-master.docx"
+            shutil.copy2(PROJECT / "tests" / "fixtures" / "complex-master-resume.docx", unsafe)
+            with zipfile.ZipFile(unsafe, "a", compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("word/media/compressed.bin", b"0" * (2 * 1024 * 1024))
+            with self.assertRaises(JobOpsError) as blocked:
+                template_fingerprint(unsafe)
+            self.assertEqual(blocked.exception.code, "DOCX_PACKAGE_COMPRESSION_UNSAFE")
 
     def test_complex_master_is_copied_and_preserves_structure_links_and_tables(self) -> None:
         master = PROJECT / "tests" / "fixtures" / "complex-master-resume.docx"
