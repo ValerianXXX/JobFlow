@@ -10,7 +10,7 @@ from typing import Any
 from . import __version__
 from .audit import audit_environment
 from .adapters import audit_real_external_actions
-from .ats_browser import analyze_local_ats_form, analyze_local_ats_form_sequence
+from .ats_browser import MAX_FORM_SEQUENCE_BYTES, MAX_FORM_SNAPSHOT_BYTES, analyze_local_ats_form, analyze_local_ats_form_sequence
 from .ats_capabilities import offline_ats_capabilities
 from .approvals import ApprovalContext, issue_approval
 from .claim_registry import ClaimRegistry
@@ -26,7 +26,7 @@ from .locator import locate_knowledge_root
 from .orchestrator import JobOpsOrchestrator, _read_jd
 from .onboarding_center import OnboardingCenterService
 from .onboarding_server import run_server
-from .official_discovery import discover_official_jobs
+from .official_discovery import MAX_SNAPSHOT_BYTES, discover_official_jobs
 from .private_onboarding import PrivateOnboarding
 from .queue_manager import QueueManager
 from .recovery import RecoveryManager
@@ -44,6 +44,17 @@ def _display_path(path: Path, project: Path) -> str:
         return "$PROJECT_ROOT/" + absolute.relative_to(project).as_posix()
     except ValueError:
         return "$EXTERNAL_PATH/" + absolute.name
+
+
+def _read_bounded_local_bytes(path: Path, maximum_bytes: int, error_code: str) -> bytes:
+    try:
+        with path.open("rb") as handle:
+            value = handle.read(maximum_bytes + 1)
+    except OSError as exc:
+        raise JobOpsError(error_code, "The selected local snapshot could not be read.") from exc
+    if len(value) > maximum_bytes:
+        raise JobOpsError(error_code, "The selected local snapshot exceeds its safe input limit.", maximum_bytes=maximum_bytes)
+    return value
 
 
 def _sanitize(value: Any, project: Path) -> Any:
@@ -302,7 +313,7 @@ def main(argv: list[str] | None = None) -> int:
                 raise JobOpsError("OFFICIAL_SNAPSHOT_FORMAT_UNSUPPORTED", "Select a project-local HTML or saved-page JSON snapshot.")
             policy = load_json(project / "config" / "policy.json")
             result = discover_official_jobs(
-                input_path.read_bytes(), official_entry_url=args.official_url, company_domain=args.company_domain,
+                _read_bounded_local_bytes(input_path, MAX_SNAPSHOT_BYTES, "OFFICIAL_SNAPSHOT_SIZE_INVALID"), official_entry_url=args.official_url, company_domain=args.company_domain,
                 approved_ats_hosts=policy["approved_ats_hosts"], source_format=source_format,
             )
             validate_named("official-discovery", result, project / "schemas")
@@ -322,7 +333,7 @@ def main(argv: list[str] | None = None) -> int:
                 jd_snapshot_hash=request.get("jd_snapshot_hash"), approved_intermediary_hosts=request.get("approved_intermediary_hosts"),
             ).as_dict()
             result = analyze_local_ats_form(
-                input_path.read_bytes(), route=route, blocked_categories=policy["blocked_form_categories"]
+                _read_bounded_local_bytes(input_path, MAX_FORM_SNAPSHOT_BYTES, "ATS_FORM_SNAPSHOT_SIZE_INVALID"), route=route, blocked_categories=policy["blocked_form_categories"]
             )
             emit({**result, "next_safe_action": "review-form-bindings-no-real-browser"}, project)
         elif args.command == "analyze-ats-sequence":
@@ -348,8 +359,17 @@ def main(argv: list[str] | None = None) -> int:
             ).as_dict()
             if manifest["provider"] != route["provider"]:
                 raise JobOpsError("ATS_SEQUENCE_PROVIDER_MISMATCH", "The sequence manifest provider does not match the verified route.")
+            snapshots: list[bytes] = []
+            total_snapshot_bytes = 0
+            for path in page_paths:
+                remaining = MAX_FORM_SEQUENCE_BYTES - total_snapshot_bytes
+                limit = min(MAX_FORM_SNAPSHOT_BYTES, remaining)
+                code = "ATS_FORM_SNAPSHOT_SIZE_INVALID" if limit == MAX_FORM_SNAPSHOT_BYTES else "ATS_FORM_SEQUENCE_BYTES_EXCEEDED"
+                snapshot = _read_bounded_local_bytes(path, limit, code)
+                snapshots.append(snapshot)
+                total_snapshot_bytes += len(snapshot)
             result = analyze_local_ats_form_sequence(
-                [path.read_bytes() for path in page_paths], route=route,
+                snapshots, route=route,
                 blocked_categories=policy["blocked_form_categories"],
             )
             emit({**result, "next_safe_action": "review-sequence-no-navigation-performed"}, project)

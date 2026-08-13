@@ -3,6 +3,7 @@ import unittest
 from unittest import mock
 
 from _support import project_temp
+from jobops.cli import _read_bounded_local_bytes
 from jobops.errors import JobOpsError
 from jobops.orchestrator import _read_jd
 
@@ -48,6 +49,10 @@ class JDInputFormatsTests(unittest.TestCase):
             with mock.patch("jobops.orchestrator.MAX_JD_HTML_EVENTS", 2), self.assertRaises(JobOpsError) as caught:
                 _read_jd(many_events, "html")
             self.assertEqual(caught.exception.code, "JD_HTML_EVENT_LIMIT_EXCEEDED")
+
+            with self.assertRaises(JobOpsError) as caught:
+                _read_bounded_local_bytes(oversized, 4, "SYNTHETIC_INPUT_TOO_LARGE")
+            self.assertEqual(caught.exception.code, "SYNTHETIC_INPUT_TOO_LARGE")
 
 
 if __name__ == "__main__":
