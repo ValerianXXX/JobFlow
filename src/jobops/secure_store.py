@@ -9,6 +9,7 @@ from pathlib import Path
 
 from .errors import JobOpsError
 from .security import validate_secure_reference
+from .util import has_reparse_component, sha256_file
 
 
 class WindowsDPAPIStore:
@@ -73,6 +74,21 @@ class WindowsDPAPIStore:
             return base64.b64decode(encoded, validate=True)
         except Exception as exc:
             raise JobOpsError("SECURE_STORE_FAILED", "DPAPI output could not be decoded.", operation="Get") from exc
+
+    def ciphertext_sha256(self, reference: str) -> str:
+        path = self.cipher_path(reference)
+        if has_reparse_component(path, self.private_root) or not path.is_file():
+            raise JobOpsError(
+                "SECURE_CIPHERTEXT_UNAVAILABLE",
+                "The registered private ciphertext is missing or no longer a regular local file.",
+            )
+        try:
+            return sha256_file(path)
+        except OSError as exc:
+            raise JobOpsError(
+                "SECURE_CIPHERTEXT_UNAVAILABLE",
+                "The registered private ciphertext could not be verified before decryption.",
+            ) from exc
 
     def put(self, secret: str) -> dict[str, str | bool]:
         return self.put_bytes(secret.encode("utf-8"))

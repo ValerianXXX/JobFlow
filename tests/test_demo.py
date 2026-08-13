@@ -30,6 +30,9 @@ class MemorySecureStore:
     def get_bytes(self, reference: str) -> bytes:
         return self.values[reference]
 
+    def ciphertext_sha256(self, reference: str) -> str:
+        return sha256_bytes(b"cipher:" + self.values[reference])
+
     def test(self, reference: str) -> bool:
         return reference in self.values
 

@@ -199,7 +199,7 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
             store.cipher_path(record["secure_ref"]).write_bytes(b"corrupt")
             with self.assertRaises(JobOpsError) as caught:
                 onboarding.read_bytes(record["secure_ref"])
-            self.assertEqual(caught.exception.code, "SECURE_STORE_FAILED")
+            self.assertEqual(caught.exception.code, "SECURE_CIPHERTEXT_HASH_MISMATCH")
             self.assertNotIn(SENTINEL, json.dumps(caught.exception.as_dict()))
             onboarding.delete(record["secure_ref"], user_confirmed=True)
 

@@ -185,6 +185,11 @@ class PrivateOnboarding:
         row = self._record(reference)
         if row["status"] != "ACTIVE":
             raise JobOpsError("SECURE_REFERENCE_REVOKED", "Secure reference is not active.", status=row["status"])
+        if self.store.ciphertext_sha256(reference).casefold() != str(row["ciphertext_sha256"]).casefold():
+            raise JobOpsError(
+                "SECURE_CIPHERTEXT_HASH_MISMATCH",
+                "Private ciphertext failed integrity verification before decryption.",
+            )
         value = self.store.get_bytes(reference)
         if sha256_bytes(value) != row["content_sha256"]:
             raise JobOpsError("SECURE_CONTENT_HASH_MISMATCH", "Decrypted private content failed integrity verification.")
