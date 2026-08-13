@@ -358,6 +358,21 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(onboarding.read_bytes(reference), previous)
             self.assertFalse(service.index_path.with_suffix(service.index_path.suffix + ".tmp").exists())
 
+    def test_initial_index_failure_removes_uncommitted_encrypted_state(self) -> None:
+        with project_temp() as root:
+            service, _, store, _, _ = self.make_service(root)
+            values_before = dict(store.values)
+            with mock.patch.object(service, "_write_index", side_effect=OSError("synthetic index failure")):
+                with self.assertRaises(JobOpsError) as blocked:
+                    service.ensure_state()
+            self.assertEqual(blocked.exception.code, "ONBOARDING_INITIAL_INDEX_WRITE_FAILED")
+            with service.database.connect() as connection:
+                count = connection.execute(
+                    "SELECT COUNT(*) FROM private_refs WHERE kind='onboarding_center_state' AND status='ACTIVE'"
+                ).fetchone()[0]
+            self.assertEqual(count, 0)
+            self.assertEqual(store.values, values_before)
+
     def test_ai_sources_are_filtered_claims_not_silent_profile_facts(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)

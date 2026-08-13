@@ -729,7 +729,20 @@ class OnboardingCenterService:
         state = self._default_state()
         record = self.onboarding.import_bytes("onboarding_center_state", canonical_json(state), synthetic=False)
         reference = str(record["secure_ref"])
-        self._write_index(reference, state)
+        try:
+            self._write_index(reference, state)
+        except Exception as exc:
+            try:
+                self.onboarding.delete(reference, user_confirmed=True)
+            except Exception as rollback_error:
+                raise JobOpsError(
+                    "ONBOARDING_INITIAL_STATE_ROLLBACK_FAILED",
+                    "The initial encrypted onboarding state could not be removed after its redacted index failed.",
+                ) from rollback_error
+            raise JobOpsError(
+                "ONBOARDING_INITIAL_INDEX_WRITE_FAILED",
+                "The initial redacted onboarding index failed, so its encrypted state was removed.",
+            ) from exc
         return reference, state
 
     def _completion(self, answers: dict[str, Any]) -> dict[str, Any]:
