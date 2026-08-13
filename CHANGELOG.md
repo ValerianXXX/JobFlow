@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Ordinary DOCX Master Resumes now receive AI-to-paragraph mapping and a bilingual one-time approval screen. Only applicant-approved, hash-bound positions can be changed in a copy; the encrypted manifest persists no resume paragraph text and any onboarding revision invalidates it.
+- 普通 DOCX 母版现在支持 AI 到原段落的映射与中英双语一次性确认；只有用户批准且哈希绑定的位置可在副本中改写，加密清单不保存简历段落正文，资料建新版后旧映射自动失效。
 - A resume uploaded through onboarding can now be designated as the encrypted Master Resume, while application-material use of confirmed Claims requires a separate, hash-bound applicant approval. The bilingual readiness board shows every remaining local blocker and automatically invalidates that approval after a revision.
 - 通过入职页上传的简历现在可以成为加密 Master Resume；已确认 Claim 用于简历、求职信或申请回答前，还必须取得一份与当前文字哈希绑定的单独申请人授权。双语准备度面板会列明所有本地阻挡项，建新版后旧授权自动失效。
 - Offline official-careers discovery now auto-detects saved Greenhouse job JSON and Lever posting JSON, while preserving the same no-network, no-queue-mutation and live-freshness-required boundary.

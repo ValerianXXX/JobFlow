@@ -13,7 +13,7 @@ from xml.etree import ElementTree as ET
 
 from .claims import external_use_decision
 from .errors import JobOpsError
-from .util import canonical_json, sha256_bytes, sha256_file
+from .util import canonical_json, sha256_bytes, sha256_file, stable_id
 
 
 NAVY = "12335B"
@@ -162,6 +162,165 @@ def discover_template_slots(path: Path) -> list[str]:
     except (OSError, RuntimeError, zipfile.BadZipFile, zipfile.LargeZipFile) as exc:
         raise JobOpsError("DOCX_PACKAGE_INVALID", "The DOCX template slots could not be inspected safely.") from exc
     return sorted(found)
+
+
+def inspect_docx_text_blocks(path: Path) -> list[dict[str, Any]]:
+    """Inspect stable body-paragraph positions without persisting their text.
+
+    The returned text is intended only for an authenticated localhost review response.
+    A persisted manifest stores the hashes and opaque block references instead.
+    """
+
+    _zip_inventory(path)
+    master_hash = sha256_file(path)
+    try:
+        with zipfile.ZipFile(path) as archive:
+            root = ET.fromstring(archive.read("word/document.xml"))
+    except (OSError, RuntimeError, KeyError, ET.ParseError, zipfile.BadZipFile, zipfile.LargeZipFile) as exc:
+        raise JobOpsError("DOCX_PACKAGE_INVALID", "The editable body blocks could not be inspected safely.") from exc
+    blocks: list[dict[str, Any]] = []
+    line_number = 0
+    paragraphs = [node for node in root.iter() if node.tag == f"{{{W_NS}}}p"]
+    for paragraph_index, paragraph in enumerate(paragraphs):
+        text = "".join(node.text or "" for node in paragraph.iter() if node.tag == f"{{{W_NS}}}t").strip()
+        if not text:
+            continue
+        line_number += 1
+        text_hash = sha256_bytes(text.encode("utf-8"))
+        style = next((node.attrib.get(f"{{{W_NS}}}val", "") for node in paragraph.iter() if node.tag == f"{{{W_NS}}}pStyle"), "")
+        is_list = any(node.tag == f"{{{W_NS}}}numPr" for node in paragraph.iter()) or bool(re.match(r"^[\u2022\u25cf\u25aa\uf0b7\-]\s*", text))
+        blocks.append({
+            "block_ref": stable_id("RBL", master_hash, "word/document.xml", str(paragraph_index), text_hash),
+            "part_name": "word/document.xml", "paragraph_index": paragraph_index,
+            "line_number": line_number, "text": text, "text_sha256": text_hash,
+            "text_length": len(text), "style_id": style, "is_list": is_list,
+        })
+    return blocks
+
+
+def tailor_master_resume_with_manifest(
+    master_path: Path,
+    output_path: Path,
+    *,
+    manifest: dict[str, Any],
+    replacements: list[dict[str, str]],
+    external_claim_set: dict[str, Any],
+    synthetic: bool = False,
+) -> dict[str, object]:
+    """Replace approved body blocks with exact externally approved Claim wording."""
+
+    from .external_claims import validate_external_claim_set_integrity
+    from .resume_tailoring import validate_resume_tailoring_manifest_integrity
+
+    if master_path.resolve() == output_path.resolve():
+        raise JobOpsError("MASTER_OVERWRITE_FORBIDDEN", "Tailoring must write a new copy, never the retained master resume.")
+    if master_path.suffix.casefold() != ".docx":
+        raise JobOpsError("DOCX_MASTER_REQUIRED", "Manifest tailoring requires an editable DOCX master.")
+    validate_resume_tailoring_manifest_integrity(manifest)
+    validate_external_claim_set_integrity(external_claim_set)
+    before = template_fingerprint(master_path)
+    if manifest.get("master_resume_sha256") != before.master_sha256:
+        raise JobOpsError("TAILORING_MANIFEST_STALE", "The approved tailoring map belongs to a different Master Resume.")
+    inspected = {item["block_ref"]: item for item in inspect_docx_text_blocks(master_path)}
+    approved_blocks = {item["block_ref"]: item for item in manifest.get("blocks", [])}
+    approved_claims = {item["claim_id"]: item for item in external_claim_set.get("claims", [])}
+    normalized: list[dict[str, Any]] = []
+    seen_blocks: set[str] = set()
+    for item in replacements:
+        block_ref, claim_id = str(item.get("block_ref", "")), str(item.get("claim_id", ""))
+        if block_ref in seen_blocks or block_ref not in approved_blocks or block_ref not in inspected:
+            raise JobOpsError("TAILORING_REPLACEMENT_INVALID", "A requested resume block is missing, duplicated, or not approved.")
+        seen_blocks.add(block_ref)
+        approved_block, current_block = approved_blocks[block_ref], inspected[block_ref]
+        if approved_block.get("original_text_sha256") != current_block.get("text_sha256"):
+            raise JobOpsError("TAILORING_MANIFEST_STALE", "An approved resume block changed after review.")
+        claim = approved_claims.get(claim_id)
+        if claim is None or claim.get("approved_for_external") is not True or "resume" not in claim.get("allowed_uses", []):
+            raise JobOpsError("TAILORING_CLAIM_NOT_APPROVED", "A selected Claim is not currently approved for resume use.")
+        if claim.get("category") != approved_block.get("category"):
+            raise JobOpsError("TAILORING_CATEGORY_MISMATCH", "A selected Claim does not match the approved resume-block category.")
+        wording = str((claim.get("allowed_wording") or [""])[0]).strip()
+        if not wording or len(wording) > int(approved_block.get("maximum_characters", 0)):
+            raise JobOpsError("TAILORING_CONTENT_TOO_LONG", "Approved Claim wording exceeds this block's safe review length.")
+        if not synthetic and any(marker in wording.casefold() for marker in ("jobops", "secure-ref:", "evidence-gated")):
+            raise JobOpsError("INTERNAL_MARKER_FORBIDDEN", "Application material cannot contain internal workflow markers.")
+        normalized.append({**current_block, "claim_id": claim_id, "replacement": wording})
+    if not normalized:
+        raise JobOpsError("TAILORING_REPLACEMENT_EMPTY", "At least one approved resume block must be tailored.")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_output = output_path.with_name(f".{output_path.name}.jobflow-{uuid.uuid4().hex}.tmp")
+    changed_parts: set[str] = set()
+    changes: list[dict[str, Any]] = []
+    try:
+        with zipfile.ZipFile(master_path, "r") as source, zipfile.ZipFile(temporary_output, "x") as target:
+            for info in source.infolist():
+                name = info.filename
+                data = source.read(name)
+                if name == "docProps/custom.xml" and not synthetic:
+                    continue
+                if name == "word/document.xml":
+                    root = ET.fromstring(data)
+                    paragraphs = [node for node in root.iter() if node.tag == f"{{{W_NS}}}p"]
+                    for replacement in normalized:
+                        index = int(replacement["paragraph_index"])
+                        if not 0 <= index < len(paragraphs):
+                            raise JobOpsError("TAILORING_MANIFEST_STALE", "An approved resume block no longer exists.")
+                        text_nodes = [node for node in paragraphs[index].iter() if node.tag == f"{{{W_NS}}}t"]
+                        if not text_nodes:
+                            raise JobOpsError("TAILORING_MANIFEST_STALE", "An approved resume block no longer contains editable text.")
+                        text_nodes[0].text = replacement["replacement"]
+                        for node in text_nodes[1:]:
+                            node.text = ""
+                        changes.append({
+                            "block_ref": replacement["block_ref"], "claim_id": replacement["claim_id"],
+                            "replacement_sha256": sha256_bytes(replacement["replacement"].encode("utf-8")),
+                        })
+                    data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+                    changed_parts.add(name)
+                if name == "docProps/core.xml" and not synthetic:
+                    root = ET.fromstring(data)
+                    for tag in (f"{{{DC_NS}}}creator", f"{{{CP_NS}}}lastModifiedBy", f"{{{DC_NS}}}description"):
+                        node = root.find(tag)
+                        if node is not None:
+                            node.text = ""
+                    data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+                    changed_parts.add(name)
+                target.writestr(info, data)
+    except Exception:
+        temporary_output.unlink(missing_ok=True)
+        raise
+    if sha256_file(master_path) != before.master_sha256:
+        temporary_output.unlink(missing_ok=True)
+        raise JobOpsError("MASTER_CHANGED_DURING_TAILORING", "The retained master changed while its copy was tailored.")
+    try:
+        after = template_fingerprint(temporary_output)
+    except Exception:
+        temporary_output.unlink(missing_ok=True)
+        raise
+    if after.page_geometry != before.page_geometry or after.style_ids != before.style_ids or after.table_grids != before.table_grids or after.hyperlinks != before.hyperlinks:
+        temporary_output.unlink(missing_ok=True)
+        raise JobOpsError("TEMPLATE_STRUCTURE_CHANGED", "The tailored copy changed page geometry, styles, tables, or hyperlinks.")
+    before_parts = {name: (size, digest) for name, size, digest in before.package_parts}
+    after_parts = {name: (size, digest) for name, size, digest in after.package_parts}
+    expected_changes = changed_parts | ({"docProps/custom.xml"} if "docProps/custom.xml" in before_parts and not synthetic else set())
+    unexplained = sorted(name for name in set(before_parts) | set(after_parts) if before_parts.get(name) != after_parts.get(name) and name not in expected_changes)
+    if unexplained:
+        temporary_output.unlink(missing_ok=True)
+        raise JobOpsError("UNEXPLAINED_PACKAGE_CHANGE", "An unrelated DOCX package part changed.", parts=unexplained)
+    diff: dict[str, Any] = {
+        "master_sha256": before.master_sha256, "output_sha256": sha256_file(temporary_output),
+        "manifest_content_hash": manifest.get("content_hash"), "claim_set_content_hash": external_claim_set.get("content_hash"),
+        "changed_parts": sorted(changed_parts), "block_changes": changes,
+        "preserved": {"page_geometry": True, "styles": True, "table_grids": True, "hyperlinks": True, "unexplained_package_changes": []},
+    }
+    diff["diff_sha256"] = sha256_bytes(canonical_json(diff))
+    try:
+        os.replace(temporary_output, output_path)
+    except OSError as exc:
+        temporary_output.unlink(missing_ok=True)
+        raise JobOpsError("DOCUMENT_OUTPUT_COMMIT_FAILED", "The validated tailored document could not be committed atomically.") from exc
+    return diff
 
 
 def _claim_wordings(claims: list[dict[str, Any]]) -> set[str]:

@@ -18,8 +18,8 @@
     "onboarding_complete": {"type": "boolean"},
     "ai_structured_ready": {"type": "boolean"},
     "master_resume": {
-      "type": "object", "additionalProperties": false, "required": ["present", "editable_docx", "template_fingerprint_present", "tailoring_mode", "template_slot_count"],
-      "properties": {"present": {"type": "boolean"}, "editable_docx": {"type": "boolean"}, "template_fingerprint_present": {"type": "boolean"}, "tailoring_mode": {"enum": ["EXPLICIT_TEMPLATE_SLOTS", "MANIFEST_REQUIRED", "UNAVAILABLE"]}, "template_slot_count": {"type": "integer", "minimum": 0}}
+      "type": "object", "additionalProperties": false, "required": ["present", "editable_docx", "template_fingerprint_present", "tailoring_mode", "template_slot_count", "tailoring_manifest_current", "tailoring_block_count"],
+      "properties": {"present": {"type": "boolean"}, "editable_docx": {"type": "boolean"}, "template_fingerprint_present": {"type": "boolean"}, "tailoring_mode": {"enum": ["EXPLICIT_TEMPLATE_SLOTS", "APPROVED_BLOCK_MANIFEST", "MANIFEST_REQUIRED", "UNAVAILABLE"]}, "template_slot_count": {"type": "integer", "minimum": 0}, "tailoring_manifest_current": {"type": "boolean"}, "tailoring_block_count": {"type": "integer", "minimum": 0, "maximum": 200}}
     },
     "claims": {
       "type": "object", "additionalProperties": false, "required": ["confirmed_count", "review_hash", "external_approval_current", "externally_approved_count"],

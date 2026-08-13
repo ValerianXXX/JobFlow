@@ -29,7 +29,7 @@ from .ai_runtime import (
 )
 from .ai_connections import AIConnectionManager
 from .db import JobOpsDB
-from .document_builder import discover_template_slots, template_fingerprint
+from .document_builder import discover_template_slots, inspect_docx_text_blocks, template_fingerprint
 from .document_qa import extract_pdf_text
 from .errors import JobOpsError
 from .external_claims import (
@@ -43,10 +43,15 @@ from .official_discovery import MAX_SNAPSHOT_BYTES, discover_official_jobs
 from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, REQUIRED_FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
 from .private_onboarding import PrivateOnboarding
 from .queue_manager import QueueManager
+from .resume_tailoring import (
+    build_resume_tailoring_manifest,
+    build_tailoring_proposal,
+    validate_resume_tailoring_manifest_integrity,
+)
 from .runtime_schema import validate_named
 from .security import assert_no_plaintext_secret
 from .source_quality import document_quality_rank, document_text_preflight, safe_ai_failure_category
-from .util import canonical_json, iso_utc, load_json, sha256_bytes, stable_id, write_json
+from .util import canonical_json, iso_utc, load_json, sha256_bytes, sha256_file, stable_id, write_json
 
 
 IN_PROGRESS = "IN_PROGRESS"
@@ -806,6 +811,67 @@ class OnboardingCenterService:
             "content_hash": str(value.get("content_hash")) if current else None,
         }
 
+    def _tailoring_manifest_status(
+        self, state_ref: str, master: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        reference = self._latest_ref("resume_tailoring_manifest")
+        if not reference or master is None:
+            return {"current": False, "block_count": 0, "content_hash": None}
+        try:
+            value = self._read_json_ref(reference)
+            validate_named("resume-tailoring-manifest", value, self.schemas)
+            validate_resume_tailoring_manifest_integrity(value)
+        except JobOpsError:
+            return {"current": False, "block_count": 0, "content_hash": None}
+        current = (
+            value.get("onboarding_state_ref") == state_ref
+            and value.get("master_resume_ref") == master.get("secure_ref")
+            and value.get("master_resume_sha256") == master.get("sha256")
+            and value.get("template_fingerprint") == master.get("template_fingerprint")
+        )
+        return {
+            "current": bool(current),
+            "block_count": int(value.get("block_count", 0)) if current else 0,
+            "content_hash": str(value.get("content_hash")) if current else None,
+        }
+
+    def _tailoring_claims(self, state: dict[str, Any], master: dict[str, Any]) -> list[dict[str, Any]]:
+        material = {
+            str(item.get("claim_id")): item for item in state.get("material_claims", [])
+            if item.get("claim_id")
+        }
+        output: list[dict[str, Any]] = []
+        for item in self._claims_for_ui(state):
+            if item.get("decision") != "CONFIRMED" or item.get("deleted") is True:
+                continue
+            original = material.get(str(item.get("claim_id")), {})
+            output.append({
+                **item,
+                "source_id": original.get("source_id", item.get("source_id")),
+                "provenance": deepcopy(original.get("provenance")),
+            })
+        return output
+
+    def _build_tailoring_proposal(
+        self, state_ref: str, state: dict[str, Any], master: dict[str, Any],
+    ) -> dict[str, Any]:
+        if state.get("status") != COMPLETE:
+            raise JobOpsError("ONBOARDING_INCOMPLETE", "Complete onboarding before approving safe resume-editing positions.")
+        if not master.get("editable_docx"):
+            raise JobOpsError("EDITABLE_MASTER_DOCX_MISSING", "Upload an editable DOCX Master Resume first.")
+        with self.onboarding.staging_directory() as staging:
+            local_copy = staging / "master-resume.docx"
+            local_copy.write_bytes(self.onboarding.read_bytes(str(master["secure_ref"])))
+            if sha256_file(local_copy) != master.get("sha256"):
+                raise JobOpsError("MASTER_RESUME_HASH_INVALID", "The decrypted Master Resume failed its hash check.")
+            blocks = inspect_docx_text_blocks(local_copy)
+        return build_tailoring_proposal(
+            onboarding_state_ref=state_ref,
+            master_resume=master,
+            blocks=blocks,
+            claims=self._tailoring_claims(state, master),
+        )
+
     def _read_json_ref(self, reference: str) -> dict[str, Any]:
         try:
             value = json.loads(self.onboarding.read_bytes(reference).decode("utf-8"))
@@ -1313,6 +1379,7 @@ class OnboardingCenterService:
         conflicts = self._conflicts_for_ui(state)
         master, approval_claims, review_hash, _ = self._claim_approval_context(reference, state)
         external_claims = self._external_claim_status(reference, state, review_hash, master)
+        tailoring_manifest = self._tailoring_manifest_status(reference, master)
         queue_status = QueueManager(self.database).status()
         readiness = build_application_readiness(
             onboarding_status=str(state.get("status", IN_PROGRESS)),
@@ -1322,6 +1389,7 @@ class OnboardingCenterService:
             claim_review_hash=review_hash,
             external_claim_status=external_claims,
             queue=queue_status,
+            tailoring_manifest_status=tailoring_manifest,
         )
         validate_named("application-readiness", readiness, self.schemas)
         all_base = self._claim_bundle().get("claims", [])
@@ -1343,6 +1411,15 @@ class OnboardingCenterService:
                 "confirmed_claim_count": len(approval_claims),
                 "review_hash": review_hash,
                 "allowed_uses": list(ALLOWED_EXTERNAL_USES),
+                "real_external_actions": 0,
+            },
+            "tailoring_manifest": {
+                "available": bool(
+                    state.get("status") == COMPLETE and master is not None
+                    and master.get("editable_docx") and not master.get("template_slots")
+                ),
+                "current": bool(tailoring_manifest["current"]),
+                "block_count": int(tailoring_manifest["block_count"]),
                 "real_external_actions": 0,
             },
             "ats_capabilities": offline_ats_capabilities(),
@@ -2178,6 +2255,53 @@ class OnboardingCenterService:
             "claim_count": value["claim_count"], "content_hash": value["content_hash"],
             "allowed_uses": value["allowed_uses"], "claim_set_ref": record["secure_ref"],
             "private_values_emitted": 0, "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def tailoring_manifest_proposal(self) -> dict[str, Any]:
+        state_ref, state = self.ensure_state()
+        master = self._master_resume_descriptor(state)
+        if master is None:
+            raise JobOpsError("MASTER_RESUME_MISSING", "Upload a Master Resume before preparing safe editing positions.")
+        proposal = self._build_tailoring_proposal(state_ref, state, master)
+        return {
+            **proposal,
+            "source_text_exposed_to_local_session_only": True,
+            "private_values_persisted": 0,
+            "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def approve_tailoring_manifest(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError("TAILORING_CONFIRMATION_REQUIRED", "Safe resume-editing positions require explicit approval.")
+        expected = str(payload.get("expected_proposal_hash", ""))
+        if not re.fullmatch(r"sha256:[a-f0-9]{64}", expected):
+            raise JobOpsError("TAILORING_PROPOSAL_HASH_INVALID", "The tailoring proposal binding is invalid.")
+        selections = payload.get("selections")
+        if not isinstance(selections, list) or not all(isinstance(item, dict) for item in selections):
+            raise JobOpsError("TAILORING_SELECTION_INVALID", "Tailoring selections must be a list of approved positions.")
+        state_ref, state = self.ensure_state()
+        master = self._master_resume_descriptor(state)
+        if master is None:
+            raise JobOpsError("MASTER_RESUME_MISSING", "The encrypted Master Resume is missing.")
+        proposal = self._build_tailoring_proposal(state_ref, state, master)
+        value = build_resume_tailoring_manifest(
+            onboarding_state_ref=state_ref,
+            master_resume=master,
+            proposal=proposal,
+            selections=selections,
+            expected_proposal_hash=expected,
+            user_confirmed=True,
+        )
+        validate_named("resume-tailoring-manifest", value, self.schemas)
+        validate_resume_tailoring_manifest_integrity(value)
+        record = self.onboarding.import_bytes("resume_tailoring_manifest", canonical_json(value), synthetic=False)
+        return {
+            "status": "TAILORING_MANIFEST_APPROVED", "changed": not bool(record.get("deduplicated")),
+            "block_count": value["block_count"], "content_hash": value["content_hash"],
+            "manifest_ref": record["secure_ref"], "private_values_emitted": 0,
+            "real_external_actions": 0,
         }
 
     @staticmethod

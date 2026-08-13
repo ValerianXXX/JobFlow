@@ -180,6 +180,9 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         ):
             if bool(capabilities.get(key)) != ready:
                 raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Application readiness capability flags disagree.")
+    if name == "resume-tailoring-manifest":
+        from .resume_tailoring import validate_resume_tailoring_manifest_integrity
+        validate_resume_tailoring_manifest_integrity(value)
     if name == "ats-form-snapshot":
         if value.get("field_count") != len(value.get("fields", [])):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS form field_count must match the field list.")

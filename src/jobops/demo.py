@@ -32,6 +32,7 @@ DEMO_SCHEMAS = (
     "review-packet",
     "external-claim-set",
     "application-readiness",
+    "resume-tailoring-manifest",
 )
 DEMO_APPLICATION_ID = "APP-DEFACED00001"
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v13">
+  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v14">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -72,6 +72,18 @@
           <label><input id="externalClaimConfirm" type="checkbox"><span data-i18n="externalClaimConsent">我已检查这些 Claim，并允许按当前措辞用于生成申请材料。</span></label>
           <button id="approveExternalClaims" class="primary" type="button" data-i18n="approveExternalClaims">批准材料使用</button>
           <small id="externalClaimApprovalMeta"></small>
+        </div>
+        <div id="tailoringManifestPanel" class="tailoring-manifest-panel hidden">
+          <strong data-i18n="tailoringManifestTitle">建立安全简历改写位置</strong>
+          <p data-i18n="tailoringManifestBody">AI 只会提出与已确认 Claim 对应的原简历段落；你一次确认后，岗位副本才能在这些位置改写，母版不会变化。</p>
+          <button id="openTailoringManifest" class="primary" type="button" data-i18n="openTailoringManifest">检查 AI 建议位置</button>
+          <small id="tailoringManifestMeta"></small>
+          <section id="tailoringManifestProposal" class="tailoring-manifest-proposal hidden" aria-live="polite">
+            <div class="tailoring-manifest-toolbar"><b id="tailoringManifestCandidateCount"></b><button id="selectRecommendedTailoring" class="secondary compact" type="button" data-i18n="selectRecommendedTailoring">选择 AI 推荐项</button></div>
+            <div id="tailoringManifestCandidates" class="tailoring-manifest-candidates"></div>
+            <label class="tailoring-manifest-confirm"><input id="tailoringManifestConfirm" type="checkbox"><span data-i18n="tailoringManifestConsent">我已检查以上原简历段落及类型，并允许 JobFlow 只在这些位置生成岗位副本。</span></label>
+            <button id="approveTailoringManifest" class="primary" type="button" data-i18n="approveTailoringManifest">批准安全改写位置</button>
+          </section>
         </div>
       </section>
       <div class="queue-preferences">
@@ -314,6 +326,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260813-jobflow-v13"></script>
+  <script src="app.js?v=20260813-jobflow-v14"></script>
 </body>
 </html>

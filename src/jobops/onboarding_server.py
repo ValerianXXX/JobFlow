@@ -294,6 +294,11 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.decide_review_packet(self._json_body())
             elif route == "approve-external-claims":
                 result = self.server.service.approve_external_claims(self._json_body())
+            elif route == "tailoring-manifest-proposal":
+                self._optional_json_body()
+                result = self.server.service.tailoring_manifest_proposal()
+            elif route == "approve-tailoring-manifest":
+                result = self.server.service.approve_tailoring_manifest(self._json_body())
             elif route == "claim-transform":
                 result = self.server.service.transform_claims(self._json_body())
             elif route == "start-revision":

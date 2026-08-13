@@ -70,6 +70,7 @@ $requiredSchemas = @(
     "onboarding-completion.schema.json",
     "external-claim-set.schema.json",
     "application-readiness.schema.json",
+    "resume-tailoring-manifest.schema.json",
     "review-packet.schema.json",
     "release-readiness.schema.json"
 )

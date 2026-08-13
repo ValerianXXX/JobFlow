@@ -19,6 +19,7 @@ from _support import PROJECT, project_temp
 from jobops import UI_PROTOCOL_VERSION, __version__
 from jobops.ai_runtime import AIAnalysisEngine, LocalSubprocessAIEngine
 from jobops.db import JobOpsDB
+from jobops.document_builder import inspect_docx_text_blocks, template_fingerprint
 from jobops.document_qa import extract_pdf_text
 from jobops.errors import JobOpsError
 from jobops.instance_lock import local_instance_lock
@@ -26,7 +27,7 @@ from jobops.onboarding_catalog import FIELD_BY_ID, FIELD_IDS, REQUIRED_FIELD_IDS
 from jobops.onboarding_center import OnboardingCenterService, _docx_text, _evidence_preview, _json_text, _string_values
 from jobops.onboarding_server import create_server
 from jobops.private_onboarding import PrivateOnboarding
-from jobops.util import canonical_json, sha256_bytes
+from jobops.util import canonical_json, sha256_bytes, sha256_file
 
 
 class MemorySecureStore:
@@ -172,7 +173,7 @@ class OnboardingCenterTests(unittest.TestCase):
         (project / "state").mkdir()
         for name in (
             "candidate-profile", "onboarding-answer-bank", "onboarding-completion", "official-discovery",
-            "external-claim-set", "application-readiness",
+            "external-claim-set", "application-readiness", "resume-tailoring-manifest",
         ):
             shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
         (project / "config").mkdir()
@@ -1100,6 +1101,66 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertFalse(revised["external_claim_approval"]["current"])
             self.assertEqual(revised["application_readiness"]["status"], "NEEDS_ONBOARDING")
 
+    def test_plain_docx_gets_an_ai_mapped_user_approved_tailoring_manifest(self) -> None:
+        with project_temp() as root:
+            service, onboarding, _, _, _ = self.make_service(root)
+            fixture = PROJECT / "tests" / "fixtures" / "complex-master-resume.docx"
+            master_record = onboarding.import_bytes("onboarding_source_document", fixture.read_bytes(), synthetic=True)
+            block = next(item for item in inspect_docx_text_blocks(fixture) if item["text_length"] >= 20)
+            fingerprint = template_fingerprint(fixture)
+            state_ref, state = service.ensure_state()
+            source_id = "SRC-SYNTHETIC-DOCX"
+            state["master_resume"] = {
+                "secure_ref": master_record["secure_ref"], "sha256": sha256_file(fixture),
+                "extension": ".docx", "source_id": source_id, "editable_docx": True,
+                "template_fingerprint": sha256_bytes(canonical_json(fingerprint.as_dict())),
+                "template_slots": [], "designated_at": "2026-08-13T00:00:00Z",
+            }
+            state["material_claims"].append({
+                "claim_id": "CLM-SYNTHETIC-MANIFEST", "category": "project",
+                "statement": "Built a synthetic, evidence-bound workflow for a reviewed local application.",
+                "source_ref": master_record["secure_ref"], "source_id": source_id,
+                "source_candidate_id": "EXT-SYNTHETIC-MANIFEST",
+                "provenance": {"line_start": block["line_number"], "line_end": block["line_number"]},
+                "provenance_claim_ids": [], "decision": "PENDING", "approved_for_external": False,
+                "deleted": False, "ai_validated": True, "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+                "confidence": "HIGH", "claim_kind": "achievement", "entity_id": None, "entity": None,
+                "applicant_category_override": False,
+            })
+            service._save_state(state_ref, state)
+            service.save_answers({"locale": "zh", "answers": full_answers()})
+            bootstrap = service.bootstrap()
+            service.save_review({
+                "profile_review": "CONFIRMED",
+                "claim_decisions": {item["claim_id"]: "CONFIRMED" for item in bootstrap["claims"]},
+                "conflict_resolutions": {
+                    item["conflict_id"]: {"resolution": "USE_RESUME", "manual_value": None}
+                    for item in bootstrap["conflicts"]
+                },
+            })
+            service.complete(user_confirmed=True)
+            before = service.bootstrap()
+            self.assertTrue(before["tailoring_manifest"]["available"])
+            self.assertFalse(before["tailoring_manifest"]["current"])
+            proposal = service.tailoring_manifest_proposal()
+            self.assertEqual(proposal["candidate_count"], 1)
+            candidate = proposal["candidates"][0]
+            self.assertEqual(candidate["allowed_categories"], ["project"])
+            approved = service.approve_tailoring_manifest({
+                "user_confirmed": True, "expected_proposal_hash": proposal["proposal_hash"],
+                "selections": [{"block_ref": candidate["block_ref"], "category": "project"}],
+            })
+            manifest = json.loads(onboarding.read_bytes(str(approved["manifest_ref"])))
+            self.assertNotIn(candidate["text"], json.dumps(manifest))
+            current = service.bootstrap()
+            self.assertTrue(current["tailoring_manifest"]["current"])
+            self.assertEqual(current["application_readiness"]["master_resume"]["tailoring_mode"], "APPROVED_BLOCK_MANIFEST")
+            self.assertEqual(current["application_readiness"]["master_resume"]["tailoring_block_count"], 1)
+            self.assertEqual(current["application_readiness"]["real_external_actions"], 0)
+
+            service.start_revision()
+            self.assertFalse(service.bootstrap()["tailoring_manifest"]["current"])
+
     def test_completion_failure_removes_partial_refs_and_restores_answer_bank(self) -> None:
         with project_temp() as root:
             service, onboarding, store, _, _ = self.make_service(root)
@@ -1510,8 +1571,12 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="applicationReadinessStatus"', html)
         self.assertIn('id="externalClaimConfirm"', html)
         self.assertIn('id="approveExternalClaims"', html)
+        self.assertIn('id="tailoringManifestPanel"', html)
+        self.assertIn('id="openTailoringManifest"', html)
+        self.assertIn('id="approveTailoringManifest"', html)
         self.assertIn("function renderDashboard()", app)
         self.assertIn("function renderApplicationReadiness()", app)
+        self.assertIn("function renderTailoringProposal(", app)
         self.assertIn("function renderOfficialDiscovery", app)
         self.assertIn("function clearOfficialDiscovery", app)
         self.assertIn('event.target.matches("#officialCompanyDomain,#officialCareersUrl,#officialSnapshotFile")', app)
@@ -1521,6 +1586,8 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('api("review-packet"', app)
         self.assertIn('api("queue-decision"', app)
         self.assertIn('api("approve-external-claims"', app)
+        self.assertIn('api("tailoring-manifest-proposal"', app)
+        self.assertIn('api("approve-tailoring-manifest"', app)
         self.assertIn('id="packetDecisionConfirm"', html)
         self.assertIn('id="confirmPacketDecision"', html)
         self.assertNotIn("showToast(e.message", app)

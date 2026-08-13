@@ -14,7 +14,8 @@ flowchart LR
   P --> E
   E --> R["Human review / 人工审阅"]
   R --> C["Hash-bound Claim-use approval / 哈希绑定的 Claim 用途授权"]
-  C --> M["Per-job material plan / 岗位材料计划"]
+  C --> T["Approved DOCX tailoring map / 已批准 DOCX 改写映射"]
+  T --> M["Per-job material plan / 岗位材料计划"]
   M --> Q
   Q["Bounded approval queue / 有上限审批队列"]
   O["Saved official-page snapshots / 已保存官网快照"] --> D["Offline discovery and ATS analysis / 离线找岗与 ATS 分析"]
@@ -42,7 +43,7 @@ flowchart LR
 
 - `onboarding_center`, `onboarding_server`, `ui/`: bilingual one-time profile and Claim review.
 - `ai_runtime`, `ai_connections`, `source_quality`, `onboarding_extraction`: capability-tested local/Agent AI connection and multi-mode extraction quality gates.
-- `secure_store`, `private_onboarding`, `resume_onboarding`, `external_claims`, `application_readiness`: DPAPI lifecycle, Master Resume designation, exact Claim-use approval and redacted local-readiness reporting.
+- `secure_store`, `private_onboarding`, `resume_onboarding`, `external_claims`, `resume_tailoring`, `application_readiness`: DPAPI lifecycle, Master Resume designation, exact Claim-use approval, applicant-approved paragraph mappings and redacted local-readiness reporting.
 - `knowledge`, `claims`, `claim_registry`, `evidence`: read-only evidence and approval lifecycle.
 - `official_discovery`, `sourcing`, `ats_browser`, `ats_capabilities`: offline official-source and ATS safety framework.
 - `application_materials`, `orchestrator`, `queue_manager`, `continuous_intake`: one-master per-job material planning and content-bound processing to the bounded review queue.

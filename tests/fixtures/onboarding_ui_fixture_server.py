@@ -78,7 +78,7 @@ def main() -> None:
         (project / "state").mkdir()
         for name in (
             "candidate-profile", "onboarding-answer-bank", "onboarding-completion",
-            "external-claim-set", "application-readiness",
+            "external-claim-set", "application-readiness", "resume-tailoring-manifest",
         ):
             shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
         database = JobOpsDB(project / "state" / "jobops.db")

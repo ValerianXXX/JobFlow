@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/resume-tailoring-manifest.schema.json",
+  "title": "Encrypted applicant-approved Master Resume tailoring manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "manifest_id", "onboarding_state_ref", "master_resume_ref", "master_resume_sha256", "template_fingerprint", "proposal_hash", "block_count", "blocks", "approved_at", "applicant_confirmed", "real_external_actions", "content_hash"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "TAILORING_MANIFEST_APPROVED"},
+    "manifest_id": {"type": "string", "pattern": "^RMF-[A-F0-9]{12}$"},
+    "onboarding_state_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+    "master_resume_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
+    "master_resume_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "template_fingerprint": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "proposal_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "block_count": {"type": "integer", "minimum": 1, "maximum": 200},
+    "blocks": {
+      "type": "array", "minItems": 1, "maxItems": 200, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["block_ref", "part_name", "paragraph_index", "original_text_sha256", "category", "maximum_characters", "applicant_confirmed"],
+        "properties": {
+          "block_ref": {"type": "string", "pattern": "^RBL-[A-F0-9]{12}$"},
+          "part_name": {"const": "word/document.xml"},
+          "paragraph_index": {"type": "integer", "minimum": 0, "maximum": 10000},
+          "original_text_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "category": {"enum": ["summary", "work", "internship", "education", "project", "skill", "certification", "language"]},
+          "maximum_characters": {"type": "integer", "minimum": 1, "maximum": 2000},
+          "applicant_confirmed": {"const": true}
+        }
+      }
+    },
+    "approved_at": {"type": "string", "format": "date-time"},
+    "applicant_confirmed": {"const": true},
+    "real_external_actions": {"const": 0},
+    "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}

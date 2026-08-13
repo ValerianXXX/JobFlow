@@ -14,11 +14,15 @@ def build_application_readiness(
     claim_review_hash: str | None,
     external_claim_status: dict[str, Any],
     queue: dict[str, Any],
+    tailoring_manifest_status: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     master = master_resume or {}
     master_present = bool(master.get("secure_ref") and master.get("sha256"))
     editable = bool(master_present and master.get("editable_docx"))
     slots = sorted({str(value) for value in master.get("template_slots", []) if str(value)})
+    manifest = tailoring_manifest_status or {}
+    manifest_current = bool(manifest.get("current"))
+    manifest_blocks = max(0, int(manifest.get("block_count", 0))) if manifest_current else 0
     external_current = bool(external_claim_status.get("current"))
     blockers: list[dict[str, str]] = []
     if onboarding_status != "ONBOARDING_COMPLETE":
@@ -33,7 +37,7 @@ def build_application_readiness(
         blockers.append({"code": "CONFIRMED_CLAIMS_MISSING", "stage": "CLAIMS", "user_action_required": "CONFIRM_AT_LEAST_ONE_CLAIM"})
     elif not external_current:
         blockers.append({"code": "EXTERNAL_CLAIM_APPROVAL_REQUIRED", "stage": "CLAIMS", "user_action_required": "APPROVE_CONFIRMED_CLAIMS"})
-    if editable and not slots:
+    if editable and not slots and not manifest_current:
         blockers.append({"code": "MASTER_TAILORING_MANIFEST_REQUIRED", "stage": "MATERIALS", "user_action_required": "BUILD_SAFE_TAILORING_MANIFEST"})
 
     if not blockers:
@@ -59,8 +63,14 @@ def build_application_readiness(
             "present": master_present,
             "editable_docx": editable,
             "template_fingerprint_present": bool(master.get("template_fingerprint")),
-            "tailoring_mode": "EXPLICIT_TEMPLATE_SLOTS" if slots else ("MANIFEST_REQUIRED" if editable else "UNAVAILABLE"),
+            "tailoring_mode": (
+                "EXPLICIT_TEMPLATE_SLOTS" if slots else
+                "APPROVED_BLOCK_MANIFEST" if manifest_current else
+                "MANIFEST_REQUIRED" if editable else "UNAVAILABLE"
+            ),
             "template_slot_count": len(slots),
+            "tailoring_manifest_current": manifest_current,
+            "tailoring_block_count": manifest_blocks,
         },
         "claims": {
             "confirmed_count": max(0, int(confirmed_claim_count)),

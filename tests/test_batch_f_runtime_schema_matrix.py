@@ -9,6 +9,7 @@ from jobops.application_execution import build_application_execution_plan
 from jobops.application_readiness import build_application_readiness
 from jobops.errors import JobOpsError
 from jobops.external_claims import build_external_claim_set, claim_review_hash
+from jobops.resume_tailoring import build_resume_tailoring_manifest
 from jobops.runtime_schema import validate_named
 from jobops.sourcing import source_route_hash
 
@@ -83,6 +84,23 @@ def valid_fixtures() -> dict[str, dict]:
         confirmed_claim_count=1, claim_review_hash=external_claim_set["review_hash"],
         external_claim_status={"current": True, "claim_count": 1},
         queue={"pending_limit": 3, "awaiting_approval": 1, "slots_available": 2},
+    )
+    resume_tailoring_manifest = build_resume_tailoring_manifest(
+        onboarding_state_ref="secure-ref:SYNTHETIC01",
+        master_resume={
+            "secure_ref": "secure-ref:SYNTHETIC03", "sha256": H,
+            "template_fingerprint": H, "editable_docx": True,
+        },
+        proposal={
+            "proposal_hash": H,
+            "candidates": [{
+                "block_ref": "RBL-ABCDEF123456", "part_name": "word/document.xml",
+                "paragraph_index": 3, "original_text_sha256": H,
+                "maximum_characters": 300, "allowed_categories": ["project"],
+            }],
+        },
+        selections=[{"block_ref": "RBL-ABCDEF123456", "category": "project"}],
+        expected_proposal_hash=H, user_confirmed=True,
     )
     return {
         "application": {"application_id": APP, "job_id": JOB, "status": "AWAITING_APPROVAL", "site": "example.com", "resume_hash": H, "answers_hash": H, "dry_run": True, "secure_profile_ref": "secure-ref:SYNTHETIC01", "sensitive_fields": [], "unknown_fields": []},
@@ -187,6 +205,7 @@ def valid_fixtures() -> dict[str, dict]:
         "application-execution-plan": execution_plan,
         "external-claim-set": external_claim_set,
         "application-readiness": application_readiness,
+        "resume-tailoring-manifest": resume_tailoring_manifest,
         "ats-form-snapshot": {
             "schema_version": 1, "status": "FORM_SNAPSHOT_ANALYZED", "source_mode": "LOCAL_SNAPSHOT_ONLY",
             "provider": "company", "step_kind": "MY_INFORMATION", "canonical_url": "https://example.com/careers/a", "source_route_hash": route["route_hash"],
