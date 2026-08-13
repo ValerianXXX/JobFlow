@@ -66,6 +66,25 @@ class AtomicQueueTests(unittest.TestCase):
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM applications").fetchone()[0], 0)
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM review_packets").fetchone()[0], 0)
 
+    def test_queue_admission_rejects_private_paths_urls_and_refs_before_writes(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            manager = QueueManager(database)
+            reservation = manager.enqueue("PRIVATE-BOUNDARY", source_type="txt", source_locator="fixtures/safe.txt")
+            attempts = (
+                ({"snapshot_relative_path": "C:\\Users\\private\\jd.txt"}, "JOB_SNAPSHOT_PATH_INVALID"),
+                ({"snapshot_relative_path": "workspace/jobs/safe.txt", "job_details": {"official_url": "https://example.test/job?session_token=private"}}, "JOB_SOURCE_URL_SENSITIVE_QUERY"),
+                ({"snapshot_relative_path": "workspace/jobs/safe.txt", "material_records": [{"path": "C:\\private.docx"}]}, "INVALID_SECURE_REFERENCE"),
+            )
+            for kwargs, code in attempts:
+                with self.subTest(code=code), self.assertRaises(JobOpsError) as blocked:
+                    manager.admit_awaiting(reservation.reservation_id, binding(98), **kwargs)
+                self.assertEqual(blocked.exception.code, code)
+            with database.connect() as connection:
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM applications").fetchone()[0], 0)
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM jobs").fetchone()[0], 0)
+
     def test_twelve_jobs_limit_three_release_promotes_exactly_one(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")

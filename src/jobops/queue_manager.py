@@ -1,13 +1,64 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
 from .approvals import ApprovalContext
 from .db import JobOpsDB
 from .errors import JobOpsError
+from .security import assert_no_plaintext_secret, validate_secure_reference
+from .sourcing import _canonical_url, url_has_sensitive_query
 from .util import iso_utc, stable_id
+
+
+def _validate_relative_display(value: object, code: str) -> str:
+    if not isinstance(value, str):
+        raise JobOpsError(code, "A bounded project-relative display path is required.")
+    normalized = value.replace("\\", "/")
+    path = PurePosixPath(normalized)
+    if (
+        not value
+        or len(value) > 512
+        or "\x00" in value
+        or ":" in value
+        or path.is_absolute()
+        or ".." in path.parts
+        or any(ord(character) < 32 for character in value)
+    ):
+        raise JobOpsError(code, "A bounded project-relative display path is required.")
+    return normalized
+
+
+def _validate_job_details(details: dict[str, object], fallback_locator: str, fallback_url: str) -> dict[str, object]:
+    source_type = details.get("source_type", "synthetic")
+    if not isinstance(source_type, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", source_type):
+        raise JobOpsError("JOB_SOURCE_TYPE_INVALID", "The queue job source type must be a short safe identifier.")
+    source_locator = _validate_relative_display(details.get("source_locator", fallback_locator), "JOB_SOURCE_LOCATOR_INVALID")
+    official_url = _canonical_url(str(details.get("official_url", fallback_url)))
+    if url_has_sensitive_query(official_url):
+        raise JobOpsError("JOB_SOURCE_URL_SENSITIVE_QUERY", "The queue job URL cannot contain private query parameters.")
+    metadata: dict[str, object] = {}
+    for name, default, optional in (
+        ("company", "Synthetic Company", False),
+        ("title", "Synthetic Role", False),
+        ("location", None, True),
+    ):
+        value = details.get(name, default)
+        if value is None and optional:
+            metadata[name] = None
+            continue
+        if not isinstance(value, str) or not value.strip() or len(value) > 512 or any(ord(character) < 32 for character in value):
+            raise JobOpsError("JOB_METADATA_INVALID", "Queue job metadata must be bounded display text.", field=name)
+        assert_no_plaintext_secret(value)
+        metadata[name] = value
+    return {
+        "source_type": source_type,
+        "source_locator": source_locator,
+        "official_url": official_url,
+        **metadata,
+    }
 
 
 @dataclass(frozen=True)
@@ -35,20 +86,7 @@ class QueueManager:
     def enqueue(self, intake_key: str, *, source_type: str, source_locator: str) -> QueueAdmission:
         if not intake_key or not source_type or not source_locator:
             raise JobOpsError("INTAKE_INVALID", "Intake key, source type and safe source locator are required.")
-        normalized_locator = source_locator.replace("\\", "/")
-        locator_path = PurePosixPath(normalized_locator)
-        if (
-            len(source_locator) > 512
-            or "\x00" in source_locator
-            or ":" in source_locator
-            or locator_path.is_absolute()
-            or ".." in locator_path.parts
-            or any(ord(character) < 32 for character in source_locator)
-        ):
-            raise JobOpsError(
-                "INTAKE_SOURCE_LOCATOR_INVALID",
-                "The intake source locator must be a bounded project-relative display value.",
-            )
+        _validate_relative_display(source_locator, "INTAKE_SOURCE_LOCATOR_INVALID")
         with self.database.connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             existing = connection.execute("SELECT * FROM intake_queue WHERE intake_key=?", (intake_key,)).fetchone()
@@ -170,6 +208,15 @@ class QueueManager:
                 "REVIEW_PACKET_CONTEXT_MISMATCH",
                 "The review packet content hash must match the current approval context.",
             )
+        snapshot_relative_path = _validate_relative_display(snapshot_relative_path, "JOB_SNAPSHOT_PATH_INVALID")
+        validate_secure_reference(secure_profile_ref)
+        if review_packet is not None:
+            validate_secure_reference(str(review_packet.get("secure_ref", "")))
+        for material in material_records or []:
+            validate_secure_reference(str(material.get("path", "")))
+        for field in field_records or []:
+            if field.get("secure_ref") is not None:
+                validate_secure_reference(str(field["secure_ref"]))
         with self.database.connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             reservation = connection.execute("SELECT * FROM queue_reservations WHERE reservation_id=?", (reservation_id,)).fetchone()
@@ -185,7 +232,7 @@ class QueueManager:
             if awaiting + reserved > limit:
                 raise JobOpsError("QUEUE_CAPACITY_INVARIANT_BROKEN", "Awaiting plus reserved slots exceeds the configured limit.")
             now = iso_utc()
-            details = job_details or {}
+            details = _validate_job_details(job_details or {}, str(reservation["intake_key"]), binding.canonical_url)
             existing_application = connection.execute(
                 "SELECT status FROM applications WHERE application_id=?", (binding.application_id,)
             ).fetchone()
@@ -201,18 +248,18 @@ class QueueManager:
                 """INSERT OR IGNORE INTO jobs(job_id,source_type,source_locator,official_url,company,title,location,status,discovered_at,updated_at)
                 VALUES(?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    binding.job_id, details.get("source_type", "synthetic"), details.get("source_locator", reservation["intake_key"]),
-                    details.get("official_url", binding.canonical_url), details.get("company", "Synthetic Company"),
-                    details.get("title", "Synthetic Role"), details.get("location"), "FORM_VALIDATED", now, now,
+                    binding.job_id, details["source_type"], details["source_locator"],
+                    details["official_url"], details["company"],
+                    details["title"], details["location"], "FORM_VALIDATED", now, now,
                 ),
             )
             connection.execute("UPDATE jobs SET status='FORM_VALIDATED',updated_at=? WHERE job_id=?", (now, binding.job_id))
             connection.execute(
                 "UPDATE jobs SET source_type=?,source_locator=?,official_url=?,company=?,title=?,location=? WHERE job_id=?",
                 (
-                    details.get("source_type", "synthetic"), details.get("source_locator", reservation["intake_key"]),
-                    details.get("official_url", binding.canonical_url), details.get("company", "Synthetic Company"),
-                    details.get("title", "Synthetic Role"), details.get("location"), binding.job_id,
+                    details["source_type"], details["source_locator"],
+                    details["official_url"], details["company"],
+                    details["title"], details["location"], binding.job_id,
                 ),
             )
             connection.execute(
