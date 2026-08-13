@@ -60,6 +60,9 @@ main { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; paddin
 .demo-banner { margin: -18px 0 34px; padding: 16px 18px; border: 1px solid #d7a85d; border-left: 5px solid var(--amber); background: #fff8e9; box-shadow: var(--shadow); }
 .demo-banner strong { display: block; color: #69430e; font-size: 14px; }
 .demo-banner p { margin: 4px 0 0; color: #795b2c; font-size: 12px; }
+.demo-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.button-link { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--green); background: var(--green); color: #fff; font-weight: 700; text-decoration: none; }
+.button-link.compact { min-height: 38px; padding: 8px 14px; font-size: 12px; }
 body.is-demo .upload-button { cursor: not-allowed; opacity: .58; }
 .hero { display: grid; grid-template-columns: 1.55fr .8fr; gap: 70px; align-items: end; margin-bottom: 46px; }
 .eyebrow, .section-no { margin: 0 0 12px; color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: .2em; }

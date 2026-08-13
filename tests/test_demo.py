@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from _support import PROJECT, project_temp
-from jobops.demo import DEMO_SOURCE, create_demo_service
+from jobops.demo import DEMO_APPLICATION_ID, DEMO_SOURCE, create_demo_service
 from jobops.errors import JobOpsError
 from jobops.onboarding_server import create_server
 from jobops.util import sha256_bytes
@@ -54,6 +54,12 @@ class SyntheticDemoTests(unittest.TestCase):
             self.assertEqual(len(bootstrap["sources"]), 1)
             self.assertGreaterEqual(len(bootstrap["claims"]), 2)
             self.assertEqual(len(bootstrap["conflicts"]), 1)
+            self.assertEqual(bootstrap["dashboard"]["queue"]["awaiting_approval"], 1)
+            self.assertEqual(len(bootstrap["dashboard"]["pending_applications"]), 1)
+            self.assertEqual(
+                bootstrap["dashboard"]["pending_applications"][0]["company"],
+                "Synthetic Demo Studio",
+            )
             self.assertTrue(store.values)
             with self.assertRaises(JobOpsError) as intake:
                 service.preview_source("resume", ".txt", b"real user data")
@@ -64,6 +70,27 @@ class SyntheticDemoTests(unittest.TestCase):
             with self.assertRaises(JobOpsError) as connection:
                 service.connect_ai({"mode": "agent"})
             self.assertEqual(connection.exception.code, "DEMO_AI_CONNECTION_DISABLED")
+
+    def test_demo_review_packet_can_be_decided_locally_without_external_actions(self) -> None:
+        with project_temp() as root:
+            service, _ = self.make_service(root)
+            displayed = service.review_packet(DEMO_APPLICATION_ID)
+            self.assertEqual(displayed["status"], "AWAITING_APPROVAL")
+            self.assertEqual(displayed["packet"]["job"]["company"], "Synthetic Demo Studio")
+            outcome = service.decide_review_packet(
+                {
+                    "application_id": DEMO_APPLICATION_ID,
+                    "decision": "APPROVE",
+                    "expected_packet_hash": displayed["packet"]["content_hash"],
+                    "user_confirmed": True,
+                }
+            )
+            self.assertEqual(outcome["status"], "APPROVED")
+            self.assertEqual(outcome["real_external_actions"], 0)
+            dashboard = service.bootstrap()["dashboard"]
+            self.assertEqual(dashboard["queue"]["awaiting_approval"], 0)
+            self.assertEqual(dashboard["safety"]["external_action_attempts"], 0)
+            self.assertEqual(dashboard["safety"]["real_external_actions"], 0)
 
     def test_demo_server_exposes_only_local_synthetic_state(self) -> None:
         with project_temp() as root:
@@ -106,6 +133,8 @@ class SyntheticDemoTests(unittest.TestCase):
         self.assertIn('id="demoBanner"', ui)
         self.assertIn("合成演示 · 不使用真实资料", app)
         self.assertIn("Synthetic demo · no real data", app)
+        self.assertIn('data-target="review"', ui)
+        self.assertIn('href="#pendingReviewTitle"', ui)
 
 
 if __name__ == "__main__":

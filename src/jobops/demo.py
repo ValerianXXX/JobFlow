@@ -9,20 +9,28 @@ from pathlib import Path
 from typing import Any
 
 from .ai_runtime import LocalSubprocessAIEngine
+from .approvals import ApprovalContext, UploadBinding
 from .db import JobOpsDB
 from .errors import JobOpsError
 from .onboarding_center import OnboardingCenterService
 from .onboarding_server import create_server
 from .private_onboarding import PrivateOnboarding
+from .queue_manager import QueueManager
 from .secure_store import WindowsDPAPIStore
-from .util import canonical_json
+from .util import canonical_json, iso_utc, sha256_bytes
 
 
 DEMO_SOURCE = (
     "At Synthetic Demo Studio, the Synthetic Workflow Contributor built a governed "
     "review workflow and improved synthetic review accuracy by 20%."
 )
-DEMO_SCHEMAS = ("candidate-profile", "onboarding-answer-bank", "onboarding-completion")
+DEMO_SCHEMAS = (
+    "candidate-profile",
+    "onboarding-answer-bank",
+    "onboarding-completion",
+    "review-packet",
+)
+DEMO_APPLICATION_ID = "APP-DEFACED00001"
 
 
 class SyntheticDemoAIEngine(LocalSubprocessAIEngine):
@@ -71,6 +79,118 @@ class SyntheticDemoService(OnboardingCenterService):
         upload_size: int,
     ) -> dict[str, Any]:
         raise JobOpsError("DEMO_FILE_INTAKE_DISABLED", "Synthetic demo mode cannot ingest user files.")
+
+
+def _seed_demo_review_queue(database: JobOpsDB, onboarding: PrivateOnboarding, *, profile_ref: str) -> None:
+    queue = QueueManager(database)
+    job_id = "JOB-DEFACED00001"
+    packet_id = "RPK-DEFACED00001"
+    official_url = "https://careers.example.test/jobs/synthetic-demo"
+    application_url = "https://boards.example.test/jobs/synthetic-demo"
+    jd_hash = sha256_bytes(b"synthetic-demo-jd")
+    freshness_hash = sha256_bytes(b"synthetic-demo-freshness")
+    route_hash = sha256_bytes(b"synthetic-demo-route")
+    claim_hash = sha256_bytes(b"synthetic-demo-claims")
+    form_hash = sha256_bytes(b"synthetic-demo-form")
+    answers_hash = sha256_bytes(b"synthetic-demo-answers")
+    resume_hash = sha256_bytes(b"synthetic-demo-resume")
+    upload = UploadBinding("synthetic-resume.pdf", "resume", resume_hash)
+    packet: dict[str, Any] = {
+        "schema_version": 1,
+        "status": "AWAITING_APPROVAL",
+        "packet_id": packet_id,
+        "application_id": DEMO_APPLICATION_ID,
+        "job": {
+            "job_id": job_id,
+            "company": "Synthetic Demo Studio",
+            "title": "Workflow Quality Analyst",
+            "official_url": official_url,
+        },
+        "jd_captured_at": iso_utc(),
+        "fit": {
+            "overall_score": 88,
+            "recommendation": "STRONG_MATCH",
+            "explanation": ["Synthetic skills align with the fictional role; no live freshness claim is made."],
+        },
+        "hard_gaps": [],
+        "resume_bullets": [
+            {
+                "text": "Improved a synthetic governed-review workflow by 20%.",
+                "claim_id": "CLM-SYNTHETIC-DEMO",
+                "evidence": ["synthetic-demo-source"],
+            }
+        ],
+        "master_resume_diff": {"changed_sections": ["project"]},
+        "form_questions": [
+            {
+                "id": "field-synthetic-location",
+                "label": "Preferred work location",
+                "classification": "ordinary",
+                "action": "PREFILL_PROPOSAL",
+            }
+        ],
+        "sensitive_fields": [
+            {
+                "id": "field-final-submit",
+                "label": "Final submission",
+                "classification": "final_submit_stop",
+                "action": "STOP",
+            }
+        ],
+        "uploads": [upload.as_dict()],
+        "external_actions": ["upload_material", "submit_application"],
+        "source_route": {
+            "route_kind": "OFFICIAL_TO_APPROVED_ATS",
+            "provider": "greenhouse",
+            "guest_mode": "GUEST_SELECTED",
+            "account_action": "NONE",
+            "official_entry_url": official_url,
+            "current_url": application_url,
+        },
+        "queue": queue.status(),
+    }
+    packet["content_hash"] = sha256_bytes(canonical_json(packet))
+    packet_ref = onboarding.import_bytes("review_packet", canonical_json(packet), synthetic=True)
+    context = ApprovalContext(
+        application_id=DEMO_APPLICATION_ID,
+        job_id=job_id,
+        jd_snapshot_hash=jd_hash,
+        jd_freshness_hash=freshness_hash,
+        source_route_hash=route_hash,
+        canonical_url=application_url,
+        ats_tenant="synthetic-demo",
+        ats_board="careers",
+        ats_job_identity="synthetic-demo",
+        profile_version="SYNTHETIC-DEMO-1",
+        claim_set_hash=claim_hash,
+        form_snapshot_hash=form_hash,
+        answers_hash=answers_hash,
+        review_packet_hash=str(packet["content_hash"]),
+        uploads=(upload,),
+        external_actions=("upload_material", "submit_application"),
+        site_policy_version="SYNTHETIC-DEMO-1",
+    )
+    admission = queue.enqueue(jd_hash, source_type="synthetic_demo", source_locator="synthetic-demo")
+    queue.admit_awaiting(
+        admission.reservation_id,
+        context,
+        snapshot_relative_path="synthetic-demo/jd.txt",
+        job_details={
+            "source_type": "synthetic_demo",
+            "source_locator": "synthetic-demo",
+            "official_url": official_url,
+            "company": "Synthetic Demo Studio",
+            "title": "Workflow Quality Analyst",
+            "location": "Remote · Synthetic",
+        },
+        secure_profile_ref=profile_ref,
+        review_packet={
+            "packet_id": packet_id,
+            "content_hash": packet["content_hash"],
+            "secure_ref": packet_ref["secure_ref"],
+            "status": "AWAITING_APPROVAL",
+        },
+    )
 
 
 def create_demo_service(
@@ -142,7 +262,13 @@ def create_demo_service(
     )
     engine = SyntheticDemoAIEngine([sys.executable, str(Path(__file__).with_name("_demo_ai_command.py"))])
     service = SyntheticDemoService(project, database, onboarding, ai_engine=engine)
-    OnboardingCenterService.import_source(service, "project_case", ".txt", DEMO_SOURCE.encode("utf-8"))
+    source = OnboardingCenterService.import_source(service, "project_case", ".txt", DEMO_SOURCE.encode("utf-8"))
+    _, private_state = service.ensure_state()
+    imported = next(
+        item for item in private_state["sources"]
+        if item["source_id"] == source["source_id"]
+    )
+    _seed_demo_review_queue(database, onboarding, profile_ref=str(imported["secure_ref"]))
     return service
 
 
