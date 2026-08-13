@@ -31,10 +31,12 @@ class WindowsLauncherTests(unittest.TestCase):
         install = (PROJECT / "scripts" / "install-jobflow.ps1").read_text(encoding="utf-8-sig")
         start = (PROJECT / "scripts" / "start-jobflow.ps1").read_text(encoding="utf-8-sig")
         check = (PROJECT / "scripts" / "check-jobflow.ps1").read_text(encoding="utf-8-sig")
+        release = (PROJECT / "scripts" / "check-release-readiness.ps1").read_text(encoding="utf-8-sig")
         self.assertIn(" / ", install)
         self.assertIn(" / ", start)
         self.assertIn(" / ", check)
-        combined = (install + start + check).casefold()
+        self.assertIn(" / ", release)
+        combined = (install + start + check + release).casefold()
         for forbidden in ("invoke-webrequest", "start-bitstransfer", "git clone", "git push"):
             self.assertNotIn(forbidden, combined)
 
@@ -75,6 +77,29 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0)
         self.assertEqual(completed.stdout.strip(), f"JobFlow {__version__}")
         self.assertNotIn(str(PROJECT), completed.stdout)
+
+    def test_one_click_release_check_is_redacted_local_only_and_truthfully_blocked(self) -> None:
+        completed = subprocess.run(
+            [
+                "powershell.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-File", str(PROJECT / "scripts" / "check-release-readiness.ps1"), "-Json",
+            ],
+            cwd=PROJECT,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 2, completed.stderr)
+        result = json.loads(completed.stdout.lstrip("\ufeff"))
+        self.assertEqual(result["status"], "PUBLIC_RELEASE_BLOCKED")
+        self.assertFalse(result["upload_performed"])
+        self.assertEqual(result["network_actions"], 0)
+        self.assertEqual(result["real_external_actions"], 0)
+        self.assertIn("GITHUB_REPOSITORY_METADATA_REQUIRED", result["blockers"])
+        serialized = json.dumps(result)
+        self.assertNotIn(str(PROJECT), serialized)
+        self.assertNotIn("secure-ref:", serialized)
 
 
 if __name__ == "__main__":

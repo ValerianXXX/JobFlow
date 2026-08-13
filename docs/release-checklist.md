@@ -4,6 +4,10 @@ Run the following only on the final clean commit. Nothing in this checklist auth
 
 只在最终干净提交上执行以下清单。本清单不授权上传，也不授权任何真实招聘动作。
 
+Double-click `Check Release Readiness.cmd` at any time for a bilingual, local-only list of remaining gates. A `BLOCKED` result is expected until every automated check and human decision below is genuinely complete. The checker does not create a repository or tag and performs no upload or network action.
+
+可随时双击 `Check Release Readiness.cmd` 查看中英双语的本地剩余门禁。只有下列自动检查与人工决定真实完成后才会变为 `PASS`；此前显示 `BLOCKED` 是正常安全状态。该检查不会创建仓库或标签，也不会上传或联网。
+
 ## Automated gates / 自动门禁
 
 - [ ] `python .agents/skills/job-application-operator/scripts/run-release-verification.py` passes all tests, Schemas, leakage, knowledge and external-action checks.
