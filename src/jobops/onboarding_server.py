@@ -123,7 +123,7 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         if length < 1 or length > JSON_LIMIT:
             raise JobOpsError("REQUEST_SIZE_INVALID", "The local JSON request exceeds the safety limit.")
         try:
-            value = json.loads(self.rfile.read(length).decode("utf-8"))
+            value = json.loads(self._read_exact_body(length).decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise JobOpsError("REQUEST_JSON_INVALID", "The local request body is not valid JSON.") from exc
         if not isinstance(value, dict):
@@ -173,6 +173,17 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         if length < 1 or length > maximum:
             raise JobOpsError(size_code, size_message)
         return length
+
+    def _read_exact_body(self, length: int) -> bytes:
+        value = self.rfile.read(length)
+        if len(value) != length:
+            raise JobOpsError(
+                "ONBOARDING_UPLOAD_INTERRUPTED",
+                "The local request ended before every declared byte was received; no partial content was accepted.",
+                expected_bytes=length,
+                received_bytes=len(value),
+            )
+        return value
 
     def _stream_large_export(self, length: int, extension: str) -> dict[str, Any]:
         if extension.casefold() != ".zip":
@@ -305,7 +316,7 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                     size_message="The local official-careers snapshot is empty or too large.",
                 )
                 result = self.server.service.discover_official_jobs(
-                    self.rfile.read(length),
+                    self._read_exact_body(length),
                     official_entry_url=official_entry_url,
                     company_domain=company_domain,
                     source_format=source_format,
@@ -325,7 +336,7 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 if source_type == "chatgpt_export_large":
                     result = self._stream_large_export(length, extension)
                 else:
-                    result = self.server.service.preview_source(source_type, extension, self.rfile.read(length))
+                    result = self.server.service.preview_source(source_type, extension, self._read_exact_body(length))
             elif route == "shutdown":
                 self._optional_json_body()
                 result = {"status": "CLOSING", "real_external_actions": 0}

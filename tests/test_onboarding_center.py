@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import http.client
 import json
+import socket
 import shutil
 import sys
 import threading
@@ -1022,6 +1023,24 @@ class OnboardingCenterTests(unittest.TestCase):
                 self.assertEqual(chunked_payload["code"], "REQUEST_TRANSFER_ENCODING_FORBIDDEN")
                 self.assertTrue(chunked_response.will_close)
 
+                incomplete_binary = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                incomplete_binary.putrequest("POST", path)
+                incomplete_binary.putheader("X-JobOps-Session", "synthetic-session-token")
+                incomplete_binary.putheader("Origin", host)
+                incomplete_binary.putheader("Content-Type", "application/octet-stream")
+                incomplete_binary.putheader("Content-Length", "64")
+                incomplete_binary.endheaders(b"<p>safe</p>")
+                assert incomplete_binary.sock is not None
+                incomplete_binary.sock.shutdown(socket.SHUT_WR)
+                incomplete_binary_response = incomplete_binary.getresponse()
+                incomplete_binary_payload = json.loads(incomplete_binary_response.read())
+                incomplete_binary.close()
+                self.assertEqual(incomplete_binary_response.status, 400)
+                self.assertEqual(incomplete_binary_payload["code"], "ONBOARDING_UPLOAD_INTERRUPTED")
+                self.assertEqual(incomplete_binary_payload["details"]["expected_bytes"], 64)
+                self.assertEqual(incomplete_binary_payload["details"]["received_bytes"], 11)
+                self.assertTrue(incomplete_binary_response.will_close)
+
                 json_path = "/session/synthetic-session-token/api/save"
                 wrong_json_type = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
                 wrong_json_type.request(
@@ -1037,6 +1056,24 @@ class OnboardingCenterTests(unittest.TestCase):
                 self.assertEqual(wrong_json_response.status, 400)
                 self.assertEqual(wrong_json_payload["code"], "REQUEST_CONTENT_TYPE_INVALID")
                 self.assertTrue(wrong_json_response.will_close)
+
+                incomplete_json = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                incomplete_json.putrequest("POST", json_path)
+                incomplete_json.putheader("X-JobOps-Session", "synthetic-session-token")
+                incomplete_json.putheader("Origin", host)
+                incomplete_json.putheader("Content-Type", "application/json")
+                incomplete_json.putheader("Content-Length", "8")
+                incomplete_json.endheaders(b"{}")
+                assert incomplete_json.sock is not None
+                incomplete_json.sock.shutdown(socket.SHUT_WR)
+                incomplete_json_response = incomplete_json.getresponse()
+                incomplete_json_payload = json.loads(incomplete_json_response.read())
+                incomplete_json.close()
+                self.assertEqual(incomplete_json_response.status, 400)
+                self.assertEqual(incomplete_json_payload["code"], "ONBOARDING_UPLOAD_INTERRUPTED")
+                self.assertEqual(incomplete_json_payload["details"]["expected_bytes"], 8)
+                self.assertEqual(incomplete_json_payload["details"]["received_bytes"], 2)
+                self.assertTrue(incomplete_json_response.will_close)
 
                 duplicate_length = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
                 duplicate_length.putrequest("POST", json_path)
