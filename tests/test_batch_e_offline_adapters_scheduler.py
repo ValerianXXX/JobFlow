@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from _support import project_temp
-from jobops.adapters import AdapterRegistry, DisabledAdapter, FakeBrowserPrefillAdapter, FakeOutboxAdapter, FakeReceiptAdapter, FakeSubmissionAdapter, audit_real_external_actions
+from jobops.adapters import AdapterRegistry, DisabledAdapter, FakeBrowserPrefillAdapter, FakeOfficialSourceAdapter, FakeOutboxAdapter, FakeReceiptAdapter, FakeSubmissionAdapter, audit_real_external_actions
 from jobops.approvals import ApprovalContext, UploadBinding, issue_approval
 from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
@@ -57,6 +57,16 @@ def seed_awaiting(database: JobOpsDB, ctx: ApprovalContext) -> None:
 
 
 class OfflineAdapterTests(unittest.TestCase):
+    def test_fake_official_source_streams_only_bounded_local_fixtures(self) -> None:
+        with project_temp() as temp:
+            fixture = temp / "jobs.html"
+            fixture.write_bytes(b"safe synthetic fixture")
+            adapter = FakeOfficialSourceAdapter(temp)
+            self.assertEqual(adapter.discover({"fixture": fixture.name})["network_actions"], 0)
+            with patch("jobops.adapters.MAX_FAKE_FIXTURE_BYTES", 4), self.assertRaises(JobOpsError) as caught:
+                adapter.discover({"fixture": fixture.name})
+            self.assertEqual(caught.exception.code, "LOCAL_FIXTURE_TOO_LARGE")
+
     def test_registry_contains_only_fake_or_disabled_and_real_capabilities_fail_closed(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")

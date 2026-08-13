@@ -8,10 +8,11 @@ from typing import Any, Protocol
 
 from .db import JobOpsDB
 from .errors import JobOpsError
-from .util import canonical_json, iso_utc, sha256_bytes
+from .util import canonical_json, iso_utc, sha256_bytes, sha256_file
 
 
 OFFLINE_KINDS = frozenset({"fake", "mock", "dry-run", "disabled"})
+MAX_FAKE_FIXTURE_BYTES = 32 * 1024 * 1024
 
 
 class OfficialSourceAdapter(Protocol):
@@ -93,7 +94,13 @@ class FakeOfficialSourceAdapter:
         path = (self.fixture_root / name).resolve()
         if path.parent != self.fixture_root.resolve() or not path.is_file():
             raise JobOpsError("LOCAL_FIXTURE_REQUIRED", "Fake discovery only accepts an existing local fixture filename.")
-        return {"status": "LOCAL_FIXTURE_LOADED", "fixture": name, "content_sha256": sha256_bytes(path.read_bytes()), "network_actions": 0}
+        if path.stat().st_size > MAX_FAKE_FIXTURE_BYTES:
+            raise JobOpsError(
+                "LOCAL_FIXTURE_TOO_LARGE",
+                "The offline discovery fixture exceeds the safe parser input limit.",
+                maximum_bytes=MAX_FAKE_FIXTURE_BYTES,
+            )
+        return {"status": "LOCAL_FIXTURE_LOADED", "fixture": name, "content_sha256": sha256_file(path), "network_actions": 0}
 
 
 @dataclass
