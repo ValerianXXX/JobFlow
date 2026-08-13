@@ -75,6 +75,34 @@ def full_answers() -> dict[str, dict[str, object]]:
 
 
 class OnboardingCenterTests(unittest.TestCase):
+    def test_dashboard_exposes_only_safe_queue_summaries(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            now = "2026-08-13T00:00:00Z"
+            with service.database.connect() as connection:
+                connection.execute(
+                    "INSERT INTO jobs(job_id,source_type,source_locator,official_url,company,title,location,status,discovered_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("JOB-DASH", "synthetic", "fixture", "https://careers.example.test/jobs/1", "Synthetic Company", "Synthetic Role", "Remote", "FORM_VALIDATED", now, now),
+                )
+                connection.execute(
+                    "INSERT INTO applications(application_id,job_id,site,status,resume_hash,answers_hash,dry_run,secure_profile_ref,last_safe_state,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("APP-DASH", "JOB-DASH", "https://careers.example.test/jobs/1", "AWAITING_APPROVAL", "sha256:" + "1" * 64, "sha256:" + "2" * 64, 1, "secure-ref:SYNTHETIC_DASH", "AWAITING_APPROVAL", now),
+                )
+                connection.execute(
+                    "INSERT INTO review_packets(packet_id,application_id,content_hash,relative_path,status,created_at) VALUES(?,?,?,?,?,?)",
+                    ("PKT-DASH", "APP-DASH", "sha256:" + "3" * 64, "secure-ref:SYNTHETIC_PACKET", "AWAITING_APPROVAL", now),
+                )
+            dashboard = service.bootstrap()["dashboard"]
+            self.assertEqual(dashboard["queue"]["awaiting_approval"], 1)
+            self.assertEqual(dashboard["queue"]["slots_available"], 9)
+            self.assertEqual(dashboard["pending_applications"][0]["company"], "Synthetic Company")
+            self.assertEqual(dashboard["pending_applications"][0]["packet_hash_prefix"], "sha256:" + "3" * 8)
+            self.assertEqual(dashboard["safety"]["real_external_actions"], 0)
+            self.assertEqual(dashboard["safety"]["real_website_accesses"], 0)
+            serialized = json.dumps(dashboard, ensure_ascii=False)
+            for forbidden in ("secure_profile_ref", "answers_hash", "resume_hash", "relative_path", "context_json"):
+                self.assertNotIn(forbidden, serialized)
+
     def test_local_interactive_service_has_a_single_instance_lock(self) -> None:
         with project_temp() as root:
             with local_instance_lock(root / "locks"):
@@ -667,6 +695,8 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('CLAIM_REVIEW_INCOMPLETE:"claimReviewIncomplete"', app)
         self.assertIn('CONFLICT_REVIEW_INCOMPLETE:"conflictReviewIncomplete"', app)
         self.assertIn('id="blockingNotice"', html)
+        self.assertIn('id="pipelineDashboard"', html)
+        self.assertIn("function renderDashboard()", app)
         self.assertNotIn("showToast(e.message", app)
 
 

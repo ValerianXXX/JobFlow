@@ -28,6 +28,7 @@ from .document_qa import extract_pdf_text
 from .errors import JobOpsError
 from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
 from .private_onboarding import PrivateOnboarding
+from .queue_manager import QueueManager
 from .runtime_schema import validate_named
 from .security import assert_no_plaintext_secret
 from .util import canonical_json, iso_utc, sha256_bytes, stable_id, write_json
@@ -734,6 +735,53 @@ class OnboardingCenterService:
             })
         return output
 
+    def _pipeline_dashboard(self, state: dict[str, Any]) -> dict[str, Any]:
+        queue = QueueManager(self.database).status()
+        actions = audit_real_external_actions(self.database)
+        with self.database.connect() as connection:
+            status_rows = connection.execute(
+                "SELECT status,COUNT(*) AS total FROM applications GROUP BY status ORDER BY status"
+            ).fetchall()
+            pending_rows = connection.execute(
+                """SELECT a.application_id,a.job_id,a.status,a.updated_at,
+                          j.company,j.title,j.location,j.official_url,
+                          r.packet_id,r.status AS packet_status,r.content_hash
+                   FROM applications a
+                   JOIN jobs j ON j.job_id=a.job_id
+                   LEFT JOIN review_packets r ON r.application_id=a.application_id
+                   WHERE a.status='AWAITING_APPROVAL'
+                   ORDER BY a.updated_at,a.application_id
+                   LIMIT 100"""
+            ).fetchall()
+        applications = [{
+            "application_id": str(row["application_id"]),
+            "job_id": str(row["job_id"]),
+            "status": str(row["status"]),
+            "updated_at": str(row["updated_at"]),
+            "company": str(row["company"]),
+            "title": str(row["title"]),
+            "location": str(row["location"]) if row["location"] is not None else None,
+            "official_url": str(row["official_url"]) if row["official_url"] is not None else None,
+            "packet_id": str(row["packet_id"]) if row["packet_id"] is not None else None,
+            "packet_status": str(row["packet_status"]) if row["packet_status"] is not None else "MISSING",
+            "packet_hash_prefix": str(row["content_hash"])[:15] if row["content_hash"] is not None else None,
+        } for row in pending_rows]
+        return {
+            "status": "LOCAL_PIPELINE_READY",
+            "onboarding_status": str(state.get("status", IN_PROGRESS)),
+            "queue": queue,
+            "application_status_counts": {str(row["status"]): int(row["total"]) for row in status_rows},
+            "pending_applications": applications,
+            "safety": {
+                "network_mode": "LOCAL_OFFLINE_ONLY",
+                "real_website_accesses": 0,
+                "external_action_attempts": int(actions["attempt_count"]),
+                "real_external_actions": int(actions["real_external_actions"]),
+                "knowledge_write_operations": 0,
+            },
+            "generated_at": iso_utc(),
+        }
+
     @_synchronized
     def bootstrap(self) -> dict[str, Any]:
         reference, state = self.ensure_state()
@@ -749,6 +797,7 @@ class OnboardingCenterService:
                 "product": "JobFlow", "version": __version__,
                 "ui_protocol": UI_PROTOCOL_VERSION,
             },
+            "dashboard": self._pipeline_dashboard(state),
             "status": state.get("status", IN_PROGRESS), "locale": state.get("locale", "zh"),
             "revision_number": int(state.get("revision_number", 1)),
             "can_start_revision": state.get("status") == COMPLETE,

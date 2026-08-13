@@ -5,6 +5,7 @@ const STRINGS = {
     brandSubtitle: "找工流水线", localOnly: "仅限本机 · DPAPI 加密", eyebrow: "JOBFLOW SETUP", pageTitle: "JobFlow · 找工流水线",
     heroTitle: "一次填写，连续投递", heroBody: "从简历与项目材料、AI 资料和你的直接回答建立完整资料。所有私人内容只在本机解密，不写入普通项目文件。",
     progressLabel: "问卷完成度", draftSaved: "草稿保存时直接加密", stepSources: "资料来源", stepQuestions: "完整问卷", stepReview: "资料与 Claim 审阅", stepFinish: "确认完成",
+    pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "本地投递控制台", pipelineBody: "统一查看资料准备度、待审批容量和安全边界。这里不会打开招聘网站或执行外部动作。", refreshDashboard: "刷新状态", dashboardRefreshed: "本地控制台已刷新", profileReadiness: "资料准备", awaitingApproval: "待你审批", approvalQueueOnly: "只生成本地审阅包", availableSlots: "剩余容量", deferredJobs: "排队等待", continuesUntilLimit: "达到上限前继续处理其他岗位", pendingReviewTitle: "待审批申请", pendingReviewBody: "只显示安全岗位摘要；私人答案和材料正文不会出现在此处。", safetyBoardTitle: "当前安全边界", realSites: "真实网站访问", externalActions: "真实外部动作", knowledgeWrites: "知识库写入", networkMode: "运行模式", pipelineReady: "已完成", pipelineNeedsSetup: "待完成", aiReadyShort: "AI 已连接", aiMissingShort: "AI 未连接", queueLimit: "上限 {limit}", pendingEmpty: "目前没有等待你审批的申请。离线处理完成的岗位会出现在这里。", packetHash: "审阅包 {hash}", awaitingApprovalStatus: "等待你的决定", safetyGuardOn: "外部动作锁定", offlineMode: "仅限本地离线", refreshingDashboard: "刷新本地控制台…",
     sourceTitle: "把已有信息交给 JobFlow", sourceBody: "资料必须先通过 AI 的实体归并、分类和完整性检查，才会进入 Claim；规则拆分结果不再显示。",
     docsTitle: "简历与项目材料", docsBody: "DOCX、PDF、TXT、MD 或 JSON。适用于简历、案例、证书与补充材料。", materialType: "材料类型", resume: "简历", projectCase: "项目案例", supporting: "补充材料",
     aiTitle: "AI 资料", aiBody: "支持 ChatGPT 官方导出 ZIP 或你整理的 AI 总结。超过 200 MB 的官方导出请选择“雷霆大文件”；原始 ZIP 不会被保留。", aiType: "AI 资料类型", chatgptExport: "ChatGPT 官方导出（不超过 200 MB）", chatgptExportLarge: "雷霆大文件（超过 200 MB 请选择）", aiSummary: "AI 总结", chooseFile: "选择本地文件", uploadAndAnalyze: "选择并由 AI 分析",
@@ -27,6 +28,7 @@ const STRINGS = {
     brandSubtitle: "Job application pipeline", localOnly: "Local only · DPAPI encrypted", eyebrow: "JOBFLOW SETUP", pageTitle: "JobFlow · Job pipeline",
     heroTitle: "Set it up once. Apply continuously.", heroBody: "Build a complete profile from resumes and project materials, AI sources, and your direct answers. Private content is decrypted only on this computer and never written to ordinary project files.",
     progressLabel: "Questionnaire progress", draftSaved: "Drafts are encrypted when saved", stepSources: "Sources", stepQuestions: "Full questionnaire", stepReview: "Profile & Claim review", stepFinish: "Finish",
+    pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "Local application control center", pipelineBody: "See profile readiness, approval capacity, and safety boundaries in one place. This screen never opens recruiting sites or performs external actions.", refreshDashboard: "Refresh status", dashboardRefreshed: "Local control center refreshed", profileReadiness: "Profile readiness", awaitingApproval: "Awaiting you", approvalQueueOnly: "Local review packets only", availableSlots: "Available capacity", deferredJobs: "Waiting in line", continuesUntilLimit: "Other jobs continue until the limit", pendingReviewTitle: "Applications awaiting approval", pendingReviewBody: "Only safe job summaries appear here; private answers and document bodies never do.", safetyBoardTitle: "Active safety boundary", realSites: "Real-site visits", externalActions: "Real external actions", knowledgeWrites: "Knowledge writes", networkMode: "Run mode", pipelineReady: "Complete", pipelineNeedsSetup: "Needs setup", aiReadyShort: "AI connected", aiMissingShort: "AI not connected", queueLimit: "limit {limit}", pendingEmpty: "No application currently needs your approval. Offline-processed roles will appear here.", packetHash: "packet {hash}", awaitingApprovalStatus: "Awaiting your decision", safetyGuardOn: "External actions locked", offlineMode: "Local offline only", refreshingDashboard: "Refreshing local control center…",
     sourceTitle: "Bring your existing information into JobFlow", sourceBody: "A source must pass AI entity consolidation, classification, and completeness checks before anything can enter Claim review. Rule-split output is no longer shown.",
     docsTitle: "Resume & project materials", docsBody: "DOCX, PDF, TXT, MD, or JSON for resumes, cases, certificates, and supporting material.", materialType: "Material type", resume: "Resume", projectCase: "Project case", supporting: "Supporting material",
     aiTitle: "AI sources", aiBody: "Use an official ChatGPT export ZIP or a curated AI summary. For exports over 200 MB, pick ZIPzilla Express. The raw ZIP is never retained.", aiType: "AI source type", chatgptExport: "Official ChatGPT export (up to 200 MB)", chatgptExportLarge: "ZIPzilla Express (over 200 MB — unleash the beast)", aiSummary: "AI summary", chooseFile: "Choose local file", uploadAndAnalyze: "Choose & analyze with AI",
@@ -60,7 +62,7 @@ const ACTIVITY_ESTIMATES = {
   detectingAgent: 22, detectingLocalModel: 12, startingRevision: 8,
   committingSource: 7, includingAll: 7, discardingSource: 5,
   deletingSource: 7, transformingClaims: 8, reprocessing: 45,
-  reprocessingAll: 45
+  reprocessingAll: 45, refreshingDashboard: 5
 };
 const STANDARD_CHATGPT_EXPORT_BYTES = 200 * 1024 * 1024;
 const MAX_LIGHTNING_EXPORT_BYTES = 8 * 1024 * 1024 * 1024;
@@ -271,7 +273,30 @@ function applyLocale() {
     document.querySelector("#blockingNoticeTitle").textContent=t("attentionRequired");
     document.querySelector("#blockingNoticeBody").textContent=localizedErrorMessage(state.lastBlockingError);
   }
+  if(state.data)renderDashboard();
   renderActivity();
+}
+
+function renderDashboard(){
+  const dashboard=state.data?.dashboard;
+  if(!dashboard)return;
+  const queue=dashboard.queue||{}, safety=dashboard.safety||{}, pending=dashboard.pending_applications||[];
+  document.querySelector("#metricOnboarding").textContent=dashboard.onboarding_status==="ONBOARDING_COMPLETE"?t("pipelineReady"):t("pipelineNeedsSetup");
+  document.querySelector("#metricAi").textContent=state.data.ai_engine?.status==="READY"?t("aiReadyShort"):t("aiMissingShort");
+  document.querySelector("#metricAwaiting").textContent=String(queue.awaiting_approval||0);
+  document.querySelector("#metricSlots").textContent=String(queue.slots_available||0);
+  document.querySelector("#metricLimit").textContent=t("queueLimit").replace("{limit}",queue.pending_limit||0);
+  document.querySelector("#metricDeferred").textContent=String(queue.deferred_intake||0);
+  document.querySelector("#pendingDashboardCount").textContent=String(pending.length);
+  const safe=safety.real_website_accesses===0&&safety.real_external_actions===0&&safety.knowledge_write_operations===0;
+  const guard=document.querySelector("#pipelineGuard");guard.textContent=t("safetyGuardOn");guard.classList.toggle("unsafe",!safe);
+  document.querySelector("#safetySites").textContent=String(safety.real_website_accesses||0);
+  document.querySelector("#safetyActions").textContent=String(safety.real_external_actions||0);
+  document.querySelector("#safetyKnowledge").textContent=String(safety.knowledge_write_operations||0);
+  document.querySelector("#safetyMode").textContent=t("offlineMode");
+  const list=document.querySelector("#pendingDashboardList");
+  list.classList.toggle("empty",!pending.length);
+  list.innerHTML=pending.length?pending.map(item=>`<article class="pending-dashboard-item" data-application="${escapeHtml(item.application_id)}"><div><strong>${escapeHtml(item.title)} · ${escapeHtml(item.company)}</strong><small>${escapeHtml([item.location,item.application_id].filter(Boolean).join(" · "))}</small></div><div class="pending-dashboard-item-meta"><b>${escapeHtml(t("awaitingApprovalStatus"))}</b><small>${escapeHtml(t("packetHash").replace("{hash}",item.packet_hash_prefix||"—"))}</small></div></article>`).join(""):`<p>${escapeHtml(t("pendingEmpty"))}</p>`;
 }
 
 function navigate(target) {
@@ -521,7 +546,7 @@ async function refresh(cacheBust=false) {
   state.data=next;
   state.answerDraft=JSON.parse(JSON.stringify(state.data.answers));
   state.claimDraft={}; state.claimEditDraft={}; state.conflictDraft={}; state.selectedClaims=new Set();
-  applyLocale(); renderSources(); renderQuestions(); renderClaims(); updateProgress(); renderStateMode();
+  applyLocale(); renderDashboard(); renderSources(); renderQuestions(); renderClaims(); updateProgress(); renderStateMode();
   document.querySelector("#profileReview").checked=state.data.profile_review==="CONFIRMED";
   clearAttention(); hideBlockingNotice();
 }
@@ -625,6 +650,8 @@ function previewSelections(sourceId, forceSelected=null){
 }
 
 document.addEventListener("click", async event => {
+  const dashboardRefresh=event.target.closest("#refreshDashboard");
+  if(dashboardRefresh){try{await withActivity("refreshingDashboard",()=>refreshLatest());showToast(t("dashboardRefreshed"));}catch(error){handleUiError(error);}return;}
   const aiToggle=event.target.closest("#aiConnectButton");
   if(aiToggle){
     const panel=document.querySelector("#aiConnectionPanel"), opening=panel.classList.contains("hidden");
