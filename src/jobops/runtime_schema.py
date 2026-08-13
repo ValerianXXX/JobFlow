@@ -151,6 +151,21 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Official discovery candidate_count must match the candidate list.")
         if any(item.get("snapshot_hash") != value.get("snapshot_hash") for item in candidates):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Every discovered candidate must retain the same local snapshot hash.")
+        provider_format = str(value.get("source_format", ""))
+        expected_provider = {"greenhouse_json": "greenhouse", "lever_json": "lever"}.get(provider_format)
+        if expected_provider and any(
+            item.get("provider") != expected_provider or item.get("evidence_kind") != "provider_json"
+            for item in candidates
+        ):
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "Saved ATS JSON candidates must match the declared provider and retain provider_json evidence.",
+            )
+        if not expected_provider and any(item.get("evidence_kind") == "provider_json" for item in candidates):
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "HTML and saved-page discovery cannot claim provider_json evidence.",
+            )
     if name == "ats-form-snapshot":
         if value.get("field_count") != len(value.get("fields", [])):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS form field_count must match the field list.")

@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Offline official-careers discovery now auto-detects saved Greenhouse job JSON and Lever posting JSON, while preserving the same no-network, no-queue-mutation and live-freshness-required boundary.
+- 离线官网找岗现在可自动识别已保存的 Greenhouse 岗位 JSON 与 Lever 职位 JSON，同时继续保持不联网、不修改队列且必须实时复验的边界。
 - Every review packet now contains a hash-bound six-step application execution plan covering live freshness, guest entry, safe prefill, conditional materials, protected questions, and final submission. It plainly identifies each approval gate and confirms that other jobs continue until the pending-review limit.
 - 每份审阅包现在都包含哈希绑定的六步投递计划，依次覆盖实时新鲜度、访客进入、安全预填、按需材料、敏感问题与最终提交；每一步的审批门都会明确显示，当前岗位等待时其他岗位仍会继续处理到待审批上限。
 - PDF numeric grounding now accepts only provably equivalent presentation changes (digit grouping, full-width digits, harmless decimal zeros) and bounded adjacent wrapped lines; calculations, scaling, rounding and unrelated-line borrowing still fail closed, while every accepted adjustment is flagged for human review.

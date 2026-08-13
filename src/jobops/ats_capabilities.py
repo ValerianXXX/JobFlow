@@ -15,12 +15,12 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
     },
     {
         "provider": "greenhouse", "offline_evidence_level": "SYNTHETIC_VERTICAL_PASS",
-        "saved_snapshot_modes": ["single_html"], "route_shape": "OFFICIAL_TO_APPROVED_ATS",
+        "saved_snapshot_modes": ["single_html", "provider_json"], "route_shape": "OFFICIAL_TO_APPROVED_ATS",
         "dynamic_control_strategy": "opaque_control_ref",
     },
     {
         "provider": "lever", "offline_evidence_level": "SINGLE_SNAPSHOT_PASS",
-        "saved_snapshot_modes": ["single_html"], "route_shape": "OFFICIAL_TO_APPROVED_ATS",
+        "saved_snapshot_modes": ["single_html", "provider_json"], "route_shape": "OFFICIAL_TO_APPROVED_ATS",
         "dynamic_control_strategy": "opaque_control_ref",
     },
     {

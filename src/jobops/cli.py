@@ -308,9 +308,9 @@ def main(argv: list[str] | None = None) -> int:
             emit({**result.as_dict(), "next_safe_action": "run-to-awaiting-approval"}, project)
         elif args.command == "discover-official-jobs":
             input_path = _project_input(project, args.input, operation="read")
-            source_format = "page_snapshot" if input_path.suffix.casefold() == ".json" else "html"
+            source_format = "auto" if input_path.suffix.casefold() == ".json" else "html"
             if input_path.suffix.casefold() not in {".html", ".htm", ".json"}:
-                raise JobOpsError("OFFICIAL_SNAPSHOT_FORMAT_UNSUPPORTED", "Select a project-local HTML or saved-page JSON snapshot.")
+                raise JobOpsError("OFFICIAL_SNAPSHOT_FORMAT_UNSUPPORTED", "Select a project-local HTML, saved-page JSON, Greenhouse JSON, or Lever JSON snapshot.")
             policy = load_json(project / "config" / "policy.json")
             result = discover_official_jobs(
                 _read_bounded_local_bytes(input_path, MAX_SNAPSHOT_BYTES, "OFFICIAL_SNAPSHOT_SIZE_INVALID"), official_entry_url=args.official_url, company_domain=args.company_domain,

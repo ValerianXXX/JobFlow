@@ -32,7 +32,7 @@ flowchart LR
 | Per-job materials | One immutable approved master; conditional Cover Letter and portfolio/link bindings | 同一不可变母版；求职信与作品集/链接按字段需要生成或绑定 |
 | Personal claims | Always proposed first; never externally approved automatically | 始终先作为候选；绝不自动批准对外使用 |
 | Knowledge | Read-only fingerprints and zero-write verification | 只读指纹与零写入验证 |
-| Job discovery | Saved company/ATS snapshots only; no live freshness claim | 只读已保存官网/ATS 快照；不声称实时有效 |
+| Job discovery | Saved company/ATS HTML or Greenhouse/Lever JSON only; no live freshness claim | 只读已保存官网/ATS HTML 或 Greenhouse/Lever JSON；不声称实时有效 |
 | Browser/ATS | Opaque field plans and zero-modification fake adapter | 不透明字段计划与零修改假适配器 |
 | Queue | Transactional capacity and FIFO deferred intake | 事务容量与延后任务 FIFO |
 | External actions | Production transport absent and fail-closed | 生产传输不存在且失败关闭 |

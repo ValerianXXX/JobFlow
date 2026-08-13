@@ -19,7 +19,7 @@
         "properties": {
           "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
           "offline_evidence_level": {"enum": ["DIRECT_SNAPSHOT_PASS", "SYNTHETIC_VERTICAL_PASS", "SINGLE_SNAPSHOT_PASS", "SAVED_SEQUENCE_PASS"]},
-          "saved_snapshot_modes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["single_html", "ordered_html_sequence"]}},
+          "saved_snapshot_modes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["single_html", "provider_json", "ordered_html_sequence"]}},
           "route_shape": {"enum": ["OFFICIAL_DIRECT", "OFFICIAL_TO_APPROVED_ATS"]},
           "dynamic_control_strategy": {"enum": ["opaque_control_ref", "logical_field_hash"]},
           "guest_first": {"const": true},

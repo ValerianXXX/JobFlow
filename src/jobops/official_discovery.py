@@ -159,6 +159,50 @@ def _safe_title(evidence: _LinkEvidence) -> tuple[str, str]:
     return "UNKNOWN", "UNKNOWN"
 
 
+def _provider_json_evidence(value: object, source_format: str) -> tuple[list[_LinkEvidence], int]:
+    evidence: list[_LinkEvidence] = []
+    ignored = 0
+    if source_format == "greenhouse_json":
+        if not isinstance(value, dict) or not isinstance(value.get("jobs"), list):
+            raise JobOpsError("OFFICIAL_PROVIDER_JSON_INVALID", "The saved Greenhouse payload must contain a jobs array.")
+        jobs = value["jobs"]
+        if len(jobs) > MAX_JOB_CANDIDATES:
+            raise JobOpsError("OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT", "The saved provider payload contains too many jobs.")
+        for item in jobs:
+            if not isinstance(item, dict):
+                ignored += 1
+                continue
+            location_value = item.get("location")
+            location = location_value.get("name") if isinstance(location_value, dict) else location_value
+            href = item.get("absolute_url")
+            title = item.get("title")
+            if not isinstance(href, str) or not isinstance(title, str):
+                ignored += 1
+                continue
+            evidence.append(_LinkEvidence(href, "", _compact(title), _compact(location), "provider_json"))
+    elif source_format == "lever_json":
+        if not isinstance(value, list):
+            raise JobOpsError("OFFICIAL_PROVIDER_JSON_INVALID", "The saved Lever payload must contain a posting array.")
+        if len(value) > MAX_JOB_CANDIDATES:
+            raise JobOpsError("OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT", "The saved provider payload contains too many jobs.")
+        for item in value:
+            if not isinstance(item, dict):
+                ignored += 1
+                continue
+            categories = item.get("categories") if isinstance(item.get("categories"), dict) else {}
+            href = item.get("hostedUrl")
+            title = item.get("text")
+            if not isinstance(href, str) or not isinstance(title, str):
+                ignored += 1
+                continue
+            evidence.append(
+                _LinkEvidence(href, "", _compact(title), _compact(categories.get("location")), "provider_json")
+            )
+    else:
+        raise JobOpsError("OFFICIAL_SNAPSHOT_FORMAT_UNSUPPORTED", "The saved provider payload type is unsupported.")
+    return evidence, ignored
+
+
 def _is_allowed_ats(host: str, approved_ats_hosts: list[str]) -> bool:
     candidate = _host(host)
     return any(candidate == _host(value) or candidate.endswith("." + _host(value)) for value in approved_ats_hosts)
@@ -246,8 +290,11 @@ def discover_official_jobs(
             "The local official-careers snapshot must be non-empty and no larger than the offline parser limit.",
             maximum_bytes=MAX_SNAPSHOT_BYTES,
         )
-    if source_format not in {"html", "page_snapshot"}:
-        raise JobOpsError("OFFICIAL_SNAPSHOT_FORMAT_UNSUPPORTED", "Only local HTML and saved-page JSON snapshots are supported.")
+    if source_format not in {"html", "page_snapshot", "greenhouse_json", "lever_json", "auto"}:
+        raise JobOpsError(
+            "OFFICIAL_SNAPSHOT_FORMAT_UNSUPPORTED",
+            "Only local HTML, saved-page JSON, Greenhouse JSON, and Lever JSON snapshots are supported.",
+        )
     try:
         decoded = snapshot.decode("utf-8")
     except UnicodeDecodeError as exc:
@@ -266,12 +313,31 @@ def discover_official_jobs(
     if not any(hint in (urlparse(entry_url).path + " " + urlparse(entry_url).query).casefold() for hint in CAREER_HINTS):
         raise JobOpsError("OFFICIAL_CAREERS_PATH_NOT_PROVEN", "The saved page URL is not identifiable as an official careers/jobs page.")
 
-    html = decoded
-    if source_format == "page_snapshot":
+    resolved_format = source_format
+    parsed_json: object | None = None
+    if source_format != "html":
         try:
-            envelope = json.loads(decoded)
+            parsed_json = json.loads(decoded)
         except json.JSONDecodeError as exc:
-            raise JobOpsError("OFFICIAL_PAGE_SNAPSHOT_INVALID", "The saved-page snapshot is not valid JSON.") from exc
+            raise JobOpsError("OFFICIAL_PAGE_SNAPSHOT_INVALID", "The saved careers snapshot is not valid JSON.") from exc
+    if source_format == "auto":
+        if isinstance(parsed_json, dict) and isinstance(parsed_json.get("source_url"), str) and isinstance(parsed_json.get("html"), str):
+            resolved_format = "page_snapshot"
+        elif isinstance(parsed_json, dict) and isinstance(parsed_json.get("jobs"), list):
+            resolved_format = "greenhouse_json"
+        elif isinstance(parsed_json, list):
+            resolved_format = "lever_json"
+        else:
+            raise JobOpsError(
+                "OFFICIAL_PROVIDER_JSON_UNRECOGNIZED",
+                "The JSON is not a saved page, Greenhouse job payload, or Lever posting payload.",
+            )
+
+    html: str | None = decoded if resolved_format == "html" else None
+    provider_evidence: list[_LinkEvidence] = []
+    provider_ignored = 0
+    if resolved_format == "page_snapshot":
+        envelope = parsed_json
         if not isinstance(envelope, dict) or set(envelope) - {"source_url", "html"}:
             raise JobOpsError("OFFICIAL_PAGE_SNAPSHOT_INVALID", "The saved-page snapshot contains missing or unrecognized fields.")
         if _canonical_url(str(envelope.get("source_url", ""))) != entry_url:
@@ -279,32 +345,38 @@ def discover_official_jobs(
         html = envelope.get("html")
         if not isinstance(html, str) or not html.strip():
             raise JobOpsError("OFFICIAL_PAGE_SNAPSHOT_INVALID", "The saved-page snapshot must contain non-empty HTML.")
+    elif resolved_format in {"greenhouse_json", "lever_json"}:
+        provider_evidence, provider_ignored = _provider_json_evidence(parsed_json, resolved_format)
 
     snapshot_hash = sha256_bytes(snapshot)
-    parser = _SnapshotHTMLParser()
-    try:
-        parser.feed(html)
-        parser.close()
-    except JobOpsError:
-        raise
-    except Exception as exc:
-        raise JobOpsError("OFFICIAL_SNAPSHOT_HTML_INVALID", "The local careers snapshot could not be parsed safely.") from exc
+    parser: _SnapshotHTMLParser | None = None
+    if html is not None:
+        parser = _SnapshotHTMLParser()
+        try:
+            parser.feed(html)
+            parser.close()
+        except JobOpsError:
+            raise
+        except Exception as exc:
+            raise JobOpsError("OFFICIAL_SNAPSHOT_HTML_INVALID", "The local careers snapshot could not be parsed safely.") from exc
 
-    evidences = list(parser.links)
-    visible = " ".join(parser.visible_text)
-    existing_hrefs = {item.href for item in evidences}
-    for match in PLAIN_HTTPS_URL.findall(visible):
-        value = match.rstrip(".,);]}")
-        if value not in existing_hrefs:
-            if len(evidences) >= MAX_LINK_EVIDENCE:
-                raise JobOpsError(
-                    "OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT",
-                    "The local careers snapshot contains too many link records for bounded offline analysis.",
-                )
-            evidences.append(_LinkEvidence(value, "", "", "", "plain_url"))
+        evidences = list(parser.links)
+        visible = " ".join(parser.visible_text)
+        existing_hrefs = {item.href for item in evidences}
+        for match in PLAIN_HTTPS_URL.findall(visible):
+            value = match.rstrip(".,);]}")
+            if value not in existing_hrefs:
+                if len(evidences) >= MAX_LINK_EVIDENCE:
+                    raise JobOpsError(
+                        "OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT",
+                        "The local careers snapshot contains too many link records for bounded offline analysis.",
+                    )
+                evidences.append(_LinkEvidence(value, "", "", "", "plain_url"))
+    else:
+        evidences = provider_evidence
 
     candidates_by_key: dict[str, dict[str, object]] = {}
-    ignored = 0
+    ignored = provider_ignored
     duplicates = 0
     for evidence in evidences:
         candidate = _job_link(
@@ -336,7 +408,7 @@ def discover_official_jobs(
         candidates_by_key[key] = candidate
 
     candidates = sorted(candidates_by_key.values(), key=lambda item: (str(item["provider"]), str(item["ats_job_identity"]), str(item["discovered_url"])))
-    if len(candidates) == 1 and candidates[0]["title_status"] == "UNKNOWN" and parser.headings:
+    if len(candidates) == 1 and candidates[0]["title_status"] == "UNKNOWN" and parser is not None and parser.headings:
         heading = _compact(parser.headings[0])
         if heading.casefold() not in GENERIC_LINK_TEXT:
             candidates[0]["title"] = heading
@@ -346,7 +418,7 @@ def discover_official_jobs(
         "schema_version": 1,
         "status": "LOCAL_SNAPSHOT_PARSED",
         "source_mode": "LOCAL_SNAPSHOT_ONLY",
-        "source_format": source_format,
+        "source_format": resolved_format,
         "company_domain": registered,
         "official_entry_url": entry_url,
         "snapshot_hash": snapshot_hash,

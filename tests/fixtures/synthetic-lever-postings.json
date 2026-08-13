@@ -1,0 +1,21 @@
+[
+  {
+    "id": "lever-1",
+    "text": "Synthetic Strategy Analyst",
+    "hostedUrl": "https://jobs.lever.co/example/lever-1",
+    "categories": {"location": "Boston, MA", "commitment": "Full-time"}
+  },
+  {
+    "id": "lever-2",
+    "text": "Synthetic Product Analyst",
+    "hostedUrl": "https://jobs.lever.co/example/lever-2",
+    "categories": {"location": "Remote"}
+  },
+  {
+    "id": "ignored-sensitive-query",
+    "text": "Unsafe query fixture",
+    "hostedUrl": "https://jobs.lever.co/example/private?session_token=do-not-retain",
+    "categories": {"location": "UNKNOWN"}
+  },
+  {"id": "missing-url", "text": "Missing URL"}
+]

@@ -16,6 +16,66 @@ APPROVED_ATS = ["myworkdayjobs.com", "greenhouse.io", "lever.co"]
 
 
 class OfflineOfficialDiscoveryTests(unittest.TestCase):
+    def test_saved_greenhouse_and_lever_json_are_auto_detected_without_transport(self) -> None:
+        fixtures = PROJECT / "tests" / "fixtures"
+        for filename, expected_format, expected_provider, expected_titles in (
+            (
+                "synthetic-greenhouse-jobs.json", "greenhouse_json", "greenhouse",
+                {"Synthetic Data Analyst", "Synthetic Operations Analyst"},
+            ),
+            (
+                "synthetic-lever-postings.json", "lever_json", "lever",
+                {"Synthetic Strategy Analyst", "Synthetic Product Analyst"},
+            ),
+        ):
+            with self.subTest(filename=filename), patch(
+                "socket.socket", side_effect=AssertionError("network forbidden")
+            ), patch("urllib.request.urlopen", side_effect=AssertionError("network forbidden")):
+                report = discover_official_jobs(
+                    (fixtures / filename).read_bytes(),
+                    official_entry_url="https://example.com/careers",
+                    company_domain="example.com",
+                    approved_ats_hosts=APPROVED_ATS,
+                    source_format="auto",
+                )
+            self.assertEqual(report["source_format"], expected_format)
+            self.assertEqual(report["candidate_count"], 2)
+            self.assertEqual({item["provider"] for item in report["candidates"]}, {expected_provider})
+            self.assertEqual({item["title"] for item in report["candidates"]}, expected_titles)
+            self.assertTrue(all(item["evidence_kind"] == "provider_json" for item in report["candidates"]))
+            self.assertTrue(all(item["ats_tenant"] == "example" for item in report["candidates"]))
+            self.assertTrue(all(item["requires_live_freshness_check"] for item in report["candidates"]))
+            self.assertEqual(report["network_actions"], 0)
+            self.assertEqual(report["real_external_actions"], 0)
+            validate_named("official-discovery", report, PROJECT / "schemas")
+
+    def test_unrecognized_or_mislabeled_provider_json_fails_closed(self) -> None:
+        with self.assertRaises(JobOpsError) as unrecognized:
+            discover_official_jobs(
+                b'{"results": []}', official_entry_url="https://example.com/careers",
+                company_domain="example.com", approved_ats_hosts=APPROVED_ATS, source_format="auto",
+            )
+        self.assertEqual(unrecognized.exception.code, "OFFICIAL_PROVIDER_JSON_UNRECOGNIZED")
+        with self.assertRaises(JobOpsError) as mislabeled:
+            discover_official_jobs(
+                b'[]', official_entry_url="https://example.com/careers",
+                company_domain="example.com", approved_ats_hosts=APPROVED_ATS, source_format="greenhouse_json",
+            )
+        self.assertEqual(mislabeled.exception.code, "OFFICIAL_PROVIDER_JSON_INVALID")
+
+    def test_provider_json_report_rejects_mismatched_semantics(self) -> None:
+        report = discover_official_jobs(
+            (PROJECT / "tests" / "fixtures" / "synthetic-greenhouse-jobs.json").read_bytes(),
+            official_entry_url="https://example.com/careers",
+            company_domain="example.com",
+            approved_ats_hosts=APPROVED_ATS,
+            source_format="auto",
+        )
+        report["candidates"][0]["provider"] = "lever"
+        with self.assertRaises(JobOpsError) as mismatch:
+            validate_named("official-discovery", report, PROJECT / "schemas")
+        self.assertEqual(mismatch.exception.code, "SCHEMA_SEMANTIC_CONFLICT")
+
     def test_local_fixture_discovers_company_and_workday_jobs_without_network(self) -> None:
         snapshot = (PROJECT / "tests" / "fixtures" / "synthetic-official-job-list.html").read_bytes()
         with patch("socket.socket", side_effect=AssertionError("network forbidden")), patch(

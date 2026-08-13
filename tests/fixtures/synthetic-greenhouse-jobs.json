@@ -1,0 +1,23 @@
+{
+  "jobs": [
+    {
+      "id": 101,
+      "title": "Synthetic Data Analyst",
+      "absolute_url": "https://job-boards.greenhouse.io/example/jobs/101",
+      "location": {"name": "New York, NY"}
+    },
+    {
+      "id": 102,
+      "title": "Synthetic Operations Analyst",
+      "absolute_url": "https://boards.greenhouse.io/example/jobs/102",
+      "location": {"name": "Remote"}
+    },
+    {
+      "id": 101,
+      "title": "Synthetic Data Analyst",
+      "absolute_url": "https://job-boards.greenhouse.io/example/jobs/101",
+      "location": {"name": "New York, NY"}
+    },
+    {"id": 999, "title": "Missing URL"}
+  ]
+}

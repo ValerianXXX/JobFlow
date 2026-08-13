@@ -10,7 +10,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] DPAPI Candidate Profile, Answer Bank, source deletion and versioned onboarding review.
 - [x] AI-required entity reconstruction, source coverage, grounding and Claim quality gates.
 - [x] Transactional pending-review queue with explicit approve/reject/revise/defer decisions.
-- [x] Offline company-careers discovery from saved snapshots.
+- [x] Offline company-careers discovery from saved HTML/page snapshots and saved Greenhouse/Lever job JSON.
 - [x] Fail-closed local ATS form and Workday saved-sequence analysis.
 - [x] Synthetic Greenhouse vertical to `AWAITING_APPROVAL`; Lever contract evidence.
 - [x] Manual-tick-only continuous intake planning with FIFO and user-selected capacity.
