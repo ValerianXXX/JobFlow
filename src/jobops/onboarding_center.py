@@ -755,11 +755,56 @@ class OnboardingCenterService:
         }
         write_json(self.index_path, value)
 
-    def _save_state(self, reference: str, state: dict[str, Any]) -> dict[str, object]:
+    def _save_state(
+        self,
+        reference: str,
+        state: dict[str, Any],
+        *,
+        completion_ref: str | None = None,
+    ) -> dict[str, object]:
+        previous = self.onboarding.read_bytes(reference)
         state["updated_at"] = iso_utc()
         result = self.onboarding.rotate(reference, canonical_json(state))
-        self._write_index(reference, state)
+        try:
+            self._write_index(reference, state, completion_ref=completion_ref)
+        except Exception as exc:
+            try:
+                self.onboarding.rotate(reference, previous)
+            except Exception as rollback_error:
+                raise JobOpsError(
+                    "ONBOARDING_STATE_INDEX_ROLLBACK_FAILED",
+                    "The encrypted onboarding state could not be restored after its redacted index failed to update.",
+                ) from rollback_error
+            raise JobOpsError(
+                "ONBOARDING_STATE_INDEX_WRITE_FAILED",
+                "The redacted onboarding index failed to update, so the encrypted state was restored.",
+            ) from exc
         return result
+
+    def _rollback_private_writes(
+        self,
+        created_references: list[str],
+        *,
+        rotated_reference: str | None = None,
+        previous_value: bytes | None = None,
+    ) -> None:
+        failures = 0
+        if rotated_reference and previous_value is not None:
+            try:
+                self.onboarding.rotate(rotated_reference, previous_value)
+            except Exception:
+                failures += 1
+        for created_reference in reversed(created_references):
+            try:
+                self.onboarding.delete(created_reference, user_confirmed=True)
+            except Exception:
+                failures += 1
+        if failures:
+            raise JobOpsError(
+                "ONBOARDING_PRIVATE_ROLLBACK_FAILED",
+                "A multi-reference private update failed and one or more compensating writes did not complete.",
+                failed_compensations=failures,
+            )
 
     def _claims_for_ui(self, state: dict[str, Any]) -> list[dict[str, Any]]:
         decisions = state.get("claim_decisions", {})
@@ -1214,12 +1259,43 @@ class OnboardingCenterService:
         }
         validate_named("onboarding-answer-bank", answer_bank, self.schemas)
         answer_ref = state.get("answer_bank_ref")
-        if answer_ref:
-            self.onboarding.rotate(answer_ref, canonical_json(answer_bank))
-        else:
-            record = self.onboarding.import_bytes("answer_bank", canonical_json(answer_bank), synthetic=False)
-            state["answer_bank_ref"] = str(record["secure_ref"])
-        self._save_state(reference, state)
+        previous_answer: bytes | None = None
+        created_references: list[str] = []
+        rotated_reference: str | None = None
+        try:
+            if answer_ref:
+                previous_answer = self.onboarding.read_bytes(str(answer_ref))
+                self.onboarding.rotate(str(answer_ref), canonical_json(answer_bank))
+                rotated_reference = str(answer_ref)
+            else:
+                record = self.onboarding.import_bytes("answer_bank", canonical_json(answer_bank), synthetic=False)
+                answer_ref = str(record["secure_ref"])
+                created_references.append(answer_ref)
+                state["answer_bank_ref"] = answer_ref
+            self._save_state(reference, state)
+        except Exception as exc:
+            if isinstance(exc, JobOpsError) and exc.code in {
+                "ONBOARDING_STATE_INDEX_ROLLBACK_FAILED", "PRIVATE_ROTATION_ROLLBACK_FAILED",
+            }:
+                raise JobOpsError(
+                    "ONBOARDING_ANSWER_SAVE_ROLLBACK_FAILED",
+                    "The Answer Bank save stopped with an indeterminate encrypted-state commit; references were retained for repair.",
+                ) from exc
+            try:
+                self._rollback_private_writes(
+                    created_references,
+                    rotated_reference=rotated_reference,
+                    previous_value=previous_answer,
+                )
+            except Exception as rollback_error:
+                raise JobOpsError(
+                    "ONBOARDING_ANSWER_SAVE_ROLLBACK_FAILED",
+                    "The Answer Bank save failed and its prior encrypted version could not be fully restored.",
+                ) from rollback_error
+            raise JobOpsError(
+                "ONBOARDING_ANSWER_SAVE_FAILED",
+                "The Answer Bank save did not commit, so all encrypted references were restored.",
+            ) from exc
         return {"status": "SAVED", "completion": answer_bank["completion"], "private_values_emitted": 0, "real_external_actions": 0}
 
     @_synchronized
@@ -1953,11 +2029,28 @@ class OnboardingCenterService:
             "completion": self._completion(revision["answers"]), "updated_at": now,
         }
         validate_named("onboarding-answer-bank", answer_bank, self.schemas)
-        answer_record = self.onboarding.import_bytes("answer_bank", canonical_json(answer_bank), synthetic=False)
-        revision["answer_bank_ref"] = str(answer_record["secure_ref"])
-        record = self.onboarding.import_bytes("onboarding_center_state", canonical_json(revision), synthetic=False)
-        reference = str(record["secure_ref"])
-        self._write_index(reference, revision)
+        created_references: list[str] = []
+        try:
+            answer_record = self.onboarding.import_bytes("answer_bank", canonical_json(answer_bank), synthetic=False)
+            answer_reference = str(answer_record["secure_ref"])
+            created_references.append(answer_reference)
+            revision["answer_bank_ref"] = answer_reference
+            record = self.onboarding.import_bytes("onboarding_center_state", canonical_json(revision), synthetic=False)
+            reference = str(record["secure_ref"])
+            created_references.append(reference)
+            self._write_index(reference, revision)
+        except Exception as exc:
+            try:
+                self._rollback_private_writes(created_references)
+            except Exception as rollback_error:
+                raise JobOpsError(
+                    "ONBOARDING_REVISION_ROLLBACK_FAILED",
+                    "The new onboarding revision failed and its partial encrypted references could not be fully removed.",
+                ) from rollback_error
+            raise JobOpsError(
+                "ONBOARDING_REVISION_WRITE_FAILED",
+                "The new onboarding revision did not commit, so its partial encrypted references were removed.",
+            ) from exc
         return {
             "status": "ONBOARDING_REVISION_STARTED", "revision_number": revision["revision_number"],
             "state_ref": reference, "previous_state_ref": previous_ref, "changed": True,
@@ -2088,18 +2181,11 @@ class OnboardingCenterService:
             raise JobOpsError("ANSWER_BANK_MISSING", "The encrypted Answer Bank is missing.")
         # Create a new immutable profile version.  Never rewrite the profile referenced by
         # a previous review packet: historical evidence bindings must remain reproducible.
-        profile = self._build_profile(state, "secure-ref:IMPORT_PENDING")
-        profile_record = self.onboarding.import_bytes("candidate_profile", canonical_json(profile), synthetic=False)
-        profile_ref = str(profile_record["secure_ref"])
-        profile["profile_ref"] = profile_ref
-        validate_named("candidate-profile", profile, self.schemas)
-        self.onboarding.rotate(profile_ref, canonical_json(profile))
         answer_bank = {
             "schema_version": 2, "status": COMPLETE, "locale": state["locale"], "answers": state["answers"],
             "completion": completion, "updated_at": iso_utc(),
         }
         validate_named("onboarding-answer-bank", answer_bank, self.schemas)
-        self.onboarding.rotate(answer_ref, canonical_json(answer_bank))
         active_claims = self._claims_for_ui(state)
         active_ids = {item["claim_id"] for item in active_claims}
         active_material = [item for item in state.get("material_claims", []) if item.get("claim_id") in active_ids]
@@ -2119,7 +2205,6 @@ class OnboardingCenterService:
             "approved_for_external": False,
             "note": "User review is complete; registry promotion remains separately evidence-gated.",
         }
-        approval_record = self.onboarding.import_bytes("claim_approvals", canonical_json(claim_approvals), synthetic=False)
         imported_materials = sum(item["category"] not in AI_SOURCE_TYPES for item in state["sources"])
         existing_master = bool(self._latest_ref("master_resume_docx") or self._latest_ref("master_resume_pdf"))
         if existing_master and not any(item["category"] == "resume" for item in state["sources"]):
@@ -2129,25 +2214,67 @@ class OnboardingCenterService:
             "ai": sum(item["category"] in AI_SOURCE_TYPES for item in state["sources"]),
             "direct_answers": sum(item["source"] == "APPLICANT_CONFIRMED" for item in state["answers"].values()),
         }
-        packet = {
-            "schema_version": 1, "status": COMPLETE, "profile_ref": profile_ref,
-            "answer_bank_ref": answer_ref, "claim_approvals_ref": approval_record["secure_ref"],
-            "counts": {
-                "answers_resolved": completion["resolved"], "answers_total": completion["total"],
-                "claims_reviewed": review["claims_reviewed"], "claims_total": review["claims_total"],
-                "conflicts_resolved": review["conflicts_resolved"], "conflicts_total": review["conflicts_total"],
-            },
-            "sources": source_counts, "locale": state["locale"], "completed_at": iso_utc(),
-            "real_external_actions": 0, "knowledge_write_operations": 0,
-        }
-        validate_named("onboarding-completion", packet, self.schemas)
-        completion_record = self.onboarding.import_bytes("onboarding_completion_packet", canonical_json(packet), synthetic=False)
-        state["status"] = COMPLETE
-        state["completed_at"] = packet["completed_at"]
-        self._save_state(state_ref, state)
-        self._write_index(state_ref, state, completion_ref=str(completion_record["secure_ref"]))
+        previous_answer = self.onboarding.read_bytes(str(answer_ref))
+        created_references: list[str] = []
+        answer_rotated = False
+        try:
+            profile = self._build_profile(state, "secure-ref:IMPORT_PENDING")
+            profile_record = self.onboarding.import_bytes("candidate_profile", canonical_json(profile), synthetic=False)
+            profile_ref = str(profile_record["secure_ref"])
+            created_references.append(profile_ref)
+            profile["profile_ref"] = profile_ref
+            validate_named("candidate-profile", profile, self.schemas)
+            self.onboarding.rotate(profile_ref, canonical_json(profile))
+            self.onboarding.rotate(str(answer_ref), canonical_json(answer_bank))
+            answer_rotated = True
+            approval_record = self.onboarding.import_bytes("claim_approvals", canonical_json(claim_approvals), synthetic=False)
+            approval_ref = str(approval_record["secure_ref"])
+            created_references.append(approval_ref)
+            packet = {
+                "schema_version": 1, "status": COMPLETE, "profile_ref": profile_ref,
+                "answer_bank_ref": answer_ref, "claim_approvals_ref": approval_ref,
+                "counts": {
+                    "answers_resolved": completion["resolved"], "answers_total": completion["total"],
+                    "claims_reviewed": review["claims_reviewed"], "claims_total": review["claims_total"],
+                    "conflicts_resolved": review["conflicts_resolved"], "conflicts_total": review["conflicts_total"],
+                },
+                "sources": source_counts, "locale": state["locale"], "completed_at": iso_utc(),
+                "real_external_actions": 0, "knowledge_write_operations": 0,
+            }
+            validate_named("onboarding-completion", packet, self.schemas)
+            completion_record = self.onboarding.import_bytes(
+                "onboarding_completion_packet", canonical_json(packet), synthetic=False,
+            )
+            completion_ref = str(completion_record["secure_ref"])
+            created_references.append(completion_ref)
+            state["status"] = COMPLETE
+            state["completed_at"] = packet["completed_at"]
+            self._save_state(state_ref, state, completion_ref=completion_ref)
+        except Exception as exc:
+            if isinstance(exc, JobOpsError) and exc.code in {
+                "ONBOARDING_STATE_INDEX_ROLLBACK_FAILED", "PRIVATE_ROTATION_ROLLBACK_FAILED",
+            }:
+                raise JobOpsError(
+                    "ONBOARDING_COMPLETION_ROLLBACK_FAILED",
+                    "Onboarding completion stopped with an indeterminate encrypted-state commit; references were retained for repair.",
+                ) from exc
+            try:
+                self._rollback_private_writes(
+                    created_references,
+                    rotated_reference=str(answer_ref) if answer_rotated else None,
+                    previous_value=previous_answer if answer_rotated else None,
+                )
+            except Exception as rollback_error:
+                raise JobOpsError(
+                    "ONBOARDING_COMPLETION_ROLLBACK_FAILED",
+                    "Onboarding completion failed and its partial encrypted references could not be fully restored.",
+                ) from rollback_error
+            raise JobOpsError(
+                "ONBOARDING_COMPLETION_WRITE_FAILED",
+                "Onboarding completion did not commit, so all prior encrypted versions were restored.",
+            ) from exc
         return {
-            **packet, "completion_ref": completion_record["secure_ref"],
+            **packet, "completion_ref": completion_ref,
             "private_values_emitted": 0, "staging_residue": 0,
             "next_safe_action": "start offline job intake; real external actions remain disabled",
         }

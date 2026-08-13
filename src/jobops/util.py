@@ -102,8 +102,14 @@ def load_json(path: Path) -> dict[str, Any]:
 def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    os.replace(temporary, path)
+    try:
+        temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        os.replace(temporary, path)
+    finally:
+        try:
+            temporary.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 def tree_fingerprint(root: Path, files: Iterable[Path]) -> dict[str, object]:
@@ -115,4 +121,3 @@ def tree_fingerprint(root: Path, files: Iterable[Path]) -> dict[str, object]:
         count += 1
     payload = ("\n".join(records) + ("\n" if records else "")).encode("utf-8")
     return {"file_count": count, "tree_sha256": sha256_bytes(payload)}
-

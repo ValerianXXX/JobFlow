@@ -308,6 +308,53 @@ class OnboardingCenterTests(unittest.TestCase):
                 dump = "\n".join(connection.iterdump())
             self.assertNotIn("Synthetic Candidate", dump)
 
+    def test_answer_save_failure_restores_every_private_reference(self) -> None:
+        with project_temp() as root:
+            service, onboarding, _, _, _ = self.make_service(root)
+            state_ref, _ = service.ensure_state()
+            initial_state = onboarding.read_bytes(state_ref)
+            with service.database.connect() as connection:
+                initial_active = {
+                    row[0] for row in connection.execute("SELECT secure_ref FROM private_refs WHERE status='ACTIVE'")
+                }
+            with mock.patch.object(service, "_save_state", side_effect=OSError("synthetic state failure")):
+                with self.assertRaises(JobOpsError) as first_failure:
+                    service.save_answers({"locale": "en", "answers": full_answers()})
+            self.assertEqual(first_failure.exception.code, "ONBOARDING_ANSWER_SAVE_FAILED")
+            self.assertEqual(onboarding.read_bytes(state_ref), initial_state)
+            with service.database.connect() as connection:
+                self.assertEqual(
+                    {row[0] for row in connection.execute("SELECT secure_ref FROM private_refs WHERE status='ACTIVE'")},
+                    initial_active,
+                )
+
+            service.save_answers({"locale": "en", "answers": full_answers()})
+            _, saved_state = service.ensure_state()
+            answer_ref = str(saved_state["answer_bank_ref"])
+            saved_answer = onboarding.read_bytes(answer_ref)
+            saved_state_bytes = onboarding.read_bytes(state_ref)
+            changed = full_answers()
+            changed["minimum_salary"]["value"] = "200000"
+            with mock.patch.object(service, "_save_state", side_effect=OSError("synthetic state failure")):
+                with self.assertRaises(JobOpsError) as second_failure:
+                    service.save_answers({"locale": "zh", "answers": changed})
+            self.assertEqual(second_failure.exception.code, "ONBOARDING_ANSWER_SAVE_FAILED")
+            self.assertEqual(onboarding.read_bytes(answer_ref), saved_answer)
+            self.assertEqual(onboarding.read_bytes(state_ref), saved_state_bytes)
+
+    def test_redacted_index_failure_restores_encrypted_state(self) -> None:
+        with project_temp() as root:
+            service, onboarding, _, _, _ = self.make_service(root)
+            reference, state = service.ensure_state()
+            previous = onboarding.read_bytes(reference)
+            state["locale"] = "en"
+            with mock.patch("jobops.onboarding_center.write_json", side_effect=OSError("synthetic index failure")):
+                with self.assertRaises(JobOpsError) as failed:
+                    service._save_state(reference, state)
+            self.assertEqual(failed.exception.code, "ONBOARDING_STATE_INDEX_WRITE_FAILED")
+            self.assertEqual(onboarding.read_bytes(reference), previous)
+            self.assertFalse(service.index_path.with_suffix(service.index_path.suffix + ".tmp").exists())
+
     def test_ai_sources_are_filtered_claims_not_silent_profile_facts(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
@@ -881,6 +928,41 @@ class OnboardingCenterTests(unittest.TestCase):
                 service.complete(user_confirmed=True)
             self.assertEqual(caught_again.exception.code, "ONBOARDING_ALREADY_COMPLETE")
 
+    def test_completion_failure_removes_partial_refs_and_restores_answer_bank(self) -> None:
+        with project_temp() as root:
+            service, onboarding, store, _, _ = self.make_service(root)
+            service.save_answers({"locale": "zh", "answers": full_answers()})
+            bootstrap = service.bootstrap()
+            service.save_review({
+                "profile_review": "CONFIRMED",
+                "claim_decisions": {item["claim_id"]: "CONFIRMED" for item in bootstrap["claims"]},
+                "conflict_resolutions": {
+                    item["conflict_id"]: {"resolution": "USE_RESUME", "manual_value": None}
+                    for item in bootstrap["conflicts"]
+                },
+            })
+            _, state = service.ensure_state()
+            answer_ref = str(state["answer_bank_ref"])
+            previous_answer = onboarding.read_bytes(answer_ref)
+            with service.database.connect() as connection:
+                previous_active = {
+                    row[0] for row in connection.execute("SELECT secure_ref FROM private_refs WHERE status='ACTIVE'")
+                }
+            previous_store_refs = set(store.values)
+            with mock.patch.object(service, "_save_state", side_effect=OSError("synthetic final state failure")):
+                with self.assertRaises(JobOpsError) as failed:
+                    service.complete(user_confirmed=True)
+            self.assertEqual(failed.exception.code, "ONBOARDING_COMPLETION_WRITE_FAILED")
+            self.assertEqual(service.bootstrap()["status"], "IN_PROGRESS")
+            self.assertEqual(onboarding.read_bytes(answer_ref), previous_answer)
+            self.assertEqual(set(store.values), previous_store_refs)
+            with service.database.connect() as connection:
+                self.assertEqual(
+                    {row[0] for row in connection.execute("SELECT secure_ref FROM private_refs WHERE status='ACTIVE'")},
+                    previous_active,
+                )
+            self.assertEqual(service.complete(user_confirmed=True)["status"], "ONBOARDING_COMPLETE")
+
     def test_completed_snapshot_requires_versioned_revision_for_edits(self) -> None:
         with project_temp() as root:
             service, onboarding, _, _, _ = self.make_service(root)
@@ -917,6 +999,38 @@ class OnboardingCenterTests(unittest.TestCase):
             })
             self.assertEqual(onboarding.read_bytes(old_ref), old_bytes)
             self.assertEqual(service.bootstrap()["claims"][0]["statement"], "Edited synthetic statement with a complete responsibility boundary.")
+
+    def test_revision_index_failure_removes_partial_private_references(self) -> None:
+        with project_temp() as root:
+            service, _, store, _, _ = self.make_service(root)
+            service.save_answers({"locale": "zh", "answers": full_answers()})
+            bootstrap = service.bootstrap()
+            service.save_review({
+                "profile_review": "CONFIRMED",
+                "claim_decisions": {item["claim_id"]: "CONFIRMED" for item in bootstrap["claims"]},
+                "conflict_resolutions": {
+                    item["conflict_id"]: {"resolution": "USE_RESUME", "manual_value": None}
+                    for item in bootstrap["conflicts"]
+                },
+            })
+            service.complete(user_confirmed=True)
+            with service.database.connect() as connection:
+                previous_active = {
+                    row[0] for row in connection.execute("SELECT secure_ref FROM private_refs WHERE status='ACTIVE'")
+                }
+            previous_store_refs = set(store.values)
+            with mock.patch.object(service, "_write_index", side_effect=OSError("synthetic revision index failure")):
+                with self.assertRaises(JobOpsError) as failed:
+                    service.start_revision()
+            self.assertEqual(failed.exception.code, "ONBOARDING_REVISION_WRITE_FAILED")
+            self.assertEqual(service.bootstrap()["status"], "ONBOARDING_COMPLETE")
+            self.assertEqual(set(store.values), previous_store_refs)
+            with service.database.connect() as connection:
+                self.assertEqual(
+                    {row[0] for row in connection.execute("SELECT secure_ref FROM private_refs WHERE status='ACTIVE'")},
+                    previous_active,
+                )
+            self.assertEqual(service.start_revision()["status"], "ONBOARDING_REVISION_STARTED")
 
     def test_claims_can_be_merged_and_split_without_overwriting_sources(self) -> None:
         with project_temp() as root:
@@ -1209,6 +1323,8 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("const MAX_RETAINED_SOURCE_BYTES = 64 * 1024 * 1024;", app)
         self.assertIn('privateDeleteRetry: "本机加密副本暂时无法删除', app)
         self.assertIn('privateDeleteRetry: "The local encrypted copy could not be deleted', app)
+        self.assertIn('ONBOARDING_COMPLETION_WRITE_FAILED:"privateWriteRetry"', app)
+        self.assertIn('ONBOARDING_COMPLETION_ROLLBACK_FAILED:"privateWriteRepair"', app)
         self.assertIn('id="blockingNotice"', html)
         self.assertIn('id="pipelineDashboard"', html)
         self.assertIn('id="deferredDashboardList"', html)
