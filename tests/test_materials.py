@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import unittest
+import subprocess
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from unittest import mock
 
 from _support import project_temp
-from jobops.document_builder import _save_document_atomic, build_cover_letter, build_resume
+from jobops.document_builder import _save_document_atomic, build_cover_letter, build_resume, export_docx_to_pdf
 from jobops.errors import JobOpsError
 from jobops.evidence import map_evidence
 from jobops.materials import approved_wordings, master_diff
@@ -29,6 +32,28 @@ def approved_claim(claim_id: str, wording: str, fact: str):
 
 
 class MaterialTests(unittest.TestCase):
+    def test_pdf_export_never_accepts_or_overwrites_a_stale_target(self) -> None:
+        with project_temp() as temp:
+            docx = temp / "resume.docx"
+            pdf = temp / "resume.pdf"
+            docx.write_bytes(b"synthetic docx input")
+            pdf.write_bytes(b"stable old pdf")
+            completed = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+            with mock.patch("jobops.document_builder.subprocess.run", return_value=completed):
+                with self.assertRaises(JobOpsError) as blocked:
+                    export_docx_to_pdf(docx, pdf, temp / "export.ps1")
+            self.assertEqual(blocked.exception.code, "DOCX_PDF_EXPORT_FAILED")
+            self.assertEqual(pdf.read_bytes(), b"stable old pdf")
+            self.assertEqual(list(temp.glob(".resume.jobflow-*.tmp.pdf")), [])
+
+            def successful_export(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+                Path(command[-1]).write_bytes(b"fresh pdf")
+                return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+            with mock.patch("jobops.document_builder.subprocess.run", side_effect=successful_export):
+                export_docx_to_pdf(docx, pdf, temp / "export.ps1")
+            self.assertEqual(pdf.read_bytes(), b"fresh pdf")
+
     def test_document_save_failure_preserves_existing_output(self) -> None:
         class InterruptedDocument:
             @staticmethod

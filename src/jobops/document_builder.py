@@ -512,13 +512,22 @@ def build_cover_letter(path: Path, *, candidate_display_name: str, company: str,
 
 def export_docx_to_pdf(docx_path: Path, pdf_path: Path, powershell_script: Path) -> None:
     pdf_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_pdf = pdf_path.with_name(f".{pdf_path.stem}.jobflow-{uuid.uuid4().hex}.tmp.pdf")
     command = [
         "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(powershell_script),
-        "-InputPath", str(docx_path), "-OutputPath", str(pdf_path),
+        "-InputPath", str(docx_path), "-OutputPath", str(temporary_pdf),
     ]
-    completed = subprocess.run(command, capture_output=True, text=True, timeout=90, check=False)
-    if completed.returncode != 0 or not pdf_path.is_file() or pdf_path.stat().st_size == 0:
-        raise JobOpsError("DOCX_PDF_EXPORT_FAILED", "Microsoft Word PDF export failed.", returncode=completed.returncode, stderr=completed.stderr[-1000:])
+    try:
+        completed = subprocess.run(command, capture_output=True, text=True, timeout=90, check=False)
+        if completed.returncode != 0 or not temporary_pdf.is_file() or temporary_pdf.stat().st_size == 0:
+            raise JobOpsError("DOCX_PDF_EXPORT_FAILED", "Microsoft Word PDF export failed.", returncode=completed.returncode, stderr=completed.stderr[-1000:])
+        os.replace(temporary_pdf, pdf_path)
+    except JobOpsError:
+        temporary_pdf.unlink(missing_ok=True)
+        raise
+    except (OSError, subprocess.SubprocessError) as exc:
+        temporary_pdf.unlink(missing_ok=True)
+        raise JobOpsError("DOCX_PDF_EXPORT_FAILED", "Microsoft Word PDF export could not be committed safely.") from exc
 
 
 def render_pdf_to_pngs(pdf_path: Path, output_dir: Path, pdftoppm: str) -> list[Path]:
