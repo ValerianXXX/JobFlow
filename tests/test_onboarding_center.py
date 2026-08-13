@@ -717,6 +717,13 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertEqual([item["category"] for item in validated], ["work", "internship", "education", "project"])
 
     def test_ai_contract_rejects_duplicate_real_world_entities(self) -> None:
+        with self.assertRaises(JobOpsError) as malformed_schema:
+            LocalSubprocessAIEngine._validated_candidates(
+                {"schema_version": {}, "entities": [], "candidates": []},
+                source_id="SRC-SYNTHETIC", source_lines=["Synthetic source."],
+            )
+        self.assertEqual(malformed_schema.exception.code, "AI_RESPONSE_INVALID")
+
         duplicate = {
             "entity_type": "work", "organization": "Alpha", "role": "Analyst",
             "start_date": "2020", "end_date": "2021", "line_start": 1, "line_end": 1,

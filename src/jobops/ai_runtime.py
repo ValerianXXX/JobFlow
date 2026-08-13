@@ -481,7 +481,13 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         source_lines: list[str],
         line_number_start: int = 1,
     ) -> list[dict[str, Any]]:
-        if not isinstance(value, dict) or int(value.get("schema_version", 0)) != AI_PROTOCOL_VERSION:
+        if not isinstance(value, dict):
+            raise JobOpsError("AI_RESPONSE_INVALID", "The local AI response did not match the JobOps protocol.")
+        try:
+            protocol_version = int(value.get("schema_version", 0))
+        except (TypeError, ValueError) as exc:
+            raise JobOpsError("AI_RESPONSE_INVALID", "The local AI response did not match the JobOps protocol.") from exc
+        if protocol_version != AI_PROTOCOL_VERSION:
             raise JobOpsError("AI_RESPONSE_INVALID", "The local AI response did not match the JobOps protocol.")
         raw_entities = value.get("entities")
         if not isinstance(raw_entities, list) or len(raw_entities) > 100:
