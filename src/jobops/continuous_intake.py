@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import PurePosixPath
 from typing import Any
 
 from .errors import JobOpsError
@@ -14,6 +15,14 @@ JOB_KEYS = {
     "source_type", "synthetic",
 }
 REQUIRED_JOB_KEYS = {"input", "profile_ref", "master_resume_ref", "answer_bank_ref", "synthetic"}
+
+
+def _safe_project_relative_path(value: Any) -> bool:
+    if not isinstance(value, str) or not value or "\x00" in value or ":" in value:
+        return False
+    normalized = value.replace("\\", "/")
+    path = PurePosixPath(normalized)
+    return not path.is_absolute() and ".." not in path.parts and bool(path.parts)
 
 
 def validate_continuous_manifest(value: Any) -> dict[str, Any]:
@@ -34,7 +43,7 @@ def validate_continuous_manifest(value: Any) -> dict[str, Any]:
         if raw.get("source_type") not in {None, "txt", "html", "pdf", "snapshot"}:
             raise JobOpsError("CONTINUOUS_JOB_INVALID", "A continuous job has an unsupported source type.", job_index=index)
         path_values = [raw.get(key) for key in ("input", "route", "form", "research") if raw.get(key) is not None]
-        if not all(isinstance(item, str) and item and not item.startswith(("/", "\\")) and not (len(item) > 1 and item[1] == ":") for item in path_values):
+        if not all(_safe_project_relative_path(item) for item in path_values):
             raise JobOpsError("CONTINUOUS_JOB_INVALID", "Continuous manifest paths must be project-relative.", job_index=index)
         for key in ("profile_ref", "master_resume_ref", "answer_bank_ref"):
             if not isinstance(raw.get(key), str):

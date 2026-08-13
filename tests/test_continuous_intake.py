@@ -74,6 +74,13 @@ class ContinuousIntakeTests(unittest.TestCase):
             validate_continuous_manifest(duplicate)
         self.assertEqual(duplicate_error.exception.code, "CONTINUOUS_JOB_DUPLICATE")
 
+        for unsafe_path in ("../outside.txt", "jobs/../../outside.txt", "resume.txt:secret", "C:\\outside.txt", "\\\\server\\share\\job.txt"):
+            unsafe = copy.deepcopy(manifest)
+            unsafe["jobs"][0]["input"] = unsafe_path
+            with self.subTest(path=unsafe_path), self.assertRaises(JobOpsError) as path_error:
+                validate_continuous_manifest(unsafe)
+            self.assertEqual(path_error.exception.code, "CONTINUOUS_JOB_INVALID")
+
     def test_released_capacity_promotes_oldest_deferred_before_new_intake(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")
