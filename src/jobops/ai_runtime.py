@@ -5,6 +5,7 @@ import math
 import os
 import re
 import subprocess
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -47,6 +48,94 @@ ENTITY_VERB_RE = re.compile(
     re.IGNORECASE,
 )
 CHINESE_ENTITY_VERBS = ("担任", "负责", "完成", "建立", "领导", "参与", "开发", "管理", "分析", "提升", "创建", "就读", "获得", "交付", "推动", "设计", "实施")
+
+
+def _run_bounded_ai_command(command: list[str], payload: dict[str, Any], *, timeout_seconds: int) -> tuple[int, str]:
+    """Run a local AI adapter without ever buffering unbounded process output."""
+    creation_flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+    encoded_input = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    try:
+        process = subprocess.Popen(
+            command,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            shell=False,
+            creationflags=creation_flags,
+        )
+    except OSError as exc:
+        raise JobOpsError("AI_ENGINE_UNAVAILABLE", "The configured local AI engine could not start.") from exc
+
+    output = bytearray()
+    output_exceeded = threading.Event()
+    reader_failed = threading.Event()
+
+    def write_input() -> None:
+        try:
+            if process.stdin is not None:
+                process.stdin.write(encoded_input)
+        except (BrokenPipeError, OSError):
+            # A non-zero exit is handled after process.wait().
+            pass
+        finally:
+            if process.stdin is not None:
+                try:
+                    process.stdin.close()
+                except OSError:
+                    pass
+
+    def read_output() -> None:
+        try:
+            if process.stdout is None:
+                reader_failed.set()
+                return
+            while True:
+                chunk = process.stdout.read(64 * 1024)
+                if not chunk:
+                    return
+                remaining = (MAX_AI_OUTPUT_BYTES + 1) - len(output)
+                if remaining > 0:
+                    output.extend(chunk[:remaining])
+                if len(output) > MAX_AI_OUTPUT_BYTES:
+                    output_exceeded.set()
+                    try:
+                        process.kill()
+                    except OSError:
+                        pass
+                    return
+        except OSError:
+            reader_failed.set()
+        finally:
+            if process.stdout is not None:
+                try:
+                    process.stdout.close()
+                except OSError:
+                    pass
+
+    writer = threading.Thread(target=write_input, name="jobflow-ai-input", daemon=True)
+    reader = threading.Thread(target=read_output, name="jobflow-ai-output", daemon=True)
+    writer.start()
+    reader.start()
+    timed_out = False
+    try:
+        returncode = process.wait(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        try:
+            process.kill()
+        except OSError:
+            pass
+        returncode = process.wait()
+    writer.join(timeout=2)
+    reader.join(timeout=2)
+    if timed_out or writer.is_alive() or reader.is_alive() or reader_failed.is_set():
+        raise JobOpsError("AI_ENGINE_UNAVAILABLE", "The configured local AI engine could not complete the analysis.")
+    if output_exceeded.is_set():
+        raise JobOpsError("AI_ENGINE_FAILED", "The configured local AI engine exceeded the bounded output limit.")
+    try:
+        return returncode, bytes(output).decode("utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        raise JobOpsError("AI_RESPONSE_INVALID", "The configured local AI engine did not return UTF-8 JSON.") from exc
 
 
 def _compact(value: Any, *, limit: int) -> str:
@@ -517,27 +606,21 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
 
     def analyze_document(self, text: str, *, source_id: str, source_type: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         def invoke(payload: dict[str, Any]) -> Any:
-            creation_flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
             try:
-                completed = subprocess.run(
+                returncode, stdout = _run_bounded_ai_command(
                     self.command,
-                    input=json.dumps(payload, ensure_ascii=False),
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    errors="strict",
-                    timeout=self.timeout_seconds,
-                    check=False,
-                    shell=False,
-                    creationflags=creation_flags,
+                    payload,
+                    timeout_seconds=self.timeout_seconds,
                 )
+            except JobOpsError:
+                raise
             except (OSError, subprocess.SubprocessError) as exc:
                 raise JobOpsError("AI_ENGINE_UNAVAILABLE", "The configured local AI engine could not complete the analysis.") from exc
-            encoded = completed.stdout.encode("utf-8")
-            if completed.returncode != 0 or not encoded or len(encoded) > MAX_AI_OUTPUT_BYTES:
+            encoded = stdout.encode("utf-8")
+            if returncode != 0 or not encoded:
                 raise JobOpsError("AI_ENGINE_FAILED", "The configured local AI engine returned no valid bounded result.")
             try:
-                return json.loads(completed.stdout)
+                return json.loads(stdout)
             except json.JSONDecodeError as exc:
                 raise JobOpsError("AI_RESPONSE_INVALID", "The configured local AI engine did not return JSON.") from exc
 

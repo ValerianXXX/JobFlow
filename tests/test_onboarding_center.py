@@ -655,6 +655,20 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertFalse(pending["candidates"][0]["selected"])
             self.assertEqual(pending["candidates"][0]["selection_reason"], "AI_DERIVED_REQUIRES_CONFIRMATION")
 
+    def test_local_ai_engine_stops_output_during_generation_at_the_memory_limit(self) -> None:
+        engine = LocalSubprocessAIEngine([
+            sys.executable,
+            "-c",
+            "import sys; sys.stdin.buffer.read(); sys.stdout.buffer.write(b'x'*(6*1024*1024)); sys.stdout.flush()",
+        ])
+        with self.assertRaises(JobOpsError) as blocked:
+            engine.analyze_document(
+                "Built a synthetic project and documented its review boundary.",
+                source_id="SRC-BOUNDED-OUTPUT",
+                source_type="project_case",
+            )
+        self.assertEqual(blocked.exception.code, "AI_ENGINE_FAILED")
+
     def test_ai_contract_keeps_work_internship_education_and_project_distinct(self) -> None:
         lines = [
             "Worked as an Analyst at Alpha from 2020 to 2021.",
