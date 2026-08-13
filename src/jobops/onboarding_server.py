@@ -15,6 +15,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from .errors import JobOpsError
+from .instance_lock import local_instance_lock
 from .onboarding_center import MAX_LARGE_EXPORT_BYTES, MAX_UPLOAD_BYTES, OnboardingCenterService
 
 
@@ -261,7 +262,7 @@ def create_server(service: OnboardingCenterService, *, port: int = 0, token: str
     return OnboardingHTTPServer(("127.0.0.1", port), service, token=token)
 
 
-def run_server(service: OnboardingCenterService, *, port: int = 0, open_browser: bool = True) -> dict[str, Any]:
+def _run_server_unlocked(service: OnboardingCenterService, *, port: int = 0, open_browser: bool = True) -> dict[str, Any]:
     server = create_server(service, port=port)
     safe = {
         "status": "ONBOARDING_CENTER_READY", "url": server.url,
@@ -279,3 +280,8 @@ def run_server(service: OnboardingCenterService, *, port: int = 0, open_browser:
     finally:
         server.server_close()
     return {**safe, "status": "ONBOARDING_CENTER_CLOSED"}
+
+
+def run_server(service: OnboardingCenterService, *, port: int = 0, open_browser: bool = True) -> dict[str, Any]:
+    with local_instance_lock():
+        return _run_server_unlocked(service, port=port, open_browser=open_browser)

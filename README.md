@@ -6,14 +6,16 @@ JobFlow（内部工程代号 JobOps）是本地优先、证据驱动的求职工
 
 ### Windows 一键安装与启动
 
-第一次使用时，在项目根目录的 Windows PowerShell 运行：
+最简单的 Windows 使用方式：第一次双击 `Install JobFlow.cmd`，以后双击 `Start JobFlow.cmd`。不需要在 WSL 中运行，也不需要输入项目路径。
+
+如果希望使用 Windows PowerShell，则在项目根目录运行：
 
 ```powershell
 .\scripts\install-jobflow.ps1
 .\scripts\start-jobflow.ps1
 ```
 
-以后只需运行第二条命令。安装内容位于项目内被 Git 忽略的 `.venv`，私人资料仍只进入 `%LOCALAPPDATA%\JobOps\private`。运行状态、数据库、审阅包与本机发布报告全部被公开仓库边界排除。
+以后只需运行第二条命令。安装内容位于项目内被 Git 忽略的 `.venv`，私人资料仍只进入 `%LOCALAPPDATA%\JobOps\private`。运行状态、数据库、审阅包与本机发布报告全部被公开仓库边界排除。同一 Windows 用户只能启动一个交互服务，避免两个页面同时改写加密草稿。
 
 开发者也可以直接运行以下兼容命令；它会在 `127.0.0.1` 打开仅限本机的入职页面：
 

@@ -18,6 +18,7 @@ from jobops import UI_PROTOCOL_VERSION, __version__
 from jobops.ai_runtime import AIAnalysisEngine, LocalSubprocessAIEngine
 from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
+from jobops.instance_lock import local_instance_lock
 from jobops.onboarding_catalog import FIELD_BY_ID, FIELD_IDS, public_catalog
 from jobops.onboarding_center import OnboardingCenterService, _evidence_preview
 from jobops.onboarding_server import create_server
@@ -74,6 +75,16 @@ def full_answers() -> dict[str, dict[str, object]]:
 
 
 class OnboardingCenterTests(unittest.TestCase):
+    def test_local_interactive_service_has_a_single_instance_lock(self) -> None:
+        with project_temp() as root:
+            with local_instance_lock(root / "locks"):
+                with self.assertRaises(JobOpsError) as blocked:
+                    with local_instance_lock(root / "locks"):
+                        pass
+                self.assertEqual(blocked.exception.code, "JOBFLOW_ALREADY_RUNNING")
+            with local_instance_lock(root / "locks"):
+                pass
+
     def make_service(self, root: Path, *, with_ai: bool = True) -> tuple[OnboardingCenterService, PrivateOnboarding, MemorySecureStore, str, bytes]:
         project = root / "project"
         (project / "schemas").mkdir(parents=True)
