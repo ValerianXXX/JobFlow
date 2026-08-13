@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/application-execution-plan.schema.json",
+  "title": "Application Execution Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "status", "mode", "application_id", "provider",
+    "route_hash", "form_snapshot_hash", "browser_plan_hash", "material_plan_hash",
+    "plan_hash", "field_summary", "upload_purposes", "blockers", "steps",
+    "queue_behavior", "live_transport_registered", "stop_before_final_submission",
+    "browser_actions", "network_actions", "real_external_actions"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["READY_FOR_REVIEW", "NEEDS_USER_INPUT", "NEEDS_ACCOUNT_APPROVAL"]},
+    "mode": {"const": "PREPARE_AND_QUEUE"},
+    "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "provider": {"enum": ["company", "greenhouse", "lever", "workday"]},
+    "route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "browser_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "material_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "field_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fillable", "sensitive_review", "work_authorization", "compensation", "legal_or_signature", "voluntary_disclosure", "account", "upload", "navigation", "final_submit", "unknown"],
+      "properties": {
+        "fillable": {"type": "integer", "minimum": 0},
+        "sensitive_review": {"type": "integer", "minimum": 0},
+        "work_authorization": {"type": "integer", "minimum": 0},
+        "compensation": {"type": "integer", "minimum": 0},
+        "legal_or_signature": {"type": "integer", "minimum": 0},
+        "voluntary_disclosure": {"type": "integer", "minimum": 0},
+        "account": {"type": "integer", "minimum": 0},
+        "upload": {"type": "integer", "minimum": 0},
+        "navigation": {"type": "integer", "minimum": 0},
+        "final_submit": {"type": "integer", "minimum": 0},
+        "unknown": {"type": "integer", "minimum": 0}
+      }
+    },
+    "upload_purposes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["resume", "cover_letter", "portfolio"]}},
+    "blockers": {"type": "array", "uniqueItems": true, "items": {"enum": ["REQUIRED_MATERIAL_MISSING", "UNKNOWN_FORM_FIELD", "NEEDS_ACCOUNT_APPROVAL", "GUEST_FLOW_UNCONFIRMED"]}},
+    "steps": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sequence", "phase", "state", "gate", "item_count", "browser_actions", "network_actions", "real_external_actions"],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 1, "maximum": 6},
+          "phase": {"enum": ["LIVE_FRESHNESS_RECHECK", "GUEST_APPLICATION_ENTRY", "SAFE_FIELD_PREFILL", "MATERIAL_UPLOAD", "PROTECTED_AND_UNKNOWN_FIELDS", "FINAL_SUBMISSION"]},
+          "state": {"enum": ["NOT_EXECUTED", "PLANNED", "PROPOSED_ONLY", "BLOCKED", "NOT_REQUIRED"]},
+          "gate": {"enum": ["SEPARATE_LIVE_READ_AUTHORIZATION", "NONE_AFTER_FRESHNESS", "USER_ACCOUNT_DECISION", "REVIEW_PACKET_APPROVAL", "SEPARATE_UPLOAD_AUTHORIZATION", "PER_APPLICATION_CONFIRMATION", "NONE", "FRESH_EXPLICIT_SUBMISSION_APPROVAL"]},
+          "item_count": {"type": "integer", "minimum": 0},
+          "browser_actions": {"const": 0},
+          "network_actions": {"const": 0},
+          "real_external_actions": {"const": 0}
+        }
+      }
+    },
+    "queue_behavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pending_limit", "continue_other_jobs", "pause_new_intake_at_limit", "current_job_waits_for_user"],
+      "properties": {
+        "pending_limit": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "continue_other_jobs": {"const": true},
+        "pause_new_intake_at_limit": {"const": true},
+        "current_job_waits_for_user": {"const": true}
+      }
+    },
+    "live_transport_registered": {"const": false},
+    "stop_before_final_submission": {"const": true},
+    "browser_actions": {"const": 0},
+    "network_actions": {"const": 0},
+    "real_external_actions": {"const": 0}
+  }
+}

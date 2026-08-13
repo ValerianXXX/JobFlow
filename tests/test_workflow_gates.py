@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 from _support import PROJECT, project_temp
+from jobops.application_execution import build_application_execution_plan
 from jobops.approvals import ApprovalContext, UploadBinding, issue_approval, submission_confirmation_status, validate_approval
 from jobops.collector import JobCollector
 from jobops.db import JobOpsDB
@@ -116,6 +117,24 @@ class WorkflowGateTests(unittest.TestCase):
         self.assertEqual(submission_confirmation_status(confirmation_page=True, confirmation_number="ABC123", confirmation_email=False), "CONFIRMED")
 
     def test_review_packet_requires_traceable_bullets_and_upload_hashes(self) -> None:
+        execution_plan = build_application_execution_plan(
+            application_id="APP-ABCDEF123456",
+            source_route={
+                "provider": "greenhouse", "route_hash": HASH_A,
+                "guest_mode": "GUEST_SELECTED", "account_action": "NONE",
+            },
+            form_snapshot_hash=HASH_A,
+            browser_plan_hash=HASH_B,
+            form_fields=[],
+            material_plan={
+                "status": "READY_FOR_REVIEW",
+                "cover_letter": {"generation_status": "NOT_GENERATED"},
+                "portfolio_file": {"binding_status": "NOT_REQUESTED"},
+                "all_uploads_and_submission_blocked": True,
+                "real_external_actions": 0,
+            },
+            pending_limit=10,
+        )
         base = {
             "job": {"job_id": "JOB-1", "company": "Example", "title": "Analyst", "official_url": "https://example.test/job"},
             "jd_captured_at": iso_utc(),
@@ -126,6 +145,7 @@ class WorkflowGateTests(unittest.TestCase):
             "form_questions": [],
             "sensitive_fields": [],
             "uploads": [{"filename": "resume.pdf", "sha256": HASH_A}],
+            "execution_plan": execution_plan,
             "external_actions": ["upload resume", "submit application"],
             "source_route": {"route_kind": "OFFICIAL_TO_APPROVED_ATS"},
             "queue": {"pending_limit": 10, "pending_count": 1},

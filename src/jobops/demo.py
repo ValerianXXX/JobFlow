@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .ai_runtime import LocalSubprocessAIEngine
+from .application_execution import build_application_execution_plan
 from .approvals import ApprovalContext, UploadBinding
 from .db import JobOpsDB
 from .errors import JobOpsError
@@ -105,6 +106,47 @@ def _seed_demo_review_queue(database: JobOpsDB, onboarding: PrivateOnboarding, *
     answers_hash = sha256_bytes(b"synthetic-demo-answers")
     resume_hash = sha256_bytes(b"synthetic-demo-resume")
     upload = UploadBinding("synthetic-resume.pdf", "resume", resume_hash)
+    demo_form_questions = [
+        {
+            "id": "field-synthetic-location",
+            "label": "Preferred work location",
+            "classification": "ordinary",
+            "action": "PREFILL_PROPOSAL",
+        }
+    ]
+    demo_sensitive_fields = [
+        {
+            "id": "field-final-submit",
+            "label": "Final submission",
+            "classification": "final_submit_stop",
+            "action": "STOP",
+        }
+    ]
+    material_plan = {
+        "schema_version": 1,
+        "status": "READY_FOR_REVIEW",
+        "resume": {
+            "derivation": "TAILORED_COPY_OF_SINGLE_APPROVED_MASTER",
+            "generated_before_application": True,
+        },
+        "cover_letter": {"request_status": "NOT_REQUESTED", "generation_status": "NOT_GENERATED"},
+        "public_links": [],
+        "portfolio_file": {"request_status": "NOT_REQUESTED", "binding_status": "NOT_REQUESTED"},
+        "all_uploads_and_submission_blocked": True,
+        "real_external_actions": 0,
+    }
+    execution_plan = build_application_execution_plan(
+        application_id=DEMO_APPLICATION_ID,
+        source_route={
+            "provider": "greenhouse", "route_hash": route_hash,
+            "guest_mode": "GUEST_SELECTED", "account_action": "NONE",
+        },
+        form_snapshot_hash=form_hash,
+        browser_plan_hash=form_hash,
+        form_fields=[*demo_form_questions, *demo_sensitive_fields],
+        material_plan=material_plan,
+        pending_limit=int(queue.status()["pending_limit"]),
+    )
     packet: dict[str, Any] = {
         "schema_version": 1,
         "status": "AWAITING_APPROVAL",
@@ -131,36 +173,11 @@ def _seed_demo_review_queue(database: JobOpsDB, onboarding: PrivateOnboarding, *
             }
         ],
         "master_resume_diff": {"changed_sections": ["project"]},
-        "form_questions": [
-            {
-                "id": "field-synthetic-location",
-                "label": "Preferred work location",
-                "classification": "ordinary",
-                "action": "PREFILL_PROPOSAL",
-            }
-        ],
-        "sensitive_fields": [
-            {
-                "id": "field-final-submit",
-                "label": "Final submission",
-                "classification": "final_submit_stop",
-                "action": "STOP",
-            }
-        ],
+        "form_questions": demo_form_questions,
+        "sensitive_fields": demo_sensitive_fields,
         "uploads": [upload.as_dict()],
-        "material_plan": {
-            "schema_version": 1,
-            "status": "READY_FOR_REVIEW",
-            "resume": {
-                "derivation": "TAILORED_COPY_OF_SINGLE_APPROVED_MASTER",
-                "generated_before_application": True,
-            },
-            "cover_letter": {"request_status": "NOT_REQUESTED", "generation_status": "NOT_GENERATED"},
-            "public_links": [],
-            "portfolio_file": {"request_status": "NOT_REQUESTED", "binding_status": "NOT_REQUESTED"},
-            "all_uploads_and_submission_blocked": True,
-            "real_external_actions": 0,
-        },
+        "material_plan": material_plan,
+        "execution_plan": execution_plan,
         "external_actions": ["upload_material", "submit_application"],
         "source_route": {
             "route_kind": "OFFICIAL_TO_APPROVED_ATS",

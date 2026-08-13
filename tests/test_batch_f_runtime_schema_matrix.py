@@ -5,6 +5,7 @@ import json
 import unittest
 
 from _support import PROJECT
+from jobops.application_execution import build_application_execution_plan
 from jobops.errors import JobOpsError
 from jobops.runtime_schema import validate_named
 from jobops.sourcing import source_route_hash
@@ -30,6 +31,30 @@ def valid_fixtures() -> dict[str, dict]:
         "navigation_history": ["https://example.com/careers/a"],
     }
     route["route_hash"] = source_route_hash(route)
+    execution_plan = build_application_execution_plan(
+        application_id=APP,
+        source_route={
+            "provider": "greenhouse", "route_hash": H,
+            "guest_mode": "GUEST_SELECTED", "account_action": "NONE",
+        },
+        form_snapshot_hash=H,
+        browser_plan_hash=H,
+        form_fields=[
+            {"classification": "private_fixed", "action": "PREFILL_FROM_SECURE_STORE"},
+            {"classification": "ordinary_fixed", "action": "PREFILL"},
+            {"classification": "work_authorization_stop", "action": "STOP"},
+            {"classification": "file_upload_stop", "action": "STOP"},
+            {"classification": "final_submit_stop", "action": "STOP"},
+        ],
+        material_plan={
+            "status": "READY_FOR_REVIEW",
+            "cover_letter": {"generation_status": "NOT_GENERATED"},
+            "portfolio_file": {"binding_status": "NOT_REQUESTED"},
+            "all_uploads_and_submission_blocked": True,
+            "real_external_actions": 0,
+        },
+        pending_limit=3,
+    )
     return {
         "application": {"application_id": APP, "job_id": JOB, "status": "AWAITING_APPROVAL", "site": "example.com", "resume_hash": H, "answers_hash": H, "dry_run": True, "secure_profile_ref": "secure-ref:SYNTHETIC01", "sensitive_fields": [], "unknown_fields": []},
         "approval": {
@@ -130,6 +155,7 @@ def valid_fixtures() -> dict[str, dict]:
             "all_uploads_and_submission_blocked": True, "real_external_actions": 0,
         },
         "application-field": {"field_id": "FLD-ABCDEF123456", "application_id": APP, "classification": "ordinary_fixed", "action": "PREFILL", "status": "READY", "secure_ref": None, "redacted_summary": None, "field_hash": H},
+        "application-execution-plan": execution_plan,
         "ats-form-snapshot": {
             "schema_version": 1, "status": "FORM_SNAPSHOT_ANALYZED", "source_mode": "LOCAL_SNAPSHOT_ONLY",
             "provider": "company", "step_kind": "MY_INFORMATION", "canonical_url": "https://example.com/careers/a", "source_route_hash": route["route_hash"],
@@ -211,7 +237,7 @@ def valid_fixtures() -> dict[str, dict]:
         "queue-reservation": {"reservation_id": "RSV-ABCDEF123456", "intake_key": H, "application_id": APP, "status": "CONSUMED", "pending_limit": 3, "pending_count": 1, "reserved_count": 1, "created_at": T, "updated_at": T},
         "recovery-event": {"recovery_id": "RCV-ABCDEF123456", "application_id": APP, "blocked_state": "SUBMISSION_UNKNOWN", "last_safe_state": "APPROVED", "validation_hash": H, "decision": "NO_AUTO_RETRY", "created_at": T},
         "receipt": {"receipt_id": "RCP-ABCDEF123456", "application_id": APP, "source": "fake-receipt", "confirmation_type": "confirmation_number", "confirmation_hash": H, "verified": True, "verified_at": T},
-        "review-packet": {"schema_version": 1, "status": "AWAITING_APPROVAL", "packet_id": "RPK-ABCDEF123456", "application_id": APP, "job": {"job_id": JOB}, "jd_captured_at": T, "fit": {"overall_score": 80}, "hard_gaps": [], "resume_bullets": [], "master_resume_diff": {}, "form_questions": [], "sensitive_fields": [], "uploads": [{"filename": "resume.pdf", "sha256": H}], "material_plan": {"status": "READY_FOR_REVIEW"}, "external_actions": ["upload_material"], "source_route": route, "queue": {"pending_limit": 3}, "content_hash": H},
+        "review-packet": {"schema_version": 1, "status": "AWAITING_APPROVAL", "packet_id": "RPK-ABCDEF123456", "application_id": APP, "job": {"job_id": JOB}, "jd_captured_at": T, "fit": {"overall_score": 80}, "hard_gaps": [], "resume_bullets": [], "master_resume_diff": {}, "form_questions": [], "sensitive_fields": [], "uploads": [{"filename": "resume.pdf", "sha256": H}], "material_plan": {"status": "READY_FOR_REVIEW"}, "execution_plan": execution_plan, "external_actions": ["upload_material"], "source_route": route, "queue": {"pending_limit": 3}, "content_hash": H},
         "onboarding-review": {
             "schema_version": 1, "packet_id": "ONB-ABCDEF123456", "status": "AWAITING_USER_CLAIM_AND_PROFILE_APPROVAL",
             "final_states": ["MASTER_RESUME_SECURELY_IMPORTED", "CANDIDATE_PROFILE_DRAFTED", "CLAIM_REVIEW_PACKET_READY"],

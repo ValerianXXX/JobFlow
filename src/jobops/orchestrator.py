@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .adapters import FakeBrowserPrefillAdapter
+from .application_execution import build_application_execution_plan
 from .application_materials import build_material_plan, detect_material_requests
 from .approvals import ApprovalContext, UploadBinding
 from .ats_browser import analyze_local_ats_form, build_browser_action_plan
@@ -342,6 +343,7 @@ class JobOpsOrchestrator:
             "website": answers.get("website"),
         })
         ats_safe_prefill: dict[str, Any] | None = None
+        browser_plan_hash: str
         if form_fixture.suffix.casefold() in {".html", ".htm"}:
             form_analysis = analyze_local_ats_form(
                 form_fixture.read_bytes(), route=route.as_dict(), blocked_categories=policy["blocked_form_categories"]
@@ -356,6 +358,7 @@ class JobOpsOrchestrator:
                     if candidate not in {"", "UNKNOWN", "UNANSWERED"}:
                         bindings[str(item["control_ref"])] = {"kind": "public_value", "value": candidate}
             browser_plan = build_browser_action_plan(form_analysis, bindings)
+            browser_plan_hash = str(browser_plan["plan_hash"])
             fake_browser = FakeBrowserPrefillAdapter().prefill({
                 "plan": browser_plan, "current_form_snapshot_hash": form_analysis["form_snapshot_hash"],
                 "isolation_policy": "ISOLATED_FAKE_ONLY",
@@ -397,6 +400,11 @@ class JobOpsOrchestrator:
             form_value = load_json(form_fixture)
             fields = map_fields(form_value["fields"], {str(k): str(v) for k, v in answers.items()}, policy["blocked_form_categories"], page_context=str(form_value.get("page_context", "")))
             form_snapshot_hash = sha256_file(form_fixture)
+            browser_plan_hash = sha256_bytes(canonical_json({
+                "mode": "LEGACY_LOCAL_FORM_MAPPING",
+                "form_snapshot_hash": form_snapshot_hash,
+                "fields": fields,
+            }))
         if fields["unknown_fields"]:
             raise JobOpsError("UNKNOWN_FORM_FIELDS", "Unrecognized form fields must be reviewed before a packet can be prepared.", fields=fields["unknown_fields"])
         field_records = []
@@ -516,6 +524,15 @@ class JobOpsOrchestrator:
             portfolio_file=portfolio_binding,
         )
         validate_named("material-plan", material_plan, self.schemas)
+        execution_plan = build_application_execution_plan(
+            application_id=application_id,
+            source_route=route.as_dict(),
+            form_snapshot_hash=form_snapshot_hash,
+            browser_plan_hash=browser_plan_hash,
+            form_fields=fields["fields"],
+            material_plan=material_plan,
+            pending_limit=int(self.queue.status()["pending_limit"]),
+        )
         safe_suffix = application_id.rsplit("-", 1)[-1].casefold()
         uploads = [{
             "filename": f"jobflow-resume-{safe_suffix}.pdf",
@@ -547,7 +564,7 @@ class JobOpsOrchestrator:
             "resume_bullets": [{"text": item["allowed_wording"][0], "claim_id": item["claim_id"], "evidence": item["source_refs"]} for item in claims],
             "master_resume_diff": diff, "form_questions": fields["fields"],
             "sensitive_fields": [item for item in fields["fields"] if item["action"] == "STOP"],
-            "uploads": uploads, "material_plan": material_plan,
+            "uploads": uploads, "material_plan": material_plan, "execution_plan": execution_plan,
             "external_actions": ["upload_material", "submit_application"],
             "source_route": route.as_dict(), "queue": self.queue.status(),
         }
@@ -596,6 +613,6 @@ class JobOpsOrchestrator:
         return {
             **admitted, "job_id": job_id, "review_packet_id": packet_id, "review_packet_ref": packet_ref["secure_ref"],
             "fit_recommendation": fit.recommendation, "document_qa": qa.as_dict(), "cover_letter_qa": cover_qa,
-            "material_plan": material_plan, "queue": self.queue.status(),
+            "material_plan": material_plan, "execution_plan": execution_plan, "queue": self.queue.status(),
             "ats_safe_prefill": ats_safe_prefill, "real_external_actions": 0, "next_safe_action": "show-review-packet",
         }

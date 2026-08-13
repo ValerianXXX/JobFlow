@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Every review packet now contains a hash-bound six-step application execution plan covering live freshness, guest entry, safe prefill, conditional materials, protected questions, and final submission. It plainly identifies each approval gate and confirms that other jobs continue until the pending-review limit.
+- 每份审阅包现在都包含哈希绑定的六步投递计划，依次覆盖实时新鲜度、访客进入、安全预填、按需材料、敏感问题与最终提交；每一步的审批门都会明确显示，当前岗位等待时其他岗位仍会继续处理到待审批上限。
 - PDF numeric grounding now accepts only provably equivalent presentation changes (digit grouping, full-width digits, harmless decimal zeros) and bounded adjacent wrapped lines; calculations, scaling, rounding and unrelated-line borrowing still fail closed, while every accepted adjustment is flagged for human review.
 - PDF 数字依据现在只放行可证明等价的显示差异（数字分组、全角数字、无意义小数零）及有限相邻换行；计算、单位缩放、四舍五入和借用无关行仍会失败关闭，所有放宽项都会明确要求人工复核。
 - AI readiness now requires a non-private full structured entity, metric and provenance test; a simple JSON handshake no longer unlocks document intake.

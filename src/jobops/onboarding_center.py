@@ -17,6 +17,7 @@ from . import UI_PROTOCOL_VERSION, __version__
 from .adapters import audit_real_external_actions
 from .approvals import ApprovalContext, issue_approval
 from .ats_capabilities import offline_ats_capabilities
+from .application_execution import validate_application_execution_plan_integrity
 from .ai_runtime import (
     ALLOWED_CATEGORIES,
     AI_QUALITY_CONTRACT,
@@ -1087,6 +1088,7 @@ class OnboardingCenterService:
         if not isinstance(packet, dict):
             raise JobOpsError("REVIEW_PACKET_INVALID", "The encrypted review packet must be an object.")
         validate_named("review-packet", packet, self.schemas)
+        validate_application_execution_plan_integrity(packet["execution_plan"])
         if packet.get("application_id") != application_id or packet.get("packet_id") != row["packet_id"]:
             raise JobOpsError("REVIEW_PACKET_BINDING_INVALID", "The review packet is not bound to the selected application.")
         if packet.get("content_hash") != row["content_hash"]:

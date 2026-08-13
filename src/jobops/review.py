@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from .application_execution import validate_application_execution_plan_integrity
 from .errors import JobOpsError
 
 
 REQUIRED_REVIEW_FIELDS = {
     "job", "jd_captured_at", "fit", "hard_gaps", "resume_bullets",
     "master_resume_diff", "form_questions", "sensitive_fields",
-    "uploads", "external_actions", "source_route", "queue",
+    "uploads", "execution_plan", "external_actions", "source_route", "queue",
 }
 
 
@@ -31,4 +32,10 @@ def build_review_packet(payload: dict[str, Any]) -> dict[str, Any]:
     queue = payload["queue"]
     if not isinstance(queue.get("pending_limit"), int) or queue["pending_limit"] < 1:
         raise JobOpsError("REVIEW_QUEUE_INVALID", "Review packet requires the active pending-approval limit.")
+    execution = payload["execution_plan"]
+    if not isinstance(execution, dict) or execution.get("stop_before_final_submission") is not True:
+        raise JobOpsError("REVIEW_EXECUTION_PLAN_INVALID", "The review packet requires a fail-closed application execution plan.")
+    if execution.get("real_external_actions") != 0 or execution.get("live_transport_registered") is not False:
+        raise JobOpsError("REVIEW_EXECUTION_PLAN_INVALID", "The review packet execution plan must remain planning-only.")
+    validate_application_execution_plan_integrity(execution)
     return {"schema_version": 1, "status": "AWAITING_APPROVAL", **payload}

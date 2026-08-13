@@ -215,6 +215,9 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         expected_status = "NEEDS_USER_MATERIAL" if required_missing else "READY_FOR_REVIEW"
         if value.get("status") != expected_status:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "The material-plan status must match its required missing bindings.")
+    if name == "application-execution-plan":
+        from .application_execution import validate_application_execution_plan_integrity
+        validate_application_execution_plan_integrity(value)
     if name == "release-readiness":
         ready = not value.get("blockers")
         if (value.get("status") == "PUBLIC_RELEASE_READY") != ready:
