@@ -10,6 +10,13 @@ from jobops import __version__
 
 
 class WindowsLauncherTests(unittest.TestCase):
+    def test_installer_wrapper_keeps_the_result_visible(self) -> None:
+        wrapper = (PROJECT / "Install JobFlow.cmd").read_text(encoding="utf-8")
+        self.assertIn('set "JOBFLOW_INSTALL_EXIT=%ERRORLEVEL%"', wrapper)
+        self.assertIn("JobFlow installation is ready.", wrapper)
+        self.assertIn("pause", wrapper)
+        self.assertIn("exit /b %JOBFLOW_INSTALL_EXIT%", wrapper)
+
     def test_localized_powershell_scripts_have_windows_utf8_bom(self) -> None:
         localized_scripts = (
             "check-jobflow.ps1",

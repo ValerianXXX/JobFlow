@@ -1,8 +1,13 @@
 @echo off
 cd /d "%~dp0"
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\install-jobflow.ps1"
-if errorlevel 1 (
+set "JOBFLOW_INSTALL_EXIT=%ERRORLEVEL%"
+echo.
+if not "%JOBFLOW_INSTALL_EXIT%"=="0" (
   echo.
   echo JobFlow installation did not finish. Keep this window open and review the message above.
-  pause
+) else (
+  echo JobFlow installation is ready. You may close this window after reviewing the result above.
 )
+pause
+exit /b %JOBFLOW_INSTALL_EXIT%
