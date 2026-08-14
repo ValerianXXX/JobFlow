@@ -89,11 +89,25 @@ class ExternalActionSessionTests(unittest.TestCase):
             self.assertEqual(session.allowed_actions, tuple(sorted(session.allowed_actions)))
             persisted = manager.persist(session, context=ctx)
             self.assertEqual(persisted["mode"], "ISOLATED_FAKE")
+            scope = manager.validate_scope(
+                session_id=session.session_id,
+                context=ctx,
+                required_actions=["read_official_job", "inspect_application_form"],
+            )
+            self.assertEqual(scope["required_action_count"], 2)
+            self.assertEqual(scope["real_external_actions"], 0)
             use = manager.record_isolated_use(
                 session_id=session.session_id, context=ctx, action="read_official_job",
                 request_hash=H, result_code="FAKE_FRESHNESS_PASS",
             )
             self.assertEqual(use["real_external_actions"], 0)
+            with self.assertRaises(JobOpsError) as scope_replayed:
+                manager.validate_scope(
+                    session_id=session.session_id,
+                    context=ctx,
+                    required_actions=["read_official_job", "inspect_application_form"],
+                )
+            self.assertEqual(scope_replayed.exception.code, "EXTERNAL_ACTION_SESSION_REPLAYED")
             with self.assertRaises(JobOpsError) as replay:
                 manager.record_isolated_use(
                     session_id=session.session_id, context=ctx, action="read_official_job",

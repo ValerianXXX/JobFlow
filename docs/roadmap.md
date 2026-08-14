@@ -15,7 +15,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] Transactional pending-review queue with explicit approve/reject/revise/defer decisions.
 - [x] Separate short-lived one-time final-submit authorization bound to the exact execution plan, review packet, route, form, uploads and freshness evidence; review approval alone cannot submit.
 - [x] Append-only isolated execution checkpoints from approved plan through fake receipt confirmation, including fail-closed site drift and non-retryable unknown-submission recovery evidence.
-- [x] Per-application, expiring, one-use action sessions for live read/form inspection/prefill/upload contracts, plus a user-visible global emergency stop that defaults off and invalidates every active session.
+- [x] Per-application, expiring, one-use action sessions for live read/form inspection/prefill/upload contracts, including complete-scope preflight before any use, plus a user-visible global emergency stop that defaults off and invalidates every active session.
 - [x] Hash-only fake material-upload contract integrated into the isolated execution chain after scoped prefill/upload authorization and before fresh final-submit confirmation; it opens and uploads zero files.
 - [x] Fault-injected interruption recovery after final authorization consumption: persisted verified receipts recover to confirmed; every other in-flight state becomes non-retryable unknown with zero automatic replay.
 - [x] Provider-neutral ATS transport contract for company pages, Greenhouse, Lever and Workday, with hash-only envelopes, fixed authorization types and no registered live transport.

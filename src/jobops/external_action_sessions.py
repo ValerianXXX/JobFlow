@@ -351,6 +351,48 @@ class ExternalActionSessionManager:
         value["allowed_actions"] = json.loads(value.pop("allowed_actions_json"))
         return ExternalActionSession.from_dict(value)
 
+    def validate_scope(
+        self,
+        *,
+        session_id: str,
+        context: ApprovalContext,
+        required_actions: Iterable[str],
+    ) -> dict[str, Any]:
+        """Preflight one complete action scope without consuming any action."""
+
+        actions = _actions(required_actions)
+        with self.database.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM external_action_sessions WHERE session_id=?", (session_id,),
+            ).fetchone()
+            used = {
+                str(item["action"])
+                for item in connection.execute(
+                    "SELECT action FROM external_action_session_uses WHERE session_id=?", (session_id,),
+                ).fetchall()
+            }
+        if row is None:
+            raise JobOpsError("EXTERNAL_ACTION_SESSION_NOT_FOUND", "The scoped action session does not exist.")
+        session = self._session_from_row(row)
+        for action in actions:
+            decision = self._validate(session, context=context, action=action)
+            if decision != "EXTERNAL_ACTION_SESSION_VALID":
+                raise JobOpsError(decision, "The scoped action session does not cover the complete execution preflight.")
+        replayed = sorted(set(actions) & used)
+        if replayed:
+            raise JobOpsError(
+                "EXTERNAL_ACTION_SESSION_REPLAYED",
+                "At least one required action in this scoped session has already been used.",
+                actions=replayed,
+            )
+        return {
+            "status": "EXTERNAL_ACTION_SCOPE_VALID",
+            "session_id": session_id,
+            "required_actions": list(actions),
+            "required_action_count": len(actions),
+            "real_external_actions": 0,
+        }
+
     def record_isolated_use(
         self,
         *,

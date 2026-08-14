@@ -209,8 +209,67 @@ class IsolatedApplicationExecutionController:
             "RUN", checked.context.application_id, checked.context.context_hash,
             str(checked.execution_plan["plan_hash"]), checked.freshness_evidence_hash, now,
         )
+        required_actions = ["read_official_job", "inspect_application_form", "upload_materials"]
+        if int(checked.browser_plan.get("fillable_count", 0)):
+            required_actions.append("prefill_application_form")
+        scope_validation = self.action_sessions.validate_scope(
+            session_id=action_session_id,
+            context=checked.context,
+            required_actions=required_actions,
+        )
         action_uses: list[dict[str, Any]] = []
         action_envelopes: list[dict[str, Any]] = []
+        official_read_request_hash = sha256_bytes(canonical_json({
+            "canonical_url": checked.context.canonical_url,
+            "source_route_hash": checked.context.source_route_hash,
+            "jd_snapshot_hash": checked.context.jd_snapshot_hash,
+            "jd_freshness_hash": checked.context.jd_freshness_hash,
+            "freshness_evidence_hash": checked.freshness_evidence_hash,
+        }))
+        official_read_use = self.action_sessions.record_isolated_use(
+            session_id=action_session_id,
+            context=checked.context,
+            action="read_official_job",
+            request_hash=official_read_request_hash,
+            result_code="AUTHORIZED_FAKE_OFFICIAL_READ_INTENT",
+        )
+        action_uses.append(official_read_use)
+        action_envelopes.append(build_ats_transport_envelope(
+            provider=str(checked.execution_plan["provider"]), action="read_official_job",
+            application_id=checked.context.application_id, run_id=run_id,
+            application_context_hash=checked.context.context_hash,
+            source_route_hash=checked.context.source_route_hash,
+            form_snapshot_hash=checked.context.form_snapshot_hash,
+            execution_plan_hash=str(checked.execution_plan["plan_hash"]),
+            request_payload_hash=official_read_request_hash,
+            authorization_kind="SCOPED_ACTION_SESSION_USE",
+            authorization_hash=sha256_bytes(canonical_json(official_read_use)),
+        ))
+        form_inspection_request_hash = sha256_bytes(canonical_json({
+            "canonical_url": checked.browser_plan["canonical_url"],
+            "source_route_hash": checked.context.source_route_hash,
+            "form_snapshot_hash": checked.context.form_snapshot_hash,
+            "browser_plan_hash": checked.browser_plan["plan_hash"],
+        }))
+        form_inspection_use = self.action_sessions.record_isolated_use(
+            session_id=action_session_id,
+            context=checked.context,
+            action="inspect_application_form",
+            request_hash=form_inspection_request_hash,
+            result_code="AUTHORIZED_FAKE_FORM_INSPECTION_INTENT",
+        )
+        action_uses.append(form_inspection_use)
+        action_envelopes.append(build_ats_transport_envelope(
+            provider=str(checked.execution_plan["provider"]), action="inspect_application_form",
+            application_id=checked.context.application_id, run_id=run_id,
+            application_context_hash=checked.context.context_hash,
+            source_route_hash=checked.context.source_route_hash,
+            form_snapshot_hash=checked.context.form_snapshot_hash,
+            execution_plan_hash=str(checked.execution_plan["plan_hash"]),
+            request_payload_hash=form_inspection_request_hash,
+            authorization_kind="SCOPED_ACTION_SESSION_USE",
+            authorization_hash=sha256_bytes(canonical_json(form_inspection_use)),
+        ))
         if int(checked.browser_plan.get("fillable_count", 0)):
             prefill_request_hash = sha256_bytes(canonical_json({
                 "browser_plan_hash": checked.browser_plan["plan_hash"],
@@ -301,6 +360,8 @@ class IsolatedApplicationExecutionController:
             }, **common),
             self._checkpoint(sequence=4, phase="SCOPED_ACTIONS_VALIDATED", status="CONSUMED", evidence={
                 "action_session_id": action_session_id,
+                "scope_validation_hash": sha256_bytes(canonical_json(scope_validation)),
+                "required_actions": scope_validation["required_actions"],
                 "action_use_ids": [item["use_id"] for item in action_uses],
                 "transport_envelope_hashes": [item["envelope_hash"] for item in action_envelopes],
                 "upload_binding_hash": upload_evidence["binding_hash"],
@@ -348,6 +409,8 @@ class IsolatedApplicationExecutionController:
             "application_id": checked.context.application_id,
             "checkpoint_count": 5,
             "proposed_field_count": checked.prefill_evidence["proposed_field_count"],
+            "scoped_action_count": len(action_uses),
+            "transport_envelope_count": len(action_envelopes),
             "fields_modified": 0,
             "uploaded_files": 0,
             "browser_actions": 0,

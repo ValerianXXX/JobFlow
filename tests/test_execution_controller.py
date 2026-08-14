@@ -112,7 +112,7 @@ def seed_approved(database: JobOpsDB, ctx: ApprovalContext) -> None:
 def action_session(database: JobOpsDB, ctx: ApprovalContext, *, prefill: bool = False) -> str:
     manager = ExternalActionSessionManager(database, ExternalActionSessionPolicy.isolated_fake())
     manager.enable(user_confirmed=True)
-    actions = ["upload_materials"]
+    actions = ["read_official_job", "inspect_application_form", "upload_materials"]
     if prefill:
         actions.append("prefill_application_form")
     session = manager.issue(context=ctx, allowed_actions=actions, user_confirmed=True)
@@ -156,6 +156,8 @@ class IsolatedExecutionControllerTests(unittest.TestCase):
                 )
                 self.assertEqual(prepared["status"], "AWAITING_FINAL_AUTHORIZATION")
                 self.assertEqual(prepared["checkpoint_count"], 5)
+                self.assertEqual(prepared["scoped_action_count"], 4)
+                self.assertEqual(prepared["transport_envelope_count"], 4)
                 self.assertEqual(prepared["proposed_field_count"], 1)
                 self.assertEqual(prepared["fields_modified"], 0)
                 self.assertEqual(prepared["real_external_actions"], 0)
@@ -207,6 +209,17 @@ class IsolatedExecutionControllerTests(unittest.TestCase):
             ])
             self.assertEqual(approval_status, "CONSUMED")
             self.assertEqual(final_status, "CONSUMED")
+            with database.connect() as connection:
+                used_actions = [
+                    row[0] for row in connection.execute(
+                        "SELECT action FROM external_action_session_uses WHERE session_id=? ORDER BY rowid",
+                        (session_id,),
+                    )
+                ]
+            self.assertEqual(used_actions, [
+                "read_official_job", "inspect_application_form",
+                "prefill_application_form", "upload_materials",
+            ])
             with self.assertRaises(JobOpsError) as replayed:
                 controller.complete_with_fresh_authorization(
                     run_id=prepared["run_id"], context=ctx,
@@ -277,6 +290,43 @@ class IsolatedExecutionControllerTests(unittest.TestCase):
                         "UPDATE application_execution_checkpoints SET status='PASS' WHERE run_id=?",
                         (prepared["run_id"],),
                     )
+
+    def test_missing_complete_action_scope_fails_before_any_session_use(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            ctx = context()
+            seed_approved(database, ctx)
+            browser = browser_plan()
+            plan = execution_plan(browser["plan_hash"])
+            manager = ExternalActionSessionManager(database, ExternalActionSessionPolicy.isolated_fake())
+            manager.enable(user_confirmed=True)
+            incomplete = manager.issue(
+                context=ctx,
+                allowed_actions=["inspect_application_form", "upload_materials"],
+                user_confirmed=True,
+            )
+            manager.persist(incomplete, context=ctx)
+            controller = IsolatedApplicationExecutionController(database)
+            with self.assertRaises(JobOpsError) as blocked:
+                controller.prepare_until_final_authorization(
+                    context=ctx,
+                    execution_plan=plan,
+                    browser_plan=browser,
+                    current_form_snapshot_hash=H,
+                    freshness_evidence_hash=H,
+                    action_session_id=incomplete.session_id,
+                )
+            self.assertEqual(blocked.exception.code, "EXTERNAL_ACTION_NOT_AUTHORIZED")
+            with database.connect() as connection:
+                self.assertEqual(connection.execute(
+                    "SELECT COUNT(*) FROM external_action_session_uses WHERE session_id=?",
+                    (incomplete.session_id,),
+                ).fetchone()[0], 0)
+                self.assertEqual(connection.execute(
+                    "SELECT COUNT(*) FROM application_execution_runs WHERE application_id=?",
+                    (ctx.application_id,),
+                ).fetchone()[0], 0)
 
     def test_checkpoint_failure_after_authorization_becomes_unknown_without_retry(self) -> None:
         with project_temp() as temp:

@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- The isolated execution preflight now validates the complete scoped action set before consuming anything, then records one-use authorizations and hash-only envelopes for official-job read, form inspection, optional prefill and material upload in fixed order. A missing scope leaves both the use ledger and execution-run table untouched.
+- 隔离执行预检现在会在消费任何动作前先验证完整授权范围，再按固定顺序记录官网岗位读取、表单检查、可选预填与材料上传的一次性授权及仅哈希信封；若范围缺失，使用账本与执行记录均保持未修改。
 - Added a synthetic-only ephemeral ATS payload broker: it resolves approved encrypted fields only in memory, stages hash-bound materials outside the project, scrubs mutable buffers, removes temporary files before returning, and keeps production activation unavailable.
 - 新增仅限合成测试的 ATS 临时载荷桥：仅在内存中解析已批准的加密字段，在项目外暂存哈希绑定材料，清零可变缓冲并在返回前删除临时文件；生产启用仍不可用。
 - Added a bilingual, redacted execution-status board and isolated startup reconciliation. Review approval is never shown as submission, and interrupted or unknown runs visibly prohibit automatic retry.
