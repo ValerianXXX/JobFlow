@@ -88,6 +88,33 @@ class ATSBrowserSafetyTests(unittest.TestCase):
                 analyze_local_ats_form(snapshot, route=verified_route(), blocked_categories=[])
         self.assertEqual(blocked.exception.code, "ATS_FORM_COMPLEXITY_LIMIT")
 
+    def test_form_parser_accepts_canonical_root_myworkday_host(self) -> None:
+        entry = "https://example.com/careers/strategy-analyst"
+        current = "https://www.myworkday.com/example/careers/job/123"
+        route = verify_source_route(
+            company_domain="example.com",
+            official_entry_url=entry,
+            current_url=current,
+            navigation_history=[entry, current],
+            approved_ats_hosts=["myworkday.com"],
+            guest_available=True,
+            tenant_binding={
+                "provider": "workday",
+                "company_registrable_domain": "example.com",
+                "ats_host": "myworkday.com",
+                "tenant": "example",
+                "board": "careers",
+                "job_identity": "123",
+                "official_page_hash": H1,
+                "jd_snapshot_hash": H2,
+            },
+            official_page_hash=H1,
+            jd_snapshot_hash=H2,
+        ).as_dict()
+        report = analyze_local_ats_form(self.snapshot, route=route, blocked_categories=[])
+        self.assertEqual(report["provider"], "workday")
+        self.assertEqual(report["canonical_url"], "https://myworkday.com/example/careers/job/123")
+
     def test_action_plan_keeps_plaintext_out_and_never_plans_protected_actions(self) -> None:
         report = analyze_local_ats_form(self.snapshot, route=verified_route(), blocked_categories=[])
         private_control = next(item for item in report["fields"] if item["classification"] == "private_fixed")

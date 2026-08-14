@@ -1,6 +1,6 @@
 ---
 name: job-application-operator
-description: Process offline job descriptions through evidence verification, tailored materials, document QA, safe form mapping, queueing, and a human review packet. Use for job analysis, truthful application preparation, local job tracking, or recruiting-form assistance. Knowledge is read-only, private data must come from secure-ref, the default stopping point is AWAITING_APPROVAL, and every real external action requires separate future authorization.
+description: Process job descriptions through evidence verification, tailored materials, document QA, safe form mapping, queueing, a human review packet, and separately authorized user-present browser assistance. Use for job analysis, truthful application preparation, local job tracking, or recruiting-form assistance. Knowledge is read-only, private data must come from secure-ref, the autonomous stopping point is AWAITING_APPROVAL, and every browser action requires a scoped per-application authorization.
 ---
 
 # Job Application Operator
@@ -32,13 +32,13 @@ Use the public CLI and persist every successful transition:
 
 Use only the blocking states in [state and recovery](references/state-and-recovery.md). Never bypass login, CAPTCHA, MFA, OTP, rate limits or site restrictions. Never auto-retry `SUBMISSION_UNKNOWN`. Changed route, JD, claims, materials, answers, uploads, actions or packet invalidates approval.
 
-Phase 5—6 are interface-only and offline: registered adapters are fake/mock/dry-run/disabled. Real website prefill, upload, submit, account creation, email, recruiter contact and scheduling are not authorized or operational. Production `ExternalActionGateway` returns `PHASE_NOT_AUTHORIZED` before side effects.
+Phase 5 has one deliberately narrow real adapter: the fixed-ID Browser Companion. Only after a separately approved application and explicit user-present consent may it inspect the bound company/Greenhouse/Lever/Workday origin, fill approved values, stream approved materials, and activate one clearly identified non-final Next/Continue control with a fresh one-use authorization. Each new page is reclassified and rebound. Login, account creation, credential collection, CAPTCHA/MFA/OTP bypass, legal/signature or unknown answers, cross-origin forms, final Submit, automatic retry, email, recruiter contact and real scheduling remain unavailable. Live-site compatibility is not inferred from synthetic tests.
 
 ## Completion gates
 
 - Public CLI forward test reaches `AWAITING_APPROVAL` with synthetic fixtures.
 - Runtime Schema, migrations, concurrency, crash recovery, attacks, leak scan and all document renders pass.
 - Knowledge comparison is `UNCHANGED` with zero writes.
-- Append-only action audit and network probes show `REAL_EXTERNAL_ACTIONS=0`.
+- Offline release QA and synthetic probes show `REAL_EXTERNAL_ACTIONS=0`; any separately user-authorized Browser Companion trial must instead reconcile every nonzero inspected/filled/uploaded/navigated action in the append-only audit.
 - Purge synthetic private values and report active private references separately from deleted metadata.
 - Real onboarding may retain active DPAPI references; release gates require zero active synthetic references, zero staging files and zero plaintext leakage, not zero legitimate encrypted records.

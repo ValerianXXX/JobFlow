@@ -458,6 +458,14 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                     result = self.server.service.browser_assist.prepare(token, self._json_body(), extension_origin=origin)
                 elif route_parts == ["complete"]:
                     result = self.server.service.browser_assist.complete(token, self._json_body(), extension_origin=origin)
+                elif route_parts == ["authorize-navigation"]:
+                    result = self.server.service.browser_assist.authorize_navigation(
+                        token, self._json_body(), extension_origin=origin,
+                    )
+                elif route_parts == ["navigation-observed"]:
+                    result = self.server.service.browser_assist.navigation_observed(
+                        token, self._json_body(), extension_origin=origin,
+                    )
                 elif route_parts == ["submit-observed"]:
                     result = self.server.service.browser_assist.submit_observed(token, self._json_body(), extension_origin=origin)
                 elif route_parts == ["observe-result"]:

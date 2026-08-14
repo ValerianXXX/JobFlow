@@ -20,7 +20,9 @@ class DryRunPolicyTests(unittest.TestCase):
         self.assertFalse(policy["phase_5_6_operational"])
         self.assertTrue(policy["phase_5_assisted_subset_operational"])
         self.assertFalse(policy["phase_6_operational"])
-        self.assertEqual(policy["phase_5_6_authorization"], "PER_APPLICATION_USER_PRESENT_PREFILL_UPLOAD_ONLY")
+        self.assertEqual(policy["phase_5_6_authorization"], "PER_APPLICATION_USER_PRESENT_PREFILL_UPLOAD_AND_SCOPED_FORWARD_NAVIGATION_ONLY")
+        self.assertFalse(policy["browser_assist_company_direct_only"])
+        self.assertFalse(policy["browser_assist_single_page_only"])
         self.assertEqual(policy["real_transport_adapters_registered"], 1)
         self.assertEqual(policy["requires_new_authorization"], [6])
 

@@ -291,7 +291,8 @@ def _provider_host_matches(provider: str, host: str, company_domain: str) -> boo
     value = _host(host)
     return {
         "company": host_matches_registered(value, company_domain),
-        "workday": value.endswith(".myworkdayjobs.com") or value.endswith(".workday.com"),
+        "workday": value in {"myworkdayjobs.com", "myworkday.com", "workday.com"}
+        or value.endswith((".myworkdayjobs.com", ".myworkday.com", ".workday.com")),
         "greenhouse": value == "boards.greenhouse.io" or value == "job-boards.greenhouse.io" or value.endswith(".greenhouse.io"),
         "lever": value == "jobs.lever.co" or value.endswith(".lever.co"),
     }.get(provider, False)

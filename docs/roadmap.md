@@ -18,7 +18,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] Per-application, expiring, one-use action sessions for live read/form inspection/prefill/upload contracts, including complete-scope preflight before any use, plus a user-visible global emergency stop that defaults off and invalidates every active session.
 - [x] Hash-only fake material-upload contract integrated into the isolated execution chain after scoped prefill/upload authorization and before fresh final-submit confirmation; it opens and uploads zero files.
 - [x] Fault-injected interruption recovery after final authorization consumption: persisted verified receipts recover to confirmed; every other in-flight state becomes non-retryable unknown with zero automatic replay.
-- [x] Provider-neutral ATS transport contract for company pages, Greenhouse, Lever and Workday, with hash-only envelopes, fixed authorization types and no registered live transport.
+- [x] Provider-neutral ATS action contract for company pages, Greenhouse, Lever and Workday, with hash-only envelopes, fixed authorization types and one narrow user-present Browser Companion transport.
 - [x] Synthetic-only ephemeral payload broker that resolves encrypted form values in memory, stages hash-bound materials outside the project, and proves complete cleanup before any future ATS adapter can be registered.
 - [x] Nonce-protected DPAPI execution bundle that persists the exact form snapshot, browser plan, public-value bindings and upload references without exposing them in ordinary records.
 - [x] Bilingual redacted execution-status board plus startup reconciliation visibility for awaiting-final, confirmed, invalidated, interrupted and non-retryable unknown runs.
@@ -42,9 +42,9 @@ This roadmap separates implemented offline evidence from future capabilities tha
 ## Future, separately authorized / 未来需另行授权
 
 - [ ] Read-only live official-careers freshness checks that comply with site terms.
-- [x] Browser-assisted real same-page company-form inspection with exact-page, same-origin, guest-mode and per-application policy validation.
-- [x] User-present live browser fill and approved material attachment after a visible proposal, with a hard stop before every final submission and zero automatic retry.
+- [x] Browser-assisted per-page company/ATS form inspection with exact bound origin, per-application consent and rotated per-page action sessions.
+- [x] User-present approved fill, later-page material attachment, explicit one-use non-final Next/Continue, and human login/CAPTCHA/MFA handoff, with a hard stop before final Submit and zero automatic retry.
 - [ ] Provider-specific live Greenhouse, Lever and Workday compatibility evidence.
 - [ ] User-controlled scheduling after explicit authorization and a kill switch.
 
-Real final submission, unattended or multi-page ATS automation, email, account creation and recruiter contact remain outside the current release. Approved material attachment on the supported same-page company flow is included. / 真实最终提交、无人值守或多页 ATS 自动化、邮件、账号创建与招聘者联系仍不属于当前发布；受支持的同页公司申请可挂载获批材料。
+Real final submission, unattended automation, cross-origin forms, credential handling, verification bypass, email, account creation and recruiter contact remain outside the current release. Multi-page assistance is user-present and supported only on a previously bound provider origin; synthetic evidence is not live-site certification. / 真实最终提交、无人值守自动化、跨域表单、凭据处理、验证绕过、邮件、账号创建与招聘者联系仍不属于当前发布；多页辅助必须用户在场且只限预先绑定的提供商来源，合成证据不等于实时站点认证。

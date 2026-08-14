@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const PROTOCOL = 1;
+  const PROTOCOL = 2;
   const allowedPage = location.hostname === "127.0.0.1" || location.hostname === "localhost";
   if (!allowedPage) return;
 

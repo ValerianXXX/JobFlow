@@ -20,6 +20,7 @@ SESSION_ACTIONS = frozenset({
     "inspect_application_form",
     "prefill_application_form",
     "upload_materials",
+    "navigate_application_step",
 })
 FINAL_OR_SEPARATE_ACTIONS = frozenset({
     "submit_application",
@@ -495,9 +496,14 @@ class ExternalActionSessionManager:
 
         if not self.policy.assisted_user_present or self.policy.mode != "ASSISTED_USER_PRESENT":
             raise JobOpsError("REAL_TRANSPORT_FORBIDDEN", "User-present browser assistance is not active.")
-        if action not in {"inspect_application_form", "prefill_application_form", "upload_materials"}:
+        if action not in {
+            "inspect_application_form", "prefill_application_form", "upload_materials",
+            "navigate_application_step",
+        }:
             raise JobOpsError("EXTERNAL_SESSION_ACTION_UNSUPPORTED", "The browser companion attempted an unsupported action.")
-        if real_side_effect is not (action in {"prefill_application_form", "upload_materials"}):
+        if real_side_effect is not (
+            action in {"prefill_application_form", "upload_materials", "navigate_application_step"}
+        ):
             raise JobOpsError(
                 "EXTERNAL_ACTION_AUDIT_INVALID",
                 "The assisted action side-effect flag does not match the operation.",

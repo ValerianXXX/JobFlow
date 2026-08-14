@@ -71,8 +71,9 @@ def _provider_and_tenant(host: str, url: str) -> tuple[str, str, str, str]:
     parsed = urlparse(url)
     labels = _host(host).split(".")
     path_parts = [part for part in parsed.path.split("/") if part]
-    if _host(host).endswith(".myworkdayjobs.com"):
-        tenant = labels[0]
+    workday_host = _host(host)
+    if workday_host in {"myworkdayjobs.com", "myworkday.com"} or workday_host.endswith((".myworkdayjobs.com", ".myworkday.com")):
+        tenant = path_parts[0] if (workday_host == "myworkday.com" or workday_host.endswith(".myworkday.com")) and path_parts else labels[0]
         job_identity = path_parts[-1] if path_parts else "UNKNOWN"
         board = next((part for part in path_parts if part.casefold() in {"careers", "jobs"}), "careers")
         return "workday", tenant, board.casefold(), job_identity

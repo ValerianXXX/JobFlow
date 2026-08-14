@@ -23,7 +23,7 @@
       "items": {
         "enum": [
           "read_official_job", "inspect_application_form", "prefill_application_form",
-          "upload_materials"
+          "upload_materials", "navigate_application_step"
         ]
       }
     },

@@ -74,6 +74,7 @@ def build_material_plan(
     public_values: dict[str, Any],
     cover_letter: dict[str, str] | None = None,
     portfolio_file: dict[str, str] | None = None,
+    anticipate_later_pages: bool = False,
 ) -> dict[str, Any]:
     for reference in (master_resume_ref, tailored_docx_ref, tailored_pdf_ref):
         validate_secure_reference(reference)
@@ -98,7 +99,7 @@ def build_material_plan(
             "value_exposed_in_packet": False,
         })
 
-    portfolio_requested = bool(portfolio_requests)
+    portfolio_requested = bool(portfolio_requests) or (anticipate_later_pages and portfolio_file is not None)
     portfolio_bound = portfolio_requested and portfolio_file is not None
     missing_required = any(item["required"] for item in portfolio_requests) and not portfolio_bound
     missing_required = missing_required or any(item["required"] and item["binding_status"] == "MISSING_USER_VALUE" for item in links)
@@ -118,7 +119,7 @@ def build_material_plan(
         "cover_letter": {
             "request_status": (
                 "REQUESTED_REQUIRED" if any(item["required"] for item in cover_requests)
-                else "REQUESTED_OPTIONAL" if cover_requests
+                else "REQUESTED_OPTIONAL" if cover_requests or (anticipate_later_pages and cover_letter)
                 else "NOT_REQUESTED"
             ),
             "generation_status": "GENERATED_ON_DEMAND" if cover_letter else "NOT_GENERATED",
@@ -131,7 +132,7 @@ def build_material_plan(
         "portfolio_file": {
             "request_status": (
                 "REQUESTED_REQUIRED" if any(item["required"] for item in portfolio_requests)
-                else "REQUESTED_OPTIONAL" if portfolio_requests
+                else "REQUESTED_OPTIONAL" if portfolio_requests or (anticipate_later_pages and portfolio_file)
                 else "NOT_REQUESTED"
             ),
             "binding_status": "BOUND_SECURE_FILE" if portfolio_bound else ("MISSING_USER_MATERIAL" if portfolio_requested else "NOT_REQUESTED"),

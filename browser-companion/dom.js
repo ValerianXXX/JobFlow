@@ -5,6 +5,8 @@
 
   const MAX_TEXT = 500;
   const controlMap = new Map();
+  const finalSubmitElements = new Set();
+  let navigationElement = null;
   let submitSignalSent = false;
 
   function compact(value, limit = MAX_TEXT) {
@@ -74,6 +76,9 @@
 
   function collectForm() {
     controlMap.clear();
+    finalSubmitElements.clear();
+    navigationElement = null;
+    submitSignalSent = false;
     const controls = Array.from(document.querySelectorAll("input,select,textarea,button"))
       .filter((element) => !(element instanceof HTMLInputElement && element.type.toLowerCase() === "hidden"));
     const clientRefs = [];
@@ -176,6 +181,21 @@
   async function applyApproved(message) {
     const fieldBindings = [];
     const materialBindings = [];
+    finalSubmitElements.clear();
+    navigationElement = null;
+    for (const clientRef of message.final_submit_client_refs || []) {
+      const element = controlMap.get(clientRef);
+      if (!element || !document.contains(element)) {
+        return {status: "BLOCKED", code: "COMPANION_FINAL_CONTROL_CHANGED", client_ref: clientRef};
+      }
+      finalSubmitElements.add(element);
+    }
+    if (message.navigation?.client_ref) {
+      navigationElement = controlMap.get(message.navigation.client_ref) || null;
+      if (!navigationElement || !document.contains(navigationElement) || finalSubmitElements.has(navigationElement)) {
+        return {status: "BLOCKED", code: "COMPANION_NAVIGATION_CONTROL_CHANGED"};
+      }
+    }
     for (const item of message.fields || []) {
       const element = controlMap.get(item.client_ref);
       if (!element || !document.contains(element) || element.disabled || !visible(element)) {
@@ -213,7 +233,44 @@
       }
       materialBindings.push({client_ref: item.client_ref, purpose: item.purpose, sha256: item.sha256});
     }
-    return {status: "APPLIED", field_bindings: fieldBindings, material_bindings: materialBindings};
+    return {
+      status: "APPLIED",
+      field_bindings: fieldBindings,
+      material_bindings: materialBindings,
+      final_submit_armed: finalSubmitElements.size > 0,
+      navigation_ready: Boolean(navigationElement)
+    };
+  }
+
+  function validateNavigation(message) {
+    const element = controlMap.get(String(message.client_ref || ""));
+    if (
+      !element || element !== navigationElement || finalSubmitElements.has(element) ||
+      !document.contains(element) || element.disabled || !visible(element)
+    ) {
+      return {status: "BLOCKED", code: "COMPANION_NAVIGATION_CONTROL_CHANGED"};
+    }
+    const label = compact(element.innerText || element.textContent || element.value || element.getAttribute("aria-label"));
+    if (
+      !/(?:^|\b)(?:next|continue|save\s*(?:and|&)\s*continue|review(?:\s+application)?)(?:\b|$)|下一步|继续|保存并继续/i.test(label) ||
+      /(?:^|\b)(?:back|previous|cancel)(?:\b|$)|返回|上一步|取消/i.test(label)
+    ) {
+      return {status: "BLOCKED", code: "COMPANION_NAVIGATION_LABEL_CHANGED"};
+    }
+    const form = element.form;
+    if (form && !form.checkValidity()) {
+      form.reportValidity();
+      return {status: "BLOCKED", code: "COMPANION_REQUIRED_FIELDS_INCOMPLETE", form_valid: false};
+    }
+    return {status: "NAVIGATION_VALID", form_valid: true, final_submit: false};
+  }
+
+  function navigateApproved(message) {
+    const validation = validateNavigation(message);
+    if (validation.status !== "NAVIGATION_VALID") return validation;
+    const element = controlMap.get(String(message.client_ref || ""));
+    element.click();
+    return {status: "NAVIGATION_STARTED", form_valid: true, final_submit: false};
   }
 
   function resultMarkers() {
@@ -279,18 +336,24 @@
   }
 
   document.addEventListener("submit", (event) => {
-    if (event.isTrusted) signalUserSubmit("FORM_SUBMIT");
+    if (!event.isTrusted || finalSubmitElements.size === 0) return;
+    const submitter = event.submitter || null;
+    if ((submitter && finalSubmitElements.has(submitter)) || (!submitter && !navigationElement)) {
+      signalUserSubmit("FORM_SUBMIT");
+    }
   }, true);
   document.addEventListener("click", (event) => {
     if (!event.isTrusted) return;
     const target = event.target instanceof Element ? event.target.closest('button[type="submit"],input[type="submit"],button:not([type])') : null;
-    if (target && target.form) signalUserSubmit("SUBMIT_CONTROL_CLICK");
+    if (target && target.form && finalSubmitElements.has(target)) signalUserSubmit("SUBMIT_CONTROL_CLICK");
   }, true);
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     (async () => {
       if (message?.type === "JOBFLOW_COLLECT_FORM") return collectForm();
       if (message?.type === "JOBFLOW_APPLY_APPROVED") return await applyApproved(message);
+      if (message?.type === "JOBFLOW_CHECK_NAVIGATION") return validateNavigation(message);
+      if (message?.type === "JOBFLOW_NAVIGATE_APPROVED") return navigateApproved(message);
       if (message?.type === "JOBFLOW_COLLECT_RESULT") {
         const payload = await collectResult();
         await chrome.runtime.sendMessage({type: "JOBFLOW_RESULT_SIGNALS", payload});

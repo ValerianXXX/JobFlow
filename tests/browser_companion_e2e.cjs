@@ -84,13 +84,19 @@ function valueHash(value) {
       download_url: `http://127.0.0.1/assist/synthetic/file/${fileIndex}`
     }));
     const fieldApplied = await page.evaluate(
-      (fields) => globalThis.__jobflowCall({type: "JOBFLOW_APPLY_APPROVED", fields, files: []}),
-      fields
+      ({fields, finalRef}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED", fields, files: [], navigation: null,
+        final_submit_client_refs: [finalRef]
+      }),
+      {fields, finalRef: collected.payload.client_refs[6]}
     );
     assert.equal(fieldApplied.status, "APPLIED", JSON.stringify(fieldApplied));
     const fileApplied = await page.evaluate(
-      (files) => globalThis.__jobflowCall({type: "JOBFLOW_APPLY_APPROVED", fields: [], files}),
-      files
+      ({files, finalRef}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED", fields: [], files, navigation: null,
+        final_submit_client_refs: [finalRef]
+      }),
+      {files, finalRef: collected.payload.client_refs[6]}
     );
     assert.equal(fileApplied.status, "APPLIED", JSON.stringify(fileApplied));
     assert.equal(fieldApplied.field_bindings.length, 3);
@@ -111,13 +117,67 @@ function valueHash(value) {
     assert.equal(userSignals.length, 1);
     assert.equal(userSignals[0].payload.trusted_user_event, true);
 
+    const navigationPage = await browser.newPage();
+    const navigationFixture = fs.readFileSync(
+      path.join(project, "tests", "fixtures", "synthetic-v2-workday-step-1.html"), "utf8"
+    );
+    await navigationPage.route("https://workday.example.test/**", (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8", body: navigationFixture
+    }));
+    await navigationPage.goto("https://workday.example.test/apply", {waitUntil: "domcontentloaded"});
+    await navigationPage.evaluate(() => {
+      globalThis.__jobflowMessages = [];
+      globalThis.__jobflowListener = null;
+      globalThis.chrome = {
+        runtime: {
+          lastError: null,
+          onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+          async sendMessage(message) { globalThis.__jobflowMessages.push(message); return {status: "RECORDED"}; },
+          connect() { throw new Error("NO_FILE_STREAM_EXPECTED"); }
+        }
+      };
+    });
+    await navigationPage.addScriptTag({path: companion});
+    await navigationPage.evaluate(() => {
+      document.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+      globalThis.__jobflowCall = (message) => new Promise((resolve) => {
+        globalThis.__jobflowListener(message, {}, resolve);
+      });
+    });
+    const navCollected = await navigationPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+    const navValue = "Synthetic Applicant";
+    const navApplied = await navigationPage.evaluate(
+      ({clientRefs, value, hash}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED",
+        fields: [{client_ref: clientRefs[0], value, value_sha256: hash}],
+        files: [], navigation: {client_ref: clientRefs[1]}, final_submit_client_refs: []
+      }),
+      {clientRefs: navCollected.payload.client_refs, value: navValue, hash: valueHash(navValue)}
+    );
+    assert.equal(navApplied.navigation_ready, true);
+    const navCheck = await navigationPage.evaluate(
+      (clientRef) => globalThis.__jobflowCall({type: "JOBFLOW_CHECK_NAVIGATION", client_ref: clientRef}),
+      navCollected.payload.client_refs[1]
+    );
+    assert.equal(navCheck.status, "NAVIGATION_VALID");
+    const navStarted = await navigationPage.evaluate(
+      (clientRef) => globalThis.__jobflowCall({type: "JOBFLOW_NAVIGATE_APPROVED", client_ref: clientRef}),
+      navCollected.payload.client_refs[1]
+    );
+    assert.equal(navStarted.status, "NAVIGATION_STARTED");
+    assert.equal(navStarted.final_submit, false);
+    const navigationMessages = await navigationPage.evaluate(() => globalThis.__jobflowMessages.slice());
+    assert.equal(navigationMessages.filter((item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED").length, 0);
+
     process.stdout.write(JSON.stringify({
       status: "PASS",
       controls: collected.payload.client_refs.length,
       fields: fieldApplied.field_bindings.length,
       files: fileApplied.material_bindings.length,
       programmatic_submit_events_before_user_click: 0,
-      trusted_user_submit_observed: true
+      trusted_user_submit_observed: true,
+      scoped_next_continue_navigation: true,
+      programmatic_final_submit_events: 0
     }));
   } finally {
     await browser.close();

@@ -26,6 +26,14 @@ CLASSIFICATION_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 ORDINARY_TERMS = ("portfolio", "linkedin", "github", "website", "personal site", "作品集", "个人网站")
 PRIVATE_TERMS = ("legal name", "full name", "first name", "last name", "email", "phone", "address", "姓名", "邮箱", "电话", "地址")
+FORWARD_NAVIGATION_TERMS = (
+    "next", "continue", "save and continue", "save continue", "review application",
+    "review and continue", "下一步", "继续", "保存并继续", "进入检查",
+)
+FINAL_SUBMIT_TERMS = (
+    "submit application", "final submit", "send application", "finish application",
+    "complete application", "提交申请", "最终提交", "发送申请", "完成申请",
+)
 
 
 def _field_material(field: dict[str, Any], page_context: str = "") -> str:
@@ -46,6 +54,14 @@ def classify_application_field(field: dict[str, Any], *, page_context: str = "",
     if normalized_name(str(field.get("type", ""))) == "file":
         return "file_upload_stop", "File selection is an external upload action and remains blocked."
     if normalized_name(str(field.get("type", ""))) in {"submit", "image"}:
+        # Multi-page ATS products commonly implement Next/Continue as a submit-type
+        # control.  Treat only an explicit forward label as navigation; an ambiguous
+        # submit-like control remains final-submit gated.
+        if (
+            any(normalized_name(term) in material for term in FORWARD_NAVIGATION_TERMS)
+            and not any(normalized_name(term) in material for term in FINAL_SUBMIT_TERMS)
+        ):
+            return "navigation_control_stop", "A forward page transition requires one scoped user-present navigation authorization."
         return "final_submit_stop", "Final submit controls always require the external action gateway."
     if normalized_name(str(field.get("type", ""))) == "button":
         return "navigation_control_stop", "Page navigation remains a reviewed browser action in this build."

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "JobFlow Browser Companion",
-  "version": "0.2.0",
-  "description": "User-present company-form prefill and approved-material attachment. JobFlow never clicks Submit.",
+  "version": "0.3.0",
+  "description": "User-present multi-page company/ATS prefill, approved Next/Continue navigation, and material attachment. JobFlow never clicks final Submit.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3JJZck4JA/+QsgJCJ9GFoNZGFV0JB5XkQXCHNBP+umelhXJoLCz7NVHNuvzT33cILjfwjRj/hguTOGVuIQQpRz8sxXTqmSUSvwtrqMcDeZ35I2EPOUhnOme/8b+QE5UdU2wJ3drazV1A881ZESZiRn4xe+OJt14ChHAEsfg9xlGHQkCylC8gBeO6Gkja4I406fMJFwpXKyiF+7hcnsKGlwb88yzKCSM81ex9MWVhkWnBoqoThvzJn6NB6d4VUVH7VbkB0+5msGOtPR4jMP843ZQwpQvxH2B/ShEy2/NF0J/5HLRzUi5J8ABPXILwpe/agAfCTOtPyTjsLgy14W4YvQIDAQAB",
   "permissions": ["activeTab", "alarms", "scripting", "storage"],
   "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],

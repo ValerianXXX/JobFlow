@@ -3,17 +3,21 @@
 const copy = {
   zh: {
     subtitle: "浏览器伴侣", notPaired: "尚未与 JobFlow 配对。请先在 JobFlow 的已批准申请中点击“开始自动预填”。",
-    paired: "已配对：打开已批准的公司申请页，然后点击下方按钮。", fill: "预填并附加已批准材料",
-    boundary: "JobFlow 不会点击提交、下一步或创建账号。完成后请你逐项检查并亲自点击最终提交。",
+    paired: "已配对：返回已批准的公司/ATS 申请页。", fill: "分析并填写当前页", continue: "检查后进入下一页", resume: "我已完成登录/验证，继续",
+    boundary: "JobFlow 可在你在场时逐页填写并点击明确的 Next/Continue，但绝不会点击最终 Submit、创建账号或绕过验证码。最终提交只能由你亲自点击。",
     working: "正在核对表单、预填并附加材料……", wrong: "请先打开 JobFlow 指定的公司申请页面。",
-    permission: "需要你允许本次公司页面访问，才能进行预填。", done: "已停在最终提交前。请检查内容并亲自点击提交。"
+    permission: "需要你允许本次申请页面访问，才能继续。", done: "已停在最终提交前。请检查内容并亲自点击提交。",
+    handoff: "请在网页中亲自完成登录、CAPTCHA 或 MFA；不要把密码或验证码交给 JobFlow。完成并回到申请页后点击继续。",
+    manual: "JobFlow 已填写可安全复用的内容。请补完当前页标出的字段，再点击进入下一页。", navigating: "正在进入下一页并重新验真……", stalled: "页面在 20 秒内没有可靠前进。JobFlow 已停止且不会重试；请返回 JobFlow 结束本次辅助后重新开始。"
   },
   en: {
     subtitle: "Browser Companion", notPaired: "Not paired. Start assisted prefill from an approved application in JobFlow first.",
-    paired: "Paired. Open the approved company application page, then use the button below.", fill: "Fill and attach approved materials",
-    boundary: "JobFlow never clicks Submit, Next, or account creation. Review every field and click the final Submit button yourself.",
-    working: "Matching the form, filling approved fields, and attaching materials…", wrong: "Open the company application page selected by JobFlow first.",
-    permission: "Allow access to this company page to continue.", done: "Stopped before final submission. Review everything and click Submit yourself."
+    paired: "Paired. Return to the approved company/ATS application page.", fill: "Analyze and fill this page", continue: "Review, then continue", resume: "Login/verification done — resume",
+    boundary: "While you are present, JobFlow may fill each page and activate an explicit Next/Continue control. It never clicks final Submit, creates an account, or bypasses verification. Only you submit.",
+    working: "Matching the page, filling approved fields, and attaching materials…", wrong: "Open the application page selected by JobFlow first.",
+    permission: "Allow access to this application page to continue.", done: "Stopped before final submission. Review everything and click Submit yourself.",
+    handoff: "Complete login, CAPTCHA, or MFA yourself. Never give JobFlow a password or verification code. Return to the application page, then resume.",
+    manual: "Reusable fields are ready. Complete the remaining fields shown on this page, then continue.", navigating: "Opening and re-validating the next page…", stalled: "The page did not reliably advance within 20 seconds. JobFlow stopped and will not retry; end this assist in JobFlow, then start again."
   }
 };
 let locale = "zh";
@@ -24,9 +28,9 @@ const elements = Object.fromEntries(["subtitle","state","fill","boundary","messa
 function render() {
   const text = copy[locale];
   elements.subtitle.textContent = text.subtitle;
-  elements.state.textContent = status?.paired ? `${text.paired}\n${status.allowed_page_origin || ""}` : text.notPaired;
-  elements.fill.textContent = text.fill;
-  elements.fill.disabled = !status?.paired || status?.status === "AWAITING_USER_SUBMIT" || status?.status === "OBSERVING_RESULT_PAGE";
+  elements.state.textContent = status?.paired ? `${text.paired}\n${status.provider || ""} · ${status.current_step || 1}/${status.max_steps || 20}\n${status.allowed_page_origin || ""}` : text.notPaired;
+  elements.fill.textContent = status?.status === "HANDOFF_REQUIRED" ? text.resume : status?.status === "PAGE_REVIEW_REQUIRED" ? text.continue : text.fill;
+  elements.fill.disabled = !status?.paired || ["AWAITING_USER_SUBMIT", "OBSERVING_RESULT_PAGE", "AWAITING_NAVIGATION", "CONFIRMED"].includes(status?.status);
   elements.boundary.textContent = text.boundary;
 }
 
@@ -34,6 +38,10 @@ async function refresh() {
   status = await chrome.runtime.sendMessage({type: "JOBFLOW_GET_STATUS"});
   render();
   if (status?.last_result?.status === "AWAITING_USER_SUBMIT") elements.message.textContent = copy[locale].done;
+  else if (status?.status === "HANDOFF_REQUIRED") elements.message.textContent = copy[locale].handoff;
+  else if (status?.status === "PAGE_REVIEW_REQUIRED") elements.message.textContent = copy[locale].manual;
+  else if (status?.status === "AWAITING_NAVIGATION") elements.message.textContent = copy[locale].navigating;
+  if (status?.last_result?.status === "NAVIGATION_STALLED") elements.message.textContent = copy[locale].stalled;
 }
 
 document.getElementById("zh").addEventListener("click", () => {locale = "zh"; render();});
@@ -48,13 +56,16 @@ elements.fill.addEventListener("click", async () => {
     if (url.protocol !== "https:" || url.origin !== status.allowed_page_origin) throw new Error(copy[locale].wrong);
     const granted = await chrome.permissions.request({origins: [`${url.origin}/*`]});
     if (!granted) throw new Error(copy[locale].permission);
-    const result = await chrome.runtime.sendMessage({
-      type: "JOBFLOW_FILL_CURRENT", tab_id: tab.id, tab_url: tab.url
-    });
-    if (!result || result.status !== "AWAITING_USER_SUBMIT") {
+    const type = status?.status === "PAGE_REVIEW_REQUIRED" ? "JOBFLOW_CONTINUE_CURRENT" : "JOBFLOW_FILL_CURRENT";
+    const result = await chrome.runtime.sendMessage({type, tab_id: tab.id, tab_url: tab.url});
+    if (!result || ![
+      "AWAITING_USER_SUBMIT", "PAGE_REVIEW_REQUIRED", "HANDOFF_REQUIRED", "NAVIGATION_STARTED"
+    ].includes(result.status)) {
       throw new Error(result?.message || result?.code || "JobFlow blocked the operation.");
     }
-    elements.message.textContent = copy[locale].done;
+    elements.message.textContent = result.status === "AWAITING_USER_SUBMIT" ? copy[locale].done :
+      result.status === "HANDOFF_REQUIRED" ? copy[locale].handoff :
+      result.status === "PAGE_REVIEW_REQUIRED" ? copy[locale].manual : copy[locale].navigating;
     await refresh();
   } catch (error) {
     elements.message.textContent = String(error?.message || error);

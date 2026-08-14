@@ -76,6 +76,23 @@ class SourceRouteHardeningTests(unittest.TestCase):
             )
         self.assertEqual(caught.exception.code, "PUBLIC_SUFFIX_NOT_COMPANY")
 
+    def test_workday_myworkday_host_is_bound_to_path_tenant(self) -> None:
+        entry = "https://careers.example.com/jobs/strategy"
+        current = "https://www.myworkday.com/example/careers/job/123"
+        binding = {
+            "provider": "workday", "company_registrable_domain": "example.com",
+            "ats_host": "myworkday.com", "tenant": "example", "board": "careers",
+            "job_identity": "123", "official_page_hash": HASH_A, "jd_snapshot_hash": HASH_B,
+        }
+        route = verify_source_route(
+            company_domain="example.com", official_entry_url=entry, current_url=current,
+            navigation_history=[entry, current], approved_ats_hosts=["myworkday.com"],
+            approved_intermediary_hosts=[], guest_available=True, tenant_binding=binding,
+            official_page_hash=HASH_A, jd_snapshot_hash=HASH_B,
+        )
+        self.assertEqual(route.provider, "workday")
+        self.assertEqual(route.ats_tenant, "example")
+
 
 class CompositeRequirementAndFitTests(unittest.TestCase):
     def profile(self):
@@ -170,6 +187,22 @@ class OfflineResearchAndFormTests(unittest.TestCase):
         self.assertEqual(classes, ["ordinary_fixed", "work_authorization_stop", "unknown_stop", "voluntary_disclosure_stop", "final_submit_stop"])
         rendered = json.dumps(mapped, ensure_ascii=False)
         self.assertNotIn("PRIVATE ANSWER MUST NOT LEAK", rendered)
+        self.assertTrue(mapped["submit_blocked"])
+
+    def test_submit_type_next_is_navigation_but_final_submit_remains_locked(self) -> None:
+        mapped = map_fields(
+            [
+                {"id": "next", "name": "next", "label": "Save and continue", "type": "submit"},
+                {"id": "submit", "name": "submit", "label": "Submit application", "type": "submit"},
+                {"id": "ambiguous", "name": "action", "label": "Finish", "type": "submit"},
+            ],
+            {},
+            [],
+        )
+        self.assertEqual(
+            [item["classification"] for item in mapped["fields"]],
+            ["navigation_control_stop", "final_submit_stop", "final_submit_stop"],
+        )
         self.assertTrue(mapped["submit_blocked"])
 
 

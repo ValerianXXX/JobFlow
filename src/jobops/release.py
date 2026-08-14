@@ -298,11 +298,11 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         "final_states": [
             "PHASE_0_4_HARDENED", "PHASE_4_5_SECURE_ONBOARDING_READY",
             "BILINGUAL_ONBOARDING_CENTER_READY",
-            "PHASE_5_USER_PRESENT_COMPANY_ASSIST_READY",
+            "PHASE_5_USER_PRESENT_MULTI_PAGE_COMPANY_ATS_ASSIST_READY",
             "FINAL_SUBMIT_USER_ONLY_AUTOMATIC_RETRY_DISABLED",
             "PHASE_6_UNATTENDED_AUTOMATION_NOT_OPERATIONAL",
         ],
-        "phase_5_6_authorization": "PER_APPLICATION_USER_PRESENT_PREFILL_UPLOAD_ONLY",
+        "phase_5_6_authorization": "PER_APPLICATION_USER_PRESENT_PREFILL_UPLOAD_AND_SCOPED_FORWARD_NAVIGATION_ONLY",
         "real_external_actions": actions["real_external_actions"],
         "checks": checks, "tests": tests, "skill_validation": skill_validation,
         "knowledge": knowledge, "database": {"schema_version": schema_version, "dry_run_constraint": True},
@@ -327,7 +327,7 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         **independent_counts,
         "closed_capabilities": [
             "final submit", "automatic retry", "login or account creation",
-            "cross-origin or multi-page ATS automation", "email", "recruiter contact",
+            "cross-origin forms or unattended ATS automation", "email", "recruiter contact",
             "unattended real scheduler",
         ],
         "next_safe_action": (
@@ -372,9 +372,9 @@ def write_release_reports(project: Path, result: dict[str, Any]) -> None:
         "- Read-only Knowledge Gateway, evidence-verified Claim lifecycle, hardened path exclusions and DPAPI-backed secure references.",
         "- Transactional bounded intake, idempotent/revisable orchestration, safe recovery and a complete offline chain to `AWAITING_APPROVAL`.",
         "- Compound JD/eligibility/Fit analysis, local research evidence, master-resume copy tailoring, document QA and fail-closed bilingual form classification.",
-        "- Disabled production transports plus isolated fake adapters, fake scheduler, fake receipt flow and network/side-effect probes for Phase 5-6 engineering.",
-        "- Fully content-bound synthetic Greenhouse, Lever and representative Workday verticals from official local snapshots through encrypted per-job answers where needed, ephemeral payload cleanup, scoped fake actions, fresh final authorization and verified synthetic receipts, with zero browser modifications or real external actions.",
-        "- Ordered offline Workday saved-page analysis with dynamic-control logical deduplication, explicit navigation stops and zero browser navigation.",
+        "- A fixed-ID, loopback-only Browser Companion for separately authorized user-present inspection, approved prefill/material attachment and one-use non-final Next/Continue navigation; final Submit and automatic retry are absent.",
+        "- Fully content-bound synthetic Greenhouse, Lever and representative three-page Workday verticals through encrypted answers, per-page session rotation, human login/CAPTCHA handoff, later-page material attachment and trusted-user receipt observation, with zero public-site access.",
+        "- Ordered Workday page analysis with dynamic-control logical deduplication, repeated-page detection, cross-origin rejection and bounded navigation.",
         "- Hash-bound ATS capability disclosure plus Lever single-snapshot contract tests; every provider explicitly remains unverified against live sites.",
         "- Manual-tick-only continuous intake with strict local manifests, FIFO deferred promotion, same-process automatic capacity refill and one-use DPAPI retention for UI-deferred evidence; zero background or external actions are registered.",
         "- Existing Skill, references, deterministic scripts, fixtures, quick start and release verification were updated in place.", "",
@@ -386,6 +386,6 @@ def write_release_reports(project: Path, result: dict[str, Any]) -> None:
         "## Closed capabilities", "",
         *[f"- {item}" for item in result["closed_capabilities"]], "",
         "## Next safe action", "", result["next_safe_action"], "",
-        "Future real trial requires secure Candidate Profile, Answer Bank, editable master DOCX, individually approved Claims, and separate Phase 5 authorization. Site terms, fresh route/freshness evidence and a fresh per-job final approval would still apply. No real website, browser session, upload, account, email, recruiter contact or scheduler was used in this release.",
+        "Any real trial requires a secure Candidate Profile, Answer Bank, editable master DOCX, approved Claims, a current review packet and separate user-present authorization for one application. Site terms and fresh route evidence still apply. JobFlow may assist only on the bound company/ATS origin; login and verification stay with the user, and the user alone clicks final Submit. No public recruiting site, account creation, email, recruiter contact or real scheduler was used in this release.",
     ]
     (project / "reports" / "checkpoint-final.md").write_text("\n".join(lines), encoding="utf-8")

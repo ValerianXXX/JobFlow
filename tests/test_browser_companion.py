@@ -24,7 +24,7 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertNotIn("cookies", manifest["permissions"])
         self.assertNotIn("webRequest", manifest["permissions"])
 
-    def test_companion_contains_no_programmatic_submit_or_navigation_call(self) -> None:
+    def test_companion_has_one_scoped_navigation_call_and_no_programmatic_final_submit(self) -> None:
         sources = "\n".join(
             (PROJECT / "browser-companion" / name).read_text(encoding="utf-8")
             for name in ("dom.js", "service-worker.js", "pair.js", "popup.js")
@@ -32,14 +32,22 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         for forbidden in (
             r"\.requestSubmit\s*\(",
             r"\.submit\s*\(",
-            r"\.click\s*\(",
             r"chrome\.tabs\.update\s*\(",
             r"chrome\.tabs\.create\s*\(",
         ):
             self.assertIsNone(re.search(forbidden, sources), forbidden)
+        self.assertEqual(len(re.findall(r"\.click\s*\(", sources)), 1)
+        self.assertIn('type: "JOBFLOW_CHECK_NAVIGATION"', sources)
+        self.assertIn('type: "JOBFLOW_NAVIGATE_APPROVED"', sources)
+        self.assertIn('final_submit: false', sources)
         self.assertIn('event.isTrusted', sources)
         self.assertIn('trusted_user_event: true', sources)
         self.assertIn('result-unavailable', sources)
+        self.assertIn("const NAVIGATION_SETTLE_MS = 20000;", sources)
+        self.assertIn("prior_page_observation_hash", sources)
+        self.assertIn('status: "NAVIGATION_PENDING"', sources)
+        self.assertIn('status: "NAVIGATION_STALLED"', sources)
+        self.assertIn("automatic_retry: false", sources)
 
     def test_companion_install_helper_and_bilingual_ui_entry_are_packaged(self) -> None:
         wrapper = (PROJECT / "Install JobFlow Browser Companion.cmd").read_text(encoding="utf-8")
@@ -49,8 +57,16 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn("pause", wrapper.casefold())
         self.assertIn(COMPANION_EXTENSION_ID, helper)
         self.assertIn("browserAssistTitle", html)
-        self.assertIn("真实公司官网辅助投递", app)
-        self.assertIn("Assisted application on a real company site", app)
+        self.assertIn("公司官网与 ATS 辅助投递", app)
+        self.assertIn("Company and ATS assisted application", app)
+        self.assertIn("最终 Submit", app)
+        self.assertIn("Final Submit", app)
+        pair = (PROJECT / "browser-companion" / "pair.js").read_text(encoding="utf-8")
+        worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
+        self.assertIn("const PROTOCOL = 2;", pair)
+        self.assertIn("const PROTOCOL = 2;", worker)
+        self.assertIn("protocol_version:2", app)
+        self.assertIn("pairing:{protocol_version:result.protocol_version", app)
 
 
 if __name__ == "__main__":

@@ -29,8 +29,21 @@ ASSISTED_FIELD_TYPES = frozenset({
 })
 PROFILE_FIELD_ALIASES = {
     "full_name": "candidate_display_name",
+    "first_name": "first_name",
+    "last_name": "last_name",
+    "email": "email",
+    "phone": "phone",
+    "linkedin": "linkedin_url",
     "github": "github_url",
     "portfolio": "portfolio_url",
+    "website": "website_url",
+    "address": "address",
+}
+ANSWER_BANK_FIELD_ALIASES = {
+    "linkedin": ("linkedin", "linkedin_url"),
+    "github": ("github", "github_url"),
+    "portfolio": ("portfolio", "portfolio_url"),
+    "website": ("website", "website_url"),
 }
 
 
@@ -382,6 +395,81 @@ class EphemeralATSPayloadBroker:
             "application_answer_bundle_count": len(answer_references),
             "skipped_optional_field_count": skipped_optional_count,
         }
+
+    def materialize_reusable_page_fields(
+        self,
+        *,
+        fields: list[dict[str, Any]],
+        profile_reference: str | None,
+        answer_bank_reference: str | None,
+    ) -> list[dict[str, str]]:
+        """Resolve only applicant-confirmed reusable values for a newly discovered ATS page.
+
+        The caller has already limited the page to an approved ATS origin. Protected,
+        unknown, legal and voluntary-disclosure fields never enter this resolver. Values
+        remain in memory and are returned only to the loopback browser companion.
+        """
+
+        if not isinstance(fields, list) or len(fields) > 500:
+            raise JobOpsError("EPHEMERAL_DYNAMIC_FIELDS_INVALID", "The live ATS page has an invalid field set.")
+        profile: dict[str, Any] = {}
+        answers: dict[str, Any] = {}
+        if profile_reference:
+            profile, kind = self._private_json(
+                profile_reference, allowed_kinds={"candidate_profile"}, require_synthetic=False,
+            )
+            if kind != "candidate_profile":
+                raise JobOpsError("EPHEMERAL_PRIVATE_REFERENCE_INVALID", "The reusable profile reference is invalid.")
+        if answer_bank_reference:
+            answer_bank, kind = self._private_json(
+                answer_bank_reference, allowed_kinds={"answer_bank"}, require_synthetic=False,
+            )
+            if kind != "answer_bank" or not isinstance(answer_bank.get("answers"), dict):
+                raise JobOpsError("EPHEMERAL_PRIVATE_REFERENCE_INVALID", "The reusable Answer Bank reference is invalid.")
+            answers = answer_bank["answers"]
+
+        def confirmed_answer(answer_key: str) -> Any:
+            candidates = ANSWER_BANK_FIELD_ALIASES.get(answer_key, (answer_key,))
+            for candidate in candidates:
+                item = answers.get(candidate)
+                if (
+                    isinstance(item, dict)
+                    and item.get("status") == "CONFIRMED"
+                    and item.get("source") == "APPLICANT_CONFIRMED"
+                    and item.get("use_policy") == "reuse"
+                ):
+                    return item.get("value")
+            return None
+
+        resolved: list[dict[str, str]] = []
+        for field in fields:
+            if not isinstance(field, dict):
+                raise JobOpsError("EPHEMERAL_DYNAMIC_FIELDS_INVALID", "A live ATS field is invalid.")
+            if field.get("classification") not in {"ordinary_fixed", "private_fixed"}:
+                continue
+            control_type = str(field.get("control_type", ""))
+            if control_type not in ASSISTED_FIELD_TYPES:
+                continue
+            answer_key = str(field.get("answer_key", ""))
+            profile_key = PROFILE_FIELD_ALIASES.get(answer_key, answer_key)
+            raw = profile.get(profile_key)
+            if raw in (None, "", "UNKNOWN", "UNANSWERED"):
+                raw = confirmed_answer(answer_key)
+            try:
+                value = _field_value(raw)
+            except JobOpsError as exc:
+                if exc.code == "EPHEMERAL_FIELD_VALUE_UNAVAILABLE":
+                    continue
+                raise
+            resolved.append({
+                "control_ref": str(field.get("control_ref", "")),
+                "control_type": control_type,
+                "value": value,
+                "value_sha256": sha256_bytes(value.encode("utf-8")),
+            })
+        if len({item["control_ref"] for item in resolved}) != len(resolved):
+            raise JobOpsError("EPHEMERAL_FIELD_BINDING_DUPLICATE", "A reusable page field was resolved more than once.")
+        return sorted(resolved, key=lambda item: item["control_ref"])
 
     def read_assisted_material(
         self,

@@ -12,7 +12,7 @@ from .state_machine import BLOCKING_STATES, assert_transition
 from .util import iso_utc
 
 
-LATEST_SCHEMA_VERSION = 8
+LATEST_SCHEMA_VERSION = 9
 
 
 MIGRATION_001_SQL = """
@@ -438,6 +438,69 @@ COMMIT;
 """
 
 
+MIGRATION_009_SQL = """
+BEGIN IMMEDIATE;
+
+DROP TRIGGER browser_assist_events_append_only_update;
+DROP TRIGGER browser_assist_events_append_only_delete;
+DROP INDEX idx_browser_assist_runs_application;
+ALTER TABLE browser_assist_runs RENAME TO browser_assist_runs_v8;
+ALTER TABLE browser_assist_events RENAME TO browser_assist_events_v8;
+
+CREATE TABLE browser_assist_runs (
+    assist_id TEXT PRIMARY KEY,
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    session_id TEXT NOT NULL REFERENCES external_action_sessions(session_id),
+    allowed_origin TEXT NOT NULL,
+    provider TEXT NOT NULL CHECK(provider IN ('company','greenhouse','lever','workday')),
+    route_kind TEXT NOT NULL CHECK(route_kind IN ('OFFICIAL_DIRECT','OFFICIAL_TO_APPROVED_ATS')),
+    current_step INTEGER NOT NULL CHECK(current_step BETWEEN 1 AND 20),
+    max_steps INTEGER NOT NULL CHECK(max_steps BETWEEN 1 AND 20),
+    handoff_kind TEXT,
+    last_page_hash TEXT,
+    status TEXT NOT NULL CHECK(status IN (
+        'PAIRING','READY','HANDOFF_REQUIRED','PAGE_PREPARED','PAGE_REVIEW_REQUIRED',
+        'AWAITING_NAVIGATION','AWAITING_USER_SUBMIT','SUBMISSION_UNKNOWN',
+        'CONFIRMED','FAILED','EXPIRED','REVOKED'
+    )),
+    prepared_hash TEXT,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+INSERT INTO browser_assist_runs(
+    assist_id,application_id,session_id,allowed_origin,provider,route_kind,current_step,max_steps,
+    handoff_kind,last_page_hash,status,prepared_hash,created_at,expires_at,updated_at
+)
+SELECT assist_id,application_id,session_id,allowed_origin,'company','OFFICIAL_DIRECT',1,20,
+       NULL,NULL,status,prepared_hash,created_at,expires_at,updated_at
+FROM browser_assist_runs_v8;
+CREATE INDEX idx_browser_assist_runs_application
+ON browser_assist_runs(application_id,created_at DESC);
+
+CREATE TABLE browser_assist_events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    assist_id TEXT NOT NULL REFERENCES browser_assist_runs(assist_id),
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    event_type TEXT NOT NULL,
+    evidence_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+INSERT INTO browser_assist_events(event_id,assist_id,application_id,event_type,evidence_hash,created_at)
+SELECT event_id,assist_id,application_id,event_type,evidence_hash,created_at
+FROM browser_assist_events_v8;
+CREATE TRIGGER browser_assist_events_append_only_update BEFORE UPDATE ON browser_assist_events
+BEGIN SELECT RAISE(ABORT, 'browser assist events are append-only'); END;
+CREATE TRIGGER browser_assist_events_append_only_delete BEFORE DELETE ON browser_assist_events
+BEGIN SELECT RAISE(ABORT, 'browser assist events are append-only'); END;
+
+DROP TABLE browser_assist_events_v8;
+DROP TABLE browser_assist_runs_v8;
+INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','9');
+COMMIT;
+"""
+
+
 def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
@@ -530,6 +593,10 @@ class JobOpsDB:
             if version == 7:
                 connection.executescript(MIGRATION_008_SQL)
                 applied.append(8)
+                version = 8
+            if version == 8:
+                connection.executescript(MIGRATION_009_SQL)
+                applied.append(9)
         return applied
 
     def initialize(self) -> None:

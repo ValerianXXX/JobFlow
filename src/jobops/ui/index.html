@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260814-jobflow-v20">
+  <link rel="stylesheet" href="styles.css?v=20260814-jobflow-v21">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -120,8 +120,8 @@
       <section id="browserAssistPanel" class="browser-assist-board" aria-labelledby="browserAssistTitle">
         <div class="subheading">
           <div>
-            <h3 id="browserAssistTitle" data-i18n="browserAssistTitle">真实公司官网辅助投递</h3>
-            <small data-i18n="browserAssistBody">JobFlow 在你在场时预填已批准字段并附加已批准材料，随后强制停在最终提交前。</small>
+            <h3 id="browserAssistTitle" data-i18n="browserAssistTitle">公司官网与 ATS 辅助投递</h3>
+            <small data-i18n="browserAssistBody">JobFlow 逐页预填获批字段、附加材料并安全通过明确的 Next/Continue，最终 Submit 永远留给你。</small>
           </div>
           <span id="browserAssistBadge" class="guard-badge" data-i18n="browserAssistIdle">等待选择申请</span>
         </div>
@@ -133,13 +133,13 @@
           </article>
           <article>
             <strong data-i18n="browserAssistBoundaryTitle">不可越过的边界</strong>
-            <p data-i18n="browserAssistBoundary">JobFlow 不会点击提交、下一步、登录、注册或绕过验证码。最终提交只能由你亲自点击；结果不明确时只会询问你，不会重试。</p>
-            <small data-i18n="browserAssistCompanyOnly">当前最快版本仅支持已批准的公司同域、访客、单页表单。</small>
+            <p data-i18n="browserAssistBoundary">JobFlow 只会在当前页校验通过后，使用一次性授权点击一个明确的 Next/Continue；不会登录、注册、绕过验证码或点击最终 Submit。结果不明确时绝不自动重试。</p>
+            <small data-i18n="browserAssistCompanyOnly">支持已审批的公司官网、Greenhouse、Lever 与 Workday 路线；这是本地合成验证能力，不代表所有实时页面都已兼容。</small>
           </article>
         </div>
         <div id="browserAssistSelection" class="browser-assist-selection hidden" aria-live="polite">
           <div><strong id="browserAssistJob"></strong><small id="browserAssistApplication"></small></div>
-          <label><input id="browserAssistConfirm" type="checkbox"><span data-i18n="browserAssistConsent">我确认对这一个申请启动 30 分钟的真实表单读取、预填和材料附加授权；我会亲自检查并点击最终提交。</span></label>
+          <label><input id="browserAssistConfirm" type="checkbox"><span data-i18n="browserAssistConsent">我授权这一个申请在 30 分钟内逐页读取表单结构、预填获批字段、附加获批材料并通过明确的非最终 Next/Continue；登录、验证、未知问题和最终 Submit 由我处理。</span></label>
           <div class="browser-assist-actions">
             <button id="startBrowserAssistNow" class="primary" type="button" data-i18n="startBrowserAssistNow" disabled>建立浏览器连接</button>
             <a id="browserAssistOpenPage" class="button-link compact hidden" target="_blank" rel="noopener noreferrer" data-i18n="openApprovedApplication">打开已批准的申请页</a>
@@ -380,7 +380,7 @@
       <div class="finish-card">
         <p class="section-no">04</p>
         <h2 data-i18n="finishTitle">完成一次性入职</h2>
-        <p data-i18n="finishBody">完成后，JobFlow 可连续处理离线岗位并生成待审批队列。真实网站、上传、邮件和最终提交仍保持关闭。</p>
+        <p data-i18n="finishBody">完成后，JobFlow 可连续准备岗位并生成待审批队列。每个已批准申请仍需你单独授权；最终 Submit 始终由你亲自点击。</p>
         <div id="readiness" class="readiness"></div>
         <label class="final-confirm"><input id="finalConfirm" type="checkbox"><span data-i18n="finalConsent">我确认以上答案和审阅决定准确，并同意将其加密保存为当前 Candidate Profile 与 Answer Bank。</span></label>
         <button id="completeOnboarding" class="primary large" type="button" data-i18n="completeButton">完成入职设置</button>
@@ -398,6 +398,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260814-jobflow-v20"></script>
+  <script src="app.js?v=20260814-jobflow-v21"></script>
 </body>
 </html>

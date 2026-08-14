@@ -173,7 +173,11 @@ class ApplicationFieldResolutionTests(unittest.TestCase):
                 )
                 self.assertEqual(prepared["status"], "AWAITING_FINAL_AUTHORIZATION")
                 self.assertEqual(prepared["ephemeral_field_count"], 3)
-                self.assertEqual(prepared["ephemeral_file_count"], 1)
+                # V2 prepares the approved resume, on-demand Cover Letter, and
+                # approved portfolio in memory before a supported ATS sequence.
+                # The Browser Companion still attaches each file only when the
+                # current page exposes the matching upload control.
+                self.assertEqual(prepared["ephemeral_file_count"], 3)
                 self.assertEqual(prepared["confirmed_stop_field_count"], 1)
                 self.assertTrue(prepared["temporary_files_removed"])
                 self.assertFalse(prepared["production_activation"])

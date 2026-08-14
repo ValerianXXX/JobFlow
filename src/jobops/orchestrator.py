@@ -725,7 +725,17 @@ class JobOpsOrchestrator:
             "EDUCATION": claims[4]["allowed_wording"][0],
         } if synthetic else {})
         material_requests = detect_material_requests(fields["fields"])
-        cover_requested = any(item["purpose"] == "cover_letter" for item in material_requests["uploads"])
+        anticipate_later_materials = bool(
+            form_analysis is not None
+            and (
+                route.provider in {"greenhouse", "lever", "workday"}
+                or "NAVIGATION_ACTION_STOP" in form_analysis.get("blockers", [])
+            )
+        )
+        cover_requested = (
+            any(item["purpose"] == "cover_letter" for item in material_requests["uploads"])
+            or anticipate_later_materials
+        )
         cover_docx_ref: dict[str, Any] | None = None
         cover_pdf_ref: dict[str, Any] | None = None
         cover_visual_ref: dict[str, Any] | None = None
@@ -885,6 +895,7 @@ class JobOpsOrchestrator:
             public_values=public_values,
             cover_letter=cover_binding,
             portfolio_file=portfolio_binding,
+            anticipate_later_pages=anticipate_later_materials,
         )
         validate_named("material-plan", material_plan, self.schemas)
         execution_plan = build_application_execution_plan(

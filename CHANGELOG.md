@@ -6,6 +6,15 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+## [0.2.0] - release candidate / 发布候选
+
+- Added user-present, per-application multi-page assistance for bound company, Greenhouse, Lever and Workday routes. Every page gets fresh form classification, a rotated action session, approved-only prefill/material attachment, and one-use authorization for one explicit non-final Next/Continue control.
+- 新增用户在场、逐申请授权的公司官网、Greenhouse、Lever 与 Workday 多页辅助：每一页都会重新分类表单、轮换动作会话，仅预填获批值和挂载获批材料，并只允许一次性授权一个明确的非最终 Next/Continue。
+- Added safe user handoff and resume for login, existing-account, CAPTCHA and MFA pages without reading credentials or bypassing verification. Cross-origin forms, repeated pages, ambiguous navigation, account creation, final Submit and automatic retry fail closed.
+- 新增登录、已有账号、CAPTCHA 与 MFA 页面的人工接管和恢复；JobFlow 不读取凭据也不绕过验证。跨域表单、未前进的重复页面、歧义导航、账号创建、最终 Submit 与自动重试均失败关闭。
+- Added a three-page synthetic Workday vertical covering later-page reusable fields, manual questions, per-job resume/Cover Letter/portfolio attachment, trusted user Submit observation and receipt classification. No public recruiting site was visited.
+- 新增三页合成 Workday 纵向链，覆盖后续页可复用字段、人工问题、岗位简历/Cover Letter/作品集挂载、可信用户 Submit 观察与回执判断；未访问任何公开招聘网站。
+
 - Added the fixed-ID JobFlow Browser Companion and a real, user-present company-site assistance path. For one approved application it revalidates the exact same-origin guest form, fills only approved fields, streams approved materials through one-use localhost tokens, and stops at `AWAITING_USER_SUBMIT`; no code path can click or invoke final submit.
 - 新增固定 ID 的 JobFlow 浏览器伴侣与真实、用户在场的公司官网辅助路径：每次只处理一项已批准申请，重新核验精确同源访客表单，仅填写获批字段，并通过本机一次性令牌流式挂载获批材料；随后严格停在 `AWAITING_USER_SUBMIT`，代码中不存在点击或调用最终提交的路径。
 - Added trusted-user-submit observation, strong success/failure result classification, a bilingual manual “Was it submitted successfully?” fallback, startup/kill-switch recovery to non-retryable `SUBMISSION_UNKNOWN`, append-only real-action auditing, and zero automatic retries.
@@ -37,7 +46,7 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 - The bilingual home page can now prepare one real-profile offline application from three explicitly selected saved files. It constructs the company/ATS route locally, retains no input snapshot, opens the encrypted review packet, and rolls back both queue capacity and newly generated ciphertext if preparation fails; network and real external actions remain zero.
 - 中英双语首页现在可以从三份用户明确选择的本机文件准备一项真实资料离线申请：本机自动建立公司官网/ATS 路线，不保留输入快照，生成后直接打开加密审阅包；如中途失败，会同时释放队列容量并删除本轮新建密文，网络与真实外部动作仍为 0。
 - A completed non-synthetic onboarding profile can now drive the same local application pipeline as the demo: approved Claims are selected against a saved JD, only applicant-approved Master Resume positions are changed in a copy, Word renders the result for structural/visual QA, and the encrypted packet enters `AWAITING_APPROVAL`. Live transport remains absent.
-- 已完成的真实用户资料现在可以进入与演示相同的本机投递流水线：系统按已保存 JD 选择获批 Claim，只在用户批准的母版位置生成副本改写，经 Word 实际渲染与结构/视觉检查后，将加密审阅包放入 `AWAITING_APPROVAL`；实时传输仍不存在。
+- 已完成的真实用户资料现在可以进入与演示相同的本机投递流水线：系统按已保存 JD 选择获批 Claim，只在用户批准的母版位置生成副本改写，经 Word 实际渲染与结构/视觉检查后，将加密审阅包放入 `AWAITING_APPROVAL`；准备阶段不触发实时传输。
 - Ordinary DOCX Master Resumes now receive AI-to-paragraph mapping and a bilingual one-time approval screen. Only applicant-approved, hash-bound positions can be changed in a copy; the encrypted manifest persists no resume paragraph text and any onboarding revision invalidates it.
 - 普通 DOCX 母版现在支持 AI 到原段落的映射与中英双语一次性确认；只有用户批准且哈希绑定的位置可在副本中改写，加密清单不保存简历段落正文，资料建新版后旧映射自动失效。
 - A resume uploaded through onboarding can now be designated as the encrypted Master Resume, while application-material use of confirmed Claims requires a separate, hash-bound applicant approval. The bilingual readiness board shows every remaining local blocker and automatically invalidates that approval after a revision.
