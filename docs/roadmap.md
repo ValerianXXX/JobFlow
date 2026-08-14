@@ -28,10 +28,11 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] Manual-tick-only continuous intake for synthetic fixtures and completed real profiles with explicit per-job saved evidence, FIFO, user-selected capacity, idempotency, redacted results and same-process automatic slot refill after review decisions; UI-deferred evidence is hash-bound, DPAPI-encrypted and deleted before one-use continuation.
 - [x] Current-tree and full-Git-history privacy scanner; deterministic local source candidate.
 - [x] Auto-cleaned synthetic UI demo that rejects real file intake and real AI connections.
+- [x] Bilingual field-by-field redacted prefill proposal plus an in-product synthetic rehearsal that stops at a separate final-confirmation gate and ends only after a verified fake receipt; browser, network and real external actions remain zero.
 
 ## Before a public GitHub release / GitHub 正式发布前
 
-- [ ] Confirm or replace the public Git author identity without exposing a private email.
+- [x] Confirm or replace the public Git author identity without exposing a private email.
 - [ ] Run fresh independent QA from a frozen clean copy of the final commit.
 - [ ] Capture sanitized bilingual screenshots from the completed local-only synthetic demo.
 - [ ] Perform first-time installation on a clean supported Windows user profile.
@@ -42,7 +43,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 
 - [ ] Read-only live official-careers freshness checks that comply with site terms.
 - [ ] Browser-assisted real form inspection with per-site policy validation.
-- [ ] A user-visible prefill proposal that still stops before every final submission.
+- [ ] Live-site browser prefill after a user-visible proposal, with a separate stop before every final submission.
 - [ ] Provider-specific live Greenhouse, Lever and Workday compatibility evidence.
 - [ ] User-controlled scheduling after explicit authorization and a kill switch.
 

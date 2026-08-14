@@ -10,15 +10,19 @@ from typing import Any
 
 from .ai_runtime import LocalSubprocessAIEngine
 from .application_execution import build_application_execution_plan
+from .ats_browser import analyze_local_ats_form, build_browser_action_plan
 from .approvals import ApprovalContext, UploadBinding
 from .db import JobOpsDB
 from .errors import JobOpsError
+from .execution_bundle import build_application_execution_bundle
 from .onboarding_center import OnboardingCenterService
 from .onboarding_server import create_server
 from .private_onboarding import PrivateOnboarding
 from .queue_manager import QueueManager
 from .secure_store import WindowsDPAPIStore
-from .util import canonical_json, iso_utc, sha256_bytes
+from .sourcing import verify_source_route
+from .synthetic_lifecycle import SyntheticApplicationLifecycle
+from .util import canonical_json, iso_utc, sha256_bytes, stable_id
 
 
 DEMO_SOURCE = (
@@ -35,6 +39,18 @@ DEMO_SCHEMAS = (
     "resume-tailoring-manifest",
 )
 DEMO_APPLICATION_ID = "APP-DEFACED00001"
+DEMO_FORM_HTML = b"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Synthetic application</title></head>
+<body><main data-provider="greenhouse"><h1>Synthetic Workflow Quality Analyst</h1>
+<form action="/example/jobs/synthetic-demo">
+<h2>Candidate details</h2>
+<label for="full_name">Full name</label><input id="full_name" name="full_name" autocomplete="name" required>
+<label for="portfolio">Portfolio URL</label><input id="portfolio" name="portfolio" type="url">
+<h2>Documents</h2>
+<label for="resume">Resume</label><input id="resume" name="resume" type="file" required>
+<button id="submit" type="submit">Submit application</button>
+</form><script>throw new Error('SYNTHETIC_SCRIPT_MUST_NOT_RUN');</script></main></body></html>"""
+DEMO_RESUME = b"%PDF-1.4\n% JobFlow synthetic demo document; never uploaded.\n%%EOF\n"
 
 
 class SyntheticDemoAIEngine(LocalSubprocessAIEngine):
@@ -61,8 +77,44 @@ class SyntheticDemoService(OnboardingCenterService):
                 "file_intake_enabled": False,
                 "ai_connection_enabled": False,
                 "temporary_runtime": True,
+                "application_id": DEMO_APPLICATION_ID,
+                "isolated_execution_rehearsal": True,
                 "real_external_actions": 0,
             },
+        }
+
+    def prepare_synthetic_execution(self, payload: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            if payload.get("application_id") != DEMO_APPLICATION_ID:
+                raise JobOpsError("DEMO_APPLICATION_INVALID", "The synthetic demo application identifier is invalid.")
+            result = SyntheticApplicationLifecycle(self.database, self.onboarding).prepare_until_final_authorization(
+                application_id=DEMO_APPLICATION_ID,
+                user_confirmed=payload.get("user_confirmed") is True,
+            )
+        return {
+            **result,
+            "synthetic_demo": True,
+            "private_values_emitted": 0,
+            "network_actions": 0,
+            "real_external_actions": 0,
+        }
+
+    def complete_synthetic_execution(self, payload: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            if payload.get("application_id") != DEMO_APPLICATION_ID:
+                raise JobOpsError("DEMO_APPLICATION_INVALID", "The synthetic demo application identifier is invalid.")
+            result = SyntheticApplicationLifecycle(self.database, self.onboarding).complete_with_fresh_authorization(
+                application_id=DEMO_APPLICATION_ID,
+                run_id=str(payload.get("run_id", "")),
+                user_confirmed=payload.get("user_confirmed") is True,
+                fake_confirmation_number="SYNTHETIC-JOBFLOW-DEMO-RECEIPT",
+            )
+        return {
+            **result,
+            "synthetic_demo": True,
+            "private_values_emitted": 0,
+            "network_actions": 0,
+            "real_external_actions": 0,
         }
 
     def connect_ai(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -105,31 +157,72 @@ def _seed_demo_review_queue(database: JobOpsDB, onboarding: PrivateOnboarding, *
     job_id = "JOB-DEFACED00001"
     packet_id = "RPK-DEFACED00001"
     official_url = "https://careers.example.test/jobs/synthetic-demo"
-    application_url = "https://boards.example.test/jobs/synthetic-demo"
+    application_url = "https://boards.greenhouse.io/example/jobs/synthetic-demo"
     jd_hash = sha256_bytes(b"synthetic-demo-jd")
     freshness_hash = sha256_bytes(b"synthetic-demo-freshness")
-    route_hash = sha256_bytes(b"synthetic-demo-route")
     claim_hash = sha256_bytes(b"synthetic-demo-claims")
-    form_hash = sha256_bytes(b"synthetic-demo-form")
     answers_hash = sha256_bytes(b"synthetic-demo-answers")
-    resume_hash = sha256_bytes(b"synthetic-demo-resume")
+    official_page_hash = sha256_bytes(b"synthetic-demo-official-page")
+    route = verify_source_route(
+        official_entry_url=official_url,
+        current_url=application_url,
+        navigation_history=[official_url, application_url],
+        approved_ats_hosts=["greenhouse.io"],
+        guest_available=True,
+        official_page_hash=official_page_hash,
+        jd_snapshot_hash=jd_hash,
+        tenant_binding={
+            "provider": "greenhouse",
+            "company_registrable_domain": "example.test",
+            "ats_host": "boards.greenhouse.io",
+            "tenant": "example",
+            "board": "default",
+            "job_identity": "synthetic-demo",
+            "official_page_hash": official_page_hash,
+            "jd_snapshot_hash": jd_hash,
+        },
+    )
+    form_snapshot = analyze_local_ats_form(DEMO_FORM_HTML, route=route.as_dict(), blocked_categories=[])
+    bindings: dict[str, dict[str, str]] = {}
+    public_values: dict[str, str] = {}
+    for item in form_snapshot["fields"]:
+        control_ref = str(item["control_ref"])
+        if item["answer_key"] == "full_name":
+            bindings[control_ref] = {"kind": "secure_ref", "value": profile_ref}
+        elif item["answer_key"] == "portfolio":
+            value = "https://portfolio.example.test/synthetic-demo"
+            bindings[control_ref] = {"kind": "public_value", "value": value}
+            public_values[control_ref] = value
+    browser_plan = build_browser_action_plan(form_snapshot, bindings)
+    actions = {str(item["control_ref"]): item for item in browser_plan["actions"]}
+    demo_form_questions = []
+    for item in form_snapshot["fields"]:
+        action = actions[str(item["control_ref"])]
+        demo_form_questions.append({
+            "id": item["control_ref"],
+            "label": item.get("display_label") or item["answer_key"],
+            "answer_key": item["answer_key"],
+            "classification": item["classification"],
+            "action": (
+                "PREFILL_FROM_SECURE_STORE"
+                if action["binding_kind"] == "SECURE_REF"
+                else "PREFILL"
+                if action["action"] == "PROPOSE_PREFILL"
+                else "STOP"
+            ),
+            "status": "READY" if action["action"] == "PROPOSE_PREFILL" else "STOPPED",
+            "redacted_summary": (
+                "PRIVATE_VALUE_PRESENT"
+                if action["binding_kind"] == "SECURE_REF"
+                else "PUBLIC_VALUE_HASH_PRESENT"
+                if action["binding_kind"] == "PUBLIC_VALUE_HASH"
+                else "SEPARATE_ACTION_GATE"
+            ),
+        })
+    demo_sensitive_fields = [item for item in demo_form_questions if item["action"] == "STOP"]
+    resume_ref = onboarding.import_bytes("generated_resume_pdf", DEMO_RESUME, synthetic=True)
+    resume_hash = str(resume_ref["content_sha256"])
     upload = UploadBinding("synthetic-resume.pdf", "resume", resume_hash)
-    demo_form_questions = [
-        {
-            "id": "field-synthetic-location",
-            "label": "Preferred work location",
-            "classification": "ordinary",
-            "action": "PREFILL_PROPOSAL",
-        }
-    ]
-    demo_sensitive_fields = [
-        {
-            "id": "field-final-submit",
-            "label": "Final submission",
-            "classification": "final_submit_stop",
-            "action": "STOP",
-        }
-    ]
     material_plan = {
         "schema_version": 1,
         "status": "READY_FOR_REVIEW",
@@ -145,15 +238,28 @@ def _seed_demo_review_queue(database: JobOpsDB, onboarding: PrivateOnboarding, *
     }
     execution_plan = build_application_execution_plan(
         application_id=DEMO_APPLICATION_ID,
-        source_route={
-            "provider": "greenhouse", "route_hash": route_hash,
-            "guest_mode": "GUEST_SELECTED", "account_action": "NONE",
-        },
-        form_snapshot_hash=form_hash,
-        browser_plan_hash=form_hash,
-        form_fields=[*demo_form_questions, *demo_sensitive_fields],
+        source_route=route.as_dict(),
+        form_snapshot_hash=str(form_snapshot["form_snapshot_hash"]),
+        browser_plan_hash=str(browser_plan["plan_hash"]),
+        form_fields=demo_form_questions,
         material_plan=material_plan,
         pending_limit=int(queue.status()["pending_limit"]),
+    )
+    execution_bundle = build_application_execution_bundle(
+        application_id=DEMO_APPLICATION_ID,
+        form_snapshot=form_snapshot,
+        browser_plan=browser_plan,
+        execution_plan=execution_plan,
+        public_values=public_values,
+        material_references=[{
+            "purpose": "resume",
+            "filename": upload.filename,
+            "sha256": upload.sha256,
+            "secure_ref": str(resume_ref["secure_ref"]),
+        }],
+    )
+    execution_bundle_ref = onboarding.import_bytes(
+        "application_execution_bundle", canonical_json(execution_bundle), synthetic=True,
     )
     packet: dict[str, Any] = {
         "schema_version": 1,
@@ -187,15 +293,9 @@ def _seed_demo_review_queue(database: JobOpsDB, onboarding: PrivateOnboarding, *
         "material_plan": material_plan,
         "execution_plan": execution_plan,
         "external_actions": ["upload_material", "submit_application"],
-        "source_route": {
-            "route_kind": "OFFICIAL_TO_APPROVED_ATS",
-            "provider": "greenhouse",
-            "guest_mode": "GUEST_SELECTED",
-            "account_action": "NONE",
-            "official_entry_url": official_url,
-            "current_url": application_url,
-        },
+        "source_route": route.as_dict(),
         "queue": queue.status(),
+        "execution_bundle_content_hash": execution_bundle_ref["content_sha256"],
     }
     packet["content_hash"] = sha256_bytes(canonical_json(packet))
     packet_ref = onboarding.import_bytes("review_packet", canonical_json(packet), synthetic=True)
@@ -204,14 +304,14 @@ def _seed_demo_review_queue(database: JobOpsDB, onboarding: PrivateOnboarding, *
         job_id=job_id,
         jd_snapshot_hash=jd_hash,
         jd_freshness_hash=freshness_hash,
-        source_route_hash=route_hash,
+        source_route_hash=route.route_hash,
         canonical_url=application_url,
-        ats_tenant="synthetic-demo",
-        ats_board="careers",
+        ats_tenant=route.ats_tenant,
+        ats_board=route.ats_board,
         ats_job_identity="synthetic-demo",
         profile_version="SYNTHETIC-DEMO-1",
         claim_set_hash=claim_hash,
-        form_snapshot_hash=form_hash,
+        form_snapshot_hash=str(form_snapshot["form_snapshot_hash"]),
         answers_hash=answers_hash,
         review_packet_hash=str(packet["content_hash"]),
         uploads=(upload,),
@@ -238,6 +338,25 @@ def _seed_demo_review_queue(database: JobOpsDB, onboarding: PrivateOnboarding, *
             "secure_ref": packet_ref["secure_ref"],
             "status": "AWAITING_APPROVAL",
         },
+        material_records=[
+            {
+                "material_id": stable_id("MAT", DEMO_APPLICATION_ID, "resume_pdf", resume_hash),
+                "kind": "resume_pdf",
+                "path": resume_ref["secure_ref"],
+                "content_hash": resume_hash,
+                "claim_ids": ["CLM-SYNTHETIC-DEMO"],
+            },
+            {
+                "material_id": stable_id(
+                    "MAT", DEMO_APPLICATION_ID, "execution_bundle", str(execution_bundle_ref["content_sha256"]),
+                ),
+                "kind": "execution_bundle",
+                "path": execution_bundle_ref["secure_ref"],
+                "content_hash": execution_bundle_ref["content_sha256"],
+                "claim_ids": [],
+            },
+        ],
+        source_route=route.as_dict(),
     )
 
 
@@ -310,13 +429,17 @@ def create_demo_service(
     )
     engine = SyntheticDemoAIEngine([sys.executable, str(Path(__file__).with_name("_demo_ai_command.py"))])
     service = SyntheticDemoService(project, database, onboarding, ai_engine=engine)
-    source = OnboardingCenterService.import_source(service, "project_case", ".txt", DEMO_SOURCE.encode("utf-8"))
-    _, private_state = service.ensure_state()
-    imported = next(
-        item for item in private_state["sources"]
-        if item["source_id"] == source["source_id"]
+    OnboardingCenterService.import_source(service, "project_case", ".txt", DEMO_SOURCE.encode("utf-8"))
+    demo_profile = onboarding.import_bytes(
+        "candidate_profile",
+        canonical_json({
+            "schema_version": 1,
+            "status": "SYNTHETIC_DEMO_ONLY",
+            "candidate_display_name": "Synthetic Applicant",
+        }),
+        synthetic=True,
     )
-    _seed_demo_review_queue(database, onboarding, profile_ref=str(imported["secure_ref"]))
+    _seed_demo_review_queue(database, onboarding, profile_ref=str(demo_profile["secure_ref"]))
     return service
 
 

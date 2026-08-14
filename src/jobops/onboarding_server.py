@@ -367,6 +367,10 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.set_queue_limit(self._json_body())
             elif route == "external-action-kill-switch":
                 result = self.server.service.disable_external_actions(self._json_body())
+            elif route == "prepare-synthetic-execution":
+                result = self.server.service.prepare_synthetic_execution(self._json_body())
+            elif route == "complete-synthetic-execution":
+                result = self.server.service.complete_synthetic_execution(self._json_body())
             elif route == "review-packet":
                 result = self.server.service.review_packet(str(self._json_body().get("application_id", "")))
             elif route == "resolve-application-fields":

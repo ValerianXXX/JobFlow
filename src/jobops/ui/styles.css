@@ -189,6 +189,13 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .execution-dashboard-item aside b { color: var(--green); font-size: 10px; }
 .execution-dashboard-item.review-required aside b { color: #8d3e34; }
 .execution-dashboard-item .no-retry { color: #8d3e34; font-weight: 700; }
+.demo-execution-panel { margin-top: 16px; padding: 17px; border: 1px solid #a9c9bd; background: var(--green-soft); }
+.demo-execution-panel > div:first-child strong { display: block; color: var(--green); font-size: 13px; }
+.demo-execution-panel > div:first-child p,.demo-execution-panel > p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.demo-execution-controls { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px; align-items: center; margin-top: 13px; padding-top: 13px; border-top: 1px solid #bfd5cd; }
+.demo-execution-controls label { display: flex; align-items: flex-start; gap: 9px; color: var(--ink); font-size: 11px; line-height: 1.5; }
+.demo-execution-controls input { margin-top: 2px; accent-color: var(--green); }
+.demo-execution-controls button { margin: 0; }
 .review-packet-panel { margin-top: 14px; padding: 20px; border: 1px solid var(--green); background: #fff; }
 .review-packet-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .review-packet-panel h3 { margin: 0; font: 600 24px/1.2 Georgia, "Songti SC", serif; }
@@ -491,6 +498,7 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .application-field-row { grid-template-columns: 1fr; }
   .packet-decision-options { grid-template-columns: 1fr; }
   .queue-secondary-boards { grid-template-columns: 1fr; }
+  .demo-execution-controls { grid-template-columns: 1fr; }
   .ats-capability-list { grid-template-columns: 1fr 1fr; }
   .offline-discovery-controls { grid-template-columns: 1fr 1fr; }
   .offline-application-grid { grid-template-columns: 1fr 1fr; }

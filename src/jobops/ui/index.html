@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v18">
+  <link rel="stylesheet" href="styles.css?v=20260814-jobflow-v19">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -120,6 +120,18 @@
       <section class="execution-status-board" aria-labelledby="executionRunsTitle">
         <div class="subheading"><div><h3 id="executionRunsTitle" data-i18n="executionRunsTitle">自动投递执行状态</h3><small data-i18n="executionRunsBody">显示安全状态、最近检查点和下一步；不显示私人答案、文件内容或网站会话。</small></div><span id="executionRunsCount">0</span></div>
         <div id="executionRunsList" class="execution-dashboard-list"></div>
+        <section id="demoExecutionPanel" class="demo-execution-panel hidden" aria-live="polite">
+          <div><strong data-i18n="demoExecutionTitle">合成自动投递演练</strong><p data-i18n="demoExecutionBody">用虚构资料验证审批后自动预填、材料暂存、最终确认和假回执；浏览器、网络和真实外部动作始终为 0。</p></div>
+          <p id="demoExecutionStatus"></p>
+          <div id="demoRehearsalControls" class="demo-execution-controls hidden">
+            <label><input id="demoRehearsalConfirm" type="checkbox"><span data-i18n="demoRehearsalConsent">我确认只运行本机合成演练，不访问或修改任何真实网站。</span></label>
+            <button id="runSyntheticRehearsal" class="primary" type="button" data-i18n="demoRunRehearsal">运行到最终确认前</button>
+          </div>
+          <div id="demoFinalControls" class="demo-execution-controls hidden">
+            <label><input id="demoFinalConfirm" type="checkbox"><span data-i18n="demoFinalConsent">我确认执行一次假的最终提交，并只生成本机合成回执。</span></label>
+            <button id="completeSyntheticRehearsal" class="primary" type="button" data-i18n="demoCompleteRehearsal">确认假的最终提交</button>
+          </div>
+        </section>
       </section>
       <section class="offline-application-prep" aria-labelledby="offlineApplicationTitle">
         <div class="subheading">
@@ -356,6 +368,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260813-jobflow-v18"></script>
+  <script src="app.js?v=20260814-jobflow-v19"></script>
 </body>
 </html>

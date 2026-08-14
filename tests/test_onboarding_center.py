@@ -181,6 +181,10 @@ class OnboardingCenterTests(unittest.TestCase):
             stopped = service.disable_external_actions({"user_confirmed": True})
             self.assertEqual(stopped["status"], "EXTERNAL_ACTIONS_DISABLED")
             self.assertEqual(stopped["real_external_actions"], 0)
+            for operation in (service.prepare_synthetic_execution, service.complete_synthetic_execution):
+                with self.assertRaises(JobOpsError) as synthetic_only:
+                    operation({"application_id": "APP-DASH", "user_confirmed": True})
+                self.assertEqual(synthetic_only.exception.code, "SYNTHETIC_DEMO_ONLY")
 
     def test_bootstrap_discloses_only_truthful_offline_ats_capabilities(self) -> None:
         with project_temp() as root:

@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- The synthetic product tour now displays a bilingual, field-by-field redacted prefill proposal and rehearses an approved application through isolated private-value resolution, temporary material staging, a separate fake final-confirmation gate and a verified synthetic receipt. The normal workspace rejects both demo-only endpoints, and browser, network, upload and real external actions remain zero.
+- 合成产品体验现在会以中英双语逐字段显示脱敏预填提案，并把已批准的虚构申请演练到隔离私人值解析、临时材料暂存、独立假最终确认门和经验证的合成回执；正常工作区会拒绝两个演示专用接口，浏览器、网络、上传与真实外部动作仍均为 0。
 - The isolated execution preflight now validates the complete scoped action set before consuming anything, then records one-use authorizations and hash-only envelopes for official-job read, form inspection, optional prefill and material upload in fixed order. A missing scope leaves both the use ledger and execution-run table untouched.
 - 隔离执行预检现在会在消费任何动作前先验证完整授权范围，再按固定顺序记录官网岗位读取、表单检查、可选预填与材料上传的一次性授权及仅哈希信封；若范围缺失，使用账本与执行记录均保持未修改。
 - Added a synthetic-only ephemeral ATS payload broker: it resolves approved encrypted fields only in memory, stages hash-bound materials outside the project, scrubs mutable buffers, removes temporary files before returning, and keeps production activation unavailable.

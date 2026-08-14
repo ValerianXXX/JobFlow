@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from _support import PROJECT, project_temp
+from jobops.adapters import audit_real_external_actions
 from jobops.demo import DEMO_APPLICATION_ID, DEMO_SOURCE, create_demo_service
 from jobops.errors import JobOpsError
 from jobops.onboarding_server import create_server
@@ -53,6 +54,8 @@ class SyntheticDemoTests(unittest.TestCase):
             self.assertTrue(bootstrap["demo_constraints"]["synthetic_only"])
             self.assertFalse(bootstrap["demo_constraints"]["file_intake_enabled"])
             self.assertFalse(bootstrap["demo_constraints"]["ai_connection_enabled"])
+            self.assertTrue(bootstrap["demo_constraints"]["isolated_execution_rehearsal"])
+            self.assertEqual(bootstrap["demo_constraints"]["application_id"], DEMO_APPLICATION_ID)
             self.assertEqual(bootstrap["real_external_actions"], 0)
             self.assertEqual(len(bootstrap["sources"]), 1)
             self.assertGreaterEqual(len(bootstrap["claims"]), 2)
@@ -88,6 +91,13 @@ class SyntheticDemoTests(unittest.TestCase):
             displayed = service.review_packet(DEMO_APPLICATION_ID)
             self.assertEqual(displayed["status"], "AWAITING_APPROVAL")
             self.assertEqual(displayed["packet"]["job"]["company"], "Synthetic Demo Studio")
+            questions = displayed["packet"]["form_questions"]
+            self.assertEqual(
+                {item["redacted_summary"] for item in questions if item["action"].startswith("PREFILL")},
+                {"PRIVATE_VALUE_PRESENT", "PUBLIC_VALUE_HASH_PRESENT"},
+            )
+            self.assertTrue(any(item["answer_key"] == "resume" for item in displayed["packet"]["sensitive_fields"]))
+            self.assertEqual(displayed["packet"]["external_actions"], ["upload_material", "submit_application"])
             outcome = service.decide_review_packet(
                 {
                     "application_id": DEMO_APPLICATION_ID,
@@ -103,9 +113,63 @@ class SyntheticDemoTests(unittest.TestCase):
             self.assertEqual(dashboard["safety"]["external_action_attempts"], 0)
             self.assertEqual(dashboard["safety"]["real_external_actions"], 0)
 
+    def test_demo_can_rehearse_the_complete_two_confirmation_lifecycle(self) -> None:
+        with project_temp() as root:
+            service, _ = self.make_service(root)
+            displayed = service.review_packet(DEMO_APPLICATION_ID)
+            service.decide_review_packet({
+                "application_id": DEMO_APPLICATION_ID,
+                "decision": "APPROVE",
+                "expected_packet_hash": displayed["packet"]["content_hash"],
+                "user_confirmed": True,
+            })
+            with self.assertRaises(JobOpsError) as missing_rehearsal_consent:
+                service.prepare_synthetic_execution({
+                    "application_id": DEMO_APPLICATION_ID,
+                    "user_confirmed": False,
+                })
+            self.assertEqual(
+                missing_rehearsal_consent.exception.code,
+                "SYNTHETIC_EXECUTION_CONFIRMATION_REQUIRED",
+            )
+            prepared = service.prepare_synthetic_execution({
+                "application_id": DEMO_APPLICATION_ID,
+                "user_confirmed": True,
+            })
+            self.assertEqual(prepared["status"], "AWAITING_FINAL_AUTHORIZATION")
+            self.assertTrue(prepared["temporary_files_removed"])
+            self.assertEqual(prepared["network_actions"], 0)
+            self.assertEqual(prepared["real_external_actions"], 0)
+            with self.assertRaises(JobOpsError) as missing_final_consent:
+                service.complete_synthetic_execution({
+                    "application_id": DEMO_APPLICATION_ID,
+                    "run_id": prepared["run_id"],
+                    "user_confirmed": False,
+                })
+            self.assertEqual(missing_final_consent.exception.code, "FINAL_SUBMISSION_CONFIRMATION_REQUIRED")
+            completed = service.complete_synthetic_execution({
+                "application_id": DEMO_APPLICATION_ID,
+                "run_id": prepared["run_id"],
+                "user_confirmed": True,
+            })
+            self.assertEqual(completed["status"], "CONFIRMED")
+            self.assertEqual(completed["checkpoint_count"], 8)
+            self.assertEqual(completed["network_actions"], 0)
+            self.assertEqual(completed["real_external_actions"], 0)
+            dashboard = service.bootstrap()["dashboard"]
+            self.assertEqual(dashboard["execution_runs"][0]["status"], "CONFIRMED")
+            self.assertEqual(audit_real_external_actions(service.database)["real_external_actions"], 0)
+
     def test_demo_server_exposes_only_local_synthetic_state(self) -> None:
         with project_temp() as root:
             service, _ = self.make_service(root)
+            displayed = service.review_packet(DEMO_APPLICATION_ID)
+            service.decide_review_packet({
+                "application_id": DEMO_APPLICATION_ID,
+                "decision": "APPROVE",
+                "expected_packet_hash": displayed["packet"]["content_hash"],
+                "user_confirmed": True,
+            })
             server = create_server(service, token="synthetic-demo-test")
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
@@ -128,6 +192,41 @@ class SyntheticDemoTests(unittest.TestCase):
                 self.assertIn("Synthetic Demo Studio", serialized)
                 self.assertNotIn(str(PROJECT), serialized)
                 self.assertNotIn("@", serialized)
+
+                def post(route: str, payload: dict[str, object]) -> tuple[int, dict[str, object]]:
+                    request = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                    request.request(
+                        "POST",
+                        f"/session/synthetic-demo-test/api/{route}",
+                        body=json.dumps(payload).encode("utf-8"),
+                        headers={
+                            "Content-Type": "application/json",
+                            "X-JobOps-Session": "synthetic-demo-test",
+                        },
+                    )
+                    result = request.getresponse()
+                    result_body = json.loads(result.read().decode("utf-8"))
+                    status = result.status
+                    result.close()
+                    request.close()
+                    return status, result_body
+
+                status, prepared = post("prepare-synthetic-execution", {
+                    "application_id": DEMO_APPLICATION_ID,
+                    "user_confirmed": True,
+                })
+                self.assertEqual(status, 200)
+                self.assertEqual(prepared["status"], "AWAITING_FINAL_AUTHORIZATION")
+                self.assertEqual(prepared["real_external_actions"], 0)
+                status, completed = post("complete-synthetic-execution", {
+                    "application_id": DEMO_APPLICATION_ID,
+                    "run_id": prepared["run_id"],
+                    "user_confirmed": True,
+                })
+                self.assertEqual(status, 200)
+                self.assertEqual(completed["status"], "CONFIRMED")
+                self.assertEqual(completed["network_actions"], 0)
+                self.assertEqual(completed["real_external_actions"], 0)
             finally:
                 server.shutdown()
                 server.server_close()
@@ -142,8 +241,12 @@ class SyntheticDemoTests(unittest.TestCase):
         self.assertIn('Join-Path $PSScriptRoot ".."', script)
         self.assertIn('"jobops.cli", "demo"', script)
         self.assertIn('id="demoBanner"', ui)
+        self.assertIn('id="demoExecutionPanel"', ui)
         self.assertIn("合成演示 · 不使用真实资料", app)
         self.assertIn("Synthetic demo · no real data", app)
+        self.assertIn("renderPrefillProposal", app)
+        self.assertIn('api("prepare-synthetic-execution"', app)
+        self.assertIn('api("complete-synthetic-execution"', app)
         self.assertIn('data-target="review"', ui)
         self.assertIn('href="#pendingReviewTitle"', ui)
 

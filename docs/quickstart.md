@@ -9,12 +9,13 @@ This guide gets a Windows user from an extracted JobFlow source package to a saf
 1. Extract the complete source ZIP to a normal Windows folder. Do not run it inside the ZIP preview. / 将完整源码 ZIP 解压到普通 Windows 文件夹，不要直接在压缩包预览中运行。
 2. Double-click `Install JobFlow.cmd` once. Keep the window open until it says the installation is ready. / 第一次双击 `Install JobFlow.cmd`，窗口提示安装完成前不要关闭。
 3. Double-click `Start JobFlow Demo.cmd`. / 双击 `Start JobFlow Demo.cmd`。
-4. In the browser, use “View AI and conflict review” and “View pending application.” You may approve, revise, or reject the fictional packet; every decision stays in the temporary local database. / 在浏览器中点击“查看 AI 与冲突审阅”和“查看待审批申请”；可批准、退回或拒绝虚构审阅包，决定只进入临时本机数据库。
-5. Close the launch window or press `Ctrl+C`. The demo server, port, database, DPAPI directory and synthetic ciphertext are removed. / 关闭启动窗口或按 `Ctrl+C`；演示服务、端口、数据库、DPAPI 目录和合成密文都会清理。
+4. In the browser, use “View AI and conflict review” and “View pending application.” Open the fictional packet to inspect its field-by-field redacted prefill proposal, then approve it. / 在浏览器中点击“查看 AI 与冲突审阅”和“查看待审批申请”；打开虚构审阅包，检查逐字段脱敏预填提案，然后批准。
+5. In “Automatic application execution status,” confirm and run the synthetic rehearsal. It stops before the fake final submission. Use the separate final confirmation to create the verified fake receipt. / 在“自动投递执行状态”中确认并运行合成演练；它会停在假的最终提交前，再通过独立最终确认生成经验证的假回执。
+6. Close the launch window or press `Ctrl+C`. The demo server, port, database, DPAPI directory and synthetic ciphertext are removed. / 关闭启动窗口或按 `Ctrl+C`；演示服务、端口、数据库、DPAPI 目录和合成密文都会清理。
 
-The demo rejects file intake and real AI connections at the server boundary. Do not type real personal information into it. It never opens a recruiting site, uploads a file, submits an application, sends a message, creates an account, or starts a scheduler.
+The demo rejects file intake and real AI connections at the server boundary. Do not type real personal information into it. Its “submission” and receipt are built-in fictional adapters: it never opens a recruiting site, uploads a file, submits a real application, sends a message, creates an account, or starts a scheduler.
 
-演示模式在服务端拒绝文件接入和真实 AI 连接。请勿在演示中填写真实个人信息。它不会打开招聘网站、上传文件、提交申请、发送消息、创建账号或启动定时任务。
+演示模式在服务端拒绝文件接入和真实 AI 连接。请勿在演示中填写真实个人信息。“提交”和回执均来自内置假适配器；它不会打开招聘网站、上传文件、提交真实申请、发送消息、创建账号或启动定时任务。
 
 ## Start the real local workspace / 启动真实本机工作区
 

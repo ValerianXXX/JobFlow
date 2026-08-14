@@ -1316,6 +1316,20 @@ class OnboardingCenterService:
             self.database, ExternalActionSessionPolicy.production_disabled()
         ).disable(reason="USER_EMERGENCY_STOP")
 
+    def prepare_synthetic_execution(self, payload: dict[str, Any]) -> dict[str, Any]:
+        del payload
+        raise JobOpsError(
+            "SYNTHETIC_DEMO_ONLY",
+            "The isolated execution rehearsal exists only in the temporary synthetic demo.",
+        )
+
+    def complete_synthetic_execution(self, payload: dict[str, Any]) -> dict[str, Any]:
+        del payload
+        raise JobOpsError(
+            "SYNTHETIC_DEMO_ONLY",
+            "The isolated execution rehearsal exists only in the temporary synthetic demo.",
+        )
+
     @_synchronized
     def set_queue_limit(self, payload: dict[str, Any]) -> dict[str, Any]:
         limit = payload.get("limit")

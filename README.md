@@ -24,7 +24,7 @@ JobFlow（内部工程代号 JobOps）是本地优先、证据驱动的求职工
 
 如果启动异常或页面显示 `Failed to fetch`，先双击 `Check JobFlow.cmd`。它只检查公开程序组件与“真实动作关闭”策略，不联网、不读取私人资料，也不会显示用户路径；按第一条失败项给出的中英文提示修复即可。 / If startup fails, run `Check JobFlow.cmd` for a redacted, offline health check and follow the first failed item.
 
-想先体验而不接触真实简历时，安装后双击 `Start JobFlow Demo.cmd`。该入口只运行虚构资料，使用自动清理的临时数据库与 DPAPI 目录；文件上传和真实 AI 连接均被服务端拒绝，关闭窗口后演示状态即删除。/ To tour JobFlow without real data, run `Start JobFlow Demo.cmd`; it uses fictional data in an auto-cleaned temporary runtime and rejects file intake and real AI connections.
+想先体验而不接触真实简历时，安装后双击 `Start JobFlow Demo.cmd`。该入口只运行虚构资料，使用自动清理的临时数据库与 DPAPI 目录；文件上传和真实 AI 连接均被服务端拒绝。虚构审阅包会逐字段显示准备预填的来源类型，批准后可运行到假的最终提交门，再通过第二次明确确认生成可靠合成回执；浏览器、网络、文件上传和真实外部动作始终为 0，关闭窗口后演示状态即删除。/ To tour JobFlow without real data, run `Start JobFlow Demo.cmd`; it shows a field-by-field redacted prefill proposal and can rehearse the approved application through a separate fake final-confirmation gate and verified synthetic receipt. The auto-cleaned runtime rejects file intake and real AI connections, and browser, network, upload, and real external actions remain zero.
 
 如果希望使用 Windows PowerShell，则在项目根目录运行：
 
