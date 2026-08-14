@@ -12,9 +12,14 @@
     "job": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["input", "profile_ref", "master_resume_ref", "answer_bank_ref", "synthetic"],
+      "required": ["profile_ref", "master_resume_ref", "answer_bank_ref", "synthetic"],
+      "oneOf": [
+        {"required": ["input"], "not": {"required": ["evidence_bundle_ref"]}},
+        {"required": ["evidence_bundle_ref"], "not": {"required": ["input"]}}
+      ],
       "properties": {
         "input": {"type": "string", "minLength": 1, "maxLength": 512},
+        "evidence_bundle_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
         "profile_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
         "master_resume_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
         "answer_bank_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},

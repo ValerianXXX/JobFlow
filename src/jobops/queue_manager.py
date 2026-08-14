@@ -213,6 +213,41 @@ class QueueManager:
             )
             return QueueAdmission(intake_key, "RESERVED", reservation_id, "RUN_TO_AWAITING_APPROVAL")
 
+    def rollback_unretained_deferred(self, intake_key: str, *, reason: str) -> dict[str, object]:
+        """Remove a deferred admission when its required local evidence was not retained.
+
+        This is a narrow admission rollback, not application deletion. It is
+        allowed only before a reservation or application exists, and an
+        append-only event preserves the reason without recording source data.
+        """
+
+        intake_key = _validate_intake_key(intake_key)
+        safe_reason = re.sub(r"[^A-Z0-9_]+", "_", str(reason).upper()).strip("_")[:120]
+        if not safe_reason:
+            safe_reason = "DEFERRED_EVIDENCE_NOT_RETAINED"
+        with self.database.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT status,reservation_id FROM intake_queue WHERE intake_key=?",
+                (intake_key,),
+            ).fetchone()
+            if row is None:
+                return {"status": "ROLLED_BACK", "deduplicated": True, "real_external_actions": 0}
+            if row["status"] != "DEFERRED" or row["reservation_id"] is not None:
+                raise JobOpsError(
+                    "DEFERRED_INTAKE_ROLLBACK_FORBIDDEN",
+                    "Only an unreserved deferred intake may be rolled back after local evidence retention fails.",
+                )
+            connection.execute("DELETE FROM intake_queue WHERE intake_key=?", (intake_key,))
+            connection.execute(
+                "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(NULL,?,?,?,?,?)",
+                (
+                    "DEFERRED_INTAKE_ROLLED_BACK", "DEFERRED", "ABSENT",
+                    json.dumps({"reason": safe_reason}), iso_utc(),
+                ),
+            )
+        return {"status": "ROLLED_BACK", "deduplicated": False, "real_external_actions": 0}
+
     def release_reservation(self, reservation_id: str | None, *, reason: str) -> dict[str, object]:
         """Release an unconsumed local slot after a preparation failure.
 

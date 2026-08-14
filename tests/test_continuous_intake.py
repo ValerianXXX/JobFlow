@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import copy
+import io
 import json
 import unittest
+import zipfile
 
 from _support import PROJECT, project_temp
 from jobops.approvals import ApprovalContext, UploadBinding
 from jobops.continuous_intake import (
     ContinuousIntakeDescriptorStore,
+    build_deferred_evidence_bundle,
     build_continuous_intake_plan,
+    continue_recorded_intake,
+    extract_deferred_evidence_bundle,
     run_continuous_intake_tick,
     validate_continuous_manifest,
 )
@@ -82,6 +87,21 @@ class ContinuousIntakeTests(unittest.TestCase):
             validate_continuous_manifest(duplicate)
         self.assertEqual(duplicate_error.exception.code, "CONTINUOUS_JOB_DUPLICATE")
 
+        mixed = copy.deepcopy(real)
+        mixed["jobs"][0]["evidence_bundle_ref"] = "secure-ref:DEFERRED_EVIDENCE_01"
+        with self.assertRaises(JobOpsError) as mixed_error:
+            validate_continuous_manifest(mixed)
+        self.assertEqual(mixed_error.exception.code, "CONTINUOUS_JOB_SOURCE_INVALID")
+
+        bundled = copy.deepcopy(real)
+        for key in ("input", "route", "form", "research"):
+            bundled["jobs"][0].pop(key)
+        bundled["jobs"][0]["evidence_bundle_ref"] = "secure-ref:DEFERRED_EVIDENCE_01"
+        self.assertEqual(
+            validate_continuous_manifest(bundled)["jobs"][0]["evidence_bundle_ref"],
+            "secure-ref:DEFERRED_EVIDENCE_01",
+        )
+
         for unsafe_path in ("../outside.txt", "jobs/../../outside.txt", "resume.txt:secret", "C:\\outside.txt", "\\\\server\\share\\job.txt", "jobs/bad\nname.txt"):
             unsafe = copy.deepcopy(manifest)
             unsafe["jobs"][0]["input"] = unsafe_path
@@ -146,6 +166,38 @@ class ContinuousIntakeTests(unittest.TestCase):
                 store.load(H)
             self.assertEqual(changed.exception.code, "CONTINUOUS_DESCRIPTOR_CHANGED")
 
+    def test_deferred_evidence_bundle_roundtrips_and_rejects_changed_content(self) -> None:
+        files = {
+            "jd": (".txt", b"Company: Example\nTitle: Analyst\n"),
+            "official": (".html", b"<html><body>Example Analyst</body></html>"),
+            "form": (".json", b'{"fields": []}'),
+        }
+        route = b'{"official_entry_url":"https://example.com/careers"}'
+        research = b"Example Analyst"
+        bundle = build_deferred_evidence_bundle(
+            files=files, route_json=route, research_text=research,
+        )
+        with project_temp() as temp:
+            extracted = extract_deferred_evidence_bundle(bundle, temp)
+            self.assertEqual(extracted["jd"].read_bytes(), files["jd"][1])
+            self.assertEqual(extracted["official"].read_bytes(), files["official"][1])
+            self.assertEqual(extracted["form"].read_bytes(), files["form"][1])
+            self.assertEqual(extracted["route"].read_bytes(), route)
+            self.assertEqual(extracted["research"].read_bytes(), research)
+
+        changed = io.BytesIO()
+        with zipfile.ZipFile(io.BytesIO(bundle), "r") as source, zipfile.ZipFile(
+            changed, "w", compression=zipfile.ZIP_STORED,
+        ) as target:
+            for info in source.infolist():
+                content = source.read(info.filename)
+                if info.filename == "jd.txt":
+                    content += b"changed"
+                target.writestr(info.filename, content)
+        with project_temp() as temp, self.assertRaises(JobOpsError) as tampered:
+            extract_deferred_evidence_bundle(changed.getvalue(), temp)
+        self.assertEqual(tampered.exception.code, "CONTINUOUS_EVIDENCE_BUNDLE_CHANGED")
+
     def test_released_capacity_promotes_oldest_deferred_before_new_intake(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")
@@ -177,6 +229,58 @@ class ContinuousIntakeTests(unittest.TestCase):
             with database.connect() as connection:
                 deferred = [row[0] for row in connection.execute("SELECT intake_key FROM intake_queue WHERE status='DEFERRED'")]
             self.assertEqual(deferred, ["INTAKE-5"])
+
+    def test_unretained_deferred_admission_can_be_rolled_back_and_retried(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            database.set_pending_limit(1)
+            manager = QueueManager(database)
+            first = manager.enqueue("INTAKE-BLOCKER", source_type="txt", source_locator="blocker.txt")
+            self.assertEqual(first.status, "RESERVED")
+            deferred = manager.enqueue(H, source_type="txt", source_locator="deferred.txt")
+            self.assertEqual(deferred.status, "DEFERRED")
+
+            rolled_back = manager.rollback_unretained_deferred(H, reason="LOCAL_RETENTION_FAILED")
+            self.assertEqual(rolled_back["status"], "ROLLED_BACK")
+            self.assertEqual(manager.status()["deferred_intake"], 0)
+            retry = manager.enqueue(H, source_type="txt", source_locator="deferred.txt")
+            self.assertEqual(retry.status, "DEFERRED")
+            with database.connect() as connection:
+                event = connection.execute(
+                    "SELECT event_type,payload_json FROM events ORDER BY event_id DESC LIMIT 1"
+                ).fetchone()
+            self.assertEqual(event["event_type"], "DEFERRED_INTAKE_ROLLED_BACK")
+            self.assertIn("LOCAL_RETENTION_FAILED", event["payload_json"])
+
+    def test_failed_saved_continuation_releases_its_promoted_reservation(self) -> None:
+        class LocalOnlyOnboarding:
+            @staticmethod
+            def assert_outside_project(project) -> None:
+                return None
+
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            database.set_pending_limit(1)
+            manager = QueueManager(database)
+            blocker = manager.enqueue("INTAKE-BLOCKER", source_type="txt", source_locator="blocker.txt")
+            self.assertEqual(blocker.status, "RESERVED")
+            deferred = manager.enqueue(H, source_type="txt", source_locator="missing.txt")
+            self.assertEqual(deferred.status, "DEFERRED")
+            descriptor = ContinuousIntakeDescriptorStore(database, PROJECT / "schemas")
+            job = load_json(PROJECT / "tests" / "fixtures" / "synthetic-continuous-manifest.json")["jobs"][0]
+            job["input"] = "tests/fixtures/does-not-exist.txt"
+            descriptor.remember(H, job)
+            manager.release_reservation(blocker.reservation_id, reason="SYNTHETIC_SLOT_RELEASE")
+
+            result = continue_recorded_intake(
+                project=PROJECT, database=database, onboarding=LocalOnlyOnboarding(),
+            )
+            self.assertEqual(result["failed_count"], 1)
+            self.assertEqual(result["queue"]["reserved_slots"], 0)
+            self.assertEqual(result["queue"]["deferred_intake"], 0)
+            self.assertEqual(list((temp / "continuous-intake").glob("*.json")), [])
 
     def test_deferred_reprocess_invalidates_old_approval_immediately(self) -> None:
         with project_temp() as temp:

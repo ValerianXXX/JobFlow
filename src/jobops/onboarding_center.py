@@ -34,7 +34,11 @@ from .ai_runtime import (
 )
 from .ai_connections import AIConnectionManager
 from .db import JobOpsDB
-from .continuous_intake import continue_recorded_intake
+from .continuous_intake import (
+    ContinuousIntakeDescriptorStore,
+    build_deferred_evidence_bundle,
+    continue_recorded_intake,
+)
 from .document_builder import discover_template_slots, inspect_docx_text_blocks, template_fingerprint
 from .document_qa import extract_pdf_text
 from .errors import JobOpsError
@@ -1638,6 +1642,7 @@ class OnboardingCenterService:
                 "provider": provider, "company_registrable_domain": company_domain,
                 "ats_host": current_host, "tenant": tenant, "board": board, "job_identity": identity,
             }
+        deferred_evidence_retained = False
         with self.onboarding.staging_directory() as staging:
             paths: dict[str, Path] = {}
             for name, (extension, value) in files.items():
@@ -1655,15 +1660,80 @@ class OnboardingCenterService:
                 )
             research_path = staging / "research.txt"
             research_path.write_text(normalized_research, encoding="utf-8")
-            result = JobOpsOrchestrator(self.project, self.database, self.onboarding).run_to_awaiting(
+            orchestrator = JobOpsOrchestrator(self.project, self.database, self.onboarding)
+            result = orchestrator.run_to_awaiting(
                 paths["jd"], profile_ref=None, master_resume_ref=None, answer_bank_ref=None,
                 route_fixture=route_path, form_fixture=paths["form"],
                 research_fixture=research_path, official_snapshot_fixture=paths["official"],
                 synthetic=False,
             )
+            if result.get("status") == "DEFERRED":
+                intake_key = str(result.get("intake_key", ""))
+                descriptor_store = ContinuousIntakeDescriptorStore(self.database, self.project / "schemas")
+                existing = descriptor_store.load(intake_key)
+                if existing is not None and existing.get("evidence_bundle_ref"):
+                    try:
+                        existing_metadata = self.onboarding.reference_metadata(
+                            str(existing["evidence_bundle_ref"])
+                        )
+                        if (
+                            existing_metadata.get("kind") != "continuous_evidence_bundle"
+                            or existing_metadata.get("status") != "ACTIVE"
+                            or existing_metadata.get("synthetic") is not False
+                        ):
+                            existing = None
+                    except JobOpsError:
+                        existing = None
+                    if existing is None:
+                        descriptor_store.forget(intake_key)
+                if existing is not None:
+                    deferred_evidence_retained = True
+                else:
+                    evidence_record: dict[str, object] | None = None
+                    try:
+                        evidence_bundle = build_deferred_evidence_bundle(
+                            files=files,
+                            route_json=canonical_json(route),
+                            research_text=normalized_research.encode("utf-8"),
+                        )
+                        evidence_record = self.onboarding.import_bytes(
+                            "continuous_evidence_bundle", evidence_bundle, synthetic=False,
+                        )
+                        references = orchestrator.current_real_application_references()
+                        source_type = files["jd"][0].lstrip(".").casefold()
+                        if source_type == "htm":
+                            source_type = "html"
+                        elif source_type == "json":
+                            source_type = "snapshot"
+                        descriptor_store.remember(intake_key, {
+                            **references,
+                            "evidence_bundle_ref": str(evidence_record["secure_ref"]),
+                            "source_type": source_type,
+                            "synthetic": False,
+                        })
+                        deferred_evidence_retained = True
+                    except Exception as retention_error:
+                        try:
+                            if evidence_record is not None:
+                                self.onboarding.delete(str(evidence_record["secure_ref"]), user_confirmed=True)
+                            QueueManager(self.database).rollback_unretained_deferred(
+                                intake_key,
+                                reason=(
+                                    retention_error.code
+                                    if isinstance(retention_error, JobOpsError)
+                                    else "DEFERRED_EVIDENCE_RETENTION_FAILED"
+                                ),
+                            )
+                        except Exception as rollback_error:
+                            raise JobOpsError(
+                                "DEFERRED_EVIDENCE_ROLLBACK_FAILED",
+                                "Deferred evidence could not be retained and its local admission rollback did not complete.",
+                            ) from rollback_error
+                        raise retention_error
         return {
             "status": str(result["status"]), "application_id": result.get("application_id"),
             "review_packet_id": result.get("review_packet_id"), "queue": result.get("queue"),
+            "deferred_evidence_retained": deferred_evidence_retained,
             "real_external_actions": 0, "network_actions": 0,
             "next_safe_action": "OPEN_LOCAL_REVIEW_PACKET" if result.get("application_id") else result.get("next_safe_action"),
         }

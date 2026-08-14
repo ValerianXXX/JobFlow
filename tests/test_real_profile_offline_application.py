@@ -196,6 +196,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 },
             )
             self.assertEqual(result["status"], "AWAITING_APPROVAL")
+            self.assertFalse(result["deferred_evidence_retained"])
             self.assertEqual(result["real_external_actions"], 0)
             self.assertEqual(result["network_actions"], 0)
             displayed = service.review_packet(str(result["application_id"]))
@@ -205,6 +206,119 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0], 0)
             self.assertFalse(any(kind.startswith("application_input_") for kind in kinds))
             self.assertEqual(list((onboarding.store.private_root / "staging").iterdir()), [])
+
+    def test_ui_deferred_bundle_is_encrypted_then_automatically_consumed_after_review(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            database.set_pending_limit(1)
+            fixtures = PROJECT / "tests" / "fixtures"
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            metadata = {
+                "official_url": "https://example.com/careers/synthetic-data-analyst",
+                "application_url": "https://boards.greenhouse.io/example/jobs/987654",
+                "guest_available": True,
+                "research_title": "Synthetic company role page",
+                "evidence_excerpt": "Synthetic Data Analyst",
+            }
+
+            def local_bundle(jd_name: str) -> dict[str, tuple[str, bytes]]:
+                return {
+                    "jd": (".txt", (fixtures / jd_name).read_bytes()),
+                    "official": (".html", (fixtures / "synthetic-greenhouse-careers.html").read_bytes()),
+                    "form": (".html", (fixtures / "synthetic-material-form.html").read_bytes()),
+                }
+
+            first = service.prepare_offline_application_bundle(
+                metadata=metadata, files=local_bundle("synthetic-forward-jd.txt"),
+            )
+            second = service.prepare_offline_application_bundle(
+                metadata=metadata, files=local_bundle("synthetic-forward-jd-two.txt"),
+            )
+            self.assertEqual(first["status"], "AWAITING_APPROVAL")
+            self.assertEqual(second["status"], "DEFERRED")
+            self.assertTrue(second["deferred_evidence_retained"])
+            self.assertEqual(len(list((temp / "continuous-intake").glob("*.json"))), 1)
+            with database.connect() as connection:
+                active_before = connection.execute(
+                    "SELECT COUNT(*) FROM private_refs WHERE kind='continuous_evidence_bundle' AND status='ACTIVE'"
+                ).fetchone()[0]
+            self.assertEqual(active_before, 1)
+
+            application_id = str(first["application_id"])
+            packet = service.review_packet(application_id)["packet"]
+            decision = service.decide_review_packet({
+                "application_id": application_id, "decision": "APPROVE",
+                "expected_packet_hash": packet["content_hash"], "user_confirmed": True,
+            })
+            continued = decision["continued_intake"]
+            self.assertEqual(continued["status"], "LOCAL_CONTINUATION_PROCESSED")
+            self.assertEqual(continued["prepared_count"], 1)
+            self.assertEqual(decision["queue"]["awaiting_approval"], 1)
+            self.assertEqual(decision["queue"]["deferred_intake"], 0)
+            self.assertEqual(list((temp / "continuous-intake").glob("*.json")), [])
+            self.assertEqual(list((onboarding.store.private_root / "staging").iterdir()), [])
+            with database.connect() as connection:
+                evidence_rows = connection.execute(
+                    "SELECT status FROM private_refs WHERE kind='continuous_evidence_bundle'"
+                ).fetchall()
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM applications").fetchone()[0], 2)
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0], 0)
+            self.assertEqual([str(row["status"]) for row in evidence_rows], ["DELETED"])
+            safe_output = json.dumps({"second": second, "decision": decision})
+            self.assertNotIn("secure-ref:", safe_output)
+            self.assertNotIn("synthetic-forward-jd-two", safe_output)
+
+    def test_ui_deferred_retention_failure_rolls_back_the_queue_admission(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            database.set_pending_limit(1)
+            fixtures = PROJECT / "tests" / "fixtures"
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            metadata = {
+                "official_url": "https://example.com/careers/synthetic-data-analyst",
+                "application_url": "https://boards.greenhouse.io/example/jobs/987654",
+                "guest_available": True,
+                "research_title": "Synthetic company role page",
+                "evidence_excerpt": "Synthetic Data Analyst",
+            }
+
+            def local_bundle(jd_name: str) -> dict[str, tuple[str, bytes]]:
+                return {
+                    "jd": (".txt", (fixtures / jd_name).read_bytes()),
+                    "official": (".html", (fixtures / "synthetic-greenhouse-careers.html").read_bytes()),
+                    "form": (".html", (fixtures / "synthetic-material-form.html").read_bytes()),
+                }
+
+            first = service.prepare_offline_application_bundle(
+                metadata=metadata, files=local_bundle("synthetic-forward-jd.txt"),
+            )
+            self.assertEqual(first["status"], "AWAITING_APPROVAL")
+            original_import = onboarding.import_bytes
+
+            def fail_deferred_import(kind: str, value: bytes, *, synthetic: bool = False):
+                if kind == "continuous_evidence_bundle":
+                    raise JobOpsError("LOCAL_RETENTION_FAILED", "Synthetic retention failure.")
+                return original_import(kind, value, synthetic=synthetic)
+
+            with mock.patch.object(onboarding, "import_bytes", side_effect=fail_deferred_import):
+                with self.assertRaises(JobOpsError) as failed:
+                    service.prepare_offline_application_bundle(
+                        metadata=metadata, files=local_bundle("synthetic-forward-jd-two.txt"),
+                    )
+            self.assertEqual(failed.exception.code, "LOCAL_RETENTION_FAILED")
+            status = QueueManager(database).status()
+            self.assertEqual(status["awaiting_approval"], 1)
+            self.assertEqual(status["deferred_intake"], 0)
+            self.assertEqual(status["reserved_slots"], 0)
+            self.assertEqual(list((temp / "continuous-intake").glob("*.json")), [])
+            self.assertEqual(list((onboarding.store.private_root / "staging").iterdir()), [])
+            with database.connect() as connection:
+                self.assertEqual(connection.execute(
+                    "SELECT COUNT(*) FROM private_refs WHERE kind='continuous_evidence_bundle' AND status='ACTIVE'"
+                ).fetchone()[0], 0)
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0], 0)
 
     def test_failed_preparation_releases_slot_and_deletes_new_encrypted_materials(self) -> None:
         with project_temp() as temp:

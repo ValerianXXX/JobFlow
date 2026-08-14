@@ -309,6 +309,22 @@ class JobOpsOrchestrator:
             "tailoring_manifest": manifest,
         }
 
+    def current_real_application_references(self) -> dict[str, str]:
+        """Return only the opaque bindings for the current completed onboarding state."""
+
+        context = self._real_application_context(
+            profile_ref=None, master_resume_ref=None, answer_bank_ref=None,
+            external_claim_set_ref=None, tailoring_manifest_ref=None,
+        )
+        return {
+            key: str(context[key])
+            for key in (
+                "profile_ref", "master_resume_ref", "answer_bank_ref",
+                "external_claim_set_ref", "tailoring_manifest_ref",
+            )
+            if context.get(key)
+        }
+
     def _synthetic_claims(self) -> list[dict[str, Any]]:
         root = self.project / "tests" / "fixtures" / "synthetic-knowledge"
         gateway = SyntheticKnowledgeGateway(root)

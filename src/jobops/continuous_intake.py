@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import io
+import json
 import re
+import zipfile
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable
 
@@ -13,9 +16,17 @@ from .util import canonical_json, iso_utc, load_json, project_root, sha256_bytes
 MAX_CONTINUOUS_JOBS = 1000
 JOB_KEYS = {
     "input", "profile_ref", "master_resume_ref", "answer_bank_ref", "route", "form", "research",
-    "external_claim_set_ref", "tailoring_manifest_ref", "source_type", "synthetic",
+    "external_claim_set_ref", "tailoring_manifest_ref", "evidence_bundle_ref", "source_type", "synthetic",
 }
-REQUIRED_JOB_KEYS = {"input", "profile_ref", "master_resume_ref", "answer_bank_ref", "synthetic"}
+REQUIRED_JOB_KEYS = {"profile_ref", "master_resume_ref", "answer_bank_ref", "synthetic"}
+MAX_DEFERRED_EVIDENCE_BUNDLE_BYTES = 60 * 1024 * 1024
+DEFERRED_EVIDENCE_EXTENSIONS = {
+    "jd": {".txt", ".html", ".htm", ".pdf", ".json"},
+    "official": {".html", ".htm", ".txt"},
+    "form": {".html", ".htm", ".json"},
+}
+MAX_DEFERRED_ROUTE_BYTES = 1024 * 1024
+MAX_DEFERRED_RESEARCH_BYTES = 16 * 1024 * 1024
 
 
 def _safe_project_relative_path(value: Any) -> bool:
@@ -44,7 +55,23 @@ def validate_continuous_manifest(value: Any) -> dict[str, Any]:
             raise JobOpsError("CONTINUOUS_JOB_INVALID", "A continuous job contains missing or unrecognized fields.", job_index=index)
         if not isinstance(raw.get("synthetic"), bool):
             raise JobOpsError("CONTINUOUS_JOB_INVALID", "Every continuous job must declare whether it is a synthetic fixture.", job_index=index)
-        if raw.get("synthetic") is False and not all(raw.get(key) for key in ("route", "form", "research")):
+        has_path_input = isinstance(raw.get("input"), str) and bool(raw.get("input"))
+        has_evidence_bundle = isinstance(raw.get("evidence_bundle_ref"), str) and bool(raw.get("evidence_bundle_ref"))
+        if has_path_input == has_evidence_bundle:
+            raise JobOpsError(
+                "CONTINUOUS_JOB_SOURCE_INVALID",
+                "Every manual-tick job must use exactly one project-local input or one encrypted deferred-evidence bundle.",
+                job_index=index,
+            )
+        if has_evidence_bundle and (
+            raw.get("synthetic") is not False or any(raw.get(key) is not None for key in ("route", "form", "research"))
+        ):
+            raise JobOpsError(
+                "CONTINUOUS_JOB_SOURCE_INVALID",
+                "An encrypted deferred-evidence bundle is real-profile only and cannot be mixed with project paths.",
+                job_index=index,
+            )
+        if raw.get("synthetic") is False and has_path_input and not all(raw.get(key) for key in ("route", "form", "research")):
             raise JobOpsError(
                 "CONTINUOUS_LOCAL_EVIDENCE_REQUIRED",
                 "A real-profile manual tick requires explicit local route, form and research snapshots for every job.",
@@ -64,12 +91,151 @@ def validate_continuous_manifest(value: Any) -> dict[str, Any]:
                 if not isinstance(raw[key], str):
                     raise JobOpsError("CONTINUOUS_JOB_INVALID", "Optional private bindings must be opaque secure references.", job_index=index)
                 validate_secure_reference(str(raw[key]))
-        identity = str(raw["input"]).replace("\\", "/").casefold()
+        if has_evidence_bundle:
+            validate_secure_reference(str(raw["evidence_bundle_ref"]))
+        identity = (
+            str(raw["input"]).replace("\\", "/").casefold()
+            if has_path_input else str(raw["evidence_bundle_ref"]).casefold()
+        )
         if identity in seen:
             raise JobOpsError("CONTINUOUS_JOB_DUPLICATE", "The same local job input may appear only once per tick.", job_index=index)
         seen.add(identity)
         normalized.append({key: raw[key] for key in sorted(raw)})
     return {"schema_version": 1, "mode": "MANUAL_TICK_ONLY", "jobs": normalized}
+
+
+def build_deferred_evidence_bundle(
+    *,
+    files: dict[str, tuple[str, bytes]],
+    route_json: bytes,
+    research_text: bytes,
+) -> bytes:
+    if set(files) != {"jd", "official", "form"}:
+        raise JobOpsError("CONTINUOUS_EVIDENCE_FILES_INVALID", "Deferred evidence requires one JD, official page and application form.")
+    if (
+        not isinstance(route_json, bytes) or not route_json or len(route_json) > MAX_DEFERRED_ROUTE_BYTES
+        or not isinstance(research_text, bytes) or not research_text or len(research_text) > MAX_DEFERRED_RESEARCH_BYTES
+    ):
+        raise JobOpsError("CONTINUOUS_EVIDENCE_FILES_INVALID", "Deferred route or research evidence has an invalid size.")
+    try:
+        route_value = json.loads(route_json.decode("utf-8"))
+        research_text.decode("utf-8")
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise JobOpsError("CONTINUOUS_EVIDENCE_FILES_INVALID", "Deferred route and research evidence must use the internal UTF-8 format.") from exc
+    if not isinstance(route_value, dict):
+        raise JobOpsError("CONTINUOUS_EVIDENCE_FILES_INVALID", "Deferred route evidence must be a JSON object.")
+    entries: dict[str, bytes] = {"route.json": route_json, "research.txt": research_text}
+    manifest_files: list[dict[str, Any]] = []
+    for key in ("jd", "official", "form"):
+        extension, content = files[key]
+        normalized_extension = str(extension).casefold()
+        if (
+            normalized_extension not in DEFERRED_EVIDENCE_EXTENSIONS[key]
+            or not isinstance(content, bytes) or not content
+        ):
+            raise JobOpsError("CONTINUOUS_EVIDENCE_FILES_INVALID", "A deferred evidence file has an invalid extension or empty content.")
+        name = key + normalized_extension
+        entries[name] = content
+        manifest_files.append({
+            "key": key, "name": name, "extension": normalized_extension,
+            "size": len(content), "sha256": sha256_bytes(content),
+        })
+    manifest = {
+        "schema_version": 1, "files": manifest_files,
+        "route_sha256": sha256_bytes(route_json), "research_sha256": sha256_bytes(research_text),
+    }
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_STORED) as archive:
+        archive.writestr("manifest.json", canonical_json(manifest))
+        for name, content in entries.items():
+            archive.writestr(name, content)
+    value = buffer.getvalue()
+    if len(value) > MAX_DEFERRED_EVIDENCE_BUNDLE_BYTES:
+        raise JobOpsError(
+            "CONTINUOUS_EVIDENCE_BUNDLE_TOO_LARGE",
+            "The deferred local evidence is too large to retain safely; retry after a review slot is available.",
+            maximum_bytes=MAX_DEFERRED_EVIDENCE_BUNDLE_BYTES,
+        )
+    return value
+
+
+def extract_deferred_evidence_bundle(value: bytes, staging: Path) -> dict[str, Path]:
+    if not isinstance(value, bytes) or not value or len(value) > MAX_DEFERRED_EVIDENCE_BUNDLE_BYTES:
+        raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "The encrypted deferred evidence has an invalid size.")
+    try:
+        with zipfile.ZipFile(io.BytesIO(value), "r") as archive:
+            infos = archive.infolist()
+            if (
+                len(infos) != 6
+                or sum(info.file_size for info in infos) > MAX_DEFERRED_EVIDENCE_BUNDLE_BYTES
+                or any(
+                    info.compress_type != zipfile.ZIP_STORED or info.is_dir()
+                    or info.file_size < 1 or info.compress_size != info.file_size
+                    for info in infos
+                )
+            ):
+                raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "Deferred evidence must use the fixed local archive format.")
+            names = [info.filename for info in infos]
+            if len(names) != len(set(names)) or "manifest.json" not in names or "route.json" not in names or "research.txt" not in names:
+                raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "Deferred evidence entries are incomplete or duplicated.")
+            manifest_raw = archive.read("manifest.json")
+            if len(manifest_raw) > 64 * 1024:
+                raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "Deferred evidence metadata exceeds the safe limit.")
+            manifest = json.loads(manifest_raw.decode("utf-8"))
+            if not isinstance(manifest, dict) or set(manifest) != {"schema_version", "files", "route_sha256", "research_sha256"} or manifest.get("schema_version") != 1:
+                raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "Deferred evidence metadata is invalid.")
+            file_records = manifest.get("files")
+            if not isinstance(file_records, list) or len(file_records) != 3:
+                raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "Deferred evidence must describe exactly three source files.")
+            expected_names = {"manifest.json", "route.json", "research.txt"}
+            paths: dict[str, Path] = {}
+            seen_keys: set[str] = set()
+            for record in file_records:
+                if not isinstance(record, dict) or set(record) != {"key", "name", "extension", "size", "sha256"}:
+                    raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "A deferred evidence file descriptor is invalid.")
+                key, name, extension = record["key"], record["name"], record["extension"]
+                if (
+                    not isinstance(key, str) or not isinstance(name, str) or not isinstance(extension, str)
+                    or key not in DEFERRED_EVIDENCE_EXTENSIONS or key in seen_keys
+                    or extension not in DEFERRED_EVIDENCE_EXTENSIONS[key]
+                    or name != key + extension or not re.fullmatch(r"[a-z]+\.[a-z0-9]{1,12}", name)
+                    or type(record["size"]) is not int or not 1 <= record["size"] <= MAX_DEFERRED_EVIDENCE_BUNDLE_BYTES
+                    or not isinstance(record["sha256"], str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", record["sha256"])
+                    or name not in names
+                ):
+                    raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "A deferred evidence filename is invalid.")
+                seen_keys.add(key)
+                content = archive.read(name)
+                if record["size"] != len(content) or record["sha256"] != sha256_bytes(content):
+                    raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_CHANGED", "A deferred evidence file failed its content binding.")
+                target = staging / name
+                target.write_bytes(content)
+                paths[key] = target
+                expected_names.add(name)
+            if seen_keys != {"jd", "official", "form"} or set(names) != expected_names:
+                raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "Deferred evidence contains an unexpected entry.")
+            for key, name in (("route", "route.json"), ("research", "research.txt")):
+                content = archive.read(name)
+                maximum = MAX_DEFERRED_ROUTE_BYTES if key == "route" else MAX_DEFERRED_RESEARCH_BYTES
+                if (
+                    not 1 <= len(content) <= maximum
+                    or not isinstance(manifest[f"{key}_sha256"], str)
+                    or not re.fullmatch(r"sha256:[a-f0-9]{64}", manifest[f"{key}_sha256"])
+                    or manifest[f"{key}_sha256"] != sha256_bytes(content)
+                ):
+                    raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_CHANGED", "Deferred route or research evidence changed.")
+                if key == "route" and not isinstance(json.loads(content.decode("utf-8")), dict):
+                    raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "Deferred route evidence must be a JSON object.")
+                if key == "research":
+                    content.decode("utf-8")
+                target = staging / name
+                target.write_bytes(content)
+                paths[key] = target
+            return paths
+    except JobOpsError:
+        raise
+    except (OSError, ValueError, KeyError, TypeError, zipfile.BadZipFile, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise JobOpsError("CONTINUOUS_EVIDENCE_BUNDLE_INVALID", "The encrypted deferred evidence could not be validated.") from exc
 
 
 def build_continuous_intake_plan(manifest: Any, queue_status: dict[str, int]) -> dict[str, Any]:
@@ -211,7 +377,8 @@ class ContinuousIntakeDescriptorStore:
 
     Descriptor files live beside the local database under ``state`` (or beside a
     test database), never in tracked source.  They contain no applicant values,
-    document text, URLs, or external session material.
+    document text, URLs, or external session material. UI-deferred evidence is
+    represented only by a DPAPI-backed opaque reference.
     """
 
     def __init__(self, database: Any, schema_root: Path | None = None) -> None:
@@ -326,6 +493,47 @@ def continue_recorded_intake(
             return assert_project_io_path(path if path.is_absolute() else project / path, project, operation="read")
 
         def prepare(item: dict[str, Any]) -> dict[str, Any]:
+            evidence_reference = item.get("evidence_bundle_ref")
+            if evidence_reference is not None:
+                metadata = onboarding.reference_metadata(str(evidence_reference))
+                if (
+                    metadata.get("kind") != "continuous_evidence_bundle"
+                    or metadata.get("status") != "ACTIVE"
+                    or metadata.get("synthetic") is not False
+                ):
+                    raise JobOpsError(
+                        "CONTINUOUS_EVIDENCE_REFERENCE_INVALID",
+                        "The saved deferred evidence is not an active real-profile bundle.",
+                    )
+                try:
+                    bundle = onboarding.read_bytes(str(evidence_reference))
+                    with onboarding.staging_directory() as staging:
+                        extracted = extract_deferred_evidence_bundle(bundle, staging)
+                        # Once exact local evidence is available in the controlled
+                        # one-use directory, delete its queued ciphertext before
+                        # generating application materials. This makes cleanup a
+                        # prerequisite rather than a best-effort afterthought.
+                        onboarding.delete(str(evidence_reference), user_confirmed=True)
+                        return orchestrator.run_to_awaiting(
+                            extracted["jd"],
+                            profile_ref=item["profile_ref"], master_resume_ref=item["master_resume_ref"],
+                            answer_bank_ref=item["answer_bank_ref"],
+                            external_claim_set_ref=item.get("external_claim_set_ref"),
+                            tailoring_manifest_ref=item.get("tailoring_manifest_ref"),
+                            route_fixture=extracted["route"], form_fixture=extracted["form"],
+                            research_fixture=extracted["research"], official_snapshot_fixture=extracted["official"],
+                            source_type=item.get("source_type"), synthetic=False,
+                        )
+                except Exception as source_error:
+                    try:
+                        if onboarding.reference_metadata(str(evidence_reference)).get("status") == "ACTIVE":
+                            onboarding.delete(str(evidence_reference), user_confirmed=True)
+                    except Exception as cleanup_error:
+                        raise JobOpsError(
+                            "CONTINUOUS_EVIDENCE_CLEANUP_FAILED",
+                            "Deferred evidence could not be removed after local continuation stopped.",
+                        ) from cleanup_error
+                    raise source_error
             return orchestrator.run_to_awaiting(
                 local_path(item["input"]),
                 profile_ref=item["profile_ref"], master_resume_ref=item["master_resume_ref"],
@@ -346,6 +554,15 @@ def continue_recorded_intake(
         row = dict(tick["results"][0])
         row["ordinal"] = len(results) + 1
         results.append(row)
+        if row["status"] == "LOCAL_ERROR":
+            # Errors can occur before the orchestrator receives the promoted
+            # reservation (for example, a missing saved path or an invalid
+            # encrypted bundle). Release is idempotent when the orchestrator
+            # already performed its own rollback.
+            manager.release_reservation(
+                admission.reservation_id,
+                reason=str(row.get("error_code") or "LOCAL_CONTINUATION_FAILED"),
+            )
         if row["status"] != "DEFERRED_CAPACITY" and not store.forget(admission.intake_key):
             descriptor_cleanup_failure_count += 1
         if row["status"] not in {"LOCAL_ERROR"}:
