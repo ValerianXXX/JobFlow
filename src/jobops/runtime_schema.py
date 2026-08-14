@@ -260,6 +260,30 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         expected = "MANUAL_TICK_READY" if value.get("slots_available", 0) else "PAUSED_AT_PENDING_LIMIT"
         if value.get("status") != expected:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Continuous plan status must match available queue capacity.")
+    if name == "continuous-intake-result":
+        results = value.get("results", [])
+        expected_ordinals = list(range(1, len(results) + 1))
+        if value.get("job_count") != len(results) or [item.get("ordinal") for item in results] != expected_ordinals:
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Continuous result rows must account for every job in order.")
+        expected_counts = {
+            "prepared_count": sum(item.get("status") == "PREPARED" for item in results),
+            "deduplicated_count": sum(item.get("status") == "ALREADY_TRACKED" for item in results),
+            "deferred_count": sum(item.get("status") == "DEFERRED_CAPACITY" for item in results),
+            "failed_count": sum(item.get("status") == "LOCAL_ERROR" for item in results),
+        }
+        if any(value.get(key) != count for key, count in expected_counts.items()):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Continuous result counters must match the redacted rows.")
+        expected_status = (
+            "COMPLETED_WITH_LOCAL_ERRORS" if expected_counts["failed_count"]
+            else "PAUSED_AT_PENDING_LIMIT" if expected_counts["deferred_count"]
+            else "MANUAL_TICK_COMPLETE"
+        )
+        if value.get("status") != expected_status:
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Continuous result status must match its job outcomes.")
+        for item in results:
+            failed = item.get("status") == "LOCAL_ERROR"
+            if failed != bool(item.get("error_code")):
+                raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Only failed local jobs may expose an error code.")
     if name == "material-plan":
         cover = value.get("cover_letter", {})
         cover_requested = cover.get("request_status") != "NOT_REQUESTED"

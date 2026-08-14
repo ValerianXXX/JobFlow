@@ -11,12 +11,14 @@ from docx import Document
 
 from _support import PROJECT, project_temp
 from jobops.db import JobOpsDB
+from jobops.continuous_intake import ContinuousIntakeDescriptorStore, run_continuous_intake_tick
 from jobops.document_builder import inspect_docx_text_blocks, template_fingerprint
 from jobops.errors import JobOpsError
 from jobops.external_claims import build_external_claim_set, claim_review_hash
 from jobops.orchestrator import JobOpsOrchestrator
 from jobops.onboarding_center import OnboardingCenterService
 from jobops.private_onboarding import PrivateOnboarding
+from jobops.queue_manager import QueueManager
 from jobops.resume_tailoring import build_resume_tailoring_manifest, build_tailoring_proposal
 from jobops.secure_store import WindowsDPAPIStore
 from jobops.util import canonical_json, iso_utc, sha256_bytes, sha256_file
@@ -244,6 +246,123 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertEqual(active_generated, 0)
             self.assertEqual(active_visual_or_packet, 0)
             self.assertEqual(str(reservation["status"]), "RELEASED")
+
+    def test_manual_real_profile_tick_prepares_saved_local_evidence_and_is_idempotent(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, orchestrator = self.build(temp)
+            refs = self.seed_completed_context(onboarding)
+            manager = QueueManager(database)
+            manifest = {
+                "schema_version": 1,
+                "mode": "MANUAL_TICK_ONLY",
+                "jobs": [{
+                    "input": "tests/fixtures/synthetic-forward-jd.txt",
+                    "profile_ref": refs["profile_ref"],
+                    "master_resume_ref": refs["master_resume_ref"],
+                    "answer_bank_ref": refs["answer_bank_ref"],
+                    "external_claim_set_ref": refs["external_claim_set_ref"],
+                    "tailoring_manifest_ref": refs["tailoring_manifest_ref"],
+                    "route": "tests/fixtures/synthetic-real-offline-route.json",
+                    "form": "tests/fixtures/synthetic-material-form.html",
+                    "research": "tests/fixtures/synthetic-research.html",
+                    "source_type": "txt",
+                    "synthetic": False,
+                }],
+            }
+
+            def prepare(item: dict) -> dict:
+                return orchestrator.run_to_awaiting(
+                    PROJECT / item["input"],
+                    profile_ref=item["profile_ref"], master_resume_ref=item["master_resume_ref"],
+                    answer_bank_ref=item["answer_bank_ref"],
+                    external_claim_set_ref=item["external_claim_set_ref"],
+                    tailoring_manifest_ref=item["tailoring_manifest_ref"],
+                    route_fixture=PROJECT / item["route"], form_fixture=PROJECT / item["form"],
+                    research_fixture=PROJECT / item["research"], source_type=item["source_type"],
+                    synthetic=False,
+                )
+
+            first = run_continuous_intake_tick(manifest, queue_status=manager.status, prepare_job=prepare)
+            self.assertEqual(first["status"], "MANUAL_TICK_COMPLETE")
+            self.assertEqual(first["prepared_count"], 1)
+            self.assertEqual(first["results"][0]["source_mode"], "SAVED_LOCAL_EVIDENCE")
+            self.assertEqual(first["results"][0]["status"], "PREPARED")
+            self.assertEqual(first["real_external_actions"], 0)
+            safe_json = json.dumps(first)
+            self.assertNotIn("secure-ref:", safe_json)
+            self.assertNotIn("synthetic-forward-jd", safe_json)
+
+            second = run_continuous_intake_tick(manifest, queue_status=manager.status, prepare_job=prepare)
+            self.assertEqual(second["deduplicated_count"], 1)
+            self.assertEqual(second["results"][0]["status"], "ALREADY_TRACKED")
+            with database.connect() as connection:
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM applications").fetchone()[0], 1)
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0], 0)
+
+    def test_review_decision_automatically_fills_freed_slot_from_recorded_local_batch(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, orchestrator = self.build(temp)
+            refs = self.seed_completed_context(onboarding)
+            database.set_pending_limit(1)
+            manager = QueueManager(database)
+            store = ContinuousIntakeDescriptorStore(database, PROJECT / "schemas")
+
+            def job(input_name: str) -> dict:
+                return {
+                    "input": f"tests/fixtures/{input_name}",
+                    "profile_ref": refs["profile_ref"], "master_resume_ref": refs["master_resume_ref"],
+                    "answer_bank_ref": refs["answer_bank_ref"],
+                    "external_claim_set_ref": refs["external_claim_set_ref"],
+                    "tailoring_manifest_ref": refs["tailoring_manifest_ref"],
+                    "route": "tests/fixtures/synthetic-real-offline-route.json",
+                    "form": "tests/fixtures/synthetic-material-form.html",
+                    "research": "tests/fixtures/synthetic-research.html",
+                    "source_type": "txt", "synthetic": False,
+                }
+
+            manifest = {
+                "schema_version": 1, "mode": "MANUAL_TICK_ONLY",
+                "jobs": [job("synthetic-forward-jd.txt"), job("synthetic-forward-jd-two.txt")],
+            }
+
+            def prepare(item: dict) -> dict:
+                result = orchestrator.run_to_awaiting(
+                    PROJECT / item["input"], profile_ref=item["profile_ref"],
+                    master_resume_ref=item["master_resume_ref"], answer_bank_ref=item["answer_bank_ref"],
+                    external_claim_set_ref=item["external_claim_set_ref"],
+                    tailoring_manifest_ref=item["tailoring_manifest_ref"],
+                    route_fixture=PROJECT / item["route"], form_fixture=PROJECT / item["form"],
+                    research_fixture=PROJECT / item["research"], source_type="txt", synthetic=False,
+                )
+                if result.get("status") == "DEFERRED":
+                    store.remember(str(result["intake_key"]), item)
+                return result
+
+            initial = run_continuous_intake_tick(manifest, queue_status=manager.status, prepare_job=prepare)
+            self.assertEqual(initial["prepared_count"], 1)
+            self.assertEqual(initial["deferred_count"], 1)
+            first_application = str(initial["results"][0]["application_id"])
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            packet = service.review_packet(first_application)["packet"]
+            decision = service.decide_review_packet({
+                "application_id": first_application, "decision": "APPROVE",
+                "expected_packet_hash": packet["content_hash"], "user_confirmed": True,
+            })
+
+            continued = decision["continued_intake"]
+            self.assertEqual(continued["status"], "LOCAL_CONTINUATION_PROCESSED")
+            self.assertEqual(continued["processed_count"], 1)
+            self.assertEqual(continued["prepared_count"], 1)
+            self.assertEqual(continued["results"][0]["source_mode"], "SAVED_LOCAL_EVIDENCE")
+            self.assertEqual(decision["queue"]["awaiting_approval"], 1)
+            self.assertEqual(decision["queue"]["deferred_intake"], 0)
+            safe_json = json.dumps(continued)
+            self.assertNotIn("secure-ref:", safe_json)
+            self.assertNotIn("synthetic-forward-jd-two", safe_json)
+            self.assertEqual(list((temp / "continuous-intake").glob("*.json")), [])
+            with database.connect() as connection:
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM applications").fetchone()[0], 2)
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0], 0)
 
 
 if __name__ == "__main__":

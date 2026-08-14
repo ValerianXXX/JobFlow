@@ -34,6 +34,7 @@ from .ai_runtime import (
 )
 from .ai_connections import AIConnectionManager
 from .db import JobOpsDB
+from .continuous_intake import continue_recorded_intake
 from .document_builder import discover_template_slots, inspect_docx_text_blocks, template_fingerprint
 from .document_qa import extract_pdf_text
 from .errors import JobOpsError
@@ -1466,17 +1467,21 @@ class OnboardingCenterService:
         else:
             outcome = manager.release_application(application_id, reason="USER_REJECTED_REVIEW_PACKET")
 
-        promoted = manager.promote_next_deferred()
+        continuation = continue_recorded_intake(
+            project=self.project, database=self.database, onboarding=self.onboarding,
+        )
+        promoted = continuation["initial_promotion"]
         return {
             "status": str(outcome["status"]), "decision": decision,
-            "application_id": application_id, "promoted": promoted.as_dict(),
+            "application_id": application_id, "promoted": promoted,
+            "continued_intake": continuation,
             "queue": manager.status(), "phase5_authorization": "ABSENT",
             "real_external_actions": 0,
             "next_safe_action": (
                 "AWAIT_SEPARATE_EXTERNAL_ACTION_AUTHORIZATION"
                 if decision == "APPROVE" else
                 "REBUILD_OFFLINE_REVIEW_PACKET" if decision == "REVISE" else
-                promoted.next_safe_action
+                str(promoted.get("next_safe_action", "NONE"))
             ),
         }
 

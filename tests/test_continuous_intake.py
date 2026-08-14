@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import copy
+import json
 import unittest
 
 from _support import PROJECT, project_temp
 from jobops.approvals import ApprovalContext, UploadBinding
-from jobops.continuous_intake import build_continuous_intake_plan, validate_continuous_manifest
+from jobops.continuous_intake import (
+    ContinuousIntakeDescriptorStore,
+    build_continuous_intake_plan,
+    run_continuous_intake_tick,
+    validate_continuous_manifest,
+)
 from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
 from jobops.queue_manager import QueueManager
@@ -56,7 +62,7 @@ class ContinuousIntakeTests(unittest.TestCase):
         self.assertEqual(paused["status"], "PAUSED_AT_PENDING_LIMIT")
         self.assertEqual(paused["jobs_eligible_this_tick"], 0)
 
-    def test_manifest_rejects_private_values_extra_fields_duplicates_and_real_mode(self) -> None:
+    def test_manifest_rejects_private_values_extra_fields_duplicates_and_incomplete_real_evidence(self) -> None:
         manifest = load_json(PROJECT / "tests" / "fixtures" / "synthetic-continuous-manifest.json")
         leaked = copy.deepcopy(manifest); leaked["jobs"][0]["email"] = "FORBIDDEN_PRIVATE_FIELD"
         with self.assertRaises(JobOpsError) as extra:
@@ -66,20 +72,79 @@ class ContinuousIntakeTests(unittest.TestCase):
         with self.assertRaises(Exception):
             validate_continuous_manifest(plaintext)
         real = copy.deepcopy(manifest); real["jobs"][0]["synthetic"] = False
+        self.assertFalse(validate_continuous_manifest(real)["jobs"][0]["synthetic"])
+        missing_evidence = copy.deepcopy(real); missing_evidence["jobs"][0].pop("form")
         with self.assertRaises(JobOpsError) as real_error:
-            validate_continuous_manifest(real)
-        self.assertEqual(real_error.exception.code, "CONTINUOUS_REAL_INTAKE_NOT_AUTHORIZED")
+            validate_continuous_manifest(missing_evidence)
+        self.assertEqual(real_error.exception.code, "CONTINUOUS_LOCAL_EVIDENCE_REQUIRED")
         duplicate = copy.deepcopy(manifest); duplicate["jobs"].append(copy.deepcopy(duplicate["jobs"][0]))
         with self.assertRaises(JobOpsError) as duplicate_error:
             validate_continuous_manifest(duplicate)
         self.assertEqual(duplicate_error.exception.code, "CONTINUOUS_JOB_DUPLICATE")
 
-        for unsafe_path in ("../outside.txt", "jobs/../../outside.txt", "resume.txt:secret", "C:\\outside.txt", "\\\\server\\share\\job.txt"):
+        for unsafe_path in ("../outside.txt", "jobs/../../outside.txt", "resume.txt:secret", "C:\\outside.txt", "\\\\server\\share\\job.txt", "jobs/bad\nname.txt"):
             unsafe = copy.deepcopy(manifest)
             unsafe["jobs"][0]["input"] = unsafe_path
             with self.subTest(path=unsafe_path), self.assertRaises(JobOpsError) as path_error:
                 validate_continuous_manifest(unsafe)
             self.assertEqual(path_error.exception.code, "CONTINUOUS_JOB_INVALID")
+
+    def test_manual_tick_continues_after_local_errors_and_returns_only_redacted_results(self) -> None:
+        manifest = load_json(PROJECT / "tests" / "fixtures" / "synthetic-continuous-manifest.json")
+        manifest["jobs"] = [
+            {**manifest["jobs"][0], "input": f"tests/fixtures/job-{index}.txt"}
+            for index in range(4)
+        ]
+        outcomes = [
+            {"status": "AWAITING_APPROVAL", "application_id": "APP-000000000001", "real_external_actions": 0},
+            {"status": "DEFERRED", "real_external_actions": 0},
+            {"status": "APPROVED", "application_id": "APP-000000000003", "deduplicated": True, "real_external_actions": 0},
+        ]
+
+        def prepare(item: dict) -> dict:
+            index = int(str(item["input"]).split("-")[-1].split(".")[0])
+            if index == 3:
+                raise JobOpsError("LOCAL_FIXTURE_INVALID", "This private diagnostic must not appear in the result.")
+            return outcomes[index]
+
+        status = {
+            "pending_limit": 4, "awaiting_approval": 1, "reserved_slots": 0,
+            "deferred_intake": 0, "slots_available": 3,
+        }
+        result = run_continuous_intake_tick(manifest, queue_status=lambda: dict(status), prepare_job=prepare)
+        self.assertEqual(result["status"], "COMPLETED_WITH_LOCAL_ERRORS")
+        self.assertEqual(result["prepared_count"], 1)
+        self.assertEqual(result["deferred_count"], 1)
+        self.assertEqual(result["deduplicated_count"], 1)
+        self.assertEqual(result["failed_count"], 1)
+        self.assertEqual(result["results"][3]["error_code"], "LOCAL_FIXTURE_INVALID")
+        serialized = json.dumps(result)
+        self.assertNotIn("secure-ref:", serialized)
+        self.assertNotIn("tests/fixtures/job-", serialized)
+        self.assertNotIn("private diagnostic", serialized)
+        self.assertEqual(result["real_external_actions"], 0)
+
+    def test_deferred_descriptor_is_hash_bound_and_contains_only_safe_bindings(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            store = ContinuousIntakeDescriptorStore(database, PROJECT / "schemas")
+            job = load_json(PROJECT / "tests" / "fixtures" / "synthetic-continuous-manifest.json")["jobs"][0]
+            recorded = store.remember(H, job)
+            self.assertEqual(recorded["status"], "READY_FOR_MANUAL_CONTINUATION")
+            self.assertEqual(store.load(H), validate_continuous_manifest({
+                "schema_version": 1, "mode": "MANUAL_TICK_ONLY", "jobs": [job],
+            })["jobs"][0])
+            descriptor_path = temp / "continuous-intake" / ("a" * 64 + ".json")
+            raw = json.loads(descriptor_path.read_text(encoding="utf-8"))
+            serialized = json.dumps(raw)
+            self.assertNotIn("Plain Person", serialized)
+            self.assertNotIn("@", serialized)
+            raw["job"]["input"] = "tests/fixtures/changed.txt"
+            descriptor_path.write_text(json.dumps(raw), encoding="utf-8")
+            with self.assertRaises(JobOpsError) as changed:
+                store.load(H)
+            self.assertEqual(changed.exception.code, "CONTINUOUS_DESCRIPTOR_CHANGED")
 
     def test_released_capacity_promotes_oldest_deferred_before_new_intake(self) -> None:
         with project_temp() as temp:

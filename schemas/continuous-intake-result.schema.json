@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/continuous-intake-result.schema.json",
+  "title": "Manual Continuous Intake Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "mode", "plan_hash", "job_count", "prepared_count", "deduplicated_count", "deferred_count", "failed_count", "results", "queue", "requires_explicit_invocation", "background_service_started", "system_tasks_registered", "browser_actions", "network_actions", "real_external_actions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["MANUAL_TICK_COMPLETE", "PAUSED_AT_PENDING_LIMIT", "COMPLETED_WITH_LOCAL_ERRORS"]},
+    "mode": {"const": "MANUAL_TICK_ONLY"},
+    "plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "job_count": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "prepared_count": {"type": "integer", "minimum": 0},
+    "deduplicated_count": {"type": "integer", "minimum": 0},
+    "deferred_count": {"type": "integer", "minimum": 0},
+    "failed_count": {"type": "integer", "minimum": 0},
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ordinal", "source_type", "source_mode", "status", "application_id", "error_code", "next_safe_action", "real_external_actions"],
+        "properties": {
+          "ordinal": {"type": "integer", "minimum": 1, "maximum": 1000},
+          "source_type": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"},
+          "source_mode": {"enum": ["SYNTHETIC_FIXTURE", "SAVED_LOCAL_EVIDENCE"]},
+          "status": {"enum": ["PREPARED", "DEFERRED_CAPACITY", "ALREADY_TRACKED", "LOCAL_ERROR"]},
+          "application_id": {"type": ["string", "null"], "pattern": "^APP-[A-F0-9]{12}$"},
+          "error_code": {"type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9_]{1,119}$"},
+          "next_safe_action": {"enum": ["REVIEW_APPLICATION_PACKET", "REVIEW_PENDING_APPLICATIONS", "REVIEW_CURRENT_APPLICATION_STATE", "FIX_LOCAL_EVIDENCE_AND_RETRY_MANUAL_TICK"]},
+          "real_external_actions": {"const": 0}
+        }
+      }
+    },
+    "queue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pending_limit", "awaiting_approval", "reserved_slots", "deferred_intake", "slots_available"],
+      "properties": {
+        "pending_limit": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "awaiting_approval": {"type": "integer", "minimum": 0},
+        "reserved_slots": {"type": "integer", "minimum": 0},
+        "deferred_intake": {"type": "integer", "minimum": 0},
+        "slots_available": {"type": "integer", "minimum": 0}
+      }
+    },
+    "requires_explicit_invocation": {"const": true},
+    "background_service_started": {"const": false},
+    "system_tasks_registered": {"const": 0},
+    "browser_actions": {"const": 0},
+    "network_actions": {"const": 0},
+    "real_external_actions": {"const": 0}
+  }
+}

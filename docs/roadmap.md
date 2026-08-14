@@ -25,7 +25,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] Offline company-careers discovery from saved HTML/page snapshots and saved Greenhouse/Lever job JSON.
 - [x] Fail-closed local ATS form and Workday saved-sequence analysis; CAPTCHA, MFA, login, unsafe form actions and cross-origin frames become execution blockers.
 - [x] Synthetic Greenhouse, Lever and representative Workday complete verticals from local official evidence through encrypted job-specific answers where needed, review approval, ephemeral payload, scoped fake actions, fresh final authorization and verified synthetic receipt.
-- [x] Manual-tick-only continuous intake planning with FIFO and user-selected capacity.
+- [x] Manual-tick-only continuous intake for synthetic fixtures and completed real profiles with explicit per-job saved evidence, FIFO, user-selected capacity, idempotency, redacted results and same-process automatic slot refill after review decisions.
 - [x] Current-tree and full-Git-history privacy scanner; deterministic local source candidate.
 - [x] Auto-cleaned synthetic UI demo that rejects real file intake and real AI connections.
 

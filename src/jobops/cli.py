@@ -15,7 +15,13 @@ from .ats_capabilities import offline_ats_capabilities
 from .approvals import ApprovalContext, issue_approval
 from .claim_registry import ClaimRegistry
 from .collector import JobCollector
-from .continuous_intake import build_continuous_intake_plan, validate_continuous_manifest
+from .continuous_intake import (
+    ContinuousIntakeDescriptorStore,
+    build_continuous_intake_plan,
+    continue_recorded_intake,
+    run_continuous_intake_tick,
+    validate_continuous_manifest,
+)
 from .db import JobOpsDB
 from .errors import JobOpsError
 from .external_actions import ExternalActionGateway, ExternalActionPolicy
@@ -559,24 +565,32 @@ def main(argv: list[str] | None = None) -> int:
             raw_manifest = load_json(_project_input(project, args.manifest))
             if isinstance(raw_manifest, dict) and set(raw_manifest) == {"jobs"}:
                 raw_manifest = {"schema_version": 1, "mode": "MANUAL_TICK_ONLY", "jobs": raw_manifest["jobs"]}
-            manifest = validate_continuous_manifest(raw_manifest); jobs = manifest["jobs"]
+            manifest = validate_continuous_manifest(raw_manifest)
             database = _database(project); manager = QueueManager(database)
-            plan = build_continuous_intake_plan(manifest, manager.status())
             onboarding = _onboarding(project, database); orchestrator = JobOpsOrchestrator(project, database, onboarding)
-            results = []
-            for item in jobs:
-                try:
-                    fixtures = project / "tests" / "fixtures"
-                    results.append(orchestrator.run_to_awaiting(
-                        _project_input(project, Path(item["input"])), profile_ref=item["profile_ref"], master_resume_ref=item["master_resume_ref"], answer_bank_ref=item["answer_bank_ref"],
-                        route_fixture=_project_input(project, Path(item.get("route", "tests/fixtures/synthetic-forward-route.json"))),
-                        form_fixture=_project_input(project, Path(item.get("form", "tests/fixtures/synthetic-forward-form.json"))),
-                        research_fixture=_project_input(project, Path(item.get("research", "tests/fixtures/synthetic-research.html"))),
-                        source_type=item.get("source_type"), synthetic=bool(item.get("synthetic", False)),
-                    ))
-                except JobOpsError as exc:
-                    results.append(exc.as_dict())
-            emit({"status": "QUEUE_RUN_COMPLETE", "plan_hash": plan["plan_hash"], "mode": "MANUAL_TICK_ONLY", "results": results, "queue": manager.status(), "background_service_started": False, "system_tasks_registered": 0, "real_external_actions": 0, "next_safe_action": "list-pending"}, project)
+            descriptor_store = ContinuousIntakeDescriptorStore(database, project / "schemas")
+            fixtures = project / "tests" / "fixtures"
+
+            def prepare_local_job(item: dict[str, Any]) -> dict[str, Any]:
+                outcome = orchestrator.run_to_awaiting(
+                    _project_input(project, Path(item["input"])),
+                    profile_ref=item["profile_ref"], master_resume_ref=item["master_resume_ref"],
+                    answer_bank_ref=item["answer_bank_ref"],
+                    external_claim_set_ref=item.get("external_claim_set_ref"),
+                    tailoring_manifest_ref=item.get("tailoring_manifest_ref"),
+                    route_fixture=_project_input(project, Path(item.get("route", fixtures / "synthetic-forward-route.json"))),
+                    form_fixture=_project_input(project, Path(item.get("form", fixtures / "synthetic-forward-form.json"))),
+                    research_fixture=_project_input(project, Path(item.get("research", fixtures / "synthetic-research.html"))),
+                    source_type=item.get("source_type"), synthetic=bool(item["synthetic"]),
+                )
+                if outcome.get("status") == "DEFERRED" and isinstance(outcome.get("intake_key"), str):
+                    descriptor_store.remember(str(outcome["intake_key"]), item)
+                return outcome
+
+            result = run_continuous_intake_tick(
+                manifest, queue_status=manager.status, prepare_job=prepare_local_job,
+            )
+            emit({**result, "next_safe_action": "list-pending"}, project)
         elif args.command == "list-pending":
             database = _database(project)
             with database.connect() as connection:
@@ -608,22 +622,28 @@ def main(argv: list[str] | None = None) -> int:
                 raise JobOpsError("APPLICATION_BINDING_MISSING", "The current approval binding is missing.")
             context = ApprovalContext.from_dict(json.loads(row[0])); approval = issue_approval(context=context, user_confirmed=True)
             result = ExternalActionGateway(database, ExternalActionPolicy.production_disabled()).persist_approval(approval, context)
-            promoted = QueueManager(database).promote_next_deferred()
-            emit({**result, "promoted": promoted.as_dict(), "phase5_authorization": "ABSENT", "next_safe_action": "NONE_EXTERNAL_ACTIONS_REMAIN_DISABLED"}, project)
+            continuation = continue_recorded_intake(
+                project=project, database=database, onboarding=_onboarding(project, database),
+            )
+            emit({**result, "promoted": continuation["initial_promotion"], "continued_intake": continuation, "phase5_authorization": "ABSENT", "next_safe_action": "NONE_EXTERNAL_ACTIONS_REMAIN_DISABLED"}, project)
         elif args.command == "reject-review-packet":
             if not args.application_id:
                 raise JobOpsError("APPLICATION_ID_REQUIRED", "Select the review packet to reject.")
             database = _database(project); manager = QueueManager(database)
             result = manager.release_application(args.application_id, reason="USER_REJECTED_REVIEW_PACKET")
-            promoted = manager.promote_next_deferred()
-            emit({**result, "promoted": promoted.as_dict(), "next_safe_action": "run-queue"}, project)
+            continuation = continue_recorded_intake(
+                project=project, database=database, onboarding=_onboarding(project, database),
+            )
+            emit({**result, "promoted": continuation["initial_promotion"], "continued_intake": continuation, "next_safe_action": "list-pending"}, project)
         elif args.command == "revise-application":
             if not args.application_id:
                 raise JobOpsError("APPLICATION_ID_REQUIRED", "Select the application to revise.")
             database = _database(project); manager = QueueManager(database)
             result = manager.request_revision(args.application_id, reason="USER_REQUESTED_REVIEW_PACKET_REVISION")
-            promoted = manager.promote_next_deferred()
-            emit({**result, "promoted": promoted.as_dict(), "next_safe_action": "run-to-awaiting-approval"}, project)
+            continuation = continue_recorded_intake(
+                project=project, database=database, onboarding=_onboarding(project, database),
+            )
+            emit({**result, "promoted": continuation["initial_promotion"], "continued_intake": continuation, "next_safe_action": "list-pending"}, project)
         elif args.command in {"resume-blocked", "retry-safe-step", "explain"}:
             if not args.application_id:
                 raise JobOpsError("APPLICATION_ID_REQUIRED", "Select an application.")
