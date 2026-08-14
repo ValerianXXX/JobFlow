@@ -119,7 +119,12 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
             8: {("RECEIPT_VERIFIED", "CONFIRMED"), ("SUBMISSION_UNKNOWN", "UNKNOWN")},
         }
         pair = (value.get("phase"), value.get("status"))
-        if pair not in expected.get(value.get("sequence"), set()):
+        recovery_pair = (
+            value.get("sequence") in {6, 7, 8}
+            and value.get("phase") == "INTERRUPTION_RECONCILED"
+            and value.get("status") in {"CONFIRMED", "UNKNOWN"}
+        )
+        if pair not in expected.get(value.get("sequence"), set()) and not recovery_pair:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Execution checkpoint phase and status do not match its fixed sequence.")
     if name == "external-action-session":
         if parse_iso(value["issued_at"]) >= parse_iso(value["expires_at"]):

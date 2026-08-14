@@ -18,6 +18,7 @@ from jobops.errors import JobOpsError
 from jobops.execution_controller import IsolatedApplicationExecutionController
 from jobops.external_action_sessions import ExternalActionSessionManager, ExternalActionSessionPolicy
 from jobops.external_actions import ExternalActionGateway, ExternalActionPolicy
+from jobops.final_submission import issue_final_submission_authorization
 from jobops.util import canonical_json, iso_utc, sha256_bytes
 
 
@@ -120,6 +121,19 @@ def action_session(database: JobOpsDB, ctx: ApprovalContext, *, prefill: bool = 
 
 
 class IsolatedExecutionControllerTests(unittest.TestCase):
+    def _prepared(self, database: JobOpsDB):
+        ctx = context()
+        seed_approved(database, ctx)
+        browser = browser_plan()
+        plan = execution_plan(browser["plan_hash"])
+        controller = IsolatedApplicationExecutionController(database)
+        prepared = controller.prepare_until_final_authorization(
+            context=ctx, execution_plan=plan, browser_plan=browser,
+            current_form_snapshot_hash=H, freshness_evidence_hash=H,
+            action_session_id=action_session(database, ctx),
+        )
+        return ctx, browser, plan, controller, prepared
+
     def test_complete_fake_lifecycle_requires_two_approvals_and_never_uses_transport(self) -> None:
         def forbidden(*args, **kwargs):
             raise AssertionError("external transport or process attempted")
@@ -263,6 +277,139 @@ class IsolatedExecutionControllerTests(unittest.TestCase):
                         "UPDATE application_execution_checkpoints SET status='PASS' WHERE run_id=?",
                         (prepared["run_id"],),
                     )
+
+    def test_checkpoint_failure_after_authorization_becomes_unknown_without_retry(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            ctx, browser, plan, controller, prepared = self._prepared(database)
+            original = controller._append_checkpoint
+
+            def fail_sequence_six(**kwargs):
+                if kwargs["sequence"] == 6:
+                    raise RuntimeError("synthetic crash after authorization consumption")
+                return original(**kwargs)
+
+            with patch.object(controller, "_append_checkpoint", side_effect=fail_sequence_six):
+                with self.assertRaises(RuntimeError):
+                    controller.complete_with_fresh_authorization(
+                        run_id=prepared["run_id"], context=ctx,
+                        execution_plan=plan, browser_plan=browser,
+                        current_form_snapshot_hash=H, freshness_evidence_hash=H,
+                        user_confirmed=True, fake_confirmation_number="SYNTHETIC-CRASH",
+                    )
+            with database.connect() as connection:
+                run = connection.execute(
+                    "SELECT status,checkpoint_sequence FROM application_execution_runs WHERE run_id=?",
+                    (prepared["run_id"],),
+                ).fetchone()
+                phase = connection.execute(
+                    "SELECT phase FROM application_execution_checkpoints WHERE run_id=? ORDER BY sequence DESC LIMIT 1",
+                    (prepared["run_id"],),
+                ).fetchone()[0]
+                application = connection.execute(
+                    "SELECT status FROM applications WHERE application_id=?", (ctx.application_id,),
+                ).fetchone()[0]
+            self.assertEqual(tuple(run), ("SUBMISSION_UNKNOWN", 6))
+            self.assertEqual(phase, "INTERRUPTION_RECONCILED")
+            self.assertEqual(application, "SUBMISSION_UNKNOWN")
+            with self.assertRaises(JobOpsError) as retried:
+                controller.complete_with_fresh_authorization(
+                    run_id=prepared["run_id"], context=ctx,
+                    execution_plan=plan, browser_plan=browser,
+                    current_form_snapshot_hash=H, freshness_evidence_hash=H,
+                    user_confirmed=True, fake_confirmation_number="NEVER-RETRY",
+                )
+            self.assertEqual(retried.exception.code, "SUBMISSION_UNKNOWN_NO_RETRY")
+
+    def test_checkpoint_failure_after_fake_transport_becomes_unknown_without_retry(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            ctx, browser, plan, controller, prepared = self._prepared(database)
+            original = controller._append_checkpoint
+
+            def fail_sequence_seven(**kwargs):
+                if kwargs["sequence"] == 7:
+                    raise RuntimeError("synthetic crash after fake transport")
+                return original(**kwargs)
+
+            with patch.object(controller, "_append_checkpoint", side_effect=fail_sequence_seven):
+                with self.assertRaises(RuntimeError):
+                    controller.complete_with_fresh_authorization(
+                        run_id=prepared["run_id"], context=ctx,
+                        execution_plan=plan, browser_plan=browser,
+                        current_form_snapshot_hash=H, freshness_evidence_hash=H,
+                        user_confirmed=True, fake_confirmation_number="SYNTHETIC-CRASH",
+                    )
+            with database.connect() as connection:
+                run = connection.execute(
+                    "SELECT status,checkpoint_sequence FROM application_execution_runs WHERE run_id=?",
+                    (prepared["run_id"],),
+                ).fetchone()
+            self.assertEqual(tuple(run), ("SUBMISSION_UNKNOWN", 7))
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 0)
+
+    def test_checkpoint_failure_after_verified_receipt_recovers_confirmed(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            ctx, browser, plan, controller, prepared = self._prepared(database)
+            original = controller._append_checkpoint
+
+            def fail_sequence_eight(**kwargs):
+                if kwargs["sequence"] == 8:
+                    raise RuntimeError("synthetic crash after verified receipt")
+                return original(**kwargs)
+
+            with patch.object(controller, "_append_checkpoint", side_effect=fail_sequence_eight):
+                outcome = controller.complete_with_fresh_authorization(
+                    run_id=prepared["run_id"], context=ctx,
+                    execution_plan=plan, browser_plan=browser,
+                    current_form_snapshot_hash=H, freshness_evidence_hash=H,
+                    user_confirmed=True, fake_confirmation_number="SYNTHETIC-RECOVERED",
+                )
+            self.assertEqual(outcome["status"], "CONFIRMED")
+            self.assertTrue(outcome["recovered_after_interruption"])
+            with database.connect() as connection:
+                run = connection.execute(
+                    "SELECT status,checkpoint_sequence FROM application_execution_runs WHERE run_id=?",
+                    (prepared["run_id"],),
+                ).fetchone()
+                phase = connection.execute(
+                    "SELECT phase FROM application_execution_checkpoints WHERE run_id=? ORDER BY sequence DESC LIMIT 1",
+                    (prepared["run_id"],),
+                ).fetchone()[0]
+            self.assertEqual(tuple(run), ("CONFIRMED", 8))
+            self.assertEqual(phase, "INTERRUPTION_RECONCILED")
+
+    def test_restart_reconciliation_marks_consumed_run_unknown_without_replay(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            ctx, browser, plan, controller, prepared = self._prepared(database)
+            authorization = issue_final_submission_authorization(
+                context=ctx, execution_plan=plan, freshness_evidence_hash=H,
+                user_confirmed=True,
+            )
+            controller.gateway.persist_final_submission_authorization(
+                authorization, context=ctx, execution_plan=plan, freshness_evidence_hash=H,
+            )
+            controller.gateway.begin_submission(
+                ctx, execution_plan=plan, freshness_evidence_hash=H,
+            )
+
+            restarted = IsolatedApplicationExecutionController(database)
+            result = restarted.reconcile_interrupted_runs()
+            self.assertEqual(result["runs_examined"], 1)
+            self.assertEqual(result["submission_unknown"], 1)
+            self.assertEqual(result["automatic_retries"], 0)
+            with database.connect() as connection:
+                run = connection.execute(
+                    "SELECT status,checkpoint_sequence FROM application_execution_runs WHERE run_id=?",
+                    (prepared["run_id"],),
+                ).fetchone()
+            self.assertEqual(tuple(run), ("SUBMISSION_UNKNOWN", 6))
 
 
 if __name__ == "__main__":

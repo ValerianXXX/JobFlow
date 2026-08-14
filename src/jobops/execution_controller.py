@@ -398,6 +398,172 @@ class IsolatedApplicationExecutionController:
             )
         return checkpoint
 
+    def _record_interruption_outcome(
+        self,
+        *,
+        run_id: str,
+        failure_code: str,
+    ) -> dict[str, Any]:
+        """Conservatively reconcile a run after its final approval was consumed.
+
+        The application row is the durable indicator that the submission boundary
+        was crossed.  A verified receipt wins; every other in-flight/submitted
+        state becomes non-retryable unknown.  The recovery checkpoint is written
+        without calling ``_append_checkpoint`` so a fault injected into the normal
+        checkpoint path cannot also suppress the recovery marker.
+        """
+        with self.database.connect() as connection:
+            row = connection.execute(
+                """SELECT r.*,a.status AS application_status
+                   FROM application_execution_runs r
+                   JOIN applications a ON a.application_id=r.application_id
+                   WHERE r.run_id=?""",
+                (run_id,),
+            ).fetchone()
+            receipt = None
+            if row is not None and row["application_status"] == "CONFIRMED":
+                receipt = connection.execute(
+                    """SELECT receipt_id,confirmation_hash FROM receipts
+                       WHERE application_id=? ORDER BY verified_at DESC LIMIT 1""",
+                    (row["application_id"],),
+                ).fetchone()
+        if row is None:
+            raise JobOpsError("EXECUTION_RUN_NOT_FOUND", "The isolated execution run does not exist.")
+        if row["status"] in {"CONFIRMED", "SUBMISSION_UNKNOWN"}:
+            return {
+                "status": str(row["status"]),
+                "run_id": run_id,
+                "recovered": False,
+                "automatic_retry": False,
+            }
+
+        if receipt is not None:
+            target_status = "CONFIRMED"
+            checkpoint_status = "CONFIRMED"
+            evidence = {
+                "reason": "VERIFIED_RECEIPT_ALREADY_PERSISTED",
+                "failure_code": failure_code,
+                "receipt_id": str(receipt["receipt_id"]),
+                "confirmation_hash": str(receipt["confirmation_hash"]),
+            }
+        else:
+            if row["application_status"] in {"SUBMITTING", "SUBMITTED"}:
+                self.gateway.mark_submission_unknown(
+                    str(row["application_id"]),
+                    evidence={"run_id": run_id, "failure_code": failure_code},
+                )
+            elif row["application_status"] != "SUBMISSION_UNKNOWN":
+                raise JobOpsError(
+                    "EXECUTION_RECOVERY_STATE_INVALID",
+                    "The interrupted run cannot be reconciled from the current application state.",
+                    application_status=str(row["application_status"]),
+                )
+            target_status = "SUBMISSION_UNKNOWN"
+            checkpoint_status = "UNKNOWN"
+            evidence = {
+                "reason": "INTERRUPTED_AFTER_FINAL_AUTHORIZATION",
+                "failure_code": failure_code,
+                "automatic_retry": False,
+            }
+
+        with self.database.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            current = connection.execute(
+                "SELECT * FROM application_execution_runs WHERE run_id=?", (run_id,),
+            ).fetchone()
+            if current is None:
+                raise JobOpsError("EXECUTION_RUN_NOT_FOUND", "The isolated execution run does not exist.")
+            if current["status"] in {"CONFIRMED", "SUBMISSION_UNKNOWN"}:
+                return {
+                    "status": str(current["status"]),
+                    "run_id": run_id,
+                    "recovered": False,
+                    "automatic_retry": False,
+                }
+            sequence = int(current["checkpoint_sequence"]) + 1
+            if sequence not in {6, 7, 8}:
+                raise JobOpsError(
+                    "EXECUTION_RECOVERY_SEQUENCE_INVALID",
+                    "The interrupted execution cannot be reconciled at this checkpoint sequence.",
+                    sequence=sequence,
+                )
+            now = iso_utc()
+            checkpoint = self._checkpoint(
+                run_id=run_id,
+                application_id=str(current["application_id"]),
+                sequence=sequence,
+                phase="INTERRUPTION_RECONCILED",
+                status=checkpoint_status,
+                context_hash=str(current["application_context_hash"]),
+                execution_plan_hash=str(current["execution_plan_hash"]),
+                browser_plan_hash=str(current["browser_plan_hash"]),
+                form_snapshot_hash=str(current["form_snapshot_hash"]),
+                freshness_evidence_hash=str(current["freshness_evidence_hash"]),
+                evidence=evidence,
+                created_at=now,
+            )
+            changed = connection.execute(
+                """UPDATE application_execution_runs
+                   SET status=?,checkpoint_sequence=?,updated_at=?
+                   WHERE run_id=? AND checkpoint_sequence=?
+                   AND status NOT IN ('CONFIRMED','SUBMISSION_UNKNOWN','INVALIDATED')""",
+                (target_status, sequence, now, run_id, sequence - 1),
+            ).rowcount
+            if changed != 1:
+                raise JobOpsError("EXECUTION_RECOVERY_RACE", "The interrupted execution changed during recovery.")
+            self._insert_checkpoint(connection, checkpoint)
+            connection.execute(
+                "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
+                (
+                    current["application_id"], "ISOLATED_EXECUTION_INTERRUPTION_RECONCILED", None, target_status,
+                    json.dumps({
+                        "run_id": run_id,
+                        "checkpoint_id": checkpoint["checkpoint_id"],
+                        "failure_code": failure_code,
+                        "automatic_retry": False,
+                    }), now,
+                ),
+            )
+        return {
+            "status": target_status,
+            "run_id": run_id,
+            "recovered": True,
+            "automatic_retry": False,
+            "checkpoint_sequence": sequence,
+            "real_external_actions": 0,
+        }
+
+    def reconcile_interrupted_runs(self) -> dict[str, Any]:
+        """Recover persisted half-finished isolated runs without replaying them."""
+        with self.database.connect() as connection:
+            rows = connection.execute(
+                """SELECT r.run_id
+                   FROM application_execution_runs r
+                   JOIN applications a ON a.application_id=r.application_id
+                   WHERE r.status IN ('AWAITING_FINAL_AUTHORIZATION','SUBMISSION_STARTED','SUBMITTED')
+                   AND (
+                       r.status != 'AWAITING_FINAL_AUTHORIZATION'
+                       OR a.status IN ('SUBMITTING','SUBMITTED','SUBMISSION_UNKNOWN','CONFIRMED')
+                   )
+                   ORDER BY r.created_at,r.run_id"""
+            ).fetchall()
+        outcomes: list[dict[str, Any]] = []
+        for row in rows:
+            outcomes.append(self._record_interruption_outcome(
+                run_id=str(row["run_id"]),
+                failure_code="PROCESS_RESTART_RECONCILIATION",
+            ))
+        return {
+            "status": "RECONCILED",
+            "runs_examined": len(rows),
+            "confirmed": sum(1 for item in outcomes if item["status"] == "CONFIRMED"),
+            "submission_unknown": sum(1 for item in outcomes if item["status"] == "SUBMISSION_UNKNOWN"),
+            "automatic_retries": 0,
+            "browser_actions": 0,
+            "network_actions": 0,
+            "real_external_actions": 0,
+        }
+
     def complete_with_fresh_authorization(
         self,
         *,
@@ -529,11 +695,20 @@ class IsolatedApplicationExecutionController:
             }
         except Exception as exc:
             if submission_started:
-                try:
-                    self.gateway.mark_submission_unknown(
-                        checked.context.application_id,
-                        evidence={"run_id": run_id, "failure_code": getattr(exc, "code", "ISOLATED_EXECUTION_FAILURE")},
-                    )
-                except JobOpsError:
-                    pass
+                recovery = self._record_interruption_outcome(
+                    run_id=run_id,
+                    failure_code=str(getattr(exc, "code", "ISOLATED_EXECUTION_FAILURE")),
+                )
+                if recovery["status"] == "CONFIRMED":
+                    return {
+                        "status": "CONFIRMED",
+                        "run_id": run_id,
+                        "application_id": checked.context.application_id,
+                        "checkpoint_count": recovery["checkpoint_sequence"],
+                        "recovered_after_interruption": True,
+                        "automatic_retry": False,
+                        "browser_actions": 0,
+                        "network_actions": 0,
+                        "real_external_actions": 0,
+                    }
             raise

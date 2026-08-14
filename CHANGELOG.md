@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Added crash-consistent isolated execution reconciliation across final-authorization, fake-transport and receipt checkpoints; only an already persisted verified receipt can recover to confirmed, while every uncertain state becomes non-retryable `SUBMISSION_UNKNOWN`.
+- 新增隔离执行的崩溃一致性恢复：覆盖最终授权、假传输与回执检查点；只有已持久化的可靠回执可恢复为已确认，其余不确定状态全部进入不可自动重试的 `SUBMISSION_UNKNOWN`。
 - Integrated scoped prefill/upload authorization into the isolated execution chain. The hash-only fake upload adapter rejects filenames, paths, secure references and file bodies, and reports zero files opened/uploaded and zero network actions.
 - 将预填/上传的精确授权接入隔离执行链；仅哈希的上传假适配器拒绝文件名、路径、secure-ref 与正文，并报告打开/上传文件 0、网络动作 0。
 - Added expiring, one-use, per-action authorization sessions for live-read, form-inspection, prefill and upload contracts, with a generation-bound global emergency stop visible in the bilingual dashboard. Production activation remains structurally disabled.
