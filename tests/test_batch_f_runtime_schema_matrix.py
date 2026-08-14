@@ -300,6 +300,16 @@ def valid_fixtures() -> dict[str, dict]:
             "contains_private_values": False, "contains_file_content": False, "created_at": T,
             "browser_actions": 0, "network_actions": 0, "real_external_actions": 0, "envelope_hash": H,
         },
+        "ephemeral-ats-payload-evidence": {
+            "schema_version": 1, "status": "ISOLATED_EPHEMERAL_PAYLOAD_VALIDATED",
+            "application_id": APP, "application_context_hash": H,
+            "browser_plan_hash": H, "form_snapshot_hash": H,
+            "field_count": 2, "file_count": 1,
+            "field_binding_hash": H, "material_binding_hash": H,
+            "synthetic_only": True, "production_activation": False,
+            "temporary_files_removed": True, "private_values_emitted": 0,
+            "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
+        },
         "continuous-intake-plan": {
             "schema_version": 1, "status": "MANUAL_TICK_READY", "mode": "MANUAL_TICK_ONLY", "plan_hash": H,
             "job_count": 3, "pending_limit": 5, "awaiting_approval": 2, "reserved_slots": 1,

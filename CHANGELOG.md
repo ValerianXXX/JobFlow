@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Added a synthetic-only ephemeral ATS payload broker: it resolves approved encrypted fields only in memory, stages hash-bound materials outside the project, scrubs mutable buffers, removes temporary files before returning, and keeps production activation unavailable.
+- 新增仅限合成测试的 ATS 临时载荷桥：仅在内存中解析已批准的加密字段，在项目外暂存哈希绑定材料，清零可变缓冲并在返回前删除临时文件；生产启用仍不可用。
 - Added a bilingual, redacted execution-status board and isolated startup reconciliation. Review approval is never shown as submission, and interrupted or unknown runs visibly prohibit automatic retry.
 - 新增中英双语脱敏执行状态板与本机启动恢复；审阅批准不会被误标为已提交，中断或结果未知会明确提示禁止自动重试。
 - Stabilized rejected localhost uploads on Windows by draining only a small, explicitly sized request body under a short timeout before closing; ambiguous, chunked and oversized requests remain fail-closed.

@@ -19,6 +19,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] Hash-only fake material-upload contract integrated into the isolated execution chain after scoped prefill/upload authorization and before fresh final-submit confirmation; it opens and uploads zero files.
 - [x] Fault-injected interruption recovery after final authorization consumption: persisted verified receipts recover to confirmed; every other in-flight state becomes non-retryable unknown with zero automatic replay.
 - [x] Provider-neutral ATS transport contract for company pages, Greenhouse, Lever and Workday, with hash-only envelopes, fixed authorization types and no registered live transport.
+- [x] Synthetic-only ephemeral payload broker that resolves encrypted form values in memory, stages hash-bound materials outside the project, and proves complete cleanup before any future ATS adapter can be registered.
 - [x] Bilingual redacted execution-status board plus startup reconciliation visibility for awaiting-final, confirmed, invalidated, interrupted and non-retryable unknown runs.
 - [x] Offline company-careers discovery from saved HTML/page snapshots and saved Greenhouse/Lever job JSON.
 - [x] Fail-closed local ATS form and Workday saved-sequence analysis.
