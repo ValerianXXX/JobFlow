@@ -21,9 +21,9 @@
   });
 
   chrome.runtime.onMessage.addListener((message) => {
-    if (!message || message.type !== "JOBFLOW_ASSIST_STATUS") return;
+    if (!message || !["JOBFLOW_ASSIST_STATUS", "JOBFLOW_INTAKE_STATUS"].includes(message.type)) return;
     window.postMessage({
-      type: "JOBFLOW_ASSIST_STATUS",
+      type: message.type,
       protocol_version: PROTOCOL,
       result: message.result
     }, location.origin);

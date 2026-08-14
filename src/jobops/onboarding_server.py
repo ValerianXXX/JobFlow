@@ -107,6 +107,13 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             return None
         return parts[1], parts[2:]
 
+    def _intake_token_and_route(self, parsed=None) -> tuple[str, list[str]] | None:
+        parsed = parsed or urlparse(self.path)
+        parts = [item for item in parsed.path.split("/") if item]
+        if len(parts) < 2 or parts[0] != "intake":
+            return None
+        return parts[1], parts[2:]
+
     def _assist_security_headers(self, content_type: str, origin: str) -> None:
         self.send_header("Content-Type", content_type)
         self.send_header("Cache-Control", "no-store, max-age=0")
@@ -366,8 +373,9 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         assist = self._assist_token_and_route(parsed)
+        intake = self._intake_token_and_route(parsed)
         origin = self._assist_origin()
-        if assist is None or origin is None or not self._valid_host():
+        if (assist is None and intake is None) or origin is None or not self._valid_host():
             self.close_connection = True
             self.send_response(HTTPStatus.FORBIDDEN)
             self.send_header("Content-Length", "0")
@@ -441,6 +449,34 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        intake = self._intake_token_and_route(parsed)
+        if intake is not None:
+            origin = self._assist_origin()
+            if origin is None or not self._valid_host():
+                self.close_connection = True
+                self._discard_small_declared_body()
+                self._send_json(HTTPStatus.FORBIDDEN, {"status": "BLOCKED", "code": "BROWSER_COMPANION_ORIGIN_FORBIDDEN"})
+                return
+            token, route_parts = intake
+            try:
+                if route_parts == ["pair"]:
+                    self._optional_json_body()
+                    result = self.server.service.pair_guided_intake(token, extension_origin=origin)
+                elif route_parts == ["capture-job"]:
+                    result = self.server.service.capture_guided_job_page(
+                        token, self._json_body(), extension_origin=origin,
+                    )
+                elif route_parts == ["capture-form"]:
+                    result = self.server.service.capture_guided_application_form(
+                        token, self._json_body(), extension_origin=origin,
+                    )
+                else:
+                    self._send_assist_json(HTTPStatus.NOT_FOUND, {"status": "NOT_FOUND"}, origin)
+                    return
+                self._send_assist_json(HTTPStatus.OK, result, origin)
+            except Exception as exc:
+                self._dispatch_assist_error(exc, origin)
+            return
         assist = self._assist_token_and_route(parsed)
         if assist is not None:
             origin = self._assist_origin()
@@ -500,6 +536,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.disable_external_actions(self._json_body())
             elif route == "start-browser-assist":
                 result = self.server.service.start_browser_assist(self._json_body())
+            elif route == "start-guided-intake":
+                result = self.server.service.start_guided_intake(self._json_body())
             elif route == "resolve-browser-assist-unknown":
                 result = self.server.service.resolve_browser_assist_unknown(self._json_body())
             elif route == "prepare-synthetic-execution":

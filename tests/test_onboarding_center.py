@@ -1402,6 +1402,16 @@ class OnboardingCenterTests(unittest.TestCase):
                 self.assertEqual(preflight_response.headers["Access-Control-Allow-Origin"], COMPANION_EXTENSION_ORIGIN)
                 self.assertEqual(preflight_response.headers["Access-Control-Allow-Private-Network"], "true")
                 preflight.close()
+                intake_preflight = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                intake_preflight.request(
+                    "OPTIONS", "/intake/not-a-secret/pair",
+                    headers={"Origin": COMPANION_EXTENSION_ORIGIN, "Access-Control-Request-Method": "POST"},
+                )
+                intake_response = intake_preflight.getresponse()
+                intake_response.read()
+                self.assertEqual(intake_response.status, 204)
+                self.assertEqual(intake_response.headers["Access-Control-Allow-Origin"], COMPANION_EXTENSION_ORIGIN)
+                intake_preflight.close()
                 untrusted_preflight = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
                 untrusted_preflight.request(
                     "OPTIONS", "/assist/not-a-secret/pair",

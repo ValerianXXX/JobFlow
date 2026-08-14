@@ -74,10 +74,10 @@ async function postJSON(url, body = {}) {
   return value;
 }
 
-async function notifyJobFlow(result) {
+async function notifyJobFlow(result, messageType = "JOBFLOW_ASSIST_STATUS") {
   const tabs = await chrome.tabs.query({url: ["http://127.0.0.1/*", "http://localhost/*"]});
   await Promise.all(tabs.map((tab) => (
-    tab.id ? chrome.tabs.sendMessage(tab.id, {type: "JOBFLOW_ASSIST_STATUS", result}).catch(() => undefined) : undefined
+    tab.id ? chrome.tabs.sendMessage(tab.id, {type: messageType, result}).catch(() => undefined) : undefined
   )));
 }
 
@@ -89,6 +89,64 @@ function publicError(error) {
 
 async function ensureDOMScript(tabId) {
   await chrome.scripting.executeScript({target: {tabId}, files: ["dom.js"]});
+}
+
+async function captureGuidedCurrentTab(tabId, tabUrl) {
+  const state = await sessionState();
+  if (!state || state.mode !== "JOB_CAPTURE" || !state.paired) {
+    throw Object.assign(new Error("Start guided job import in JobFlow first."), {
+      jobflow: {status: "BLOCKED", code: "GUIDED_INTAKE_NOT_PAIRED"}
+    });
+  }
+  const parsed = new URL(tabUrl);
+  if (parsed.protocol !== "https:") {
+    throw Object.assign(new Error("Open the HTTPS company job page or its application form."), {
+      jobflow: {status: "BLOCKED", code: "GUIDED_INTAKE_HTTPS_REQUIRED"}
+    });
+  }
+  await ensureDOMScript(tabId);
+  if (state.stage === "AWAITING_JOB_PAGE_CAPTURE") {
+    const collected = await chrome.tabs.sendMessage(tabId, {type: "JOBFLOW_COLLECT_JOB_PAGE"});
+    if (!collected || collected.status !== "COLLECTED") {
+      throw Object.assign(new Error("The company job page could not be read safely."), {
+        jobflow: collected || {status: "BLOCKED", code: "GUIDED_INTAKE_JOB_PAGE_UNAVAILABLE"}
+      });
+    }
+    const result = await postJSON(endpoint(state, "/capture-job"), collected.payload);
+    await saveSession({...state, stage: result.status, last_result: result});
+    await notifyJobFlow(result, "JOBFLOW_INTAKE_STATUS");
+    return result;
+  }
+  if (["AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED"].includes(state.stage)) {
+    const collected = await chrome.tabs.sendMessage(tabId, {type: "JOBFLOW_COLLECT_FORM"});
+    if (!collected || collected.status !== "COLLECTED") {
+      throw Object.assign(new Error("The application form could not be read safely."), {
+        jobflow: collected || {status: "BLOCKED", code: "GUIDED_INTAKE_FORM_UNAVAILABLE"}
+      });
+    }
+    await notifyJobFlow({
+      status: "PREPARING_APPLICATION", intake_id: state.intake_id,
+      mode: "JOB_CAPTURE", real_external_actions: 0
+    }, "JOBFLOW_INTAKE_STATUS");
+    let result;
+    try {
+      result = await postJSON(endpoint(state, "/capture-form"), collected.payload);
+    } catch (error) {
+      const failure = {
+        ...publicError(error), status: "FORM_CAPTURE_FAILED",
+        intake_id: state.intake_id, mode: "JOB_CAPTURE", real_external_actions: 0
+      };
+      await saveSession({...state, stage: failure.status, last_result: failure});
+      await notifyJobFlow(failure, "JOBFLOW_INTAKE_STATUS");
+      throw error;
+    }
+    await saveSession({...state, stage: result.status, application_id: result.application_id, last_result: result});
+    await notifyJobFlow(result, "JOBFLOW_INTAKE_STATUS");
+    return result;
+  }
+  throw Object.assign(new Error("This guided import is not waiting for another page."), {
+    jobflow: {status: "BLOCKED", code: "GUIDED_INTAKE_STAGE_INVALID"}
+  });
 }
 
 async function observeResult(tabId) {
@@ -298,7 +356,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         !pairing || pairing.protocol_version !== PROTOCOL ||
         typeof pairing.base_url !== "string" || typeof pairing.assist_path !== "string" ||
         !/^http:\/\/(?:127\.0\.0\.1|localhost):\d+$/.test(pairing.base_url) ||
-        !/^\/assist\/[A-Za-z0-9_-]{40,}$/.test(pairing.assist_path)
+        !/^\/(?:assist|intake)\/[A-Za-z0-9_-]{40,}$/.test(pairing.assist_path)
       ) {
         return {status: "BLOCKED", code: "COMPANION_PAIR_PAYLOAD_INVALID"};
       }
@@ -307,16 +365,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         protocol_version: PROTOCOL,
         base_url: pairing.base_url,
         assist_path: pairing.assist_path,
+        mode: result.mode || "APPLICATION_ASSIST",
         assist_id: result.assist_id,
+        intake_id: result.intake_id,
         application_id: result.application_id,
         allowed_page_origin: result.allowed_page_origin,
+        allowed_company_domain: result.allowed_company_domain,
         provider: result.provider,
         route_kind: result.route_kind,
         current_step: result.current_step,
         max_steps: result.max_steps,
         expires_at: result.expires_at,
         paired: true,
-        stage: result.status,
+        stage: result.capture_status || result.status,
         navigation: null,
         navigation_authorized: false,
         manual_field_count: 0,
@@ -332,8 +393,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return state ? {
         status: state.stage,
         paired: Boolean(state.paired),
+        mode: state.mode,
+        intake_id: state.intake_id,
         application_id: state.application_id,
         allowed_page_origin: state.allowed_page_origin,
+        allowed_company_domain: state.allowed_company_domain,
         provider: state.provider,
         current_step: state.current_step,
         max_steps: state.max_steps,
@@ -344,7 +408,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       } : {status: "NOT_PAIRED", paired: false};
     }
     if (message.type === "JOBFLOW_FILL_CURRENT") {
+      const state = await sessionState();
+      if (state?.mode === "JOB_CAPTURE") return {status: "BLOCKED", code: "GUIDED_INTAKE_CAPTURE_REQUIRED"};
       return await fillCurrentTab(Number(message.tab_id), String(message.tab_url || ""));
+    }
+    if (message.type === "JOBFLOW_CAPTURE_CURRENT") {
+      return await captureGuidedCurrentTab(Number(message.tab_id), String(message.tab_url || ""));
     }
     if (message.type === "JOBFLOW_CONTINUE_CURRENT") {
       return await navigateCurrentTab(Number(message.tab_id));

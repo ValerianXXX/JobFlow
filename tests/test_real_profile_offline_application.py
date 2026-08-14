@@ -217,6 +217,63 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         )
         return token, prepared
 
+    def test_guided_browser_intake_builds_one_review_packet_without_page_actions(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            fixtures = PROJECT / "tests" / "fixtures"
+            readiness = {"application_readiness": {"status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION"}}
+            with mock.patch.object(service, "bootstrap", return_value=readiness):
+                started = service.start_guided_intake({
+                    "official_url": "https://example.com/careers/synthetic-data-analyst",
+                    "user_confirmed": True,
+                })
+            token = str(started["intake_token"])
+            paired = service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            self.assertEqual(paired["capture_status"], "AWAITING_JOB_PAGE_CAPTURE")
+            job_text = (fixtures / "synthetic-forward-jd.txt").read_text(encoding="utf-8")
+            captured = service.capture_guided_job_page(
+                token,
+                {
+                    "url": "https://example.com/careers/synthetic-data-analyst",
+                    "document_title": "Synthetic Data Analyst",
+                    "job_title": "Synthetic Data Analyst",
+                    "company_name": "Example Analytics Lab",
+                    "job_location": "Remote",
+                    "visible_text": job_text,
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(captured["status"], "AWAITING_APPLICATION_FORM_CAPTURE")
+            prepared = service.capture_guided_application_form(
+                token,
+                {
+                    "url": "https://example.com/careers/apply/synthetic-data-analyst",
+                    "sanitized_html": (fixtures / "synthetic-material-form.html").read_text(encoding="utf-8"),
+                    "blocker_signals": [],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(prepared["status"], "REVIEW_PACKET_READY")
+            packet = service.review_packet(str(prepared["application_id"]))
+            self.assertEqual(packet["application_id"], prepared["application_id"])
+            with database.connect() as connection:
+                events = [row[0] for row in connection.execute(
+                    "SELECT event_type FROM guided_intake_events ORDER BY event_id"
+                ).fetchall()]
+                self.assertEqual(events, [
+                    "STARTED", "PAIRED", "JOB_PAGE_INSPECTED", "FORM_INSPECTED", "REVIEW_PACKET_READY",
+                ])
+                with self.assertRaises(Exception):
+                    connection.execute("UPDATE guided_intake_events SET event_type='FAILED' WHERE event_id=1")
+                with self.assertRaises(Exception):
+                    connection.execute("DELETE FROM guided_intake_events WHERE event_id=1")
+            audit = audit_real_external_actions(database)
+            self.assertEqual(audit["attempt_count"], 0)
+            self.assertEqual(audit["real_external_actions"], 0)
+
     def test_completed_user_context_generates_encrypted_review_materials_without_external_actions(self) -> None:
         with project_temp() as temp:
             database, onboarding, orchestrator = self.build(temp)

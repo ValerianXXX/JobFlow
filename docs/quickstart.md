@@ -31,9 +31,11 @@ Use the page in this order:
 4. Review every AI-proposed entity, Claim and conflict. Nothing becomes externally approved automatically. / 审阅每个 AI 候选实体、Claim 与冲突；系统不会自动批准对外使用。
 5. Complete the local profile and review future offline application packets in the bounded queue. / 完成本机资料，并在有上限的队列中审阅后续离线申请包。
 
-After the Application readiness panel has no blockers, use **Prepare one offline application / 准备一个离线申请** on the same page. Enter the official job URL and the original application-form URL, choose whether guest apply appears available, select a saved JD, saved official job page, and saved application form, then paste one exact 12–2000 character excerpt that occurs on the official page. JobFlow stages those inputs once outside the project, generates and verifies local materials, removes the inputs, and opens the encrypted review packet. It does not open either URL.
+After the Application readiness panel has no blockers, paste the role URL from the company's own website into **Paste a job link to begin** and approve the 30-minute read-only capture. Open that role, use the JobFlow J companion to read it, click the company's Apply control yourself, then use J once more on the application form. JobFlow reads no existing input values and performs no fill, upload, or page click during capture. It prepares and verifies the job-specific materials and opens one encrypted review packet.
 
-“自动投递准备度”没有阻挡项后，直接使用同页的“准备一个离线申请”：填写官网岗位 URL 与申请表原始 URL，选择是否可访客申请，再选择本机保存的 JD、官网岗位页和申请表，并粘贴一段能在官网页逐字找到的 12—2000 字符原文。JobFlow 只在项目外临时接入一次，生成并检查本机材料后清理输入并打开加密审阅包；它不会打开这两个 URL。
+“自动投递准备度”没有阻挡项后，在“粘贴岗位链接即可开始”中贴入公司官网岗位链接，并确认 30 分钟只读授权。打开岗位页后用一次 JobFlow J 读取岗位；你亲自点击公司的 Apply，进入申请表后再用一次 J。读取阶段不读取既有输入值，也不填写、上传或点击网页按钮；JobFlow 会自动生成并检查岗位材料，然后打开唯一的加密审阅包。
+
+The former three-file JD/official-page/form workflow is still available under **Advanced diagnostics and offline QA** for development or when guided browser capture cannot be used; it is not part of the normal path. / 原来的 JD、官网页、申请表三文件流程只保留在“高级诊断与离线 QA”，用于开发或浏览器读取不可用时的排障，不属于普通流程。
 
 When PDF extraction changes only numeric presentation or an obvious sentence wrap, the Claim preview labels that adjustment and still leaves the Claim unchecked for the user. New, calculated, rounded, scaled or unrelated-line numbers remain blocked. / PDF 仅出现数字显示格式或明显同句换行差异时，预览会标出调整且 Claim 仍保持未选择；新增、计算、四舍五入、单位缩放或无关行数字仍被拒绝。
 

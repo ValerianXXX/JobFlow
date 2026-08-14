@@ -4,7 +4,9 @@ import io
 import heapq
 import json
 import re
+import secrets
 import threading
+import time
 import zipfile
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -65,7 +67,14 @@ from .resume_tailoring import (
 from .runtime_schema import validate_named
 from .security import assert_no_plaintext_secret
 from .source_quality import document_quality_rank, document_text_preflight, safe_ai_failure_category
-from .sourcing import _canonical_url, _host, _provider_and_tenant, host_matches_registered, registrable_domain
+from .sourcing import (
+    _canonical_url,
+    _host,
+    _provider_and_tenant,
+    host_matches_registered,
+    registrable_domain,
+    url_has_sensitive_query,
+)
 from .util import canonical_json, iso_utc, load_json, sha256_bytes, sha256_file, stable_id, write_json
 
 
@@ -92,6 +101,9 @@ MAX_JSON_DEPTH = 100
 MAX_ONBOARDING_PDF_PAGES = 500
 MAX_REVIEW_PACKET_BYTES = 2 * 1024 * 1024
 MAX_OFFLINE_APPLICATION_BUNDLE_BYTES = MAX_JD_SOURCE_BYTES + MAX_SNAPSHOT_BYTES + 16 * 1024 * 1024 + 64 * 1024
+GUIDED_INTAKE_TTL_SECONDS = 30 * 60
+MAX_GUIDED_JOB_TEXT_CHARS = 750_000
+MAX_GUIDED_FORM_HTML_CHARS = 1_750_000
 ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "portfolio", "ai_summary", "chatgpt_export"}
 ALLOWED_EXTENSIONS = {".docx", ".pdf", ".txt", ".md", ".json", ".zip"}
 AI_SOURCE_TYPES = {"ai_summary", "chatgpt_export"}
@@ -680,6 +692,7 @@ class OnboardingCenterService:
         self.schemas = self.project / "schemas"
         self.index_path = self.project / "state" / "onboarding-center-index.json"
         self._lock = threading.RLock()
+        self._guided_intakes: dict[str, dict[str, Any]] = {}
 
     def _latest_ref(self, kind: str) -> str | None:
         with self.database.connect() as connection:
@@ -1286,6 +1299,7 @@ class OnboardingCenterService:
                 "next_safe_action": next_safe_action,
             })
         browser_assist = self.browser_assist.public_status()
+        guided_intake = self._guided_public_status()
         return {
             "status": "LOCAL_PIPELINE_READY",
             "onboarding_status": str(state.get("status", IN_PROGRESS)),
@@ -1301,7 +1315,10 @@ class OnboardingCenterService:
             "startup_execution_reconciliation": dict(self.execution_reconciliation),
             "safety": {
                 "network_mode": "LOCAL_OFFLINE_PLUS_USER_PRESENT_BROWSER_ASSIST",
-                "real_website_accesses": int(browser_assist["real_website_inspections"]),
+                "real_website_accesses": (
+                    int(browser_assist["real_website_inspections"])
+                    + int(guided_intake["read_only_page_inspections"])
+                ),
                 "external_action_attempts": int(actions["attempt_count"]),
                 "real_external_actions": int(actions["real_external_actions"]),
                 "knowledge_write_operations": 0,
@@ -1311,6 +1328,7 @@ class OnboardingCenterService:
                 "automatic_retry": False,
             },
             "generated_at": iso_utc(),
+            "guided_intake": guided_intake,
         }
 
     @_synchronized
@@ -1347,6 +1365,290 @@ class OnboardingCenterService:
             source_route=source_route,
             user_confirmed=payload.get("user_confirmed") is True,
         )
+
+    def _guided_event(
+        self,
+        intake_id: str,
+        event_type: str,
+        evidence: object,
+        *,
+        application_id: str | None = None,
+    ) -> None:
+        evidence_hash = sha256_bytes(canonical_json(evidence))
+        with self.database.connect() as connection:
+            connection.execute(
+                """INSERT INTO guided_intake_events(
+                       intake_id,event_type,evidence_hash,application_id,created_at
+                   ) VALUES(?,?,?,?,?)""",
+                (intake_id, event_type, evidence_hash, application_id, iso_utc()),
+            )
+
+    def _guided_lease(self, token: str) -> dict[str, Any]:
+        if not re.fullmatch(r"[A-Za-z0-9_-]{40,}", token):
+            raise JobOpsError("GUIDED_INTAKE_TOKEN_INVALID", "The guided job-import session is invalid.")
+        lease = self._guided_intakes.get(token)
+        if lease is None:
+            raise JobOpsError("GUIDED_INTAKE_NOT_FOUND", "Start the guided job import again from JobFlow.")
+        if time.time() >= float(lease["expires_epoch"]):
+            self._guided_event(
+                str(lease["intake_id"]), "EXPIRED",
+                {"status": str(lease.get("status", "UNKNOWN"))},
+            )
+            self._guided_intakes.pop(token, None)
+            raise JobOpsError("GUIDED_INTAKE_EXPIRED", "This guided job-import session expired. Start it again.")
+        return lease
+
+    def _guided_public_status(self) -> dict[str, Any]:
+        expired = [
+            token for token, lease in self._guided_intakes.items()
+            if time.time() >= float(lease["expires_epoch"])
+        ]
+        for token in expired:
+            lease = self._guided_intakes.pop(token)
+            self._guided_event(
+                str(lease["intake_id"]), "EXPIRED",
+                {"status": str(lease.get("status", "UNKNOWN"))},
+            )
+        active = max(
+            self._guided_intakes.values(),
+            key=lambda item: float(item["started_epoch"]),
+            default=None,
+        )
+        with self.database.connect() as connection:
+            inspections = int(connection.execute(
+                """SELECT COUNT(*) FROM guided_intake_events
+                   WHERE event_type IN ('JOB_PAGE_INSPECTED','FORM_INSPECTED')"""
+            ).fetchone()[0])
+        if active is None:
+            return {
+                "status": "IDLE", "active": False,
+                "read_only_page_inspections": inspections,
+                "real_external_actions": 0,
+            }
+        return {
+            "status": str(active["status"]), "active": True,
+            "intake_id": str(active["intake_id"]),
+            "paired": bool(active.get("paired")),
+            "expires_at": str(active["expires_at"]),
+            "read_only_page_inspections": inspections,
+            "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def start_guided_intake(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError(
+                "EXPLICIT_CONFIRMATION_REQUIRED",
+                "Guided import needs your permission to read the two pages you explicitly choose in the browser.",
+            )
+        readiness = self.bootstrap().get("application_readiness", {})
+        if readiness.get("status") != "READY_FOR_OFFLINE_APPLICATION_PREPARATION":
+            raise JobOpsError(
+                "APPLICATION_READINESS_INCOMPLETE",
+                "Finish the one-time profile and material readiness items before importing a job.",
+                blockers=[str(item.get("code")) for item in readiness.get("blockers", []) if isinstance(item, dict)],
+            )
+        official_url = _canonical_url(str(payload.get("official_url", "")).strip())
+        if url_has_sensitive_query(official_url):
+            raise JobOpsError(
+                "ROUTE_URL_SENSITIVE_QUERY",
+                "Use the public company job URL without login, identity, session, or signature parameters.",
+            )
+        host = _host(urlparse(official_url).hostname or "")
+        company_domain = registrable_domain(host)
+        policy = load_json(self.project / "config" / "policy.json")
+        approved_ats = {_host(value) for value in policy["approved_ats_hosts"]}
+        if any(host == suffix or host.endswith("." + suffix) for suffix in approved_ats):
+            raise JobOpsError(
+                "GUIDED_INTAKE_COMPANY_URL_REQUIRED",
+                "Start with the role on the company's own website. JobFlow will accept the ATS page after you follow the company's Apply link.",
+            )
+        token = secrets.token_urlsafe(40)
+        intake_id = stable_id("GIN", token)
+        started_epoch = time.time()
+        expires_epoch = started_epoch + GUIDED_INTAKE_TTL_SECONDS
+        expires_at = datetime.fromtimestamp(expires_epoch, timezone.utc).isoformat().replace("+00:00", "Z")
+        lease = {
+            "token": token, "intake_id": intake_id,
+            "official_url": official_url, "company_domain": company_domain,
+            "started_epoch": started_epoch, "expires_epoch": expires_epoch,
+            "expires_at": expires_at, "paired": False,
+            "status": "GUIDED_INTAKE_PAIRING", "job_page": None,
+        }
+        self._guided_intakes[token] = lease
+        self._guided_event(
+            intake_id, "STARTED",
+            {"company_domain_hash": sha256_bytes(company_domain.encode("utf-8")), "mode": "USER_PRESENT_READ_ONLY"},
+        )
+        return {
+            "status": "GUIDED_INTAKE_PAIRING", "intake_id": intake_id,
+            "intake_token": token, "intake_path": f"/intake/{token}",
+            "protocol_version": 2, "official_url": official_url,
+            "expires_at": expires_at, "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def pair_guided_intake(self, token: str, *, extension_origin: str | None) -> dict[str, Any]:
+        if not BrowserAssistManager.extension_origin_allowed(extension_origin):
+            raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "Only the fixed JobFlow Browser Companion may pair.")
+        lease = self._guided_lease(token)
+        lease["paired"] = True
+        lease["status"] = "AWAITING_JOB_PAGE_CAPTURE"
+        self._guided_event(str(lease["intake_id"]), "PAIRED", {"protocol_version": 2})
+        return {
+            "status": "GUIDED_INTAKE_PAIRED", "mode": "JOB_CAPTURE",
+            "capture_status": "AWAITING_JOB_PAGE_CAPTURE",
+            "intake_id": str(lease["intake_id"]),
+            "allowed_company_domain": str(lease["company_domain"]),
+            "expires_at": str(lease["expires_at"]),
+            "real_external_actions": 0,
+        }
+
+    @staticmethod
+    def _guided_text(payload: dict[str, Any], key: str, *, maximum: int, required: bool = False) -> str:
+        value = payload.get(key)
+        if not isinstance(value, str):
+            if required:
+                raise JobOpsError("GUIDED_INTAKE_PAGE_INVALID", "The selected page did not provide readable job content.")
+            return ""
+        value = value.replace("\x00", "").strip()
+        if len(value) > maximum or (required and len(value) < 12):
+            raise JobOpsError("GUIDED_INTAKE_PAGE_INVALID", "The selected page content is empty or exceeds the safe local limit.")
+        return value
+
+    @_synchronized
+    def capture_guided_job_page(
+        self, token: str, payload: dict[str, Any], *, extension_origin: str | None,
+    ) -> dict[str, Any]:
+        if not BrowserAssistManager.extension_origin_allowed(extension_origin):
+            raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "Only the fixed JobFlow Browser Companion may capture a page.")
+        lease = self._guided_lease(token)
+        if not lease.get("paired") or lease.get("status") not in {"AWAITING_JOB_PAGE_CAPTURE", "FORM_CAPTURE_FAILED"}:
+            raise JobOpsError("GUIDED_INTAKE_STAGE_INVALID", "This guided import is not waiting for a company job page.")
+        page_url = _canonical_url(str(payload.get("url", "")))
+        if url_has_sensitive_query(page_url):
+            raise JobOpsError("ROUTE_URL_SENSITIVE_QUERY", "The selected job page URL contains a sensitive query parameter.")
+        page_host = _host(urlparse(page_url).hostname or "")
+        if not host_matches_registered(page_host, str(lease["company_domain"])):
+            raise JobOpsError(
+                "GUIDED_INTAKE_WRONG_JOB_PAGE",
+                "First capture the role on the company's own website, before opening its ATS application page.",
+            )
+        visible_text = self._guided_text(payload, "visible_text", maximum=MAX_GUIDED_JOB_TEXT_CHARS, required=True)
+        title = self._guided_text(payload, "job_title", maximum=500) or self._guided_text(payload, "document_title", maximum=500)
+        company = self._guided_text(payload, "company_name", maximum=300)
+        location = self._guided_text(payload, "job_location", maximum=500)
+        if not title:
+            raise JobOpsError("GUIDED_INTAKE_JOB_TITLE_MISSING", "JobFlow could not identify a role title on this page.")
+        if not company:
+            company = str(lease["company_domain"]).split(".", 1)[0].replace("-", " ").title()
+        jd_text = "\n".join((
+            f"Company: {company}", f"Title: {title}", f"Location: {location or 'UNKNOWN'}", "", visible_text,
+        )).strip()
+        lease["official_url"] = page_url
+        lease["job_page"] = {
+            "visible_text": visible_text, "jd_text": jd_text,
+            "title": title, "company": company, "location": location or "UNKNOWN",
+        }
+        lease["status"] = "AWAITING_APPLICATION_FORM_CAPTURE"
+        self._guided_event(
+            str(lease["intake_id"]), "JOB_PAGE_INSPECTED",
+            {"page_hash": sha256_bytes(visible_text.encode("utf-8")), "url_hash": sha256_bytes(page_url.encode("utf-8"))},
+        )
+        return {
+            "status": "AWAITING_APPLICATION_FORM_CAPTURE", "mode": "JOB_CAPTURE",
+            "intake_id": str(lease["intake_id"]), "company": company,
+            "title": title, "real_external_actions": 0,
+            "next_safe_action": "USER_OPENS_COMPANY_APPLY_LINK_THEN_CAPTURES_FORM",
+        }
+
+    @_synchronized
+    def capture_guided_application_form(
+        self, token: str, payload: dict[str, Any], *, extension_origin: str | None,
+    ) -> dict[str, Any]:
+        if not BrowserAssistManager.extension_origin_allowed(extension_origin):
+            raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "Only the fixed JobFlow Browser Companion may capture a page.")
+        lease = self._guided_lease(token)
+        if not lease.get("paired") or lease.get("status") not in {"AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED"}:
+            raise JobOpsError("GUIDED_INTAKE_STAGE_INVALID", "Capture the company job page before the application form.")
+        job_page = lease.get("job_page")
+        if not isinstance(job_page, dict):
+            raise JobOpsError("GUIDED_INTAKE_JOB_PAGE_MISSING", "Capture the company job page again.")
+        application_url = _canonical_url(str(payload.get("url", "")))
+        if url_has_sensitive_query(application_url):
+            raise JobOpsError("ROUTE_URL_SENSITIVE_QUERY", "The selected application URL contains a sensitive query parameter.")
+        current_host = _host(urlparse(application_url).hostname or "")
+        policy = load_json(self.project / "config" / "policy.json")
+        approved_ats = {_host(value) for value in policy["approved_ats_hosts"]}
+        same_company = host_matches_registered(current_host, str(lease["company_domain"]))
+        is_approved_ats = any(current_host == suffix or current_host.endswith("." + suffix) for suffix in approved_ats)
+        if not same_company and not is_approved_ats:
+            raise JobOpsError(
+                "UNAPPROVED_APPLICATION_HOST",
+                "The application page is neither on the company website nor a supported ATS reached from it.",
+            )
+        if is_approved_ats:
+            _provider_and_tenant(current_host, application_url)
+        sanitized_html = self._guided_text(
+            payload, "sanitized_html", maximum=MAX_GUIDED_FORM_HTML_CHARS, required=True,
+        )
+        if not re.search(r"<(?:input|select|textarea)\b", sanitized_html, re.IGNORECASE):
+            raise JobOpsError(
+                "GUIDED_INTAKE_FORM_MISSING",
+                "No application fields were found on this page. Open the actual application form and try again.",
+            )
+        raw_signals = payload.get("blocker_signals", [])
+        if not isinstance(raw_signals, list) or any(not isinstance(item, str) for item in raw_signals):
+            raise JobOpsError("GUIDED_INTAKE_PAGE_INVALID", "The application page safety signals are invalid.")
+        signals = sorted(set(raw_signals) & {"CAPTCHA", "MFA", "LOGIN", "ACCOUNT_CREATION", "CROSS_ORIGIN_IFRAME", "CROSS_ORIGIN_FORM"})
+        guest_available = not bool({"LOGIN", "ACCOUNT_CREATION"} & set(signals))
+        normalized_official = re.sub(r"\s+", " ", str(job_page["visible_text"])).strip()
+        if len(normalized_official) < 12:
+            raise JobOpsError("GUIDED_INTAKE_PAGE_INVALID", "The captured company job page is no longer available in this session.")
+        preferred_excerpt = re.sub(r"\s+", " ", str(job_page["title"])).strip()
+        excerpt = preferred_excerpt if len(preferred_excerpt) >= 12 and preferred_excerpt in normalized_official else normalized_official[:500]
+        lease["status"] = "PREPARING_APPLICATION"
+        self._guided_event(
+            str(lease["intake_id"]), "FORM_INSPECTED",
+            {"form_hash": sha256_bytes(sanitized_html.encode("utf-8")), "url_hash": sha256_bytes(application_url.encode("utf-8"))},
+        )
+        try:
+            result = self.prepare_offline_application_bundle(
+                metadata={
+                    "official_url": str(lease["official_url"]),
+                    "application_url": application_url,
+                    "guest_available": guest_available,
+                    "research_title": str(job_page["title"]),
+                    "evidence_excerpt": excerpt,
+                },
+                files={
+                    "jd": (".txt", str(job_page["jd_text"]).encode("utf-8")),
+                    "official": (".txt", str(job_page["visible_text"]).encode("utf-8")),
+                    "form": (".html", sanitized_html.encode("utf-8")),
+                },
+            )
+        except Exception as exc:
+            lease["status"] = "FORM_CAPTURE_FAILED"
+            self._guided_event(
+                str(lease["intake_id"]), "FAILED",
+                {"code": exc.code if isinstance(exc, JobOpsError) else "LOCAL_PREPARATION_FAILED"},
+            )
+            raise
+        application_id = str(result.get("application_id") or "") or None
+        final_status = "REVIEW_PACKET_READY" if application_id else "DEFERRED"
+        lease["status"] = final_status
+        lease["application_id"] = application_id
+        lease["job_page"] = None
+        self._guided_event(
+            str(lease["intake_id"]), final_status,
+            {"result_status": str(result.get("status", "UNKNOWN"))},
+            application_id=application_id,
+        )
+        return {
+            **result, "status": final_status,
+            "intake_id": str(lease["intake_id"]),
+            "mode": "JOB_CAPTURE", "real_external_actions": 0,
+        }
 
     @_synchronized
     def resolve_browser_assist_unknown(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -1579,6 +1881,7 @@ class OnboardingCenterService:
             },
             "dashboard": dashboard,
             "browser_assist": self.browser_assist.public_status(),
+            "guided_intake": self._guided_public_status(),
             "application_readiness": readiness,
             "external_claim_approval": {
                 "available": bool(

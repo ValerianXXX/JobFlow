@@ -64,6 +64,12 @@ function valueHash(value) {
       });
     });
 
+    const jobCollected = await page.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_JOB_PAGE"}));
+    assert.equal(jobCollected.status, "COLLECTED");
+    assert.ok(jobCollected.payload.job_title.length > 0);
+    assert.ok(jobCollected.payload.visible_text.length > 0);
+    assert.ok(!jobCollected.payload.visible_text.includes("synthetic approved resume"));
+
     const collected = await page.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
     assert.equal(collected.status, "COLLECTED");
     assert.equal(collected.payload.client_refs.length, 7);
@@ -172,6 +178,7 @@ function valueHash(value) {
     process.stdout.write(JSON.stringify({
       status: "PASS",
       controls: collected.payload.client_refs.length,
+      guided_job_capture: true,
       fields: fieldApplied.field_bindings.length,
       files: fileApplied.material_bindings.length,
       programmatic_submit_events_before_user_click: 0,

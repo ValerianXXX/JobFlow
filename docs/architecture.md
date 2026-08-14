@@ -49,7 +49,7 @@ flowchart LR
 
 ## Main packages / 主要模块
 
-- `onboarding_center`, `onboarding_server`, `ui/`: bilingual one-time profile and Claim review plus the safe home-page entry for one offline application bundle.
+- `onboarding_center`, `onboarding_server`, `ui/`: bilingual profile and Claim review plus a linear guided intake: company role URL, user-selected read-only role/form capture, automatic local material preparation, one review packet, then separately authorized browser assistance. The former three-snapshot bundle is an advanced diagnostic path.
 - The local dashboard exposes redacted execution-run status and performs isolated startup reconciliation before rendering; it never exposes private payloads or offers a live-submit shortcut.
 - `ai_runtime`, `ai_connections`, `source_quality`, `onboarding_extraction`: capability-tested local/Agent AI connection and multi-mode extraction quality gates.
 - `secure_store`, `private_onboarding`, `resume_onboarding`, `external_claims`, `resume_tailoring`, `application_readiness`: DPAPI lifecycle, Master Resume designation, exact Claim-use approval, applicant-approved paragraph mappings and redacted local-readiness reporting.

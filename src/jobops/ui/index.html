@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260814-jobflow-v21">
+  <link rel="stylesheet" href="styles.css?v=20260814-jobflow-v22">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -86,6 +86,29 @@
           </section>
         </div>
       </section>
+      <section id="guidedIntakePanel" class="guided-intake-board" aria-labelledby="guidedIntakeTitle">
+        <div class="subheading">
+          <div><p class="eyebrow" data-i18n="guidedIntakeEyebrow">NEXT JOB</p><h3 id="guidedIntakeTitle" data-i18n="guidedIntakeTitle">添加一个岗位</h3><small data-i18n="guidedIntakeBody">粘贴公司官网上的岗位链接。JobFlow 会通过浏览器伴侣读取你主动选择的岗位页和申请表结构，然后自动生成同一份审阅包。</small></div>
+          <span id="guidedIntakeBadge" class="guard-badge" data-i18n="guidedIntakeIdle">尚未开始</span>
+        </div>
+        <div class="guided-intake-layout">
+          <div class="guided-intake-start">
+            <label><span data-i18n="guidedOfficialUrl">公司官网岗位链接</span><input id="guidedOfficialUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://company.example/careers/role"></label>
+            <label class="guided-intake-consent"><input id="guidedIntakeConfirm" type="checkbox"><span data-i18n="guidedIntakeConsent">我允许 JobFlow 在接下来的 30 分钟内，只读取我在浏览器中主动选择的公司岗位页和申请表结构；此阶段不填写、不上传、不点击网页按钮。</span></label>
+            <div class="guided-intake-actions">
+              <button id="startGuidedIntake" class="primary" type="button" data-i18n="startGuidedIntake" disabled>连接浏览器并开始</button>
+              <a id="guidedOpenJob" class="button-link compact hidden" target="_blank" rel="noopener noreferrer" data-i18n="guidedOpenJob">打开公司岗位页</a>
+            </div>
+            <p id="guidedIntakeMessage" class="guided-intake-message" aria-live="polite"></p>
+          </div>
+          <ol class="guided-intake-steps">
+            <li id="guidedStepOne"><b>1</b><span><strong data-i18n="guidedStepOneTitle">打开公司岗位页</strong><small data-i18n="guidedStepOneBody">只需粘贴一次链接并建立浏览器连接。</small></span></li>
+            <li id="guidedStepTwo"><b>2</b><span><strong data-i18n="guidedStepTwoTitle">读取岗位</strong><small data-i18n="guidedStepTwoBody">在岗位页点击浏览器右上角的 JobFlow J，再点“读取当前公司岗位页”。</small></span></li>
+            <li id="guidedStepThree"><b>3</b><span><strong data-i18n="guidedStepThreeTitle">读取申请表</strong><small data-i18n="guidedStepThreeBody">亲自点击公司页面的 Apply；到申请表后再次点击 J。JobFlow 会自动生成材料和审阅包。</small></span></li>
+            <li id="guidedStepFour"><b>4</b><span><strong data-i18n="guidedStepFourTitle">一次审阅</strong><small data-i18n="guidedStepFourBody">确认材料与岗位问题后，才会出现浏览器辅助填写入口。</small></span></li>
+          </ol>
+        </div>
+      </section>
       <div class="queue-preferences">
         <div><strong data-i18n="queuePreferences">待审批数量上限</strong><small data-i18n="queuePreferencesBody">JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。</small></div>
         <label><span data-i18n="pendingLimitLabel">最多等待</span><input id="pendingLimitInput" type="number" min="1" max="1000" step="1" inputmode="numeric"><button id="saveQueueLimit" class="secondary compact" type="button" data-i18n="saveLimit">保存上限</button></label>
@@ -117,36 +140,6 @@
           <div id="recentDashboardList" class="compact-dashboard-list"></div>
         </section>
       </div>
-      <section id="browserAssistPanel" class="browser-assist-board" aria-labelledby="browserAssistTitle">
-        <div class="subheading">
-          <div>
-            <h3 id="browserAssistTitle" data-i18n="browserAssistTitle">公司官网与 ATS 辅助投递</h3>
-            <small data-i18n="browserAssistBody">JobFlow 逐页预填获批字段、附加材料并安全通过明确的 Next/Continue，最终 Submit 永远留给你。</small>
-          </div>
-          <span id="browserAssistBadge" class="guard-badge" data-i18n="browserAssistIdle">等待选择申请</span>
-        </div>
-        <div class="browser-assist-grid">
-          <article>
-            <strong data-i18n="browserCompanionStep">一次安装浏览器伴侣</strong>
-            <p data-i18n="browserCompanionHelp">首次使用请双击项目根目录的“Install JobFlow Browser Companion.cmd”，按窗口提示在 Edge 或 Chrome 中加载一次。以后无需重复安装。</p>
-            <small id="browserCompanionStatus" data-i18n="browserCompanionNotPaired">尚未与本次申请配对</small>
-          </article>
-          <article>
-            <strong data-i18n="browserAssistBoundaryTitle">不可越过的边界</strong>
-            <p data-i18n="browserAssistBoundary">JobFlow 只会在当前页校验通过后，使用一次性授权点击一个明确的 Next/Continue；不会登录、注册、绕过验证码或点击最终 Submit。结果不明确时绝不自动重试。</p>
-            <small data-i18n="browserAssistCompanyOnly">支持已审批的公司官网、Greenhouse、Lever 与 Workday 路线；这是本地合成验证能力，不代表所有实时页面都已兼容。</small>
-          </article>
-        </div>
-        <div id="browserAssistSelection" class="browser-assist-selection hidden" aria-live="polite">
-          <div><strong id="browserAssistJob"></strong><small id="browserAssistApplication"></small></div>
-          <label><input id="browserAssistConfirm" type="checkbox"><span data-i18n="browserAssistConsent">我授权这一个申请在 30 分钟内逐页读取表单结构、预填获批字段、附加获批材料并通过明确的非最终 Next/Continue；登录、验证、未知问题和最终 Submit 由我处理。</span></label>
-          <div class="browser-assist-actions">
-            <button id="startBrowserAssistNow" class="primary" type="button" data-i18n="startBrowserAssistNow" disabled>建立浏览器连接</button>
-            <a id="browserAssistOpenPage" class="button-link compact hidden" target="_blank" rel="noopener noreferrer" data-i18n="openApprovedApplication">打开已批准的申请页</a>
-          </div>
-          <p id="browserAssistMessage"></p>
-        </div>
-      </section>
       <section class="execution-status-board" aria-labelledby="executionRunsTitle">
         <div class="subheading"><div><h3 id="executionRunsTitle" data-i18n="executionRunsTitle">自动投递执行状态</h3><small data-i18n="executionRunsBody">显示安全状态、最近检查点和下一步；不显示私人答案、文件内容或网站会话。</small></div><span id="executionRunsCount">0</span></div>
         <div id="executionRunsList" class="execution-dashboard-list"></div>
@@ -163,6 +156,8 @@
           </div>
         </section>
       </section>
+      <details id="advancedTools" class="advanced-tools">
+        <summary><span><strong data-i18n="advancedToolsTitle">高级诊断与离线 QA</strong><small data-i18n="advancedToolsBody">普通使用不需要这里。仅在开发测试或浏览器导入不可用时，才手动提供本地快照。</small></span><b data-i18n="advancedToolsOpen">展开</b></summary>
       <section class="offline-application-prep" aria-labelledby="offlineApplicationTitle">
         <div class="subheading">
           <div><h3 id="offlineApplicationTitle" data-i18n="offlineApplicationTitle">准备一个离线申请</h3><small data-i18n="offlineApplicationBody">选择你已经保存到电脑的岗位说明、公司官网岗位页和申请表。JobFlow 只在本机生成岗位材料与审阅包，不打开网站。</small></div>
@@ -199,6 +194,7 @@
           </section>
         </div>
       </section>
+      </details>
       <section id="reviewPacketPanel" class="review-packet-panel hidden" aria-live="polite">
         <header><div><p class="eyebrow" data-i18n="reviewPacketEyebrow">LOCAL REVIEW PACKET</p><h3 id="reviewPacketTitle" data-i18n="reviewPacketTitlePlaceholder">本地审阅包</h3><small id="reviewPacketMeta"></small></div><button id="closeReviewPacket" class="text-action" type="button" data-i18n="closePacket">关闭审阅包</button></header>
         <div id="reviewPacketBody" class="review-packet-body"></div>
@@ -221,6 +217,37 @@
           <label class="packet-decision-confirm"><input id="packetDecisionConfirm" type="checkbox"><span data-i18n="decisionConfirm">我确认这是我对当前审阅包的决定，并理解本轮真实外部动作仍为 0。</span></label>
           <button id="confirmPacketDecision" type="button" disabled data-i18n="confirmDecision">确认这个决定</button>
         </fieldset>
+      </section>
+      <section id="browserAssistPanel" class="browser-assist-board hidden" aria-labelledby="browserAssistTitle">
+        <div class="subheading">
+          <div>
+            <p class="eyebrow" data-i18n="browserAssistEyebrow">APPROVED APPLICATION</p>
+            <h3 id="browserAssistTitle" data-i18n="browserAssistTitle">审阅后辅助填写</h3>
+            <small data-i18n="browserAssistBody">只有当前审阅包批准后，这里才会逐页预填获批字段、附加材料并安全通过明确的 Next/Continue。最终 Submit 永远留给你。</small>
+          </div>
+          <span id="browserAssistBadge" class="guard-badge" data-i18n="browserAssistIdle">等待已批准申请</span>
+        </div>
+        <div class="browser-assist-grid">
+          <article>
+            <strong data-i18n="browserCompanionStep">同一个浏览器伴侣</strong>
+            <p data-i18n="browserCompanionHelp">岗位导入和审阅后填写使用同一个 JobFlow J 扩展。首次加载后无需重复安装。</p>
+            <small id="browserCompanionStatus" data-i18n="browserCompanionNotPaired">尚未与本次申请配对</small>
+          </article>
+          <article>
+            <strong data-i18n="browserAssistBoundaryTitle">不可越过的边界</strong>
+            <p data-i18n="browserAssistBoundary">JobFlow 只会在当前页校验通过后，使用一次性授权点击一个明确的 Next/Continue；不会登录、注册、绕过验证码或点击最终 Submit。结果不明确时绝不自动重试。</p>
+            <small data-i18n="browserAssistCompanyOnly">支持已审批的公司官网、Greenhouse、Lever 与 Workday 路线；实时页面仍会逐页重新校验。</small>
+          </article>
+        </div>
+        <div id="browserAssistSelection" class="browser-assist-selection hidden" aria-live="polite">
+          <div><strong id="browserAssistJob"></strong><small id="browserAssistApplication"></small></div>
+          <label><input id="browserAssistConfirm" type="checkbox"><span data-i18n="browserAssistConsent">我授权这一个申请在 30 分钟内逐页读取表单结构、预填获批字段、附加获批材料并通过明确的非最终 Next/Continue；登录、验证、未知问题和最终 Submit 由我处理。</span></label>
+          <div class="browser-assist-actions">
+            <button id="startBrowserAssistNow" class="primary" type="button" data-i18n="startBrowserAssistNow" disabled>建立浏览器连接</button>
+            <a id="browserAssistOpenPage" class="button-link compact hidden" target="_blank" rel="noopener noreferrer" data-i18n="openApprovedApplication">打开已批准的申请页</a>
+          </div>
+          <p id="browserAssistMessage"></p>
+        </div>
       </section>
     </section>
 
@@ -398,6 +425,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260814-jobflow-v21"></script>
+  <script src="app.js?v=20260814-jobflow-v22"></script>
 </body>
 </html>

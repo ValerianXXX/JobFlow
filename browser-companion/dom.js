@@ -126,6 +126,83 @@
     };
   }
 
+  function readableLines(value, limit = 750000) {
+    const lines = String(value || "").split(/\r?\n/)
+      .map((line) => compact(line, 4000))
+      .filter(Boolean);
+    return lines.join("\n").slice(0, limit);
+  }
+
+  function findJobPosting(value, depth = 0) {
+    if (depth > 12 || value === null || value === undefined) return null;
+    if (Array.isArray(value)) {
+      for (const item of value.slice(0, 200)) {
+        const found = findJobPosting(item, depth + 1);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (typeof value !== "object") return null;
+    const type = value["@type"];
+    if (type === "JobPosting" || (Array.isArray(type) && type.includes("JobPosting"))) return value;
+    for (const item of Object.values(value).slice(0, 200)) {
+      const found = findJobPosting(item, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  function structuredJobPosting() {
+    const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]')).slice(0, 20);
+    for (const script of scripts) {
+      const source = String(script.textContent || "");
+      if (!source || source.length > 500000) continue;
+      try {
+        const found = findJobPosting(JSON.parse(source));
+        if (found) return found;
+      } catch (_error) {
+        // Untrusted page metadata is optional; malformed JSON never weakens the capture gate.
+      }
+    }
+    return null;
+  }
+
+  function locationText(posting) {
+    const locations = Array.isArray(posting?.jobLocation) ? posting.jobLocation : [posting?.jobLocation];
+    const values = [];
+    for (const item of locations) {
+      const address = item?.address || item;
+      for (const key of ["streetAddress", "addressLocality", "addressRegion", "postalCode", "addressCountry", "name"]) {
+        const value = typeof address?.[key] === "object" ? address[key]?.name : address?.[key];
+        if (value) values.push(compact(value, 160));
+      }
+    }
+    return [...new Set(values.filter(Boolean))].join(", ").slice(0, 500);
+  }
+
+  function collectJobPage() {
+    const posting = structuredJobPosting();
+    const jobRoot = document.querySelector("main,[role=main],article") || document.body;
+    const visibleText = readableLines(jobRoot?.innerText || "");
+    const heading = compact(document.querySelector("main h1,h1")?.textContent, 500);
+    const siteName = compact(document.querySelector('meta[property="og:site_name"]')?.content, 300);
+    const company = compact(posting?.hiringOrganization?.name, 300) || siteName;
+    const title = compact(posting?.title, 500) || heading || compact(document.title, 500);
+    return {
+      status: "COLLECTED",
+      payload: {
+        url: location.href,
+        document_title: compact(document.title, 500),
+        job_title: title,
+        company_name: company,
+        job_location: locationText(posting),
+        visible_text: visibleText,
+        blocker_signals: blockerSignals(),
+        application_fields_present: Boolean(document.querySelector("input:not([type=hidden]),select,textarea"))
+      }
+    };
+  }
+
   async function sha256(bytesOrText) {
     const bytes = typeof bytesOrText === "string" ? new TextEncoder().encode(bytesOrText) : bytesOrText;
     const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
@@ -350,6 +427,7 @@
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     (async () => {
+      if (message?.type === "JOBFLOW_COLLECT_JOB_PAGE") return collectJobPage();
       if (message?.type === "JOBFLOW_COLLECT_FORM") return collectForm();
       if (message?.type === "JOBFLOW_APPLY_APPROVED") return await applyApproved(message);
       if (message?.type === "JOBFLOW_CHECK_NAVIGATION") return validateNavigation(message);

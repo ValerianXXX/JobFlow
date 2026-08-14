@@ -48,6 +48,11 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn('status: "NAVIGATION_PENDING"', sources)
         self.assertIn('status: "NAVIGATION_STALLED"', sources)
         self.assertIn("automatic_retry: false", sources)
+        self.assertIn('type: "JOBFLOW_COLLECT_JOB_PAGE"', sources)
+        self.assertIn('message.type === "JOBFLOW_CAPTURE_CURRENT"', sources)
+        self.assertIn('"JOBFLOW_INTAKE_STATUS"', sources)
+        self.assertIn("collectJobPage", sources)
+        self.assertNotIn("input.value", (PROJECT / "browser-companion" / "dom.js").read_text(encoding="utf-8"))
 
     def test_companion_install_helper_and_bilingual_ui_entry_are_packaged(self) -> None:
         wrapper = (PROJECT / "Install JobFlow Browser Companion.cmd").read_text(encoding="utf-8")
@@ -57,8 +62,8 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn("pause", wrapper.casefold())
         self.assertIn(COMPANION_EXTENSION_ID, helper)
         self.assertIn("browserAssistTitle", html)
-        self.assertIn("公司官网与 ATS 辅助投递", app)
-        self.assertIn("Company and ATS assisted application", app)
+        self.assertIn("审阅后辅助填写", app)
+        self.assertIn("Assisted filling after review", app)
         self.assertIn("最终 Submit", app)
         self.assertIn("Final Submit", app)
         pair = (PROJECT / "browser-companion" / "pair.js").read_text(encoding="utf-8")
@@ -67,6 +72,9 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn("const PROTOCOL = 2;", worker)
         self.assertIn("protocol_version:2", app)
         self.assertIn("pairing:{protocol_version:result.protocol_version", app)
+        self.assertIn("start-guided-intake", app)
+        self.assertIn("guidedIntakeTitle", html)
+        self.assertIn("Advanced diagnostics and offline QA", app)
 
 
 if __name__ == "__main__":
