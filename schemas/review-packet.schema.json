@@ -24,6 +24,8 @@
       }
     },
     "external_actions": {"type": "array", "minItems": 1, "items": {"enum": ["create_recruiting_account", "upload_material", "submit_application", "send_email", "contact_recruiter", "withdraw_application", "accept_legal_terms", "electronic_signature"]}},
-    "source_route": {"type": "object"}, "queue": {"type": "object"}, "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+    "source_route": {"type": "object"}, "queue": {"type": "object"},
+    "execution_bundle_content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
   }
 }

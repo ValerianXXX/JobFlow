@@ -41,7 +41,7 @@
       }
     },
     "upload_purposes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["resume", "cover_letter", "portfolio"]}},
-    "blockers": {"type": "array", "uniqueItems": true, "items": {"enum": ["REQUIRED_MATERIAL_MISSING", "UNKNOWN_FORM_FIELD", "NEEDS_ACCOUNT_APPROVAL", "GUEST_FLOW_UNCONFIRMED"]}},
+    "blockers": {"type": "array", "uniqueItems": true, "items": {"enum": ["REQUIRED_MATERIAL_MISSING", "UNKNOWN_FORM_FIELD", "NEEDS_ACCOUNT_APPROVAL", "GUEST_FLOW_UNCONFIRMED", "CAPTCHA_REQUIRED", "MFA_REQUIRED", "LOGIN_REQUIRED", "UNSAFE_FORM_ACTION", "CROSS_ORIGIN_IFRAME"]}},
     "steps": {
       "type": "array",
       "minItems": 6,

@@ -182,7 +182,8 @@ class OrchestratorForwardTests(unittest.TestCase):
                     "SELECT context_json FROM application_bindings WHERE application_id=?",
                     (result["application_id"],),
                 ).fetchone()[0])
-            self.assertEqual(len(kinds), 7)
+            self.assertEqual(len(kinds), 8)
+            self.assertIn("execution_bundle", kinds)
             self.assertIn("cover_letter_docx", kinds)
             self.assertIn("cover_letter_pdf", kinds)
             self.assertIn("portfolio_file", kinds)

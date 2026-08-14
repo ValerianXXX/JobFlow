@@ -103,6 +103,32 @@ class ApplicationExecutionPlanTests(unittest.TestCase):
             )
         self.assertEqual(gates.exception.code, "EXECUTION_STOP_GATES_MISSING")
 
+    def test_captcha_login_and_cross_origin_form_evidence_block_execution(self) -> None:
+        blocked = build_application_execution_plan(
+            application_id="APP-ABCDEF123456",
+            source_route=route(),
+            form_snapshot_hash=H2,
+            browser_plan_hash=H3,
+            form_fields=FIELDS,
+            material_plan=materials(),
+            pending_limit=10,
+            form_blockers=["CAPTCHA_STOP", "CROSS_ORIGIN_IFRAME_STOP"],
+        )
+        self.assertEqual(blocked["status"], "NEEDS_USER_INPUT")
+        self.assertEqual(set(blocked["blockers"]), {"CAPTCHA_REQUIRED", "CROSS_ORIGIN_IFRAME"})
+        login = build_application_execution_plan(
+            application_id="APP-ABCDEF123456",
+            source_route=route(),
+            form_snapshot_hash=H2,
+            browser_plan_hash=H3,
+            form_fields=FIELDS,
+            material_plan=materials(),
+            pending_limit=10,
+            form_blockers=["LOGIN_STOP"],
+        )
+        self.assertEqual(login["status"], "NEEDS_ACCOUNT_APPROVAL")
+        self.assertEqual(login["blockers"], ["LOGIN_REQUIRED"])
+
 
 if __name__ == "__main__":
     unittest.main()

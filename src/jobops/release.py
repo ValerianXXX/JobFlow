@@ -366,7 +366,7 @@ def write_release_reports(project: Path, result: dict[str, Any]) -> None:
         "- Transactional bounded intake, idempotent/revisable orchestration, safe recovery and a complete offline chain to `AWAITING_APPROVAL`.",
         "- Compound JD/eligibility/Fit analysis, local research evidence, master-resume copy tailoring, document QA and fail-closed bilingual form classification.",
         "- Disabled production transports plus isolated fake adapters, fake scheduler, fake receipt flow and network/side-effect probes for Phase 5-6 engineering.",
-        "- A fully content-bound synthetic Greenhouse vertical from official local snapshot through redacted form planning and material QA to `AWAITING_APPROVAL`, with zero browser modifications.",
+        "- Fully content-bound synthetic Greenhouse, Lever and representative Workday verticals from official local snapshots through encrypted per-job answers where needed, ephemeral payload cleanup, scoped fake actions, fresh final authorization and verified synthetic receipts, with zero browser modifications or real external actions.",
         "- Ordered offline Workday saved-page analysis with dynamic-control logical deduplication, explicit navigation stops and zero browser navigation.",
         "- Hash-bound ATS capability disclosure plus Lever single-snapshot contract tests; every provider explicitly remains unverified against live sites.",
         "- Manual-tick-only continuous intake planning with strict local manifests, FIFO deferred promotion, atomic capacity filling and zero registered background or external actions.",

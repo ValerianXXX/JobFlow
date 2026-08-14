@@ -104,6 +104,7 @@ def build_application_execution_plan(
     form_fields: Iterable[dict[str, Any]],
     material_plan: dict[str, Any],
     pending_limit: int,
+    form_blockers: Iterable[str] = (),
 ) -> dict[str, Any]:
     """Build the exact future-action runbook without executing any transport.
 
@@ -144,10 +145,22 @@ def build_application_execution_plan(
         blockers.append("NEEDS_ACCOUNT_APPROVAL")
     elif guest_mode != "GUEST_SELECTED" or account_action != "NONE":
         blockers.append("GUEST_FLOW_UNCONFIRMED")
+    blocker_mapping = {
+        "CAPTCHA_STOP": "CAPTCHA_REQUIRED",
+        "MFA_STOP": "MFA_REQUIRED",
+        "LOGIN_STOP": "LOGIN_REQUIRED",
+        "ACCOUNT_CREATION_STOP": "NEEDS_ACCOUNT_APPROVAL",
+        "FORM_ACTION_HOST_STOP": "UNSAFE_FORM_ACTION",
+        "CROSS_ORIGIN_IFRAME_STOP": "CROSS_ORIGIN_IFRAME",
+    }
+    for blocker in sorted(set(str(item) for item in form_blockers)):
+        mapped = blocker_mapping.get(blocker)
+        if mapped and mapped not in blockers:
+            blockers.append(mapped)
 
     status = (
         "NEEDS_ACCOUNT_APPROVAL"
-        if "NEEDS_ACCOUNT_APPROVAL" in blockers
+        if "NEEDS_ACCOUNT_APPROVAL" in blockers or "LOGIN_REQUIRED" in blockers
         else "NEEDS_USER_INPUT"
         if blockers
         else "READY_FOR_REVIEW"

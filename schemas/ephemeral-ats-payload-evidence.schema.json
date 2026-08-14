@@ -7,7 +7,8 @@
   "required": [
     "schema_version", "status", "application_id", "application_context_hash",
     "browser_plan_hash", "form_snapshot_hash", "field_count", "file_count",
-    "field_binding_hash", "material_binding_hash", "synthetic_only",
+    "field_binding_hash", "material_binding_hash", "application_answer_bundle_count",
+    "confirmed_stop_field_count", "skipped_optional_field_count", "synthetic_only",
     "production_activation", "temporary_files_removed", "private_values_emitted",
     "browser_actions", "network_actions", "real_external_actions"
   ],
@@ -22,6 +23,9 @@
     "file_count": {"type": "integer", "minimum": 1},
     "field_binding_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "material_binding_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "application_answer_bundle_count": {"type": "integer", "minimum": 0, "maximum": 1},
+    "confirmed_stop_field_count": {"type": "integer", "minimum": 0},
+    "skipped_optional_field_count": {"type": "integer", "minimum": 0},
     "synthetic_only": {"const": true},
     "production_activation": {"const": false},
     "temporary_files_removed": {"const": true},

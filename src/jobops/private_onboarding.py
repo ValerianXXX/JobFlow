@@ -21,7 +21,7 @@ PRIVATE_KINDS = {
     "resume_analysis", "claim_candidates", "onboarding_review_packet",
     "onboarding_center_state", "onboarding_source_document", "onboarding_ai_derived",
     "onboarding_completion_packet", "external_claim_set", "resume_tailoring_manifest",
-    "application_answer_bundle",
+    "application_answer_bundle", "application_execution_bundle",
 }
 MAX_PRIVATE_IMPORT_FILE_BYTES = 64 * 1024 * 1024
 

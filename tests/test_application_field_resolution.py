@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import json
 import shutil
+import smtplib
+import socket
 import tempfile
 import unittest
+import urllib.request
 from pathlib import Path
+from unittest.mock import patch
 
 from _support import PROJECT, project_temp
 from jobops.adapters import audit_real_external_actions
@@ -14,6 +18,7 @@ from jobops.onboarding_center import OnboardingCenterService
 from jobops.orchestrator import JobOpsOrchestrator
 from jobops.private_onboarding import PrivateOnboarding
 from jobops.secure_store import WindowsDPAPIStore
+from jobops.synthetic_lifecycle import SyntheticApplicationLifecycle
 
 
 class ApplicationFieldResolutionTests(unittest.TestCase):
@@ -150,6 +155,57 @@ class ApplicationFieldResolutionTests(unittest.TestCase):
             })
             self.assertEqual(approved["status"], "APPROVED")
             self.assertEqual(audit_real_external_actions(database)["attempt_count"], 0)
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 0)
+
+            lifecycle = SyntheticApplicationLifecycle(database, onboarding)
+
+            def forbidden(*args, **kwargs):
+                raise AssertionError("network, browser, email, or child-process transport attempted")
+
+            with patch.object(socket, "socket", forbidden), patch.object(
+                socket, "getaddrinfo", forbidden,
+            ), patch.object(socket, "create_connection", forbidden), patch.object(
+                urllib.request, "urlopen", forbidden,
+            ), patch.object(smtplib, "SMTP", forbidden):
+                prepared = lifecycle.prepare_until_final_authorization(
+                    application_id=str(result["application_id"]),
+                    user_confirmed=True,
+                )
+                self.assertEqual(prepared["status"], "AWAITING_FINAL_AUTHORIZATION")
+                self.assertEqual(prepared["ephemeral_field_count"], 3)
+                self.assertEqual(prepared["ephemeral_file_count"], 1)
+                self.assertEqual(prepared["confirmed_stop_field_count"], 1)
+                self.assertTrue(prepared["temporary_files_removed"])
+                self.assertFalse(prepared["production_activation"])
+                with self.assertRaises(JobOpsError) as final_gate:
+                    lifecycle.complete_with_fresh_authorization(
+                        application_id=str(result["application_id"]),
+                        run_id=str(prepared["run_id"]),
+                        user_confirmed=False,
+                        fake_confirmation_number="SYNTHETIC-GREENHOUSE-RECEIPT",
+                    )
+                self.assertEqual(final_gate.exception.code, "FINAL_SUBMISSION_CONFIRMATION_REQUIRED")
+                completed = lifecycle.complete_with_fresh_authorization(
+                    application_id=str(result["application_id"]),
+                    run_id=str(prepared["run_id"]),
+                    user_confirmed=True,
+                    fake_confirmation_number="SYNTHETIC-GREENHOUSE-RECEIPT",
+                )
+            self.assertEqual(completed["status"], "CONFIRMED")
+            self.assertEqual(completed["checkpoint_count"], 8)
+            self.assertEqual(completed["network_actions"], 0)
+            self.assertEqual(completed["real_external_actions"], 0)
+            with database.connect() as connection:
+                application_status = connection.execute(
+                    "SELECT status FROM applications WHERE application_id=?",
+                    (result["application_id"],),
+                ).fetchone()[0]
+                receipt_count = connection.execute(
+                    "SELECT COUNT(*) FROM receipts WHERE application_id=?",
+                    (result["application_id"],),
+                ).fetchone()[0]
+            self.assertEqual(application_status, "CONFIRMED")
+            self.assertEqual(receipt_count, 1)
             self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 0)
 
             purged = onboarding.purge_synthetic()

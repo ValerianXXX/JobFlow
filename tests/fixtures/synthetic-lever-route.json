@@ -1,0 +1,19 @@
+{
+  "company_domain": "example.com",
+  "official_entry_url": "https://example.com/careers/synthetic-data-analyst",
+  "current_url": "https://jobs.lever.co/example/abc-123",
+  "navigation_history": [
+    "https://example.com/careers/synthetic-data-analyst",
+    "https://jobs.lever.co/example/abc-123"
+  ],
+  "guest_available": true,
+  "official_snapshot": "tests/fixtures/synthetic-lever-careers.html",
+  "tenant_binding": {
+    "provider": "lever",
+    "company_registrable_domain": "example.com",
+    "ats_host": "jobs.lever.co",
+    "tenant": "example",
+    "board": "default",
+    "job_identity": "abc-123"
+  }
+}

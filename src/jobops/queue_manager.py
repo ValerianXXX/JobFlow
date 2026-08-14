@@ -17,7 +17,10 @@ from .util import iso_utc, project_root, stable_id
 MAX_ADMISSION_MATERIALS = 32
 MAX_ADMISSION_RESEARCH_FINDINGS = 500
 MAX_ADMISSION_FIELDS = 1_000
-MATERIAL_KINDS = {"resume_docx", "resume_pdf", "cover_letter_docx", "cover_letter_pdf", "portfolio_file", "application_narrative", "visual_evidence"}
+MATERIAL_KINDS = {
+    "resume_docx", "resume_pdf", "cover_letter_docx", "cover_letter_pdf",
+    "portfolio_file", "application_narrative", "visual_evidence", "execution_bundle",
+}
 
 
 def _validate_relative_display(value: object, code: str) -> str:

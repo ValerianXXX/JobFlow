@@ -338,6 +338,7 @@ class ApplicationFieldResolutionManager:
                 "application_id": application_id,
                 "source_packet_id": str(row["packet_id"]),
                 "source_packet_hash": expected_packet_hash,
+                "prior_answers_hash": old_context.answers_hash,
                 "bundle_nonce": secrets.token_hex(32),
                 "fields": resolutions,
                 "created_at": created_at,

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Synthetic Workday application</title></head>
+<body>
+  <main data-provider="workday">
+    <h1>Synthetic application</h1>
+    <form action="/en-US/Careers/job/123/apply">
+      <h2>My Information</h2>
+      <label for="wd-name">Full name</label>
+      <input id="wd-name" data-automation-id="legalName" name="full_name" type="text" required>
+      <label for="wd-email">Email address</label>
+      <input id="wd-email" data-automation-id="email" name="email" type="email" required>
+      <label for="wd-portfolio">Portfolio URL</label>
+      <input id="wd-portfolio" name="portfolio" type="url">
+      <h2>Application Questions</h2>
+      <label for="wd-auth">Are you legally authorized to work?</label>
+      <select id="wd-auth" name="work_authorization" required>
+        <option>Select</option><option>Yes</option><option>No</option>
+      </select>
+      <label for="wd-salary">Expected salary</label>
+      <input id="wd-salary" name="salary" type="number">
+      <h2>Voluntary Self-Identification</h2>
+      <label for="wd-gender">Gender</label>
+      <select id="wd-gender" name="gender"><option>Decline to answer</option></select>
+      <h2>Documents</h2>
+      <label for="wd-resume">Resume</label>
+      <input id="wd-resume" name="resume" type="file" required>
+      <button type="submit" data-automation-id="submit">Submit application</button>
+    </form>
+  </main>
+</body>
+</html>

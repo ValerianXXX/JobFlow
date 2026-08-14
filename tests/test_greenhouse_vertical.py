@@ -85,7 +85,14 @@ class SyntheticGreenhouseVerticalTests(unittest.TestCase):
             self.assertNotIn("DO_NOT_RETAIN_SYNTHETIC_TOKEN", serialized)
             self.assertIn("Full name", serialized)
             self.assertEqual(packet["source_route"]["provider"], "greenhouse")
+            self.assertTrue(str(packet["execution_bundle_content_hash"]).startswith("sha256:"))
             self.assertEqual(len(packet["form_questions"]), 5)
+            with database.connect() as connection:
+                execution_bundle_count = connection.execute(
+                    "SELECT COUNT(*) FROM materials WHERE application_id=? AND kind='execution_bundle'",
+                    (result["application_id"],),
+                ).fetchone()[0]
+            self.assertEqual(execution_bundle_count, 1)
             self.assertEqual(audit_real_external_actions(database)["attempt_count"], 0)
             self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 0)
 

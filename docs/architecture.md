@@ -23,6 +23,8 @@ flowchart LR
   B --> M
   D --> Q
   Q --> X["AWAITING_APPROVAL"]
+  X --> EB["Encrypted execution bundle / 加密执行包"]
+  EB --> F["Synthetic full-lifecycle proof / 合成全链路验收"]
   X -. "closed / 关闭" .-> W["Real website actions / 真实网站动作"]
 ```
 
@@ -39,6 +41,7 @@ flowchart LR
 | Job discovery | Saved company/ATS HTML or Greenhouse/Lever JSON only; no live freshness claim | 只读已保存官网/ATS HTML 或 Greenhouse/Lever JSON；不声称实时有效 |
 | Offline application intake | Three explicitly selected saved inputs are framed in one localhost request, staged outside the project, never retained, and rolled back on preparation failure | 三份明确选择的本机输入通过单次 localhost 请求接入，只在项目外暂存，不保留；准备失败即回滚 |
 | Browser/ATS | Opaque field plans and zero-modification fake adapter | 不透明字段计划与零修改假适配器 |
+| Execution artifacts | Exact form, browser plan, public-value bindings and upload references are kept in one nonce-protected DPAPI bundle; ordinary records keep only secure-ref and hash | 精确表单、浏览器计划、公开值绑定及上传引用进入带随机 nonce 的 DPAPI 执行包；普通记录只保留 secure-ref 与哈希 |
 | Queue | Transactional capacity and FIFO deferred intake | 事务容量与延后任务 FIFO |
 | Final submission | Review approval is insufficient; a separate 1–30 minute, one-time authorization binds plan, packet, route, form, uploads and fresh evidence, then both approvals are consumed atomically | 审阅批准不足以提交；必须再取得绑定计划、审阅包、路线、表单、材料与新鲜证据的 1—30 分钟一次性授权，并原子消费两张授权 |
 | Action sessions | Live read, form inspection, prefill and upload are separate, expiring, one-use scopes; the global kill switch invalidates all sessions immediately and defaults off | 实时读取、表单检查、预填与上传是分离的限时单次权限；总急停可立即使全部会话失效且默认关闭 |
@@ -54,11 +57,12 @@ flowchart LR
 - `official_discovery`, `sourcing`, `ats_browser`, `ats_capabilities`: offline official-source and ATS safety framework.
 - `application_materials`, `orchestrator`, `queue_manager`, `continuous_intake`: one-master per-job material planning and content-bound processing to the bounded review queue. Both the synthetic tour and a completed DPAPI-backed user profile use this same offline pipeline; the latter accepts only explicit local snapshots and current applicant approvals.
 - `application_execution`: hash-bound six-step runbook for freshness, guest entry, prefill, upload, protected questions and final submission; every step remains planning-only until its exact approval boundary is separately enabled.
+- `execution_bundle`, `application_field_resolution`: encrypted persistence of the exact reviewed ATS artifacts plus one-shot per-job answer confirmation. Protected values are rebound into a new packet version and never written to ordinary SQLite fields.
 - `final_submission`, `external_actions`: separate fresh final-confirmation artifact, database persistence, expiry/replay checks and atomic dual-approval consumption; only isolated fake transport can exercise the transition.
 - `execution_controller`: append-only, hash-only checkpoints for the approved-plan lifecycle; scoped prefill/upload intent must be consumed before the final-confirmation gate, the fake upload adapter accepts hashes only and opens/uploads zero files, and interruption reconciliation uses persisted application/receipt evidence to select only confirmed or non-retryable `SUBMISSION_UNKNOWN` without replay.
 - `external_action_sessions`: exact per-action scopes, expiry, replay protection, revocation and a generation-bound global kill switch. The isolated controller preflights the complete required scope before consuming anything, then records official read, form inspection, optional prefill and upload in fixed order; production activation is structurally unavailable in the current build.
 - `ats_transport`: one provider-neutral, hash-only envelope for official read, form inspection, prefill, upload, submit and receipt verification; action-to-authorization matching is schema-checked and every live provider transport remains unregistered.
-- `ephemeral_payload`: a synthetic-only encrypted-to-adapter handoff proof. Confirmed scalar fields are resolved only in process, approved materials are staged under the DPAPI private root outside the project, the built-in probe returns hashes and counts only, and all staging is removed before evidence is returned. Production activation remains unavailable.
+- `ephemeral_payload`, `synthetic_lifecycle`: a synthetic-only encrypted-to-adapter handoff and complete Greenhouse acceptance proof. Reusable and job-specific confirmed scalar fields are resolved only in process, approved materials are staged under the DPAPI private root outside the project, scoped fake actions stop for a separate final authorization, the built-in probe returns hashes and counts only, and all staging is removed before evidence is returned. Production activation remains unavailable.
 - `public_release`, `release_candidate`, `release`: current-tree/history privacy gates and release evidence.
 
 Every persisted transition is content-bound or auditable. `SUBMISSION_UNKNOWN`, CAPTCHA, MFA, OTP, login and account creation do not have an automatic continuation path.

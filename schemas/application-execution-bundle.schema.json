@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/application-execution-bundle.schema.json",
+  "title": "Encrypted Application Execution Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "status", "application_id", "provider",
+    "source_route_hash", "form_snapshot_hash", "browser_plan_hash",
+    "execution_plan_hash", "form_snapshot", "browser_plan", "execution_plan",
+    "public_values", "material_references", "bundle_nonce", "bundle_hash",
+    "created_at", "real_external_actions"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "LOCAL_EXECUTION_BUNDLE_READY"},
+    "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "provider": {"enum": ["company", "greenhouse", "lever", "workday"]},
+    "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "browser_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "execution_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "form_snapshot": {"type": "object"},
+    "browser_plan": {"type": "object"},
+    "execution_plan": {"type": "object"},
+    "public_values": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["control_ref", "value", "value_sha256"],
+        "properties": {
+          "control_ref": {"type": "string", "pattern": "^CTL-[A-F0-9]{12}$"},
+          "value": {"type": "string", "minLength": 1, "maxLength": 4000},
+          "value_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "material_references": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["purpose", "filename", "sha256", "secure_ref"],
+        "properties": {
+          "purpose": {"enum": ["resume", "cover_letter", "portfolio"]},
+          "filename": {"type": "string", "minLength": 1, "maxLength": 160},
+          "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "secure_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"}
+        }
+      }
+    },
+    "bundle_nonce": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "bundle_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "real_external_actions": {"const": 0}
+  }
+}

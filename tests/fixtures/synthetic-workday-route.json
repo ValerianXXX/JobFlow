@@ -1,0 +1,19 @@
+{
+  "company_domain": "example.com",
+  "official_entry_url": "https://example.com/careers/synthetic-data-analyst",
+  "current_url": "https://example.wd5.myworkdayjobs.com/en-US/Careers/job/123",
+  "navigation_history": [
+    "https://example.com/careers/synthetic-data-analyst",
+    "https://example.wd5.myworkdayjobs.com/en-US/Careers/job/123"
+  ],
+  "guest_available": true,
+  "official_snapshot": "tests/fixtures/synthetic-workday-careers.html",
+  "tenant_binding": {
+    "provider": "workday",
+    "company_registrable_domain": "example.com",
+    "ats_host": "example.wd5.myworkdayjobs.com",
+    "tenant": "example",
+    "board": "careers",
+    "job_identity": "123"
+  }
+}

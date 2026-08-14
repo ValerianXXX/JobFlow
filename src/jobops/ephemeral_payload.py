@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .application_field_resolution import ANSWERABLE_STOP_CLASSES, RESOLUTION_DECISIONS
 from .approvals import ApprovalContext
 from .ats_browser import validate_ats_form_snapshot_integrity, validate_browser_action_plan_integrity
 from .errors import JobOpsError
@@ -132,7 +133,9 @@ class EphemeralATSPayloadBroker:
             key = PROFILE_FIELD_ALIASES.get(answer_key, answer_key)
             return _field_value(value.get(key))
         answers = value.get("answers")
-        if not isinstance(answers, dict) or not isinstance(answers.get(answer_key), dict):
+        if not isinstance(answers, dict):
+            return _field_value(value.get(answer_key))
+        if not isinstance(answers.get(answer_key), dict):
             raise JobOpsError("EPHEMERAL_FIELD_VALUE_UNAVAILABLE", "The encrypted Answer Bank has no matching field.")
         item = answers[answer_key]
         if item.get("status") != "CONFIRMED" or item.get("use_policy") in {
@@ -143,6 +146,86 @@ class EphemeralATSPayloadBroker:
                 "This encrypted answer is missing, undisclosed, or still requires per-application confirmation.",
             )
         return _field_value(item.get("value"))
+
+    def _resolve_application_answers(
+        self,
+        *,
+        context: ApprovalContext,
+        form_snapshot: dict[str, Any],
+        browser_plan: dict[str, Any],
+        references: list[str],
+    ) -> tuple[list[dict[str, str]], list[dict[str, str]], int]:
+        if not references:
+            return [], [], 0
+        if len(references) != 1:
+            raise JobOpsError(
+                "EPHEMERAL_ANSWER_BUNDLE_COUNT_INVALID",
+                "The current application must bind exactly one complete job-specific answer bundle.",
+            )
+        if context.unresolved_stops or context.mandatory_unknowns:
+            raise JobOpsError(
+                "EPHEMERAL_APPLICATION_FIELDS_UNRESOLVED",
+                "Job-specific answers must be fully confirmed before an ephemeral payload can be formed.",
+            )
+        reference = references[0]
+        metadata = self.onboarding.reference_metadata(reference)
+        bundle, kind = self._private_json(reference, allowed_kinds={"application_answer_bundle"})
+        if kind != "application_answer_bundle" or metadata["content_sha256"] is None:
+            raise JobOpsError("EPHEMERAL_ANSWER_BUNDLE_INVALID", "The encrypted job-specific answer bundle is invalid.")
+        if bundle.get("application_id") != context.application_id:
+            raise JobOpsError("EPHEMERAL_ANSWER_APPLICATION_MISMATCH", "The encrypted job-specific answers belong to another application.")
+        prior_answers_hash = _sha256(bundle.get("prior_answers_hash"), code="EPHEMERAL_PRIOR_ANSWERS_HASH_INVALID")
+        fields = bundle.get("fields")
+        if not isinstance(fields, list) or not 1 <= len(fields) <= 100:
+            raise JobOpsError("EPHEMERAL_ANSWER_BUNDLE_INVALID", "The encrypted job-specific answer list is invalid.")
+        fields_by_ref = {str(item["control_ref"]): item for item in form_snapshot["fields"]}
+        actions_by_ref = {str(item["control_ref"]): item for item in browser_plan["actions"]}
+        resolved: list[dict[str, str]] = []
+        decisions: list[dict[str, str]] = []
+        skipped = 0
+        seen: set[str] = set()
+        for item in fields:
+            if not isinstance(item, dict):
+                raise JobOpsError("EPHEMERAL_ANSWER_BUNDLE_INVALID", "A job-specific answer entry is invalid.")
+            control_ref = str(item.get("control_ref", ""))
+            classification = str(item.get("classification", ""))
+            answer_key = str(item.get("answer_key", ""))
+            decision = str(item.get("decision", ""))
+            field = fields_by_ref.get(control_ref)
+            action = actions_by_ref.get(control_ref)
+            if (
+                not re.fullmatch(r"CTL-[A-F0-9]{12}", control_ref)
+                or control_ref in seen
+                or classification not in ANSWERABLE_STOP_CLASSES
+                or decision not in RESOLUTION_DECISIONS
+                or field is None
+                or action is None
+                or field.get("classification") != classification
+                or field.get("answer_key") != answer_key
+                or action.get("action") != "STOP"
+                or action.get("binding_kind") != "NONE"
+            ):
+                raise JobOpsError("EPHEMERAL_ANSWER_FORM_BINDING_CHANGED", "A confirmed job-specific answer no longer matches the reviewed form.")
+            seen.add(control_ref)
+            decisions.append({"control_ref": control_ref, "decision": decision})
+            if decision == "CONFIRMED_VALUE":
+                resolved.append({"control_ref": control_ref, "value": _field_value(item.get("value"))})
+            else:
+                if bool(field.get("required", False)) or item.get("value") is not None:
+                    raise JobOpsError("EPHEMERAL_ANSWER_DECISION_INVALID", "A required field cannot be skipped and a skip decision cannot carry a value.")
+                skipped += 1
+        expected_answers_hash = sha256_bytes(canonical_json({
+            "prior_answers_hash": prior_answers_hash,
+            "answer_bundle_content_hash": str(metadata["content_sha256"]),
+            "fields": sorted(decisions, key=lambda item: item["control_ref"]),
+        }))
+        if expected_answers_hash != context.answers_hash:
+            raise JobOpsError("EPHEMERAL_ANSWER_BINDING_CHANGED", "The encrypted job-specific answers differ from the approved application context.")
+        expected_bindings = [
+            {"control_ref": item["control_ref"], "value_sha256": sha256_bytes(item["value"].encode("utf-8"))}
+            for item in resolved
+        ]
+        return resolved, expected_bindings, skipped
 
     @staticmethod
     def _safe_suffix(filename: str) -> str:
@@ -161,6 +244,7 @@ class EphemeralATSPayloadBroker:
         browser_plan: dict[str, Any],
         public_values: dict[str, str],
         material_references: dict[str, str],
+        application_answer_bundle_references: list[str] | None = None,
         probe: IsolatedEphemeralPayloadProbe | None = None,
     ) -> dict[str, Any]:
         if not self.isolated_test_mode:
@@ -187,9 +271,15 @@ class EphemeralATSPayloadBroker:
         if set(public_values) - {str(item["control_ref"]) for item in browser_plan["actions"]}:
             raise JobOpsError("EPHEMERAL_PUBLIC_BINDING_EXTRA", "A public value targets a control outside the approved browser plan.")
 
+        answer_references = list(application_answer_bundle_references or [])
+        resolved_fields, expected_field_bindings, skipped_optional_count = self._resolve_application_answers(
+            context=normalized,
+            form_snapshot=form_snapshot,
+            browser_plan=browser_plan,
+            references=answer_references,
+        )
+        confirmed_stop_count = len(resolved_fields)
         fields_by_ref = {str(item["control_ref"]): item for item in form_snapshot["fields"]}
-        resolved_fields: list[dict[str, str]] = []
-        expected_field_bindings: list[dict[str, str]] = []
         for action in browser_plan["actions"]:
             control_ref = str(action["control_ref"])
             if action["action"] != "PROPOSE_PREFILL":
@@ -304,6 +394,9 @@ class EphemeralATSPayloadBroker:
             "file_count": int(result["file_count"]),
             "field_binding_hash": str(result["field_binding_hash"]),
             "material_binding_hash": str(result["material_binding_hash"]),
+            "application_answer_bundle_count": len(answer_references),
+            "confirmed_stop_field_count": confirmed_stop_count,
+            "skipped_optional_field_count": skipped_optional_count,
             "synthetic_only": True,
             "production_activation": False,
             "temporary_files_removed": True,

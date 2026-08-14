@@ -28,6 +28,7 @@ from .document_qa import automated_visual_probe, extract_pdf_text, structural_qa
 from .eligibility import check_eligibility
 from .errors import JobOpsError
 from .evidence import map_evidence
+from .execution_bundle import build_application_execution_bundle
 from .external_claims import (
     approved_external_claims, map_external_claim_evidence,
     validate_external_claim_set_integrity,
@@ -55,7 +56,7 @@ MAX_JD_PDF_PAGES = 200
 ROLLBACK_PRIVATE_KINDS = {
     "generated_resume_docx", "generated_resume_pdf",
     "generated_cover_letter_docx", "generated_cover_letter_pdf",
-    "visual_evidence", "review_packet",
+    "visual_evidence", "review_packet", "application_execution_bundle",
 }
 
 
@@ -616,6 +617,9 @@ class JobOpsOrchestrator:
             "website": answers.get("website"),
         })
         ats_safe_prefill: dict[str, Any] | None = None
+        form_analysis: dict[str, Any] | None = None
+        browser_plan: dict[str, Any] | None = None
+        public_values_by_control: dict[str, str] = {}
         browser_plan_hash: str
         if form_fixture.suffix.casefold() in {".html", ".htm"}:
             form_analysis = analyze_local_ats_form(
@@ -632,6 +636,7 @@ class JobOpsOrchestrator:
                     candidate = str(public_answers[answer_key])
                     if candidate not in {"", "UNKNOWN", "UNANSWERED"}:
                         bindings[str(item["control_ref"])] = {"kind": "public_value", "value": candidate}
+                        public_values_by_control[str(item["control_ref"])] = candidate
             browser_plan = build_browser_action_plan(form_analysis, bindings)
             browser_plan_hash = str(browser_plan["plan_hash"])
             fake_browser = FakeBrowserPrefillAdapter().prefill({
@@ -874,6 +879,7 @@ class JobOpsOrchestrator:
             form_fields=fields["fields"],
             material_plan=material_plan,
             pending_limit=int(self.queue.status()["pending_limit"]),
+            form_blockers=form_analysis["blockers"] if form_analysis is not None else (),
         )
         safe_suffix = application_id.rsplit("-", 1)[-1].casefold()
         uploads = [{
@@ -893,6 +899,32 @@ class JobOpsOrchestrator:
                 "purpose": "portfolio",
                 "sha256": material_plan["portfolio_file"]["sha256"],
             })
+        execution_bundle_ref: dict[str, Any] | None = None
+        if form_analysis is not None and browser_plan is not None:
+            upload_reference_by_purpose = {
+                "resume": str(pdf_ref["secure_ref"]),
+                **({"cover_letter": str(cover_pdf_ref["secure_ref"])} if cover_pdf_ref else {}),
+                **(
+                    {"portfolio": str(material_plan["portfolio_file"]["secure_ref"])}
+                    if material_plan["portfolio_file"]["binding_status"] == "BOUND_SECURE_FILE"
+                    else {}
+                ),
+            }
+            execution_bundle = build_application_execution_bundle(
+                application_id=application_id,
+                form_snapshot=form_analysis,
+                browser_plan=browser_plan,
+                execution_plan=execution_plan,
+                public_values=public_values_by_control,
+                material_references=[{
+                    **item,
+                    "secure_ref": upload_reference_by_purpose[str(item["purpose"])],
+                } for item in uploads],
+            )
+            execution_bundle_ref = self.onboarding.import_bytes(
+                "application_execution_bundle", canonical_json(execution_bundle), synthetic=synthetic,
+            )
+            self._remember_created_reference(execution_bundle_ref, created_references)
         answers_hash = sha256_bytes(canonical_json(answers))
         packet_id = stable_id(
             "RPK", application_id, intake_key, str(profile["profile_version"]), claim_set_hash,
@@ -913,6 +945,8 @@ class JobOpsOrchestrator:
             "external_actions": ["upload_material", "submit_application"],
             "source_route": route.as_dict(), "queue": self.queue.status(),
         }
+        if execution_bundle_ref is not None:
+            packet["execution_bundle_content_hash"] = execution_bundle_ref["content_sha256"]
         packet["content_hash"] = sha256_bytes(canonical_json(packet))
         validate_named("review-packet", packet, self.schemas)
         packet_ref = self.onboarding.import_bytes("review_packet", canonical_json(packet), synthetic=synthetic)
@@ -948,6 +982,14 @@ class JobOpsOrchestrator:
                 "material_id": stable_id("MAT", application_id, "portfolio_file", str(material_plan["portfolio_file"]["sha256"])),
                 "kind": "portfolio_file", "path": material_plan["portfolio_file"]["secure_ref"],
                 "content_hash": material_plan["portfolio_file"]["sha256"], "claim_ids": [],
+            })
+        if execution_bundle_ref is not None:
+            materials.append({
+                "material_id": stable_id(
+                    "MAT", application_id, "execution_bundle", str(execution_bundle_ref["content_sha256"]),
+                ),
+                "kind": "execution_bundle", "path": execution_bundle_ref["secure_ref"],
+                "content_hash": execution_bundle_ref["content_sha256"], "claim_ids": [],
             })
         admitted = self.queue.admit_awaiting(
             admission.reservation_id, context, snapshot_relative_path=str(collected["snapshot_path"]),
