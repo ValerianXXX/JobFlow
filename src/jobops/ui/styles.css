@@ -348,6 +348,7 @@ textarea { min-height: 96px; resize: vertical; }
 .source-preview > footer .secondary { margin-top: 0; }
 .preview-candidates { margin-top: 14px; border-top: 1px solid var(--line); }
 .preview-bulk-actions { display: flex; justify-content: flex-end; gap: 14px; margin-top: 12px; }
+.preview-filter-notice { margin: 12px 0 0; padding: 10px 12px; border-left: 3px solid #b7791f; background: #fff8e8; color: #754d0b; font-size: 11px; line-height: 1.5; }
 .preview-candidate { display: grid; grid-template-columns: 92px 1fr; gap: 10px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .preview-choice { display: flex; align-items: flex-start; gap: 6px; padding-top: 12px; color: var(--muted); }
 .preview-choice input { margin-top: 2px; accent-color: var(--green); }

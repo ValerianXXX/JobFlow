@@ -4,7 +4,6 @@ import unittest
 
 import _support  # noqa: F401  # Adds the project src directory to sys.path.
 from jobops.ai_runtime import LocalSubprocessAIEngine, _numbers
-from jobops.errors import JobOpsError
 
 
 def _payload(statement: str, *, line_start: int = 1, line_end: int = 1) -> dict[str, object]:
@@ -34,11 +33,19 @@ def _payload(statement: str, *, line_start: int = 1, line_end: int = 1) -> dict[
 
 
 class AINumericGroundingTests(unittest.TestCase):
-    def _validate(self, statement: str, source_lines: list[str], *, line_end: int = 1) -> list[dict[str, object]]:
+    def _validate(
+        self,
+        statement: str,
+        source_lines: list[str],
+        *,
+        line_end: int = 1,
+        diagnostics: dict[str, object] | None = None,
+    ) -> list[dict[str, object]]:
         return LocalSubprocessAIEngine._validated_candidates(
             _payload(statement, line_end=line_end),
             source_id="SRC-NUMERIC-SYNTHETIC",
             source_lines=source_lines,
+            quality_diagnostics=diagnostics,
         )
 
     def test_safe_grouping_and_full_width_formats_are_equivalent_but_flagged_for_review(self) -> None:
@@ -72,7 +79,7 @@ class AINumericGroundingTests(unittest.TestCase):
         self.assertEqual(provenance["citation_adjustment"], "ADJACENT_WRAPPED_LINES")
         self.assertEqual(provenance["numeric_format_normalizations"], 1)
 
-    def test_new_or_calculated_number_remains_rejected(self) -> None:
+    def test_new_or_calculated_number_is_filtered_without_rejecting_the_source(self) -> None:
         cases = (
             (
                 "At Synthetic Market Lab, a Project Analyst built a 5,000 merchant database.",
@@ -85,21 +92,24 @@ class AINumericGroundingTests(unittest.TestCase):
         )
         for statement, source_lines in cases:
             with self.subTest(statement=statement):
-                with self.assertRaises(JobOpsError) as caught:
-                    self._validate(statement, source_lines)
-                self.assertEqual(caught.exception.code, "AI_RESPONSE_INVALID")
-                self.assertEqual(caught.exception.details["failure_category"], "UNSUPPORTED_NUMBER")
-                self.assertGreaterEqual(caught.exception.details["unsupported_number_count"], 1)
+                diagnostics: dict[str, object] = {}
+                self.assertEqual(self._validate(statement, source_lines, diagnostics=diagnostics), [])
+                self.assertEqual(
+                    diagnostics,
+                    {"filtered_candidate_reasons": {"UNSUPPORTED_NUMBER": 1}},
+                )
 
-    def test_number_from_a_separate_sentence_is_not_borrowed(self) -> None:
+    def test_number_from_a_separate_sentence_is_filtered_not_borrowed(self) -> None:
         statement = "At Synthetic Market Lab, a Project Analyst built a 5,000 merchant database."
-        with self.assertRaises(JobOpsError) as caught:
-            self._validate(statement, [
-                "At Synthetic Market Lab, a Project Analyst built a merchant database.",
-                "A separate project processed 5,000 records.",
-            ])
-        self.assertEqual(caught.exception.details["failure_category"], "UNSUPPORTED_NUMBER")
-        self.assertFalse(caught.exception.details["adjacent_line_expansion_attempted"])
+        diagnostics: dict[str, object] = {}
+        self.assertEqual(self._validate(statement, [
+            "At Synthetic Market Lab, a Project Analyst built a merchant database.",
+            "A separate project processed 5,000 records.",
+        ], diagnostics=diagnostics), [])
+        self.assertEqual(
+            diagnostics,
+            {"filtered_candidate_reasons": {"UNSUPPORTED_NUMBER": 1}},
+        )
 
 
 if __name__ == "__main__":

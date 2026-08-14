@@ -18,7 +18,7 @@ from unittest import mock
 
 from _support import PROJECT, project_temp
 from jobops import UI_PROTOCOL_VERSION, __version__
-from jobops.ai_runtime import AIAnalysisEngine, LocalSubprocessAIEngine
+from jobops.ai_runtime import AI_QUALITY_CONTRACT, AIAnalysisEngine, LocalSubprocessAIEngine
 from jobops.browser_assist import COMPANION_EXTENSION_ORIGIN
 from jobops.db import JobOpsDB
 from jobops.document_builder import inspect_docx_text_blocks, template_fingerprint
@@ -411,6 +411,9 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("完整扫描 ZIP", script)
         self.assertIn("Full ZIP scan", script)
         self.assertIn("analysisPassedSelected", script)
+        self.assertIn("filteredCandidateNotice", script)
+        self.assertIn("确认资料并安全保留", script)
+        self.assertIn("ENTITY_DEDUPED_LINE_ANCHORED_V6", script)
 
     def test_draft_is_private_and_language_is_persisted(self) -> None:
         with project_temp() as root:
@@ -717,6 +720,59 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertFalse(source["ai_input_truncated"])
             self.assertGreaterEqual(source["ai_chunks"], 1)
 
+    def test_docx_with_only_filtered_ai_candidates_is_still_securely_retained_as_master(self) -> None:
+        class FilterOnlyAI(AIAnalysisEngine):
+            ready = True
+
+            def public_status(self) -> dict[str, object]:
+                return {"status": "READY", "quality_contract": AI_QUALITY_CONTRACT}
+
+            def analyze_document(
+                self,
+                text: str,
+                *,
+                source_id: str,
+                source_type: str,
+            ) -> tuple[list[dict[str, object]], dict[str, object]]:
+                return [], {
+                    "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+                    "quality_contract": AI_QUALITY_CONTRACT,
+                    "quality_gate_version": 5,
+                    "ai_chunks": 1,
+                    "ai_input_characters": len(text),
+                    "ai_covered_characters": len(text),
+                    "ai_input_truncated": False,
+                    "ai_candidates": 0,
+                    "ai_entities": 1,
+                    "filtered_candidate_count": 2,
+                    "filtered_candidate_reasons": {"STATEMENT_FRAGMENT": 2},
+                    "candidate_filter_applied": True,
+                    "automatic_claim_selection": False,
+                }
+
+        with project_temp() as root:
+            original, _, store, _, _ = self.make_service(root)
+            service = OnboardingCenterService(
+                original.project,
+                original.database,
+                original.onboarding,
+                ai_engine=FilterOnlyAI(),
+            )
+            fixture = PROJECT / "tests" / "fixtures" / "complex-master-resume.docx"
+            preview = service.preview_source("resume", ".docx", fixture.read_bytes())
+            pending = service.bootstrap()["pending_sources"][0]
+            self.assertEqual(preview["candidate_count"], 0)
+            self.assertEqual(pending["extraction_summary"]["filtered_candidate_count"], 2)
+            self.assertEqual(pending["candidates"], [])
+
+            imported = service.commit_source(preview["source_id"], [])
+            self.assertTrue(imported["master_resume_designated"])
+            self.assertTrue(imported["editable_master_docx"])
+            bootstrap = service.bootstrap()
+            self.assertEqual(bootstrap["pending_sources"], [])
+            self.assertEqual(bootstrap["sources"][0]["filtered_candidate_count"], 2)
+            self.assertTrue(any(store.test(reference) for reference in store.values))
+
     def test_source_preview_and_compatibility_import_remove_refs_when_state_save_fails(self) -> None:
         with project_temp() as root:
             service, _, store, _, _ = self.make_service(root)
@@ -801,6 +857,24 @@ class OnboardingCenterTests(unittest.TestCase):
                 source_type="project_case",
             )
         self.assertEqual(blocked.exception.code, "AI_ENGINE_FAILED")
+
+    def test_local_ai_engine_filters_fragment_after_one_repair_and_keeps_complete_coverage(self) -> None:
+        engine = LocalSubprocessAIEngine([
+            sys.executable,
+            str(PROJECT / "tests" / "fixtures" / "fake_jobops_ai.py"),
+        ])
+        source = "FORCE_FRAGMENT_CANDIDATE Project Lead at Synthetic."
+        candidates, summary = engine.analyze_document(
+            source,
+            source_id="SRC-FILTERED-FRAGMENT",
+            source_type="resume",
+        )
+        self.assertEqual(candidates, [])
+        self.assertTrue(summary["ai_repair_attempted"])
+        self.assertEqual(summary["filtered_candidate_count"], 1)
+        self.assertEqual(summary["filtered_candidate_reasons"], {"STATEMENT_FRAGMENT": 1})
+        self.assertEqual(summary["ai_input_characters"], summary["ai_covered_characters"])
+        self.assertFalse(summary["ai_input_truncated"])
 
     def test_ai_contract_keeps_work_internship_education_and_project_distinct(self) -> None:
         lines = [
@@ -902,7 +976,7 @@ class OnboardingCenterTests(unittest.TestCase):
             )
         self.assertEqual(ambiguous.exception.code, "AI_RESPONSE_INVALID")
 
-    def test_ai_contract_normalizes_obvious_internship_misclassification_and_rejects_header_fragments(self) -> None:
+    def test_ai_contract_normalizes_internship_and_filters_header_fragments(self) -> None:
         source = ["Worked as a Strategy Intern at Beta from April 2025 to July 2025."]
         entity = {
             "entity_key": "beta", "entity_type": "work", "organization": "Beta", "role": "Strategy Intern",
@@ -929,14 +1003,15 @@ class OnboardingCenterTests(unittest.TestCase):
             "claim_kind": "entity_summary", "entity_key": "beta", "confidence": "HIGH",
             "line_start": 1, "line_end": 1, "reason": "Synthetic header.",
         }
-        with self.assertRaises(JobOpsError) as fragment_error:
-            LocalSubprocessAIEngine._validated_candidates(
-                {"schema_version": 2, "entities": [entity], "candidates": [header]},
-                source_id="SRC-HEADER", source_lines=source,
-            )
-        self.assertEqual(fragment_error.exception.code, "AI_RESPONSE_INVALID")
+        diagnostics: dict[str, object] = {}
+        self.assertEqual(LocalSubprocessAIEngine._validated_candidates(
+            {"schema_version": 2, "entities": [entity], "candidates": [header]},
+            source_id="SRC-HEADER", source_lines=source,
+            quality_diagnostics=diagnostics,
+        ), [])
+        self.assertEqual(diagnostics, {"filtered_candidate_reasons": {"STATEMENT_FRAGMENT": 1}})
 
-    def test_ai_contract_rejects_weak_grounding_and_merges_near_duplicate_claims(self) -> None:
+    def test_ai_contract_filters_weak_grounding_and_merges_near_duplicate_claims(self) -> None:
         weak_source = ["Led a merchant database project containing 4,000 records."]
         entity = {
             "entity_key": "merchant", "entity_type": "project", "organization": "merchant database",
@@ -947,12 +1022,13 @@ class OnboardingCenterTests(unittest.TestCase):
             "category": "project", "claim_kind": "achievement", "entity_key": "merchant", "confidence": "HIGH",
             "line_start": 1, "line_end": 1, "reason": "Synthetic overclaim.",
         }
-        with self.assertRaises(JobOpsError) as grounding_error:
-            LocalSubprocessAIEngine._validated_candidates(
-                {"schema_version": 2, "entities": [entity], "candidates": [unsupported]},
-                source_id="SRC-GROUNDING", source_lines=weak_source,
-            )
-        self.assertEqual(grounding_error.exception.code, "AI_RESPONSE_INVALID")
+        diagnostics: dict[str, object] = {}
+        self.assertEqual(LocalSubprocessAIEngine._validated_candidates(
+            {"schema_version": 2, "entities": [entity], "candidates": [unsupported]},
+            source_id="SRC-GROUNDING", source_lines=weak_source,
+            quality_diagnostics=diagnostics,
+        ), [])
+        self.assertEqual(diagnostics, {"filtered_candidate_reasons": {"CITED_LINE_GROUNDING": 1}})
 
         duplicate_lines = [
             "Led a synthetic project and improved review accuracy by 20%.",

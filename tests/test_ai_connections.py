@@ -167,7 +167,7 @@ class AIConnectionTests(unittest.TestCase):
         self.assertEqual(starts, sorted(starts))
         self.assertEqual(len(starts), len(set(starts)))
 
-    def test_complete_analysis_discards_every_chunk_when_one_chunk_fails_validation(self) -> None:
+    def test_complete_analysis_keeps_valid_chunks_and_filters_bad_candidates(self) -> None:
         line = "Built a synthetic project workflow."
         source_text = "\n".join(line for _ in range(14_000))
         calls = 0
@@ -197,17 +197,20 @@ class AIConnectionTests(unittest.TestCase):
                 }],
             }
 
-        with self.assertRaises(JobOpsError) as caught:
-            _analyze_all_chunks(
-                second_chunk_never_repairs,
-                source_text,
-                source_id="SRC-LARGE-FAIL",
-                source_type="project_case",
-            )
-        self.assertEqual(caught.exception.code, "AI_RESPONSE_REPAIR_FAILED")
-        self.assertGreaterEqual(calls, 3)
+        candidates, summary = _analyze_all_chunks(
+            second_chunk_never_repairs,
+            source_text,
+            source_id="SRC-LARGE-FAIL",
+            source_type="project_case",
+        )
+        self.assertEqual(len(candidates), 1)
+        filtered_chunks = int(summary["ai_chunks"]) - 1
+        self.assertEqual(summary["filtered_candidate_count"], filtered_chunks)
+        self.assertEqual(summary["filtered_candidate_reasons"], {"UNSUPPORTED_NUMBER": filtered_chunks})
+        self.assertEqual(calls, 1 + (2 * filtered_chunks))
+        self.assertTrue(summary["ai_repair_attempted"])
 
-    def test_ai_repair_fails_closed_when_replacement_remains_ungrounded(self) -> None:
+    def test_ungrounded_candidate_is_filtered_without_blocking_the_source(self) -> None:
         private_value = "Synthetic grounded project statement."
         request, _ = LocalSubprocessAIEngine._request(
             private_value,
@@ -231,9 +234,16 @@ class AIConnectionTests(unittest.TestCase):
                 }],
             }
 
-        with self.assertRaises(JobOpsError) as caught:
-            _analyze_with_single_repair(invalid_response, request, source_id="SRC-REPAIR-FAIL")
-        self.assertEqual(caught.exception.code, "AI_RESPONSE_REPAIR_FAILED")
+        diagnostics: dict[str, object] = {}
+        _, candidates, repaired = _analyze_with_single_repair(
+            invalid_response,
+            request,
+            source_id="SRC-REPAIR-FAIL",
+            quality_diagnostics=diagnostics,
+        )
+        self.assertEqual(candidates, [])
+        self.assertTrue(repaired)
+        self.assertEqual(diagnostics, {"filtered_candidate_reasons": {"UNSUPPORTED_NUMBER": 1}})
         self.assertEqual(
             [str(item.get("task")) for item in calls],
             ["JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2", "JOBOPS_REPAIR_PRIVATE_DOCUMENT_UNDERSTANDING_V2"],

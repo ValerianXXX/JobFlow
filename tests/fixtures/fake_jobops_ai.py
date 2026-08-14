@@ -12,6 +12,8 @@ line_end = int(numbered[-1].split("\t", 1)[0]) if numbered else line_start
 source_type = request.get("source", {}).get("source_type")
 source_text = " ".join(item.split("\t", 1)[1] if "\t" in item else "" for item in numbered).strip()
 statement = " ".join(source_text.split())
+if "FORCE_FRAGMENT_CANDIDATE" in source_text:
+    statement = "Project Lead at Synthetic."
 if len(statement) < 20:
     statement = f"The applicant provided this source-grounded statement: {statement}"
 if statement[-1:] not in ".?!。！？":

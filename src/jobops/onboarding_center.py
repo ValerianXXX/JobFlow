@@ -148,6 +148,7 @@ def _public_ai_analysis(summary: Any) -> dict[str, Any]:
             "ai_chunks", "ai_chunking_applied", "ai_input_characters",
             "ai_covered_characters", "ai_input_truncated", "ai_repair_count",
             "quality_contract", "quality_gate_version",
+            "filtered_candidate_count", "filtered_candidate_reasons", "candidate_filter_applied",
             "archive_scan_complete", "user_fragments_scanned", "readable_user_fragments",
             "safe_fragments_considered", "ai_selected_fragments", "ai_omitted_fragments",
             "ai_selection_bounded", "ai_selection_mode", "ai_selection_character_limit",

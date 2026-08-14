@@ -15,7 +15,7 @@ from .util import stable_id
 
 
 AI_PROTOCOL_VERSION = 2
-AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V5"
+AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6"
 MAX_AI_INPUT_CHARS = 500_000
 MAX_AI_OUTPUT_BYTES = 5 * 1024 * 1024
 MAX_AI_CHUNK_CHARS = 450_000
@@ -432,6 +432,39 @@ def _structural_quality_summary(candidates: list[dict[str, Any]]) -> dict[str, A
     }
 
 
+def _record_candidate_filter(diagnostics: dict[str, Any] | None, reason: str) -> None:
+    """Count a rejected Claim candidate without retaining any private candidate text."""
+    if diagnostics is None:
+        return
+    reasons = diagnostics.setdefault("filtered_candidate_reasons", {})
+    reasons[reason] = int(reasons.get(reason, 0)) + 1
+
+
+def _candidate_filter_summary(diagnostics: dict[str, Any] | None) -> dict[str, Any]:
+    raw_reasons = (diagnostics or {}).get("filtered_candidate_reasons", {})
+    reasons = {
+        str(reason): int(count)
+        for reason, count in raw_reasons.items()
+        if isinstance(reason, str) and isinstance(count, int) and count > 0
+    }
+    return {
+        "filtered_candidate_count": sum(reasons.values()),
+        "filtered_candidate_reasons": dict(sorted(reasons.items())),
+        "candidate_filter_applied": bool(reasons),
+    }
+
+
+def _merge_candidate_filter_diagnostics(
+    target: dict[str, Any] | None,
+    source: dict[str, Any] | None,
+) -> None:
+    if target is None:
+        return
+    for reason, count in (source or {}).get("filtered_candidate_reasons", {}).items():
+        for _ in range(int(count)):
+            _record_candidate_filter(target, str(reason))
+
+
 def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str, Any]:
     format_complete = bool(20 <= len(statement) <= 2_000 and statement[-1:] in ".?!。！？")
     if statement.endswith((",", ";", ":", "-", "–", "—")) or "|" in statement or "http://" in statement.casefold() or "https://" in statement.casefold():
@@ -776,7 +809,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         diagnostics = {key: value for key, value in error.details.items() if key in safe_detail_keys}
         return JobOpsError(
             "AI_RESPONSE_REPAIR_FAILED",
-            "The AI result still contained an incomplete or unsupported Claim after one automatic correction. Nothing from this attempt was imported.",
+            "The replacement AI response still lacked a valid top-level protocol or entity registry, so it could not be attached to a complete analysis preview.",
             validation_code=error.code,
             automatic_repair_attempts=1,
             **diagnostics,
@@ -789,6 +822,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         source_id: str,
         source_lines: list[str],
         line_number_start: int = 1,
+        quality_diagnostics: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         if not isinstance(value, dict):
             raise _invalid_ai_response("RESPONSE_FORMAT", "The local AI response did not match the JobOps protocol.")
@@ -912,7 +946,8 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         seen_candidates: list[tuple[str, str, str]] = []
         for candidate_index, raw in enumerate(raw_candidates, start=1):
             if not isinstance(raw, dict):
-                raise _invalid_ai_response("RESPONSE_FORMAT", "A local AI candidate is not an object.")
+                _record_candidate_filter(quality_diagnostics, "RESPONSE_FORMAT")
+                continue
             statement = _clean_candidate_statement(raw.get("statement"))
             raw_category = _compact(raw.get("category"), limit=81).casefold()
             category = _normalized_candidate_category(raw_category)
@@ -925,8 +960,9 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             try:
                 line_start = int(raw.get("line_start"))
                 line_end = int(raw.get("line_end"))
-            except (TypeError, ValueError) as exc:
-                raise _invalid_ai_response("PROVENANCE_LINES", "A local AI candidate has invalid provenance lines.") from exc
+            except (TypeError, ValueError):
+                _record_candidate_filter(quality_diagnostics, "PROVENANCE_LINES")
+                continue
             canonical_key = (
                 entity_aliases.get(entity_key) or entity_keys_casefold.get(entity_key.casefold())
                 if entity_key else None
@@ -936,13 +972,15 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 category = str(entity["entity_type"])
                 normalization_codes.append("GENERIC_CATEGORY_REPLACED_BY_PARENT")
             if category not in ALLOWED_CATEGORIES or claim_kind not in ALLOWED_CLAIM_KINDS:
-                raise _invalid_ai_response("CATEGORY_CONTRACT", "A local AI candidate contains an unsupported category or Claim kind.")
+                _record_candidate_filter(quality_diagnostics, "CATEGORY_CONTRACT")
+                continue
             if category != raw_category:
                 normalization_codes.append("CANDIDATE_CATEGORY_ALIAS_NORMALIZED")
             if claim_kind != raw_claim_kind:
                 normalization_codes.append("CLAIM_KIND_ALIAS_NORMALIZED")
             if confidence not in ALLOWED_CONFIDENCE or not line_number_start <= line_start <= line_end <= line_number_end:
-                raise _invalid_ai_response("PROVENANCE_LINES", "A local AI candidate contains invalid confidence or provenance.")
+                _record_candidate_filter(quality_diagnostics, "PROVENANCE_LINES")
+                continue
             if category in ENTITY_CATEGORIES and entity is None:
                 same_type = [item for item in entities.values() if item["entity_type"] == category]
                 nearby = [
@@ -956,9 +994,8 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                     canonical_key = str(entity["entity_key"])
                     normalization_codes.append("MISSING_ENTITY_KEY_RECOVERED")
                 else:
-                    raise _invalid_ai_response(
-                        "ENTITY_RELATION", "An experience Claim is not attached to one unambiguous entity.",
-                    )
+                    _record_candidate_filter(quality_diagnostics, "ENTITY_RELATION")
+                    continue
             if category in ENTITY_CATEGORIES and entity is not None and entity["entity_type"] != category:
                 category = str(entity["entity_type"])
                 normalization_codes.append("PARENT_ENTITY_TYPE_INHERITED")
@@ -967,7 +1004,8 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 canonical_key = None
                 normalization_codes.append("NON_ENTITY_CLAIM_DETACHED")
             if category in ENTITY_CATEGORIES and not _has_entity_predicate(statement):
-                raise _invalid_ai_response("STATEMENT_FRAGMENT", "An experience Claim is a heading or fragment without a complete action or relationship.")
+                _record_candidate_filter(quality_diagnostics, "STATEMENT_FRAGMENT")
+                continue
             grounding = _bounded_statement_grounding(
                 statement,
                 source_lines,
@@ -981,21 +1019,8 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                     else "STATEMENT_FRAGMENT" if not grounding["statement_format_complete"]
                     else "CITED_LINE_GROUNDING"
                 )
-                raise _invalid_ai_response(
-                    failure_category,
-                    "The AI returned a fragment or a statement that is not grounded in its cited lines.",
-                    candidate_index=candidate_index,
-                    cited_line_start=line_start,
-                    cited_line_end=line_end,
-                    unsupported_number_count=grounding["unsupported_number_count"],
-                    shared_grounding_token_count=grounding["shared_grounding_token_count"],
-                    required_grounding_token_count=grounding["required_grounding_token_count"],
-                    statement_format_complete=grounding["statement_format_complete"],
-                    adjacent_line_expansion_attempted=grounding["adjacent_line_expansion_attempted"],
-                    expanded_line_start=grounding.get("expanded_line_start"),
-                    expanded_line_end=grounding.get("expanded_line_end"),
-                    numeric_matching_policy="FORMAT_EQUIVALENT_ONLY_NO_CALCULATION",
-                )
+                _record_candidate_filter(quality_diagnostics, failure_category)
+                continue
             accepted_line_start = int(grounding["line_start"])
             accepted_line_end = int(grounding["line_end"])
             signature = re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", statement.casefold())
@@ -1066,32 +1091,45 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         batches: list[list[dict[str, Any]]] = []
         values: list[dict[str, Any]] = []
         repairs = 0
+        quality_diagnostics: dict[str, Any] = {}
         for request in requests:
             numbered = request["line_numbered_document"]
             source_lines = [item.split("\t", 1)[1] if "\t" in item else "" for item in numbered]
             line_number_start = int(str(numbered[0]).split("\t", 1)[0]) if numbered else 1
             value: Any = {"status": "REJECTED_BEFORE_STRUCTURED_PROTOCOL"}
+            attempt_diagnostics: dict[str, Any] = {}
             try:
                 value = invoke(request)
                 candidates = self._validated_candidates(
                     value, source_id=source_id, source_lines=source_lines,
                     line_number_start=line_number_start,
+                    quality_diagnostics=attempt_diagnostics,
                 )
+                if not candidates and _candidate_filter_summary(attempt_diagnostics)["filtered_candidate_count"]:
+                    raise _invalid_ai_response(
+                        "FILTERED_CANDIDATE_SET",
+                        "The first AI response contained only candidates that require filtering.",
+                    )
             except JobOpsError as first_error:
                 if first_error.code != "AI_RESPONSE_INVALID":
                     raise
                 repairs += 1
+                repaired_diagnostics: dict[str, Any] = {}
                 try:
                     repaired = invoke(self._repair_request(request, value, first_error))
                     candidates = self._validated_candidates(
                         repaired, source_id=source_id, source_lines=source_lines,
                         line_number_start=line_number_start,
+                        quality_diagnostics=repaired_diagnostics,
                     )
                 except JobOpsError as repaired_error:
                     if repaired_error.code == "AI_RESPONSE_INVALID":
                         raise self._repair_failed(repaired_error) from repaired_error
                     raise
+                _merge_candidate_filter_diagnostics(quality_diagnostics, repaired_diagnostics)
                 value = repaired
+            else:
+                _merge_candidate_filter_diagnostics(quality_diagnostics, attempt_diagnostics)
             batches.append(candidates)
             values.append(value)
         candidates = self._merge_candidate_batches(batches)
@@ -1110,7 +1148,8 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "ai_repair_count": repairs,
             "automatic_claim_selection": False,
             "quality_contract": AI_QUALITY_CONTRACT,
-            "quality_gate_version": 4,
+            "quality_gate_version": 5,
+            **_candidate_filter_summary(quality_diagnostics),
             **_structural_quality_summary(candidates),
             "grounding_ratio_minimum": GROUNDING_RATIO,
             "near_duplicate_ratio": NEAR_DUPLICATE_RATIO,

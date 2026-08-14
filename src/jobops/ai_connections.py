@@ -19,6 +19,8 @@ from .ai_runtime import (
     MAX_AI_OUTPUT_BYTES,
     AIAnalysisEngine,
     LocalSubprocessAIEngine,
+    _candidate_filter_summary,
+    _merge_candidate_filter_diagnostics,
     _run_bounded_ai_command,
     _structural_quality_summary,
     configured_ai_engine,
@@ -497,6 +499,7 @@ def _analyze_with_single_repair(
     request: dict[str, Any],
     *,
     source_id: str,
+    quality_diagnostics: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], bool]:
     """Validate once, ask the same AI for one replacement on protocol/content failure, then fail closed."""
     first_response: Any = {"status": "REJECTED_BEFORE_STRUCTURED_PROTOCOL"}
@@ -509,6 +512,7 @@ def _analyze_with_single_repair(
         if request["line_numbered_document"] else 1
     )
     validation_error: JobOpsError | None = None
+    first_diagnostics: dict[str, Any] = {}
     try:
         first_response = invoke(request)
         value = _protocol_payload(first_response)
@@ -517,7 +521,15 @@ def _analyze_with_single_repair(
             source_id=source_id,
             source_lines=source_lines,
             line_number_start=line_number_start,
+            quality_diagnostics=first_diagnostics,
         )
+        if not candidates and _candidate_filter_summary(first_diagnostics)["filtered_candidate_count"]:
+            raise JobOpsError(
+                "AI_RESPONSE_INVALID",
+                "The first AI response contained only candidates that require filtering.",
+                failure_category="FILTERED_CANDIDATE_SET",
+            )
+        _merge_candidate_filter_diagnostics(quality_diagnostics, first_diagnostics)
         return value, candidates, False
     except JobOpsError as first_error:
         if first_error.code != "AI_RESPONSE_INVALID":
@@ -525,6 +537,7 @@ def _analyze_with_single_repair(
         validation_error = first_error
     assert validation_error is not None
     repair_request = LocalSubprocessAIEngine._repair_request(request, first_response, validation_error)
+    repaired_diagnostics: dict[str, Any] = {}
     try:
         repaired_value = _protocol_payload(invoke(repair_request))
         repaired_candidates = LocalSubprocessAIEngine._validated_candidates(
@@ -532,11 +545,13 @@ def _analyze_with_single_repair(
             source_id=source_id,
             source_lines=source_lines,
             line_number_start=line_number_start,
+            quality_diagnostics=repaired_diagnostics,
         )
     except JobOpsError as repaired_error:
         if repaired_error.code == "AI_RESPONSE_INVALID":
             raise LocalSubprocessAIEngine._repair_failed(repaired_error) from repaired_error
         raise
+    _merge_candidate_filter_diagnostics(quality_diagnostics, repaired_diagnostics)
     return repaired_value, repaired_candidates, True
 
 
@@ -552,9 +567,11 @@ def _analyze_all_chunks(
     )
     batches: list[list[dict[str, Any]]] = []
     repairs = 0
+    quality_diagnostics: dict[str, Any] = {}
     for request in requests:
         _, candidates, repaired = _analyze_with_single_repair(
             invoke, request, source_id=source_id,
+            quality_diagnostics=quality_diagnostics,
         )
         batches.append(candidates)
         repairs += int(repaired)
@@ -567,7 +584,8 @@ def _analyze_all_chunks(
         "ai_candidates": len(merged), "ai_entities": len(entity_fingerprints),
         **coverage, "ai_repair_attempted": repairs > 0,
         "ai_repair_succeeded": repairs > 0, "ai_repair_count": repairs,
-        "quality_gate_version": 4,
+        "quality_gate_version": 5,
+        **_candidate_filter_summary(quality_diagnostics),
         **_structural_quality_summary(merged),
     }
 
