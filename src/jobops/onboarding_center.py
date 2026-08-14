@@ -41,6 +41,7 @@ from .external_claims import (
 )
 from .external_actions import ExternalActionGateway, ExternalActionPolicy
 from .external_action_sessions import ExternalActionSessionManager, ExternalActionSessionPolicy
+from .execution_controller import IsolatedApplicationExecutionController
 from .official_discovery import MAX_SNAPSHOT_BYTES, discover_official_jobs
 from .orchestrator import JobOpsOrchestrator, MAX_JD_SOURCE_BYTES, _read_jd
 from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, REQUIRED_FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
@@ -654,6 +655,9 @@ class OnboardingCenterService:
         self.project = project.resolve(strict=True)
         self.database = database
         self.database.initialize()
+        self.execution_reconciliation = IsolatedApplicationExecutionController(
+            self.database
+        ).reconcile_interrupted_runs()
         self.onboarding = onboarding
         self.onboarding.assert_outside_project(self.project)
         initial_engine = ai_engine or configured_ai_engine()
@@ -1193,6 +1197,19 @@ class OnboardingCenterService:
                    WHERE a.status<>'AWAITING_APPROVAL'
                    ORDER BY a.updated_at DESC,a.application_id DESC LIMIT 30"""
             ).fetchall()
+            execution_rows = connection.execute(
+                """SELECT r.run_id,r.application_id,r.status,r.checkpoint_sequence,r.updated_at,
+                          a.status AS application_status,j.company,j.title,j.location,
+                          c.phase AS last_phase,c.status AS checkpoint_status
+                   FROM application_execution_runs r
+                   JOIN applications a ON a.application_id=r.application_id
+                   JOIN jobs j ON j.job_id=a.job_id
+                   LEFT JOIN application_execution_checkpoints c ON c.checkpoint_id=(
+                       SELECT ec.checkpoint_id FROM application_execution_checkpoints ec
+                       WHERE ec.run_id=r.run_id ORDER BY ec.sequence DESC LIMIT 1
+                   )
+                   ORDER BY r.updated_at DESC,r.run_id DESC LIMIT 30"""
+            ).fetchall()
         applications = [{
             "application_id": str(row["application_id"]),
             "job_id": str(row["job_id"]),
@@ -1223,6 +1240,40 @@ class OnboardingCenterService:
             "packet_status": str(row["packet_status"]) if row["packet_status"] is not None else "MISSING",
             "approval_expires_at": str(row["approval_expires_at"]) if row["approval_expires_at"] is not None else None,
         } for row in recent_rows]
+        execution_runs = []
+        for row in execution_rows:
+            run_status = str(row["status"])
+            application_status = str(row["application_status"])
+            interrupted = (
+                run_status in {"SUBMISSION_STARTED", "SUBMITTED"}
+                or (
+                    run_status == "AWAITING_FINAL_AUTHORIZATION"
+                    and application_status in {"SUBMITTING", "SUBMITTED", "SUBMISSION_UNKNOWN", "CONFIRMED"}
+                )
+            )
+            display_status = "INTERRUPTED_RECONCILIATION_REQUIRED" if interrupted else run_status
+            next_safe_action = {
+                "AWAITING_FINAL_AUTHORIZATION": "USER_FINAL_CONFIRMATION_REQUIRED",
+                "CONFIRMED": "NONE",
+                "SUBMISSION_UNKNOWN": "MANUAL_EXTERNAL_VERIFICATION_REQUIRED",
+                "INVALIDATED": "REBUILD_REVIEW_PACKET",
+                "INTERRUPTED_RECONCILIATION_REQUIRED": "RESTART_RECONCILIATION_REQUIRED",
+            }.get(display_status, "MANUAL_EXTERNAL_VERIFICATION_REQUIRED")
+            execution_runs.append({
+                "run_id": str(row["run_id"]),
+                "application_id": str(row["application_id"]),
+                "company": str(row["company"]),
+                "title": str(row["title"]),
+                "location": str(row["location"]) if row["location"] is not None else None,
+                "status": display_status,
+                "application_status": application_status,
+                "checkpoint_sequence": int(row["checkpoint_sequence"]),
+                "last_phase": str(row["last_phase"]) if row["last_phase"] is not None else "MISSING",
+                "checkpoint_status": str(row["checkpoint_status"]) if row["checkpoint_status"] is not None else "MISSING",
+                "updated_at": str(row["updated_at"]),
+                "automatic_retry": False,
+                "next_safe_action": next_safe_action,
+            })
         return {
             "status": "LOCAL_PIPELINE_READY",
             "onboarding_status": str(state.get("status", IN_PROGRESS)),
@@ -1230,6 +1281,12 @@ class OnboardingCenterService:
             "application_status_counts": {str(row["status"]): int(row["total"]) for row in status_rows},
             "pending_applications": applications,
             "deferred_intake": deferred, "recent_applications": recent,
+            "execution_runs": execution_runs,
+            "execution_status_counts": {
+                status: sum(1 for item in execution_runs if item["status"] == status)
+                for status in sorted({item["status"] for item in execution_runs})
+            },
+            "startup_execution_reconciliation": dict(self.execution_reconciliation),
             "safety": {
                 "network_mode": "LOCAL_OFFLINE_ONLY",
                 "real_website_accesses": 0,

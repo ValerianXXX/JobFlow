@@ -115,6 +115,27 @@ class OnboardingCenterTests(unittest.TestCase):
                     "INSERT INTO intake_queue(intake_key,source_type,source_locator,status,reservation_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",
                     ("private-source-locator-key", "offline_snapshot", "private/source/path.txt", "DEFERRED", None, now, now),
                 )
+                connection.execute(
+                    """INSERT INTO application_execution_runs(
+                    run_id,application_id,application_context_hash,execution_plan_hash,browser_plan_hash,
+                    form_snapshot_hash,freshness_evidence_hash,status,checkpoint_sequence,created_at,updated_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        "RUN-DASHBOARD01", "APP-DASH", "sha256:" + "5" * 64,
+                        "sha256:" + "6" * 64, "sha256:" + "7" * 64,
+                        "sha256:" + "8" * 64, "sha256:" + "9" * 64,
+                        "AWAITING_FINAL_AUTHORIZATION", 5, now, now,
+                    ),
+                )
+                connection.execute(
+                    """INSERT INTO application_execution_checkpoints(
+                    checkpoint_id,run_id,application_id,sequence,phase,status,evidence_hash,created_at
+                    ) VALUES(?,?,?,?,?,?,?,?)""",
+                    (
+                        "ECP-DASHBOARD01", "RUN-DASHBOARD01", "APP-DASH", 5,
+                        "AWAITING_FINAL_AUTHORIZATION", "AWAITING_USER", "sha256:" + "a" * 64, now,
+                    ),
+                )
             dashboard = service.bootstrap()["dashboard"]
             self.assertEqual(dashboard["queue"]["awaiting_approval"], 1)
             self.assertEqual(dashboard["queue"]["slots_available"], 9)
@@ -129,6 +150,17 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(dashboard["safety"]["external_action_control_mode"], "PRODUCTION_DISABLED")
             self.assertEqual(dashboard["deferred_intake"][0]["status"], "DEFERRED")
             self.assertTrue(dashboard["deferred_intake"][0]["safe_intake_id"].startswith("sha256:"))
+            self.assertEqual(len(dashboard["execution_runs"]), 1)
+            self.assertEqual(dashboard["execution_runs"][0]["status"], "AWAITING_FINAL_AUTHORIZATION")
+            self.assertEqual(dashboard["execution_runs"][0]["checkpoint_sequence"], 5)
+            self.assertEqual(dashboard["execution_runs"][0]["last_phase"], "AWAITING_FINAL_AUTHORIZATION")
+            self.assertFalse(dashboard["execution_runs"][0]["automatic_retry"])
+            self.assertEqual(
+                dashboard["execution_runs"][0]["next_safe_action"],
+                "USER_FINAL_CONFIRMATION_REQUIRED",
+            )
+            self.assertEqual(dashboard["execution_status_counts"], {"AWAITING_FINAL_AUTHORIZATION": 1})
+            self.assertEqual(dashboard["startup_execution_reconciliation"]["automatic_retries"], 0)
             serialized = json.dumps(dashboard, ensure_ascii=False)
             for forbidden in ("secure_profile_ref", "answers_hash", "resume_hash", "relative_path", "context_json", "private/source/path.txt", "private-source-locator-key"):
                 self.assertNotIn(forbidden, serialized)
@@ -1641,6 +1673,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="pipelineDashboard"', html)
         self.assertIn('id="deferredDashboardList"', html)
         self.assertIn('id="recentDashboardList"', html)
+        self.assertIn('id="executionRunsList"', html)
         self.assertIn('id="saveQueueLimit"', html)
         self.assertIn('id="emergencyStop"', html)
         self.assertIn('id="reviewPacketPanel"', html)
@@ -1654,6 +1687,8 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="openTailoringManifest"', html)
         self.assertIn('id="approveTailoringManifest"', html)
         self.assertIn("function renderDashboard()", app)
+        self.assertIn("function executionRunStatusLabel(", app)
+        self.assertIn("function executionNextActionLabel(", app)
         self.assertIn("function renderApplicationReadiness()", app)
         self.assertIn("function renderTailoringProposal(", app)
         self.assertIn("function renderOfficialDiscovery", app)

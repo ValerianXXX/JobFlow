@@ -29,6 +29,8 @@ from .official_discovery import MAX_SNAPSHOT_BYTES
 
 JSON_LIMIT = 2 * 1024 * 1024
 APPLICATION_BUNDLE_MANIFEST_LIMIT = 64 * 1024
+REJECTED_BODY_DRAIN_LIMIT = 64 * 1024
+REJECTED_BODY_DRAIN_TIMEOUT_SECONDS = 0.25
 
 
 class OnboardingHTTPServer(ThreadingHTTPServer):
@@ -193,6 +195,43 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             )
         return value
 
+    def _discard_small_declared_body(self) -> None:
+        """Best-effort drain for a rejected, already-sent loopback request.
+
+        Windows may reset a TCP connection when the server closes it with unread
+        request bytes, which can hide the JSON error response from the browser.
+        Only one small, explicitly sized body is consumed, with a short timeout;
+        transfer-encoded, ambiguous, oversized, or incomplete bodies still fail
+        closed without an unbounded read.
+        """
+        if self.headers.get("Transfer-Encoding") is not None:
+            return
+        content_lengths = self.headers.get_all("Content-Length") or []
+        if len(content_lengths) != 1:
+            return
+        try:
+            length = int(content_lengths[0])
+        except ValueError:
+            return
+        if not 0 < length <= REJECTED_BODY_DRAIN_LIMIT:
+            return
+        previous_timeout = self.connection.gettimeout()
+        try:
+            self.connection.settimeout(REJECTED_BODY_DRAIN_TIMEOUT_SECONDS)
+            remaining = length
+            while remaining:
+                chunk = self.rfile.read(min(16 * 1024, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+        except OSError:
+            pass
+        finally:
+            try:
+                self.connection.settimeout(previous_timeout)
+            except OSError:
+                pass
+
     def _stream_large_export(self, length: int, extension: str) -> dict[str, Any]:
         if extension.casefold() != ".zip":
             raise JobOpsError("CHATGPT_EXPORT_FORMAT_INVALID", "The streaming large-file option accepts ZIP exports only.")
@@ -266,6 +305,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         # connection prevents unread bytes from becoming a second, ambiguous local request.
         self.close_connection = True
         if isinstance(exc, JobOpsError):
+            if exc.code == "REQUEST_CONTENT_TYPE_INVALID":
+                self._discard_small_declared_body()
             self._send_json(HTTPStatus.BAD_REQUEST, exc.as_dict())
         else:
             self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {
@@ -309,6 +350,7 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if not self._authorized(parsed) or not self._origin_allowed():
             self.close_connection = True
+            self._discard_small_declared_body()
             self._send_json(HTTPStatus.FORBIDDEN, {"status": "BLOCKED", "code": "LOCAL_SESSION_REQUIRED"})
             return
         route = parsed.path.split("/api/", 1)[-1] if "/api/" in parsed.path else ""

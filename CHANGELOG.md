@@ -6,6 +6,10 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Added a bilingual, redacted execution-status board and isolated startup reconciliation. Review approval is never shown as submission, and interrupted or unknown runs visibly prohibit automatic retry.
+- 新增中英双语脱敏执行状态板与本机启动恢复；审阅批准不会被误标为已提交，中断或结果未知会明确提示禁止自动重试。
+- Stabilized rejected localhost uploads on Windows by draining only a small, explicitly sized request body under a short timeout before closing; ambiguous, chunked and oversized requests remain fail-closed.
+- 修复 Windows 本机上传被拒绝时偶发的连接中止：关闭前仅在短超时内清理明确声明的小请求体；长度歧义、分块与超限请求仍保持失败关闭。
 - Added one provider-neutral, hash-only ATS transport contract across company pages, Greenhouse, Lever and Workday. Raw private values and file content are forbidden, action authorization types are fixed, and live transports remain unregistered.
 - 为公司官网、Greenhouse、Lever 与 Workday 新增统一的仅哈希 ATS 传输契约；禁止私人原值与文件正文进入信封，固定逐动作授权类型，且实时传输仍未注册。
 - Added crash-consistent isolated execution reconciliation across final-authorization, fake-transport and receipt checkpoints; only an already persisted verified receipt can recover to confirmed, while every uncertain state becomes non-retryable `SUBMISSION_UNKNOWN`.

@@ -179,6 +179,16 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .compact-dashboard-item aside { text-align: right; }
 .compact-dashboard-item aside b { display: block; color: var(--green); font-size: 9px; }
 .compact-dashboard-item aside button { margin-top: 5px; }
+.execution-status-board { margin-top: 12px; padding: 18px; border: 1px solid var(--line); background: #fff; }
+.execution-dashboard-list.empty { padding: 18px 4px 4px; color: var(--muted); font-size: 11px; }
+.execution-dashboard-item { display: grid; grid-template-columns: minmax(0,1fr) minmax(220px,.65fr); gap: 18px; padding: 13px 0; border-top: 1px solid #edf0f1; }
+.execution-dashboard-item:first-child { border-top: 0; }
+.execution-dashboard-item strong,.execution-dashboard-item small,.execution-dashboard-item b { display: block; overflow-wrap: anywhere; }
+.execution-dashboard-item small { margin-top: 3px; color: var(--muted); font-size: 10px; }
+.execution-dashboard-item aside { text-align: right; }
+.execution-dashboard-item aside b { color: var(--green); font-size: 10px; }
+.execution-dashboard-item.review-required aside b { color: #8d3e34; }
+.execution-dashboard-item .no-retry { color: #8d3e34; font-weight: 700; }
 .review-packet-panel { margin-top: 14px; padding: 20px; border: 1px solid var(--green); background: #fff; }
 .review-packet-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .review-packet-panel h3 { margin: 0; font: 600 24px/1.2 Georgia, "Songti SC", serif; }
