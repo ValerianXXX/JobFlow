@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260814-jobflow-v19">
+  <link rel="stylesheet" href="styles.css?v=20260814-jobflow-v20">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -117,6 +117,36 @@
           <div id="recentDashboardList" class="compact-dashboard-list"></div>
         </section>
       </div>
+      <section id="browserAssistPanel" class="browser-assist-board" aria-labelledby="browserAssistTitle">
+        <div class="subheading">
+          <div>
+            <h3 id="browserAssistTitle" data-i18n="browserAssistTitle">真实公司官网辅助投递</h3>
+            <small data-i18n="browserAssistBody">JobFlow 在你在场时预填已批准字段并附加已批准材料，随后强制停在最终提交前。</small>
+          </div>
+          <span id="browserAssistBadge" class="guard-badge" data-i18n="browserAssistIdle">等待选择申请</span>
+        </div>
+        <div class="browser-assist-grid">
+          <article>
+            <strong data-i18n="browserCompanionStep">一次安装浏览器伴侣</strong>
+            <p data-i18n="browserCompanionHelp">首次使用请双击项目根目录的“Install JobFlow Browser Companion.cmd”，按窗口提示在 Edge 或 Chrome 中加载一次。以后无需重复安装。</p>
+            <small id="browserCompanionStatus" data-i18n="browserCompanionNotPaired">尚未与本次申请配对</small>
+          </article>
+          <article>
+            <strong data-i18n="browserAssistBoundaryTitle">不可越过的边界</strong>
+            <p data-i18n="browserAssistBoundary">JobFlow 不会点击提交、下一步、登录、注册或绕过验证码。最终提交只能由你亲自点击；结果不明确时只会询问你，不会重试。</p>
+            <small data-i18n="browserAssistCompanyOnly">当前最快版本仅支持已批准的公司同域、访客、单页表单。</small>
+          </article>
+        </div>
+        <div id="browserAssistSelection" class="browser-assist-selection hidden" aria-live="polite">
+          <div><strong id="browserAssistJob"></strong><small id="browserAssistApplication"></small></div>
+          <label><input id="browserAssistConfirm" type="checkbox"><span data-i18n="browserAssistConsent">我确认对这一个申请启动 30 分钟的真实表单读取、预填和材料附加授权；我会亲自检查并点击最终提交。</span></label>
+          <div class="browser-assist-actions">
+            <button id="startBrowserAssistNow" class="primary" type="button" data-i18n="startBrowserAssistNow" disabled>建立浏览器连接</button>
+            <a id="browserAssistOpenPage" class="button-link compact hidden" target="_blank" rel="noopener noreferrer" data-i18n="openApprovedApplication">打开已批准的申请页</a>
+          </div>
+          <p id="browserAssistMessage"></p>
+        </div>
+      </section>
       <section class="execution-status-board" aria-labelledby="executionRunsTitle">
         <div class="subheading"><div><h3 id="executionRunsTitle" data-i18n="executionRunsTitle">自动投递执行状态</h3><small data-i18n="executionRunsBody">显示安全状态、最近检查点和下一步；不显示私人答案、文件内容或网站会话。</small></div><span id="executionRunsCount">0</span></div>
         <div id="executionRunsList" class="execution-dashboard-list"></div>
@@ -368,6 +398,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260814-jobflow-v19"></script>
+  <script src="app.js?v=20260814-jobflow-v20"></script>
 </body>
 </html>

@@ -16,6 +16,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from .errors import JobOpsError
+from .browser_assist import BrowserAssistManager
 from .instance_lock import local_instance_lock
 from .onboarding_center import (
     MAX_LARGE_EXPORT_BYTES,
@@ -94,6 +95,44 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
 
     def _send_json(self, status: int, value: dict[str, Any]) -> None:
         self._send_bytes(status, json.dumps(value, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+
+    def _assist_origin(self) -> str | None:
+        origin = self.headers.get("Origin")
+        return origin if BrowserAssistManager.extension_origin_allowed(origin) else None
+
+    def _assist_token_and_route(self, parsed=None) -> tuple[str, list[str]] | None:
+        parsed = parsed or urlparse(self.path)
+        parts = [item for item in parsed.path.split("/") if item]
+        if len(parts) < 2 or parts[0] != "assist":
+            return None
+        return parts[1], parts[2:]
+
+    def _assist_security_headers(self, content_type: str, origin: str) -> None:
+        self.send_header("Content-Type", content_type)
+        self.send_header("Cache-Control", "no-store, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Cross-Origin-Resource-Policy", "cross-origin")
+        self.send_header("Access-Control-Allow-Origin", origin)
+        self.send_header("Vary", "Origin")
+
+    def _send_assist_bytes(self, status: int, data: bytes | bytearray, content_type: str, origin: str) -> None:
+        self.send_response(status)
+        self._assist_security_headers(content_type, origin)
+        if self.close_connection:
+            self.send_header("Connection", "close")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _send_assist_json(self, status: int, value: dict[str, Any], origin: str) -> None:
+        self._send_assist_bytes(
+            status,
+            json.dumps(value, ensure_ascii=False).encode("utf-8"),
+            "application/json; charset=utf-8",
+            origin,
+        )
 
     def _valid_host(self) -> bool:
         host = self.headers.get("Host", "").split(":", 1)[0].casefold()
@@ -314,8 +353,62 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 "message": "The local onboarding request could not be completed.", "details": {},
             })
 
+    def _dispatch_assist_error(self, exc: Exception, origin: str) -> None:
+        self.close_connection = True
+        if isinstance(exc, JobOpsError):
+            self._send_assist_json(HTTPStatus.BAD_REQUEST, exc.as_dict(), origin)
+        else:
+            self._send_assist_json(HTTPStatus.INTERNAL_SERVER_ERROR, {
+                "status": "BLOCKED", "code": "BROWSER_ASSIST_LOCAL_ERROR",
+                "message": "The local browser-assist request could not be completed.", "details": {},
+            }, origin)
+
+    def do_OPTIONS(self) -> None:  # noqa: N802
+        parsed = urlparse(self.path)
+        assist = self._assist_token_and_route(parsed)
+        origin = self._assist_origin()
+        if assist is None or origin is None or not self._valid_host():
+            self.close_connection = True
+            self.send_response(HTTPStatus.FORBIDDEN)
+            self.send_header("Content-Length", "0")
+            self.send_header("Connection", "close")
+            self.end_headers()
+            return
+        self.send_response(HTTPStatus.NO_CONTENT)
+        self._assist_security_headers("text/plain; charset=utf-8", origin)
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Max-Age", "300")
+        if self.headers.get("Access-Control-Request-Private-Network", "").casefold() == "true":
+            self.send_header("Access-Control-Allow-Private-Network", "true")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        assist = self._assist_token_and_route(parsed)
+        if assist is not None:
+            origin = self._assist_origin()
+            if origin is None or not self._valid_host():
+                self.close_connection = True
+                self._send_json(HTTPStatus.FORBIDDEN, {"status": "BLOCKED", "code": "BROWSER_COMPANION_ORIGIN_FORBIDDEN"})
+                return
+            token, route_parts = assist
+            if len(route_parts) != 2 or route_parts[0] != "file":
+                self._send_assist_json(HTTPStatus.NOT_FOUND, {"status": "NOT_FOUND"}, origin)
+                return
+            raw: bytearray | None = None
+            try:
+                raw, _ = self.server.service.browser_assist.take_file(
+                    token, route_parts[1], extension_origin=origin,
+                )
+                self._send_assist_bytes(HTTPStatus.OK, raw, "application/octet-stream", origin)
+            except Exception as exc:
+                self._dispatch_assist_error(exc, origin)
+            finally:
+                if raw is not None:
+                    raw[:] = b"\0" * len(raw)
+            return
         if parsed.path == "/health":
             self._send_json(HTTPStatus.OK, {"status": "READY", "binding": "127.0.0.1", "real_external_actions": 0})
             return
@@ -348,6 +441,36 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        assist = self._assist_token_and_route(parsed)
+        if assist is not None:
+            origin = self._assist_origin()
+            if origin is None or not self._valid_host():
+                self.close_connection = True
+                self._discard_small_declared_body()
+                self._send_json(HTTPStatus.FORBIDDEN, {"status": "BLOCKED", "code": "BROWSER_COMPANION_ORIGIN_FORBIDDEN"})
+                return
+            token, route_parts = assist
+            try:
+                if route_parts == ["pair"]:
+                    self._optional_json_body()
+                    result = self.server.service.browser_assist.pair(token, extension_origin=origin)
+                elif route_parts == ["prepare"]:
+                    result = self.server.service.browser_assist.prepare(token, self._json_body(), extension_origin=origin)
+                elif route_parts == ["complete"]:
+                    result = self.server.service.browser_assist.complete(token, self._json_body(), extension_origin=origin)
+                elif route_parts == ["submit-observed"]:
+                    result = self.server.service.browser_assist.submit_observed(token, self._json_body(), extension_origin=origin)
+                elif route_parts == ["observe-result"]:
+                    result = self.server.service.browser_assist.observe_result(token, self._json_body(), extension_origin=origin)
+                elif route_parts == ["result-unavailable"]:
+                    result = self.server.service.browser_assist.result_unavailable(token, self._json_body(), extension_origin=origin)
+                else:
+                    self._send_assist_json(HTTPStatus.NOT_FOUND, {"status": "NOT_FOUND"}, origin)
+                    return
+                self._send_assist_json(HTTPStatus.OK, result, origin)
+            except Exception as exc:
+                self._dispatch_assist_error(exc, origin)
+            return
         if not self._authorized(parsed) or not self._origin_allowed():
             self.close_connection = True
             self._discard_small_declared_body()
@@ -367,6 +490,10 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.set_queue_limit(self._json_body())
             elif route == "external-action-kill-switch":
                 result = self.server.service.disable_external_actions(self._json_body())
+            elif route == "start-browser-assist":
+                result = self.server.service.start_browser_assist(self._json_body())
+            elif route == "resolve-browser-assist-unknown":
+                result = self.server.service.resolve_browser_assist_unknown(self._json_body())
             elif route == "prepare-synthetic-execution":
                 result = self.server.service.prepare_synthetic_execution(self._json_body())
             elif route == "complete-synthetic-execution":

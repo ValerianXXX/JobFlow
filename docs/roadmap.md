@@ -42,9 +42,9 @@ This roadmap separates implemented offline evidence from future capabilities tha
 ## Future, separately authorized / 未来需另行授权
 
 - [ ] Read-only live official-careers freshness checks that comply with site terms.
-- [ ] Browser-assisted real form inspection with per-site policy validation.
-- [ ] Live-site browser prefill after a user-visible proposal, with a separate stop before every final submission.
+- [x] Browser-assisted real same-page company-form inspection with exact-page, same-origin, guest-mode and per-application policy validation.
+- [x] User-present live browser fill and approved material attachment after a visible proposal, with a hard stop before every final submission and zero automatic retry.
 - [ ] Provider-specific live Greenhouse, Lever and Workday compatibility evidence.
 - [ ] User-controlled scheduling after explicit authorization and a kill switch.
 
-Real submission, upload, email, account creation and recruiter contact remain outside the current release. / 真实提交、上传、邮件、账号创建与招聘者联系仍不属于当前发布。
+Real final submission, unattended or multi-page ATS automation, email, account creation and recruiter contact remain outside the current release. Approved material attachment on the supported same-page company flow is included. / 真实最终提交、无人值守或多页 ATS 自动化、邮件、账号创建与招聘者联系仍不属于当前发布；受支持的同页公司申请可挂载获批材料。

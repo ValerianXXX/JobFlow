@@ -447,6 +447,21 @@ textarea { min-height: 96px; resize: vertical; }
 .final-confirm { margin: 0 0 22px; text-align: left; }
 .completion-message { min-height: 24px; margin: 16px 0 0; color: var(--green); font-weight: 700; }
 
+.browser-assist-board { margin-top: 20px; padding: 20px; border: 1px solid #9fc3b7; background: linear-gradient(135deg,#f4faf8,#edf5f2); }
+.browser-assist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+.browser-assist-grid article { padding: 15px; border: 1px solid var(--line); background: #fff; }
+.browser-assist-grid strong,.browser-assist-grid small { display: block; }
+.browser-assist-grid p { margin: 7px 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.browser-assist-grid small { color: var(--green-dark); font-weight: 700; }
+.browser-assist-selection { display: grid; gap: 12px; margin-top: 15px; padding: 16px; border: 1px solid var(--green); background: #fff; }
+.browser-assist-selection > div:first-child strong,.browser-assist-selection > div:first-child small { display: block; }
+.browser-assist-selection > div:first-child small { margin-top: 3px; color: var(--muted); }
+.browser-assist-selection label { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: var(--green-soft); font-size: 12px; line-height: 1.55; }
+.browser-assist-selection input { margin-top: 3px; accent-color: var(--green); }
+.browser-assist-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#browserAssistMessage { min-height: 18px; margin: 0; color: var(--green-dark); font-weight: 700; }
+.browser-assist-start,.browser-assist-resolve { margin-top: 8px; }
+
 #toast { position: fixed; right: 24px; bottom: 104px; max-width: 390px; padding: 13px 17px; color: #fff; background: var(--ink); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transform: translateY(12px); transition: .2s; z-index: 50; }
 #toast.show { opacity: 1; transform: translateY(0); }
 #toast.error { background: #8d3e34; }
@@ -498,6 +513,7 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .application-field-row { grid-template-columns: 1fr; }
   .packet-decision-options { grid-template-columns: 1fr; }
   .queue-secondary-boards { grid-template-columns: 1fr; }
+  .browser-assist-grid { grid-template-columns: 1fr; }
   .demo-execution-controls { grid-template-columns: 1fr; }
   .ats-capability-list { grid-template-columns: 1fr 1fr; }
   .offline-discovery-controls { grid-template-columns: 1fr 1fr; }

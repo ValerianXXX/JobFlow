@@ -11,6 +11,7 @@ graft config
 graft docs
 graft schemas
 graft scripts
+graft browser-companion
 graft src/jobops/ui
 prune build
 prune dist

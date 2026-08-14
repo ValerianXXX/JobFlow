@@ -56,14 +56,19 @@ class ExternalActionSessionPolicy:
     mode: str
     activation_authorized: bool
     isolated_test_mode: bool
+    assisted_user_present: bool
 
     @classmethod
     def production_disabled(cls) -> "ExternalActionSessionPolicy":
-        return cls("PRODUCTION_DISABLED", False, False)
+        return cls("PRODUCTION_DISABLED", False, False, False)
 
     @classmethod
     def isolated_fake(cls) -> "ExternalActionSessionPolicy":
-        return cls("ISOLATED_FAKE", True, True)
+        return cls("ISOLATED_FAKE", True, True, False)
+
+    @classmethod
+    def assisted_user_present_mode(cls) -> "ExternalActionSessionPolicy":
+        return cls("ASSISTED_USER_PRESENT", True, False, True)
 
 
 @dataclass(frozen=True)
@@ -106,7 +111,7 @@ class ExternalActionSession:
 
 
 class ExternalActionSessionManager:
-    """Scoped authorization ledger; this build can activate it only in isolated tests."""
+    """Scoped authorization ledger for isolated tests and explicit user-present assistance."""
 
     def __init__(self, database: JobOpsDB, policy: ExternalActionSessionPolicy) -> None:
         self.database = database
@@ -120,19 +125,28 @@ class ExternalActionSessionManager:
             ).fetchone()
         if row is None:
             raise JobOpsError("EXTERNAL_ACTION_CONTROL_MISSING", "The external-action kill switch is unavailable.")
+        with self.database.connect() as connection:
+            real_actions = int(connection.execute(
+                "SELECT COALESCE(SUM(real_side_effect),0) FROM external_action_session_uses"
+            ).fetchone()[0])
         return {
             "enabled": bool(row["enabled"]), "generation": int(row["generation"]),
             "mode": str(row["mode"]), "updated_at": str(row["updated_at"]),
-            "real_external_actions": 0,
+            "real_external_actions": real_actions,
         }
 
     def enable(self, *, user_confirmed: bool) -> dict[str, Any]:
         if not user_confirmed:
             raise JobOpsError("EXPLICIT_CONFIRMATION_REQUIRED", "Enabling an action session requires explicit confirmation.")
-        if not self.policy.activation_authorized or not self.policy.isolated_test_mode or self.policy.mode != "ISOLATED_FAKE":
+        if (
+            not self.policy.activation_authorized
+            or self.policy.mode not in {"ISOLATED_FAKE", "ASSISTED_USER_PRESENT"}
+            or (self.policy.mode == "ISOLATED_FAKE" and not self.policy.isolated_test_mode)
+            or (self.policy.mode == "ASSISTED_USER_PRESENT" and not self.policy.assisted_user_present)
+        ):
             raise JobOpsError(
                 "PHASE_NOT_AUTHORIZED",
-                "External action sessions cannot be enabled in the production-disabled build.",
+                "External action sessions cannot be enabled without an authorized operating policy.",
             )
         now = iso_utc()
         with self.database.connect() as connection:
@@ -151,11 +165,19 @@ class ExternalActionSessionManager:
             connection.execute(
                 "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(NULL,?,?,?,?,?)",
                 (
-                    "EXTERNAL_ACTION_CONTROL_ENABLED", "DISABLED", "ISOLATED_FAKE",
+                    "EXTERNAL_ACTION_CONTROL_ENABLED", "DISABLED", self.policy.mode,
                     json.dumps({"generation": generation, "mode": self.policy.mode}), now,
                 ),
             )
-        return {"status": "ISOLATED_ACTION_CONTROL_ENABLED", "generation": generation, "real_external_actions": 0}
+        return {
+            "status": (
+                "ASSISTED_ACTION_CONTROL_ENABLED"
+                if self.policy.assisted_user_present else "ISOLATED_ACTION_CONTROL_ENABLED"
+            ),
+            "generation": generation,
+            "mode": self.policy.mode,
+            "real_external_actions": 0,
+        }
 
     def disable(self, *, reason: str = "USER_KILL_SWITCH") -> dict[str, Any]:
         safe_reason = str(reason).strip().upper()
@@ -204,8 +226,10 @@ class ExternalActionSessionManager:
         control = self.control_state()
         if not control["enabled"] or control["mode"] != self.policy.mode:
             raise JobOpsError("EXTERNAL_ACTION_KILL_SWITCH_ACTIVE", "The external-action kill switch is active.")
-        if not self.policy.activation_authorized or not self.policy.isolated_test_mode:
-            raise JobOpsError("PHASE_NOT_AUTHORIZED", "This build cannot issue a production external-action session.")
+        if not self.policy.activation_authorized or not (
+            self.policy.isolated_test_mode or self.policy.assisted_user_present
+        ):
+            raise JobOpsError("PHASE_NOT_AUTHORIZED", "This build cannot issue the requested external-action session.")
         normalized = context.normalized()
         actions = _actions(allowed_actions)
         if "upload_materials" in actions and "upload_material" not in normalized.external_actions:
@@ -455,6 +479,95 @@ class ExternalActionSessionManager:
             "status": "ISOLATED_ACTION_RECORDED", "use_id": use_id,
             "session_id": session_id, "action": action, "adapter_kind": "fake",
             "real_external_actions": 0,
+        }
+
+    def record_assisted_use(
+        self,
+        *,
+        session_id: str,
+        context: ApprovalContext,
+        action: str,
+        request_hash: str,
+        result_code: str,
+        real_side_effect: bool,
+    ) -> dict[str, Any]:
+        """Append one actual browser-companion action without storing its private payload."""
+
+        if not self.policy.assisted_user_present or self.policy.mode != "ASSISTED_USER_PRESENT":
+            raise JobOpsError("REAL_TRANSPORT_FORBIDDEN", "User-present browser assistance is not active.")
+        if action not in {"inspect_application_form", "prefill_application_form", "upload_materials"}:
+            raise JobOpsError("EXTERNAL_SESSION_ACTION_UNSUPPORTED", "The browser companion attempted an unsupported action.")
+        if real_side_effect is not (action in {"prefill_application_form", "upload_materials"}):
+            raise JobOpsError(
+                "EXTERNAL_ACTION_AUDIT_INVALID",
+                "The assisted action side-effect flag does not match the operation.",
+            )
+        if len(request_hash) != 71 or not request_hash.startswith("sha256:"):
+            raise JobOpsError("EXTERNAL_ACTION_REQUEST_HASH_INVALID", "The action request must be represented by a SHA-256 hash.")
+        try:
+            int(request_hash[7:], 16)
+        except ValueError as exc:
+            raise JobOpsError("EXTERNAL_ACTION_REQUEST_HASH_INVALID", "The action request must be represented by a SHA-256 hash.") from exc
+        safe_result = str(result_code).strip().upper()
+        if not safe_result or len(safe_result) > 100 or not safe_result.replace("_", "").isalnum():
+            raise JobOpsError("EXTERNAL_ACTION_RESULT_INVALID", "The assisted result must be a short safe code.")
+        with self.database.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM external_action_sessions WHERE session_id=?", (session_id,),
+            ).fetchone()
+        if row is None:
+            raise JobOpsError("EXTERNAL_ACTION_SESSION_NOT_FOUND", "The scoped action session does not exist.")
+        session = self._session_from_row(row)
+        decision = self._validate(session, context=context, action=action)
+        if decision != "EXTERNAL_ACTION_SESSION_VALID":
+            raise JobOpsError(decision, "The scoped action session cannot authorize this operation.")
+        used_at = iso_utc()
+        use_id = stable_id("EAU", session_id, action, request_hash, used_at)
+        attempt_id = stable_id("ATT", use_id, "browser_companion")
+        real_value = 1 if real_side_effect else 0
+        try:
+            with self.database.connect() as connection:
+                connection.execute("BEGIN IMMEDIATE")
+                connection.execute(
+                    """INSERT INTO external_action_session_uses(
+                    use_id,session_id,application_id,action,request_hash,adapter_kind,result_code,
+                    real_side_effect,used_at) VALUES(?,?,?,?,?,?,?,?,?)""",
+                    (
+                        use_id, session_id, context.application_id, action, request_hash,
+                        "browser_companion", safe_result, real_value, used_at,
+                    ),
+                )
+                connection.execute(
+                    """INSERT INTO external_action_attempts(
+                    attempt_id,application_id,action,adapter_kind,result_code,context_hash,
+                    real_side_effect,created_at) VALUES(?,?,?,?,?,?,?,?)""",
+                    (
+                        attempt_id, context.application_id, action, "browser_companion", safe_result,
+                        context.context_hash, real_value, used_at,
+                    ),
+                )
+                connection.execute(
+                    "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
+                    (
+                        context.application_id, "ASSISTED_EXTERNAL_ACTION_SESSION_USED", "APPROVED", "APPROVED",
+                        json.dumps({
+                            "session_id": session_id, "use_id": use_id, "action": action,
+                            "request_hash": request_hash, "result_code": safe_result,
+                            "real_side_effect": bool(real_side_effect),
+                        }), used_at,
+                    ),
+                )
+        except sqlite3.IntegrityError as exc:
+            if "UNIQUE constraint failed" in str(exc):
+                raise JobOpsError("EXTERNAL_ACTION_SESSION_REPLAYED", "This session action has already been used.") from exc
+            raise
+        return {
+            "status": "ASSISTED_ACTION_RECORDED",
+            "use_id": use_id,
+            "session_id": session_id,
+            "action": action,
+            "adapter_kind": "browser_companion",
+            "real_external_actions": real_value,
         }
 
     def revoke(self, session_id: str) -> dict[str, Any]:

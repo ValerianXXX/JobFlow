@@ -625,7 +625,7 @@ def main(argv: list[str] | None = None) -> int:
             continuation = continue_recorded_intake(
                 project=project, database=database, onboarding=_onboarding(project, database),
             )
-            emit({**result, "promoted": continuation["initial_promotion"], "continued_intake": continuation, "phase5_authorization": "ABSENT", "next_safe_action": "NONE_EXTERNAL_ACTIONS_REMAIN_DISABLED"}, project)
+            emit({**result, "promoted": continuation["initial_promotion"], "continued_intake": continuation, "phase5_authorization": "PER_APPLICATION_USER_PRESENT_REQUIRED", "next_safe_action": "START_BROWSER_ASSIST_FROM_LOCAL_UI"}, project)
         elif args.command == "reject-review-packet":
             if not args.application_id:
                 raise JobOpsError("APPLICATION_ID_REQUIRED", "Select the review packet to reject.")

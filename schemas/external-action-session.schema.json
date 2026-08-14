@@ -28,7 +28,7 @@
       }
     },
     "control_generation": {"type": "integer", "minimum": 1},
-    "mode": {"enum": ["PRODUCTION_DISABLED", "ISOLATED_FAKE"]},
+    "mode": {"enum": ["PRODUCTION_DISABLED", "ISOLATED_FAKE", "ASSISTED_USER_PRESENT"]},
     "bound_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "issued_at": {"type": "string", "format": "date-time"},
     "expires_at": {"type": "string", "format": "date-time"},

@@ -12,7 +12,7 @@ from .state_machine import BLOCKING_STATES, assert_transition
 from .util import iso_utc
 
 
-LATEST_SCHEMA_VERSION = 7
+LATEST_SCHEMA_VERSION = 8
 
 
 MIGRATION_001_SQL = """
@@ -319,6 +319,125 @@ COMMIT;
 """
 
 
+MIGRATION_008_SQL = """
+BEGIN IMMEDIATE;
+
+CREATE TABLE external_action_control_v8 (
+    singleton_id INTEGER PRIMARY KEY CHECK(singleton_id = 1),
+    enabled INTEGER NOT NULL CHECK(enabled IN (0,1)),
+    generation INTEGER NOT NULL CHECK(generation >= 1),
+    mode TEXT NOT NULL CHECK(mode IN ('PRODUCTION_DISABLED','ISOLATED_FAKE','ASSISTED_USER_PRESENT')),
+    updated_at TEXT NOT NULL
+);
+INSERT INTO external_action_control_v8 SELECT * FROM external_action_control;
+
+CREATE TABLE external_action_sessions_v8 (
+    session_id TEXT PRIMARY KEY,
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    application_context_hash TEXT NOT NULL,
+    source_route_hash TEXT NOT NULL,
+    form_snapshot_hash TEXT NOT NULL,
+    uploads_hash TEXT NOT NULL,
+    site_policy_version TEXT NOT NULL,
+    allowed_actions_json TEXT NOT NULL,
+    control_generation INTEGER NOT NULL CHECK(control_generation >= 1),
+    mode TEXT NOT NULL CHECK(mode IN ('PRODUCTION_DISABLED','ISOLATED_FAKE','ASSISTED_USER_PRESENT')),
+    bound_hash TEXT NOT NULL,
+    issued_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    nonce TEXT NOT NULL,
+    session_version INTEGER NOT NULL CHECK(session_version >= 1),
+    status TEXT NOT NULL CHECK(status IN ('AUTHORIZED','REVOKED','EXPIRED','INVALIDATED')),
+    revoked_at TEXT
+);
+INSERT INTO external_action_sessions_v8 SELECT * FROM external_action_sessions;
+
+CREATE TABLE external_action_session_uses_v8 (
+    use_id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES external_action_sessions_v8(session_id),
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    action TEXT NOT NULL,
+    request_hash TEXT NOT NULL,
+    adapter_kind TEXT NOT NULL,
+    result_code TEXT NOT NULL,
+    real_side_effect INTEGER NOT NULL CHECK(real_side_effect IN (0,1)),
+    used_at TEXT NOT NULL,
+    UNIQUE(session_id,action)
+);
+INSERT INTO external_action_session_uses_v8 SELECT * FROM external_action_session_uses;
+
+CREATE TABLE external_action_attempts_v8 (
+    attempt_id TEXT PRIMARY KEY,
+    application_id TEXT,
+    action TEXT NOT NULL,
+    adapter_kind TEXT NOT NULL,
+    result_code TEXT NOT NULL,
+    context_hash TEXT,
+    real_side_effect INTEGER NOT NULL CHECK(real_side_effect IN (0,1)),
+    created_at TEXT NOT NULL
+);
+INSERT INTO external_action_attempts_v8 SELECT * FROM external_action_attempts;
+
+DROP TABLE external_action_session_uses;
+DROP TABLE external_action_sessions;
+DROP TABLE external_action_control;
+DROP TABLE external_action_attempts;
+ALTER TABLE external_action_control_v8 RENAME TO external_action_control;
+ALTER TABLE external_action_sessions_v8 RENAME TO external_action_sessions;
+ALTER TABLE external_action_session_uses_v8 RENAME TO external_action_session_uses;
+ALTER TABLE external_action_attempts_v8 RENAME TO external_action_attempts;
+
+CREATE INDEX idx_external_action_sessions_application
+ON external_action_sessions(application_id,issued_at DESC);
+CREATE TRIGGER external_action_session_uses_append_only_update
+BEFORE UPDATE ON external_action_session_uses
+BEGIN SELECT RAISE(ABORT, 'external action session uses are append-only'); END;
+CREATE TRIGGER external_action_session_uses_append_only_delete
+BEFORE DELETE ON external_action_session_uses
+BEGIN SELECT RAISE(ABORT, 'external action session uses are append-only'); END;
+CREATE INDEX idx_action_attempts_application ON external_action_attempts(application_id,created_at);
+CREATE TRIGGER external_attempts_append_only_update BEFORE UPDATE ON external_action_attempts
+BEGIN SELECT RAISE(ABORT, 'external_action_attempts are append-only'); END;
+CREATE TRIGGER external_attempts_append_only_delete BEFORE DELETE ON external_action_attempts
+BEGIN SELECT RAISE(ABORT, 'external_action_attempts are append-only'); END;
+
+ALTER TABLE receipts ADD COLUMN source TEXT NOT NULL DEFAULT 'legacy';
+ALTER TABLE receipts ADD COLUMN verified INTEGER NOT NULL DEFAULT 1 CHECK(verified IN (0,1));
+
+CREATE TABLE browser_assist_runs (
+    assist_id TEXT PRIMARY KEY,
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    session_id TEXT NOT NULL REFERENCES external_action_sessions(session_id),
+    allowed_origin TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN (
+        'PAIRING','READY','AWAITING_USER_SUBMIT','SUBMISSION_UNKNOWN',
+        'CONFIRMED','FAILED','EXPIRED','REVOKED'
+    )),
+    prepared_hash TEXT,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX idx_browser_assist_runs_application
+ON browser_assist_runs(application_id,created_at DESC);
+CREATE TABLE browser_assist_events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    assist_id TEXT NOT NULL REFERENCES browser_assist_runs(assist_id),
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    event_type TEXT NOT NULL,
+    evidence_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE TRIGGER browser_assist_events_append_only_update BEFORE UPDATE ON browser_assist_events
+BEGIN SELECT RAISE(ABORT, 'browser assist events are append-only'); END;
+CREATE TRIGGER browser_assist_events_append_only_delete BEFORE DELETE ON browser_assist_events
+BEGIN SELECT RAISE(ABORT, 'browser assist events are append-only'); END;
+
+INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','8');
+COMMIT;
+"""
+
+
 def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
@@ -407,6 +526,10 @@ class JobOpsDB:
             if version == 6:
                 connection.executescript(MIGRATION_007_SQL)
                 applied.append(7)
+                version = 7
+            if version == 7:
+                connection.executescript(MIGRATION_008_SQL)
+                applied.append(8)
         return applied
 
     def initialize(self) -> None:

@@ -6,6 +6,12 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Added the fixed-ID JobFlow Browser Companion and a real, user-present company-site assistance path. For one approved application it revalidates the exact same-origin guest form, fills only approved fields, streams approved materials through one-use localhost tokens, and stops at `AWAITING_USER_SUBMIT`; no code path can click or invoke final submit.
+- 新增固定 ID 的 JobFlow 浏览器伴侣与真实、用户在场的公司官网辅助路径：每次只处理一项已批准申请，重新核验精确同源访客表单，仅填写获批字段，并通过本机一次性令牌流式挂载获批材料；随后严格停在 `AWAITING_USER_SUBMIT`，代码中不存在点击或调用最终提交的路径。
+- Added trusted-user-submit observation, strong success/failure result classification, a bilingual manual “Was it submitted successfully?” fallback, startup/kill-switch recovery to non-retryable `SUBMISSION_UNKNOWN`, append-only real-action auditing, and zero automatic retries.
+- 新增可信用户提交观察、强成功/失败结果判断、双语“是否提交成功？”人工兜底，以及启动恢复/急停后收敛到不可自动重试的 `SUBMISSION_UNKNOWN`；真实检查、填写与上传采用追加式审计，自动重试固定为 0。
+- Added a one-click Windows Browser Companion installer, bilingual UI controls, exact extension-origin CORS, least-privilege optional HTTPS access, and synthetic real-browser E2E coverage. No public recruiting site was visited during development or QA.
+- 新增 Windows 一键浏览器伴侣安装入口、双语操作界面、精确扩展来源 CORS、最小化可选 HTTPS 权限与合成真实浏览器端到端验收；开发与 QA 未访问任何公开招聘网站。
 - The synthetic product tour now displays a bilingual, field-by-field redacted prefill proposal and rehearses an approved application through isolated private-value resolution, temporary material staging, a separate fake final-confirmation gate and a verified synthetic receipt. The normal workspace rejects both demo-only endpoints, and browser, network, upload and real external actions remain zero.
 - 合成产品体验现在会以中英双语逐字段显示脱敏预填提案，并把已批准的虚构申请演练到隔离私人值解析、临时材料暂存、独立假最终确认门和经验证的合成回执；正常工作区会拒绝两个演示专用接口，浏览器、网络、上传与真实外部动作仍均为 0。
 - The isolated execution preflight now validates the complete scoped action set before consuming anything, then records one-use authorizations and hash-only envelopes for official-job read, form inspection, optional prefill and material upload in fixed order. A missing scope leaves both the use ledger and execution-run table untouched.

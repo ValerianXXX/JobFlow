@@ -298,9 +298,12 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         "final_states": [
             "PHASE_0_4_HARDENED", "PHASE_4_5_SECURE_ONBOARDING_READY",
             "BILINGUAL_ONBOARDING_CENTER_READY",
-            "PHASE_5_6_OFFLINE_ENGINEERING_COMPLETE_NOT_AUTHORIZED_NOT_OPERATIONAL",
+            "PHASE_5_USER_PRESENT_COMPANY_ASSIST_READY",
+            "FINAL_SUBMIT_USER_ONLY_AUTOMATIC_RETRY_DISABLED",
+            "PHASE_6_UNATTENDED_AUTOMATION_NOT_OPERATIONAL",
         ],
-        "phase_5_6_authorization": "ABSENT", "real_external_actions": actions["real_external_actions"],
+        "phase_5_6_authorization": "PER_APPLICATION_USER_PRESENT_PREFILL_UPLOAD_ONLY",
+        "real_external_actions": actions["real_external_actions"],
         "checks": checks, "tests": tests, "skill_validation": skill_validation,
         "knowledge": knowledge, "database": {"schema_version": schema_version, "dry_run_constraint": True},
         "security_scan": scan, "public_repository": public_repository, "external_action_audit": actions,
@@ -322,7 +325,11 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         "independent_qa": independent_view,
         "document_visual_review": load_json(project / "reports" / "validation-artifacts" / "complex-resume-visual-review.json"),
         **independent_counts,
-        "closed_capabilities": ["real website access", "real prefill", "file upload", "final submit", "account creation", "email", "recruiter contact", "real scheduler"],
+        "closed_capabilities": [
+            "final submit", "automatic retry", "login or account creation",
+            "cross-origin or multi-page ATS automation", "email", "recruiter contact",
+            "unattended real scheduler",
+        ],
         "next_safe_action": (
             "onboarding-center" if status == "PASS" and onboarding_in_progress
             else "review-onboarding --latest" if status == "PASS" and active_onboarding_packets

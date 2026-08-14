@@ -17,7 +17,16 @@ from .util import canonical_json, project_root, sha256_bytes
 
 
 MAX_PRIVATE_JSON_BYTES = 2 * 1024 * 1024
+MAX_ASSISTED_MATERIAL_BYTES = 64 * 1024 * 1024
 ALLOWED_UPLOAD_SUFFIXES = frozenset({".docx", ".pdf", ".txt"})
+ASSISTED_MATERIAL_KINDS = frozenset({
+    "generated_resume_docx", "generated_resume_pdf",
+    "generated_cover_letter_docx", "generated_cover_letter_pdf",
+    "onboarding_source_document", "master_resume_docx", "master_resume_pdf",
+})
+ASSISTED_FIELD_TYPES = frozenset({
+    "text", "email", "tel", "url", "number", "date", "datetime-local", "select", "textarea",
+})
 PROFILE_FIELD_ALIASES = {
     "full_name": "candidate_display_name",
     "github": "github_url",
@@ -89,29 +98,30 @@ class IsolatedEphemeralPayloadProbe:
 
 
 class EphemeralATSPayloadBroker:
-    """Materialize approved synthetic bindings only inside a bounded private lease.
-
-    The production policy is intentionally unavailable in this build.  This local
-    proof establishes the private-value handoff and cleanup contract that a future,
-    separately authorized provider adapter must satisfy.
-    """
+    """Materialize approved bindings only inside a bounded private lease."""
 
     def __init__(self, onboarding: PrivateOnboarding, *, isolated_test_mode: bool = False) -> None:
         self.onboarding = onboarding
         self.isolated_test_mode = isolated_test_mode
         self.schemas = project_root() / "schemas"
 
-    def _private_json(self, reference: str, *, allowed_kinds: set[str]) -> tuple[dict[str, Any], str]:
+    def _private_json(
+        self,
+        reference: str,
+        *,
+        allowed_kinds: set[str],
+        require_synthetic: bool = True,
+    ) -> tuple[dict[str, Any], str]:
         validate_secure_reference(reference)
         metadata = self.onboarding.reference_metadata(reference)
         if (
             metadata["status"] != "ACTIVE"
             or metadata["kind"] not in allowed_kinds
-            or metadata["synthetic"] is not True
+            or (require_synthetic and metadata["synthetic"] is not True)
         ):
             raise JobOpsError(
                 "EPHEMERAL_PRIVATE_REFERENCE_INVALID",
-                "The isolated payload proof accepts only active synthetic references of the expected kind.",
+                "The private payload lease accepts only active references of the expected kind.",
             )
         raw = bytearray(self.onboarding.read_bytes(reference))
         try:
@@ -127,8 +137,12 @@ class EphemeralATSPayloadBroker:
         finally:
             raw[:] = b"\0" * len(raw)
 
-    def _resolve_private_field(self, reference: str, answer_key: str) -> str:
-        value, kind = self._private_json(reference, allowed_kinds={"candidate_profile", "answer_bank"})
+    def _resolve_private_field(self, reference: str, answer_key: str, *, require_synthetic: bool = True) -> str:
+        value, kind = self._private_json(
+            reference,
+            allowed_kinds={"candidate_profile", "answer_bank"},
+            require_synthetic=require_synthetic,
+        )
         if kind == "candidate_profile":
             key = PROFILE_FIELD_ALIASES.get(answer_key, answer_key)
             return _field_value(value.get(key))
@@ -154,6 +168,7 @@ class EphemeralATSPayloadBroker:
         form_snapshot: dict[str, Any],
         browser_plan: dict[str, Any],
         references: list[str],
+        require_synthetic: bool = True,
     ) -> tuple[list[dict[str, str]], list[dict[str, str]], int]:
         if not references:
             return [], [], 0
@@ -169,7 +184,11 @@ class EphemeralATSPayloadBroker:
             )
         reference = references[0]
         metadata = self.onboarding.reference_metadata(reference)
-        bundle, kind = self._private_json(reference, allowed_kinds={"application_answer_bundle"})
+        bundle, kind = self._private_json(
+            reference,
+            allowed_kinds={"application_answer_bundle"},
+            require_synthetic=require_synthetic,
+        )
         if kind != "application_answer_bundle" or metadata["content_sha256"] is None:
             raise JobOpsError("EPHEMERAL_ANSWER_BUNDLE_INVALID", "The encrypted job-specific answer bundle is invalid.")
         if bundle.get("application_id") != context.application_id:
@@ -236,6 +255,162 @@ class EphemeralATSPayloadBroker:
             raise JobOpsError("EPHEMERAL_UPLOAD_FORMAT_INVALID", "The isolated payload proof accepts DOCX, PDF, or TXT materials only.")
         return suffix
 
+    def materialize_assisted_payload(
+        self,
+        *,
+        context: ApprovalContext,
+        form_snapshot: dict[str, Any],
+        browser_plan: dict[str, Any],
+        public_values: dict[str, str],
+        material_references: dict[str, str],
+        application_answer_bundle_references: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Resolve one approved user-present payload without writing plaintext to disk."""
+
+        normalized = context.normalized()
+        validate_ats_form_snapshot_integrity(form_snapshot)
+        validate_browser_action_plan_integrity(browser_plan)
+        if (
+            browser_plan.get("form_snapshot_hash") != normalized.form_snapshot_hash
+            or form_snapshot.get("form_snapshot_hash") != normalized.form_snapshot_hash
+        ):
+            raise JobOpsError("SITE_CHANGED", "The assisted payload lease does not match the approved form snapshot.")
+        if (
+            browser_plan.get("source_route_hash") != normalized.source_route_hash
+            or form_snapshot.get("source_route_hash") != normalized.source_route_hash
+        ):
+            raise JobOpsError("EXECUTION_ROUTE_CHANGED", "The assisted payload lease does not match the approved source route.")
+        if set(public_values) - {str(item["control_ref"]) for item in browser_plan["actions"]}:
+            raise JobOpsError("EPHEMERAL_PUBLIC_BINDING_EXTRA", "A public value targets a control outside the approved browser plan.")
+
+        answer_references = list(application_answer_bundle_references or [])
+        resolved_fields, expected_field_bindings, skipped_optional_count = self._resolve_application_answers(
+            context=normalized,
+            form_snapshot=form_snapshot,
+            browser_plan=browser_plan,
+            references=answer_references,
+            require_synthetic=False,
+        )
+        fields_by_ref = {str(item["control_ref"]): item for item in form_snapshot["fields"]}
+        for item in resolved_fields:
+            field = fields_by_ref.get(str(item["control_ref"]))
+            if field is None or str(field.get("control_type")) not in ASSISTED_FIELD_TYPES:
+                raise JobOpsError(
+                    "BROWSER_CONTROL_TYPE_UNSUPPORTED",
+                    "A confirmed application answer uses a control type the browser companion cannot fill safely.",
+                    control_type=str(field.get("control_type")) if field else "missing",
+                )
+        for action in browser_plan["actions"]:
+            control_ref = str(action["control_ref"])
+            if action["action"] != "PROPOSE_PREFILL":
+                if control_ref in public_values:
+                    raise JobOpsError("EPHEMERAL_STOP_FIELD_VALUE_FORBIDDEN", "A stopped form control cannot receive a value.")
+                continue
+            field = fields_by_ref.get(control_ref)
+            if field is None or field.get("classification") != action.get("classification"):
+                raise JobOpsError("EPHEMERAL_FORM_BINDING_CHANGED", "A planned form control no longer matches its reviewed field.")
+            if str(field.get("control_type")) not in ASSISTED_FIELD_TYPES:
+                raise JobOpsError(
+                    "BROWSER_CONTROL_TYPE_UNSUPPORTED",
+                    "This approved field uses a control type the browser companion cannot fill safely.",
+                    control_type=str(field.get("control_type")),
+                )
+            answer_key = str(field.get("answer_key") or "")
+            if action["binding_kind"] == "SECURE_REF":
+                resolved = self._resolve_private_field(
+                    str(action["binding_ref"]), answer_key, require_synthetic=False,
+                )
+            elif action["binding_kind"] == "PUBLIC_VALUE_HASH":
+                if control_ref not in public_values:
+                    raise JobOpsError("EPHEMERAL_PUBLIC_VALUE_MISSING", "A hash-bound public value must be supplied again for this lease.")
+                resolved = _field_value(public_values[control_ref])
+                if sha256_bytes(resolved.encode("utf-8")) != action["binding_ref"]:
+                    raise JobOpsError("EPHEMERAL_PUBLIC_VALUE_CHANGED", "A public field value changed after review.")
+            else:
+                raise JobOpsError("EPHEMERAL_FIELD_BINDING_INVALID", "A proposed prefill has no approved value binding.")
+            resolved_fields.append({"control_ref": control_ref, "value": resolved})
+            expected_field_bindings.append({
+                "control_ref": control_ref,
+                "value_sha256": sha256_bytes(resolved.encode("utf-8")),
+            })
+
+        if len({str(item["control_ref"]) for item in resolved_fields}) != len(resolved_fields):
+            raise JobOpsError("EPHEMERAL_FIELD_BINDING_DUPLICATE", "An approved form field was resolved more than once.")
+
+        expected_uploads = [
+            (_sha256(item.sha256, code="EPHEMERAL_UPLOAD_HASH_INVALID"), item)
+            for item in normalized.uploads
+        ]
+        normalized_material_refs = {
+            _sha256(key, code="EPHEMERAL_UPLOAD_HASH_INVALID"): str(value)
+            for key, value in material_references.items()
+        }
+        if set(normalized_material_refs) != {item[0] for item in expected_uploads}:
+            raise JobOpsError("EPHEMERAL_UPLOAD_BINDINGS_INCOMPLETE", "Every approved upload must map to exactly one secure reference.")
+        files: list[dict[str, str]] = []
+        expected_material_bindings: list[dict[str, str]] = []
+        for upload_hash, upload in sorted(
+            expected_uploads, key=lambda item: (item[1].purpose, item[1].filename, item[0]),
+        ):
+            reference = normalized_material_refs[upload_hash]
+            validate_secure_reference(reference)
+            metadata = self.onboarding.reference_metadata(reference)
+            if (
+                metadata["status"] != "ACTIVE"
+                or metadata["kind"] not in ASSISTED_MATERIAL_KINDS
+                or metadata["content_sha256"] != upload_hash
+            ):
+                raise JobOpsError("EPHEMERAL_UPLOAD_REFERENCE_INVALID", "An approved upload does not match its active encrypted reference.")
+            self._safe_suffix(upload.filename)
+            files.append({
+                "purpose": upload.purpose,
+                "filename": upload.filename,
+                "sha256": upload_hash,
+                "secure_ref": reference,
+            })
+            expected_material_bindings.append({"purpose": upload.purpose, "sha256": upload_hash})
+
+        field_bindings = sorted(expected_field_bindings, key=lambda item: item["control_ref"])
+        material_bindings = sorted(expected_material_bindings, key=lambda item: (item["purpose"], item["sha256"]))
+        return {
+            "fields": sorted(resolved_fields, key=lambda item: item["control_ref"]),
+            "files": files,
+            "field_binding_hash": sha256_bytes(canonical_json(field_bindings)),
+            "material_binding_hash": sha256_bytes(canonical_json(material_bindings)),
+            "field_count": len(resolved_fields),
+            "file_count": len(files),
+            "application_answer_bundle_count": len(answer_references),
+            "skipped_optional_field_count": skipped_optional_count,
+        }
+
+    def read_assisted_material(
+        self,
+        *,
+        reference: str,
+        expected_sha256: str,
+        filename: str,
+    ) -> bytearray:
+        """Decrypt one approved material into memory for a one-use loopback stream."""
+
+        validate_secure_reference(reference)
+        expected = _sha256(expected_sha256, code="EPHEMERAL_UPLOAD_HASH_INVALID")
+        self._safe_suffix(filename)
+        metadata = self.onboarding.reference_metadata(reference)
+        if (
+            metadata["status"] != "ACTIVE"
+            or metadata["kind"] not in ASSISTED_MATERIAL_KINDS
+            or metadata["content_sha256"] != expected
+        ):
+            raise JobOpsError("EPHEMERAL_UPLOAD_REFERENCE_INVALID", "The approved upload reference is unavailable or changed.")
+        raw = bytearray(self.onboarding.read_bytes(reference))
+        if not raw or len(raw) > MAX_ASSISTED_MATERIAL_BYTES:
+            raw[:] = b"\0" * len(raw)
+            raise JobOpsError("EPHEMERAL_UPLOAD_SIZE_INVALID", "The approved upload exceeds the browser companion file limit.")
+        if sha256_bytes(bytes(raw)) != expected:
+            raw[:] = b"\0" * len(raw)
+            raise JobOpsError("EPHEMERAL_UPLOAD_CONTENT_CHANGED", "The decrypted upload changed after approval.")
+        return raw
+
     def run_isolated_probe(
         self,
         *,
@@ -277,6 +452,7 @@ class EphemeralATSPayloadBroker:
             form_snapshot=form_snapshot,
             browser_plan=browser_plan,
             references=answer_references,
+            require_synthetic=True,
         )
         confirmed_stop_count = len(resolved_fields)
         fields_by_ref = {str(item["control_ref"]): item for item in form_snapshot["fields"]}

@@ -257,7 +257,7 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                     ("RPK-PACKET-1", "APP-PACKET", HASH_A, "secure-ref:SYNTHETIC_PACKET_1", "AWAITING_APPROVAL", now),
                 )
 
-            self.assertEqual(database.migrate(), [4, 5, 6, 7])
+            self.assertEqual(database.migrate(), [4, 5, 6, 7, 8])
             with database.connect() as connection:
                 row = connection.execute(
                     "SELECT packet_id,packet_version,supersedes_packet_id,status FROM review_packets"

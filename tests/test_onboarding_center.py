@@ -19,6 +19,7 @@ from unittest import mock
 from _support import PROJECT, project_temp
 from jobops import UI_PROTOCOL_VERSION, __version__
 from jobops.ai_runtime import AIAnalysisEngine, LocalSubprocessAIEngine
+from jobops.browser_assist import COMPANION_EXTENSION_ORIGIN
 from jobops.db import JobOpsDB
 from jobops.document_builder import inspect_docx_text_blocks, template_fingerprint
 from jobops.document_qa import extract_pdf_text
@@ -1385,6 +1386,32 @@ class OnboardingCenterTests(unittest.TestCase):
                     self.assertEqual(payload["real_external_actions"], 0)
                     self.assertEqual(len(payload["catalog"]["fields"]), 27)
                     self.assertEqual(payload["catalog"]["required_field_count"], 25)
+                preflight = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                preflight.request(
+                    "OPTIONS",
+                    "/assist/not-a-secret/pair",
+                    headers={
+                        "Origin": COMPANION_EXTENSION_ORIGIN,
+                        "Access-Control-Request-Method": "POST",
+                        "Access-Control-Request-Private-Network": "true",
+                    },
+                )
+                preflight_response = preflight.getresponse()
+                preflight_response.read()
+                self.assertEqual(preflight_response.status, 204)
+                self.assertEqual(preflight_response.headers["Access-Control-Allow-Origin"], COMPANION_EXTENSION_ORIGIN)
+                self.assertEqual(preflight_response.headers["Access-Control-Allow-Private-Network"], "true")
+                preflight.close()
+                untrusted_preflight = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                untrusted_preflight.request(
+                    "OPTIONS", "/assist/not-a-secret/pair",
+                    headers={"Origin": "chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+                )
+                untrusted_response = untrusted_preflight.getresponse()
+                untrusted_response.read()
+                self.assertEqual(untrusted_response.status, 403)
+                self.assertIsNone(untrusted_response.headers.get("Access-Control-Allow-Origin"))
+                untrusted_preflight.close()
                 connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
                 session_path = "/session/synthetic-session-token/"
                 headers = {

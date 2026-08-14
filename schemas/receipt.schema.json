@@ -4,7 +4,7 @@
   "required": ["receipt_id", "application_id", "source", "confirmation_type", "confirmation_hash", "verified", "verified_at"],
   "properties": {
     "receipt_id": {"type": "string", "pattern": "^RCP-[A-F0-9]{12}$"}, "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
-    "source": {"enum": ["fake-receipt", "manual-evidence"]}, "confirmation_type": {"enum": ["confirmation_number", "confirmation_page", "confirmation_email", "manual"]},
+    "source": {"enum": ["fake-receipt", "manual-evidence", "browser-companion"]}, "confirmation_type": {"enum": ["confirmation_number", "confirmation_page", "confirmation_email", "manual"]},
     "confirmation_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "verified": {"type": "boolean"}, "verified_at": {"type": "string", "format": "date-time"}
   }
 }

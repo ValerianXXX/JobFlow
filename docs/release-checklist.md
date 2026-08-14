@@ -30,4 +30,4 @@ Double-click `Check Release Readiness.cmd` at any time for a bilingual, local-on
 
 - The source ZIP is the complete Windows application candidate. The wheel is a CI code-build smoke artifact, not the standalone desktop distribution.
 - `0.1.0` is an Alpha release candidate and does not claim live ATS compatibility.
-- Real external actions must remain 0 in every published report and artifact.
+- Real external actions must remain 0 throughout build, test and release QA. The product claim is limited to the separately user-authorized Browser Companion path for same-page company-form inspection, approved fill and approved material attachment; final submit and automatic retry remain absent.

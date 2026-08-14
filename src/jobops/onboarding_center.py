@@ -18,6 +18,7 @@ from . import UI_PROTOCOL_VERSION, __version__
 from .adapters import audit_real_external_actions
 from .approvals import ApprovalContext, issue_approval
 from .ats_capabilities import offline_ats_capabilities
+from .browser_assist import BrowserAssistManager
 from .application_readiness import build_application_readiness
 from .application_execution import validate_application_execution_plan_integrity
 from .application_field_resolution import (
@@ -669,6 +670,7 @@ class OnboardingCenterService:
         ).reconcile_interrupted_runs()
         self.onboarding = onboarding
         self.onboarding.assert_outside_project(self.project)
+        self.browser_assist = BrowserAssistManager(self.project, self.database, self.onboarding)
         initial_engine = ai_engine or configured_ai_engine()
         self.ai_connections = ai_connections or AIConnectionManager(
             self.onboarding.store.private_root.parent / "ai-connection.json",
@@ -1283,6 +1285,7 @@ class OnboardingCenterService:
                 "automatic_retry": False,
                 "next_safe_action": next_safe_action,
             })
+        browser_assist = self.browser_assist.public_status()
         return {
             "status": "LOCAL_PIPELINE_READY",
             "onboarding_status": str(state.get("status", IN_PROGRESS)),
@@ -1297,13 +1300,15 @@ class OnboardingCenterService:
             },
             "startup_execution_reconciliation": dict(self.execution_reconciliation),
             "safety": {
-                "network_mode": "LOCAL_OFFLINE_ONLY",
-                "real_website_accesses": 0,
+                "network_mode": "LOCAL_OFFLINE_PLUS_USER_PRESENT_BROWSER_ASSIST",
+                "real_website_accesses": int(browser_assist["real_website_inspections"]),
                 "external_action_attempts": int(actions["attempt_count"]),
                 "real_external_actions": int(actions["real_external_actions"]),
                 "knowledge_write_operations": 0,
                 "external_action_control_enabled": bool(action_control["enabled"]),
                 "external_action_control_mode": str(action_control["mode"]),
+                "submit_capability": False,
+                "automatic_retry": False,
             },
             "generated_at": iso_utc(),
         }
@@ -1312,9 +1317,47 @@ class OnboardingCenterService:
     def disable_external_actions(self, payload: dict[str, Any]) -> dict[str, Any]:
         if payload.get("user_confirmed") is not True:
             raise JobOpsError("EXPLICIT_CONFIRMATION_REQUIRED", "The emergency stop requires an explicit user confirmation.")
-        return ExternalActionSessionManager(
-            self.database, ExternalActionSessionPolicy.production_disabled()
-        ).disable(reason="USER_EMERGENCY_STOP")
+        stopped = self.browser_assist.stop(user_confirmed=True)
+        actions = audit_real_external_actions(self.database)
+        return {
+            "status": "EXTERNAL_ACTIONS_DISABLED",
+            "browser_assist_status": stopped["status"],
+            "revoked_assists": int(stopped["revoked_assists"]),
+            "submission_unknown_assists": int(stopped["submission_unknown_assists"]),
+            "real_external_actions": int(actions["real_external_actions"]),
+            "automatic_retry": False,
+        }
+
+    @_synchronized
+    def start_browser_assist(self, payload: dict[str, Any]) -> dict[str, Any]:
+        application_id = str(payload.get("application_id", "")).strip()
+        if not re.fullmatch(r"APP-[A-F0-9]{12}", application_id):
+            raise JobOpsError("APPLICATION_ID_INVALID", "Choose one approved application for browser assistance.")
+        displayed = self.review_packet(application_id)
+        if displayed["status"] != "APPROVED" or displayed["application_status"] != "APPROVED":
+            raise JobOpsError(
+                "APPLICATION_NOT_APPROVED",
+                "Review and approve the current packet before starting live prefill and upload.",
+            )
+        source_route = displayed["packet"].get("source_route")
+        if not isinstance(source_route, dict):
+            raise JobOpsError("SOURCE_ROUTE_MISSING", "The approved review packet has no verified company route.")
+        return self.browser_assist.start(
+            application_id=application_id,
+            source_route=source_route,
+            user_confirmed=payload.get("user_confirmed") is True,
+        )
+
+    @_synchronized
+    def resolve_browser_assist_unknown(self, payload: dict[str, Any]) -> dict[str, Any]:
+        submitted = payload.get("submitted")
+        if not isinstance(submitted, bool):
+            raise JobOpsError("SUBMISSION_RESULT_INVALID", "Confirm whether the application was submitted successfully.")
+        return self.browser_assist.resolve_unknown(
+            application_id=str(payload.get("application_id", "")).strip(),
+            submitted=submitted,
+            user_confirmed=payload.get("user_confirmed") is True,
+        )
 
     def prepare_synthetic_execution(self, payload: dict[str, Any]) -> dict[str, Any]:
         del payload
@@ -1441,7 +1484,7 @@ class OnboardingCenterService:
         )
         return {
             **outcome,
-            "phase5_authorization": "ABSENT",
+            "phase5_authorization": "PER_APPLICATION_USER_PRESENT_REQUIRED",
             "real_external_actions": 0,
         }
 
@@ -1493,7 +1536,7 @@ class OnboardingCenterService:
             "status": str(outcome["status"]), "decision": decision,
             "application_id": application_id, "promoted": promoted,
             "continued_intake": continuation,
-            "queue": manager.status(), "phase5_authorization": "ABSENT",
+            "queue": manager.status(), "phase5_authorization": "PER_APPLICATION_USER_PRESENT_REQUIRED",
             "real_external_actions": 0,
             "next_safe_action": (
                 "AWAIT_SEPARATE_EXTERNAL_ACTION_AUTHORIZATION"
@@ -1528,12 +1571,14 @@ class OnboardingCenterService:
         all_material = state.get("material_claims", [])
         raw_claim_count = len(all_base) + len(all_material)
         active_suggestions = [item for item in state.get("suggestions", []) if item.get("ai_validated") is True]
+        dashboard = self._pipeline_dashboard(state)
         return {
             "build": {
                 "product": "JobFlow", "version": __version__,
                 "ui_protocol": UI_PROTOCOL_VERSION,
             },
-            "dashboard": self._pipeline_dashboard(state),
+            "dashboard": dashboard,
+            "browser_assist": self.browser_assist.public_status(),
             "application_readiness": readiness,
             "external_claim_approval": {
                 "available": bool(
@@ -1585,7 +1630,8 @@ class OnboardingCenterService:
                 "quarantined_legacy_claims": max(0, raw_claim_count - len(claims)),
                 "suppressed_invalid_conflicts": max(0, len(state.get("conflict_resolutions", {})) - len(conflicts)),
             },
-            "real_external_actions": 0, "knowledge_write_operations": 0,
+            "real_external_actions": int(dashboard["safety"]["real_external_actions"]),
+            "knowledge_write_operations": 0,
         }
 
     @_synchronized
@@ -1753,7 +1799,10 @@ class OnboardingCenterService:
         }
 
     def close(self) -> None:
-        self.ai_connections.close()
+        try:
+            self.browser_assist.close()
+        finally:
+            self.ai_connections.close()
 
     @staticmethod
     def _validate_answer(field_id: str, value: Any) -> dict[str, Any]:

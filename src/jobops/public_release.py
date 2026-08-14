@@ -42,8 +42,13 @@ REQUIRED_PUBLIC_FILES = {
     "Check JobFlow.cmd",
     "Check Release Readiness.cmd",
     "Start JobFlow Demo.cmd",
+    "Install JobFlow Browser Companion.cmd",
+    "browser-companion/manifest.json",
+    "browser-companion/service-worker.js",
+    "browser-companion/dom.js",
     "scripts/check-jobflow.ps1",
     "scripts/check-release-readiness.ps1",
+    "scripts/install-jobflow-browser-companion.ps1",
     "scripts/start-jobflow-demo.ps1",
     "pyproject.toml",
 }

@@ -116,7 +116,7 @@ class OrchestratorForwardTests(unittest.TestCase):
             decision = service.decide_review_packet({**payload, "user_confirmed": True})
 
             self.assertEqual(decision["status"], "APPROVED")
-            self.assertEqual(decision["phase5_authorization"], "ABSENT")
+            self.assertEqual(decision["phase5_authorization"], "PER_APPLICATION_USER_PRESENT_REQUIRED")
             self.assertEqual(decision["real_external_actions"], 0)
             with database.connect() as connection:
                 application_status = connection.execute(

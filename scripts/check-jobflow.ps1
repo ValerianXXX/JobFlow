@@ -110,6 +110,18 @@ $uiReady = @("index.html", "app.js", "styles.css") | ForEach-Object {
 $uiReady = $uiReady -eq 0
 Add-JobFlowCheck "LOCAL_UI" $uiReady "本机界面文件齐全" "Local UI files present" "重新解压完整源码包" "Extract the complete source package again"
 
+$companionReady = @(
+    "Install JobFlow Browser Companion.cmd",
+    "browser-companion\manifest.json",
+    "browser-companion\service-worker.js",
+    "browser-companion\dom.js",
+    "browser-companion\popup.html"
+) | ForEach-Object {
+    Test-Path -LiteralPath (Join-Path $projectRoot $_) -PathType Leaf
+} | Where-Object { -not $_ } | Measure-Object | Select-Object -ExpandProperty Count
+$companionReady = $companionReady -eq 0
+Add-JobFlowCheck "BROWSER_COMPANION" $companionReady "浏览器伴侣文件齐全" "Browser Companion files present" "重新解压完整源码包" "Extract the complete source package again"
+
 $policyReady = $false
 $policyPath = Join-Path $projectRoot "config\policy.json"
 if (Test-Path -LiteralPath $policyPath -PathType Leaf) {
@@ -117,8 +129,11 @@ if (Test-Path -LiteralPath $policyPath -PathType Leaf) {
         $policy = Get-Content -LiteralPath $policyPath -Raw | ConvertFrom-Json
         $policyReady = (
             $policy.external_actions_enabled -eq $false -and
-            $policy.phase_5_6_authorization -eq "ABSENT" -and
-            [int]$policy.real_transport_adapters_registered -eq 0 -and
+            $policy.user_present_browser_assist_enabled -eq $true -and
+            $policy.final_submit_implementation_present -eq $false -and
+            $policy.unattended_submission_enabled -eq $false -and
+            $policy.phase_5_6_authorization -eq "PER_APPLICATION_USER_PRESENT_PREFILL_UPLOAD_ONLY" -and
+            [int]$policy.real_transport_adapters_registered -eq 1 -and
             $policy.scheduler_mode -eq "fake_clock_only"
         )
     }
@@ -126,7 +141,7 @@ if (Test-Path -LiteralPath $policyPath -PathType Leaf) {
         $policyReady = $false
     }
 }
-Add-JobFlowCheck "SAFETY_POLICY" $policyReady "真实外部动作保持关闭" "Real external actions remain closed" "不要启动；恢复原始 config/policy.json 后重试" "Do not start; restore config/policy.json and retry"
+Add-JobFlowCheck "SAFETY_POLICY" $policyReady "仅允许逐申请在场预填与上传；提交和无人值守动作锁定" "Only per-application user-present fill/upload is enabled; submit and unattended actions are locked" "不要启动；恢复原始 config/policy.json 后重试" "Do not start; restore config/policy.json and retry"
 
 $failed = @($checks | Where-Object { $_.status -ne "PASS" })
 $result = [ordered]@{
