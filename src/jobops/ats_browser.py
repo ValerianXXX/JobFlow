@@ -34,6 +34,21 @@ def _compact(value: object, *, limit: int = 500) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()[:limit]
 
 
+def _safe_display_text(value: object, *, limit: int = 500) -> str:
+    """Keep a bounded, inert label for human review without retaining field values.
+
+    Form prompts are untrusted website text.  They are useful to the applicant, but
+    control characters and bidi overrides can make a review screen misleading.  The
+    returned text is plain display evidence only; it is never interpreted as markup
+    or an instruction and is included in the form-snapshot hash.
+    """
+
+    text = _compact(value, limit=limit * 2)
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
+    text = re.sub(r"[\u202a-\u202e\u2066-\u2069]", "", text)
+    return text[:limit]
+
+
 def _safe_control_type(tag: str, raw_type: str) -> str:
     if tag == "select":
         return "select"
@@ -373,6 +388,14 @@ def analyze_local_ats_form(
             "required": bool(raw["required"]),
             "classification": classification,
             "answer_key": answer_key,
+            "display_label": _safe_display_text(
+                raw["label"] or raw["aria_label"] or raw["placeholder"] or answer_key,
+            ),
+            "display_options": [
+                option for option in (
+                    _safe_display_text(item, limit=200) for item in raw["options"]
+                ) if option
+            ],
             "logical_field_hash": logical_field_hash,
             "reason_code": reason_code,
             "prompt_hash": prompt_hash,

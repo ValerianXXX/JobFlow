@@ -11,6 +11,7 @@ const STRINGS = {
     progressLabel: "问卷完成度", draftSaved: "草稿保存时直接加密", stepSources: "资料来源", stepQuestions: "完整问卷", stepReview: "资料与 Claim 审阅", stepFinish: "确认完成",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "本地投递控制台", pipelineBody: "统一查看资料准备度、待审批容量和安全边界。这里不会打开招聘网站或执行外部动作。", refreshDashboard: "刷新状态", dashboardRefreshed: "本地控制台已刷新", profileReadiness: "资料准备", awaitingApproval: "待你审批", approvalQueueOnly: "只生成本地审阅包", availableSlots: "剩余容量", deferredJobs: "排队等待", continuesUntilLimit: "达到上限前继续处理其他岗位", pendingReviewTitle: "待审批申请", pendingReviewBody: "只显示安全岗位摘要；私人答案和材料正文不会出现在此处。", safetyBoardTitle: "当前安全边界", realSites: "真实网站访问", externalActions: "真实外部动作", knowledgeWrites: "知识库写入", networkMode: "运行模式", externalControl: "外部动作总开关", externalControlLocked: "已关闭", externalControlEnabled: "已启用", emergencyStop: "立即停止全部外部动作", emergencyStopConfirm: "确认立即关闭全部外部动作并使现有动作授权失效？", emergencyStopped: "全部外部动作已关闭，现有动作授权已失效。", stoppingExternalActions: "正在关闭全部外部动作…", pipelineReady: "已完成", pipelineNeedsSetup: "待完成", aiReadyShort: "AI 已连接", aiMissingShort: "AI 未连接", queueLimit: "上限 {limit}", pendingEmpty: "目前没有等待你审批的申请。离线处理完成的岗位会出现在这里。", packetHash: "审阅包 {hash}", packetVersion: "第 {version} 版", awaitingApprovalStatus: "等待你的决定", safetyGuardOn: "外部动作锁定", offlineMode: "仅限本地离线", refreshingDashboard: "刷新本地控制台…", deferredListTitle: "等待处理的岗位", deferredListBody: "达到上限后进入这里；释放位置时按顺序继续。", deferredEmpty: "目前没有因容量而等待的岗位。", recentDecisionsTitle: "最近的队列决定", recentDecisionsBody: "显示本地状态变化；不会把批准当成已提交。", recentEmpty: "还没有已处理的队列决定。", safeQueueId: "安全队列编号", queuedAt: "进入时间", viewRecord: "查看记录", approvalExpiry: "本地批准有效至 {time}", statusApproved: "本地已批准", statusClosed: "已关闭", statusRevision: "等待修改", statusDeferred: "等待容量", statusOther: "本地状态：{status}", executionRunsTitle: "自动投递执行状态", executionRunsBody: "只显示安全状态、最近检查点和下一步；不显示私人答案、文件内容或网站会话。", executionRunsEmpty: "目前没有自动投递执行记录。审阅批准不会被显示为已提交。", executionStatusAwaiting: "等待一次性最终确认", executionStatusConfirmed: "已由可靠回执确认", executionStatusUnknown: "提交结果未知，必须人工核验", executionStatusInvalidated: "已失效", executionStatusInterrupted: "发现中断，必须恢复核验", executionStatusOther: "执行状态：{status}", executionCheckpoint: "检查点 {sequence}", executionPhaseNow: "最近阶段：{phase}", executionNoRetry: "禁止自动重试", executionNextFinal: "下一步：取得一次性最终确认；当前实时动作仍关闭", executionNextNone: "下一步：无，流程已确认完成", executionNextManual: "下一步：人工核验外部证据，绝不自动重投", executionNextRebuild: "下一步：重新生成并审阅申请包", executionNextRestart: "下一步：本机恢复器核验持久化状态，不重新发送", executionNextOther: "下一步：人工检查本机状态",
     queuePreferences: "待审批数量上限", queuePreferencesBody: "JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。", pendingLimitLabel: "最多等待", saveLimit: "保存上限", limitSaved: "待审批上限已保存", viewPacket: "查看审阅包", closePacket: "关闭审阅包", reviewPacketEyebrow: "LOCAL REVIEW PACKET", reviewPacketTitlePlaceholder: "本地审阅包", loadingReviewPacket: "解密并核验本地审阅包…", packetJob: "岗位", packetFit: "匹配分析", packetGaps: "硬性缺口", packetBullets: "简历表述与证据", packetQuestions: "申请问题", packetSensitive: "必须停下确认的敏感字段", packetUploads: "待上传材料", packetActions: "审批将绑定的动作", packetRoute: "官网与 ATS 路径", packetNone: "无", packetOverall: "总体匹配", packetStatus: "状态", packetCreated: "生成时间", packetClaims: "Claim", packetEvidence: "证据", pendingLimitInvalid: "请输入 1 到 1000 之间的整数。", pendingLimitBelowActive: "上限不能低于当前已占用的审批位置。请先处理一项申请。", reviewPacketUnavailable: "无法安全打开这个审阅包；内容未被显示，请刷新后重试。", packetDecisionTitle: "你对这份审阅包的决定", packetDecisionBody: "决定只保存在本机。当前不会打开网站、上传材料或提交申请。", decisionApprove: "批准这份审阅包", decisionApproveHelp: "保存与当前哈希绑定的一次性本地批准；真实外部动作仍锁定。", decisionRevise: "退回修改", decisionReviseHelp: "标记材料需要修订；任何旧批准都会失效。", decisionReject: "不申请这个岗位", decisionRejectHelp: "关闭这项申请并释放一个待审批位置。", decisionConfirm: "我确认这是我对当前审阅包的决定，并理解本轮真实外部动作仍为 0。", confirmDecision: "确认这个决定", chooseDecision: "请先选择批准、退回修改或不申请。", confirmDecisionFirst: "请勾选确认框后再保存决定。", decisionApproved: "审阅包已批准；真实外部动作仍为 0。", decisionRevised: "已退回修改；旧批准已失效。", decisionRejected: "已关闭这项申请并释放队列位置。", savingQueueDecision: "正在核验并保存队列决定…", reviewPacketStale: "这份审阅包已经变化。为防止误批，请重新打开并审阅最新版本。", reviewDecisionUnavailable: "当前申请已不在待审批状态，请刷新队列。",
+    packetFieldTitle: "先确认这个岗位的专属问题", packetFieldBody: "这些答案只用于当前岗位，并立即保存为本机 DPAPI 加密引用。审阅包、项目文件和普通数据库不会保存明文。", packetFieldSeparateHelp: "上传、页面导航、账号动作和最终提交由各自的授权门控制，不会被误算成尚未回答。", packetFieldRequired: "必答", packetFieldOptional: "选答", packetFieldDecision: "处理方式", packetFieldValue: "本岗位答案", packetFieldConfirmValue: "填写并确认", packetFieldPreferNot: "不愿回答", packetFieldNotApplicable: "不适用", packetFieldValuePlaceholder: "输入这个岗位要求的准确答案", packetFieldConsent: "我确认这些是当前岗位的准确答案，并同意仅在本机加密保存。", savePacketFields: "加密保存并生成新版审阅包", savingApplicationFields: "正在加密岗位专属答案并重新绑定审阅包…", packetFieldsSaved: "岗位专属答案已加密；请审阅新版审阅包。", packetFieldsRequired: "先完成所有标出的岗位专属问题，才能批准审阅包。", packetFieldInvalid: "有一个岗位专属答案不完整或不属于当前表单，请检查后重试。", packetFieldUnknowns: "仍有无法由当前表单解决的硬条件，请重新生成岗位材料。",
     sourceTitle: "把已有信息交给 JobFlow", sourceBody: "资料必须先通过 AI 的实体归并、分类和完整性检查，才会进入 Claim；规则拆分结果不再显示。",
     sourceIntakeDemoTitle: "当前是合成演示，不接收真实文件", sourceIntakeDemoBody: "请关闭演示启动窗口，然后双击 Start JobFlow.cmd 进入可上传的真实本机工作区。", sourceIntakeReadonlyTitle: "当前资料版本已完成，因此文件接入已锁定", sourceIntakeReadonlyBody: "历史版本不会被覆盖。建立一个可编辑新版本后，即可继续添加、删除和重新分析资料。", sourceIntakeAiTitle: "连接 AI 后才能分析文件", sourceIntakeAiBody: "点击右上角“连接 AI”，选择已准备的 Agent 或本地模型。连接成功后文件选择会自动开放。",
     docsTitle: "简历与项目材料", docsBody: "DOCX、PDF、TXT、MD 或 JSON。适用于简历、案例、证书、作品集与补充材料。", materialType: "材料类型", resume: "简历", projectCase: "项目案例", supporting: "补充材料", portfolioFile: "作品集文件",
@@ -41,6 +42,7 @@ const STRINGS = {
     progressLabel: "Questionnaire progress", draftSaved: "Drafts are encrypted when saved", stepSources: "Sources", stepQuestions: "Full questionnaire", stepReview: "Profile & Claim review", stepFinish: "Finish",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "Local application control center", pipelineBody: "See profile readiness, approval capacity, and safety boundaries in one place. This screen never opens recruiting sites or performs external actions.", refreshDashboard: "Refresh status", dashboardRefreshed: "Local control center refreshed", profileReadiness: "Profile readiness", awaitingApproval: "Awaiting you", approvalQueueOnly: "Local review packets only", availableSlots: "Available capacity", deferredJobs: "Waiting in line", continuesUntilLimit: "Other jobs continue until the limit", pendingReviewTitle: "Applications awaiting approval", pendingReviewBody: "Only safe job summaries appear here; private answers and document bodies never do.", safetyBoardTitle: "Active safety boundary", realSites: "Real-site visits", externalActions: "Real external actions", knowledgeWrites: "Knowledge writes", networkMode: "Run mode", externalControl: "External-action master switch", externalControlLocked: "Off", externalControlEnabled: "Enabled", emergencyStop: "Stop all external actions now", emergencyStopConfirm: "Stop all external actions now and invalidate every active action authorization?", emergencyStopped: "All external actions are off and active action authorizations are invalidated.", stoppingExternalActions: "Stopping all external actions…", pipelineReady: "Complete", pipelineNeedsSetup: "Needs setup", aiReadyShort: "AI connected", aiMissingShort: "AI not connected", queueLimit: "limit {limit}", pendingEmpty: "No application currently needs your approval. Offline-processed roles will appear here.", packetHash: "packet {hash}", packetVersion: "version {version}", awaitingApprovalStatus: "Awaiting your decision", safetyGuardOn: "External actions locked", offlineMode: "Local offline only", refreshingDashboard: "Refreshing local control center…", deferredListTitle: "Waiting roles", deferredListBody: "Roles wait here at capacity and resume in order when a slot opens.", deferredEmpty: "No role is currently waiting for queue capacity.", recentDecisionsTitle: "Recent queue decisions", recentDecisionsBody: "Shows local state changes and never labels approval as submission.", recentEmpty: "No queue decision has been completed yet.", safeQueueId: "Safe queue ID", queuedAt: "Queued", viewRecord: "View record", approvalExpiry: "Local approval valid until {time}", statusApproved: "Locally approved", statusClosed: "Closed", statusRevision: "Revision needed", statusDeferred: "Waiting for capacity", statusOther: "Local state: {status}", executionRunsTitle: "Automatic-application execution status", executionRunsBody: "Shows only safe status, the latest checkpoint, and the next step; no private answers, file content, or site session is exposed.", executionRunsEmpty: "No automatic-application execution record exists yet. Review approval is never shown as submission.", executionStatusAwaiting: "Awaiting one-time final confirmation", executionStatusConfirmed: "Confirmed by reliable receipt", executionStatusUnknown: "Submission outcome unknown; manual verification required", executionStatusInvalidated: "Invalidated", executionStatusInterrupted: "Interruption detected; reconciliation required", executionStatusOther: "Execution state: {status}", executionCheckpoint: "checkpoint {sequence}", executionPhaseNow: "latest phase: {phase}", executionNoRetry: "Automatic retry prohibited", executionNextFinal: "Next: obtain one-time final confirmation; live actions remain off", executionNextNone: "Next: none; the run is confirmed", executionNextManual: "Next: manually verify external evidence; never resubmit automatically", executionNextRebuild: "Next: rebuild and review the application packet", executionNextRestart: "Next: reconcile persisted local state without sending again", executionNextOther: "Next: inspect local state manually",
     queuePreferences: "Pending-approval limit", queuePreferencesBody: "JobFlow pauses new intake at this number and continues after you resolve one item.", pendingLimitLabel: "Maximum waiting", saveLimit: "Save limit", limitSaved: "Pending-approval limit saved", viewPacket: "View review packet", closePacket: "Close packet", reviewPacketEyebrow: "LOCAL REVIEW PACKET", reviewPacketTitlePlaceholder: "Local review packet", loadingReviewPacket: "Decrypting and validating local review packet…", packetJob: "Job", packetFit: "Fit analysis", packetGaps: "Hard gaps", packetBullets: "Resume wording and evidence", packetQuestions: "Application questions", packetSensitive: "Sensitive fields requiring a stop", packetUploads: "Pending uploads", packetActions: "Actions bound by approval", packetRoute: "Official-site and ATS route", packetNone: "None", packetOverall: "Overall fit", packetStatus: "Status", packetCreated: "Created", packetClaims: "Claim", packetEvidence: "Evidence", pendingLimitInvalid: "Enter a whole number from 1 to 1000.", pendingLimitBelowActive: "The limit cannot be below the number of occupied approval slots. Resolve one application first.", reviewPacketUnavailable: "This review packet could not be opened safely. No content was shown; refresh and retry.", packetDecisionTitle: "Your decision on this review packet", packetDecisionBody: "The decision is saved locally only. No site opens, material uploads, or application submission occurs now.", decisionApprove: "Approve this review packet", decisionApproveHelp: "Save a one-time local approval bound to this exact hash; real external actions remain locked.", decisionRevise: "Return for revision", decisionReviseHelp: "Mark materials for revision and invalidate any earlier approval.", decisionReject: "Do not apply", decisionRejectHelp: "Close this application and release one pending-review slot.", decisionConfirm: "I confirm this is my decision on the current packet and understand real external actions remain 0 in this run.", confirmDecision: "Confirm this decision", chooseDecision: "Choose approve, revise, or do not apply first.", confirmDecisionFirst: "Check the confirmation box before saving the decision.", decisionApproved: "Review packet approved; real external actions remain 0.", decisionRevised: "Returned for revision; prior approval invalidated.", decisionRejected: "Application closed and queue capacity released.", savingQueueDecision: "Validating and saving queue decision…", reviewPacketStale: "This packet changed. To prevent stale approval, reopen and review the current version.", reviewDecisionUnavailable: "This application is no longer awaiting a decision. Refresh the queue.",
+    packetFieldTitle: "Confirm job-specific questions first", packetFieldBody: "These answers apply only to this job and are immediately stored as a local DPAPI-encrypted reference. No plaintext is written to the review packet, project files, or ordinary database fields.", packetFieldSeparateHelp: "Uploads, navigation, account actions, and final submission use their own authorization gates and are not mislabelled as unanswered questions.", packetFieldRequired: "Required", packetFieldOptional: "Optional", packetFieldDecision: "Decision", packetFieldValue: "Answer for this job", packetFieldConfirmValue: "Enter and confirm", packetFieldPreferNot: "Prefer not to answer", packetFieldNotApplicable: "Not applicable", packetFieldValuePlaceholder: "Enter the exact answer requested by this job", packetFieldConsent: "I confirm these answers are accurate for this job and agree to store them encrypted on this device only.", savePacketFields: "Encrypt answers and create a new packet", savingApplicationFields: "Encrypting job-specific answers and rebinding the review packet…", packetFieldsSaved: "Job-specific answers encrypted; review the new packet.", packetFieldsRequired: "Complete every highlighted job-specific question before approving the packet.", packetFieldInvalid: "A job-specific answer is incomplete or does not belong to the current form. Check it and retry.", packetFieldUnknowns: "A hard condition cannot be resolved by this form; rebuild the job materials.",
     sourceTitle: "Bring your existing information into JobFlow", sourceBody: "A source must pass AI entity consolidation, classification, and completeness checks before anything can enter Claim review. Rule-split output is no longer shown.",
     sourceIntakeDemoTitle: "Synthetic demo mode does not accept real files", sourceIntakeDemoBody: "Close the demo launch window, then double-click Start JobFlow.cmd to open the real local workspace with file intake enabled.", sourceIntakeReadonlyTitle: "File intake is locked because this profile revision is complete", sourceIntakeReadonlyBody: "Historical revisions are preserved. Create an editable revision to add, delete, or re-analyze sources.", sourceIntakeAiTitle: "Connect AI before analyzing files", sourceIntakeAiBody: "Use Connect AI at the top right and choose a prepared Agent or local model. File selection opens automatically after a successful connection.",
     docsTitle: "Resume & project materials", docsBody: "DOCX, PDF, TXT, MD, or JSON for resumes, cases, certificates, portfolios, and supporting material.", materialType: "Material type", resume: "Resume", projectCase: "Project case", supporting: "Supporting material", portfolioFile: "Portfolio file",
@@ -63,7 +65,7 @@ const STRINGS = {
   }
 };
 
-const UI_PROTOCOL_VERSION = 15;
+const UI_PROTOCOL_VERSION = 16;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V4";
 const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, reviewDecision: "", reviewDecisionConfirmed: false, officialDiscovery: null, tailoringProposal: null, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [], activityDurations: {} };
 const sessionToken = location.pathname.split("/")[2];
@@ -77,7 +79,7 @@ const ACTIVITY_ESTIMATES = {
   detectingAgent: 22, detectingLocalModel: 12, startingRevision: 8,
   committingSource: 7, includingAll: 7, discardingSource: 5,
   deletingSource: 7, transformingClaims: 8, reprocessing: 45,
-  reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5, savingQueueDecision: 7,
+  reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5, savingQueueDecision: 7, savingApplicationFields: 8,
   discoveringJobs: 8, approvingExternalClaims: 7, loadingTailoringManifest: 8, approvingTailoringManifest: 7,
   preparingOfflineApplication: 150
 };
@@ -142,6 +144,11 @@ const LOCAL_ERROR_KEYS = {
   REVIEW_PACKET_STALE:"reviewPacketStale", REVIEW_DECISION_INVALID:"chooseDecision",
   EXPLICIT_CONFIRMATION_REQUIRED:"confirmDecisionFirst", APPLICATION_NOT_AWAITING_APPROVAL:"reviewDecisionUnavailable",
   APPLICATION_NOT_REVISABLE:"reviewDecisionUnavailable", APPLICATION_BINDING_MISSING:"reviewPacketUnavailable",
+  APPLICATION_FIELDS_UNRESOLVED:"packetFieldsRequired", APPLICATION_FIELD_RESOLUTIONS_INCOMPLETE:"packetFieldInvalid",
+  APPLICATION_FIELD_RESOLUTION_INVALID:"packetFieldInvalid", APPLICATION_FIELD_REFERENCE_INVALID:"packetFieldInvalid",
+  APPLICATION_FIELD_VALUE_REQUIRED:"packetFieldInvalid", APPLICATION_FIELD_VALUE_INVALID:"packetFieldInvalid",
+  APPLICATION_FIELD_OPTION_INVALID:"packetFieldInvalid", APPLICATION_FIELD_BINDING_INVALID:"packetFieldInvalid",
+  APPLICATION_ANSWER_BUNDLE_TOO_LARGE:"packetFieldInvalid", APPLICATION_FIELD_RESOLUTION_ROLLBACK_FAILED:"privateWriteRepair",
   PROFILE_REVIEW_REQUIRED:"profileReviewRequired", ONBOARDING_ANSWERS_INCOMPLETE:"answersIncomplete",
   ONBOARDING_HARD_CONDITIONS_UNRESOLVED:"hardConditionsUnresolved", SOURCE_PREVIEW_PENDING:"sourcePreviewPending",
   SOURCE_AI_REANALYSIS_REQUIRED:"sourceAiReanalysisRequired", CLAIM_REVIEW_INCOMPLETE:"claimReviewIncomplete",
@@ -662,6 +669,58 @@ function executionGateLabel(value){
   const keys={SEPARATE_LIVE_READ_AUTHORIZATION:"gateLiveRead",NONE_AFTER_FRESHNESS:"gateAfterFreshness",USER_ACCOUNT_DECISION:"gateAccount",REVIEW_PACKET_APPROVAL:"gatePacket",SEPARATE_UPLOAD_AUTHORIZATION:"gateUpload",PER_APPLICATION_CONFIRMATION:"gatePerApplication",NONE:"gateNone",FRESH_EXPLICIT_SUBMISSION_APPROVAL:"gateSubmit"};
   return keys[value]?t(keys[value]):packetValue(value);
 }
+function applicationFieldDecisionOptions(field){
+  const allowed=new Set(field.allowed_decisions||["CONFIRMED_VALUE"]);
+  const options=[
+    ["CONFIRMED_VALUE","packetFieldConfirmValue"],
+    ["PREFER_NOT_TO_ANSWER","packetFieldPreferNot"],
+    ["NOT_APPLICABLE","packetFieldNotApplicable"]
+  ];
+  return options.filter(([value])=>allowed.has(value)).map(([value,key])=>`<option value="${value}">${escapeHtml(t(key))}</option>`).join("");
+}
+function applicationFieldValueControl(field){
+  const options=Array.isArray(field.options)?field.options:[];
+  if(options.length){
+    return `<select class="application-field-value"><option value="">${escapeHtml(t("packetFieldValuePlaceholder"))}</option>${options.map(value=>`<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("")}</select>`;
+  }
+  return `<input class="application-field-value" type="text" maxlength="4000" autocomplete="off" placeholder="${escapeHtml(t("packetFieldValuePlaceholder"))}">`;
+}
+function updateApplicationFieldResolutionButton(){
+  const panel=document.querySelector("#applicationFieldResolutionPanel");
+  if(panel.classList.contains("hidden"))return;
+  let valid=true;
+  panel.querySelectorAll(".application-field-row").forEach(row=>{
+    const decision=row.querySelector(".application-field-decision").value;
+    const value=row.querySelector(".application-field-value");
+    value.disabled=decision!=="CONFIRMED_VALUE";
+    if(decision!=="CONFIRMED_VALUE")value.value="";
+    if(decision==="CONFIRMED_VALUE"&&!value.value.trim())valid=false;
+  });
+  document.querySelector("#saveApplicationFieldResolutions").disabled=!valid||!document.querySelector("#applicationFieldResolutionConfirm").checked;
+}
+function renderApplicationFieldResolution(result){
+  const summary=result?.field_resolution||{},fields=summary.unresolved_fields||[];
+  const panel=document.querySelector("#applicationFieldResolutionPanel"),list=document.querySelector("#applicationFieldResolutionList");
+  document.querySelector("#applicationFieldResolutionConfirm").checked=false;
+  if(!fields.length){list.replaceChildren();panel.classList.add("hidden");return;}
+  list.innerHTML=fields.map(field=>`<article class="application-field-row" data-control-ref="${escapeHtml(field.control_ref)}">
+    <div><strong>${escapeHtml(field.label||field.answer_key||field.control_ref)}</strong><small>${escapeHtml(field.required?t("packetFieldRequired"):t("packetFieldOptional"))} · ${escapeHtml(field.classification)}</small></div>
+    <label><span>${escapeHtml(t("packetFieldDecision"))}</span><select class="application-field-decision">${applicationFieldDecisionOptions(field)}</select></label>
+    <label><span>${escapeHtml(t("packetFieldValue"))}</span>${applicationFieldValueControl(field)}</label>
+  </article>`).join("");
+  panel.classList.remove("hidden");updateApplicationFieldResolutionButton();
+}
+function collectApplicationFieldResolutions(){
+  const rows=[...document.querySelectorAll("#applicationFieldResolutionList .application-field-row")];
+  const values=[];
+  for(const row of rows){
+    const decision=row.querySelector(".application-field-decision").value;
+    const value=row.querySelector(".application-field-value").value.trim();
+    if(decision==="CONFIRMED_VALUE"&&!value)return null;
+    values.push({control_ref:row.dataset.controlRef,decision,value:decision==="CONFIRMED_VALUE"?value:""});
+  }
+  return values;
+}
 function renderReviewPacket(){
   const result=state.reviewPacket;if(!result)return;
   const packet=result.packet||{},job=packet.job||result.job_summary||{},fit=packet.fit||{},route=packet.source_route||{},materialPlan=packet.material_plan||{},executionPlan=packet.execution_plan||{};
@@ -684,10 +743,14 @@ function renderReviewPacket(){
     ["packetRoute",`<dl class="packet-kv"><dt>Route</dt><dd>${escapeHtml(packetValue(route.route_kind))}</dd><dt>Guest</dt><dd>${escapeHtml(packetValue(route.guest_mode))}</dd><dt>Account</dt><dd>${escapeHtml(packetValue(route.account_action))}</dd></dl>`,false]
   ];
   document.querySelector("#reviewPacketBody").innerHTML=sections.map(([key,body,wide])=>`<section class="packet-section${wide?" wide":""}"><h4>${escapeHtml(t(key))}</h4>${body}</section>`).join("");
+  renderApplicationFieldResolution(result);
   document.querySelectorAll('input[name="packetDecision"]').forEach(input=>{input.checked=input.value===state.reviewDecision;});
   const confirmation=document.querySelector("#packetDecisionConfirm");confirmation.checked=state.reviewDecisionConfirmed;
   document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecision||!state.reviewDecisionConfirmed;
   const canDecide=result.application_status==="AWAITING_APPROVAL"&&result.status==="AWAITING_APPROVAL";
+  const fieldsBlocked=Number(result.field_resolution?.unresolved_count||0)>0||(result.field_resolution?.remaining_non_form_unknowns||[]).length>0;
+  const approveInput=document.querySelector('input[name="packetDecision"][value="APPROVE"]');approveInput.disabled=fieldsBlocked;
+  if(fieldsBlocked&&state.reviewDecision==="APPROVE"){state.reviewDecision="";state.reviewDecisionConfirmed=false;approveInput.checked=false;}
   document.querySelector("#packetDecisionPanel").classList.toggle("hidden",!canDecide);
   if(!canDecide){state.reviewDecision="";state.reviewDecisionConfirmed=false;}
   const panel=document.querySelector("#reviewPacketPanel");panel.classList.remove("hidden");
@@ -1232,7 +1295,26 @@ document.addEventListener("click", async event => {
     return;
   }
   const closePacket=event.target.closest("#closeReviewPacket");
-  if(closePacket){state.reviewPacket=null;state.reviewDecision="";state.reviewDecisionConfirmed=false;document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#reviewPacketPanel").classList.add("hidden");return;}
+  if(closePacket){state.reviewPacket=null;state.reviewDecision="";state.reviewDecisionConfirmed=false;document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#applicationFieldResolutionList").replaceChildren();document.querySelector("#applicationFieldResolutionPanel").classList.add("hidden");document.querySelector("#reviewPacketPanel").classList.add("hidden");return;}
+  const saveApplicationFields=event.target.closest("#saveApplicationFieldResolutions");
+  if(saveApplicationFields){
+    const packet=state.reviewPacket?.packet,resolutions=collectApplicationFieldResolutions();
+    if(!packet||!resolutions||!resolutions.length||!document.querySelector("#applicationFieldResolutionConfirm").checked){showToast(t("packetFieldInvalid"),true);return;}
+    try{
+      let refreshedPacket=null;
+      await withActivity("savingApplicationFields",async()=>{
+        await api("resolve-application-fields",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+          application_id:state.reviewPacket.application_id,expected_packet_hash:packet.content_hash,resolutions,user_confirmed:true
+        })});
+        document.querySelectorAll("#applicationFieldResolutionList .application-field-value").forEach(input=>{input.value="";});
+        refreshedPacket=await api("review-packet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({application_id:state.reviewPacket.application_id})});
+        await refreshLatest();
+      });
+      state.reviewPacket=refreshedPacket;state.reviewDecision="";state.reviewDecisionConfirmed=false;renderReviewPacket();
+      document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});showToast(t("packetFieldsSaved"));
+    }catch(error){handleUiError(error);}
+    return;
+  }
   const confirmPacketDecision=event.target.closest("#confirmPacketDecision");
   if(confirmPacketDecision){
     if(!state.reviewDecision){showToast(t("chooseDecision"),true);return;}
@@ -1352,6 +1434,7 @@ document.addEventListener("change",event=>{
   }
   if(event.target.matches('input[name="packetDecision"]')){state.reviewDecision=event.target.value;document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecisionConfirmed;}
   if(event.target.matches("#packetDecisionConfirm")){state.reviewDecisionConfirmed=event.target.checked;document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecision||!state.reviewDecisionConfirmed;}
+  if(event.target.matches("#applicationFieldResolutionConfirm,.application-field-decision,.application-field-value")){updateApplicationFieldResolutionButton();}
   if(event.target.matches("#externalClaimConfirm")){renderApplicationReadiness();}
   if(event.target.matches("#tailoringManifestConfirm,.tailoring-select")){updateTailoringApprovalButton();}
   if(event.target.matches(".answer-input")){
@@ -1363,6 +1446,7 @@ document.addEventListener("change",event=>{
   if(event.target.matches(".conflict-resolution")){state.conflictDraft[event.target.dataset.conflict]=event.target.value;updateReviewProgress();}
 });
 document.addEventListener("input",event=>{
+  if(event.target.matches(".application-field-value")){updateApplicationFieldResolutionButton();return;}
   if(!event.target.matches(".claim-statement,.claim-category"))return;
   const row=event.target.closest("[data-claim-row]"),id=row.dataset.claimRow,item=state.data.claims.find(claim=>claim.claim_id===id);
   state.claimEditDraft[id]={statement:row.querySelector(".claim-statement").value,category:row.querySelector(".claim-category").value,deleted:Boolean(item.deleted)};

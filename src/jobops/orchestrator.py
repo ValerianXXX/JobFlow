@@ -9,6 +9,10 @@ from typing import Any
 
 from .adapters import FakeBrowserPrefillAdapter
 from .application_execution import build_application_execution_plan
+from .application_field_resolution import (
+    approval_unresolved_stop_ids,
+    initial_application_field_status,
+)
 from .application_materials import build_material_plan, detect_material_requests
 from .approvals import ApprovalContext, UploadBinding
 from .ats_browser import analyze_local_ats_form, build_browser_action_plan
@@ -639,7 +643,11 @@ class JobOpsOrchestrator:
             for item in form_analysis["fields"]:
                 action = action_by_ref[str(item["control_ref"])]
                 safe_questions.append({
-                    "id": item["control_ref"], "label": item["answer_key"], "answer_key": item["answer_key"],
+                    "id": item["control_ref"],
+                    "label": item.get("display_label") or item["answer_key"],
+                    "options": list(item.get("display_options", [])),
+                    "untrusted_prompt_display_only": True,
+                    "answer_key": item["answer_key"],
                     "prompt_hash": item["prompt_hash"], "control_type": item["control_type"],
                     "required": bool(item.get("required", False)),
                     "classification": item["classification"], "reason": item["reason_code"],
@@ -678,7 +686,8 @@ class JobOpsOrchestrator:
             }))
         field_records = []
         for field in fields["fields"]:
-            status = "READY" if str(field["action"]).startswith("PREFILL") else "STOP_REQUIRED"
+            classification = str(field["classification"])
+            status = initial_application_field_status(classification, str(field["action"]))
             record = {
                 "field_id": stable_id("FLD", application_id, str(field["id"])), "application_id": application_id,
                 "classification": field["classification"], "action": "PREFILL" if str(field["action"]).startswith("PREFILL") else "STOP",
@@ -916,10 +925,7 @@ class JobOpsOrchestrator:
             claim_set_hash=claim_set_hash, form_snapshot_hash=form_snapshot_hash, answers_hash=answers_hash,
             review_packet_hash=packet["content_hash"], uploads=tuple(UploadBinding(item["filename"], item["purpose"], item["sha256"]) for item in uploads),
             external_actions=("upload_material", "submit_application"), site_policy_version=str(policy["schema_version"]),
-            unresolved_stops=tuple(
-                str(item["id"]) for item in fields["fields"]
-                if item["action"] == "STOP" and item["classification"] != "final_submit_stop"
-            ),
+            unresolved_stops=approval_unresolved_stop_ids(fields["fields"]),
             mandatory_unknowns=tuple(
                 [str(item) for item in fields["unknown_fields"]]
                 + [str(item) for item in eligibility.unknowns]

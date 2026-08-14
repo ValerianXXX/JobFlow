@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v15">
+  <link rel="stylesheet" href="styles.css?v=20260813-jobflow-v16">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -160,6 +160,14 @@
       <section id="reviewPacketPanel" class="review-packet-panel hidden" aria-live="polite">
         <header><div><p class="eyebrow" data-i18n="reviewPacketEyebrow">LOCAL REVIEW PACKET</p><h3 id="reviewPacketTitle" data-i18n="reviewPacketTitlePlaceholder">本地审阅包</h3><small id="reviewPacketMeta"></small></div><button id="closeReviewPacket" class="text-action" type="button" data-i18n="closePacket">关闭审阅包</button></header>
         <div id="reviewPacketBody" class="review-packet-body"></div>
+        <fieldset id="applicationFieldResolutionPanel" class="application-field-resolution hidden">
+          <legend data-i18n="packetFieldTitle">先确认这个岗位的专属问题</legend>
+          <p data-i18n="packetFieldBody">这些答案只用于当前岗位，并立即保存为本机 DPAPI 加密引用。审阅包、项目文件和普通数据库不会保存明文。</p>
+          <p class="field-gate-help" data-i18n="packetFieldSeparateHelp">上传、页面导航、账号动作和最终提交由各自的授权门控制，不会被误算成尚未回答。</p>
+          <div id="applicationFieldResolutionList" class="application-field-resolution-list"></div>
+          <label class="packet-decision-confirm"><input id="applicationFieldResolutionConfirm" type="checkbox"><span data-i18n="packetFieldConsent">我确认这些是当前岗位的准确答案，并同意仅在本机加密保存。</span></label>
+          <button id="saveApplicationFieldResolutions" type="button" disabled data-i18n="savePacketFields">加密保存并生成新版审阅包</button>
+        </fieldset>
         <fieldset id="packetDecisionPanel" class="packet-decision-panel">
           <legend data-i18n="packetDecisionTitle">你对这份审阅包的决定</legend>
           <p data-i18n="packetDecisionBody">决定只保存在本机。当前不会打开网站、上传材料或提交申请。</p>
@@ -348,6 +356,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260813-jobflow-v15"></script>
+  <script src="app.js?v=20260813-jobflow-v16"></script>
 </body>
 </html>

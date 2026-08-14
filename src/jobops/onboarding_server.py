@@ -369,6 +369,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.disable_external_actions(self._json_body())
             elif route == "review-packet":
                 result = self.server.service.review_packet(str(self._json_body().get("application_id", "")))
+            elif route == "resolve-application-fields":
+                result = self.server.service.resolve_application_fields(self._json_body())
             elif route == "queue-decision":
                 result = self.server.service.decide_review_packet(self._json_body())
             elif route == "approve-external-claims":

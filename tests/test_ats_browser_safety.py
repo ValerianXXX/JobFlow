@@ -56,7 +56,11 @@ class ATSBrowserSafetyTests(unittest.TestCase):
         serialized = json.dumps(report, sort_keys=True)
         self.assertNotIn("DO_NOT_LEAK_PRIVATE_SENTINEL", serialized)
         self.assertNotIn("DO_NOT_LEAK_HIDDEN_SENTINEL", serialized)
-        self.assertNotIn("Email address", serialized)
+        self.assertIn("Email address", serialized)
+        self.assertEqual(
+            next(item for item in report["fields"] if item["answer_key"] == "work_authorization")["display_options"],
+            ["Select", "Yes", "No"],
+        )
         self.assertEqual(report["field_count"], 7)
         self.assertEqual(report["ignored_hidden_control_count"], 1)
         self.assertEqual(

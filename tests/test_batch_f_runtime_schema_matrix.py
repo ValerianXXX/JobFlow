@@ -241,6 +241,7 @@ def valid_fixtures() -> dict[str, dict]:
             "fields": [{
                 "control_ref": "CTL-ABCDEF123456", "control_type": "email", "required": True,
                 "classification": "private_fixed", "answer_key": "email", "logical_field_hash": H,
+                "display_label": "Email address", "display_options": [],
                 "reason_code": "SECURE_REFERENCE_REQUIRED", "prompt_hash": H,
                 "option_count": 0, "existing_value_discarded": True, "binding_status": "UNBOUND", "action": "STOP",
             }],

@@ -76,13 +76,14 @@ class SyntheticGreenhouseVerticalTests(unittest.TestCase):
             self.assertEqual(route["route_hash"], binding["source_route_hash"])
             self.assertEqual(binding["form_snapshot_hash"], evidence["form_snapshot_hash"])
             self.assertEqual(sum(row["status"] == "READY" for row in fields), 2)
-            self.assertEqual(sum(row["status"] == "STOP_REQUIRED" for row in fields), 3)
+            self.assertEqual(sum(row["status"] == "STOP_REQUIRED" for row in fields), 1)
+            self.assertEqual(sum(row["status"] == "SEPARATE_ACTION_GATED" for row in fields), 2)
             self.assertTrue(all(row["secure_ref"] is None or str(row["secure_ref"]).startswith("secure-ref:") for row in fields))
 
             packet = OnboardingCenterService(PROJECT, database, onboarding).review_packet(result["application_id"])["packet"]
             serialized = json.dumps(packet, ensure_ascii=False)
             self.assertNotIn("DO_NOT_RETAIN_SYNTHETIC_TOKEN", serialized)
-            self.assertNotIn("Full name", serialized)
+            self.assertIn("Full name", serialized)
             self.assertEqual(packet["source_route"]["provider"], "greenhouse")
             self.assertEqual(len(packet["form_questions"]), 5)
             self.assertEqual(audit_real_external_actions(database)["attempt_count"], 0)

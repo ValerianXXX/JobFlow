@@ -20,6 +20,10 @@ from .approvals import ApprovalContext, issue_approval
 from .ats_capabilities import offline_ats_capabilities
 from .application_readiness import build_application_readiness
 from .application_execution import validate_application_execution_plan_integrity
+from .application_field_resolution import (
+    ApplicationFieldResolutionManager,
+    field_resolution_summary,
+)
 from .ai_runtime import (
     ALLOWED_CATEGORIES,
     AI_QUALITY_CONTRACT,
@@ -1356,10 +1360,12 @@ class OnboardingCenterService:
         with self.database.connect() as connection:
             row = connection.execute(
                 """SELECT r.packet_id,r.packet_version,r.content_hash,r.relative_path,r.status,r.created_at,
-                          a.status AS application_status,j.company,j.title,j.location
+                          a.status AS application_status,j.company,j.title,j.location,
+                          b.context_hash,b.context_json
                    FROM review_packets r
                    JOIN applications a ON a.application_id=r.application_id
                    JOIN jobs j ON j.job_id=a.job_id
+                   JOIN application_bindings b ON b.application_id=r.application_id
                    WHERE r.application_id=?
                     ORDER BY r.packet_version DESC LIMIT 1""",
                 (application_id,),
@@ -1385,6 +1391,9 @@ class OnboardingCenterService:
             raise JobOpsError("REVIEW_PACKET_BINDING_INVALID", "The review packet is not bound to the selected application.")
         if packet.get("content_hash") != row["content_hash"]:
             raise JobOpsError("REVIEW_PACKET_HASH_INVALID", "The review packet hash does not match the active queue record.")
+        context = ApprovalContext.from_dict(json.loads(str(row["context_json"])))
+        if context.context_hash != row["context_hash"] or context.review_packet_hash != packet["content_hash"]:
+            raise JobOpsError("APPLICATION_BINDING_MISSING", "The review packet approval binding is inconsistent.")
         return {
             "status": str(row["status"]), "application_status": str(row["application_status"]),
             "application_id": application_id, "packet_id": str(row["packet_id"]),
@@ -1395,7 +1404,26 @@ class OnboardingCenterService:
                 "location": str(row["location"]) if row["location"] is not None else None,
             },
             "packet": packet, "private_transport": "LOCAL_SESSION_ONLY",
+            "field_resolution": field_resolution_summary(packet, context),
             "private_values_persisted_to_project": 0, "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def resolve_application_fields(self, payload: dict[str, Any]) -> dict[str, Any]:
+        application_id = str(payload.get("application_id", "")).strip()
+        expected_hash = str(payload.get("expected_packet_hash", "")).strip()
+        outcome = ApplicationFieldResolutionManager(
+            self.database, self.onboarding,
+        ).resolve(
+            application_id=application_id,
+            expected_packet_hash=expected_hash,
+            raw_resolutions=payload.get("resolutions"),
+            user_confirmed=payload.get("user_confirmed") is True,
+        )
+        return {
+            **outcome,
+            "phase5_authorization": "ABSENT",
+            "real_external_actions": 0,
         }
 
     @_synchronized
@@ -1423,6 +1451,12 @@ class OnboardingCenterService:
             if row is None:
                 raise JobOpsError("APPLICATION_BINDING_MISSING", "The current approval binding is missing.")
             context = ApprovalContext.from_dict(json.loads(row["context_json"]))
+            if context.unresolved_stops or context.mandatory_unknowns:
+                raise JobOpsError(
+                    "APPLICATION_FIELDS_UNRESOLVED",
+                    "Confirm every highlighted job-specific question before approving this packet.",
+                    unresolved_count=len(context.unresolved_stops) + len(context.mandatory_unknowns),
+                )
             approval = issue_approval(context=context, user_confirmed=True)
             outcome = ExternalActionGateway(
                 self.database, ExternalActionPolicy.production_disabled()
