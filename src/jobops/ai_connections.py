@@ -20,6 +20,7 @@ from .ai_runtime import (
     AIAnalysisEngine,
     LocalSubprocessAIEngine,
     _run_bounded_ai_command,
+    _structural_quality_summary,
     configured_ai_engine,
 )
 from .errors import JobOpsError
@@ -566,6 +567,8 @@ def _analyze_all_chunks(
         "ai_candidates": len(merged), "ai_entities": len(entity_fingerprints),
         **coverage, "ai_repair_attempted": repairs > 0,
         "ai_repair_succeeded": repairs > 0, "ai_repair_count": repairs,
+        "quality_gate_version": 4,
+        **_structural_quality_summary(merged),
     }
 
 

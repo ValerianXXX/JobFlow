@@ -15,7 +15,7 @@ from .util import stable_id
 
 
 AI_PROTOCOL_VERSION = 2
-AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V4"
+AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V5"
 MAX_AI_INPUT_CHARS = 500_000
 MAX_AI_OUTPUT_BYTES = 5 * 1024 * 1024
 MAX_AI_CHUNK_CHARS = 450_000
@@ -26,6 +26,26 @@ ALLOWED_CATEGORIES = {
     "work", "internship", "education", "project", "skill", "certification", "language", "summary",
 }
 ENTITY_CATEGORIES = {"work", "internship", "education", "project"}
+ENTITY_CATEGORY_ALIASES = {
+    "employment": "work", "professional": "work", "professional experience": "work",
+    "work experience": "work", "experience": "work",
+    "intern": "internship", "intern experience": "internship", "internship experience": "internship",
+    "academic": "education", "academics": "education", "school": "education",
+    "academic experience": "education", "educational experience": "education",
+    "case": "project", "engagement": "project", "case study": "project",
+    "personal project": "project", "consulting project": "project", "project experience": "project",
+}
+GENERIC_ENTITY_CANDIDATE_CATEGORIES = {
+    "achievement", "accomplishment", "responsibility", "role", "entity", "entity summary",
+    "entity_summary",
+}
+CLAIM_KIND_ALIASES = {
+    "role summary": "entity_summary", "role_summary": "entity_summary", "experience": "entity_summary",
+    "role": "entity_summary", "entity": "entity_summary",
+    "responsibilities": "responsibility", "achievement summary": "achievement",
+    "achievements": "achievement", "qualification summary": "qualification",
+    "skills": "skill", "professional summary": "summary",
+}
 ALLOWED_CLAIM_KINDS = {
     "entity_summary", "responsibility", "achievement", "qualification", "skill", "summary",
 }
@@ -262,6 +282,107 @@ def _entity_signature(entity: dict[str, Any]) -> str:
     return "|".join(_identity_part(item) for item in fields)
 
 
+def _explicit_entity_markers(source_excerpt: str) -> tuple[bool, bool]:
+    internship = bool(re.search(r"\b(?:intern|internship|trainee)\b|实习", source_excerpt, re.IGNORECASE))
+    education = bool(re.search(
+        r"\b(?:bachelor|master|ph\.?d|degree|university|college|student|graduat(?:e|ed|ion)|"
+        r"mba|bba|bsc|b\.sc|msc|m\.sc|b\.a|m\.a)\b|学士|硕士|博士|大学|学院|学历|学位|毕业",
+        source_excerpt,
+        re.IGNORECASE,
+    ))
+    return internship, education
+
+
+def _normalized_entity_category(value: Any, source_excerpt: str) -> tuple[str, list[str], bool]:
+    """Normalize only structural labels; never synthesize an experience fact."""
+
+    raw = _compact(value, limit=80).casefold().replace("_", " ").replace("-", " ")
+    raw = re.sub(r"\s+", " ", raw).strip()
+    category = raw if raw in ENTITY_CATEGORIES else ENTITY_CATEGORY_ALIASES.get(raw, "")
+    internship_explicit, education_explicit = _explicit_entity_markers(source_excerpt)
+    codes: list[str] = []
+    review_required = False
+    if internship_explicit and category != "internship":
+        category = "internship"
+        codes.append("EXPLICIT_INTERNSHIP_TYPE_NORMALIZED")
+        review_required = True
+    elif category and category != raw:
+        codes.append("ENTITY_TYPE_ALIAS_NORMALIZED")
+        review_required = True
+    if category == "internship" and not internship_explicit:
+        codes.append("AI_INTERNSHIP_TYPE_REQUIRES_CONFIRMATION")
+        review_required = True
+    if category == "education" and not education_explicit:
+        codes.append("AI_EDUCATION_TYPE_REQUIRES_CONFIRMATION")
+        review_required = True
+    return category, codes, review_required
+
+
+def _normalized_candidate_category(value: Any) -> str:
+    raw = _compact(value, limit=81).casefold().replace("_", " ").replace("-", " ")
+    raw = re.sub(r"\s+", " ", raw).strip()
+    if raw in ALLOWED_CATEGORIES:
+        return raw
+    return ENTITY_CATEGORY_ALIASES.get(raw, "")
+
+
+def _normalized_claim_kind(value: Any) -> str:
+    raw = _compact(value, limit=80).casefold().replace("-", " ")
+    raw = re.sub(r"\s+", " ", raw).strip()
+    if raw in ALLOWED_CLAIM_KINDS:
+        return raw
+    return CLAIM_KIND_ALIASES.get(raw, "")
+
+
+def _grounded_entity_range(
+    entity: dict[str, Any],
+    source_lines: list[str],
+    *,
+    line_number_start: int,
+) -> tuple[int, int, str | None]:
+    """Expand by at most two total adjacent lines for a split DOCX/PDF entity header."""
+
+    line_number_end = line_number_start + max(1, len(source_lines)) - 1
+    original_start, original_end = int(entity["line_start"]), int(entity["line_end"])
+    attempted: set[tuple[int, int]] = set()
+    ranges: list[tuple[int, int]] = []
+    for added_total in range(MAX_GROUNDING_ADJACENT_LINES + 1):
+        before_values = sorted(
+            range(added_total + 1),
+            key=lambda before: (abs(before - (added_total - before)), -before),
+        )
+        for before in before_values:
+            after = added_total - before
+            start = max(line_number_start, original_start - before)
+            end = min(line_number_end, original_end + after)
+            if (start, end) not in attempted:
+                attempted.add((start, end))
+                ranges.append((start, end))
+    for start, end in ranges:
+        segment = source_lines[start - line_number_start:end - line_number_start + 1]
+        expanding = (start, end) != (original_start, original_end)
+        if expanding and (
+            any(not line.strip() or BULLET_PREFIX_RE.match(line.strip()) for line in segment)
+            or any(SENTENCE_END_RE.search(line.strip()) for line in segment[:-1])
+        ):
+            continue
+        excerpt = "\n".join(source_lines[start - line_number_start:end - line_number_start + 1])
+        identity_grounded = (
+            _field_is_grounded(str(entity.get("organization", "")), excerpt)
+            and _field_is_grounded(str(entity.get("role", "")), excerpt)
+        )
+        dates_grounded = not (
+            _numbers(f"{entity.get('start_date', '')} {entity.get('end_date', '')}") - _numbers(excerpt)
+        )
+        if identity_grounded and dates_grounded:
+            adjustment = "ADJACENT_ENTITY_HEADER_LINES" if (start, end) != (original_start, original_end) else None
+            return start, end, adjustment
+    raise _invalid_ai_response(
+        "ENTITY_IDENTITY",
+        "An AI entity identity or date is not grounded within its cited or adjacent physical lines.",
+    )
+
+
 def _clean_candidate_statement(value: Any) -> str:
     statement = _compact(value, limit=2_001)
     return re.sub(r"^[\s\u2022\u2023\u25e6\u2043\u2219\uf0de\uf0b7▪▫●○◦‣·*—–-]+", "", statement).strip()
@@ -291,6 +412,24 @@ def _near_duplicate(left: str, right: str) -> bool:
     left_tokens, right_tokens = _tokens(left), _tokens(right)
     union = left_tokens | right_tokens
     return bool(union) and len(left_tokens & right_tokens) / len(union) >= NEAR_DUPLICATE_RATIO
+
+
+def _structural_quality_summary(candidates: list[dict[str, Any]]) -> dict[str, Any]:
+    codes = {
+        str(code)
+        for candidate in candidates
+        for code in (candidate.get("provenance", {}).get("structural_normalizations", []) or [])
+        if isinstance(code, str)
+    }
+    review_count = sum(
+        1 for candidate in candidates
+        if candidate.get("provenance", {}).get("classification_review_required") is True
+    )
+    return {
+        "structural_normalization_codes": sorted(codes),
+        "structural_normalization_count": len(codes),
+        "classification_review_candidate_count": review_count,
+    }
 
 
 def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str, Any]:
@@ -451,6 +590,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "Reconstruct wrapped lines and page breaks before analysis. Never return a line fragment, heading, navigation, table row, URL, or contact value.",
             "Identify each real-world entity once. Merge repeated mentions of the same organization, role, and date range into one entity_key.",
             "Classify paid or professional work as work, roles explicitly described as intern/internship as internship, degree study as education, and bounded case/engagement/build work as project.",
+            "Use exactly one of work, internship, education, or project for every entity_type. Every experience candidate must reuse its parent entity_key and exactly inherit that parent entity_type as category.",
             "Every candidate must be a complete standalone sentence ending in punctuation. Achievements and responsibilities inherit the category and entity_key of their parent entity.",
             "Preserve company, role, date, number, and responsibility boundaries exactly; never infer missing facts.",
             "Numeric formatting may differ only by commas, digit-grouping spaces, full-width digits, or physical PDF line wraps. Never calculate, round, scale, convert, or infer a value.",
@@ -611,10 +751,12 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 "Re-check every entity and candidate against the numbered source. A cited range must include every stated company, role, date, number, responsibility, and outcome.",
                 "Every candidate must be a complete standalone sentence of 20-2000 characters ending in . ? ! 。 ？ or ！. Never return headings, labels, table rows, URLs, contact values, or sentence fragments.",
                 "When a source sentence wraps across lines, cite the full inclusive range. Do not cite nearby unrelated lines merely to gain token overlap.",
-            "Preserve responsibility boundaries and exact numbers. Do not add a subject, result, date, role, or relationship that the cited lines do not support.",
-            "A comma, thin space, full-width digit, or physical PDF line wrap may change numeric formatting, but never calculate, round, scale, convert, or infer a numeric value.",
+                "Preserve responsibility boundaries and exact numbers. Do not add a subject, result, date, role, or relationship that the cited lines do not support.",
+                "A comma, thin space, full-width digit, or physical PDF line wrap may change numeric formatting, but never calculate, round, scale, convert, or infer a numeric value.",
                 "Omit an unsupported candidate instead of guessing. Do not preserve the rejected candidate count.",
-                "Identify each real-world work, internship, education, or project entity once and attach each experience Claim to exactly one matching entity.",
+                "Identify each real-world work, internship, education, or project entity once. Do not repeat an entity under a second key.",
+                "Use exactly one of work, internship, education, or project for every entity_type. An explicit Intern or Internship title is internship, not work.",
+                "Attach every experience Claim to its one matching entity_key and make the Claim category exactly equal to that parent entity_type.",
                 "Do not approve any Claim for external use.",
             ],
             "output_contract": original_request.get("output_contract", {}),
@@ -660,23 +802,27 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         if not isinstance(raw_entities, list) or len(raw_entities) > 100:
             raise _invalid_ai_response("RESPONSE_FORMAT", "The local AI response contains an invalid entity list.")
         entities: dict[str, dict[str, Any]] = {}
-        signatures: set[str] = set()
+        entity_aliases: dict[str, str] = {}
+        entity_keys_casefold: dict[str, str] = {}
+        identity_to_key: dict[str, str] = {}
         line_count = max(1, len(source_lines))
         line_number_end = line_number_start + line_count - 1
         for raw in raw_entities:
             if not isinstance(raw, dict):
                 raise _invalid_ai_response("RESPONSE_FORMAT", "A local AI entity is not an object.")
             entity_key = _compact(raw.get("entity_key"), limit=120)
-            entity_type = _compact(raw.get("entity_type"), limit=30).casefold()
             try:
                 line_start, line_end = int(raw.get("line_start")), int(raw.get("line_end"))
             except (TypeError, ValueError) as exc:
                 raise _invalid_ai_response("PROVENANCE_LINES", "A local AI entity has invalid provenance lines.") from exc
-            if not entity_key or entity_key in entities or entity_type not in ENTITY_CATEGORIES or not line_number_start <= line_start <= line_end <= line_number_end:
-                raise _invalid_ai_response("ENTITY_IDENTITY", "A local AI entity has an invalid identity, type, or provenance.")
+            if (
+                not entity_key
+                or not line_number_start <= line_start <= line_end <= line_number_end
+            ):
+                raise _invalid_ai_response("ENTITY_IDENTITY", "A local AI entity has an invalid identity or provenance.")
             entity = {
                 "entity_key": entity_key,
-                "entity_type": entity_type,
+                "entity_type": "",
                 "organization": _compact(raw.get("organization"), limit=300),
                 "role": _compact(raw.get("role"), limit=300),
                 "start_date": _compact(raw.get("start_date"), limit=120),
@@ -684,34 +830,80 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 "line_start": line_start,
                 "line_end": line_end,
             }
-            entity_excerpt = "\n".join(source_lines[line_start - line_number_start:line_end - line_number_start + 1])
             if not (entity["organization"] or entity["role"]):
                 raise _invalid_ai_response("ENTITY_IDENTITY", "An AI entity has no grounded organization or role identity.")
-            if not _field_is_grounded(entity["organization"], entity_excerpt) or not _field_is_grounded(entity["role"], entity_excerpt):
-                raise _invalid_ai_response("ENTITY_IDENTITY", "An AI entity identity is not grounded in its cited lines.")
-            entity_numbers = _numbers(f"{entity['start_date']} {entity['end_date']}")
-            if entity_numbers - _numbers(entity_excerpt):
-                raise _invalid_ai_response("ENTITY_DATE", "An AI entity date is not grounded in its cited lines.")
-            context_excerpt = entity_excerpt
-            internship_explicit = bool(re.search(r"\b(?:intern|internship|trainee)\b|实习", context_excerpt, re.IGNORECASE))
-            education_explicit = bool(re.search(
-                r"\b(?:bachelor|master|ph\.?d|degree|university|college|student|graduat(?:e|ed|ion))\b|学士|硕士|博士|大学|学院|学历|学位|毕业",
-                context_excerpt,
-                re.IGNORECASE,
+            grounded_start, grounded_end, citation_adjustment = _grounded_entity_range(
+                entity, source_lines, line_number_start=line_number_start,
+            )
+            entity["line_start"], entity["line_end"] = grounded_start, grounded_end
+            context_excerpt = "\n".join(
+                source_lines[grounded_start - line_number_start:grounded_end - line_number_start + 1]
+            )
+            entity_type, normalization_codes, classification_review = _normalized_entity_category(
+                raw.get("entity_type"), context_excerpt,
+            )
+            if entity_type not in ENTITY_CATEGORIES:
+                raise _invalid_ai_response(
+                    "EXPERIENCE_CLASSIFICATION",
+                    "An AI entity did not use a recognizable work, internship, education, or project type.",
+                )
+            entity["entity_type"] = entity_type
+            if citation_adjustment:
+                normalization_codes.append(citation_adjustment)
+                classification_review = True
+            entity["normalization_codes"] = sorted(set(normalization_codes))
+            entity["classification_review_required"] = classification_review
+            identity_signature = "|".join(_identity_part(entity.get(key)) for key in (
+                "organization", "role", "start_date", "end_date",
             ))
-            if internship_explicit and entity_type != "internship":
-                raise _invalid_ai_response("EXPERIENCE_CLASSIFICATION", "An explicitly identified internship was assigned to another experience category.")
-            if entity_type == "internship" and not internship_explicit:
-                raise _invalid_ai_response("EXPERIENCE_CLASSIFICATION", "An internship entity is not explicitly supported by its cited context.")
-            if entity_type == "education" and not education_explicit:
-                raise _invalid_ai_response("EXPERIENCE_CLASSIFICATION", "An education entity is not explicitly supported by its cited context.")
+            if not identity_signature.replace("|", ""):
+                raise _invalid_ai_response("ENTITY_IDENTITY", "The AI returned an unidentified real-world entity.")
+            canonical_key = identity_to_key.get(identity_signature)
+            existing_key_target = (
+                entity_aliases.get(entity_key) or entity_keys_casefold.get(entity_key.casefold())
+            )
+            if existing_key_target and canonical_key != existing_key_target:
+                raise _invalid_ai_response(
+                    "ENTITY_IDENTITY",
+                    "The AI reused one entity key for different grounded identities.",
+                )
+            if canonical_key:
+                canonical = entities[canonical_key]
+                canonical["line_start"] = min(int(canonical["line_start"]), grounded_start)
+                canonical["line_end"] = max(int(canonical["line_end"]), grounded_end)
+                canonical["normalization_codes"] = sorted(set(
+                    list(canonical.get("normalization_codes", []))
+                    + list(entity.get("normalization_codes", []))
+                    + ["DUPLICATE_ENTITY_CONSOLIDATED"]
+                ))
+                canonical["classification_review_required"] = True
+                explicit_internship, explicit_education = _explicit_entity_markers(context_excerpt)
+                if entity_type == "internship" and explicit_internship:
+                    canonical["entity_type"] = "internship"
+                    canonical["normalization_codes"] = sorted(set(
+                        list(canonical["normalization_codes"]) + ["EXPLICIT_INTERNSHIP_TYPE_NORMALIZED"]
+                    ))
+                elif entity_type == "education" and explicit_education:
+                    canonical["entity_type"] = "education"
+                    canonical["normalization_codes"] = sorted(set(
+                        list(canonical["normalization_codes"]) + ["EXPLICIT_EDUCATION_TYPE_NORMALIZED"]
+                    ))
+                elif canonical["entity_type"] != entity_type:
+                    canonical["normalization_codes"] = sorted(set(
+                        list(canonical["normalization_codes"]) + ["CONFLICTING_ENTITY_TYPE_CONSOLIDATED"]
+                    ))
+                entity_aliases[entity_key] = canonical_key
+                entity_keys_casefold[entity_key.casefold()] = canonical_key
+                continue
+            identity_to_key[identity_signature] = entity_key
+            entity_aliases[entity_key] = entity_key
+            entity_keys_casefold[entity_key.casefold()] = entity_key
+            entities[entity_key] = entity
+
+        for entity in entities.values():
             signature = _entity_signature(entity)
-            if not signature.replace("|", "") or signature in signatures:
-                raise _invalid_ai_response("DUPLICATE_ENTITY", "The AI returned a duplicate or unidentified real-world entity.")
-            signatures.add(signature)
             entity["entity_fingerprint"] = stable_id("ENTKEY", signature)
             entity["entity_id"] = stable_id("ENT", source_id, signature)
-            entities[entity_key] = entity
         raw_candidates = value.get("candidates")
         if not isinstance(raw_candidates, list) or len(raw_candidates) > 300:
             raise _invalid_ai_response("RESPONSE_FORMAT", "The local AI response contains an invalid candidate list.")
@@ -722,25 +914,58 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             if not isinstance(raw, dict):
                 raise _invalid_ai_response("RESPONSE_FORMAT", "A local AI candidate is not an object.")
             statement = _clean_candidate_statement(raw.get("statement"))
-            category = _compact(raw.get("category"), limit=81).casefold()
-            claim_kind = _compact(raw.get("claim_kind"), limit=50).casefold()
+            raw_category = _compact(raw.get("category"), limit=81).casefold()
+            category = _normalized_candidate_category(raw_category)
+            raw_claim_kind = _compact(raw.get("claim_kind"), limit=80).casefold()
+            claim_kind = _normalized_claim_kind(raw_claim_kind)
             entity_key = _compact(raw.get("entity_key"), limit=120)
             confidence = str(raw.get("confidence", "LOW")).upper()
             reason = _compact(raw.get("reason"), limit=500)
+            normalization_codes: list[str] = []
             try:
                 line_start = int(raw.get("line_start"))
                 line_end = int(raw.get("line_end"))
             except (TypeError, ValueError) as exc:
                 raise _invalid_ai_response("PROVENANCE_LINES", "A local AI candidate has invalid provenance lines.") from exc
+            canonical_key = (
+                entity_aliases.get(entity_key) or entity_keys_casefold.get(entity_key.casefold())
+                if entity_key else None
+            )
+            entity = entities.get(canonical_key) if canonical_key else None
+            if category not in ALLOWED_CATEGORIES and entity is not None and raw_category in GENERIC_ENTITY_CANDIDATE_CATEGORIES:
+                category = str(entity["entity_type"])
+                normalization_codes.append("GENERIC_CATEGORY_REPLACED_BY_PARENT")
             if category not in ALLOWED_CATEGORIES or claim_kind not in ALLOWED_CLAIM_KINDS:
                 raise _invalid_ai_response("CATEGORY_CONTRACT", "A local AI candidate contains an unsupported category or Claim kind.")
+            if category != raw_category:
+                normalization_codes.append("CANDIDATE_CATEGORY_ALIAS_NORMALIZED")
+            if claim_kind != raw_claim_kind:
+                normalization_codes.append("CLAIM_KIND_ALIAS_NORMALIZED")
             if confidence not in ALLOWED_CONFIDENCE or not line_number_start <= line_start <= line_end <= line_number_end:
                 raise _invalid_ai_response("PROVENANCE_LINES", "A local AI candidate contains invalid confidence or provenance.")
-            entity = entities.get(entity_key) if entity_key else None
-            if category in ENTITY_CATEGORIES and (entity is None or entity["entity_type"] != category):
-                raise _invalid_ai_response("ENTITY_RELATION", "An experience Claim is not attached to exactly one matching entity.")
+            if category in ENTITY_CATEGORIES and entity is None:
+                same_type = [item for item in entities.values() if item["entity_type"] == category]
+                nearby = [
+                    item for item in same_type
+                    if int(item["line_start"]) <= line_end + MAX_GROUNDING_ADJACENT_LINES
+                    and int(item["line_end"]) >= line_start - MAX_GROUNDING_ADJACENT_LINES
+                ]
+                recoverable = nearby if len(nearby) == 1 else same_type if len(same_type) == 1 else []
+                if len(recoverable) == 1:
+                    entity = recoverable[0]
+                    canonical_key = str(entity["entity_key"])
+                    normalization_codes.append("MISSING_ENTITY_KEY_RECOVERED")
+                else:
+                    raise _invalid_ai_response(
+                        "ENTITY_RELATION", "An experience Claim is not attached to one unambiguous entity.",
+                    )
+            if category in ENTITY_CATEGORIES and entity is not None and entity["entity_type"] != category:
+                category = str(entity["entity_type"])
+                normalization_codes.append("PARENT_ENTITY_TYPE_INHERITED")
             if category not in ENTITY_CATEGORIES and entity_key:
-                raise _invalid_ai_response("ENTITY_RELATION", "A non-entity Claim must not be attached to an experience entity.")
+                entity = None
+                canonical_key = None
+                normalization_codes.append("NON_ENTITY_CLAIM_DETACHED")
             if category in ENTITY_CATEGORIES and not _has_entity_predicate(statement):
                 raise _invalid_ai_response("STATEMENT_FRAGMENT", "An experience Claim is a heading or fragment without a complete action or relationship.")
             grounding = _bounded_statement_grounding(
@@ -784,6 +1009,9 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 continue
             seen.add(signature)
             seen_candidates.append((category, entity_identity, statement))
+            classification_review_required = bool(
+                normalization_codes or (entity or {}).get("classification_review_required")
+            )
             output.append({
                 "candidate_id": stable_id("EXT", source_id, str(accepted_line_start), statement),
                 "statement": statement,
@@ -791,7 +1019,10 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 "claim_kind": claim_kind,
                 "confidence": confidence,
                 "selected": False,
-                "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+                "selection_reason": (
+                    "AI_DERIVED_CLASSIFICATION_NORMALIZED_REQUIRES_CONFIRMATION"
+                    if classification_review_required else "AI_DERIVED_REQUIRES_CONFIRMATION"
+                ),
                 "ai_reason": reason,
                 "provenance": {
                     "line_start": accepted_line_start,
@@ -800,6 +1031,10 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                     "ai_line_end": line_end,
                     "citation_adjustment": grounding.get("citation_adjustment"),
                     "numeric_format_normalizations": grounding["numeric_format_normalization_count"],
+                    "structural_normalizations": sorted(set(
+                        normalization_codes + list((entity or {}).get("normalization_codes", []))
+                    )),
+                    "classification_review_required": classification_review_required,
                     "human_confirmation_required": True,
                 },
                 "entity_id": entity.get("entity_id") if entity else None,
@@ -875,7 +1110,8 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "ai_repair_count": repairs,
             "automatic_claim_selection": False,
             "quality_contract": AI_QUALITY_CONTRACT,
-            "quality_gate_version": 3,
+            "quality_gate_version": 4,
+            **_structural_quality_summary(candidates),
             "grounding_ratio_minimum": GROUNDING_RATIO,
             "near_duplicate_ratio": NEAR_DUPLICATE_RATIO,
         }

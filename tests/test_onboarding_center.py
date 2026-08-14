@@ -831,7 +831,7 @@ class OnboardingCenterTests(unittest.TestCase):
         )
         self.assertEqual([item["category"] for item in validated], ["work", "internship", "education", "project"])
 
-    def test_ai_contract_rejects_duplicate_real_world_entities(self) -> None:
+    def test_ai_contract_consolidates_duplicate_real_world_entities(self) -> None:
         with self.assertRaises(JobOpsError) as malformed_schema:
             LocalSubprocessAIEngine._validated_candidates(
                 {"schema_version": {}, "entities": [], "candidates": []},
@@ -841,29 +841,87 @@ class OnboardingCenterTests(unittest.TestCase):
 
         duplicate = {
             "entity_type": "work", "organization": "Alpha", "role": "Analyst",
-            "start_date": "2020", "end_date": "2021", "line_start": 1, "line_end": 1,
+            "start_date": "2020", "end_date": "2021",
         }
-        with self.assertRaises(JobOpsError) as blocked:
-            LocalSubprocessAIEngine._validated_candidates(
-                {"schema_version": 2, "entities": [
-                    {"entity_key": "first", **duplicate}, {"entity_key": "second", **duplicate},
-                ], "candidates": []},
-                source_id="SRC-SYNTHETIC", source_lines=["Alpha Analyst 2020 to 2021."],
-            )
-        self.assertEqual(blocked.exception.code, "AI_RESPONSE_INVALID")
+        lines = [
+            "Worked as an Analyst at Alpha from 2020 to 2021.",
+            "Worked as an Analyst at Alpha from 2020 to 2021.",
+        ]
+        candidate = {
+            "statement": lines[1], "category": "work", "claim_kind": "entity_summary",
+            "entity_key": "second", "confidence": "HIGH", "line_start": 2, "line_end": 2,
+            "reason": "Repeated model entity.",
+        }
+        validated = LocalSubprocessAIEngine._validated_candidates(
+            {"schema_version": 2, "entities": [
+                {"entity_key": "first", **duplicate, "line_start": 1, "line_end": 1},
+                {"entity_key": "second", **duplicate, "line_start": 2, "line_end": 2},
+            ], "candidates": [candidate]},
+            source_id="SRC-SYNTHETIC", source_lines=lines,
+        )
+        self.assertEqual(len(validated), 1)
+        self.assertEqual(validated[0]["entity"]["entity_key"], "first")
+        self.assertIn("DUPLICATE_ENTITY_CONSOLIDATED", validated[0]["provenance"]["structural_normalizations"])
+        self.assertTrue(validated[0]["provenance"]["classification_review_required"])
 
-    def test_ai_contract_rejects_obvious_internship_misclassification_and_header_fragments(self) -> None:
+    def test_ai_contract_consolidates_repeated_key_only_for_the_same_grounded_entity(self) -> None:
+        repeated_lines = [
+            "Worked as an Analyst at Alpha from 2020 to 2021.",
+            "Worked as an Analyst at Alpha from 2020 to 2021.",
+        ]
+        repeated_entity = {
+            "entity_key": "alpha", "entity_type": "work", "organization": "Alpha", "role": "Analyst",
+            "start_date": "2020", "end_date": "2021",
+        }
+        validated = LocalSubprocessAIEngine._validated_candidates(
+            {"schema_version": 2, "entities": [
+                {**repeated_entity, "line_start": 1, "line_end": 1},
+                {**repeated_entity, "line_start": 2, "line_end": 2},
+            ], "candidates": [{
+                "statement": repeated_lines[1], "category": "work", "claim_kind": "entity_summary",
+                "entity_key": "alpha", "confidence": "HIGH", "line_start": 2, "line_end": 2,
+                "reason": "Repeated model key.",
+            }]},
+            source_id="SRC-REPEATED-KEY", source_lines=repeated_lines,
+        )
+        self.assertIn("DUPLICATE_ENTITY_CONSOLIDATED", validated[0]["provenance"]["structural_normalizations"])
+
+        different_lines = [
+            "Worked as an Analyst at Alpha from 2020 to 2021.",
+            "Worked as a Manager at Beta from 2022 to 2023.",
+        ]
+        with self.assertRaises(JobOpsError) as ambiguous:
+            LocalSubprocessAIEngine._validated_candidates(
+                {"schema_version": 2, "entities": [{
+                    **repeated_entity, "line_start": 1, "line_end": 1,
+                }, {
+                    "entity_key": "alpha", "entity_type": "work", "organization": "Beta", "role": "Manager",
+                    "start_date": "2022", "end_date": "2023", "line_start": 2, "line_end": 2,
+                }], "candidates": []},
+                source_id="SRC-AMBIGUOUS-KEY", source_lines=different_lines,
+            )
+        self.assertEqual(ambiguous.exception.code, "AI_RESPONSE_INVALID")
+
+    def test_ai_contract_normalizes_obvious_internship_misclassification_and_rejects_header_fragments(self) -> None:
         source = ["Worked as a Strategy Intern at Beta from April 2025 to July 2025."]
         entity = {
             "entity_key": "beta", "entity_type": "work", "organization": "Beta", "role": "Strategy Intern",
             "start_date": "April 2025", "end_date": "July 2025", "line_start": 1, "line_end": 1,
         }
-        with self.assertRaises(JobOpsError) as category_error:
-            LocalSubprocessAIEngine._validated_candidates(
-                {"schema_version": 2, "entities": [entity], "candidates": []},
-                source_id="SRC-CATEGORY", source_lines=source,
-            )
-        self.assertEqual(category_error.exception.code, "AI_RESPONSE_INVALID")
+        candidate = {
+            "statement": source[0], "category": "work", "claim_kind": "entity_summary",
+            "entity_key": "beta", "confidence": "HIGH", "line_start": 1, "line_end": 1,
+            "reason": "Synthetic classification mismatch.",
+        }
+        normalized = LocalSubprocessAIEngine._validated_candidates(
+            {"schema_version": 2, "entities": [entity], "candidates": [candidate]},
+            source_id="SRC-CATEGORY", source_lines=source,
+        )
+        self.assertEqual(normalized[0]["category"], "internship")
+        self.assertEqual(normalized[0]["entity"]["entity_type"], "internship")
+        self.assertIn("EXPLICIT_INTERNSHIP_TYPE_NORMALIZED", normalized[0]["provenance"]["structural_normalizations"])
+        self.assertIn("PARENT_ENTITY_TYPE_INHERITED", normalized[0]["provenance"]["structural_normalizations"])
+        self.assertTrue(normalized[0]["provenance"]["classification_review_required"])
 
         entity["entity_type"] = "internship"
         header = {
@@ -920,8 +978,11 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertEqual(len(validated), 1)
         self.assertEqual(validated[0]["statement"], "Led a synthetic project and improved review accuracy by 20%.")
 
-    def test_ai_contract_canonicalizes_month_names_when_detecting_duplicate_entities(self) -> None:
-        lines = ["Alpha Analyst July 2020 to June 2021.", "Alpha Analyst Jul 2020 to Jun 2021."]
+    def test_ai_contract_canonicalizes_month_names_when_consolidating_duplicate_entities(self) -> None:
+        lines = [
+            "Worked as an Analyst at Alpha from July 2020 to June 2021.",
+            "Worked as an Analyst at Alpha from Jul 2020 to Jun 2021.",
+        ]
         entities = [{
             "entity_key": "first", "entity_type": "work", "organization": "Alpha", "role": "Analyst",
             "start_date": "July 2020", "end_date": "June 2021", "line_start": 1, "line_end": 1,
@@ -929,12 +990,105 @@ class OnboardingCenterTests(unittest.TestCase):
             "entity_key": "second", "entity_type": "work", "organization": "Alpha", "role": "Analyst",
             "start_date": "Jul 2020", "end_date": "Jun 2021", "line_start": 2, "line_end": 2,
         }]
-        with self.assertRaises(JobOpsError) as blocked:
+        validated = LocalSubprocessAIEngine._validated_candidates(
+            {"schema_version": 2, "entities": entities, "candidates": [{
+                "statement": lines[1], "category": "work", "claim_kind": "entity_summary",
+                "entity_key": "second", "confidence": "HIGH", "line_start": 2, "line_end": 2,
+                "reason": "Month alias duplicate.",
+            }]},
+            source_id="SRC-MONTHS", source_lines=lines,
+        )
+        self.assertEqual(len(validated), 1)
+        self.assertIn("DUPLICATE_ENTITY_CONSOLIDATED", validated[0]["provenance"]["structural_normalizations"])
+
+    def test_ai_contract_recovers_adjacent_docx_pdf_entity_headers_and_marks_review(self) -> None:
+        lines = [
+            "Alpha Advisory",
+            "Strategy Intern",
+            "April 2025 to July 2025",
+            "Mapped the customer journey and documented the operating workflow.",
+        ]
+        validated = LocalSubprocessAIEngine._validated_candidates(
+            {"schema_version": 2, "entities": [{
+                "entity_key": "alpha", "entity_type": "work", "organization": "Alpha Advisory",
+                "role": "Strategy Intern", "start_date": "April 2025", "end_date": "July 2025",
+                "line_start": 2, "line_end": 2,
+            }], "candidates": [{
+                "statement": lines[3], "category": "work", "claim_kind": "responsibility",
+                "entity_key": "alpha", "confidence": "HIGH", "line_start": 4, "line_end": 4,
+                "reason": "Physical document layout split the entity header.",
+            }]},
+            source_id="SRC-WRAPPED-ENTITY", source_lines=lines,
+        )
+        self.assertEqual(validated[0]["category"], "internship")
+        self.assertEqual(validated[0]["entity"]["line_start"], 1)
+        self.assertEqual(validated[0]["entity"]["line_end"], 3)
+        self.assertIn("ADJACENT_ENTITY_HEADER_LINES", validated[0]["provenance"]["structural_normalizations"])
+        self.assertTrue(validated[0]["provenance"]["classification_review_required"])
+
+    def test_ai_contract_does_not_expand_entity_header_beyond_two_total_lines(self) -> None:
+        lines = [
+            "Alpha Advisory",
+            "Strategy Analyst",
+            "New York",
+            "April 2025 to July 2025",
+            "Mapped the customer journey and documented the operating workflow.",
+        ]
+        with self.assertRaises(JobOpsError) as rejected:
             LocalSubprocessAIEngine._validated_candidates(
-                {"schema_version": 2, "entities": entities, "candidates": []},
-                source_id="SRC-MONTHS", source_lines=lines,
+                {"schema_version": 2, "entities": [{
+                    "entity_key": "alpha", "entity_type": "work", "organization": "Alpha Advisory",
+                    "role": "Strategy Analyst", "start_date": "April 2025", "end_date": "July 2025",
+                    "line_start": 2, "line_end": 2,
+                }], "candidates": []},
+                source_id="SRC-TOO-WIDE-ENTITY", source_lines=lines,
             )
-        self.assertEqual(blocked.exception.code, "AI_RESPONSE_INVALID")
+        self.assertEqual(rejected.exception.code, "AI_RESPONSE_INVALID")
+
+    def test_duplicate_entity_prefers_explicit_internship_and_normalizes_child_aliases(self) -> None:
+        lines = [
+            "Alpha Advisory Strategy Analyst April 2025 to July 2025",
+            "Worked as an Alpha Advisory Strategy Analyst Internship from April 2025 to July 2025.",
+        ]
+        validated = LocalSubprocessAIEngine._validated_candidates(
+            {"schema_version": 2, "entities": [{
+                "entity_key": "alpha-work", "entity_type": "work", "organization": "Alpha Advisory",
+                "role": "Strategy Analyst", "start_date": "April 2025", "end_date": "July 2025",
+                "line_start": 1, "line_end": 1,
+            }, {
+                "entity_key": "alpha-intern", "entity_type": "internship", "organization": "Alpha Advisory",
+                "role": "Strategy Analyst", "start_date": "April 2025", "end_date": "July 2025",
+                "line_start": 2, "line_end": 2,
+            }], "candidates": [{
+                "statement": lines[1], "category": "achievement", "claim_kind": "role",
+                "entity_key": "alpha-intern", "confidence": "HIGH", "line_start": 2, "line_end": 2,
+                "reason": "Duplicate entity and generic child labels.",
+            }]},
+            source_id="SRC-EXPLICIT-INTERN-DUPLICATE", source_lines=lines,
+        )
+        self.assertEqual(validated[0]["category"], "internship")
+        self.assertEqual(validated[0]["claim_kind"], "entity_summary")
+        self.assertIn("DUPLICATE_ENTITY_CONSOLIDATED", validated[0]["provenance"]["structural_normalizations"])
+        self.assertIn("GENERIC_CATEGORY_REPLACED_BY_PARENT", validated[0]["provenance"]["structural_normalizations"])
+        self.assertIn("CLAIM_KIND_ALIAS_NORMALIZED", validated[0]["provenance"]["structural_normalizations"])
+
+    def test_ai_proposed_internship_without_literal_marker_is_reviewable_not_discarded(self) -> None:
+        source = ["Worked as a Summer Analyst at Beta during 2025."]
+        validated = LocalSubprocessAIEngine._validated_candidates(
+            {"schema_version": 2, "entities": [{
+                "entity_key": "beta", "entity_type": "internship", "organization": "Beta",
+                "role": "Summer Analyst", "start_date": "2025", "end_date": "",
+                "line_start": 1, "line_end": 1,
+            }], "candidates": [{
+                "statement": source[0], "category": "internship", "claim_kind": "entity_summary",
+                "entity_key": "beta", "confidence": "MEDIUM", "line_start": 1, "line_end": 1,
+                "reason": "AI-proposed type requires the user's review.",
+            }]},
+            source_id="SRC-SUMMER-ANALYST", source_lines=source,
+        )
+        self.assertEqual(validated[0]["category"], "internship")
+        self.assertIn("AI_INTERNSHIP_TYPE_REQUIRES_CONFIRMATION", validated[0]["provenance"]["structural_normalizations"])
+        self.assertTrue(validated[0]["provenance"]["classification_review_required"])
 
     def test_same_ai_claim_from_two_sources_is_stored_once(self) -> None:
         with project_temp() as root:

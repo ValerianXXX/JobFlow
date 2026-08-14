@@ -356,6 +356,7 @@ textarea { min-height: 96px; resize: vertical; }
 .preview-meta { display: grid; grid-template-columns: minmax(140px, 220px) 1fr; gap: 12px; align-items: center; margin-top: 7px; }
 .preview-meta input, .preview-meta select { min-height: 34px; padding: 5px 8px; font-size: 11px; }
 .preview-meta small, .preview-empty { color: var(--muted); font-size: 10px; }
+.classification-review-note { color: var(--amber); font-weight: 700; }
 .entity-label { display: block; margin: 0 0 7px; color: var(--green); font-size: 11px; line-height: 1.45; }
 .source-actions { display: flex; align-items: center; gap: 10px; }
 .claim-quality-banner { margin: 0 0 16px; padding: 12px 14px; border-left: 4px solid var(--amber); background: #fff8e9; color: #775318; font-size: 12px; }
