@@ -8,6 +8,7 @@ from .adapters import FakeBrowserPrefillAdapter, FakeMaterialUploadAdapter, Fake
 from .application_execution import validate_application_execution_plan_integrity
 from .approvals import ApprovalContext, validate_approval
 from .ats_browser import validate_browser_action_plan_integrity
+from .ats_transport import build_ats_transport_envelope
 from .db import JobOpsDB
 from .errors import JobOpsError
 from .external_actions import ExternalActionGateway, ExternalActionPolicy
@@ -203,16 +204,35 @@ class IsolatedApplicationExecutionController:
             {"purpose": item.purpose, "sha256": item.sha256}
             for item in checked.context.uploads
         ]
+        now = iso_utc()
+        run_id = stable_id(
+            "RUN", checked.context.application_id, checked.context.context_hash,
+            str(checked.execution_plan["plan_hash"]), checked.freshness_evidence_hash, now,
+        )
         action_uses: list[dict[str, Any]] = []
+        action_envelopes: list[dict[str, Any]] = []
         if int(checked.browser_plan.get("fillable_count", 0)):
-            action_uses.append(self.action_sessions.record_isolated_use(
+            prefill_request_hash = sha256_bytes(canonical_json({
+                "browser_plan_hash": checked.browser_plan["plan_hash"],
+                "form_snapshot_hash": checked.context.form_snapshot_hash,
+            }))
+            prefill_use = self.action_sessions.record_isolated_use(
                 session_id=action_session_id, context=checked.context,
                 action="prefill_application_form",
-                request_hash=sha256_bytes(canonical_json({
-                    "browser_plan_hash": checked.browser_plan["plan_hash"],
-                    "form_snapshot_hash": checked.context.form_snapshot_hash,
-                })),
+                request_hash=prefill_request_hash,
                 result_code="AUTHORIZED_FAKE_PREFILL_INTENT",
+            )
+            action_uses.append(prefill_use)
+            action_envelopes.append(build_ats_transport_envelope(
+                provider=str(checked.execution_plan["provider"]), action="prefill_application_form",
+                application_id=checked.context.application_id, run_id=run_id,
+                application_context_hash=checked.context.context_hash,
+                source_route_hash=checked.context.source_route_hash,
+                form_snapshot_hash=checked.context.form_snapshot_hash,
+                execution_plan_hash=str(checked.execution_plan["plan_hash"]),
+                request_payload_hash=prefill_request_hash,
+                authorization_kind="SCOPED_ACTION_SESSION_USE",
+                authorization_hash=sha256_bytes(canonical_json(prefill_use)),
             ))
             prefill_after_authorization = self.browser.prefill({
                 "plan": checked.browser_plan,
@@ -221,11 +241,24 @@ class IsolatedApplicationExecutionController:
             })
             if prefill_after_authorization.get("fields_modified") != 0:
                 raise JobOpsError("FAKE_PREFILL_EVIDENCE_INVALID", "The isolated prefill adapter modified a field.")
-        action_uses.append(self.action_sessions.record_isolated_use(
+        upload_request_hash = sha256_bytes(canonical_json(upload_bindings))
+        upload_use = self.action_sessions.record_isolated_use(
             session_id=action_session_id, context=checked.context,
             action="upload_materials",
-            request_hash=sha256_bytes(canonical_json(upload_bindings)),
+            request_hash=upload_request_hash,
             result_code="AUTHORIZED_FAKE_UPLOAD_INTENT",
+        )
+        action_uses.append(upload_use)
+        action_envelopes.append(build_ats_transport_envelope(
+            provider=str(checked.execution_plan["provider"]), action="upload_materials",
+            application_id=checked.context.application_id, run_id=run_id,
+            application_context_hash=checked.context.context_hash,
+            source_route_hash=checked.context.source_route_hash,
+            form_snapshot_hash=checked.context.form_snapshot_hash,
+            execution_plan_hash=str(checked.execution_plan["plan_hash"]),
+            request_payload_hash=upload_request_hash,
+            authorization_kind="SCOPED_ACTION_SESSION_USE",
+            authorization_hash=sha256_bytes(canonical_json(upload_use)),
         ))
         upload_evidence = self.upload.upload({
             "application_id": checked.context.application_id,
@@ -241,11 +274,6 @@ class IsolatedApplicationExecutionController:
             or upload_evidence.get("real_side_effects") != 0
         ):
             raise JobOpsError("FAKE_UPLOAD_EVIDENCE_INVALID", "The isolated upload adapter reported a file or external action.")
-        now = iso_utc()
-        run_id = stable_id(
-            "RUN", checked.context.application_id, checked.context.context_hash,
-            str(checked.execution_plan["plan_hash"]), checked.freshness_evidence_hash, now,
-        )
         common = {
             "run_id": run_id,
             "application_id": checked.context.application_id,
@@ -274,6 +302,7 @@ class IsolatedApplicationExecutionController:
             self._checkpoint(sequence=4, phase="SCOPED_ACTIONS_VALIDATED", status="CONSUMED", evidence={
                 "action_session_id": action_session_id,
                 "action_use_ids": [item["use_id"] for item in action_uses],
+                "transport_envelope_hashes": [item["envelope_hash"] for item in action_envelopes],
                 "upload_binding_hash": upload_evidence["binding_hash"],
                 "planned_file_count": upload_evidence["planned_file_count"],
                 "files_opened": 0,
@@ -621,10 +650,25 @@ class IsolatedApplicationExecutionController:
                 run_status="SUBMISSION_STARTED",
                 evidence={"authorization_id": authorization.authorization_id, "bound_hash": authorization.bound_hash},
             )
-            transport = self.submission.submit({
+            submission_request_hash = sha256_bytes(canonical_json({
                 "application_id": checked.context.application_id,
                 "run_id": run_id,
                 "application_context_hash": checked.context.context_hash,
+                "execution_plan_hash": checked.execution_plan["plan_hash"],
+            }))
+            submission_envelope = build_ats_transport_envelope(
+                provider=str(checked.execution_plan["provider"]), action="submit_application",
+                application_id=checked.context.application_id, run_id=run_id,
+                application_context_hash=checked.context.context_hash,
+                source_route_hash=checked.context.source_route_hash,
+                form_snapshot_hash=checked.context.form_snapshot_hash,
+                execution_plan_hash=str(checked.execution_plan["plan_hash"]),
+                request_payload_hash=submission_request_hash,
+                authorization_kind="FINAL_SUBMISSION_AUTHORIZATION",
+                authorization_hash=authorization.bound_hash,
+            )
+            transport = self.submission.submit({
+                "transport_envelope": submission_envelope,
                 "isolation_policy": "ISOLATED_FAKE_ONLY",
             })
             if transport.get("status") != "FAKE_SUBMISSION_RECORDED" or transport.get("real_side_effects") != 0:
@@ -637,7 +681,26 @@ class IsolatedApplicationExecutionController:
                 run_id=run_id, checked=checked, sequence=7,
                 phase="FAKE_SUBMISSION_RECORDED", checkpoint_status="RECORDED",
                 run_status="SUBMITTED",
-                evidence={"attempt_id": transport["attempt_id"], "adapter_kind": "fake"},
+                evidence={
+                    "attempt_id": transport["attempt_id"], "adapter_kind": "fake",
+                    "transport_envelope_hash": submission_envelope["envelope_hash"],
+                },
+            )
+            receipt_request_hash = sha256_bytes(canonical_json({
+                "source": "fake-receipt",
+                "confirmation_present": bool(fake_confirmation_number),
+                "confirmation_hash": sha256_bytes(str(fake_confirmation_number or "").encode("utf-8")),
+            }))
+            receipt_envelope = build_ats_transport_envelope(
+                provider=str(checked.execution_plan["provider"]), action="verify_receipt",
+                application_id=checked.context.application_id, run_id=run_id,
+                application_context_hash=checked.context.context_hash,
+                source_route_hash=checked.context.source_route_hash,
+                form_snapshot_hash=checked.context.form_snapshot_hash,
+                execution_plan_hash=str(checked.execution_plan["plan_hash"]),
+                request_payload_hash=receipt_request_hash,
+                authorization_kind="SUBMISSION_ATTEMPT",
+                authorization_hash=submission_envelope["envelope_hash"],
             )
             receipt_result = self.receipt.verify({
                 "source": "fake-receipt",
@@ -653,7 +716,10 @@ class IsolatedApplicationExecutionController:
                     run_id=run_id, checked=checked, sequence=8,
                     phase="SUBMISSION_UNKNOWN", checkpoint_status="UNKNOWN",
                     run_status="SUBMISSION_UNKNOWN",
-                    evidence={"reason": "VERIFIED_RECEIPT_MISSING"},
+                    evidence={
+                        "reason": "VERIFIED_RECEIPT_MISSING",
+                        "transport_envelope_hash": receipt_envelope["envelope_hash"],
+                    },
                 )
                 return {
                     "status": "SUBMISSION_UNKNOWN",
@@ -680,7 +746,11 @@ class IsolatedApplicationExecutionController:
                 run_id=run_id, checked=checked, sequence=8,
                 phase="RECEIPT_VERIFIED", checkpoint_status="CONFIRMED",
                 run_status="CONFIRMED",
-                evidence={"receipt_id": confirmed["receipt_id"], "confirmation_hash": receipt["confirmation_hash"]},
+                evidence={
+                    "receipt_id": confirmed["receipt_id"],
+                    "confirmation_hash": receipt["confirmation_hash"],
+                    "transport_envelope_hash": receipt_envelope["envelope_hash"],
+                },
             )
             return {
                 "status": "CONFIRMED",

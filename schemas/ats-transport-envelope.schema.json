@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/ats-transport-envelope.schema.json",
+  "title": "Provider-neutral ATS transport envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "envelope_id", "provider", "action", "application_id", "run_id",
+    "application_context_hash", "source_route_hash", "form_snapshot_hash",
+    "execution_plan_hash", "request_payload_hash", "authorization_kind",
+    "authorization_hash", "transport_contract_hash", "mode", "contains_private_values",
+    "contains_file_content", "created_at", "browser_actions", "network_actions",
+    "real_external_actions", "envelope_hash"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "envelope_id": {"type": "string", "pattern": "^ATE-[A-F0-9]{12}$"},
+    "provider": {"enum": ["company", "greenhouse", "lever", "workday"]},
+    "action": {"enum": ["read_official_job", "inspect_application_form", "prefill_application_form", "upload_materials", "submit_application", "verify_receipt"]},
+    "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "run_id": {"type": "string", "pattern": "^RUN-[A-F0-9]{12}$"},
+    "application_context_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "execution_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "request_payload_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorization_kind": {"enum": ["SCOPED_ACTION_SESSION_USE", "FINAL_SUBMISSION_AUTHORIZATION", "SUBMISSION_ATTEMPT"]},
+    "authorization_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "transport_contract_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "mode": {"const": "ISOLATED_FAKE"},
+    "contains_private_values": {"const": false},
+    "contains_file_content": {"const": false},
+    "created_at": {"type": "string", "format": "date-time"},
+    "browser_actions": {"const": 0},
+    "network_actions": {"const": 0},
+    "real_external_actions": {"const": 0},
+    "envelope_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}

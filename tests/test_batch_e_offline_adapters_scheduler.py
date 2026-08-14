@@ -12,6 +12,7 @@ from unittest.mock import patch
 from _support import project_temp
 from jobops.adapters import AdapterRegistry, DisabledAdapter, FakeBrowserPrefillAdapter, FakeMaterialUploadAdapter, FakeOfficialSourceAdapter, FakeOutboxAdapter, FakeReceiptAdapter, FakeSubmissionAdapter, audit_real_external_actions
 from jobops.application_execution import build_application_execution_plan
+from jobops.ats_transport import build_ats_transport_envelope
 from jobops.approvals import ApprovalContext, UploadBinding, issue_approval
 from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
@@ -102,6 +103,15 @@ class OfflineAdapterTests(unittest.TestCase):
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")
             database.initialize()
+            ctx = context()
+            seed_awaiting(database, ctx)
+            envelope = build_ats_transport_envelope(
+                provider="company", action="submit_application",
+                application_id=ctx.application_id, run_id="RUN-ABCDEF123456",
+                application_context_hash=ctx.context_hash, source_route_hash=H,
+                form_snapshot_hash=H, execution_plan_hash=H, request_payload_hash=H,
+                authorization_kind="FINAL_SUBMISSION_AUTHORIZATION", authorization_hash=H,
+            )
             adapters = [
                 lambda: FakeBrowserPrefillAdapter().prefill({
                     "plan": safe_browser_plan(), "current_form_snapshot_hash": H, "isolation_policy": "ISOLATED_FAKE_ONLY",
@@ -111,7 +121,7 @@ class OfflineAdapterTests(unittest.TestCase):
                     "upload_bindings": [{"purpose": "resume", "sha256": H}],
                     "isolation_policy": "ISOLATED_FAKE_ONLY",
                 }),
-                lambda: FakeSubmissionAdapter(database).submit({"application_id": None, "isolation_policy": "ISOLATED_FAKE_ONLY"}),
+                lambda: FakeSubmissionAdapter(database).submit({"transport_envelope": envelope, "isolation_policy": "ISOLATED_FAKE_ONLY"}),
                 lambda: FakeOutboxAdapter().send_email({"to": "synthetic@example.test", "body": "fixture"}),
                 lambda: FakeReceiptAdapter().verify({"source": "fake-receipt", "confirmation_number": "SYN-1"}),
             ]

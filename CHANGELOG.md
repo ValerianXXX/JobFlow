@@ -6,6 +6,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+- Added one provider-neutral, hash-only ATS transport contract across company pages, Greenhouse, Lever and Workday. Raw private values and file content are forbidden, action authorization types are fixed, and live transports remain unregistered.
+- 为公司官网、Greenhouse、Lever 与 Workday 新增统一的仅哈希 ATS 传输契约；禁止私人原值与文件正文进入信封，固定逐动作授权类型，且实时传输仍未注册。
 - Added crash-consistent isolated execution reconciliation across final-authorization, fake-transport and receipt checkpoints; only an already persisted verified receipt can recover to confirmed, while every uncertain state becomes non-retryable `SUBMISSION_UNKNOWN`.
 - 新增隔离执行的崩溃一致性恢复：覆盖最终授权、假传输与回执检查点；只有已持久化的可靠回执可恢复为已确认，其余不确定状态全部进入不可自动重试的 `SUBMISSION_UNKNOWN`。
 - Integrated scoped prefill/upload authorization into the isolated execution chain. The hash-only fake upload adapter rejects filenames, paths, secure references and file bodies, and reports zero files opened/uploaded and zero network actions.

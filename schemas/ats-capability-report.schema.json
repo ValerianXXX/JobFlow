@@ -15,7 +15,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["provider", "offline_evidence_level", "saved_snapshot_modes", "route_shape", "dynamic_control_strategy", "guest_first", "account_creation_blocked", "upload_blocked", "submit_blocked", "live_site_verified", "browser_actions", "network_actions", "real_external_actions", "contract_hash"],
+        "required": ["provider", "offline_evidence_level", "saved_snapshot_modes", "route_shape", "dynamic_control_strategy", "guest_first", "account_creation_blocked", "upload_blocked", "submit_blocked", "live_site_verified", "browser_actions", "network_actions", "real_external_actions", "transport_contract_hash", "live_transport_registered", "automatic_retry", "contract_hash"],
         "properties": {
           "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
           "offline_evidence_level": {"enum": ["DIRECT_SNAPSHOT_PASS", "SYNTHETIC_VERTICAL_PASS", "SINGLE_SNAPSHOT_PASS", "SAVED_SEQUENCE_PASS"]},
@@ -30,6 +30,9 @@
           "browser_actions": {"const": 0},
           "network_actions": {"const": 0},
           "real_external_actions": {"const": 0},
+          "transport_contract_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "live_transport_registered": {"const": false},
+          "automatic_retry": {"const": false},
           "contract_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
         }
       }

@@ -30,12 +30,40 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
     },
 )
 
+_TRANSPORT_OPERATION_SEQUENCE = [
+    "read_official_job", "inspect_application_form", "prefill_application_form",
+    "upload_materials", "submit_application", "verify_receipt",
+]
+
+
+def provider_transport_contract(provider: str) -> dict[str, Any]:
+    if provider not in {item["provider"] for item in _CONTRACTS}:
+        raise JobOpsError("ATS_PROVIDER_UNSUPPORTED", "The ATS provider has no transport contract.", provider=provider)
+    material = {
+        "provider": provider,
+        "contract_version": 1,
+        "operation_sequence": list(_TRANSPORT_OPERATION_SEQUENCE),
+        "guest_first": True,
+        "account_creation": "STOP_REQUIRES_SEPARATE_USER_DECISION",
+        "final_submit_gate": "FRESH_ONE_TIME_AUTHORIZATION",
+        "receipt_policy": "VERIFIED_RECEIPT_REQUIRED_NO_GUESSING",
+        "automatic_retry": False,
+        "private_values_persisted": False,
+        "file_content_in_envelope": False,
+        "live_transport_registered": False,
+    }
+    return {
+        **material,
+        "transport_contract_hash": sha256_bytes(canonical_json(material)),
+    }
+
 
 def _contract_hash(value: dict[str, Any]) -> str:
     material = {key: value[key] for key in (
         "provider", "offline_evidence_level", "saved_snapshot_modes", "route_shape", "dynamic_control_strategy",
         "guest_first", "account_creation_blocked", "upload_blocked", "submit_blocked", "live_site_verified",
         "browser_actions", "network_actions", "real_external_actions",
+        "transport_contract_hash", "live_transport_registered", "automatic_retry",
     )}
     return sha256_bytes(canonical_json(material))
 
@@ -53,6 +81,9 @@ def offline_ats_capabilities() -> dict[str, Any]:
             "browser_actions": 0,
             "network_actions": 0,
             "real_external_actions": 0,
+            "transport_contract_hash": provider_transport_contract(str(definition["provider"]))["transport_contract_hash"],
+            "live_transport_registered": False,
+            "automatic_retry": False,
         }
         item["contract_hash"] = _contract_hash(item)
         providers.append(item)

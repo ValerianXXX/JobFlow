@@ -56,6 +56,7 @@ flowchart LR
 - `final_submission`, `external_actions`: separate fresh final-confirmation artifact, database persistence, expiry/replay checks and atomic dual-approval consumption; only isolated fake transport can exercise the transition.
 - `execution_controller`: append-only, hash-only checkpoints for the approved-plan lifecycle; scoped prefill/upload intent must be consumed before the final-confirmation gate, the fake upload adapter accepts hashes only and opens/uploads zero files, and interruption reconciliation uses persisted application/receipt evidence to select only confirmed or non-retryable `SUBMISSION_UNKNOWN` without replay.
 - `external_action_sessions`: exact per-action scopes, expiry, replay protection, revocation and a generation-bound global kill switch; production activation is structurally unavailable in the current build.
+- `ats_transport`: one provider-neutral, hash-only envelope for official read, form inspection, prefill, upload, submit and receipt verification; action-to-authorization matching is schema-checked and every live provider transport remains unregistered.
 - `public_release`, `release_candidate`, `release`: current-tree/history privacy gates and release evidence.
 
 Every persisted transition is content-bound or auditable. `SUBMISSION_UNKNOWN`, CAPTCHA, MFA, OTP, login and account creation do not have an automatic continuation path.

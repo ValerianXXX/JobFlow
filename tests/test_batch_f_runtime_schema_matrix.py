@@ -285,9 +285,20 @@ def valid_fixtures() -> dict[str, dict]:
                 "dynamic_control_strategy": "opaque_control_ref", "guest_first": True,
                 "account_creation_blocked": True, "upload_blocked": True, "submit_blocked": True,
                 "live_site_verified": False, "browser_actions": 0, "network_actions": 0,
-                "real_external_actions": 0, "contract_hash": H,
+                "real_external_actions": 0, "transport_contract_hash": H,
+                "live_transport_registered": False, "automatic_retry": False, "contract_hash": H,
             }],
             "live_site_accessed": False, "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
+        },
+        "ats-transport-envelope": {
+            "schema_version": 1, "envelope_id": "ATE-ABCDEF123456", "provider": "greenhouse",
+            "action": "submit_application", "application_id": APP, "run_id": "RUN-ABCDEF123456",
+            "application_context_hash": H, "source_route_hash": H, "form_snapshot_hash": H,
+            "execution_plan_hash": H, "request_payload_hash": H,
+            "authorization_kind": "FINAL_SUBMISSION_AUTHORIZATION", "authorization_hash": H,
+            "transport_contract_hash": H, "mode": "ISOLATED_FAKE",
+            "contains_private_values": False, "contains_file_content": False, "created_at": T,
+            "browser_actions": 0, "network_actions": 0, "real_external_actions": 0, "envelope_hash": H,
         },
         "continuous-intake-plan": {
             "schema_version": 1, "status": "MANUAL_TICK_READY", "mode": "MANUAL_TICK_ONLY", "plan_hash": H,
@@ -396,6 +407,7 @@ class RuntimeSchemaMatrixTests(unittest.TestCase):
             "continuous-intake-plan": ("job_count", 4),
             "application-execution-checkpoint": ("sequence", 1),
             "external-action-session": ("expires_at", T),
+            "ats-transport-envelope": ("authorization_kind", "SCOPED_ACTION_SESSION_USE"),
         }
         for name, (field, invalid) in conflicts.items():
             changed = copy.deepcopy(self.fixtures[name]); changed[field] = invalid

@@ -186,13 +186,22 @@ class FakeSubmissionAdapter:
     kind: str = "fake"
 
     def submit(self, request: dict[str, Any]) -> dict[str, Any]:
+        if set(request) != {"transport_envelope", "isolation_policy"}:
+            raise JobOpsError("FAKE_SUBMISSION_REQUEST_INVALID", "Synthetic submission accepts only a validated ATS transport envelope.")
         if request.get("isolation_policy") != "ISOLATED_FAKE_ONLY":
             raise JobOpsError("FAKE_ISOLATION_REQUIRED", "Synthetic submission requires the explicit isolated fake policy.")
+        envelope = request.get("transport_envelope")
+        if not isinstance(envelope, dict):
+            raise JobOpsError("FAKE_SUBMISSION_REQUEST_INVALID", "Synthetic submission requires an ATS transport envelope.")
+        from .ats_transport import validate_ats_transport_envelope
+        validate_ats_transport_envelope(envelope)
+        if envelope.get("action") != "submit_application" or envelope.get("authorization_kind") != "FINAL_SUBMISSION_AUTHORIZATION":
+            raise JobOpsError("FAKE_SUBMISSION_REQUEST_INVALID", "The ATS envelope is not authorized for final submission.")
         attempt_id = f"ATT-{uuid.uuid4().hex}"
         with self.database.connect() as connection:
             connection.execute(
                 "INSERT INTO external_action_attempts(attempt_id,application_id,action,adapter_kind,result_code,context_hash,real_side_effect,created_at) VALUES(?,?,?,?,?,?,0,?)",
-                (attempt_id, _safe_application_id(request), "submit_application", self.kind, "FAKE_SUBMISSION_RECORDED", sha256_bytes(canonical_json(request)), iso_utc()),
+                (attempt_id, str(envelope["application_id"]), "submit_application", self.kind, "FAKE_SUBMISSION_RECORDED", str(envelope["envelope_hash"]), iso_utc()),
             )
         return {"status": "FAKE_SUBMISSION_RECORDED", "attempt_id": attempt_id, "real_side_effects": 0, "confirmation": None}
 

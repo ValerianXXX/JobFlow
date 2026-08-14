@@ -126,6 +126,17 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         )
         if pair not in expected.get(value.get("sequence"), set()) and not recovery_pair:
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Execution checkpoint phase and status do not match its fixed sequence.")
+    if name == "ats-transport-envelope":
+        expected_authorization = {
+            "read_official_job": "SCOPED_ACTION_SESSION_USE",
+            "inspect_application_form": "SCOPED_ACTION_SESSION_USE",
+            "prefill_application_form": "SCOPED_ACTION_SESSION_USE",
+            "upload_materials": "SCOPED_ACTION_SESSION_USE",
+            "submit_application": "FINAL_SUBMISSION_AUTHORIZATION",
+            "verify_receipt": "SUBMISSION_ATTEMPT",
+        }.get(value.get("action"))
+        if value.get("authorization_kind") != expected_authorization:
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "ATS transport action and authorization type do not match.")
     if name == "external-action-session":
         if parse_iso(value["issued_at"]) >= parse_iso(value["expires_at"]):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "External action session must expire after issuance.")
