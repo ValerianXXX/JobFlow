@@ -195,15 +195,39 @@ class OfflineResearchAndFormTests(unittest.TestCase):
                 {"id": "next", "name": "next", "label": "Save and continue", "type": "submit"},
                 {"id": "submit", "name": "submit", "label": "Submit application", "type": "submit"},
                 {"id": "ambiguous", "name": "action", "label": "Finish", "type": "submit"},
+                {"id": "dangerous", "name": "action", "label": "Continue and submit", "type": "submit"},
             ],
             {},
             [],
         )
         self.assertEqual(
             [item["classification"] for item in mapped["fields"]],
-            ["navigation_control_stop", "final_submit_stop", "final_submit_stop"],
+            ["navigation_control_stop", "final_submit_stop", "final_submit_stop", "final_submit_stop"],
         )
         self.assertTrue(mapped["submit_blocked"])
+
+    def test_explicit_button_requires_forward_only_wording_before_navigation(self) -> None:
+        mapped = map_fields(
+            [
+                {"id": "next", "label": "Next", "type": "button"},
+                {"id": "continue", "label": "Continue", "type": "button"},
+                {"id": "mixed", "label": "Continue and submit", "type": "button"},
+                {"id": "submit", "label": "Submit application", "type": "button"},
+                {"id": "finish", "label": "Finish application", "type": "button"},
+                {"id": "mixed_cn", "label": "继续并提交", "type": "button"},
+                {"id": "complete_cn", "label": "完成申请", "type": "button"},
+            ],
+            {},
+            [],
+        )
+        self.assertEqual(
+            [item["classification"] for item in mapped["fields"]],
+            [
+                "navigation_control_stop", "navigation_control_stop",
+                "final_submit_stop", "final_submit_stop", "final_submit_stop",
+                "final_submit_stop", "final_submit_stop",
+            ],
+        )
 
 
 class VisualRecordTests(unittest.TestCase):

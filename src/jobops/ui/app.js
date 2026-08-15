@@ -3,6 +3,17 @@
 const STRINGS = {
   zh: {
     guidedIntakeEyebrow: "下一份岗位", guidedIntakeTitle: "粘贴岗位链接即可开始", guidedIntakeBody: "从公司官网岗位链接开始。浏览器伴侣只读取你主动选择的岗位页和申请表结构，随后自动准备岗位简历、按需求职信、作品集与审阅包。", guidedIntakeIdle: "尚未开始", guidedOfficialUrl: "公司官网岗位链接", guidedIntakeConsent: "我允许 JobFlow 在接下来的 30 分钟内，只读取我在浏览器中主动选择的公司岗位页和申请表结构；此阶段不填写、不上传、不点击网页按钮。", startGuidedIntake: "连接浏览器并开始", guidedOpenJob: "打开公司岗位页", guidedStepOneTitle: "打开公司岗位页", guidedStepOneBody: "粘贴一次链接并建立浏览器连接。", guidedStepTwoTitle: "读取岗位", guidedStepTwoBody: "在岗位页打开浏览器右上角的 JobFlow J，再点“读取当前公司岗位页”。", guidedStepThreeTitle: "读取申请表", guidedStepThreeBody: "亲自点击公司的 Apply；到申请表后再次打开 J。JobFlow 会自动准备材料。", guidedStepFourTitle: "一次审阅", guidedStepFourBody: "确认材料与岗位问题后，才会出现辅助填写入口。", guidedPairing: "正在连接浏览器伴侣…", guidedPaired: "已连接。请打开公司岗位页，再使用浏览器右上角的 JobFlow J。", guidedAwaitingJob: "等待你读取公司岗位页。", guidedAwaitingForm: "岗位已读取。请亲自点击公司页面的 Apply；进入申请表后再次使用 JobFlow J。", guidedPreparing: "正在根据岗位和表单准备岗位简历、按需材料与审阅包…", guidedReady: "材料与审阅包已准备好，请在下方一次审阅。", guidedDeferred: "待审批队列已满，这个岗位已安全排队；你处理一项后会继续。", guidedFailed: "本次读取没有完成，网页没有被填写或修改。请检查当前页面后重试。", guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认 JobFlow Browser Companion 已启用，然后重试。", guidedUrlRequired: "请粘贴公司官网上的 HTTPS 岗位链接。", guidedConsentRequired: "请先勾选这次只读岗位导入授权。", guidedReadinessRequired: "请先完成上方列出的资料准备项。", guidedWrongJobPage: "请先在公司自己的官网岗位页读取岗位，再亲自进入它链接的申请表。", guidedFormMissing: "当前页面没有找到申请字段。请先进入真正的申请表，再打开 JobFlow J。", guidedJobTitleMissing: "当前页面无法可靠识别岗位名称，请确认打开的是具体岗位页。", guidedLeaseInvalid: "这次岗位读取连接已过期，请重新开始。", advancedToolsTitle: "高级诊断与离线 QA", advancedToolsBody: "普通使用不需要这里。仅在开发测试或浏览器导入不可用时，才手动提供本地快照。", advancedToolsOpen: "展开", browserAssistEyebrow: "已批准的申请",
+    retryCompanionPairing: "再次显示连接步骤",
+    companionClickToPair: "本次连接已准备好。请停留在这个 JobFlow 页面，点击浏览器右上角的 JobFlow J，再点击“连接当前 JobFlow 页面”。",
+    companionClickToReconnect: "浏览器伴侣已明确丢失本次绑定，但本次授权仍保留。请在这个 JobFlow 页面点击 J 重新连接；JobFlow 不会静默重试。",
+    companionStatusTemporary: "暂时没有收到浏览器伴侣状态；本次授权仍保留，JobFlow 会稍后自动再检查，无需重新开始。",
+    companionSessionActive: "另一种浏览器任务仍在进行中。请先完成或明确停止它，再开始这个任务。",
+    guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认扩展已启用并重新加载当前版本；无需把网站权限改成“在所有网站上”。",
+    guidedExtensionOutdated: "浏览器伴侣版本不匹配。请重新运行安装命令，并在扩展管理页重新加载安装器打开的本机 BrowserCompanion 目录。",
+    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.6.0，然后刷新 JobFlow。",
+    browserAssistRestartRequired: "扩展已重载，本次辅助已安全停止。请重新打开这份申请的起始页，再建立一次连接；JobFlow 没有自动重试 Next/Continue。",
+    browserAssistManualRestart: "这次一次性下一步证明没有安全建立。请结束并重新启动这项申请辅助；JobFlow 不会自动重试。",
+    browserAssistReloadUnknown: "扩展在最终提交等待阶段被重载，结果已安全标记为未知。请回答“是否提交成功”；JobFlow 不会自动重试。",
     brandSubtitle: "找工流水线", localOnly: "仅限本机 · DPAPI 加密", eyebrow: "JOBFLOW SETUP", pageTitle: "JobFlow · 找工流水线",
     browserAssistNavigationStalled: "页面在 20 秒内没有可靠前进；JobFlow 已停止且不会重试。请结束本次辅助后重新开始。",
     heroTitle: "一次填写，连续投递", heroBody: "从简历与项目材料、AI 资料和你的直接回答建立完整资料。所有私人内容只在本机解密，不写入普通项目文件。",
@@ -38,9 +49,21 @@ const STRINGS = {
     aiEngineReady: "AI 结构化能力已验证", aiEngineReadyBody: "连接和结构化证据测试均已通过。AI 会归并同一经历、区分工作/实习/教育/项目并核对数字与引用行；任何 Claim 仍需你确认。", aiEngineMissing: "必须先连接并验证 AI", aiEngineMissingBody: "当前 AI 尚未通过 JobFlow 的结构化证据测试，因此上传和重新分析已暂停。请重新连接或更换 Agent/模型。", aiCapabilityFailed: "AI 虽能连接，但没有通过实体合并、分类、数字保留和逐行证据测试。没有发送私人资料；请更换模型或 Agent。", documentOcrRequired: "该 PDF 没有足够的可提取文字，可能是扫描件。请先 OCR，或上传可编辑 DOCX。", documentExtractionRisk: "文档提取出现字体、表格或阅读顺序风险。没有导入内容；请优先上传可编辑 DOCX 或更清晰的文本型 PDF。", aiFormatFailure: "AI 自动纠正后仍未返回 JobFlow 所需的结构化格式；没有导入内容。", aiNumberFailure: "AI 改动或新增了原文数字，真实性门禁已拒绝本次结果。", aiNumberFailureDetailed: "AI 第 {candidate} 条 Claim 的数字在原文第 {start}–{end} 行中仍找不到（{count} 个）。系统已检查安全格式差异和相邻换行；本次没有导入内容。", numericFormatReview: "数字格式已统一，请人工核对", adjacentWrapReview: "引用已包含相邻换行，请人工核对", aiGroundingFailure: "AI 的 Claim 无法由引用的原文行完整支持；自动纠正后仍未通过。", aiFragmentFailure: "AI 自动纠正后仍返回标题或不完整句子；没有导入内容。", packetMaterialPlan: "岗位材料计划", materialResume: "岗位简历", materialCoverLetter: "求职信", materialPortfolioFile: "作品集文件", materialExternalActions: "真实上传与提交", materialGithub: "GitHub 链接", materialPortfolio: "作品集链接", materialWebsite: "个人网站", materialSameMaster: "由同一份已批准母版生成岗位副本", materialRequestedRequired: "该岗位必需", materialRequestedOptional: "该岗位可选", materialNotRequested: "表单未要求", materialGeneratedOnDemand: "已按岗位临时生成", materialNotGenerated: "未生成", materialBoundPublic: "已绑定已确认公开值（仅显示哈希）", materialMissingValue: "缺少用户确认的链接", materialBoundSecure: "已绑定加密文件", materialMissingFile: "缺少用户提供的文件", materialBlocked: "已锁定，等待逐岗位批准", packetExecutionPlan: "自动投递步骤", executionReady: "已形成完整计划，等待你的审阅", executionNeedsInput: "仍有资料或问题需要你补充", executionNeedsAccount: "访客申请不可用，需要单独决定是否创建账号", executionQueueContinues: "这份申请等待时，JobFlow 会继续处理其他岗位，直到达到你设置的上限。", executionFreshness: "实时确认岗位仍开放", executionGuest: "以访客方式进入申请", executionPrefill: "填写可安全复用的字段", executionUpload: "上传岗位简历及按需材料", executionProtected: "处理敏感或未知问题", executionSubmit: "最终提交", executionNotExecuted: "尚未执行", executionPlanned: "已规划", executionProposed: "只生成建议", executionBlocked: "已停止等待批准", executionNotRequired: "无需执行", gateLiveRead: "需要另行授权只读访问", gateAfterFreshness: "岗位复验后继续", gateAccount: "需要用户决定账号方案", gatePacket: "受当前审阅包约束", gateUpload: "需要单独批准上传", gatePerApplication: "每次申请单独确认", gateNone: "无额外门禁", gateSubmit: "需要新鲜的最终提交批准", applicationReadinessTitle: "自动投递准备度", applicationReadinessBody: "逐项显示资料、AI、Master Resume、Claim 授权与材料模板是否已形成闭环。", readinessReady: "本地申请准备已就绪", readinessNeedsOnboarding: "先完成一次性资料设置", readinessNeedsAi: "需要连接并验证 AI", readinessNeedsMaster: "需要上传简历", readinessNeedsEditableMaster: "需要可编辑 DOCX 母版", readinessNeedsClaims: "至少确认一条 Claim", readinessNeedsClaimApproval: "需要批准 Claim 用于材料", readinessNeedsTemplate: "需要建立安全改写位置", readinessNoBlockers: "当前没有本地准备阻挡项", externalClaimApprovalTitle: "允许已确认 Claim 用于申请材料", externalClaimApprovalBody: "这项批准只允许系统使用你已经确认的确切措辞生成简历、求职信和申请回答；不会打开网站、上传或提交。", externalClaimConsent: "我已检查这些 Claim，并允许按当前措辞用于生成申请材料。", approveExternalClaims: "批准材料使用", externalClaimsApproved: "Claim 材料使用授权已加密保存", externalClaimsCurrent: "当前授权有效 · {count} 条 Claim", externalClaimsCount: "将授权 {count} 条已确认 Claim", externalClaimConfirmFirst: "请先勾选 Claim 材料使用确认框", approvingExternalClaims: "正在绑定并加密保存 Claim 授权…", tailoringManifestTitle: "建立安全简历改写位置", tailoringManifestBody: "AI 只会提出与已确认 Claim 对应的原简历段落；你一次确认后，岗位副本才能在这些位置改写，母版不会变化。", openTailoringManifest: "检查 AI 建议位置", tailoringManifestCurrent: "安全改写位置已批准 · {count} 处", tailoringManifestNeeded: "普通 DOCX 需要一次性确认可改写位置", tailoringCandidateCount: "AI 找到 {count} 个候选位置", selectRecommendedTailoring: "选择 AI 推荐项", tailoringRecommended: "AI 推荐", tailoringManual: "需要你判断", tailoringCategory: "允许替换为哪类 Claim", tailoringManifestConsent: "我已检查以上原简历段落及类型，并允许 JobFlow 只在这些位置生成岗位副本。", approveTailoringManifest: "批准安全改写位置", tailoringSelectOne: "请至少选择一个安全改写位置", tailoringConfirmFirst: "请先勾选安全改写位置确认框", tailoringManifestApproved: "安全改写位置已加密保存", tailoringProposalEmpty: "AI 没找到能与当前已确认 Claim 可靠对应的简历段落。请检查 Claim 后再试。", tailoringProposalStale: "简历或 Claim 已变化，请重新打开并检查建议位置。", tailoringSelectionInvalid: "所选简历位置或类型无效，请重新检查。", loadingTailoringManifest: "正在解析母版并映射已确认 Claim…", approvingTailoringManifest: "正在绑定并加密保存安全改写位置…",
     aiClassificationFailure: "AI 自动纠正后仍存在无法唯一对应的经历实体；没有导入内容。请重新分析，或改用更清晰的文本/DOCX。",
     classificationNormalized: "经历类型或实体关系已安全归并，请重点核对",
+    browserAssistManualNavigation: "这个 Next/Continue 必须由你亲自点击。进入下一页后，再点浏览器伴侣中的“继续分析当前页”。",
   },
   en: {
     guidedIntakeEyebrow: "NEXT JOB", guidedIntakeTitle: "Paste a job link to begin", guidedIntakeBody: "Start from the role on the company's website. The companion reads only the job page and form you explicitly choose, then prepares the tailored resume, optional Cover Letter, portfolio items, and one review packet.", guidedIntakeIdle: "Not started", guidedOfficialUrl: "Company job link", guidedIntakeConsent: "For the next 30 minutes, I allow JobFlow to read only the company job page and application-form structure I explicitly choose in the browser. This stage does not fill, upload, or click page controls.", startGuidedIntake: "Connect browser and begin", guidedOpenJob: "Open company job page", guidedStepOneTitle: "Open the company role", guidedStepOneBody: "Paste the link once and connect the browser.", guidedStepTwoTitle: "Read the role", guidedStepTwoBody: "On the role page, open the JobFlow J icon and choose Read this company job page.", guidedStepThreeTitle: "Read the application form", guidedStepThreeBody: "Click Apply yourself. On the form, open J again and JobFlow will prepare the materials.", guidedStepFourTitle: "Review once", guidedStepFourBody: "Assisted filling appears only after you approve the materials and job questions.", guidedPairing: "Connecting the browser companion…", guidedPaired: "Connected. Open the company job page, then use the JobFlow J icon in the browser toolbar.", guidedAwaitingJob: "Waiting for you to read the company job page.", guidedAwaitingForm: "Role captured. Click Apply on the company page yourself, then use JobFlow J again on the application form.", guidedPreparing: "Preparing the job-specific resume, requested materials, and review packet…", guidedReady: "Materials and the review packet are ready. Complete the single review below.", guidedDeferred: "The approval queue is full. This role is safely waiting and will continue after you handle one item.", guidedFailed: "This read did not complete and the page was not filled or changed. Check the current page and retry.", guidedExtensionMissing: "The browser companion did not respond. Make sure JobFlow Browser Companion is enabled, then retry.", guidedUrlRequired: "Paste an HTTPS role link from the company's own website.", guidedConsentRequired: "Check the read-only job-import permission for this session first.", guidedReadinessRequired: "Complete the readiness items listed above first.", guidedWrongJobPage: "Read the role on the company's own website first, then open the application form linked from it yourself.", guidedFormMissing: "No application fields were found. Open the actual application form, then use JobFlow J again.", guidedJobTitleMissing: "A role title could not be identified reliably. Confirm that this is a specific company job page.", guidedLeaseInvalid: "This job-import connection expired. Start again.", advancedToolsTitle: "Advanced diagnostics and offline QA", advancedToolsBody: "Ordinary use does not need this area. Provide local snapshots only for development tests or when browser import is unavailable.", advancedToolsOpen: "Expand", browserAssistEyebrow: "APPROVED APPLICATION",
+    retryCompanionPairing: "Show connection steps again",
+    companionClickToPair: "This connection is ready. Stay on this JobFlow page, click the JobFlow J in the browser toolbar, then choose Connect this JobFlow page.",
+    companionClickToReconnect: "The companion explicitly lost this binding, but the authorization is still retained. Click J on this JobFlow page to reconnect; JobFlow will not retry silently.",
+    companionStatusTemporary: "The companion status is temporarily unavailable. This authorization is still retained and JobFlow will check again later; do not start over.",
+    companionSessionActive: "Another browser task is still active. Complete or explicitly stop it before starting this task.",
+    guidedExtensionMissing: "The browser companion did not respond. Confirm the current extension is enabled and reloaded; you do not need to grant access on every website.",
+    guidedExtensionOutdated: "The Browser Companion version does not match. Run the installer again and reload the Local AppData BrowserCompanion folder it opens.",
+    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.6.0, then refresh JobFlow.",
+    browserAssistRestartRequired: "The extension reloaded, so this assist stopped safely. Reopen the approved application start page and connect again. JobFlow did not retry Next/Continue.",
+    browserAssistManualRestart: "The one-use Next proof was not armed safely. End this application assist and start it again. JobFlow will not retry automatically.",
+    browserAssistReloadUnknown: "The extension reloaded during the final-submit window, so the result is safely marked unknown. Answer whether submission succeeded; JobFlow will not retry.",
     brandSubtitle: "Job application pipeline", localOnly: "Local only · DPAPI encrypted", eyebrow: "JOBFLOW SETUP", pageTitle: "JobFlow · Job pipeline",
     browserAssistNavigationStalled: "The page did not reliably advance within 20 seconds. JobFlow stopped and will not retry; end this assist and start again.",
     heroTitle: "Set it up once. Apply continuously.", heroBody: "Build a complete profile from resumes and project materials, AI sources, and your direct answers. Private content is decrypted only on this computer and never written to ordinary project files.",
@@ -76,12 +99,18 @@ const STRINGS = {
     aiEngineReady: "AI structured capability verified", aiEngineReadyBody: "Both connection and structured-evidence tests passed. AI consolidates duplicate experience, separates work/internships/education/projects, and checks numbers against cited lines. Every Claim still needs confirmation.", aiEngineMissing: "Connect and verify AI", aiEngineMissingBody: "The current AI has not passed JobFlow's structured-evidence test, so uploads and re-analysis are paused. Reconnect or choose another Agent/model.", aiCapabilityFailed: "The AI connected but failed the entity, classification, metric-preservation, and line-grounding test. No private content was sent; choose another model or Agent.", documentOcrRequired: "This PDF has too little extractable text and may be scanned. Run OCR first or upload an editable DOCX.", documentExtractionRisk: "Extraction found font, table, or reading-order risk. Nothing was imported; prefer an editable DOCX or cleaner text-based PDF.", aiFormatFailure: "The corrected AI output still did not match JobFlow's structured format. Nothing was imported.", aiNumberFailure: "The AI changed or introduced a source number, so the truth gate rejected this result.", aiNumberFailureDetailed: "AI Claim {candidate} still contains {count} number(s) not found in source lines {start}–{end}. Safe format normalization and adjacent-wrap checks were attempted; nothing was imported.", numericFormatReview: "Number formatting normalized—verify it", adjacentWrapReview: "Adjacent wrapped lines included—verify them", aiGroundingFailure: "The AI Claim was not fully supported by its cited lines after correction. Nothing was imported.", aiFragmentFailure: "The corrected AI output still contained a heading or sentence fragment. Nothing was imported.", packetMaterialPlan: "Per-job material plan", materialResume: "Job-specific resume", materialCoverLetter: "Cover Letter", materialPortfolioFile: "Portfolio file", materialExternalActions: "Real upload and submission", materialGithub: "GitHub link", materialPortfolio: "Portfolio link", materialWebsite: "Personal website", materialSameMaster: "Generated from the same approved Master Resume", materialRequestedRequired: "Required by this form", materialRequestedOptional: "Optional on this form", materialNotRequested: "Not requested by the form", materialGeneratedOnDemand: "Generated on demand for this job", materialNotGenerated: "Not generated", materialBoundPublic: "Confirmed public value bound (hash shown only)", materialMissingValue: "Confirmed link is missing", materialBoundSecure: "Encrypted file is bound", materialMissingFile: "User-provided file is missing", materialBlocked: "Locked pending per-job approval", packetExecutionPlan: "Application execution steps", executionReady: "Complete plan prepared for your review", executionNeedsInput: "Some material or answers still need your input", executionNeedsAccount: "Guest apply is unavailable; account creation needs a separate decision", executionQueueContinues: "While this application waits, JobFlow continues with other jobs until your selected limit.", executionFreshness: "Confirm the role is still open", executionGuest: "Enter the application as a guest", executionPrefill: "Fill safely reusable fields", executionUpload: "Upload the job-specific resume and requested materials", executionProtected: "Handle sensitive or unknown questions", executionSubmit: "Final submission", executionNotExecuted: "Not executed", executionPlanned: "Planned", executionProposed: "Proposal only", executionBlocked: "Stopped for approval", executionNotRequired: "Not required", gateLiveRead: "Separate read-only authorization required", gateAfterFreshness: "Continue after freshness check", gateAccount: "User account decision required", gatePacket: "Bound to this review packet", gateUpload: "Separate upload approval required", gatePerApplication: "Confirm for each application", gateNone: "No additional gate", gateSubmit: "Fresh final-submit approval required", applicationReadinessTitle: "Application readiness", applicationReadinessBody: "Shows whether profile, AI, Master Resume, Claim authorization, and the safe material template form a complete local loop.", readinessReady: "Offline application preparation is ready", readinessNeedsOnboarding: "Complete the one-time setup", readinessNeedsAi: "Connect and verify AI", readinessNeedsMaster: "Upload a resume", readinessNeedsEditableMaster: "Add an editable DOCX master", readinessNeedsClaims: "Confirm at least one Claim", readinessNeedsClaimApproval: "Approve Claim use for materials", readinessNeedsTemplate: "Build safe tailoring positions", readinessNoBlockers: "No local preparation blockers remain", externalClaimApprovalTitle: "Allow confirmed Claims in application materials", externalClaimApprovalBody: "This permits only the exact Claim wording you confirmed to generate resumes, Cover Letters, and application answers. It does not open a site, upload, or submit.", externalClaimConsent: "I reviewed these Claims and allow their current wording in generated application materials.", approveExternalClaims: "Approve material use", externalClaimsApproved: "Encrypted Claim material authorization saved", externalClaimsCurrent: "Current authorization · {count} Claims", externalClaimsCount: "Will authorize {count} confirmed Claims", externalClaimConfirmFirst: "Check the Claim material-use confirmation first", approvingExternalClaims: "Binding and encrypting Claim authorization…", tailoringManifestTitle: "Build safe resume tailoring positions", tailoringManifestBody: "AI proposes only original resume paragraphs mapped to confirmed Claims. Once you approve them, JobFlow may edit only those positions in job-specific copies; the master stays unchanged.", openTailoringManifest: "Review AI-proposed positions", tailoringManifestCurrent: "Safe tailoring positions approved · {count}", tailoringManifestNeeded: "An ordinary DOCX needs one-time tailoring-position approval", tailoringCandidateCount: "AI found {count} candidate positions", selectRecommendedTailoring: "Select AI recommendations", tailoringRecommended: "AI recommended", tailoringManual: "Review manually", tailoringCategory: "Claim category allowed here", tailoringManifestConsent: "I reviewed these original resume paragraphs and categories and allow JobFlow to generate job-specific copies only at these positions.", approveTailoringManifest: "Approve safe tailoring positions", tailoringSelectOne: "Select at least one safe tailoring position", tailoringConfirmFirst: "Check the safe-tailoring confirmation first", tailoringManifestApproved: "Encrypted safe-tailoring positions saved", tailoringProposalEmpty: "AI could not reliably map any current confirmed Claim to an original resume paragraph. Review the Claims and try again.", tailoringProposalStale: "The resume or Claims changed. Reopen and review the proposed positions.", tailoringSelectionInvalid: "The selected resume position or category is invalid. Review it again.", loadingTailoringManifest: "Inspecting the master and mapping confirmed Claims…", approvingTailoringManifest: "Binding and encrypting safe-tailoring positions…",
     aiClassificationFailure: "The corrected AI output still contained an experience entity that could not be matched unambiguously. Nothing was imported; re-analyze or use a clearer text/DOCX source.",
     classificationNormalized: "Experience type or entity relation normalized—review carefully",
+    browserAssistManualNavigation: "You must click this Next/Continue yourself. On the new page, choose Continue on this page in the Browser Companion.",
   }
 };
 
-const UI_PROTOCOL_VERSION = 23;
+const UI_PROTOCOL_VERSION = 24;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
-const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, reviewDecision: "", reviewDecisionConfirmed: false, officialDiscovery: null, tailoringProposal: null, guidedIntakeSession: null, guidedIntakePairTimer: null, guidedIntakeActivity: null, browserAssistSelection: null, browserAssistSession: null, browserAssistPairTimer: null, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [], activityDurations: {} };
+const COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj";
+const COMPANION_VERSION = "0.6.0";
+const COMPANION_PAIRING_STORAGE = "jobflow-companion-pairing-v2";
+const COMPANION_POLL_BASE_MS = 1500;
+const COMPANION_POLL_MAX_MS = 12000;
+const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, reviewDecision: "", reviewDecisionConfirmed: false, officialDiscovery: null, tailoringProposal: null, guidedIntakeSession: null, guidedIntakePairTimer: null, guidedIntakeActivity: null, browserAssistSelection: null, browserAssistSession: null, browserAssistPairTimer: null, companionPairing: null, companionStatusTimer: null, companionPollInFlight: false, companionPollFailures: 0, companionConnectionNotice: null, companionTerminalHandled: null, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [], activityDurations: {} };
 const sessionToken = location.pathname.split("/")[2];
 const base = `/session/${sessionToken}/`;
 let activitySequence = 0;
@@ -139,6 +168,114 @@ function showToast(message, error=false, duration=4200) {
   toastTimer=setTimeout(()=>el.className="",duration);
 }
 
+function companionVersionCurrent(result){return result?.protocol_version===2&&result?.extension_version===COMPANION_VERSION;}
+function pairingIdentityMatches(record,result){
+  if(!record||!result)return false;
+  return record.kind==="guided"
+    ?Boolean(result.intake_id&&result.intake_id===record.session?.intake_id)
+    :Boolean(result.assist_id&&result.assist_id===record.session?.assist_id);
+}
+function guidedCompanionActive(){
+  const session=state.guidedIntakeSession||state.data?.guided_intake;
+  const terminal=new Set(["REVIEW_PACKET_READY","DEFERRED","FAILED"]);
+  return Boolean(session&&(session.active||session.intake_id)&&!terminal.has(session.status));
+}
+function browserCompanionActive(){
+  const info=state.data?.browser_assist||{}, session=state.browserAssistSession;
+  const terminal=new Set(["CONFIRMED","SUBMISSION_UNKNOWN","AWAITING_APPROVAL","REVOKED","FAILED"]);
+  return Boolean((session?.assist_id&&!terminal.has(session.status))||(info.active_assist_id&&!terminal.has(info.active_status)));
+}
+function companionModeConflict(kind){return kind==="guided"?browserCompanionActive():guidedCompanionActive();}
+function storedCompanionPairingValid(record){
+  const expiry=Number(record?.expires_epoch), pairing=record?.pairing, session=record?.session;
+  if(!record||!pairing||!session||!["guided","assist"].includes(record.kind))return false;
+  if(!Number.isFinite(expiry)||expiry<=Date.now()||pairing.protocol_version!==2||pairing.base_url!==location.origin)return false;
+  const expectedPrefix=record.kind==="guided"?"/intake/":"/assist/";
+  if(typeof pairing.assist_path!=="string"||!pairing.assist_path.startsWith(expectedPrefix)||!/^\/(?:assist|intake)\/[A-Za-z0-9_-]{40,}$/.test(pairing.assist_path))return false;
+  return record.kind==="guided"
+    ?typeof session.intake_id==="string"&&session.intake_id.length>0
+    :typeof session.assist_id==="string"&&session.assist_id.length>0;
+}
+function persistCompanionPairing(record){
+  state.companionPairing=record;
+  try{sessionStorage.setItem(COMPANION_PAIRING_STORAGE,JSON.stringify(record));}catch(_error){/* Memory state remains sufficient. */}
+}
+function clearCompanionPairing(){
+  state.companionPairing=null;state.companionTerminalHandled=null;
+  state.companionPollFailures=0;state.companionConnectionNotice=null;
+  if(state.companionStatusTimer){clearTimeout(state.companionStatusTimer);state.companionStatusTimer=null;}
+  try{sessionStorage.removeItem(COMPANION_PAIRING_STORAGE);}catch(_error){/* No persistent fallback. */}
+}
+function restoreCompanionPairing(){
+  try{
+    const record=JSON.parse(sessionStorage.getItem(COMPANION_PAIRING_STORAGE)||"null");
+    if(!storedCompanionPairingValid(record)){sessionStorage.removeItem(COMPANION_PAIRING_STORAGE);return null;}
+    state.companionPairing=record;
+    if(record.kind==="guided")state.guidedIntakeSession={...record.session,active:true};
+    else state.browserAssistSession={...record.session};
+    return record;
+  }catch(_error){return null;}
+}
+function companionExternalMessage(message,timeout=1400){
+  return new Promise((resolve,reject)=>{
+    if(!globalThis.chrome?.runtime?.sendMessage){reject(makeUiError("BROWSER_COMPANION_UNAVAILABLE"));return;}
+    let settled=false;
+    const timer=setTimeout(()=>{if(!settled){settled=true;reject(makeUiError("BROWSER_COMPANION_TIMEOUT"));}},timeout);
+    try{
+      chrome.runtime.sendMessage(COMPANION_EXTENSION_ID,message,response=>{
+        if(settled)return;settled=true;clearTimeout(timer);
+        const runtimeError=chrome.runtime.lastError;
+        if(runtimeError){reject(makeUiError("BROWSER_COMPANION_UNAVAILABLE"));return;}
+        if(!response||typeof response!=="object"){reject(makeUiError("BROWSER_COMPANION_UNAVAILABLE"));return;}
+        resolve(response);
+      });
+    }catch(_error){if(!settled){settled=true;clearTimeout(timer);reject(makeUiError("BROWSER_COMPANION_UNAVAILABLE"));}}
+  });
+}
+function pairingError(result){
+  if(!companionVersionCurrent(result))return makeUiError("BROWSER_COMPANION_UPDATE_REQUIRED",{expected:COMPANION_VERSION,actual:result?.extension_version||"UNKNOWN"});
+  return Object.assign(new Error(result?.message||result?.code||"BROWSER_COMPANION_UNAVAILABLE"),result||{});
+}
+function acceptCompanionPairResult(result){
+  const record=state.companionPairing;
+  if(!record)return false;
+  if(!companionVersionCurrent(result))throw pairingError(result);
+  if(!pairingIdentityMatches(record,result)){
+    if(result?.status==="BLOCKED")throw pairingError(result);
+    return false;
+  }
+  if(record.kind==="guided"){
+    if(result.status!=="GUIDED_INTAKE_PAIRED")throw pairingError(result);
+    if(state.guidedIntakePairTimer)clearTimeout(state.guidedIntakePairTimer);
+    state.guidedIntakeSession={...record.session,...result,status:result.capture_status||result.status,active:true,paired:true};
+    record.session={...state.guidedIntakeSession};record.paired=true;persistCompanionPairing(record);
+    renderGuidedIntake();showToast(t("guidedPaired"),false,9000);
+  }else{
+    if(result.status!=="BROWSER_COMPANION_PAIRED")throw pairingError(result);
+    if(state.browserAssistPairTimer)clearTimeout(state.browserAssistPairTimer);
+    state.browserAssistSession={...record.session,...result,paired:true};
+    record.session={...state.browserAssistSession};record.paired=true;persistCompanionPairing(record);
+    renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);showToast(t("browserAssistPaired"),false,9000);
+  }
+  state.companionPollFailures=0;state.companionConnectionNotice=null;
+  startCompanionStatusPolling();
+  return true;
+}
+function awaitExplicitCompanionPairing(record){
+  persistCompanionPairing(record);
+  state.companionConnectionNotice=record.paired?null:"companionClickToPair";
+  startCompanionStatusPolling();
+  renderGuidedIntake();renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
+  showToast(t(record.paired?"companionStatusTemporary":"companionClickToPair"),false,12000);
+  return true;
+}
+function postPendingCompanionPairing(){
+  const record=state.companionPairing;if(!record)return;
+  // pair.js is injected only after the user clicks the extension. The page never
+  // sends an external JOBFLOW_PAIR request on its own.
+  window.postMessage({type:"JOBFLOW_PAIR_REQUEST",protocol_version:2,pairing:record.pairing},location.origin);
+}
+
 function makeUiError(code, details={}) { const error=new Error(code); error.code=code; error.details=details; return error; }
 function isAiReady(engine){
   const capability=engine?.structured_capability_status;
@@ -155,6 +292,11 @@ function assertUiCompatibility(payload) {
 
 const LOCAL_ERROR_KEYS = {
   SERVICE_RESTART_REQUIRED:"serviceRestartRequired", LOCAL_RESPONSE_INVALID:"invalidLocalResponse",
+  BROWSER_COMPANION_UPDATE_REQUIRED:"guidedExtensionOutdated", BROWSER_COMPANION_UNAVAILABLE:"guidedExtensionMissing", BROWSER_COMPANION_TIMEOUT:"guidedExtensionMissing",
+  COMPANION_BINDING_MISSING:"guidedBindingMissing", COMPANION_BINDING_INVALID:"guidedBindingMissing", COMPANION_BINDING_PROOF_INVALID:"guidedBindingMissing",
+  BROWSER_COMPANION_BINDING_MISSING:"guidedBindingMissing", BROWSER_COMPANION_BINDING_INVALID:"guidedBindingMissing", BROWSER_COMPANION_BINDING_MISMATCH:"guidedBindingMissing", BROWSER_COMPANION_BINDING_REQUEST_INVALID:"guidedBindingMissing",
+  BROWSER_COMPANION_SESSION_ACTIVE:"companionSessionActive",
+  BROWSER_ASSIST_RESTART_REQUIRED:"browserAssistRestartRequired", COMPANION_MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart", BROWSER_ASSIST_SUBMISSION_UNKNOWN:"browserAssistReloadUnknown",
   PENDING_LIMIT_INVALID:"pendingLimitInvalid", PENDING_LIMIT_BELOW_ACTIVE:"pendingLimitBelowActive",
   REVIEW_PACKET_NOT_FOUND:"reviewPacketUnavailable", REVIEW_PACKET_SIZE_INVALID:"reviewPacketUnavailable",
   REVIEW_PACKET_INVALID:"reviewPacketUnavailable", REVIEW_PACKET_BINDING_INVALID:"reviewPacketUnavailable",
@@ -613,17 +755,22 @@ function guidedIntakeMessage(status){
 function renderGuidedIntake(){
   const bootstrap=state.data?.guided_intake||{}, session=state.guidedIntakeSession||bootstrap;
   const status=session?.status||"IDLE", ready=state.data?.application_readiness?.status==="READY_FOR_OFFLINE_APPLICATION_PREPARATION";
-  const demo=state.data?.demo_mode===true, active=Boolean(session?.active||state.guidedIntakeSession);
+  const demo=state.data?.demo_mode===true, active=Boolean(session?.active||state.guidedIntakeSession), assistActive=browserCompanionActive();
   const terminal=["REVIEW_PACKET_READY","DEFERRED","FAILED"].includes(status);
+  const recoverableStatuses=["GUIDED_INTAKE_PAIRING","AWAITING_JOB_PAGE_CAPTURE","AWAITING_APPLICATION_FORM_CAPTURE","FORM_CAPTURE_FAILED"];
+  const retryPairing=active&&session?.paired!==true&&recoverableStatuses.includes(status)&&state.companionPairing?.kind==="guided";
+  const restartPairing=active&&recoverableStatuses.includes(status)&&!state.companionPairing;
   const input=document.querySelector("#guidedOfficialUrl"), confirm=document.querySelector("#guidedIntakeConfirm"), start=document.querySelector("#startGuidedIntake");
   if(!input||!confirm||!start)return;
   const validUrl=isHttpsUrl(input.value.trim());
-  input.disabled=demo||!ready||(active&&!terminal);
-  confirm.disabled=demo||!ready||(active&&!terminal);
-  start.disabled=demo||!ready||!validUrl||!confirm.checked||(active&&!terminal);
+  input.disabled=demo||!ready||assistActive||(active&&!terminal&&!restartPairing);
+  confirm.disabled=demo||!ready||assistActive||(active&&!terminal&&!restartPairing);
+  start.textContent=t(retryPairing||restartPairing?"retryCompanionPairing":"startGuidedIntake");
+  start.disabled=demo||!ready||assistActive||(retryPairing?false:(!validUrl||!confirm.checked||(active&&!terminal&&!restartPairing)));
   const badge=document.querySelector("#guidedIntakeBadge"), message=document.querySelector("#guidedIntakeMessage");
   badge.textContent=guidedIntakeMessage(status);
-  message.textContent=ready?guidedIntakeMessage(status):t("guidedReadinessRequired");
+  const connectionNotice=state.companionPairing?.kind==="guided"&&state.companionConnectionNotice?t(state.companionConnectionNotice):"";
+  message.textContent=assistActive?t("companionSessionActive"):ready?[guidedIntakeMessage(status),connectionNotice].filter(Boolean).join(" "):t("guidedReadinessRequired");
   message.classList.toggle("working",["GUIDED_INTAKE_PAIRING","PREPARING_APPLICATION"].includes(status));
   const link=document.querySelector("#guidedOpenJob"), officialUrl=session?.official_url;
   if(officialUrl&&isHttpsUrl(officialUrl)){link.href=officialUrl;link.classList.remove("hidden");}
@@ -644,7 +791,7 @@ function browserAssistResultMessage(status){
   const keys={
     BROWSER_COMPANION_PAIRING:"browserAssistPairing", BROWSER_COMPANION_PAIRED:"browserAssistPaired",
     READY:"browserAssistPaired", PAGE_PREPARED:"browserAssistPaired",
-    PAGE_REVIEW_REQUIRED:"browserAssistPageReview", HANDOFF_REQUIRED:"browserAssistHandoff",
+    PAGE_REVIEW_REQUIRED:"browserAssistPageReview", MANUAL_NAVIGATION_REQUIRED:"browserAssistManualNavigation", MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart", HANDOFF_REQUIRED:"browserAssistHandoff",
     AWAITING_NAVIGATION:"browserAssistNavigating", NAVIGATION_STARTED:"browserAssistNavigating",
     NAVIGATION_PENDING:"browserAssistNavigating", NAVIGATION_STALLED:"browserAssistNavigationStalled",
     AWAITING_USER_SUBMIT:"browserAssistAwaitingSubmit", OBSERVING_RESULT_PAGE:"browserAssistObserving",
@@ -665,7 +812,9 @@ function renderBrowserAssist(recent){
   const badge=document.querySelector("#browserAssistBadge"), companion=document.querySelector("#browserCompanionStatus");
   const activeStatus=state.browserAssistSession?.status||info.active_status;
   badge.textContent=activeStatus?browserAssistResultMessage(activeStatus):t("browserAssistIdle");
-  companion.textContent=(info.paired||state.browserAssistSession?.paired)?t("browserCompanionPaired"):t("browserCompanionNotPaired");
+  const currentAssistId=state.browserAssistSession?.assist_id||info.active_assist_id;
+  const localPairing=state.companionPairing?.kind==="assist"&&state.companionPairing.session?.assist_id===currentAssistId;
+  companion.textContent=((localPairing&&state.companionPairing.paired)||(!state.companionPairing&&info.paired))?t("browserCompanionPaired"):t("browserCompanionNotPaired");
   const selection=document.querySelector("#browserAssistSelection");
   if(!state.browserAssistSelection){selection.classList.add("hidden");return;}
   const item=recent.find(value=>value.application_id===state.browserAssistSelection.application_id)||state.browserAssistSelection;
@@ -677,18 +826,162 @@ function renderBrowserAssist(recent){
   const meta=provider&&step&&max?t("browserAssistStepMeta").replace("{provider}",provider).replace("{step}",String(step)).replace("{max}",String(max)):"";
   document.querySelector("#browserAssistApplication").textContent=[item.application_id,meta].filter(Boolean).join(" · ");
   const confirm=document.querySelector("#browserAssistConfirm"), start=document.querySelector("#startBrowserAssistNow");
-  start.disabled=!confirm.checked||item.status!=="APPROVED";
+  const guidedActive=guidedCompanionActive();
+  const canRepeatPairingHelp=localPairing&&state.companionPairing?.paired!==true;
+  start.disabled=guidedActive||(browserCompanionActive()&&!canRepeatPairingHelp)||!confirm.checked||item.status!=="APPROVED";
   const link=document.querySelector("#browserAssistOpenPage");
   if(state.browserAssistSession?.approved_url){
     link.href=state.browserAssistSession.approved_url;link.classList.remove("hidden");
   }else{link.removeAttribute("href");link.classList.add("hidden");}
   const message=document.querySelector("#browserAssistMessage");
-  if(activeStatus)message.textContent=browserAssistResultMessage(activeStatus);
+  const connectionNotice=state.companionPairing?.kind==="assist"&&state.companionConnectionNotice?t(state.companionConnectionNotice):"";
+  message.textContent=guidedActive?t("companionSessionActive"):[activeStatus?browserAssistResultMessage(activeStatus):"",connectionNotice].filter(Boolean).join(" ");
   selection.classList.remove("hidden");
 }
 
+async function handleGuidedCompanionStatus(result){
+  const record=state.companionPairing;
+  if(!state.guidedIntakeSession||record?.kind!=="guided")return false;
+  if(result?.intake_id!==state.guidedIntakeSession.intake_id||result?.intake_id!==record.session?.intake_id)return false;
+  state.guidedIntakeSession={...state.guidedIntakeSession,...result,active:true,paired:true};
+  if(state.companionPairing?.kind==="guided"){
+    state.companionPairing.session={...state.guidedIntakeSession};
+    persistCompanionPairing(state.companionPairing);
+  }
+  if(result.status==="PREPARING_APPLICATION"&&!state.guidedIntakeActivity){
+    state.guidedIntakeActivity=beginActivity("preparingGuidedApplication",{estimatedSeconds:300});
+  }
+  if(["REVIEW_PACKET_READY","DEFERRED","FORM_CAPTURE_FAILED","FAILED"].includes(result.status)&&state.guidedIntakeActivity){
+    endActivity(state.guidedIntakeActivity,result.status==="REVIEW_PACKET_READY");state.guidedIntakeActivity=null;
+  }
+  renderGuidedIntake();
+  const terminalKey=`guided:${result.intake_id}:${result.status}`;
+  if(state.companionTerminalHandled===terminalKey)return true;
+  if(result.status==="REVIEW_PACKET_READY"&&result.application_id){
+    state.companionTerminalHandled=terminalKey;
+    try{
+      await refreshLatest();
+      state.reviewPacket=await api("review-packet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({application_id:result.application_id})});
+      state.reviewDecision="";state.reviewDecisionConfirmed=false;renderReviewPacket();
+      document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});showToast(t("guidedReady"),false,9000);
+      clearCompanionPairing();
+    }catch(error){handleUiError(error);}
+  }else if(result.status==="DEFERRED"){
+    state.companionTerminalHandled=terminalKey;
+    try{await refreshLatest();showToast(t("guidedDeferred"),false,9000);clearCompanionPairing();}catch(error){handleUiError(error);}
+  }else if(["FORM_CAPTURE_FAILED","FAILED"].includes(result.status)){
+    state.companionTerminalHandled=terminalKey;
+    const error=Object.assign(new Error(result.message||result.code||t("guidedFailed")),result);
+    showToast(LOCAL_ERROR_KEYS[error.code]?localizedErrorMessage(error):t("guidedFailed"),true,9000);
+  }
+  return true;
+}
+
+async function handleBrowserCompanionStatus(result){
+  const record=state.companionPairing;
+  if(!state.browserAssistSession||record?.kind!=="assist")return false;
+  if(result?.application_id!==state.browserAssistSession.application_id||result?.assist_id!==state.browserAssistSession.assist_id)return false;
+  if(result?.assist_id!==record.session?.assist_id||result?.application_id!==record.session?.application_id)return false;
+  state.browserAssistSession={...state.browserAssistSession,...result,paired:true};
+  if(state.companionPairing?.kind==="assist"){
+    state.companionPairing.session={...state.browserAssistSession};
+    persistCompanionPairing(state.companionPairing);
+  }
+  renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
+  if(["CONFIRMED","SUBMISSION_UNKNOWN","AWAITING_APPROVAL"].includes(result.status)){
+    const terminalKey=`assist:${result.application_id}:${result.status}`;
+    if(state.companionTerminalHandled!==terminalKey){
+      state.companionTerminalHandled=terminalKey;
+      try{await refreshLatest();clearCompanionPairing();}catch(error){handleUiError(error);}
+    }
+  }
+  return true;
+}
+
+function renderCompanionConnectionState(){
+  renderGuidedIntake();renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
+}
+
+function markCompanionBindingLost(record,wasPaired){
+  record.paired=false;record.session={...record.session,paired:false};persistCompanionPairing(record);
+  if(record.kind==="guided")state.guidedIntakeSession={...record.session,active:true};
+  else state.browserAssistSession={...record.session};
+  state.companionConnectionNotice=wasPaired?"companionClickToReconnect":"companionClickToPair";
+  renderCompanionConnectionState();
+}
+
+async function acceptPolledCompanionStatus(record,result){
+  if(!companionVersionCurrent(result))throw pairingError(result);
+  state.companionPollFailures=0;
+  const wasPaired=record.paired===true;
+  if(result?.paired!==true||!pairingIdentityMatches(record,result)){
+    markCompanionBindingLost(record,wasPaired);
+    return false;
+  }
+  record.paired=true;record.session={...record.session,paired:true};persistCompanionPairing(record);
+  if(record.kind==="guided")state.guidedIntakeSession={...record.session,active:true};
+  else state.browserAssistSession={...record.session};
+  state.companionPollFailures=0;state.companionConnectionNotice=null;
+  const statusResult=result.last_result?.status===result.status
+    ?{...result.last_result,...result,status:result.status,last_result:result.last_result}
+    :result;
+  if(record.kind==="guided")await handleGuidedCompanionStatus(statusResult);
+  else await handleBrowserCompanionStatus(statusResult);
+  return true;
+}
+
+function companionPollDelay(){
+  if(state.companionPollFailures<=0)return COMPANION_POLL_BASE_MS;
+  return Math.min(COMPANION_POLL_MAX_MS,COMPANION_POLL_BASE_MS*(2**Math.min(state.companionPollFailures-1,3)));
+}
+
+function scheduleCompanionStatusPoll(delay=companionPollDelay()){
+  if(state.companionStatusTimer)clearTimeout(state.companionStatusTimer);
+  if(!state.companionPairing){state.companionStatusTimer=null;return;}
+  state.companionStatusTimer=setTimeout(()=>{state.companionStatusTimer=null;pollCompanionStatus();},delay);
+}
+
+async function pollCompanionStatus(){
+  if(state.companionPollInFlight||!state.companionPairing)return;
+  state.companionPollInFlight=true;
+  const record=state.companionPairing;
+  try{
+    const result=await companionExternalMessage({type:"JOBFLOW_GET_STATUS",binding:record.pairing},1800);
+    if(state.companionPairing!==record)return;
+    await acceptPolledCompanionStatus(record,result);
+  }catch(error){
+    if(state.companionPairing!==record)return;
+    // Transport failures never erase a valid lease or silently re-pair. They
+    // only slow the next status check; an explicit unpaired response is handled
+    // above and tells the user to click the extension.
+    state.companionPollFailures+=1;
+    state.companionConnectionNotice=error?.code==="BROWSER_COMPANION_UPDATE_REQUIRED"
+      ?"guidedExtensionOutdated"
+      :record.paired?"companionStatusTemporary":"companionClickToPair";
+    renderCompanionConnectionState();
+    if(error?.code==="BROWSER_COMPANION_UPDATE_REQUIRED")showToast(t("guidedExtensionOutdated"),true,10000);
+  }finally{
+    state.companionPollInFlight=false;
+    if(state.companionPairing===record)scheduleCompanionStatusPoll();
+  }
+}
+
+function startCompanionStatusPolling(){
+  scheduleCompanionStatusPoll(0);
+}
+
+async function resumeCompanionPairing(record){
+  if(!record)return;
+  state.companionConnectionNotice=record.paired?null:"companionClickToPair";
+  renderCompanionConnectionState();
+  startCompanionStatusPolling();
+}
+
 function recentApplicationActions(item){
-  if(item.status==="APPROVED")return `<button class="primary compact browser-assist-start" type="button" data-id="${escapeHtml(item.application_id)}">${escapeHtml(t("startBrowserAssist"))}</button>`;
+  if(item.status==="APPROVED"){
+    const blocked=guidedCompanionActive()||browserCompanionActive();
+    return `<button class="primary compact browser-assist-start" type="button" data-id="${escapeHtml(item.application_id)}"${blocked?` disabled title="${escapeHtml(t("companionSessionActive"))}"`:""}>${escapeHtml(t("startBrowserAssist"))}</button>`;
+  }
   if(item.status==="SUBMISSION_UNKNOWN")return `<div class="browser-assist-resolve"><small>${escapeHtml(t("browserAssistUnknown"))}</small><button class="secondary compact resolve-browser-unknown" type="button" data-id="${escapeHtml(item.application_id)}" data-submitted="true">${escapeHtml(t("submittedYes"))}</button><button class="secondary compact resolve-browser-unknown" type="button" data-id="${escapeHtml(item.application_id)}" data-submitted="false">${escapeHtml(t("submittedNo"))}</button></div>`;
   return "";
 }
@@ -1320,39 +1613,37 @@ function previewSelections(sourceId, forceSelected=null){
 document.addEventListener("click", async event => {
   const startGuided=event.target.closest("#startGuidedIntake");
   if(startGuided){
+    if(companionModeConflict("guided")){handleUiError(makeUiError("BROWSER_COMPANION_SESSION_ACTIVE"));return;}
     const ready=state.data?.application_readiness?.status==="READY_FOR_OFFLINE_APPLICATION_PREPARATION";
     const officialUrl=document.querySelector("#guidedOfficialUrl").value.trim();
+    const retryRecord=state.companionPairing?.kind==="guided"&&!state.guidedIntakeSession?.paired?state.companionPairing:null;
     if(!ready){showToast(t("guidedReadinessRequired"),true);return;}
-    if(!isHttpsUrl(officialUrl)){showToast(t("guidedUrlRequired"),true);return;}
-    if(!document.querySelector("#guidedIntakeConfirm").checked){showToast(t("guidedConsentRequired"),true);return;}
+    if(!retryRecord&&!isHttpsUrl(officialUrl)){showToast(t("guidedUrlRequired"),true);return;}
+    if(!retryRecord&&!document.querySelector("#guidedIntakeConfirm").checked){showToast(t("guidedConsentRequired"),true);return;}
     try{
-      const result=await withActivity("startingGuidedIntake",()=>api("start-guided-intake",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({official_url:officialUrl,user_confirmed:true})
-      }));
-      state.guidedIntakeSession={...result,active:true,paired:false};
-      renderGuidedIntake();
-      window.postMessage({
-        type:"JOBFLOW_PAIR_REQUEST",protocol_version:2,
-        pairing:{protocol_version:result.protocol_version,base_url:location.origin,assist_path:result.intake_path}
-      },location.origin);
-      if(state.guidedIntakePairTimer)clearTimeout(state.guidedIntakePairTimer);
-      state.guidedIntakePairTimer=setTimeout(()=>{
-        if(!state.guidedIntakeSession?.paired){
-          document.querySelector("#guidedIntakeMessage").textContent=t("guidedExtensionMissing");
-          document.querySelector("#guidedIntakeMessage").classList.remove("working");
-          showToast(t("guidedExtensionMissing"),true,10000);
+      await withActivity("startingGuidedIntake",async()=>{
+        let record=retryRecord;
+        if(!record){
+          const result=await api("start-guided-intake",{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({official_url:officialUrl,user_confirmed:true})
+          });
+          state.guidedIntakeSession={...result,active:true,paired:false};
+          record={kind:"guided",paired:false,expires_epoch:Date.parse(result.expires_at),session:{...state.guidedIntakeSession},pairing:{protocol_version:result.protocol_version,base_url:location.origin,assist_path:result.intake_path}};
+          persistCompanionPairing(record);renderGuidedIntake();
         }
-      },5000);
-    }catch(error){handleUiError(error);}
+        awaitExplicitCompanionPairing(record);
+      });
+    }catch(error){document.querySelector("#guidedIntakeMessage").classList.remove("working");handleUiError(error);renderGuidedIntake();}
     return;
   }
   const chooseBrowserAssist=event.target.closest(".browser-assist-start");
   if(chooseBrowserAssist){
+    if(companionModeConflict("assist")||browserCompanionActive()){handleUiError(makeUiError("BROWSER_COMPANION_SESSION_ACTIVE"));return;}
     const applicationId=chooseBrowserAssist.dataset.id;
     const item=(state.data?.dashboard?.recent_applications||[]).find(value=>value.application_id===applicationId);
     if(!item||item.status!=="APPROVED"){showToast(t("reviewDecisionUnavailable"),true);return;}
-    state.browserAssistSelection={...item};state.browserAssistSession=null;
+    clearCompanionPairing();state.browserAssistSelection={...item};state.browserAssistSession=null;
     document.querySelector("#browserAssistConfirm").checked=false;
     document.querySelector("#browserAssistMessage").textContent="";
     renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
@@ -1362,25 +1653,23 @@ document.addEventListener("click", async event => {
   const startBrowserAssist=event.target.closest("#startBrowserAssistNow");
   if(startBrowserAssist){
     if(!state.browserAssistSelection||!document.querySelector("#browserAssistConfirm").checked){showToast(t("browserAssistConfirmFirst"),true);return;}
+    const existingRecord=state.companionPairing?.kind==="assist"&&state.companionPairing.paired!==true&&state.companionPairing.session?.application_id===state.browserAssistSelection.application_id;
+    if(companionModeConflict("assist")||(browserCompanionActive()&&!existingRecord)){handleUiError(makeUiError("BROWSER_COMPANION_SESSION_ACTIVE"));return;}
     try{
-      const result=await withActivity("startingBrowserAssist",()=>api("start-browser-assist",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({application_id:state.browserAssistSelection.application_id,user_confirmed:true})
-      }));
-      state.browserAssistSession={...result,paired:false};
-      document.querySelector("#browserAssistMessage").textContent=t("browserAssistPairing");
-      renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
-      window.postMessage({
-        type:"JOBFLOW_PAIR_REQUEST",protocol_version:2,
-        pairing:{protocol_version:result.protocol_version,base_url:location.origin,assist_path:result.assist_path}
-      },location.origin);
-      if(state.browserAssistPairTimer)clearTimeout(state.browserAssistPairTimer);
-      state.browserAssistPairTimer=setTimeout(()=>{
-        if(!state.browserAssistSession?.paired){
-          document.querySelector("#browserAssistMessage").textContent=t("browserAssistExtensionMissing");
-          showToast(t("browserAssistExtensionMissing"),true,10000);
+      await withActivity("startingBrowserAssist",async()=>{
+        let record=state.companionPairing?.kind==="assist"&&!state.browserAssistSession?.paired?state.companionPairing:null;
+        if(!record){
+          const result=await api("start-browser-assist",{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({application_id:state.browserAssistSelection.application_id,user_confirmed:true})
+          });
+          state.browserAssistSession={...result,paired:false};
+          record={kind:"assist",paired:false,expires_epoch:Date.parse(result.expires_at),session:{...state.browserAssistSession},pairing:{protocol_version:result.protocol_version,base_url:location.origin,assist_path:result.assist_path}};
+          persistCompanionPairing(record);
+          document.querySelector("#browserAssistMessage").textContent=t("browserAssistPairing");renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
         }
-      },5000);
+        awaitExplicitCompanionPairing(record);
+      });
     }catch(error){handleUiError(error);}
     return;
   }
@@ -1717,60 +2006,14 @@ document.addEventListener("click", async event => {
 window.addEventListener("message",async event=>{
   if(event.source!==window||event.origin!==location.origin||event.data?.protocol_version!==2)return;
   const type=event.data?.type,result=event.data?.result;
+  if(type==="JOBFLOW_COMPANION_READY"){postPendingCompanionPairing();return;}
   if(!result||typeof result!=="object")return;
   if(type==="JOBFLOW_PAIR_RESULT"){
-    if(state.guidedIntakeSession&&result.intake_id===state.guidedIntakeSession.intake_id){
-      if(result.status!=="GUIDED_INTAKE_PAIRED"){
-        const error=Object.assign(new Error(result.message||result.code||t("guidedExtensionMissing")),result);
-        handleUiError(error);return;
-      }
-      if(state.guidedIntakePairTimer)clearTimeout(state.guidedIntakePairTimer);
-      state.guidedIntakeSession={...state.guidedIntakeSession,...result,status:result.capture_status||result.status,active:true,paired:true};
-      renderGuidedIntake();showToast(t("guidedPaired"),false,9000);return;
-    }
-    if(!state.browserAssistSession||result.assist_id!==state.browserAssistSession.assist_id)return;
-    if(result.status!=="BROWSER_COMPANION_PAIRED"){
-      const error=Object.assign(new Error(result.message||result.code||t("browserAssistExtensionMissing")),result);
-      handleUiError(error);return;
-    }
-    if(state.browserAssistPairTimer)clearTimeout(state.browserAssistPairTimer);
-    state.browserAssistSession={...state.browserAssistSession,...result,paired:true};
-    renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
-    showToast(t("browserAssistPaired"),false,9000);
+    try{acceptCompanionPairResult(result);}catch(error){handleUiError(error);}
     return;
   }
-  if(type==="JOBFLOW_INTAKE_STATUS"){
-    if(!state.guidedIntakeSession||result.intake_id!==state.guidedIntakeSession.intake_id)return;
-    state.guidedIntakeSession={...state.guidedIntakeSession,...result,active:true,paired:true};
-    if(result.status==="PREPARING_APPLICATION"&&!state.guidedIntakeActivity){
-      state.guidedIntakeActivity=beginActivity("preparingGuidedApplication",{estimatedSeconds:300});
-    }
-    if(["REVIEW_PACKET_READY","DEFERRED","FORM_CAPTURE_FAILED","FAILED"].includes(result.status)&&state.guidedIntakeActivity){
-      endActivity(state.guidedIntakeActivity,result.status==="REVIEW_PACKET_READY");state.guidedIntakeActivity=null;
-    }
-    renderGuidedIntake();
-    if(result.status==="REVIEW_PACKET_READY"&&result.application_id){
-      try{
-        await refreshLatest();
-        state.reviewPacket=await api("review-packet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({application_id:result.application_id})});
-        state.reviewDecision="";state.reviewDecisionConfirmed=false;renderReviewPacket();
-        document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});showToast(t("guidedReady"),false,9000);
-      }catch(error){handleUiError(error);}
-    }else if(result.status==="DEFERRED"){
-      try{await refreshLatest();showToast(t("guidedDeferred"),false,9000);}catch(error){handleUiError(error);}
-    }else if(["FORM_CAPTURE_FAILED","FAILED"].includes(result.status)){
-      const error=Object.assign(new Error(result.message||result.code||t("guidedFailed")),result);
-      showToast(LOCAL_ERROR_KEYS[error.code]?localizedErrorMessage(error):t("guidedFailed"),true,9000);
-    }
-    return;
-  }
-  if(type!=="JOBFLOW_ASSIST_STATUS"||!state.browserAssistSession)return;
-  if(result.application_id!==state.browserAssistSession.application_id)return;
-  state.browserAssistSession={...state.browserAssistSession,...result,paired:true};
-  renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
-  if(["CONFIRMED","SUBMISSION_UNKNOWN","AWAITING_APPROVAL"].includes(result.status)){
-    refreshLatest().catch(handleUiError);
-  }
+  if(type==="JOBFLOW_INTAKE_STATUS"){await handleGuidedCompanionStatus(result);return;}
+  if(type==="JOBFLOW_ASSIST_STATUS")await handleBrowserCompanionStatus(result);
 });
 
 document.querySelector("#documentFile").addEventListener("change",e=>{upload(e.target.files[0],document.querySelector("#documentType").value);e.target.value="";});
@@ -1790,7 +2033,8 @@ document.addEventListener("change",event=>{
   if(event.target.matches("#externalClaimConfirm")){renderApplicationReadiness();}
   if(event.target.matches("#browserAssistConfirm")){
     const selected=state.browserAssistSelection;
-    document.querySelector("#startBrowserAssistNow").disabled=!event.target.checked||!selected||selected.status!=="APPROVED";
+    const canRepeatPairingHelp=state.companionPairing?.kind==="assist"&&state.companionPairing.paired!==true&&state.companionPairing.session?.application_id===selected?.application_id;
+    document.querySelector("#startBrowserAssistNow").disabled=guidedCompanionActive()||(browserCompanionActive()&&!canRepeatPairingHelp)||!event.target.checked||!selected||selected.status!=="APPROVED";
   }
   if(event.target.matches("#tailoringManifestConfirm,.tailoring-select")){updateTailoringApprovalButton();}
   if(event.target.matches(".answer-input")){
@@ -1828,4 +2072,8 @@ document.querySelector("#completeOnboarding").addEventListener("click",async()=>
 });
 
 arrangePrimaryWorkflow();
-withActivity("loadingInitial",refresh).catch(handleUiError);
+withActivity("loadingInitial",async()=>{
+  await refresh();
+  const record=restoreCompanionPairing();
+  if(record){renderGuidedIntake();renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);await resumeCompanionPairing(record);}
+}).catch(handleUiError);

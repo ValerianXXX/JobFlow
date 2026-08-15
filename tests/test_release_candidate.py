@@ -51,6 +51,22 @@ class ReleaseCandidateTests(unittest.TestCase):
             self.assertIn("unsafe_archive_path", kinds)
             self.assertIn("openai_key", kinds)
 
+    def test_archive_rejects_browser_companion_installation_binding(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-candidate-test-") as raw_temp:
+            path = Path(raw_temp) / "candidate.zip"
+            prefix = "JobFlow-v0.2.0/"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr(
+                    prefix + "browser-companion/binding.json",
+                    '{"schema_version":1,"installation_id":"' + "a" * 32 + '","secret_b64url":"synthetic"}',
+                )
+            result = verify_candidate_archive(PROJECT, path, prefix=prefix)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertIn(
+                "browser_companion_binding_tracked",
+                {item["kind"] for item in result["findings"]},
+            )
+
     def test_source_smoke_refuses_candidate_without_smoke_entry(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-candidate-test-") as raw_temp:
             temporary = Path(raw_temp)

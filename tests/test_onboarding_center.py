@@ -1642,6 +1642,28 @@ class OnboardingCenterTests(unittest.TestCase):
                 self.assertEqual(intake_response.status, 204)
                 self.assertEqual(intake_response.headers["Access-Control-Allow-Origin"], COMPANION_EXTENSION_ORIGIN)
                 intake_preflight.close()
+                outdated_pair = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                outdated_body = json.dumps({
+                    "protocol_version": 2,
+                    "extension_version": "0.3.0",
+                }).encode("utf-8")
+                outdated_pair.request(
+                    "POST", "/intake/not-a-secret/pair", body=outdated_body,
+                    headers={
+                        "Origin": COMPANION_EXTENSION_ORIGIN,
+                        "Content-Type": "application/json",
+                        "Content-Length": str(len(outdated_body)),
+                    },
+                )
+                outdated_response = outdated_pair.getresponse()
+                outdated_payload = json.loads(outdated_response.read())
+                self.assertEqual(outdated_response.status, 400)
+                self.assertEqual(outdated_payload["code"], "BROWSER_COMPANION_UPDATE_REQUIRED")
+                self.assertEqual(
+                    outdated_response.headers["Access-Control-Allow-Origin"],
+                    COMPANION_EXTENSION_ORIGIN,
+                )
+                outdated_pair.close()
                 untrusted_preflight = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
                 untrusted_preflight.request(
                     "OPTIONS", "/assist/not-a-secret/pair",

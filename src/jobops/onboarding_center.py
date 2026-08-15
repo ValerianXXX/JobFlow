@@ -1349,6 +1349,18 @@ class OnboardingCenterService:
 
     @_synchronized
     def start_browser_assist(self, payload: dict[str, Any]) -> dict[str, Any]:
+        active_guided = next((
+            lease for lease in self._guided_intakes.values()
+            if str(lease.get("status")) not in {"REVIEW_PACKET_READY", "DEFERRED", "FAILED", "EXPIRED"}
+            and time.time() < float(lease.get("expires_epoch", 0))
+        ), None)
+        if active_guided is not None:
+            raise JobOpsError(
+                "BROWSER_COMPANION_SESSION_ACTIVE",
+                "Finish or let the current guided job import expire before starting application assistance.",
+                active_mode="JOB_CAPTURE",
+                automatic_retry=False,
+            )
         application_id = str(payload.get("application_id", "")).strip()
         if not re.fullmatch(r"APP-[A-F0-9]{12}", application_id):
             raise JobOpsError("APPLICATION_ID_INVALID", "Choose one approved application for browser assistance.")
@@ -1442,6 +1454,15 @@ class OnboardingCenterService:
                 "EXPLICIT_CONFIRMATION_REQUIRED",
                 "Guided import needs your permission to read the two pages you explicitly choose in the browser.",
             )
+        browser_status = self.browser_assist.public_status()
+        if browser_status.get("active_assist_id"):
+            raise JobOpsError(
+                "BROWSER_COMPANION_SESSION_ACTIVE",
+                "Finish the current application assistance before starting a guided job import.",
+                active_mode="APPLICATION_ASSIST",
+                active_status=browser_status.get("active_status"),
+                automatic_retry=False,
+            )
         readiness = self.bootstrap().get("application_readiness", {})
         if readiness.get("status") != "READY_FOR_OFFLINE_APPLICATION_PREPARATION":
             raise JobOpsError(
@@ -1463,6 +1484,20 @@ class OnboardingCenterService:
             raise JobOpsError(
                 "GUIDED_INTAKE_COMPANY_URL_REQUIRED",
                 "Start with the role on the company's own website. JobFlow will accept the ATS page after you follow the company's Apply link.",
+            )
+        recoverable_statuses = {
+            "GUIDED_INTAKE_PAIRING", "AWAITING_JOB_PAGE_CAPTURE",
+            "AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED",
+        }
+        replaced = [
+            (old_token, old_lease) for old_token, old_lease in self._guided_intakes.items()
+            if str(old_lease.get("status")) in recoverable_statuses
+        ]
+        for old_token, old_lease in replaced:
+            self._guided_intakes.pop(old_token, None)
+            self._guided_event(
+                str(old_lease["intake_id"]), "FAILED",
+                {"prior_status": str(old_lease.get("status", "UNKNOWN")), "reason": "USER_RECONNECTED"},
             )
         token = secrets.token_urlsafe(40)
         intake_id = stable_id("GIN", token)
@@ -1493,12 +1528,13 @@ class OnboardingCenterService:
         if not BrowserAssistManager.extension_origin_allowed(extension_origin):
             raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "Only the fixed JobFlow Browser Companion may pair.")
         lease = self._guided_lease(token)
-        lease["paired"] = True
-        lease["status"] = "AWAITING_JOB_PAGE_CAPTURE"
-        self._guided_event(str(lease["intake_id"]), "PAIRED", {"protocol_version": 2})
+        if not lease.get("paired"):
+            lease["paired"] = True
+            lease["status"] = "AWAITING_JOB_PAGE_CAPTURE"
+            self._guided_event(str(lease["intake_id"]), "PAIRED", {"protocol_version": 2})
         return {
             "status": "GUIDED_INTAKE_PAIRED", "mode": "JOB_CAPTURE",
-            "capture_status": "AWAITING_JOB_PAGE_CAPTURE",
+            "capture_status": str(lease["status"]),
             "intake_id": str(lease["intake_id"]),
             "allowed_company_domain": str(lease["company_domain"]),
             "expires_at": str(lease["expires_at"]),

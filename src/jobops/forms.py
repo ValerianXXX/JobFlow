@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import html
+import re
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -35,6 +36,9 @@ FINAL_SUBMIT_TERMS = (
     "complete application", "提交申请", "最终提交", "发送申请", "完成申请",
 )
 
+PROGRAMMATIC_NAVIGATION_MODE = "PROGRAMMATIC_EXPLICIT_BUTTON"
+MANUAL_NAVIGATION_MODE = "MANUAL_USER_CLICK"
+
 
 def _field_material(field: dict[str, Any], page_context: str = "") -> str:
     values = []
@@ -49,21 +53,43 @@ def _field_material(field: dict[str, Any], page_context: str = "") -> str:
     return normalized_name(" ".join(values)).replace("_", " ")
 
 
+def _action_intent(field: dict[str, Any], page_context: str) -> tuple[bool, bool]:
+    """Identify forward-only versus possibly final action wording.
+
+    The control type is intentionally excluded so ``type=submit`` does not by
+    itself hide a genuine intermediate label.  Conversely, any explicit final
+    verb wins over a forward verb; mixed wording is never navigation-safe.
+    """
+
+    visible_action = _field_material({**field, "type": ""}, page_context)
+    has_forward_label = any(normalized_name(term) in visible_action for term in FORWARD_NAVIGATION_TERMS)
+    has_final_label = (
+        any(normalized_name(term) in visible_action for term in FINAL_SUBMIT_TERMS)
+        or bool(re.search(
+            r"(?:^|\s)(?:submit|apply|send|finish|complete)(?:\s|$)|提交|投递|发送|完成",
+            visible_action,
+        ))
+    )
+    return has_forward_label, has_final_label
+
+
 def classify_application_field(field: dict[str, Any], *, page_context: str = "", blocked_categories: Iterable[str] = ()) -> tuple[str, str]:
     material = _field_material(field, page_context)
     if normalized_name(str(field.get("type", ""))) == "file":
         return "file_upload_stop", "File selection is an external upload action and remains blocked."
     if normalized_name(str(field.get("type", ""))) in {"submit", "image"}:
-        # Multi-page ATS products commonly implement Next/Continue as a submit-type
-        # control.  Treat only an explicit forward label as navigation; an ambiguous
-        # submit-like control remains final-submit gated.
-        if (
-            any(normalized_name(term) in material for term in FORWARD_NAVIGATION_TERMS)
-            and not any(normalized_name(term) in material for term in FINAL_SUBMIT_TERMS)
-        ):
-            return "navigation_control_stop", "A forward page transition requires one scoped user-present navigation authorization."
+        # A submit-like control may be a genuine intermediate Next/Continue button,
+        # but activating it invokes the form submission algorithm.  It can therefore
+        # be classified as forward navigation for review while remaining permanently
+        # ineligible for programmatic clicking.
+        has_forward_label, has_final_label = _action_intent(field, page_context)
+        if has_forward_label and not has_final_label:
+            return "navigation_control_stop", "This submit-like forward control must be clicked manually by the user."
         return "final_submit_stop", "Final submit controls always require the external action gateway."
     if normalized_name(str(field.get("type", ""))) == "button":
+        _has_forward_label, has_final_label = _action_intent(field, page_context)
+        if has_final_label:
+            return "final_submit_stop", "A final or mixed action label can never receive navigation authorization."
         return "navigation_control_stop", "Page navigation remains a reviewed browser action in this build."
     section = normalized_name(str(field.get("section_heading", "")) + " " + page_context)
     if any(term in section for term in ("eeo", "self-identification", "self identification", "voluntary", "自愿披露", "平等就业")):
@@ -79,6 +105,21 @@ def classify_application_field(field: dict[str, Any], *, page_context: str = "",
     if any(term in material for term in PRIVATE_TERMS):
         return "private_fixed", "Recognized private fixed field; value must resolve from secure-ref."
     return "unknown_stop", "Unrecognized fields fail closed."
+
+
+def navigation_control_mode(field: dict[str, Any]) -> str:
+    """Return the only permitted activation mode for a forward control.
+
+    A sanitized explicit ``type=button`` is the sole programmatically eligible
+    shape.  Submit, image, missing/default button types, and every unknown shape
+    require the user's trusted browser click.
+    """
+
+    return (
+        PROGRAMMATIC_NAVIGATION_MODE
+        if normalized_name(str(field.get("control_type") or field.get("type") or "")) == "button"
+        else MANUAL_NAVIGATION_MODE
+    )
 
 
 def map_fields(fields: Iterable[dict[str, Any]], known_answers: dict[str, str], blocked_categories: list[str], *, page_context: str = "") -> dict[str, object]:

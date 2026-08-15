@@ -6,7 +6,14 @@
   const MAX_TEXT = 500;
   const controlMap = new Map();
   const finalSubmitElements = new Set();
+  const documentBytes = new Uint8Array(16);
+  crypto.getRandomValues(documentBytes);
+  const documentInstanceId = `DOC-${Array.from(documentBytes, (item) => item.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
   let navigationElement = null;
+  let navigationProof = null;
+  let armedManualChallenge = null;
+  let manualSignalSent = false;
+  let pendingManualClick = null;
   let submitSignalSent = false;
 
   function compact(value, limit = MAX_TEXT) {
@@ -74,11 +81,7 @@
     return [...new Set(signals)].sort();
   }
 
-  function collectForm() {
-    controlMap.clear();
-    finalSubmitElements.clear();
-    navigationElement = null;
-    submitSignalSent = false;
+  function serializedFormSnapshot() {
     const controls = Array.from(document.querySelectorAll("input,select,textarea,button"))
       .filter((element) => !(element instanceof HTMLInputElement && element.type.toLowerCase() === "hidden"));
     const clientRefs = [];
@@ -92,7 +95,6 @@
     controls.forEach((element, index) => {
       const clientRef = `DOM-${String(index + 1).padStart(12, "0")}`;
       clientRefs.push(clientRef);
-      controlMap.set(clientRef, element);
       const syntheticId = `jobflow-control-${index + 1}`;
       const section = sectionFor(element);
       if (section) parts.push(`<h3>${escapeHTML(section)}</h3>`);
@@ -115,12 +117,27 @@
       }
     });
     parts.push("</body></html>");
+    return {controls, clientRefs, sanitizedHTML: parts.join("")};
+  }
+
+  function collectForm() {
+    controlMap.clear();
+    finalSubmitElements.clear();
+    navigationElement = null;
+    navigationProof = null;
+    armedManualChallenge = null;
+    manualSignalSent = false;
+    pendingManualClick = null;
+    submitSignalSent = false;
+    const snapshot = serializedFormSnapshot();
+    snapshot.controls.forEach((element, index) => controlMap.set(snapshot.clientRefs[index], element));
     return {
       status: "COLLECTED",
       payload: {
         url: location.href,
-        sanitized_html: parts.join(""),
-        client_refs: clientRefs,
+        sanitized_html: snapshot.sanitizedHTML,
+        client_refs: snapshot.clientRefs,
+        document_instance_id: documentInstanceId,
         blocker_signals: blockerSignals()
       }
     };
@@ -260,6 +277,10 @@
     const materialBindings = [];
     finalSubmitElements.clear();
     navigationElement = null;
+    navigationProof = null;
+    armedManualChallenge = null;
+    manualSignalSent = false;
+    pendingManualClick = null;
     for (const clientRef of message.final_submit_client_refs || []) {
       const element = controlMap.get(clientRef);
       if (!element || !document.contains(element)) {
@@ -272,6 +293,14 @@
       if (!navigationElement || !document.contains(navigationElement) || finalSubmitElements.has(navigationElement)) {
         return {status: "BLOCKED", code: "COMPANION_NAVIGATION_CONTROL_CHANGED"};
       }
+      navigationProof = {
+        client_ref: String(message.navigation.client_ref),
+        mode: String(message.navigation.mode || ""),
+        control_type: String(message.navigation.control_type || ""),
+        page_content_hash: String(message.navigation.page_content_hash || ""),
+        control_semantics_hash: String(message.navigation.control_semantics_hash || ""),
+        display_label: compact(message.navigation.display_label || "")
+      };
     }
     for (const item of message.fields || []) {
       const element = controlMap.get(item.client_ref);
@@ -315,17 +344,46 @@
       field_bindings: fieldBindings,
       material_bindings: materialBindings,
       final_submit_armed: finalSubmitElements.size > 0,
-      navigation_ready: Boolean(navigationElement)
+      navigation_ready: Boolean(navigationElement && navigationProof?.mode === "PROGRAMMATIC_EXPLICIT_BUTTON"),
+      manual_navigation_required: Boolean(navigationElement && navigationProof?.mode === "MANUAL_USER_CLICK")
     };
   }
 
-  function validateNavigation(message) {
+  function explicitButtonControl(element) {
+    if (!(element instanceof HTMLButtonElement) && !(element instanceof HTMLInputElement)) return false;
+    return compact(element.getAttribute("type")).toLowerCase() === "button" && controlType(element) === "button";
+  }
+
+  async function freshNavigationEvidence(clientRef, element) {
+    const snapshot = serializedFormSnapshot();
+    const index = snapshot.clientRefs.indexOf(clientRef);
+    if (index < 0 || snapshot.controls[index] !== element) {
+      return {status: "BLOCKED", code: "COMPANION_NAVIGATION_CONTROL_CHANGED"};
+    }
+    const pageContentHash = await sha256(snapshot.sanitizedHTML);
+    const label = compact(element.innerText || element.textContent || element.value || element.getAttribute("aria-label"));
+    const semanticsHash = await sha256(JSON.stringify([pageContentHash, clientRef, controlType(element), label]));
+    if (
+      !navigationProof || navigationProof.client_ref !== clientRef ||
+      pageContentHash !== navigationProof.page_content_hash ||
+      semanticsHash !== navigationProof.control_semantics_hash ||
+      label !== navigationProof.display_label
+    ) {
+      return {status: "BLOCKED", code: "COMPANION_NAVIGATION_PROOF_STALE"};
+    }
+    return {status: "FRESH", page_content_hash: pageContentHash, control_semantics_hash: semanticsHash};
+  }
+
+  async function validateNavigation(message) {
     const element = controlMap.get(String(message.client_ref || ""));
     if (
       !element || element !== navigationElement || finalSubmitElements.has(element) ||
       !document.contains(element) || element.disabled || !visible(element)
     ) {
       return {status: "BLOCKED", code: "COMPANION_NAVIGATION_CONTROL_CHANGED"};
+    }
+    if (!navigationProof || navigationProof.mode !== "PROGRAMMATIC_EXPLICIT_BUTTON" || !explicitButtonControl(element)) {
+      return {status: "BLOCKED", code: "COMPANION_MANUAL_NAVIGATION_REQUIRED", form_valid: true};
     }
     const label = compact(element.innerText || element.textContent || element.value || element.getAttribute("aria-label"));
     if (
@@ -339,15 +397,126 @@
       form.reportValidity();
       return {status: "BLOCKED", code: "COMPANION_REQUIRED_FIELDS_INCOMPLETE", form_valid: false};
     }
-    return {status: "NAVIGATION_VALID", form_valid: true, final_submit: false};
+    const fresh = await freshNavigationEvidence(String(message.client_ref || ""), element);
+    if (fresh.status !== "FRESH") return fresh;
+    return {
+      status: "NAVIGATION_VALID", form_valid: true, final_submit: false,
+      page_content_hash: fresh.page_content_hash,
+      control_semantics_hash: fresh.control_semantics_hash
+    };
   }
 
-  function navigateApproved(message) {
-    const validation = validateNavigation(message);
+  async function navigateApproved(message) {
+    const validation = await validateNavigation(message);
     if (validation.status !== "NAVIGATION_VALID") return validation;
+    if (
+      String(message.page_content_hash || "") !== validation.page_content_hash ||
+      String(message.control_semantics_hash || "") !== validation.control_semantics_hash
+    ) {
+      return {status: "BLOCKED", code: "COMPANION_NAVIGATION_AUTHORIZATION_STALE"};
+    }
     const element = controlMap.get(String(message.client_ref || ""));
     element.click();
-    return {status: "NAVIGATION_STARTED", form_valid: true, final_submit: false};
+    navigationProof = null;
+    return {
+      status: "NAVIGATION_STARTED", form_valid: true, final_submit: false,
+      page_content_hash: validation.page_content_hash,
+      control_semantics_hash: validation.control_semantics_hash
+    };
+  }
+
+  async function armManualNavigation(message) {
+    const challenge = message?.challenge;
+    if (
+      !navigationProof || navigationProof.mode !== "MANUAL_USER_CLICK" ||
+      !navigationElement || !document.contains(navigationElement) ||
+      !challenge || typeof challenge !== "object"
+    ) {
+      return {status: "BLOCKED", code: "COMPANION_MANUAL_CHALLENGE_CONTEXT_CHANGED"};
+    }
+    if (
+      !/^MNC-[A-F0-9]{32}$/.test(String(challenge.challenge_id || "")) ||
+      !String(challenge.nonce || "") ||
+      !/^sha256:[a-f0-9]{64}$/.test(String(challenge.challenge_hash || "")) ||
+      String(challenge.document_instance_id || "") !== documentInstanceId ||
+      String(challenge.stage || "") !== "MANUAL_NAVIGATION_REQUIRED" ||
+      String(challenge.client_ref || "") !== navigationProof.client_ref ||
+      String(challenge.prior_page_content_hash || "") !== navigationProof.page_content_hash ||
+      String(challenge.control_semantics_hash || "") !== navigationProof.control_semantics_hash ||
+      !Number.isInteger(challenge.tab_id) || challenge.tab_id < 0 ||
+      !String(challenge.assist_id || "") || !String(challenge.application_id || "") ||
+      !Number.isFinite(Date.parse(String(challenge.expires_at || ""))) ||
+      Date.parse(String(challenge.expires_at || "")) <= Date.now()
+    ) {
+      return {status: "BLOCKED", code: "COMPANION_MANUAL_CHALLENGE_INVALID"};
+    }
+    const eventHash = await sha256(JSON.stringify([
+      "MANUAL_FORWARD_CONTROL_CLICK",
+      String(challenge.challenge_id),
+      String(challenge.nonce),
+      String(challenge.assist_id),
+      String(challenge.application_id),
+      challenge.tab_id,
+      documentInstanceId,
+      "MANUAL_NAVIGATION_REQUIRED",
+      navigationProof.page_content_hash,
+      navigationProof.control_semantics_hash,
+      navigationProof.client_ref,
+      false
+    ]));
+    armedManualChallenge = {...challenge, event_hash: eventHash};
+    manualSignalSent = false;
+    pendingManualClick = null;
+    return {
+      status: "MANUAL_NAVIGATION_ARMED",
+      challenge_id: String(challenge.challenge_id),
+      document_instance_id: documentInstanceId,
+      expires_at: String(challenge.expires_at)
+    };
+  }
+
+  function dispatchManualNavigation() {
+    if (
+      manualSignalSent || !navigationProof || navigationProof.mode !== "MANUAL_USER_CLICK" ||
+      !armedManualChallenge || Date.parse(String(armedManualChallenge.expires_at || "")) <= Date.now()
+    ) return;
+    manualSignalSent = true;
+    // Once cancellation has been resolved, the runtime message is dispatched
+    // synchronously with no digest or other awaited work in between.  The same
+    // function is safe to call from the immediate-unload fallback.
+    chrome.runtime.sendMessage({
+      type: "JOBFLOW_MANUAL_NAVIGATION_OBSERVED",
+      payload: {
+        url: location.href,
+        trusted_user_event: true,
+        event_hash: armedManualChallenge.event_hash,
+        prior_page_content_hash: navigationProof.page_content_hash,
+        control_semantics_hash: navigationProof.control_semantics_hash,
+        manual_navigation_challenge_id: String(armedManualChallenge.challenge_id),
+        manual_navigation_nonce: String(armedManualChallenge.nonce),
+        manual_navigation_challenge_hash: String(armedManualChallenge.challenge_hash),
+        manual_navigation_assist_id: String(armedManualChallenge.assist_id),
+        manual_navigation_application_id: String(armedManualChallenge.application_id),
+        manual_navigation_tab_id: armedManualChallenge.tab_id,
+        manual_navigation_document_id: documentInstanceId,
+        manual_navigation_stage: "MANUAL_NAVIGATION_REQUIRED",
+        manual_navigation_client_ref: navigationProof.client_ref,
+        manual_navigation_default_prevented: false
+      }
+    }).catch(() => undefined);
+  }
+
+  function signalManualNavigationAfterDispatch(event) {
+    // Event cancellation is only final after all page listeners have run.  A
+    // microtask preserves immediate-navigation reliability while refusing
+    // preventDefault flows, including SPA handlers that rewrite the page.
+    queueMicrotask(() => {
+      if (event.defaultPrevented) {
+        pendingManualClick = null;
+        return;
+      }
+      dispatchManualNavigation();
+    });
   }
 
   function resultMarkers() {
@@ -413,25 +582,57 @@
   }
 
   document.addEventListener("submit", (event) => {
-    if (!event.isTrusted || finalSubmitElements.size === 0) return;
+    if (!event.isTrusted) return;
     const submitter = event.submitter || null;
+    if (submitter && submitter === navigationElement && navigationProof?.mode === "MANUAL_USER_CLICK") {
+      pendingManualClick = null;
+      signalManualNavigationAfterDispatch(event);
+      return;
+    }
+    if (finalSubmitElements.size === 0) return;
     if ((submitter && finalSubmitElements.has(submitter)) || (!submitter && !navigationElement)) {
       signalUserSubmit("FORM_SUBMIT");
+    }
+  }, false);
+  document.addEventListener("click", (event) => {
+    if (!event.isTrusted) return;
+    const target = event.target instanceof Element ? event.target.closest("button,input") : null;
+    if (target && target === navigationElement && navigationProof?.mode === "MANUAL_USER_CLICK") {
+      // Capture only records the trusted candidate.  It never sends here:
+      // later page listeners must still get an opportunity to preventDefault.
+      pendingManualClick = {event, target};
     }
   }, true);
   document.addEventListener("click", (event) => {
     if (!event.isTrusted) return;
+    const manualTarget = event.target instanceof Element ? event.target.closest("button,input") : null;
+    if (manualTarget && manualTarget === navigationElement && navigationProof?.mode === "MANUAL_USER_CLICK") {
+      pendingManualClick = {event, target: manualTarget};
+      queueMicrotask(() => {
+        if (event.defaultPrevented) {
+          pendingManualClick = null;
+        } else if (!manualTarget.form) {
+          dispatchManualNavigation();
+        }
+      });
+    }
     const target = event.target instanceof Element ? event.target.closest('button[type="submit"],input[type="submit"],button:not([type])') : null;
     if (target && target.form && finalSubmitElements.has(target)) signalUserSubmit("SUBMIT_CONTROL_CLICK");
-  }, true);
+  }, false);
+  window.addEventListener("beforeunload", () => {
+    // Direct location changes can unload before a form submit event exists.
+    // The trusted click object already reflects every completed click listener.
+    if (pendingManualClick && !pendingManualClick.event.defaultPrevented) dispatchManualNavigation();
+  }, false);
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     (async () => {
       if (message?.type === "JOBFLOW_COLLECT_JOB_PAGE") return collectJobPage();
       if (message?.type === "JOBFLOW_COLLECT_FORM") return collectForm();
       if (message?.type === "JOBFLOW_APPLY_APPROVED") return await applyApproved(message);
-      if (message?.type === "JOBFLOW_CHECK_NAVIGATION") return validateNavigation(message);
-      if (message?.type === "JOBFLOW_NAVIGATE_APPROVED") return navigateApproved(message);
+      if (message?.type === "JOBFLOW_ARM_MANUAL_NAVIGATION") return await armManualNavigation(message);
+      if (message?.type === "JOBFLOW_CHECK_NAVIGATION") return await validateNavigation(message);
+      if (message?.type === "JOBFLOW_NAVIGATE_APPROVED") return await navigateApproved(message);
       if (message?.type === "JOBFLOW_COLLECT_RESULT") {
         const payload = await collectResult();
         await chrome.runtime.sendMessage({type: "JOBFLOW_RESULT_SIGNALS", payload});

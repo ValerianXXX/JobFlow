@@ -20,12 +20,18 @@ ALLOWED_RUNTIME_SENTINELS = {
 PRIVATE_ROOTS = {"state", "reports", "workspace"}
 FORBIDDEN_SUFFIXES = {".db", ".dpapi", ".sqlite", ".sqlite3", ".pyc", ".zip", ".7z", ".rar", ".log"}
 FORBIDDEN_PARTS = {"__pycache__", ".pytest_cache", ".venv", "venv", "dist", "build"}
+FORBIDDEN_BINDING_FILENAMES = {
+    "browser-companion-binding.json",
+}
 ABSOLUTE_USER_PATH = re.compile(r"(?i)[A-Z]:[\\/]Users[\\/][^\\/\s\"']+")
 SECRET_PATTERNS = {
     "openai_key": re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
     "github_key": re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}\b"),
     "aws_key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
     "private_key": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
+    "browser_companion_binding_secret": re.compile(
+        r'''(?i)["']?secret_b64url["']?\s*:\s*["'][A-Za-z0-9_-]{43}["']'''
+    ),
 }
 TEXT_SUFFIXES = {".py", ".js", ".css", ".json", ".md", ".yaml", ".yml", ".txt", ".ps1", ".html", ".toml", ".in"}
 HISTORY_DOCUMENT_SUFFIXES = {".docx", ".pdf"}
@@ -73,6 +79,18 @@ def validate_public_paths(paths: Iterable[str]) -> list[dict[str, str]]:
             findings.append({"kind": "private_or_generated_file_tracked", "path": normalized})
         if path.name.casefold().startswith(".env") and path.name != ".env.example":
             findings.append({"kind": "environment_file_tracked", "path": normalized})
+        folded_parts = tuple(part.casefold() for part in path.parts)
+        folded_name = path.name.casefold()
+        if (
+            folded_name in FORBIDDEN_BINDING_FILENAMES
+            or folded_name.startswith(".browser-companion-binding-")
+            or (
+                len(folded_parts) >= 2
+                and folded_parts[-1] == "binding.json"
+                and folded_parts[-2] in {"browser-companion", "browsercompanion"}
+            )
+        ):
+            findings.append({"kind": "browser_companion_binding_tracked", "path": normalized})
     return findings
 
 

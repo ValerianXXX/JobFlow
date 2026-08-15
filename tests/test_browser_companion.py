@@ -7,7 +7,11 @@ import re
 import unittest
 
 from _support import PROJECT
-from jobops.browser_assist import COMPANION_EXTENSION_ID, COMPANION_EXTENSION_ORIGIN
+from jobops.browser_assist import (
+    COMPANION_EXTENSION_ID,
+    COMPANION_EXTENSION_ORIGIN,
+    COMPANION_EXTENSION_VERSION,
+)
 
 
 class BrowserCompanionStaticTests(unittest.TestCase):
@@ -21,8 +25,106 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertEqual(set(manifest["permissions"]), {"activeTab", "alarms", "scripting", "storage"})
         self.assertEqual(set(manifest["host_permissions"]), {"http://127.0.0.1/*", "http://localhost/*"})
         self.assertEqual(manifest["optional_host_permissions"], ["https://*/*"])
+        self.assertEqual(manifest["version"], COMPANION_EXTENSION_VERSION)
+        self.assertEqual(
+            manifest["externally_connectable"],
+            {
+                "matches": ["http://127.0.0.1/*", "http://localhost/*"],
+                "accepts_tls_channel_id": False,
+            },
+        )
         self.assertNotIn("cookies", manifest["permissions"])
         self.assertNotIn("webRequest", manifest["permissions"])
+
+    def test_pairing_is_retryable_versioned_and_does_not_require_all_sites(self) -> None:
+        app = (PROJECT / "src" / "jobops" / "ui" / "app.js").read_text(encoding="utf-8")
+        pair = (PROJECT / "browser-companion" / "pair.js").read_text(encoding="utf-8")
+        worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
+        popup = (PROJECT / "browser-companion" / "popup.js").read_text(encoding="utf-8")
+        server = (PROJECT / "src" / "jobops" / "onboarding_server.py").read_text(encoding="utf-8")
+
+        self.assertIn("chrome.runtime.onMessageExternal.addListener", worker)
+        self.assertIn('senderOrigin !== pairing.base_url', worker)
+        self.assertIn('sender?.tab?.url || sender?.url', worker)
+        self.assertIn('!senderOrigin || senderOrigin !== pairing.base_url', worker)
+        self.assertIn('message.type === "JOBFLOW_PING"', worker)
+        self.assertIn('code: "COMPANION_EXTERNAL_ACTION_FORBIDDEN"', worker)
+        self.assertIn("extension_version: EXTENSION_VERSION", worker)
+        self.assertIn('chrome.runtime.getURL("binding.json")', worker)
+        self.assertIn("crypto.subtle.verify", worker)
+        self.assertIn("COMPANION_BINDING_PROOF_INVALID", worker)
+        self.assertNotIn("secret_b64url", "\n".join(line for line in worker.splitlines() if "postJSON" in line))
+        self.assertIn("COMPANION_POLL_BASE_MS = 1500", app)
+        self.assertIn("COMPANION_POLL_MAX_MS = 12000", app)
+        self.assertIn("sessionStorage.setItem", app)
+        self.assertIn("sessionStorage.removeItem", app)
+        self.assertNotIn("localStorage", app)
+        self.assertIn("Number.isFinite(expiry)", app)
+        self.assertNotIn('companionExternalMessage({type:"JOBFLOW_PAIR"', app)
+        self.assertIn('window.postMessage({type:"JOBFLOW_PAIR_REQUEST"', app)
+        self.assertIn("BROWSER_COMPANION_UPDATE_REQUIRED", app)
+        self.assertIn("JOBFLOW_COMPANION_READY", pair)
+        self.assertIn("__jobflowPairBridgeGeneration", pair)
+        self.assertIn("globalThis.__jobflowPairBridgeGeneration !== GENERATION", pair)
+        self.assertIn("chrome.runtime.getManifest().version", pair)
+        self.assertIn("岗位导入", popup)
+        self.assertIn("approved application", popup)
+        self.assertIn('status?.status === "MANUAL_NAVIGATION_RESTART_REQUIRED" ? text.restartButton', popup)
+        self.assertIn('"MANUAL_NAVIGATION_RESTART_REQUIRED", "CONFIRMED"', popup)
+        self.assertIn("这次一次性下一步证明没有安全建立", popup)
+        self.assertIn("The one-use Next proof was not armed safely", popup)
+        self.assertIn("chrome.runtime.getManifest().version", popup)
+        self.assertNotIn("chrome.permissions.request", popup)
+        self.assertIn("assist_id: state.assist_id", worker)
+        self.assertIn("loopbackOrigin(tab.url || \"\") !== state.base_url", worker)
+        self.assertIn("state.jobflow_tab_id", worker)
+        self.assertIn("chrome.storage.session.remove", worker)
+        self.assertIn("new AbortController()", worker)
+        self.assertIn("_companion_pair_body", server)
+        self.assertIn("COMPANION_EXTENSION_VERSION", server)
+        self.assertIn("validate_pair_request", server)
+        self.assertIn("sign_pair_response", server)
+        self.assertIn("_companion_local_app_data", server)
+        self.assertIn('status: "MANUAL_NAVIGATION_RESTART_REQUIRED"', worker)
+        self.assertIn('code: "COMPANION_MANUAL_NAVIGATION_RESTART_REQUIRED"', worker)
+        self.assertIn('COMPANION_MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart"', app)
+        self.assertIn('MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart"', app)
+        self.assertIn("请结束并重新启动这项申请辅助", app)
+        self.assertIn("End this application assist and start it again", app)
+
+    def test_ui_pairing_is_identity_bound_explicit_and_transport_resilient(self) -> None:
+        app = (PROJECT / "src" / "jobops" / "ui" / "app.js").read_text(encoding="utf-8")
+
+        self.assertIn(
+            'result?.application_id!==state.browserAssistSession.application_id||result?.assist_id!==state.browserAssistSession.assist_id',
+            app,
+        )
+        self.assertIn(
+            'result?.assist_id!==record.session?.assist_id||result?.application_id!==record.session?.application_id',
+            app,
+        )
+        self.assertIn(
+            'result?.intake_id!==state.guidedIntakeSession.intake_id||result?.intake_id!==record.session?.intake_id',
+            app,
+        )
+        self.assertIn("function awaitExplicitCompanionPairing(record)", app)
+        self.assertNotIn("async function pairCompanion(record)", app)
+        self.assertNotIn('type:"JOBFLOW_PAIR",pairing:', app)
+        self.assertIn("state.companionPollFailures+=1", app)
+        self.assertIn("COMPANION_POLL_MAX_MS", app)
+        self.assertIn("Transport failures never erase a valid lease or silently re-pair", app)
+        poll = app.split("async function pollCompanionStatus(){", 1)[1].split(
+            "function startCompanionStatusPolling(){", 1
+        )[0]
+        self.assertNotIn("record.paired=false", poll)
+        self.assertNotIn("awaitExplicitCompanionPairing", poll)
+        self.assertNotIn("JOBFLOW_PAIR", poll)
+        self.assertIn("scheduleCompanionStatusPoll", poll)
+        self.assertIn('state.companionConnectionNotice=record.paired?null:"companionClickToPair"', app)
+        self.assertIn('BROWSER_COMPANION_SESSION_ACTIVE:"companionSessionActive"', app)
+        self.assertIn('companionModeConflict("guided")', app)
+        self.assertIn('companionModeConflict("assist")', app)
+        self.assertIn("guidedCompanionActive()||browserCompanionActive()", app)
 
     def test_companion_has_one_scoped_navigation_call_and_no_programmatic_final_submit(self) -> None:
         sources = "\n".join(
@@ -61,6 +163,11 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         app = (PROJECT / "src" / "jobops" / "ui" / "app.js").read_text(encoding="utf-8")
         self.assertIn("pause", wrapper.casefold())
         self.assertIn(COMPANION_EXTENSION_ID, helper)
+        self.assertIn("BrowserCompanion", helper)
+        self.assertIn("browser-companion-binding.json", helper)
+        self.assertIn("RandomNumberGenerator", helper)
+        self.assertNotIn("Write-Host $secret", helper)
+        self.assertTrue(all(ord(character) < 128 for character in helper))
         self.assertIn("browserAssistTitle", html)
         self.assertIn("审阅后辅助填写", app)
         self.assertIn("Assisted filling after review", app)

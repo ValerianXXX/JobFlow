@@ -23,7 +23,28 @@ from jobops.private_onboarding import PrivateOnboarding
 from jobops.queue_manager import QueueManager
 from jobops.resume_tailoring import build_resume_tailoring_manifest, build_tailoring_proposal
 from jobops.secure_store import WindowsDPAPIStore
-from jobops.util import canonical_json, iso_utc, sha256_bytes, sha256_file
+from jobops.util import canonical_json, iso_utc, parse_iso, sha256_bytes, sha256_file
+
+
+def manual_navigation_evidence(service, token: str, completed: dict) -> dict:
+    challenge = completed["manual_navigation"]["challenge"]
+    lease = service.browser_assist._leases[token]
+    return {
+        "trusted_user_event": True,
+        "event_hash": service.browser_assist._manual_event_hash(lease),
+        "prior_page_content_hash": completed["manual_navigation"]["prior_page_content_hash"],
+        "control_semantics_hash": completed["manual_navigation"]["control_semantics_hash"],
+        "manual_navigation_challenge_id": challenge["challenge_id"],
+        "manual_navigation_nonce": challenge["nonce"],
+        "manual_navigation_challenge_hash": challenge["challenge_hash"],
+        "manual_navigation_assist_id": challenge["assist_id"],
+        "manual_navigation_application_id": challenge["application_id"],
+        "manual_navigation_tab_id": challenge["tab_id"],
+        "manual_navigation_document_id": challenge["document_instance_id"],
+        "manual_navigation_stage": challenge["stage"],
+        "manual_navigation_client_ref": challenge["client_ref"],
+        "manual_navigation_default_prevented": False,
+    }
 
 
 class RealProfileOfflineApplicationTests(unittest.TestCase):
@@ -160,6 +181,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
 
     def approved_workday_v2_application(
         self, database: JobOpsDB, onboarding: PrivateOnboarding,
+        *, initial_form: str = "synthetic-v2-workday-step-1.html",
     ) -> tuple[OnboardingCenterService, str, dict]:
         fixtures = PROJECT / "tests" / "fixtures"
         service = OnboardingCenterService(PROJECT, database, onboarding)
@@ -180,7 +202,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             files={
                 "jd": (".txt", (fixtures / "synthetic-forward-jd.txt").read_bytes()),
                 "official": (".html", official),
-                "form": (".html", (fixtures / "synthetic-v2-workday-step-1.html").read_bytes()),
+                "form": (".html", (fixtures / initial_form).read_bytes()),
             },
         )
         application_id = str(result["application_id"])
@@ -200,9 +222,26 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         started = service.start_browser_assist({
             "application_id": application_id, "user_confirmed": True,
         })
+        resumed = service.start_browser_assist({
+            "application_id": application_id, "user_confirmed": True,
+        })
+        self.assertTrue(resumed["resumed"])
+        self.assertEqual(resumed["assist_id"], started["assist_id"])
+        self.assertEqual(resumed["assist_token"], started["assist_token"])
         token = str(started["assist_token"])
         paired = service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
         self.assertEqual(paired["status"], "BROWSER_COMPANION_PAIRED")
+        paired_again = service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+        self.assertEqual(paired_again["assist_id"], paired["assist_id"])
+        with service.database.connect() as connection:
+            self.assertEqual(connection.execute(
+                "SELECT COUNT(*) FROM browser_assist_events WHERE assist_id=? AND event_type='COMPANION_PAIRED'",
+                (paired["assist_id"],),
+            ).fetchone()[0], 1)
+            self.assertEqual(connection.execute(
+                "SELECT COUNT(*) FROM browser_assist_events WHERE assist_id=? AND event_type='ASSIST_STARTED'",
+                (paired["assist_id"],),
+            ).fetchone()[0], 1)
         bundle, _, _ = service.browser_assist._bundle_manager.load_current(application_id)
         field_count = len(bundle["form_snapshot"]["fields"])
         prepared = service.browser_assist.prepare(
@@ -247,6 +286,13 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
             self.assertEqual(captured["status"], "AWAITING_APPLICATION_FORM_CAPTURE")
+            paired_again = service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            self.assertEqual(paired_again["capture_status"], "AWAITING_APPLICATION_FORM_CAPTURE")
+            with database.connect() as connection:
+                self.assertEqual(connection.execute(
+                    "SELECT COUNT(*) FROM guided_intake_events WHERE intake_id=? AND event_type='PAIRED'",
+                    (paired["intake_id"],),
+                ).fetchone()[0], 1)
             prepared = service.capture_guided_application_form(
                 token,
                 {
@@ -273,6 +319,43 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             audit = audit_real_external_actions(database)
             self.assertEqual(audit["attempt_count"], 0)
             self.assertEqual(audit["real_external_actions"], 0)
+
+    def test_guided_browser_intake_can_replace_an_unrecoverable_pairing_lease(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            readiness = {"application_readiness": {"status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION"}}
+            payload = {
+                "official_url": "https://example.com/careers/synthetic-data-analyst",
+                "user_confirmed": True,
+            }
+            with mock.patch.object(service, "bootstrap", return_value=readiness):
+                first = service.start_guided_intake(payload)
+                second = service.start_guided_intake(payload)
+            self.assertNotEqual(first["intake_id"], second["intake_id"])
+            with self.assertRaises(JobOpsError) as stale:
+                service.pair_guided_intake(
+                    str(first["intake_token"]), extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(stale.exception.code, "GUIDED_INTAKE_NOT_FOUND")
+            paired = service.pair_guided_intake(
+                str(second["intake_token"]), extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(paired["capture_status"], "AWAITING_JOB_PAGE_CAPTURE")
+            with database.connect() as connection:
+                first_events = [str(row[0]) for row in connection.execute(
+                    "SELECT event_type FROM guided_intake_events WHERE intake_id=? ORDER BY event_id",
+                    (first["intake_id"],),
+                ).fetchall()]
+                second_events = [str(row[0]) for row in connection.execute(
+                    "SELECT event_type FROM guided_intake_events WHERE intake_id=? ORDER BY event_id",
+                    (second["intake_id"],),
+                ).fetchall()]
+            self.assertEqual(first_events, ["STARTED", "FAILED"])
+            self.assertEqual(second_events, ["STARTED", "PAIRED"])
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 0)
 
     def test_completed_user_context_generates_encrypted_review_materials_without_external_actions(self) -> None:
         with project_temp() as temp:
@@ -837,11 +920,16 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertEqual(paired["provider"], "workday")
             fixtures = PROJECT / "tests" / "fixtures"
 
-            def live(name: str, count: int, *, signals: list[str] | None = None) -> dict:
+            def live(
+                name: str, count: int, *, signals: list[str] | None = None,
+                url: str | None = None, document: str = "A" * 32,
+            ) -> dict:
                 return {
-                    "url": started["approved_url"],
+                    "url": url or started["approved_url"],
                     "sanitized_html": (fixtures / name).read_text(encoding="utf-8"),
                     "client_refs": [f"DOM-{index:012d}" for index in range(1, count + 1)],
+                    "companion_tab_id": 42,
+                    "document_instance_id": "DOC-" + document,
                     "blocker_signals": list(signals or []),
                 }
 
@@ -860,38 +948,43 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 },
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
-            self.assertEqual(first_done["status"], "PAGE_REVIEW_REQUIRED")
-            with self.assertRaises(JobOpsError) as bad_navigation:
+            self.assertEqual(first_done["status"], "MANUAL_NAVIGATION_REQUIRED")
+            self.assertFalse(first_done["manual_navigation"]["programmatic_allowed"])
+            first_challenge = first_done["manual_navigation"]["challenge"]
+            self.assertEqual(
+                (parse_iso(first_challenge["expires_at"]) - parse_iso(first_challenge["issued_at"])).total_seconds(),
+                15 * 60,
+            )
+            self.assertEqual(first["navigation"]["control_type"], "submit")
+            self.assertIsNone(first["navigation"]["authorization_token"])
+            with self.assertRaises(JobOpsError) as manual_only:
                 service.browser_assist.authorize_navigation(
                     token,
-                    {"client_ref": first["navigation"]["client_ref"], "authorization_token": "wrong", "form_valid": True, "submit_events": 0},
+                    {"client_ref": first["navigation"]["client_ref"], "authorization_token": "", "form_valid": True, "submit_events": 0},
                     extension_origin=COMPANION_EXTENSION_ORIGIN,
                 )
-            self.assertEqual(bad_navigation.exception.code, "NAVIGATION_AUTHORIZATION_INVALID")
-            first_nav = service.browser_assist.authorize_navigation(
-                token,
-                {
-                    "client_ref": first["navigation"]["client_ref"],
-                    "authorization_token": first["navigation"]["authorization_token"],
-                    "form_valid": True, "submit_events": 0,
+            self.assertEqual(manual_only.exception.code, "NAVIGATION_REQUIRES_USER_CLICK")
+            first_manual = manual_navigation_evidence(service, token, first_done)
+            step_two_url = started["approved_url"] + "/apply/step-2"
+            resumed_first = service.browser_assist.resume_manual_navigation(
+                token, {
+                    **live("synthetic-v2-workday-step-2.html", 4, url=step_two_url, document="B" * 32),
+                    **first_manual,
                 },
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
-            self.assertEqual(first_nav["status"], "NAVIGATION_AUTHORIZED")
-            service.browser_assist.navigation_observed(
-                token, {"url": started["approved_url"], "event_hash": "sha256:" + "4" * 64},
-                extension_origin=COMPANION_EXTENSION_ORIGIN,
-            )
+            self.assertEqual(resumed_first["navigation_performed_by"], "USER")
+            self.assertEqual(resumed_first["current_step"], 2)
 
             handoff = service.browser_assist.prepare(
-                token, live("synthetic-v2-login.html", 3, signals=["LOGIN"]),
+                token, live("synthetic-v2-login.html", 3, signals=["LOGIN"], url=step_two_url, document="B" * 32),
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
             self.assertEqual(handoff["status"], "HANDOFF_REQUIRED")
             self.assertEqual(handoff["handoff_kind"], "LOGIN")
             self.assertFalse(handoff["account_creation_capability"])
             second = service.browser_assist.prepare(
-                token, live("synthetic-v2-workday-step-2.html", 4),
+                token, live("synthetic-v2-workday-step-2.html", 4, url=step_two_url, document="B" * 32),
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
             self.assertEqual(second["current_step"], 2)
@@ -905,23 +998,19 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 },
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
-            self.assertEqual(second_done["status"], "PAGE_REVIEW_REQUIRED")
-            service.browser_assist.authorize_navigation(
-                token,
-                {
-                    "client_ref": second["navigation"]["client_ref"],
-                    "authorization_token": second["navigation"]["authorization_token"],
-                    "form_valid": True, "submit_events": 0,
+            self.assertEqual(second_done["status"], "MANUAL_NAVIGATION_REQUIRED")
+            second_manual = manual_navigation_evidence(service, token, second_done)
+            step_three_url = started["approved_url"] + "/apply/step-3"
+            service.browser_assist.resume_manual_navigation(
+                token, {
+                    **live("synthetic-v2-workday-step-3.html", 5, url=step_three_url, document="C" * 32),
+                    **second_manual,
                 },
-                extension_origin=COMPANION_EXTENSION_ORIGIN,
-            )
-            service.browser_assist.navigation_observed(
-                token, {"url": started["approved_url"], "event_hash": "sha256:" + "5" * 64},
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
 
             final = service.browser_assist.prepare(
-                token, live("synthetic-v2-workday-step-3.html", 5),
+                token, live("synthetic-v2-workday-step-3.html", 5, url=step_three_url, document="C" * 32),
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
             self.assertEqual(final["page_kind"], "FINAL_REVIEW")
@@ -960,11 +1049,14 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             )
             self.assertEqual(confirmed["status"], "CONFIRMED")
             audit = audit_real_external_actions(database)
-            self.assertEqual(audit["attempt_count"], 9)
-            self.assertEqual(audit["real_external_actions"], 5)
+            self.assertEqual(audit["attempt_count"], 7)
+            self.assertEqual(audit["real_external_actions"], 3)
             with database.connect() as connection:
                 self.assertEqual(connection.execute(
                     "SELECT COUNT(*) FROM external_action_session_uses WHERE action='navigate_application_step'"
+                ).fetchone()[0], 0)
+                self.assertEqual(connection.execute(
+                    "SELECT COUNT(*) FROM browser_assist_events WHERE event_type='MANUAL_NEXT_PAGE_OBSERVED'"
                 ).fetchone()[0], 2)
                 self.assertEqual(connection.execute(
                     "SELECT COUNT(*) FROM browser_assist_events WHERE event_type='USER_HANDOFF_REQUIRED'"
@@ -990,6 +1082,8 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                     "url": url or started["approved_url"],
                     "sanitized_html": fixture,
                     "client_refs": ["DOM-000000000001", "DOM-000000000002"],
+                    "companion_tab_id": 42,
+                    "document_instance_id": "DOC-" + "D" * 32,
                     "blocker_signals": list(signals or []),
                 }
 
@@ -1033,30 +1127,332 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 },
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
-            service.browser_assist.authorize_navigation(
-                token,
-                {
-                    "client_ref": prepared["navigation"]["client_ref"],
-                    "authorization_token": prepared["navigation"]["authorization_token"],
-                    "form_valid": True, "submit_events": 0,
-                },
-                extension_origin=COMPANION_EXTENSION_ORIGIN,
-            )
-            service.browser_assist.navigation_observed(
-                token, {"url": started["approved_url"], "event_hash": "sha256:" + "8" * 64},
-                extension_origin=COMPANION_EXTENSION_ORIGIN,
-            )
             with self.assertRaises(JobOpsError) as repeated:
-                service.browser_assist.prepare(token, page(), extension_origin=COMPANION_EXTENSION_ORIGIN)
+                service.browser_assist.resume_manual_navigation(
+                    token,
+                    {
+                        **page(),
+                        **manual_navigation_evidence(service, token, completed),
+                    },
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
             self.assertEqual(repeated.exception.code, "NAVIGATION_DID_NOT_ADVANCE")
-            self.assertEqual(completed["status"], "PAGE_REVIEW_REQUIRED")
-            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 2)
+            with self.assertRaises(JobOpsError) as replayed:
+                service.browser_assist.resume_manual_navigation(
+                    token,
+                    {**page(), **manual_navigation_evidence(service, token, completed)},
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(replayed.exception.code, "MANUAL_NAVIGATION_CHALLENGE_REPLAYED")
+            self.assertEqual(completed["status"], "MANUAL_NAVIGATION_REQUIRED")
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 1)
             self.assertEqual(list((onboarding.store.private_root / "staging").iterdir()), [])
             service.browser_assist.stop(user_confirmed=True)
             with database.connect() as connection:
                 self.assertEqual(connection.execute(
                     "SELECT COUNT(*) FROM external_action_sessions WHERE status='AUTHORIZED'"
                 ).fetchone()[0], 0)
+
+    def test_manual_navigation_challenge_rejects_forgery_and_different_job_identity(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service, application_id, _ = self.approved_workday_v2_application(database, onboarding)
+            started = service.start_browser_assist({"application_id": application_id, "user_confirmed": True})
+            token = str(started["assist_token"])
+            service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            fixtures = PROJECT / "tests" / "fixtures"
+
+            def page(name: str, count: int, *, url: str | None = None, document: str = "E" * 32) -> dict:
+                return {
+                    "url": url or started["approved_url"],
+                    "sanitized_html": (fixtures / name).read_text(encoding="utf-8"),
+                    "client_refs": [f"DOM-{index:012d}" for index in range(1, count + 1)],
+                    "companion_tab_id": 52,
+                    "document_instance_id": "DOC-" + document,
+                    "blocker_signals": [],
+                }
+
+            prepared = service.browser_assist.prepare(
+                token, page("synthetic-v2-workday-step-1.html", 2),
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            completed = service.browser_assist.complete(
+                token,
+                {
+                    "field_bindings": [
+                        {"client_ref": item["client_ref"], "value_sha256": item["value_sha256"]}
+                        for item in prepared["fields"]
+                    ],
+                    "material_bindings": [], "submit_events": 0, "navigation_actions": 0,
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            challenge = completed["manual_navigation"]["challenge"]
+            self.assertEqual(challenge["stage"], "MANUAL_NAVIGATION_REQUIRED")
+            self.assertEqual(challenge["tab_id"], 52)
+            self.assertEqual(
+                (parse_iso(challenge["expires_at"]) - parse_iso(challenge["issued_at"])).total_seconds(),
+                15 * 60,
+            )
+            evidence = manual_navigation_evidence(service, token, completed)
+            cancelled = {**evidence, "manual_navigation_default_prevented": True}
+            with self.assertRaises(JobOpsError) as prevented:
+                service.browser_assist.resume_manual_navigation(
+                    token,
+                    {**page("synthetic-v2-workday-step-2.html", 4, document="F" * 32), **cancelled},
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(prevented.exception.code, "MANUAL_NAVIGATION_EVENT_CANCELLED")
+            self.assertEqual(
+                service.browser_assist._leases[token].manual_challenge_id,
+                challenge["challenge_id"],
+            )
+            forged = {**evidence, "event_hash": "sha256:" + "0" * 64}
+            with self.assertRaises(JobOpsError) as arbitrary_hash:
+                service.browser_assist.resume_manual_navigation(
+                    token,
+                    {**page("synthetic-v2-workday-step-2.html", 4, document="F" * 32), **forged},
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(arbitrary_hash.exception.code, "MANUAL_NAVIGATION_EVIDENCE_INVALID")
+
+            different_job_url = started["approved_url"].replace("/job/123", "/job/999") + "/apply/step-2"
+            with self.assertRaises(JobOpsError) as changed_identity:
+                service.browser_assist.resume_manual_navigation(
+                    token,
+                    {
+                        **page(
+                            "synthetic-v2-workday-step-2.html", 4,
+                            url=different_job_url, document="F" * 32,
+                        ),
+                        **evidence,
+                    },
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(changed_identity.exception.code, "FORM_ROUTE_IDENTITY_CHANGED")
+            with self.assertRaises(JobOpsError) as replayed:
+                service.browser_assist.resume_manual_navigation(
+                    token,
+                    {
+                        **page("synthetic-v2-workday-step-2.html", 4, document="F" * 32),
+                        **evidence,
+                    },
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(replayed.exception.code, "MANUAL_NAVIGATION_CHALLENGE_REPLAYED")
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 1)
+            service.browser_assist.stop(user_confirmed=True)
+
+    def test_browser_companion_reload_revokes_pre_submit_checkpoints_and_allows_new_lease(self) -> None:
+        fixtures = PROJECT / "tests" / "fixtures"
+
+        for target_status in ("PAGE_REVIEW_REQUIRED", "HANDOFF_REQUIRED", "AWAITING_NAVIGATION"):
+            with self.subTest(target_status=target_status), project_temp() as temp:
+                database, onboarding, _ = self.build(temp)
+                self.seed_completed_context(onboarding)
+                service, application_id, _ = self.approved_workday_v2_application(
+                    database, onboarding, initial_form="synthetic-v2-workday-step-1-explicit-button.html",
+                )
+                started = service.start_browser_assist({"application_id": application_id, "user_confirmed": True})
+                token = str(started["assist_token"])
+                service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+                lease = service.browser_assist._leases[token]
+                old_assist_id = lease.assist_id
+                old_session_id = lease.session_id
+                live = {
+                    "url": started["approved_url"],
+                    "sanitized_html": (fixtures / "synthetic-v2-workday-step-1-explicit-button.html").read_text(encoding="utf-8"),
+                    "client_refs": ["DOM-000000000001", "DOM-000000000002"],
+                    "blocker_signals": [],
+                }
+
+                if target_status == "HANDOFF_REQUIRED":
+                    handoff = service.browser_assist.prepare(
+                        token, {**live, "blocker_signals": ["LOGIN"]},
+                        extension_origin=COMPANION_EXTENSION_ORIGIN,
+                    )
+                    self.assertEqual(handoff["status"], target_status)
+                else:
+                    prepared = service.browser_assist.prepare(
+                        token, live, extension_origin=COMPANION_EXTENSION_ORIGIN,
+                    )
+                    completed = service.browser_assist.complete(
+                        token,
+                        {
+                            "field_bindings": [
+                                {"client_ref": item["client_ref"], "value_sha256": item["value_sha256"]}
+                                for item in prepared["fields"]
+                            ],
+                            "material_bindings": [], "submit_events": 0, "navigation_actions": 0,
+                        },
+                        extension_origin=COMPANION_EXTENSION_ORIGIN,
+                    )
+                    self.assertEqual(completed["status"], "PAGE_REVIEW_REQUIRED")
+                    if target_status == "AWAITING_NAVIGATION":
+                        with self.assertRaises(JobOpsError) as stale_proof:
+                            service.browser_assist.authorize_navigation(
+                                token,
+                                {
+                                    "client_ref": prepared["navigation"]["client_ref"],
+                                    "authorization_token": prepared["navigation"]["authorization_token"],
+                                    "form_valid": True, "submit_events": 0,
+                                    "page_content_hash": "sha256:" + "0" * 64,
+                                    "control_semantics_hash": prepared["navigation"]["control_semantics_hash"],
+                                },
+                                extension_origin=COMPANION_EXTENSION_ORIGIN,
+                            )
+                        self.assertEqual(stale_proof.exception.code, "NAVIGATION_AUTHORIZATION_INVALID")
+                        authorized = service.browser_assist.authorize_navigation(
+                            token,
+                            {
+                                "client_ref": prepared["navigation"]["client_ref"],
+                                "authorization_token": prepared["navigation"]["authorization_token"],
+                                "form_valid": True, "submit_events": 0,
+                                "page_content_hash": prepared["navigation"]["page_content_hash"],
+                                "control_semantics_hash": prepared["navigation"]["control_semantics_hash"],
+                            },
+                            extension_origin=COMPANION_EXTENSION_ORIGIN,
+                        )
+                        self.assertEqual(authorized["status"], "NAVIGATION_AUTHORIZED")
+
+                self.assertEqual(lease.status, target_status)
+                if target_status == "PAGE_REVIEW_REQUIRED":
+                    self.assertIsNotNone(lease.navigation_token)
+                with database.connect() as connection:
+                    counts_before_reload = (
+                        int(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0]),
+                        int(connection.execute("SELECT COUNT(*) FROM external_action_session_uses").fetchone()[0]),
+                        int(connection.execute(
+                            "SELECT COUNT(*) FROM external_action_session_uses WHERE action='navigate_application_step'"
+                        ).fetchone()[0]),
+                        int(connection.execute(
+                            "SELECT COUNT(*) FROM browser_assist_events WHERE event_type='NEXT_PAGE_OBSERVED'"
+                        ).fetchone()[0]),
+                    )
+
+                with self.assertRaises(JobOpsError) as reloaded:
+                    service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+                self.assertEqual(reloaded.exception.code, "BROWSER_ASSIST_RESTART_REQUIRED")
+                self.assertEqual(reloaded.exception.details["prior_status"], target_status)
+                self.assertFalse(reloaded.exception.details["automatic_retry"])
+                self.assertEqual(lease.status, "REVOKED")
+                self.assertIsNone(lease.navigation_ref)
+                self.assertIsNone(lease.navigation_token)
+                self.assertNotIn(token, service.browser_assist._leases)
+
+                with database.connect() as connection:
+                    self.assertEqual(connection.execute(
+                        "SELECT status FROM browser_assist_runs WHERE assist_id=?", (old_assist_id,),
+                    ).fetchone()[0], "REVOKED")
+                    self.assertEqual(connection.execute(
+                        "SELECT status FROM external_action_sessions WHERE session_id=?", (old_session_id,),
+                    ).fetchone()[0], "REVOKED")
+                    self.assertEqual(connection.execute(
+                        "SELECT status FROM applications WHERE application_id=?", (application_id,),
+                    ).fetchone()[0], "APPROVED")
+                    counts_after_reload = (
+                        int(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0]),
+                        int(connection.execute("SELECT COUNT(*) FROM external_action_session_uses").fetchone()[0]),
+                        int(connection.execute(
+                            "SELECT COUNT(*) FROM external_action_session_uses WHERE action='navigate_application_step'"
+                        ).fetchone()[0]),
+                        int(connection.execute(
+                            "SELECT COUNT(*) FROM browser_assist_events WHERE event_type='NEXT_PAGE_OBSERVED'"
+                        ).fetchone()[0]),
+                    )
+                self.assertEqual(counts_after_reload, counts_before_reload)
+
+                fresh = service.start_browser_assist({"application_id": application_id, "user_confirmed": True})
+                self.assertNotEqual(fresh["assist_id"], old_assist_id)
+                self.assertNotEqual(fresh["assist_token"], token)
+                self.assertFalse(fresh.get("resumed", False))
+                with database.connect() as connection:
+                    self.assertEqual(connection.execute(
+                        "SELECT status FROM browser_assist_runs WHERE assist_id=?", (fresh["assist_id"],),
+                    ).fetchone()[0], "PAIRING")
+                    self.assertEqual(connection.execute(
+                        "SELECT status FROM external_action_sessions WHERE session_id=(SELECT session_id FROM browser_assist_runs WHERE assist_id=?)",
+                        (fresh["assist_id"],),
+                    ).fetchone()[0], "AUTHORIZED")
+                    self.assertEqual(
+                        int(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0]),
+                        counts_before_reload[0],
+                    )
+                service.browser_assist.stop(user_confirmed=True)
+
+    def test_browser_companion_reload_during_user_submit_window_becomes_unknown_and_never_retries(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service, application_id, _ = self.approved_company_application(database, onboarding)
+            token, prepared = self.prepared_browser_assist(service, application_id)
+            material_bindings = []
+            for item in prepared["files"]:
+                file_token = str(item["download_path"]).rsplit("/", 1)[-1]
+                raw, _ = service.browser_assist.take_file(
+                    token, file_token, extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+                raw[:] = b"\0" * len(raw)
+                material_bindings.append({
+                    "client_ref": item["client_ref"], "purpose": item["purpose"], "sha256": item["sha256"],
+                })
+            completed = service.browser_assist.complete(
+                token,
+                {
+                    "field_bindings": [
+                        {"client_ref": item["client_ref"], "value_sha256": item["value_sha256"]}
+                        for item in prepared["fields"]
+                    ],
+                    "material_bindings": material_bindings, "submit_events": 0, "navigation_actions": 0,
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(completed["status"], "AWAITING_USER_SUBMIT")
+            lease = service.browser_assist._leases[token]
+            old_assist_id = lease.assist_id
+            with database.connect() as connection:
+                actions_before_reload = int(connection.execute(
+                    "SELECT COUNT(*) FROM external_action_attempts"
+                ).fetchone()[0])
+
+            with self.assertRaises(JobOpsError) as reloaded:
+                service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            self.assertEqual(reloaded.exception.code, "BROWSER_ASSIST_SUBMISSION_UNKNOWN")
+            self.assertFalse(reloaded.exception.details["automatic_retry"])
+            self.assertEqual(lease.status, "SUBMISSION_UNKNOWN")
+            self.assertNotIn(token, service.browser_assist._leases)
+            with database.connect() as connection:
+                self.assertEqual(connection.execute(
+                    "SELECT status FROM browser_assist_runs WHERE assist_id=?", (old_assist_id,),
+                ).fetchone()[0], "SUBMISSION_UNKNOWN")
+                self.assertEqual(connection.execute(
+                    "SELECT status FROM applications WHERE application_id=?", (application_id,),
+                ).fetchone()[0], "SUBMISSION_UNKNOWN")
+                self.assertEqual(connection.execute(
+                    "SELECT status FROM approvals WHERE application_id=? ORDER BY issued_at DESC LIMIT 1", (application_id,),
+                ).fetchone()[0], "CONSUMED")
+                event_payload = json.loads(connection.execute(
+                    "SELECT payload_json FROM events WHERE application_id=? AND event_type='SUBMISSION_EVIDENCE_UNKNOWN' ORDER BY event_id DESC LIMIT 1",
+                    (application_id,),
+                ).fetchone()[0])
+                self.assertFalse(event_payload["automatic_retry"])
+                self.assertEqual(
+                    int(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0]),
+                    actions_before_reload,
+                )
+
+            with self.assertRaises(JobOpsError) as restart:
+                service.start_browser_assist({"application_id": application_id, "user_confirmed": True})
+            self.assertEqual(restart.exception.code, "APPLICATION_NOT_APPROVED")
+            with self.assertRaises(JobOpsError) as stale_token:
+                service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            self.assertEqual(stale_token.exception.code, "BROWSER_ASSIST_TOKEN_INVALID")
+            with database.connect() as connection:
+                self.assertEqual(
+                    int(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0]),
+                    actions_before_reload,
+                )
 
 
 if __name__ == "__main__":

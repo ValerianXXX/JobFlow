@@ -7,7 +7,7 @@ import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from .approvals import ApprovalContext
 from .ats_browser import analyze_local_ats_form
@@ -16,23 +16,31 @@ from .ephemeral_payload import EphemeralATSPayloadBroker
 from .errors import JobOpsError
 from .execution_bundle import ApplicationExecutionBundleManager
 from .external_action_sessions import ExternalActionSessionManager, ExternalActionSessionPolicy
+from .forms import MANUAL_NAVIGATION_MODE, PROGRAMMATIC_NAVIGATION_MODE, navigation_control_mode
 from .private_onboarding import PrivateOnboarding
 from .runtime_schema import validate_named
-from .sourcing import _canonical_url, _host, host_matches_registered, url_has_sensitive_query
+from .sourcing import _canonical_url, _host, host_matches_registered, source_route_hash, url_has_sensitive_query
 from .util import canonical_json, iso_utc, parse_iso, project_root, sha256_bytes, stable_id
 
 
 COMPANION_PROTOCOL_VERSION = 2
+COMPANION_EXTENSION_VERSION = "0.6.0"
 COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj"
 COMPANION_EXTENSION_ORIGIN = f"chrome-extension://{COMPANION_EXTENSION_ID}"
 ASSIST_TTL_MINUTES = 30
 MAX_LIVE_FORM_HTML_BYTES = 2 * 1024 * 1024
 MAX_ACTIVE_ASSISTS = 1
 MAX_ASSIST_STEPS = 20
+# Give a person enough time to review and complete page-specific fields before
+# clicking Next.  The challenge remains one-use, page/tab/document bound, and
+# cannot outlive the enclosing 30-minute assist lease.
+MANUAL_NAVIGATION_CHALLENGE_TTL_SECONDS = 15 * 60
 ALLOWED_LIVE_BLOCKERS = frozenset({
     "FILE_UPLOAD_STOP", "NAVIGATION_ACTION_STOP", "FINAL_SUBMIT_STOP",
 })
 CLIENT_REF_PATTERN = re.compile(r"^DOM-[A-F0-9]{12}$")
+DOCUMENT_INSTANCE_PATTERN = re.compile(r"^DOC-[A-F0-9]{32}$")
+MANUAL_CHALLENGE_PATTERN = re.compile(r"^MNC-[A-F0-9]{32}$")
 SAFE_SIGNAL_CODES = frozenset({
     "CAPTCHA", "MFA", "LOGIN", "ACCOUNT_CREATION", "CROSS_ORIGIN_IFRAME", "CROSS_ORIGIN_FORM",
 })
@@ -81,6 +89,24 @@ def _safe_hash(value: object) -> str:
     return sha256_bytes(canonical_json(value))
 
 
+def _source_identity_material(application_id: str, route: dict[str, Any]) -> list[str]:
+    """Immutable application identity, deliberately separate from transient page routing."""
+
+    return [
+        application_id,
+        str(route.get("company_domain", "")),
+        str(route.get("official_entry_url", "")),
+        str(route.get("current_url", "")),
+        str(route.get("route_kind", "")),
+        str(route.get("provider", "")),
+        str(route.get("ats_tenant", "")),
+        str(route.get("ats_board", "")),
+        str(route.get("ats_job_identity", "")),
+        str(route.get("official_page_hash", "")),
+        str(route.get("jd_snapshot_hash", "")),
+    ]
+
+
 @dataclass
 class _AssistLease:
     token: str
@@ -88,6 +114,7 @@ class _AssistLease:
     application_id: str
     session_id: str
     source_route: dict[str, Any]
+    source_identity_hash: str
     allowed_page_origin: str
     provider: str
     route_kind: str
@@ -106,6 +133,18 @@ class _AssistLease:
     current_page_kind: str | None = None
     navigation_ref: str | None = None
     navigation_token: str | None = None
+    navigation_mode: str | None = None
+    navigation_control_type: str | None = None
+    navigation_control_semantics_hash: str | None = None
+    navigation_snapshot_hash: str | None = None
+    navigation_tab_id: int | None = None
+    navigation_document_id: str | None = None
+    manual_challenge_id: str | None = None
+    manual_challenge_nonce: str | None = None
+    manual_challenge_issued_at: str | None = None
+    manual_challenge_expires_at: str | None = None
+    manual_challenge_hash: str | None = None
+    manual_challenge_consumed: bool = False
     manual_field_count: int = 0
     handoff_kind: str | None = None
     visited_page_hashes: set[str] = field(default_factory=set)
@@ -300,6 +339,37 @@ class BrowserAssistManager:
             "submit_performed_by": "USER_OR_UNKNOWN_DURING_TRUSTED_SUBMIT_WINDOW",
         }
 
+    def _revoke_for_companion_reload(self, token: str, lease: _AssistLease) -> str:
+        """End a pre-submit lease after extension state loss, without repeating any page action."""
+
+        previous_status = lease.status
+        now = iso_utc()
+        evidence_hash = _safe_hash({
+            "assist_id": lease.assist_id,
+            "prior_status": previous_status,
+            "reason": "COMPANION_STATE_LOST",
+            "automatic_retry": False,
+        })
+        with self.database.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                "UPDATE browser_assist_runs SET status='REVOKED',updated_at=? WHERE assist_id=?",
+                (now, lease.assist_id),
+            )
+            connection.execute(
+                "UPDATE external_action_sessions SET status='REVOKED',revoked_at=? WHERE session_id=? AND status='AUTHORIZED'",
+                (now, lease.session_id),
+            )
+            connection.execute(
+                "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
+                (lease.assist_id, lease.application_id, "COMPANION_RECOVERY_REVOKED", evidence_hash, now),
+            )
+        lease.status = "REVOKED"
+        lease.navigation_token = None
+        lease.navigation_ref = None
+        self._leases.pop(token, None)
+        return previous_status
+
     def _lease(self, token: str, *, statuses: set[str] | None = None) -> _AssistLease:
         if not isinstance(token, str) or len(token) < 40:
             raise JobOpsError("BROWSER_ASSIST_TOKEN_INVALID", "The browser-assist lease is invalid or expired.")
@@ -324,6 +394,52 @@ class BrowserAssistManager:
             "greenhouse": value.endswith(".greenhouse.io"),
             "lever": value == "jobs.lever.co" or value.endswith(".lever.co"),
         }.get(provider, False)
+
+    @staticmethod
+    def _assert_source_identity(lease: _AssistLease, canonical: str) -> None:
+        """Keep the approved job identity fixed while allowing bounded child pages."""
+
+        if not secrets.compare_digest(
+            lease.source_identity_hash,
+            _safe_hash(_source_identity_material(lease.application_id, lease.source_route)),
+        ):
+            raise JobOpsError(
+                "FORM_ROUTE_IDENTITY_CHANGED",
+                "The approved company, job, or application identity changed during browser assistance.",
+            )
+        current_path = [unquote(part).casefold() for part in urlparse(canonical).path.split("/") if part]
+        original = _canonical_url(str(lease.source_route["current_url"]))
+        original_path = urlparse(original).path.rstrip("/") or "/"
+        current_value = urlparse(canonical).path.rstrip("/") or "/"
+        if current_value != original_path and not current_value.startswith(original_path + "/"):
+            raise JobOpsError(
+                "FORM_ROUTE_IDENTITY_CHANGED",
+                "The same-origin page is outside the approved application path.",
+            )
+        identity = unquote(str(lease.source_route.get("ats_job_identity", ""))).casefold()
+        if lease.provider != "company" and identity and identity != "unknown":
+            if identity not in current_path:
+                raise JobOpsError(
+                    "FORM_ROUTE_IDENTITY_CHANGED",
+                    "The same-origin page no longer belongs to the approved ATS job identity.",
+                )
+            return
+
+    @staticmethod
+    def _browser_context(payload: dict[str, Any]) -> tuple[int, str]:
+        tab_id = payload.get("companion_tab_id")
+        document_id = str(payload.get("document_instance_id", ""))
+        if (
+            not isinstance(tab_id, int)
+            or isinstance(tab_id, bool)
+            or tab_id < 0
+            or not DOCUMENT_INSTANCE_PATTERN.fullmatch(document_id)
+        ):
+            raise JobOpsError(
+                "BROWSER_DOCUMENT_CONTEXT_INVALID",
+                "Manual navigation requires the bound companion tab and document instance.",
+            )
+        return tab_id, document_id
 
     @classmethod
     def _validate_assisted_route(cls, route: dict[str, Any], bundle: dict[str, Any]) -> None:
@@ -414,7 +530,36 @@ class BrowserAssistManager:
                     "Starting live prefill and upload requires an explicit per-application confirmation.",
                 )
             self._prune()
-            active = [item for item in self._leases.values() if item.status not in TERMINAL_RUN_STATES]
+            active = [
+                (token, item) for token, item in self._leases.items()
+                if item.status not in TERMINAL_RUN_STATES
+            ]
+            resumable = next((
+                (token, item) for token, item in active
+                if item.application_id == application_id and item.status in {"PAIRING", "READY"}
+            ), None)
+            if resumable is not None:
+                token, lease = resumable
+                return {
+                    "status": "BROWSER_COMPANION_PAIRING",
+                    "protocol_version": COMPANION_PROTOCOL_VERSION,
+                    "assist_id": lease.assist_id,
+                    "assist_token": token,
+                    "assist_path": f"/assist/{token}",
+                    "application_id": lease.application_id,
+                    "allowed_page_origin": lease.allowed_page_origin,
+                    "provider": lease.provider,
+                    "route_kind": lease.route_kind,
+                    "multi_page": True,
+                    "max_steps": lease.max_steps,
+                    "approved_url": str(lease.source_route["current_url"]),
+                    "expires_at": lease.expires_at,
+                    "extension_id": COMPANION_EXTENSION_ID,
+                    "submit_capability": False,
+                    "automatic_retry": False,
+                    "resumed": True,
+                    "real_external_actions": 0,
+                }
             if len(active) >= MAX_ACTIVE_ASSISTS:
                 raise JobOpsError(
                     "BROWSER_ASSIST_ALREADY_ACTIVE",
@@ -445,6 +590,7 @@ class BrowserAssistManager:
                 application_id=application_id,
                 session_id=session.session_id,
                 source_route=dict(source_route),
+                source_identity_hash=_safe_hash(_source_identity_material(application_id, source_route)),
                 allowed_page_origin=_safe_origin(str(source_route["current_url"])),
                 provider=str(source_route["provider"]),
                 route_kind=str(source_route["route_kind"]),
@@ -501,22 +647,41 @@ class BrowserAssistManager:
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"PAIRING", "READY"})
-            lease.paired = True
-            lease.status = "READY"
-            now = iso_utc()
-            with self.database.connect() as connection:
-                connection.execute(
-                    "UPDATE browser_assist_runs SET status='READY',updated_at=? WHERE assist_id=?",
-                    (now, lease.assist_id),
+            lease = self._lease(token)
+            if lease.status == "AWAITING_USER_SUBMIT":
+                self._mark_unknown(lease, reason="COMPANION_RELOADED_DURING_USER_SUBMIT_WINDOW")
+                self._leases.pop(token, None)
+                raise JobOpsError(
+                    "BROWSER_ASSIST_SUBMISSION_UNKNOWN",
+                    "The companion reloaded during the user-submit window; confirm whether submission succeeded.",
+                    application_id=lease.application_id,
+                    automatic_retry=False,
                 )
-                connection.execute(
-                    "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
-                    (lease.assist_id, lease.application_id, "COMPANION_PAIRED", _safe_hash({
-                        "protocol_version": COMPANION_PROTOCOL_VERSION,
-                        "extension_id": COMPANION_EXTENSION_ID,
-                    }), now),
+            if lease.status not in {"PAIRING", "READY"}:
+                previous_status = self._revoke_for_companion_reload(token, lease)
+                raise JobOpsError(
+                    "BROWSER_ASSIST_RESTART_REQUIRED",
+                    "The companion lost its page checkpoint. Reopen the approved start page and begin a new assist.",
+                    application_id=lease.application_id,
+                    prior_status=previous_status,
+                    automatic_retry=False,
                 )
+            if not lease.paired:
+                lease.paired = True
+                lease.status = "READY"
+                now = iso_utc()
+                with self.database.connect() as connection:
+                    connection.execute(
+                        "UPDATE browser_assist_runs SET status='READY',updated_at=? WHERE assist_id=?",
+                        (now, lease.assist_id),
+                    )
+                    connection.execute(
+                        "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
+                        (lease.assist_id, lease.application_id, "COMPANION_PAIRED", _safe_hash({
+                            "protocol_version": COMPANION_PROTOCOL_VERSION,
+                            "extension_id": COMPANION_EXTENSION_ID,
+                        }), now),
+                    )
             return {
                 "status": "BROWSER_COMPANION_PAIRED",
                 "assist_id": lease.assist_id,
@@ -628,6 +793,7 @@ class BrowserAssistManager:
         lease: _AssistLease,
         payload: dict[str, Any],
         expected_snapshot: dict[str, Any],
+        enforce_initial_approval: bool = True,
     ) -> tuple[dict[str, Any], list[str]]:
         live_url = str(payload.get("url", ""))
         canonical = _canonical_url(live_url)
@@ -635,8 +801,14 @@ class BrowserAssistManager:
             lease.provider, urlparse(canonical).hostname or "", str(lease.source_route["company_domain"]),
         ):
             raise JobOpsError("FORM_ROUTE_BINDING_CHANGED", "The current tab is outside the approved company/ATS origin.")
-        if lease.current_step == 1 and not lease.visited_page_hashes and canonical != str(lease.source_route["current_url"]):
+        if (
+            enforce_initial_approval
+            and lease.current_step == 1
+            and not lease.visited_page_hashes
+            and canonical != str(lease.source_route["current_url"])
+        ):
             raise JobOpsError("FORM_ROUTE_BINDING_CHANGED", "The first live page is not the exact approved application URL.")
+        self._assert_source_identity(lease, canonical)
         if url_has_sensitive_query(canonical):
             raise JobOpsError("ATS_ROUTE_SENSITIVE_QUERY", "The live form URL contains a sensitive query field.")
         html = payload.get("sanitized_html")
@@ -654,11 +826,14 @@ class BrowserAssistManager:
         ):
             raise JobOpsError("BROWSER_CONTROL_REFERENCE_INVALID", "The live form control references are invalid.")
         policy = json.loads((self.project / "config" / "policy.json").read_text(encoding="utf-8"))
-        runtime_route = {
-            **lease.source_route,
-            "current_url": canonical,
-            "navigation_history": [*list(lease.source_route.get("navigation_history", []))[:-1], canonical],
-        }
+        history = list(lease.source_route.get("navigation_history", []))
+        if not history or history[-1] != canonical:
+            history.append(canonical)
+        runtime_route = {**lease.source_route, "current_url": canonical, "navigation_history": history}
+        # The route hash is transient page evidence.  The immutable company/job
+        # identity remains bound separately by source_identity_hash above.
+        runtime_route["route_hash"] = source_route_hash(runtime_route)
+        validate_named("source-route", runtime_route, self.schemas)
         live = analyze_local_ats_form(
             encoded,
             route=runtime_route,
@@ -679,7 +854,7 @@ class BrowserAssistManager:
                 "The live form contains a step JobFlow is not permitted to automate.",
                 blockers=sorted(set(live["blockers"]) - ALLOWED_LIVE_BLOCKERS),
             )
-        if lease.current_step == 1 and not lease.visited_page_hashes:
+        if enforce_initial_approval and lease.current_step == 1 and not lease.visited_page_hashes:
             expected_fields = list(expected_snapshot["fields"])
             if len(expected_fields) != len(live["fields"]):
                 raise JobOpsError("SITE_CHANGED", "The initial live form field count differs from the approved review packet.")
@@ -878,7 +1053,34 @@ class BrowserAssistManager:
             lease.navigation_ref = (
                 client_by_control[str(navigation_field["control_ref"])] if navigation_field else None
             )
-            lease.navigation_token = secrets.token_urlsafe(36) if navigation_field else None
+            lease.navigation_mode = navigation_control_mode(navigation_field) if navigation_field else None
+            lease.navigation_control_type = str(navigation_field["control_type"]) if navigation_field else None
+            lease.navigation_snapshot_hash = str(live["page_content_hash"]) if navigation_field else None
+            lease.navigation_control_semantics_hash = (
+                sha256_bytes(canonical_json([
+                    lease.navigation_snapshot_hash,
+                    lease.navigation_ref,
+                    lease.navigation_control_type,
+                    str(navigation_field["display_label"]),
+                ]))
+                if navigation_field else None
+            )
+            if navigation_field and lease.navigation_mode == MANUAL_NAVIGATION_MODE:
+                lease.navigation_tab_id, lease.navigation_document_id = self._browser_context(payload)
+            else:
+                lease.navigation_tab_id = None
+                lease.navigation_document_id = None
+            lease.manual_challenge_id = None
+            lease.manual_challenge_nonce = None
+            lease.manual_challenge_issued_at = None
+            lease.manual_challenge_expires_at = None
+            lease.manual_challenge_hash = None
+            lease.manual_challenge_consumed = False
+            lease.navigation_token = (
+                secrets.token_urlsafe(36)
+                if navigation_field and lease.navigation_mode == PROGRAMMATIC_NAVIGATION_MODE
+                else None
+            )
             lease.manual_field_count = len(manual_fields)
             lease.prepared_hash = _safe_hash({
                 "live_semantics": [_semantic_field(item) for item in live["fields"]],
@@ -887,6 +1089,10 @@ class BrowserAssistManager:
                 "page_kind": page_kind,
                 "step": lease.current_step,
                 "navigation_ref": lease.navigation_ref,
+                "navigation_mode": lease.navigation_mode,
+                "navigation_control_type": lease.navigation_control_type,
+                "navigation_control_semantics_hash": lease.navigation_control_semantics_hash,
+                "navigation_snapshot_hash": lease.navigation_snapshot_hash,
                 "manual_fields": [
                     {key: item[key] for key in ("client_ref", "classification", "required")}
                     for item in manual_fields
@@ -936,6 +1142,12 @@ class BrowserAssistManager:
                         "client_ref": lease.navigation_ref,
                         "authorization_token": lease.navigation_token,
                         "display_label": str(navigation_field["display_label"]),
+                        "mode": lease.navigation_mode,
+                        "control_type": lease.navigation_control_type,
+                        "page_content_hash": lease.navigation_snapshot_hash,
+                        "control_semantics_hash": lease.navigation_control_semantics_hash,
+                        "programmatic_allowed": lease.navigation_mode == PROGRAMMATIC_NAVIGATION_MODE,
+                        "user_must_click": lease.navigation_mode == MANUAL_NAVIGATION_MODE,
                     }
                     if navigation_field else None
                 ),
@@ -995,6 +1207,60 @@ class BrowserAssistManager:
             result.append(value)
         return result
 
+    @staticmethod
+    def _manual_event_hash(lease: _AssistLease) -> str:
+        return _safe_hash([
+            "MANUAL_FORWARD_CONTROL_CLICK",
+            lease.manual_challenge_id,
+            lease.manual_challenge_nonce,
+            lease.assist_id,
+            lease.application_id,
+            lease.navigation_tab_id,
+            lease.navigation_document_id,
+            "MANUAL_NAVIGATION_REQUIRED",
+            lease.navigation_snapshot_hash,
+            lease.navigation_control_semantics_hash,
+            lease.navigation_ref,
+            False,
+        ])
+
+    @staticmethod
+    def _issue_manual_challenge(lease: _AssistLease, *, now: datetime) -> dict[str, Any]:
+        if (
+            lease.navigation_tab_id is None
+            or lease.navigation_document_id is None
+            or lease.navigation_snapshot_hash is None
+            or lease.navigation_control_semantics_hash is None
+            or lease.navigation_ref is None
+        ):
+            raise JobOpsError(
+                "MANUAL_NAVIGATION_CONTEXT_INVALID",
+                "The stopped page is missing its bound tab, document, or control semantics.",
+            )
+        issued_at = iso_utc(now)
+        expires_at = iso_utc(now + timedelta(seconds=MANUAL_NAVIGATION_CHALLENGE_TTL_SECONDS))
+        lease.manual_challenge_id = "MNC-" + secrets.token_hex(16).upper()
+        lease.manual_challenge_nonce = secrets.token_urlsafe(32)
+        lease.manual_challenge_issued_at = issued_at
+        lease.manual_challenge_expires_at = expires_at
+        lease.manual_challenge_consumed = False
+        public = {
+            "challenge_id": lease.manual_challenge_id,
+            "nonce": lease.manual_challenge_nonce,
+            "issued_at": issued_at,
+            "expires_at": expires_at,
+            "assist_id": lease.assist_id,
+            "application_id": lease.application_id,
+            "tab_id": lease.navigation_tab_id,
+            "document_instance_id": lease.navigation_document_id,
+            "stage": "MANUAL_NAVIGATION_REQUIRED",
+            "client_ref": lease.navigation_ref,
+            "prior_page_content_hash": lease.navigation_snapshot_hash,
+            "control_semantics_hash": lease.navigation_control_semantics_hash,
+        }
+        lease.manual_challenge_hash = _safe_hash(public)
+        return {**public, "challenge_hash": lease.manual_challenge_hash}
+
     def complete(self, token: str, payload: dict[str, Any], *, extension_origin: str | None) -> dict[str, Any]:
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
@@ -1035,13 +1301,24 @@ class BrowserAssistManager:
                 lease.status = "AWAITING_USER_SUBMIT"
                 target_status = "AWAITING_USER_SUBMIT"
                 event_type = "STOPPED_BEFORE_SUBMIT"
-            elif lease.current_page_kind == "INTERMEDIATE" and lease.navigation_ref and lease.navigation_token:
-                lease.status = "PAGE_REVIEW_REQUIRED"
-                target_status = "PAGE_REVIEW_REQUIRED"
-                event_type = "PAGE_READY_FOR_NAVIGATION"
+            elif lease.current_page_kind == "INTERMEDIATE" and lease.navigation_ref:
+                if lease.navigation_mode == PROGRAMMATIC_NAVIGATION_MODE and lease.navigation_token:
+                    lease.status = "PAGE_REVIEW_REQUIRED"
+                    target_status = "PAGE_REVIEW_REQUIRED"
+                    event_type = "PAGE_READY_FOR_NAVIGATION"
+                elif lease.navigation_mode == MANUAL_NAVIGATION_MODE and not lease.navigation_token:
+                    lease.status = "MANUAL_NAVIGATION_REQUIRED"
+                    target_status = "MANUAL_NAVIGATION_REQUIRED"
+                    event_type = "STOPPED_FOR_USER_NAVIGATION"
+                else:
+                    raise JobOpsError("BROWSER_PAGE_KIND_INVALID", "The forward-control safety mode is inconsistent.")
             else:
                 raise JobOpsError("BROWSER_PAGE_KIND_INVALID", "The prepared page no longer has a safe next action.")
-            now = iso_utc()
+            challenge: dict[str, Any] | None = None
+            current = _now()
+            if target_status == "MANUAL_NAVIGATION_REQUIRED":
+                challenge = self._issue_manual_challenge(lease, now=current)
+            now = iso_utc(current)
             evidence_hash = _safe_hash({
                 "prepared_hash": lease.prepared_hash,
                 "field_bindings": fields,
@@ -1050,6 +1327,7 @@ class BrowserAssistManager:
                 "navigation_actions": 0,
                 "page_kind": lease.current_page_kind,
                 "step": lease.current_step,
+                "manual_challenge_hash": lease.manual_challenge_hash,
             })
             with self.database.connect() as connection:
                 connection.execute("BEGIN IMMEDIATE")
@@ -1080,6 +1358,23 @@ class BrowserAssistManager:
                     "client_ref": lease.navigation_ref,
                     "authorization_token": lease.navigation_token,
                     "requires_manual_review": lease.manual_field_count > 0,
+                    "mode": lease.navigation_mode,
+                    "control_type": lease.navigation_control_type,
+                    "page_content_hash": lease.navigation_snapshot_hash,
+                    "control_semantics_hash": lease.navigation_control_semantics_hash,
+                    "programmatic_allowed": True,
+                }
+            elif target_status == "MANUAL_NAVIGATION_REQUIRED":
+                result["manual_navigation"] = {
+                    "client_ref": lease.navigation_ref,
+                    "mode": MANUAL_NAVIGATION_MODE,
+                    "control_type": lease.navigation_control_type,
+                    "prior_page_content_hash": lease.navigation_snapshot_hash,
+                    "control_semantics_hash": lease.navigation_control_semantics_hash,
+                    "programmatic_allowed": False,
+                    "user_must_click": True,
+                    "resume_after_changed_page": True,
+                    "challenge": challenge,
                 }
             return result
 
@@ -1095,18 +1390,30 @@ class BrowserAssistManager:
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"PAGE_REVIEW_REQUIRED"})
+            lease = self._lease(token, statuses={"PAGE_REVIEW_REQUIRED", "MANUAL_NAVIGATION_REQUIRED"})
+            if (
+                lease.navigation_mode != PROGRAMMATIC_NAVIGATION_MODE
+                or lease.navigation_control_type != "button"
+            ):
+                raise JobOpsError(
+                    "NAVIGATION_REQUIRES_USER_CLICK",
+                    "Submit-like Next/Continue controls must be clicked manually by the user.",
+                )
             if payload.get("form_valid") is not True:
                 raise JobOpsError("APPLICATION_PAGE_INCOMPLETE", "Complete the required fields on this page before continuing.")
             if payload.get("submit_events") != 0:
                 raise JobOpsError("FINAL_SUBMIT_FORBIDDEN", "A final submit event cannot authorize a page transition.")
             client_ref = str(payload.get("client_ref", ""))
             authorization_token = str(payload.get("authorization_token", ""))
+            page_content_hash = str(payload.get("page_content_hash", ""))
+            control_semantics_hash = str(payload.get("control_semantics_hash", ""))
             if (
                 client_ref != lease.navigation_ref
                 or not authorization_token
                 or not lease.navigation_token
                 or not secrets.compare_digest(authorization_token, lease.navigation_token)
+                or page_content_hash != lease.navigation_snapshot_hash
+                or control_semantics_hash != lease.navigation_control_semantics_hash
             ):
                 raise JobOpsError("NAVIGATION_AUTHORIZATION_INVALID", "The one-use Next/Continue authorization is invalid.")
             bundle, context, _ = self._bundle_manager.load_current(lease.application_id)
@@ -1117,6 +1424,8 @@ class BrowserAssistManager:
                 "client_ref": client_ref,
                 "form_valid": True,
                 "final_submit": False,
+                "page_content_hash": page_content_hash,
+                "control_semantics_hash": control_semantics_hash,
             })
             self._session_manager.record_assisted_use(
                 session_id=lease.session_id,
@@ -1145,6 +1454,170 @@ class BrowserAssistManager:
                 "client_ref": client_ref,
                 "current_step": lease.current_step,
                 "final_submit": False,
+                "page_content_hash": page_content_hash,
+                "control_semantics_hash": control_semantics_hash,
+                "automatic_retry": False,
+            }
+
+    def resume_manual_navigation(
+        self,
+        token: str,
+        payload: dict[str, Any],
+        *,
+        extension_origin: str | None,
+    ) -> dict[str, Any]:
+        """Accept a freshly captured page only after a trusted manual forward click.
+
+        This endpoint never activates a page control.  It merely proves that the
+        user clicked the prior submit-like Next/Continue and that the same-origin,
+        sanitized page structure actually changed before a new step is prepared.
+        """
+
+        with self._lock:
+            if not self.extension_origin_allowed(extension_origin):
+                raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
+            lease = self._lease(token, statuses={"MANUAL_NAVIGATION_REQUIRED"})
+            if lease.navigation_mode != MANUAL_NAVIGATION_MODE or lease.navigation_token is not None:
+                raise JobOpsError("MANUAL_NAVIGATION_BINDING_INVALID", "The prior control was not bound for manual navigation.")
+            if payload.get("trusted_user_event") is not True:
+                raise JobOpsError("MANUAL_NAVIGATION_NOT_PROVEN", "A trusted user click is required before the next page can be resumed.")
+            if payload.get("manual_navigation_default_prevented") is not False:
+                raise JobOpsError(
+                    "MANUAL_NAVIGATION_EVENT_CANCELLED",
+                    "A cancelled click or form submission cannot prove manual navigation.",
+                )
+            if lease.manual_challenge_consumed:
+                raise JobOpsError(
+                    "MANUAL_NAVIGATION_CHALLENGE_REPLAYED",
+                    "The one-use manual navigation challenge was already consumed.",
+                )
+            challenge_id = str(payload.get("manual_navigation_challenge_id", ""))
+            challenge_nonce = str(payload.get("manual_navigation_nonce", ""))
+            challenge_hash = str(payload.get("manual_navigation_challenge_hash", ""))
+            prior_document_id = str(payload.get("manual_navigation_document_id", ""))
+            tab_id, _current_document_id = self._browser_context(payload)
+            if (
+                not MANUAL_CHALLENGE_PATTERN.fullmatch(challenge_id)
+                or challenge_id != lease.manual_challenge_id
+                or not challenge_nonce
+                or lease.manual_challenge_nonce is None
+                or not secrets.compare_digest(challenge_nonce, lease.manual_challenge_nonce)
+                or challenge_hash != lease.manual_challenge_hash
+                or tab_id != lease.navigation_tab_id
+                or prior_document_id != lease.navigation_document_id
+                or str(payload.get("manual_navigation_assist_id", "")) != lease.assist_id
+                or str(payload.get("manual_navigation_application_id", "")) != lease.application_id
+                or payload.get("manual_navigation_tab_id") != lease.navigation_tab_id
+                or str(payload.get("manual_navigation_stage", "")) != "MANUAL_NAVIGATION_REQUIRED"
+                or str(payload.get("manual_navigation_client_ref", "")) != lease.navigation_ref
+            ):
+                raise JobOpsError(
+                    "MANUAL_NAVIGATION_CHALLENGE_INVALID",
+                    "The manual navigation challenge does not match this application, tab, document, stage, or control.",
+                )
+            if (
+                lease.manual_challenge_expires_at is None
+                or parse_iso(lease.manual_challenge_expires_at) <= _now()
+            ):
+                lease.manual_challenge_consumed = True
+                raise JobOpsError(
+                    "MANUAL_NAVIGATION_CHALLENGE_EXPIRED",
+                    "The manual navigation challenge expired before the changed page was collected.",
+                )
+            event_hash = str(payload.get("event_hash", ""))
+            expected_event_hash = self._manual_event_hash(lease)
+            if (
+                not re.fullmatch(r"sha256:[a-f0-9]{64}", event_hash)
+                or not secrets.compare_digest(event_hash, expected_event_hash)
+            ):
+                raise JobOpsError(
+                    "MANUAL_NAVIGATION_EVIDENCE_INVALID",
+                    "The trusted click proof was not derived from the active one-use challenge.",
+                )
+            if (
+                str(payload.get("prior_page_content_hash", "")) != lease.navigation_snapshot_hash
+                or str(payload.get("control_semantics_hash", "")) != lease.navigation_control_semantics_hash
+            ):
+                raise JobOpsError("MANUAL_NAVIGATION_BINDING_INVALID", "The manual navigation evidence does not match the stopped page.")
+            # Consume before interpreting the destination.  Same-page,
+            # preventDefault, unrelated navigation and malformed-page attempts
+            # cannot replay this click proof against a later page.
+            lease.manual_challenge_consumed = True
+            signals = self._security_signals(payload)
+            if signals & HARD_SIGNAL_CODES:
+                raise JobOpsError(
+                    "BROWSER_SECURITY_STOP",
+                    "The changed page crossed the approved application boundary.",
+                    blockers=sorted(signals & HARD_SIGNAL_CODES),
+                )
+            bundle, context, _ = self._bundle_manager.load_current(lease.application_id)
+            live, _ = self._live_snapshot(
+                lease=lease,
+                payload=payload,
+                expected_snapshot=bundle["form_snapshot"],
+                enforce_initial_approval=False,
+            )
+            new_page_hash = str(live["page_content_hash"])
+            if not lease.current_page_hash or new_page_hash == lease.current_page_hash:
+                raise JobOpsError(
+                    "NAVIGATION_DID_NOT_ADVANCE",
+                    "The sanitized application page did not change after the manual click.",
+                )
+            if lease.current_step >= lease.max_steps:
+                raise JobOpsError("APPLICATION_STEP_LIMIT", "The application exceeded the maximum safe page count.")
+            lease.visited_page_hashes.add(lease.current_page_hash)
+            lease.current_step += 1
+            self._rotate_step_session(lease, context)
+            prior_page_hash = lease.current_page_hash
+            consumed_challenge_hash = lease.manual_challenge_hash
+            lease.status = "READY"
+            lease.prepared_hash = None
+            lease.current_page_hash = None
+            lease.current_page_kind = None
+            lease.navigation_ref = None
+            lease.navigation_token = None
+            lease.navigation_mode = None
+            lease.navigation_control_type = None
+            lease.navigation_control_semantics_hash = None
+            lease.navigation_snapshot_hash = None
+            lease.navigation_tab_id = None
+            lease.navigation_document_id = None
+            lease.manual_challenge_id = None
+            lease.manual_challenge_nonce = None
+            lease.manual_challenge_issued_at = None
+            lease.manual_challenge_expires_at = None
+            lease.manual_challenge_hash = None
+            lease.manual_challenge_consumed = False
+            now = iso_utc()
+            evidence_hash = _safe_hash({
+                "step": lease.current_step,
+                "origin": lease.allowed_page_origin,
+                "prior_page_hash": prior_page_hash,
+                "next_page_hash": new_page_hash,
+                "event_hash": event_hash,
+                "manual_challenge_hash": consumed_challenge_hash,
+                "performed_by": "USER",
+            })
+            with self.database.connect() as connection:
+                connection.execute("BEGIN IMMEDIATE")
+                connection.execute(
+                    """UPDATE browser_assist_runs
+                       SET status='READY',current_step=?,last_page_hash=NULL,updated_at=? WHERE assist_id=?""",
+                    (lease.current_step, now, lease.assist_id),
+                )
+                connection.execute(
+                    "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
+                    (lease.assist_id, lease.application_id, "MANUAL_NEXT_PAGE_OBSERVED", evidence_hash, now),
+                )
+            return {
+                "status": "NEXT_PAGE_READY",
+                "assist_id": lease.assist_id,
+                "application_id": lease.application_id,
+                "current_step": lease.current_step,
+                "max_steps": lease.max_steps,
+                "navigation_performed_by": "USER",
+                "next_page_content_hash": new_page_hash,
+                "submit_capability": False,
                 "automatic_retry": False,
             }
 
@@ -1467,6 +1940,7 @@ class BrowserAssistManager:
                     application_id=application_id,
                     session_id=str(row["session_id"]),
                     source_route={},
+                    source_identity_hash=_safe_hash(_source_identity_material(application_id, {})),
                     allowed_page_origin=str(row["allowed_origin"]),
                     provider="company",
                     route_kind="OFFICIAL_DIRECT",

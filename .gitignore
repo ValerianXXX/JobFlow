@@ -47,6 +47,7 @@ Thumbs.db
 *cookie*
 *token*
 *credential*
+browser-companion/binding.json
 
 # Private exports and local release bundles must never be committed accidentally.
 *.dpapi

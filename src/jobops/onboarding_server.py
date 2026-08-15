@@ -16,7 +16,8 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from .errors import JobOpsError
-from .browser_assist import BrowserAssistManager
+from .browser_assist import BrowserAssistManager, COMPANION_EXTENSION_VERSION, COMPANION_PROTOCOL_VERSION
+from .companion_binding import sign_pair_response, validate_pair_request
 from .instance_lock import local_instance_lock
 from .onboarding_center import (
     MAX_LARGE_EXPORT_BYTES,
@@ -203,6 +204,61 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         except ValueError as exc:
             raise JobOpsError("REQUEST_LENGTH_INVALID", "The local request length is invalid.") from exc
         return self._json_body()
+
+    def _companion_pair_body(self) -> dict[str, Any]:
+        payload = self._optional_json_body()
+        if (
+            set(payload) != {"protocol_version", "extension_version", "companion_binding"}
+            or payload.get("protocol_version") != COMPANION_PROTOCOL_VERSION
+            or payload.get("extension_version") != COMPANION_EXTENSION_VERSION
+            or not isinstance(payload.get("companion_binding"), dict)
+        ):
+            raise JobOpsError(
+                "BROWSER_COMPANION_UPDATE_REQUIRED",
+                "Reload the Browser Companion bundled with this JobFlow version.",
+                expected_version=COMPANION_EXTENSION_VERSION,
+            )
+        validate_pair_request(
+            payload["companion_binding"],
+            local_app_data=self._companion_local_app_data(),
+        )
+        return payload
+
+    def _companion_local_app_data(self) -> Path:
+        store = self.server.service.onboarding.store
+        configured = getattr(store, "local_app_data", None)
+        return Path(configured) if configured is not None else Path(store.private_root).parent.parent
+
+    def _companion_base_url(self) -> str:
+        host_value = self.headers.get("Host", "")
+        try:
+            parsed = urlparse(f"http://{host_value}")
+            hostname = (parsed.hostname or "").casefold()
+            port = parsed.port or self.server.server_port
+        except ValueError as exc:
+            raise JobOpsError("BROWSER_COMPANION_HOST_INVALID", "The local JobFlow host is invalid.") from exc
+        if hostname not in {"127.0.0.1", "localhost"} or port != self.server.server_port:
+            raise JobOpsError("BROWSER_COMPANION_HOST_INVALID", "The local JobFlow host is invalid.")
+        return f"http://{hostname}:{port}"
+
+    def _sign_companion_pair(
+        self,
+        *,
+        assist_path: str,
+        pair_request: dict[str, Any],
+        result: dict[str, Any],
+    ) -> dict[str, Any]:
+        signed = dict(result)
+        signed["companion_binding"] = sign_pair_response(
+            protocol_version=COMPANION_PROTOCOL_VERSION,
+            extension_version=COMPANION_EXTENSION_VERSION,
+            base_url=self._companion_base_url(),
+            assist_path=assist_path,
+            binding_request=pair_request["companion_binding"],
+            response=result,
+            local_app_data=self._companion_local_app_data(),
+        )
+        return signed
 
     def _binary_body_length(self, *, maximum: int, size_code: str, size_message: str) -> int:
         if self.headers.get("Transfer-Encoding") is not None:
@@ -460,8 +516,11 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             token, route_parts = intake
             try:
                 if route_parts == ["pair"]:
-                    self._optional_json_body()
+                    pair_request = self._companion_pair_body()
                     result = self.server.service.pair_guided_intake(token, extension_origin=origin)
+                    result = self._sign_companion_pair(
+                        assist_path=f"/intake/{token}", pair_request=pair_request, result=result,
+                    )
                 elif route_parts == ["capture-job"]:
                     result = self.server.service.capture_guided_job_page(
                         token, self._json_body(), extension_origin=origin,
@@ -488,8 +547,11 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             token, route_parts = assist
             try:
                 if route_parts == ["pair"]:
-                    self._optional_json_body()
+                    pair_request = self._companion_pair_body()
                     result = self.server.service.browser_assist.pair(token, extension_origin=origin)
+                    result = self._sign_companion_pair(
+                        assist_path=f"/assist/{token}", pair_request=pair_request, result=result,
+                    )
                 elif route_parts == ["prepare"]:
                     result = self.server.service.browser_assist.prepare(token, self._json_body(), extension_origin=origin)
                 elif route_parts == ["complete"]:
@@ -500,6 +562,10 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                     )
                 elif route_parts == ["navigation-observed"]:
                     result = self.server.service.browser_assist.navigation_observed(
+                        token, self._json_body(), extension_origin=origin,
+                    )
+                elif route_parts == ["resume-manual-navigation"]:
+                    result = self.server.service.browser_assist.resume_manual_navigation(
                         token, self._json_body(), extension_origin=origin,
                     )
                 elif route_parts == ["submit-observed"]:

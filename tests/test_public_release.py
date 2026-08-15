@@ -35,6 +35,19 @@ class PublicReleaseBoundaryTests(unittest.TestCase):
         ]
         self.assertEqual(validate_public_paths(sentinels), [])
 
+    def test_browser_companion_installation_bindings_are_never_public_paths(self) -> None:
+        paths = [
+            "browser-companion/binding.json",
+            "BrowserCompanion/binding.json",
+            "browser-companion-binding.json",
+            "nested/.browser-companion-binding-synthetic.tmp",
+        ]
+        findings = validate_public_paths(paths)
+        self.assertEqual(
+            {(item["kind"], item["path"]) for item in findings},
+            {("browser_companion_binding_tracked", path) for path in paths},
+        )
+
     def test_project_has_no_checked_in_git_metadata_before_initialization_fixture(self) -> None:
         self.assertTrue((PROJECT / ".jobops-root").is_file())
 
@@ -43,6 +56,11 @@ class PublicReleaseBoundaryTests(unittest.TestCase):
         unsafe_email = "contact" + chr(64) + "personal.invalid"
         findings = validate_public_text("unsafe.md", unsafe_email)
         self.assertEqual(findings, [{"kind": "email", "path": "unsafe.md"}])
+        binding = '{"secret_b64url":"' + "A" * 43 + '"}'
+        self.assertEqual(
+            validate_public_text("renamed.json", binding),
+            [{"kind": "browser_companion_binding_secret", "path": "renamed.json"}],
+        )
 
     def test_deleted_secret_is_still_found_in_git_history(self) -> None:
         with project_temp() as temp:
