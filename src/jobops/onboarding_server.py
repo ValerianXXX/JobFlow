@@ -526,8 +526,13 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                         token, self._json_body(), extension_origin=origin,
                     )
                 elif route_parts == ["capture-form"]:
-                    result = self.server.service.capture_guided_application_form(
+                    result = self.server.service.start_guided_application_form_preparation(
                         token, self._json_body(), extension_origin=origin,
+                    )
+                elif route_parts == ["capture-form-status"]:
+                    self._optional_json_body()
+                    result = self.server.service.guided_application_form_preparation_status(
+                        token, extension_origin=origin,
                     )
                 else:
                     self._send_assist_json(HTTPStatus.NOT_FOUND, {"status": "NOT_FOUND"}, origin)

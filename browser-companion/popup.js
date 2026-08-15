@@ -6,7 +6,7 @@ const copy = {
     reconnect: "连接当前 JobFlow 页面", returnToJobFlow: "请先返回 JobFlow 页面", reconnecting: "正在恢复本机配对……", reconnectFailed: "当前 JobFlow 页面没有待配对任务。请先点击页面中的连接按钮。",
     paired: "已配对：返回已批准的公司/ATS 申请页。", fill: "分析并填写当前页", continue: "检查后进入下一页", resume: "我已完成登录/验证，继续", manualNext: "我已亲自点击下一步，继续",
     capturePaired: "岗位导入已配对。JobFlow 只读取你主动选择的两个页面。", captureJob: "读取当前公司岗位页", captureForm: "读取当前申请表并生成审阅包",
-    captureWorking: "正在本机读取并核对当前页面……", captureNext: "岗位页已读取。请亲自点击公司页面的 Apply，再在申请表页打开 J 图标。", captureReady: "审阅包已生成。返回 JobFlow 完成一次审阅。",
+    captureWorking: "正在本机读取并核对当前页面……", capturePreparing: "本机 AI 正在后台生成审阅包，可能需要几分钟。你可以关闭这个小窗口；完成后 JobFlow 会自动更新。", captureNext: "岗位页已读取。请亲自点击公司页面的 Apply，再在申请表页打开 J 图标。", captureReady: "审阅包已生成。返回 JobFlow 完成一次审阅。", localTimeout: "本机 JobFlow 暂时没有响应。请保持 JobFlow 窗口运行，然后重试；系统不会自动重复生成或执行外部操作。",
     captureBoundary: "导入阶段只读取当前岗位页和表单结构，不填写、不上传、不点击网页按钮，也不读取密码、验证码或现有输入值。",
     boundary: "JobFlow 可在你在场时逐页填写并点击明确的 Next/Continue，但绝不会点击最终 Submit、创建账号或绕过验证码。最终提交只能由你亲自点击。",
     working: "正在核对表单、预填并附加材料……", wrong: "请先打开 JobFlow 指定的公司申请页面。",
@@ -19,7 +19,7 @@ const copy = {
     reconnect: "Connect this JobFlow page", returnToJobFlow: "Return to the JobFlow page first", reconnecting: "Restoring the local pairing…", reconnectFailed: "This JobFlow page has no pending pairing. Choose its Connect button first.",
     paired: "Paired. Return to the approved company/ATS application page.", fill: "Analyze and fill this page", continue: "Review, then continue", resume: "Login/verification done — resume", manualNext: "I clicked Next — continue here",
     capturePaired: "Guided job import is paired. JobFlow reads only the two pages you explicitly choose.", captureJob: "Read this company job page", captureForm: "Read this application form and build review packet",
-    captureWorking: "Reading and validating this page locally…", captureNext: "Job page captured. Click Apply on the company page yourself, then open J again on the application form.", captureReady: "The review packet is ready. Return to JobFlow for one review.",
+    captureWorking: "Reading and validating this page locally…", capturePreparing: "Local AI is building the review packet in the background and may need several minutes. You may close this popup; JobFlow updates automatically when it finishes.", captureNext: "Job page captured. Click Apply on the company page yourself, then open J again on the application form.", captureReady: "The review packet is ready. Return to JobFlow for one review.", localTimeout: "Local JobFlow did not respond in time. Keep the JobFlow window running and try again; no preparation or external action will be repeated automatically.",
     captureBoundary: "Import is read-only: no field fill, upload, page click, password, verification code, or existing input value is read or changed.",
     boundary: "While you are present, JobFlow may fill each page and activate an explicit Next/Continue control. It never clicks final Submit, creates an account, or bypasses verification. Only you submit.",
     working: "Matching the page, filling approved fields, and attaching materials…", wrong: "Open the application page selected by JobFlow first.",
@@ -67,6 +67,7 @@ async function refresh() {
   status = await chrome.runtime.sendMessage({type: "JOBFLOW_GET_STATUS"});
   render();
   if (status?.mode === "JOB_CAPTURE" && status?.status === "AWAITING_APPLICATION_FORM_CAPTURE") elements.message.textContent = copy[locale].captureNext;
+  else if (status?.mode === "JOB_CAPTURE" && status?.status === "PREPARING_APPLICATION") elements.message.textContent = copy[locale].capturePreparing;
   else if (status?.mode === "JOB_CAPTURE" && ["REVIEW_PACKET_READY", "DEFERRED"].includes(status?.status)) elements.message.textContent = copy[locale].captureReady;
   else if (status?.last_result?.status === "AWAITING_USER_SUBMIT") elements.message.textContent = copy[locale].done;
   else if (status?.status === "HANDOFF_REQUIRED") elements.message.textContent = copy[locale].handoff;
@@ -113,13 +114,13 @@ elements.fill.addEventListener("click", async () => {
     const type = capture ? "JOBFLOW_CAPTURE_CURRENT" : status?.status === "PAGE_REVIEW_REQUIRED" ? "JOBFLOW_CONTINUE_CURRENT" : "JOBFLOW_FILL_CURRENT";
     const result = await chrome.runtime.sendMessage({type, tab_id: tab.id, tab_url: tab.url});
     const allowed = capture
-      ? ["AWAITING_APPLICATION_FORM_CAPTURE", "REVIEW_PACKET_READY", "DEFERRED"]
+      ? ["AWAITING_APPLICATION_FORM_CAPTURE", "PREPARING_APPLICATION", "REVIEW_PACKET_READY", "DEFERRED"]
       : ["AWAITING_USER_SUBMIT", "PAGE_REVIEW_REQUIRED", "MANUAL_NAVIGATION_REQUIRED", "HANDOFF_REQUIRED", "NAVIGATION_STARTED"];
     if (!result || !allowed.includes(result.status)) {
-      throw new Error(result?.message || result?.code || "JobFlow blocked the operation.");
+      throw new Error(result?.code === "COMPANION_LOCAL_REQUEST_TIMEOUT" ? copy[locale].localTimeout : (result?.message || result?.code || "JobFlow blocked the operation."));
     }
     elements.message.textContent = capture
-      ? (result.status === "AWAITING_APPLICATION_FORM_CAPTURE" ? copy[locale].captureNext : copy[locale].captureReady)
+      ? (result.status === "AWAITING_APPLICATION_FORM_CAPTURE" ? copy[locale].captureNext : result.status === "PREPARING_APPLICATION" ? copy[locale].capturePreparing : copy[locale].captureReady)
       : result.status === "AWAITING_USER_SUBMIT" ? copy[locale].done :
       result.status === "HANDOFF_REQUIRED" ? copy[locale].handoff :
       result.status === "MANUAL_NAVIGATION_REQUIRED" ? copy[locale].manualResume :

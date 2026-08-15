@@ -700,6 +700,11 @@ class OnboardingCenterService:
         self.index_path = self.project / "state" / "onboarding-center-index.json"
         self._lock = threading.RLock()
         self._guided_intakes: dict[str, dict[str, Any]] = {}
+        # Form analysis can include local AI and document rendering.  Keep its
+        # progress outside the main service lock so the Browser Companion can
+        # poll with short requests while the bounded local job is running.
+        self._guided_form_jobs_lock = threading.Lock()
+        self._guided_form_jobs: dict[str, dict[str, Any]] = {}
 
     def _latest_ref(self, kind: str) -> str | None:
         with self.database.connect() as connection:
@@ -1417,6 +1422,139 @@ class OnboardingCenterService:
             raise JobOpsError("GUIDED_INTAKE_EXPIRED", "This guided job-import session expired. Start it again.")
         return lease
 
+    @staticmethod
+    def _guided_form_job_result(job: dict[str, Any]) -> dict[str, Any]:
+        result = job.get("result")
+        if isinstance(result, dict):
+            return deepcopy(result)
+        return {
+            "status": "PREPARING_APPLICATION",
+            "mode": "JOB_CAPTURE",
+            "intake_id": str(job["intake_id"]),
+            "retry_after_ms": 3000,
+            "automatic_retry": False,
+            "real_external_actions": 0,
+        }
+
+    def _run_guided_application_form_job(
+        self,
+        token: str,
+        job_id: str,
+        payload: dict[str, Any],
+        extension_origin: str,
+    ) -> None:
+        try:
+            result = self.capture_guided_application_form(
+                token, payload, extension_origin=extension_origin,
+            )
+        except Exception as exc:
+            if isinstance(exc, JobOpsError):
+                failure = exc.as_dict()
+            else:
+                failure = {
+                    "status": "BLOCKED",
+                    "code": "LOCAL_PREPARATION_FAILED",
+                    "message": "The local application review packet could not be prepared.",
+                    "details": {},
+                }
+            result = {
+                **failure,
+                "status": "FORM_CAPTURE_FAILED",
+                "mode": "JOB_CAPTURE",
+                "automatic_retry": False,
+                "real_external_actions": 0,
+            }
+        with self._guided_form_jobs_lock:
+            current = self._guided_form_jobs.get(token)
+            if current is None or current.get("job_id") != job_id:
+                return
+            result = {
+                **result,
+                "intake_id": str(current["intake_id"]),
+                "mode": "JOB_CAPTURE",
+                "automatic_retry": False,
+                "real_external_actions": 0,
+            }
+            current["result"] = deepcopy(result)
+            current["finished_epoch"] = time.time()
+
+    def start_guided_application_form_preparation(
+        self, token: str, payload: dict[str, Any], *, extension_origin: str | None,
+    ) -> dict[str, Any]:
+        if not BrowserAssistManager.extension_origin_allowed(extension_origin):
+            raise JobOpsError(
+                "BROWSER_COMPANION_ORIGIN_FORBIDDEN",
+                "Only the fixed JobFlow Browser Companion may capture a page.",
+            )
+        with self._guided_form_jobs_lock:
+            existing = self._guided_form_jobs.get(token)
+            if existing is not None and existing.get("result") is None:
+                return self._guided_form_job_result(existing)
+            if existing is not None and str(existing.get("result", {}).get("status")) in {
+                "REVIEW_PACKET_READY", "DEFERRED",
+            }:
+                return self._guided_form_job_result(existing)
+        with self._lock:
+            lease = self._guided_lease(token)
+            if not lease.get("paired") or lease.get("status") not in {
+                "AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED", "PREPARING_APPLICATION",
+            }:
+                raise JobOpsError(
+                    "GUIDED_INTAKE_STAGE_INVALID",
+                    "Capture the company job page before the application form.",
+                )
+            intake_id = str(lease["intake_id"])
+            expires_epoch = float(lease["expires_epoch"])
+        with self._guided_form_jobs_lock:
+            existing = self._guided_form_jobs.get(token)
+            if existing is not None and existing.get("result") is None:
+                return self._guided_form_job_result(existing)
+            if existing is not None and str(existing.get("result", {}).get("status")) in {
+                "REVIEW_PACKET_READY", "DEFERRED",
+            }:
+                return self._guided_form_job_result(existing)
+            job_id = secrets.token_urlsafe(24)
+            job = {
+                "job_id": job_id,
+                "intake_id": intake_id,
+                "expires_epoch": expires_epoch,
+                "started_epoch": time.time(),
+                "result": None,
+            }
+            self._guided_form_jobs[token] = job
+        worker = threading.Thread(
+            target=self._run_guided_application_form_job,
+            args=(token, job_id, deepcopy(payload), str(extension_origin)),
+            name=f"jobflow-guided-form-{intake_id}",
+            daemon=True,
+        )
+        worker.start()
+        return self._guided_form_job_result(job)
+
+    def guided_application_form_preparation_status(
+        self, token: str, *, extension_origin: str | None,
+    ) -> dict[str, Any]:
+        if not BrowserAssistManager.extension_origin_allowed(extension_origin):
+            raise JobOpsError(
+                "BROWSER_COMPANION_ORIGIN_FORBIDDEN",
+                "Only the fixed JobFlow Browser Companion may inspect local preparation status.",
+            )
+        if not re.fullmatch(r"[A-Za-z0-9_-]{40,}", token):
+            raise JobOpsError("GUIDED_INTAKE_TOKEN_INVALID", "The guided job-import session is invalid.")
+        with self._guided_form_jobs_lock:
+            job = self._guided_form_jobs.get(token)
+            if job is None:
+                raise JobOpsError(
+                    "GUIDED_INTAKE_PREPARATION_NOT_FOUND",
+                    "The local preparation job is no longer available. Start this job import again.",
+                )
+            if time.time() >= float(job["expires_epoch"]):
+                raise JobOpsError(
+                    "GUIDED_INTAKE_EXPIRED",
+                    "This guided job-import session expired. Start it again.",
+                )
+            return self._guided_form_job_result(job)
+
     def _guided_public_status(self) -> dict[str, Any]:
         expired = [
             token for token, lease in self._guided_intakes.items()
@@ -1497,6 +1635,8 @@ class OnboardingCenterService:
         ]
         for old_token, old_lease in replaced:
             self._guided_intakes.pop(old_token, None)
+            with self._guided_form_jobs_lock:
+                self._guided_form_jobs.pop(old_token, None)
             self._guided_event(
                 str(old_lease["intake_id"]), "FAILED",
                 {"prior_status": str(old_lease.get("status", "UNKNOWN")), "reason": "USER_RECONNECTED"},
@@ -1565,6 +1705,8 @@ class OnboardingCenterService:
                 automatic_retry=False,
             )
         self._guided_intakes.pop(token, None)
+        with self._guided_form_jobs_lock:
+            self._guided_form_jobs.pop(token, None)
         lease["job_page"] = None
         self._guided_event(
             intake_id,

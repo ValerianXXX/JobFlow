@@ -5,6 +5,7 @@ const EXTENSION_VERSION = chrome.runtime.getManifest().version;
 const SESSION_KEY = "jobflowAssist";
 const RESULT_ALARM = "jobflow-result-observer";
 const NAVIGATION_ALARM = "jobflow-navigation-observer";
+const GUIDED_PREPARATION_ALARM = "jobflow-guided-preparation-observer";
 const NAVIGATION_SETTLE_MS = 20000;
 const BINDING_SCHEMA_VERSION = 1;
 const BINDING_ALGORITHM = "HMAC-SHA256";
@@ -36,7 +37,8 @@ const TERMINAL_STAGES = new Set([
 ]);
 const SAFE_REPAIR_STAGES = new Set([
   "PAIRING", "BROWSER_COMPANION_PAIRED", "GUIDED_INTAKE_PAIRED",
-  "AWAITING_JOB_PAGE_CAPTURE", "AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED"
+  "AWAITING_JOB_PAGE_CAPTURE", "AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED",
+  "PREPARING_APPLICATION"
 ]);
 
 function withSessionLock(operation) {
@@ -428,7 +430,7 @@ function publicResult(result) {
     "allowed_page_origin", "allowed_company_domain", "provider", "route_kind",
     "current_step", "max_steps", "capture_status", "handoff_kind", "manual_field_count",
     "expires_at", "automatic_retry", "real_external_actions", "submit_capability",
-    "final_submit", "poll_count"
+    "final_submit", "poll_count", "retry_after_ms"
   ]) {
     if (["string", "number", "boolean"].includes(typeof result[key])) safe[key] = result[key];
   }
@@ -482,6 +484,9 @@ async function pairWithJobFlow(pairing, senderOrigin, senderTabId = null) {
       last_result: result
     });
     await assertCurrentSession(state);
+    if (state.mode === "JOB_CAPTURE" && state.stage === "PREPARING_APPLICATION") {
+      chrome.alarms.create(GUIDED_PREPARATION_ALARM, {delayInMinutes: 0.05});
+    }
     return {...publicResult(result), protocol_version: PROTOCOL, extension_version: EXTENSION_VERSION};
   } catch (error) {
     await restorePairingReservation(reservation);
@@ -567,6 +572,16 @@ async function postJSON(url, body = {}, timeoutMs = 15000) {
       redirect: "error",
       signal: controller.signal
     });
+  } catch (error) {
+    if (controller.signal.aborted || error?.name === "AbortError") {
+      throw Object.assign(new Error("The local JobFlow request timed out."), {
+        jobflow: {
+          status: "BLOCKED", code: "COMPANION_LOCAL_REQUEST_TIMEOUT",
+          message: "The local JobFlow request timed out.", automatic_retry: false
+        }
+      });
+    }
+    throw error;
   } finally {
     clearTimeout(timer);
   }
@@ -579,6 +594,56 @@ async function postJSON(url, body = {}, timeoutMs = 15000) {
     throw error;
   }
   return value;
+}
+
+async function pollGuidedPreparation(snapshot = null) {
+  let state = snapshot ? await assertCurrentSession(snapshot) : await sessionState();
+  if (!state || state.mode !== "JOB_CAPTURE" || state.stage !== "PREPARING_APPLICATION") return null;
+  let result;
+  try {
+    result = await postJSON(endpoint(state, "/capture-form-status"), {});
+  } catch (error) {
+    state = await assertCurrentSession(state, {stages: ["PREPARING_APPLICATION"]});
+    const failures = Number(state.preparation_poll_failures || 0) + 1;
+    if (!error?.jobflow && failures < 5) {
+      const pending = await saveSessionCAS(state, {...state, preparation_poll_failures: failures});
+      chrome.alarms.create(GUIDED_PREPARATION_ALARM, {delayInMinutes: 0.05});
+      return publicSessionStatus(pending);
+    }
+    const failure = {
+      ...publicError(error), status: "FORM_CAPTURE_FAILED",
+      intake_id: state.intake_id, mode: "JOB_CAPTURE",
+      automatic_retry: false, real_external_actions: 0
+    };
+    const failed = await saveSessionCAS(state, {
+      ...state, stage: "FORM_CAPTURE_FAILED", last_result: failure,
+      preparation_poll_failures: failures
+    });
+    await notifyJobFlow(failure, "JOBFLOW_INTAKE_STATUS", failed);
+    return failure;
+  }
+  state = await assertCurrentSession(state, {stages: ["PREPARING_APPLICATION"]});
+  if (result?.status === "PREPARING_APPLICATION") {
+    chrome.alarms.create(GUIDED_PREPARATION_ALARM, {
+      delayInMinutes: Math.max(0.05, Math.min(Number(result.retry_after_ms || 3000) / 60000, 0.25))
+    });
+    return result;
+  }
+  const accepted = new Set(["REVIEW_PACKET_READY", "DEFERRED", "FORM_CAPTURE_FAILED"]);
+  if (!accepted.has(result?.status)) {
+    result = {
+      status: "FORM_CAPTURE_FAILED", code: "COMPANION_PREPARATION_STATUS_INVALID",
+      message: "JobFlow returned an invalid local preparation status.",
+      intake_id: state.intake_id, mode: "JOB_CAPTURE",
+      automatic_retry: false, real_external_actions: 0
+    };
+  }
+  const next = await saveSessionCAS(state, {
+    ...state, stage: result.status, application_id: result.application_id,
+    last_result: result, preparation_poll_failures: 0
+  });
+  await notifyJobFlow(result, "JOBFLOW_INTAKE_STATUS", next);
+  return result;
 }
 
 async function notifyJobFlow(result, messageType = "JOBFLOW_ASSIST_STATUS", snapshot = null) {
@@ -668,8 +733,14 @@ async function captureGuidedCurrentTab(tabId, tabUrl) {
       await notifyJobFlow(failure, "JOBFLOW_INTAKE_STATUS", failed);
       throw error;
     }
-    const next = await saveSessionCAS(state, {...state, stage: result.status, application_id: result.application_id, last_result: result});
+    const next = await saveSessionCAS(state, {
+      ...state, stage: result.status, application_id: result.application_id,
+      last_result: result, preparation_poll_failures: 0
+    });
     await notifyJobFlow(result, "JOBFLOW_INTAKE_STATUS", next);
+    if (result.status === "PREPARING_APPLICATION") {
+      chrome.alarms.create(GUIDED_PREPARATION_ALARM, {delayInMinutes: 0.05});
+    }
     return result;
   }
   throw Object.assign(new Error("This guided import is not waiting for another page."), {
@@ -1231,6 +1302,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   const state = await sessionState();
+  if (alarm.name === GUIDED_PREPARATION_ALARM && state?.mode === "JOB_CAPTURE") {
+    await pollGuidedPreparation(state).catch(async (error) => {
+      const current = await sessionState();
+      if (sameGeneration(current, state)) {
+        await notifyJobFlow(publicError(error), "JOBFLOW_INTAKE_STATUS", current).catch(() => undefined);
+      }
+    });
+  }
   if (alarm.name === RESULT_ALARM && state?.tab_id) await observeResult(state.tab_id);
   if (alarm.name === NAVIGATION_ALARM && state?.tab_id) {
     const tab = await chrome.tabs.get(state.tab_id).catch(() => null);

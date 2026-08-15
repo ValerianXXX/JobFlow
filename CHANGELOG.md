@@ -6,6 +6,11 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+## [0.2.4] - release candidate / 发布候选
+
+- Guided application-form analysis now starts one idempotent local background job and uses short Browser Companion status polls. Multi-minute AI and document preparation no longer fails at the former 15-second request limit, and raw browser `AbortSignal` messages are replaced by bilingual local guidance.
+- 申请表分析现在只启动一个幂等的本机后台任务，并由浏览器伴侣用短请求查询进度。耗时数分钟的 AI 与文档生成不再被原来的 15 秒请求上限中断，浏览器原始 `AbortSignal` 异常也改为中英双语本机提示。
+
 ## [0.2.3] - release candidate / 发布候选
 
 - Fixed the real onboarding path where a DOCX selected as the editable Master Resume was retained as an encrypted onboarding source and then incorrectly rejected during application review-packet preparation. Acceptance remains bound to the exact onboarding state, applicant-approved Claim set, DOCX designation, and content hash.

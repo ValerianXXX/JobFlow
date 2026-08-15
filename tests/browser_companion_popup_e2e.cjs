@@ -48,12 +48,18 @@ const sandbox = {
   },
   chrome: {
     runtime: {
-      getManifest() { return {version: "0.6.1"}; },
+      getManifest() { return {version: "0.6.2"}; },
       async sendMessage(message) {
         runtimeMessages.push(message);
         if (message.type === "JOBFLOW_GET_STATUS") return pairedStatus;
         if (message.type === "JOBFLOW_CAPTURE_CURRENT") {
-          return {status: "AWAITING_APPLICATION_FORM_CAPTURE", intake_id: pairedStatus.intake_id};
+          const result = {
+            status: pairedStatus.status === "AWAITING_APPLICATION_FORM_CAPTURE"
+              ? "PREPARING_APPLICATION" : "AWAITING_APPLICATION_FORM_CAPTURE",
+            intake_id: pairedStatus.intake_id
+          };
+          pairedStatus = {...pairedStatus, status: result.status};
+          return result;
         }
         throw new Error(`Unexpected message: ${message.type}`);
       }
@@ -97,6 +103,18 @@ vm.runInContext(source, sandbox, {filename: "popup.js"});
   );
   assert.equal(permissionRequests, 0, "optional host permission denial must not be consulted or block activeTab");
   assert.equal(elements.message.textContent.includes("Apply"), true, "the successful capture should advance the user instruction");
+
+  pairedStatus = {
+    status: "AWAITING_APPLICATION_FORM_CAPTURE",
+    paired: true,
+    mode: "JOB_CAPTURE",
+    intake_id: "GIN-POPUP-ACTIVE-TAB",
+    allowed_company_domain: "example.test"
+  };
+  await vm.runInContext("refresh()", sandbox);
+  await elements.fill.listeners.click[0]();
+  assert.match(elements.message.textContent, /后台生成审阅包/);
+  assert.equal(elements.fill.disabled, true, "background preparation must not be started twice");
 
   pairedStatus = {
     status: "MANUAL_NAVIGATION_RESTART_REQUIRED",

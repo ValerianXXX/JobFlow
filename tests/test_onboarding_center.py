@@ -1743,6 +1743,61 @@ class OnboardingCenterTests(unittest.TestCase):
                 server.server_close()
                 thread.join(timeout=5)
 
+    def test_guided_form_http_returns_quick_start_then_poll_result(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            server = create_server(service, token="synthetic-session-token")
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            token = "a" * 54
+            body = json.dumps({
+                "url": "https://apply.example.test/form",
+                "sanitized_html": "<form><input name='first-name'></form>",
+                "blocker_signals": [],
+            }).encode("utf-8")
+            headers = {
+                "Origin": COMPANION_EXTENSION_ORIGIN,
+                "Content-Type": "application/json",
+                "Content-Length": str(len(body)),
+            }
+            try:
+                with (
+                    mock.patch.object(service, "start_guided_application_form_preparation", return_value={
+                        "status": "PREPARING_APPLICATION", "mode": "JOB_CAPTURE",
+                        "intake_id": "GIN-123456789ABC", "retry_after_ms": 3000,
+                        "automatic_retry": False, "real_external_actions": 0,
+                    }) as start,
+                    mock.patch.object(service, "guided_application_form_preparation_status", return_value={
+                        "status": "REVIEW_PACKET_READY", "mode": "JOB_CAPTURE",
+                        "intake_id": "GIN-123456789ABC", "application_id": "APP-123456789ABC",
+                        "automatic_retry": False, "real_external_actions": 0,
+                    }) as status,
+                ):
+                    connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                    connection.request("POST", f"/intake/{token}/capture-form", body=body, headers=headers)
+                    start_response = connection.getresponse()
+                    start_payload = json.loads(start_response.read())
+                    self.assertEqual(start_response.status, 200)
+                    self.assertEqual(start_payload["status"], "PREPARING_APPLICATION")
+                    self.assertEqual(start_response.headers["Access-Control-Allow-Origin"], COMPANION_EXTENSION_ORIGIN)
+                    poll_body = b"{}"
+                    connection.request(
+                        "POST", f"/intake/{token}/capture-form-status", body=poll_body,
+                        headers={**headers, "Content-Length": str(len(poll_body))},
+                    )
+                    poll_response = connection.getresponse()
+                    poll_payload = json.loads(poll_response.read())
+                    connection.close()
+                    self.assertEqual(poll_response.status, 200)
+                    self.assertEqual(poll_payload["status"], "REVIEW_PACKET_READY")
+                    self.assertEqual(poll_payload["application_id"], "APP-123456789ABC")
+                    start.assert_called_once()
+                    status.assert_called_once_with(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
     def test_local_binary_upload_transport_fails_closed(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
@@ -2039,7 +2094,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("windows-hermes-v1", html)
+        self.assertIn("guided-background-v1", html)
 
 
 if __name__ == "__main__":

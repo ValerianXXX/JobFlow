@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import shutil
 import tempfile
+import threading
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -346,7 +348,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                     "SELECT COUNT(*) FROM guided_intake_events WHERE intake_id=? AND event_type='PAIRED'",
                     (paired["intake_id"],),
                 ).fetchone()[0], 1)
-            prepared = service.capture_guided_application_form(
+            prepared = service.start_guided_application_form_preparation(
                 token,
                 {
                     "url": "https://example.com/careers/apply/synthetic-data-analyst",
@@ -355,6 +357,15 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 },
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
+            self.assertEqual(prepared["status"], "PREPARING_APPLICATION")
+            deadline = time.time() + 120
+            while time.time() < deadline:
+                prepared = service.guided_application_form_preparation_status(
+                    token, extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+                if prepared["status"] != "PREPARING_APPLICATION":
+                    break
+                time.sleep(0.05)
             self.assertEqual(prepared["status"], "REVIEW_PACKET_READY")
             packet = service.review_packet(str(prepared["application_id"]))
             self.assertEqual(packet["application_id"], prepared["application_id"])
@@ -378,6 +389,75 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             audit = audit_real_external_actions(database)
             self.assertEqual(audit["attempt_count"], 0)
             self.assertEqual(audit["real_external_actions"], 0)
+
+    def test_guided_form_preparation_runs_once_in_background_and_is_pollable(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            token = "a" * 54
+            intake_id = "GIN-123456789ABC"
+            service._guided_intakes[token] = {
+                "token": token,
+                "intake_id": intake_id,
+                "official_url": "https://example.com/careers/synthetic-role",
+                "company_domain": "example.com",
+                "started_epoch": time.time(),
+                "expires_epoch": time.time() + 1800,
+                "expires_at": "2099-01-01T00:00:00Z",
+                "paired": True,
+                "status": "AWAITING_APPLICATION_FORM_CAPTURE",
+                "job_page": {"visible_text": "Synthetic role details", "title": "Synthetic role"},
+            }
+            entered = threading.Event()
+            release = threading.Event()
+            calls = []
+
+            def slow_preparation(*args, **kwargs):
+                calls.append((args, kwargs))
+                entered.set()
+                self.assertTrue(release.wait(5))
+                return {
+                    "status": "REVIEW_PACKET_READY",
+                    "application_id": "APP-123456789ABC",
+                    "real_external_actions": 0,
+                }
+
+            with mock.patch.object(service, "capture_guided_application_form", side_effect=slow_preparation):
+                started = service.start_guided_application_form_preparation(
+                    token,
+                    {"url": "https://example.com/apply", "sanitized_html": "<form><input></form>"},
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+                self.assertEqual(started["status"], "PREPARING_APPLICATION")
+                self.assertTrue(entered.wait(2))
+                pending = service.guided_application_form_preparation_status(
+                    token, extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+                self.assertEqual(pending["status"], "PREPARING_APPLICATION")
+                repeated = service.start_guided_application_form_preparation(
+                    token,
+                    {"url": "https://example.com/other", "sanitized_html": "<form><input></form>"},
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+                self.assertEqual(repeated["status"], "PREPARING_APPLICATION")
+                self.assertEqual(len(calls), 1, "polling or repeat clicks must not start a second preparation")
+                release.set()
+                deadline = time.time() + 5
+                result = pending
+                while time.time() < deadline:
+                    result = service.guided_application_form_preparation_status(
+                        token, extension_origin=COMPANION_EXTENSION_ORIGIN,
+                    )
+                    if result["status"] != "PREPARING_APPLICATION":
+                        break
+                    time.sleep(0.02)
+            self.assertEqual(result["status"], "REVIEW_PACKET_READY")
+            self.assertEqual(result["application_id"], "APP-123456789ABC")
+            self.assertEqual(result["intake_id"], intake_id)
+            self.assertFalse(result["automatic_retry"])
+            self.assertEqual(result["real_external_actions"], 0)
+            self.assertEqual(len(calls), 1)
 
     def test_guided_browser_intake_can_replace_an_unrecoverable_pairing_lease(self) -> None:
         with project_temp() as temp:

@@ -10,7 +10,7 @@ const STRINGS = {
     companionSessionActive: "另一种浏览器任务仍在进行中。请先完成或明确停止它，再开始这个任务。",
     guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认扩展已启用并重新加载当前版本；无需把网站权限改成“在所有网站上”。",
     guidedExtensionOutdated: "浏览器伴侣版本不匹配。请重新运行安装命令，并在扩展管理页重新加载安装器打开的本机 BrowserCompanion 目录。",
-    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.6.1，然后刷新 JobFlow。",
+    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.6.2，然后刷新 JobFlow。",
     browserAssistRestartRequired: "扩展已重载，本次辅助已安全停止。请重新打开这份申请的起始页，再建立一次连接；JobFlow 没有自动重试 Next/Continue。",
     browserAssistManualRestart: "这次一次性下一步证明没有安全建立。请结束并重新启动这项申请辅助；JobFlow 不会自动重试。",
     browserAssistReloadUnknown: "扩展在最终提交等待阶段被重载，结果已安全标记为未知。请回答“是否提交成功”；JobFlow 不会自动重试。",
@@ -67,7 +67,7 @@ const STRINGS = {
     companionSessionActive: "Another browser task is still active. Complete or explicitly stop it before starting this task.",
     guidedExtensionMissing: "The browser companion did not respond. Confirm the current extension is enabled and reloaded; you do not need to grant access on every website.",
     guidedExtensionOutdated: "The Browser Companion version does not match. Run the installer again and reload the Local AppData BrowserCompanion folder it opens.",
-    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.6.1, then refresh JobFlow.",
+    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.6.2, then refresh JobFlow.",
     browserAssistRestartRequired: "The extension reloaded, so this assist stopped safely. Reopen the approved application start page and connect again. JobFlow did not retry Next/Continue.",
     browserAssistManualRestart: "The one-use Next proof was not armed safely. End this application assist and start it again. JobFlow will not retry automatically.",
     browserAssistReloadUnknown: "The extension reloaded during the final-submit window, so the result is safely marked unknown. Answer whether submission succeeded; JobFlow will not retry.",
@@ -120,7 +120,7 @@ const STRINGS = {
 const UI_PROTOCOL_VERSION = 25;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj";
-const COMPANION_VERSION = "0.6.1";
+const COMPANION_VERSION = "0.6.2";
 const COMPANION_PAIRING_STORAGE = "jobflow-companion-pairing-v2";
 const COMPANION_POLL_BASE_MS = 1500;
 const COMPANION_POLL_MAX_MS = 12000;

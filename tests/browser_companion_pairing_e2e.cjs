@@ -12,12 +12,14 @@ const listeners = {};
 const session = {};
 const fetches = [];
 const notifications = [];
+const alarmCreates = [];
 let tabQueryResults = [];
 let failResultCollection = false;
 let delayNextPair = false;
 let releaseDelayedPair = null;
 let invalidNextProof = false;
 let tamperNextProvider = false;
+let guidedPreparationPolls = 0;
 const installationId = "0123456789abcdef0123456789abcdef";
 const installationSecret = Buffer.alloc(32, 0x5a);
 
@@ -54,7 +56,7 @@ function signedPairResult(url, options) {
     assist_path: assistPath,
     base_url: parsed.origin,
     challenge: String(body.companion_binding.challenge),
-    extension_version: "0.6.1",
+    extension_version: "0.6.2",
     installation_id: String(body.companion_binding.installation_id),
     protocol_version: "2"
   };
@@ -79,7 +81,7 @@ function signedPairResult(url, options) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.6.1"}; },
+    getManifest() { return {version: "0.6.2"}; },
     getURL(pathname) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${pathname}`; },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },
@@ -92,6 +94,14 @@ const chrome = {
     async query() { return tabQueryResults; },
     async sendMessage(tabId, message) {
       if (failResultCollection && message?.type === "JOBFLOW_COLLECT_RESULT") throw new Error("SYNTHETIC_PAGE_GONE");
+      if (message?.type === "JOBFLOW_COLLECT_FORM") return {
+        status: "COLLECTED",
+        payload: {
+          url: "https://apply.example.test/application",
+          sanitized_html: "<form><input name='first-name'></form>",
+          blocker_signals: []
+        }
+      };
       notifications.push({tabId, message});
       return {status: "IGNORED"};
     },
@@ -99,7 +109,7 @@ const chrome = {
     onUpdated: event("tabUpdated")
   },
   scripting: {async executeScript() {}},
-  alarms: {create() {}, onAlarm: event("alarm")}
+  alarms: {create(name, details) { alarmCreates.push({name, details}); }, onAlarm: event("alarm")}
 };
 
 const sandbox = {
@@ -119,6 +129,25 @@ const sandbox = {
         automatic_retry: false, real_external_actions: 0,
         navigation: {authorization_token: "MUST-NOT-LEAK"},
         fields: [{value: "MUST-NOT-LEAK"}], files: [{download_path: "/private/material"}]
+      }; }};
+    }
+    if (String(url).endsWith("/capture-form")) {
+      return {ok: true, async json() { return {
+        status: "PREPARING_APPLICATION", mode: "JOB_CAPTURE",
+        intake_id: "GIN-SYNTHETIC-PAIRING", retry_after_ms: 3000,
+        automatic_retry: false, real_external_actions: 0
+      }; }};
+    }
+    if (String(url).endsWith("/capture-form-status")) {
+      guidedPreparationPolls += 1;
+      return {ok: true, async json() { return guidedPreparationPolls === 1 ? {
+        status: "PREPARING_APPLICATION", mode: "JOB_CAPTURE",
+        intake_id: "GIN-SYNTHETIC-PAIRING", retry_after_ms: 3000,
+        automatic_retry: false, real_external_actions: 0
+      } : {
+        status: "REVIEW_PACKET_READY", mode: "JOB_CAPTURE",
+        intake_id: "GIN-SYNTHETIC-PAIRING", application_id: "APP-SYNTHETIC-GUIDED",
+        automatic_retry: false, real_external_actions: 0
       }; }};
     }
     if (delayNextPair) {
@@ -151,6 +180,21 @@ async function waitUntil(predicate) {
 }
 
 (async () => {
+  const workingFetch = sandbox.fetch;
+  sandbox.fetch = async (_url, options) => await new Promise((_resolve, reject) => {
+    options.signal.addEventListener("abort", () => {
+      const error = new Error("signal is aborted without reason");
+      error.name = "AbortError";
+      reject(error);
+    }, {once: true});
+  });
+  const normalizedTimeout = await vm.runInContext(
+    'postJSON("http://127.0.0.1:43123/slow", {}, 5)', sandbox
+  ).then(() => null, (error) => error);
+  sandbox.fetch = workingFetch;
+  assert.equal(normalizedTimeout?.jobflow?.code, "COMPANION_LOCAL_REQUEST_TIMEOUT");
+  assert.doesNotMatch(String(normalizedTimeout?.message || ""), /aborted without reason/i);
+
   const token = "a".repeat(54);
   const pairing = {protocol_version: 2, base_url: "http://127.0.0.1:43123", assist_path: `/intake/${token}`};
   const sender = {url: "http://127.0.0.1:43123/session/local/index.html", tab: {id: 11}};
@@ -208,6 +252,25 @@ async function waitUntil(predicate) {
     type: "JOBFLOW_GET_STATUS", binding: {...pairing, assist_path: `/intake/${"b".repeat(54)}`}
   }, sender);
   assert.equal(wrongStatus.code, "COMPANION_STATUS_BINDING_INVALID");
+
+  session.jobflowAssist = {
+    ...session.jobflowAssist,
+    stage: "AWAITING_APPLICATION_FORM_CAPTURE",
+    last_result: {status: "AWAITING_APPLICATION_FORM_CAPTURE"}
+  };
+  const preparationStarted = await send(listeners.internal, {
+    type: "JOBFLOW_CAPTURE_CURRENT", tab_id: 77,
+    tab_url: "https://apply.example.test/application"
+  }, {tab: {id: 77, url: "https://apply.example.test/application"}});
+  assert.equal(preparationStarted.status, "PREPARING_APPLICATION");
+  assert.equal(session.jobflowAssist.stage, "PREPARING_APPLICATION");
+  assert.ok(alarmCreates.some((item) => item.name === "jobflow-guided-preparation-observer"));
+  await listeners.alarm({name: "jobflow-guided-preparation-observer"});
+  assert.equal(session.jobflowAssist.stage, "PREPARING_APPLICATION", "a pending poll must not duplicate preparation");
+  await listeners.alarm({name: "jobflow-guided-preparation-observer"});
+  assert.equal(session.jobflowAssist.stage, "REVIEW_PACKET_READY");
+  assert.equal(session.jobflowAssist.application_id, "APP-SYNTHETIC-GUIDED");
+  assert.equal(fetches.filter((item) => String(item.url).endsWith("/capture-form")).length, 1);
 
   const wrongCancel = await send(listeners.external, {
     type: "JOBFLOW_CANCEL_GUIDED", binding: pairing, intake_id: "GIN-DIFFERENT-INTAKE"
@@ -284,6 +347,8 @@ async function waitUntil(predicate) {
     different_mode_blocked: true, stale_async_completion_blocked: true,
     final_review_immutable: true, unrelated_tab_update_ignored: true,
     same_bound_tab_result_observed: true, binding_scoped_status: true, scoped_cancel_releases_session: true,
+    guided_preparation_background_polled: true, guided_preparation_start_count: 1,
+    raw_abort_error_normalized: true,
     capability_values_redacted: true,
     network_calls: fetches.length, real_external_actions: 0
   }));
