@@ -27,16 +27,37 @@ class ReleaseReadinessContractTests(unittest.TestCase):
         self.assertIn("Real external actions must remain 0", checklist)
 
     def test_unconfirmed_github_release_decisions_remain_explicit_blockers(self) -> None:
-        gates = github_release_gates(PROJECT)
-        self.assertEqual(
-            gates,
-            {
-                "repository_metadata": "PENDING",
-                "private_vulnerability_reporting": "PENDING",
-                "sanitized_screenshots": "PENDING",
-                "clean_windows_profile": "PENDING",
-            },
-        )
+        with project_temp() as root:
+            config = root / "config"
+            config.mkdir()
+            (config / "github-release.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "repository_owner": "synthetic-owner",
+                        "repository_name": "JobFlow",
+                        "visibility": "PUBLIC",
+                        "description_zh": "合成发布测试",
+                        "description_en": "Synthetic release test",
+                        "topics": ["ai", "job-search", "privacy"],
+                        "metadata_confirmed_by_user": False,
+                        "private_vulnerability_reporting_confirmed": False,
+                        "sanitized_screenshots_approved": False,
+                        "clean_windows_profile_tested": False,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            gates = github_release_gates(root)
+            self.assertEqual(
+                gates,
+                {
+                    "repository_metadata": "PENDING",
+                    "private_vulnerability_reporting": "PENDING",
+                    "sanitized_screenshots": "PENDING",
+                    "clean_windows_profile": "PENDING",
+                },
+            )
 
     def test_release_decisions_pass_only_with_complete_metadata_and_explicit_evidence(self) -> None:
         with project_temp() as root:
@@ -80,7 +101,7 @@ class ReleaseReadinessContractTests(unittest.TestCase):
         self.assertEqual(result["head_commit"], "0" * 40)
         self.assertFalse(result["worktree_clean"])
         self.assertIn("GIT_REPOSITORY_REQUIRED", result["blockers"])
-        self.assertIn("GITHUB_REPOSITORY_METADATA_REQUIRED", result["blockers"])
+        self.assertEqual(result["manual_release_gates"], github_release_gates(PROJECT))
         self.assertFalse(result["upload_performed"])
         self.assertEqual(result["network_actions"], 0)
         self.assertEqual(result["real_external_actions"], 0)

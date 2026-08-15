@@ -7,6 +7,14 @@ JobFlow（内部工程代号 JobOps）是本地优先、证据驱动的求职工
 
 [快速开始 / Quick start](docs/quickstart.md) · [架构 / Architecture](docs/architecture.md) · [路线图 / Roadmap](docs/roadmap.md) · [发布清单 / Release checklist](docs/release-checklist.md) · [变更记录 / Changelog](CHANGELOG.md) · [安全 / Security](SECURITY.md) · [参与贡献 / Contributing](CONTRIBUTING.md) · [MIT License](LICENSE)
 
+## 界面预览 / Interface preview
+
+以下画面来自自动清理的合成演示，只含虚构内容；真实文件接入和真实 AI 连接在截图环境中均被禁用。 / These screenshots come from the auto-cleaned synthetic demo and contain fictional content only; real file intake and real AI connections are disabled in the screenshot environment.
+
+| 中文 | English |
+|---|---|
+| ![JobFlow 中文合成演示](docs/screenshots/jobflow-demo-zh.png) | ![JobFlow English synthetic demo](docs/screenshots/jobflow-demo-en.png) |
+
 | 能力 / Capability | 当前证据 / Current evidence | 真实动作 / Real action |
 |---|---|---|
 | 简历、项目与 AI 导出 / Resume, projects and AI exports | 本机加密接入、严格 AI 提取、人工 Claim 审阅 / Encrypted local intake, strict AI extraction, human Claim review | 0 |

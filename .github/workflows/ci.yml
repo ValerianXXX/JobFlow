@@ -37,6 +37,15 @@ jobs:
       - name: Run redacted one-click health check
         shell: pwsh
         run: ./scripts/check-jobflow.ps1 -Json -PythonPath (Get-Command python).Source
+      - name: Exercise first-time Windows installer
+        if: matrix.python-version == '3.12'
+        shell: powershell
+        run: |
+          ./scripts/install-jobflow.ps1
+          $health = ./scripts/check-jobflow.ps1 -Json | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or $health.status -ne "JOBFLOW_READY") {
+            throw "The first-time Windows installer did not produce a healthy JobFlow runtime."
+          }
       - name: Run regression suite
         run: python -m unittest discover -s tests -v
       - name: Check public tree boundary

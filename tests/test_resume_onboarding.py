@@ -60,8 +60,8 @@ class ResumeOnboardingTests(unittest.TestCase):
 
             selected, paired, ambiguous = select_resume(discover_resume_candidates(root))
 
-            self.assertEqual(selected.path, docx)
-            self.assertEqual(paired.path, pdf)
+            self.assertTrue(selected.path.samefile(docx))
+            self.assertTrue(paired.path.samefile(pdf))
             self.assertEqual(ambiguous, [])
 
     def test_resume_facts_are_unconfirmed_and_missing_answers_remain_unknown(self) -> None:

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "repository_owner": "",
+  "repository_owner": "ValerianXXX",
   "repository_name": "JobFlow",
   "visibility": "PUBLIC",
   "description_zh": "本地优先、AI 核心、证据约束的求职工作流",
@@ -12,8 +12,8 @@
     "privacy",
     "windows"
   ],
-  "metadata_confirmed_by_user": false,
-  "private_vulnerability_reporting_confirmed": false,
-  "sanitized_screenshots_approved": false,
+  "metadata_confirmed_by_user": true,
+  "private_vulnerability_reporting_confirmed": true,
+  "sanitized_screenshots_approved": true,
   "clean_windows_profile_tested": false
 }

@@ -1,12 +1,67 @@
 from __future__ import annotations
 
 import json
-import subprocess
+import os
+import shutil
 import sys
+import tempfile
 import unittest
+from pathlib import Path
+from subprocess import DEVNULL, CompletedProcess, Popen as RealPopen, TimeoutExpired
 
 from _support import PROJECT
 from jobops import __version__
+
+
+ISOLATED_ENVIRONMENT = os.environ.copy()
+_WINDOWS_POWERSHELL = shutil.which("powershell.exe", path=ISOLATED_ENVIRONMENT.get("PATH"))
+if not _WINDOWS_POWERSHELL:
+    raise RuntimeError("Windows PowerShell is required for launcher tests.")
+WINDOWS_POWERSHELL = Path(_WINDOWS_POWERSHELL).resolve(strict=True)
+
+
+def run_process(command: list[str], *, timeout: int) -> CompletedProcess[str]:
+    """Run a launcher with clean process state and file-backed output capture."""
+    helper = (
+        "import json, subprocess, sys\n"
+        "from pathlib import Path\n"
+        "result_path = Path(sys.argv[1])\n"
+        "stdout_path = result_path.with_suffix('.stdout')\n"
+        "stderr_path = result_path.with_suffix('.stderr')\n"
+        "with stdout_path.open('wb') as stdout_file, stderr_path.open('wb') as stderr_file:\n"
+        "    completed = subprocess.run(sys.argv[2:], stdout=stdout_file, stderr=stderr_file, check=False)\n"
+        "result_path.write_text(json.dumps({"
+        "'returncode': completed.returncode, "
+        "'stdout': stdout_path.read_bytes().decode('utf-8-sig'), "
+        "'stderr': stderr_path.read_bytes().decode('utf-8-sig')}), encoding='utf-8')\n"
+    )
+    temporary_root = PROJECT / "tests" / ".tmp"
+    temporary_root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="launcher-", dir=temporary_root) as raw:
+        result_path = Path(raw) / "result.json"
+        process = RealPopen(
+            [sys.executable, "-I", "-c", helper, str(result_path), *command],
+            cwd=PROJECT,
+            env=ISOLATED_ENVIRONMENT,
+            stdin=DEVNULL,
+            stdout=DEVNULL,
+            stderr=DEVNULL,
+        )
+        try:
+            process.wait(timeout=timeout)
+        except TimeoutExpired:
+            process.kill()
+            process.wait()
+            raise
+        if process.returncode != 0 or not result_path.is_file():
+            raise AssertionError("The isolated launcher test helper did not return a result.")
+        value = json.loads(result_path.read_text(encoding="utf-8"))
+    return CompletedProcess(
+        command,
+        int(value["returncode"]),
+        str(value.get("stdout") or ""),
+        str(value.get("stderr") or ""),
+    )
 
 
 class WindowsLauncherTests(unittest.TestCase):
@@ -64,16 +119,13 @@ class WindowsLauncherTests(unittest.TestCase):
             self.assertNotIn(forbidden, combined)
 
     def test_one_click_health_check_is_redacted_local_only_and_passing(self) -> None:
-        completed = subprocess.run(
+        completed = run_process(
             [
-                "powershell.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
                 "-File", str(PROJECT / "scripts" / "check-jobflow.ps1"), "-Json",
+                "-PythonPath", sys.executable,
             ],
-            cwd=PROJECT,
-            capture_output=True,
-            text=True,
             timeout=60,
-            check=False,
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         result = json.loads(completed.stdout.lstrip("\ufeff"))
@@ -91,29 +143,22 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertNotIn("secure-ref:", serialized)
 
     def test_public_cli_reports_a_safe_version(self) -> None:
-        completed = subprocess.run(
+        completed = run_process(
             [sys.executable, "-m", "jobops.cli", "--version"],
-            cwd=PROJECT,
-            capture_output=True,
-            text=True,
             timeout=30,
-            check=False,
         )
         self.assertEqual(completed.returncode, 0)
         self.assertEqual(completed.stdout.strip(), f"JobFlow {__version__}")
         self.assertNotIn(str(PROJECT), completed.stdout)
 
     def test_one_click_release_check_is_redacted_local_only_and_truthfully_blocked(self) -> None:
-        completed = subprocess.run(
+        completed = run_process(
             [
-                "powershell.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
                 "-File", str(PROJECT / "scripts" / "check-release-readiness.ps1"), "-Json",
+                "-PythonPath", sys.executable,
             ],
-            cwd=PROJECT,
-            capture_output=True,
-            text=True,
             timeout=120,
-            check=False,
         )
         self.assertEqual(completed.returncode, 2, completed.stderr)
         result = json.loads(completed.stdout.lstrip("\ufeff"))
@@ -121,7 +166,8 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertFalse(result["upload_performed"])
         self.assertEqual(result["network_actions"], 0)
         self.assertEqual(result["real_external_actions"], 0)
-        self.assertIn("GITHUB_REPOSITORY_METADATA_REQUIRED", result["blockers"])
+        self.assertTrue(result["blockers"])
+        self.assertNotIn("PYTHON_RUNTIME_MISSING", result["blockers"])
         serialized = json.dumps(result)
         self.assertNotIn(str(PROJECT), serialized)
         self.assertNotIn("secure-ref:", serialized)

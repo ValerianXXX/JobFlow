@@ -3,13 +3,38 @@ from __future__ import annotations
 import tempfile
 import unittest
 import zipfile
+from os import replace as real_replace
 from pathlib import Path
+from unittest.mock import patch
 
 from _support import PROJECT
-from jobops.release_candidate import run_source_candidate_smoke, verify_candidate_archive
+from jobops.release_candidate import _commit_candidate_archive, run_source_candidate_smoke, verify_candidate_archive
 
 
 class ReleaseCandidateTests(unittest.TestCase):
+    def test_validated_archive_is_committed_from_the_destination_volume(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-candidate-source-") as raw_source:
+            with tempfile.TemporaryDirectory(prefix="jobflow-candidate-destination-") as raw_destination:
+                source = Path(raw_source) / "candidate.zip"
+                destination = Path(raw_destination) / "dist" / "candidate.zip"
+                destination.parent.mkdir()
+                source.write_bytes(b"validated deterministic archive")
+                replace_calls: list[tuple[Path, Path]] = []
+
+                def checked_replace(staging: str | Path, target: str | Path) -> None:
+                    staging_path, target_path = Path(staging), Path(target)
+                    self.assertEqual(staging_path.parent, destination.parent)
+                    self.assertEqual(target_path, destination)
+                    replace_calls.append((staging_path, target_path))
+                    real_replace(staging_path, target_path)
+
+                with patch("jobops.release_candidate.os.replace", side_effect=checked_replace):
+                    _commit_candidate_archive(source, destination)
+
+                self.assertEqual(destination.read_bytes(), source.read_bytes())
+                self.assertEqual(len(replace_calls), 1)
+                self.assertEqual(list(destination.parent.glob("*.tmp")), [])
+
     def test_archive_rejects_localized_powershell_without_utf8_bom(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-candidate-test-") as raw_temp:
             path = Path(raw_temp) / "candidate.zip"

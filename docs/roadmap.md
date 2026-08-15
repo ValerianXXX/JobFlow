@@ -35,9 +35,9 @@ This roadmap separates implemented offline evidence from future capabilities tha
 
 - [x] Confirm or replace the public Git author identity without exposing a private email.
 - [ ] Run fresh independent QA from a frozen clean copy of the final commit.
-- [ ] Capture sanitized bilingual screenshots from the completed local-only synthetic demo.
+- [x] Capture sanitized bilingual screenshots from the completed local-only synthetic demo.
 - [ ] Perform first-time installation on a clean supported Windows user profile.
-- [ ] Confirm repository name, owner, description, topics and private vulnerability reporting.
+- [x] Confirm repository name, owner, description, topics and private vulnerability reporting.
 - [ ] Create the repository and upload only after explicit user authorization.
 
 ## Future, separately authorized / 未来需另行授权

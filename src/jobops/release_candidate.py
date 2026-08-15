@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -46,6 +47,33 @@ def _version(project: Path) -> str:
     if not version or any(character not in "0123456789." for character in version):
         raise JobOpsError("RELEASE_VERSION_INVALID", "The public release version must be a numeric dotted value.")
     return version
+
+
+def _commit_candidate_archive(source: Path, destination: Path) -> None:
+    """Copy into the destination volume before the final atomic replacement."""
+    staging: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            prefix=f".{destination.name}.",
+            suffix=".tmp",
+            dir=destination.parent,
+            delete=False,
+        ) as staging_file:
+            staging = Path(staging_file.name)
+            with source.open("rb") as source_file:
+                shutil.copyfileobj(source_file, staging_file)
+            staging_file.flush()
+            os.fsync(staging_file.fileno())
+        os.replace(staging, destination)
+        staging = None
+    except OSError as error:
+        raise JobOpsError(
+            "RELEASE_ARCHIVE_COMMIT_FAILED",
+            "The validated release archive could not be committed atomically.",
+        ) from error
+    finally:
+        if staging is not None:
+            staging.unlink(missing_ok=True)
 
 
 def verify_candidate_archive(project: Path, archive_path: Path, *, prefix: str) -> dict[str, Any]:
@@ -192,7 +220,7 @@ def build_release_candidate(project: Path) -> dict[str, Any]:
         if verification["status"] != "PASS":
             raise JobOpsError("RELEASE_ARCHIVE_UNSAFE", "The local release candidate failed its content boundary.", findings=verification["findings"])
         source_smoke = run_source_candidate_smoke(first, prefix=prefix, temporary=temporary)
-        os.replace(first, destination)
+        _commit_candidate_archive(first, destination)
     result = {
         "schema_version": 1,
         "status": "RELEASE_CANDIDATE_BUILT",
