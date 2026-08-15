@@ -62,7 +62,12 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         )
         return database, onboarding, JobOpsOrchestrator(PROJECT, database, onboarding)
 
-    def seed_completed_context(self, onboarding: PrivateOnboarding) -> dict[str, str]:
+    def seed_completed_context(
+        self,
+        onboarding: PrivateOnboarding,
+        *,
+        master_kind: str = "master_resume_docx",
+    ) -> dict[str, str]:
         fixtures = PROJECT / "tests" / "fixtures"
         portfolio = onboarding.import_file("onboarding_source_document", fixtures / "synthetic-forward-jd.pdf", synthetic=False)
         profile = json.loads((fixtures / "synthetic-forward-profile.json").read_text(encoding="utf-8"))
@@ -96,11 +101,25 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         document.add_heading("Education", level=1)
         document.add_paragraph("Synthetic University, Bachelor of Science.")
         document.save(master_path)
-        master_record = onboarding.import_file("master_resume_docx", master_path, synthetic=False)
+        master_record = onboarding.import_file(master_kind, master_path, synthetic=False)
         master_ref = str(master_record["secure_ref"])
         master_hash = str(master_record["content_sha256"])
         fingerprint_hash = sha256_bytes(canonical_json(template_fingerprint(master_path).as_dict()))
-        state_record = onboarding.import_bytes("onboarding_center_state", canonical_json({"status": "ONBOARDING_COMPLETE"}), synthetic=False)
+        state_value: dict[str, object] = {"status": "ONBOARDING_COMPLETE"}
+        if master_kind == "onboarding_source_document":
+            state_value["master_resume"] = {
+                "secure_ref": master_ref,
+                "sha256": master_hash,
+                "extension": ".docx",
+                "source_id": "SRC-MASTER-01",
+                "editable_docx": True,
+                "template_fingerprint": fingerprint_hash,
+                "template_slots": [],
+                "designated_at": iso_utc(),
+            }
+        state_record = onboarding.import_bytes(
+            "onboarding_center_state", canonical_json(state_value), synthetic=False,
+        )
         state_ref = str(state_record["secure_ref"])
 
         block = next(item for item in inspect_docx_text_blocks(master_path) if item["text"].startswith("Analyzed synthetic"))
@@ -147,6 +166,37 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             "tailoring_manifest_ref": str(manifest_record["secure_ref"]),
             "tailoring_manifest_hash": str(manifest["content_hash"]),
         }
+
+    def test_ui_designated_docx_master_is_accepted_only_through_its_approved_state_binding(self) -> None:
+        with project_temp() as temp:
+            _, onboarding, orchestrator = self.build(temp)
+            references = self.seed_completed_context(
+                onboarding,
+                master_kind="onboarding_source_document",
+            )
+            resolved = orchestrator.current_real_application_references()
+            self.assertEqual(resolved["master_resume_ref"], references["master_resume_ref"])
+            self.assertEqual(resolved["external_claim_set_ref"], references["external_claim_set_ref"])
+
+            claim_set = json.loads(onboarding.read_bytes(resolved["external_claim_set_ref"]))
+            replacement_ref = onboarding.import_bytes(
+                "onboarding_source_document", b"unapproved replacement", synthetic=False,
+            )["secure_ref"]
+            onboarding.rotate(
+                str(claim_set["onboarding_state_ref"]),
+                canonical_json({
+                    "status": "ONBOARDING_COMPLETE",
+                    "master_resume": {
+                        "secure_ref": replacement_ref,
+                        "sha256": "sha256:" + "0" * 64,
+                        "extension": ".docx",
+                        "editable_docx": True,
+                    },
+                }),
+            )
+            with self.assertRaises(JobOpsError) as rejected:
+                orchestrator.current_real_application_references()
+            self.assertEqual(rejected.exception.code, "APPLICATION_MASTER_SOURCE_BINDING_INVALID")
 
     def approved_company_application(
         self, database: JobOpsDB, onboarding: PrivateOnboarding,
@@ -259,7 +309,10 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
     def test_guided_browser_intake_builds_one_review_packet_without_page_actions(self) -> None:
         with project_temp() as temp:
             database, onboarding, _ = self.build(temp)
-            self.seed_completed_context(onboarding)
+            self.seed_completed_context(
+                onboarding,
+                master_kind="onboarding_source_document",
+            )
             service = OnboardingCenterService(PROJECT, database, onboarding)
             self.addCleanup(service.close)
             fixtures = PROJECT / "tests" / "fixtures"

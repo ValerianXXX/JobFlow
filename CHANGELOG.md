@@ -6,6 +6,11 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+## [0.2.3] - release candidate / 发布候选
+
+- Fixed the real onboarding path where a DOCX selected as the editable Master Resume was retained as an encrypted onboarding source and then incorrectly rejected during application review-packet preparation. Acceptance remains bound to the exact onboarding state, applicant-approved Claim set, DOCX designation, and content hash.
+- 修复真实入职路径中“首页已选为可编辑 Master Resume 的 DOCX 因内部来源标签不同而在生成申请审阅包时被误拒”的问题。兼容只对同时匹配加密入职状态、用户已批准 Claim 集、DOCX 母版指定和内容哈希的同一文件生效。
+
 ## [0.2.2] - release candidate / 发布候选
 
 - Guided job intake now has an explicit bilingual cancel-and-reselect action. It revokes the selected in-memory intake, releases the matching Browser Companion session, unlocks the URL field, and records zero real external actions.

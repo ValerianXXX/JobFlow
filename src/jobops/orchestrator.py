@@ -232,6 +232,58 @@ class JobOpsOrchestrator:
             raise JobOpsError("APPLICATION_PRIVATE_REFERENCE_HASH_INVALID", "An encrypted application input failed its content binding.")
         return metadata
 
+    def _assert_real_master_reference(
+        self,
+        reference: str,
+        *,
+        claim_set: dict[str, Any],
+    ) -> dict[str, object]:
+        """Accept the dedicated master kind or an exactly bound UI-designated DOCX source.
+
+        The onboarding center retains uploaded documents as onboarding sources and
+        records the chosen editable master in its encrypted state.  That path is
+        as strongly bound as the older dedicated master kind, but only when the
+        state descriptor, applicant-approved Claim set, and content hash all agree.
+        """
+
+        metadata = self._assert_private_reference(
+            reference,
+            kinds={"master_resume_docx", "onboarding_source_document"},
+            synthetic=False,
+        )
+        if metadata["kind"] == "master_resume_docx":
+            return metadata
+
+        approved_master = claim_set.get("master_resume")
+        state_ref = str(claim_set.get("onboarding_state_ref", ""))
+        if not isinstance(approved_master, dict) or not state_ref:
+            raise JobOpsError(
+                "APPLICATION_MASTER_SOURCE_BINDING_INVALID",
+                "The editable Master Resume selected in JobFlow is missing its approved state binding.",
+            )
+        self._assert_private_reference(
+            state_ref,
+            kinds={"onboarding_center_state"},
+            synthetic=False,
+        )
+        state = self._load_json_ref(state_ref)
+        descriptor = state.get("master_resume")
+        if (
+            not isinstance(descriptor, dict)
+            or descriptor.get("secure_ref") != reference
+            or descriptor.get("sha256") != metadata["content_sha256"]
+            or str(descriptor.get("extension", "")).casefold() != ".docx"
+            or descriptor.get("editable_docx") is not True
+            or approved_master.get("secure_ref") != reference
+            or approved_master.get("sha256") != metadata["content_sha256"]
+            or approved_master.get("editable_docx") is not True
+        ):
+            raise JobOpsError(
+                "APPLICATION_MASTER_SOURCE_BINDING_INVALID",
+                "The editable Master Resume selected in JobFlow no longer matches its approved encrypted state.",
+            )
+        return metadata
+
     def _real_application_context(
         self,
         *,
@@ -271,7 +323,10 @@ class JobOpsOrchestrator:
             )
         self._assert_private_reference(resolved_profile, kinds={"candidate_profile"}, synthetic=False)
         self._assert_private_reference(resolved_answers, kinds={"answer_bank"}, synthetic=False)
-        master_metadata = self._assert_private_reference(resolved_master, kinds={"master_resume_docx"}, synthetic=False)
+        master_metadata = self._assert_real_master_reference(
+            resolved_master,
+            claim_set=claim_set,
+        )
         if master_metadata["content_sha256"] != claim_set["master_resume"]["sha256"]:
             raise JobOpsError("APPLICATION_MASTER_BINDING_MISMATCH", "The Master Resume no longer matches the approved Claim set.")
 
@@ -282,10 +337,19 @@ class JobOpsOrchestrator:
         for claim in claims_to_validate.values():
             for binding in claim.get("source_bindings", []):
                 reference = str(binding["secure_ref"])
-                kinds = {"master_resume_docx", "master_resume_pdf"} if binding["kind"] == "MASTER_RESUME" else {
-                    "onboarding_source_document", "onboarding_ai_derived",
-                }
-                source_metadata = self._assert_private_reference(reference, kinds=kinds, synthetic=False)
+                if binding["kind"] == "MASTER_RESUME":
+                    if reference != resolved_master:
+                        raise JobOpsError(
+                            "APPLICATION_CLAIM_MASTER_BINDING_MISMATCH",
+                            "An approved Claim points to a different Master Resume than the current application.",
+                        )
+                    source_metadata = master_metadata
+                else:
+                    source_metadata = self._assert_private_reference(
+                        reference,
+                        kinds={"onboarding_source_document", "onboarding_ai_derived"},
+                        synthetic=False,
+                    )
                 if source_metadata["content_sha256"] != binding["content_sha256"]:
                     raise JobOpsError("APPLICATION_CLAIM_SOURCE_CHANGED", "An approved Claim source no longer matches its encrypted hash.")
 
