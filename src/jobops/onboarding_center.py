@@ -102,6 +102,12 @@ MAX_ONBOARDING_PDF_PAGES = 500
 MAX_REVIEW_PACKET_BYTES = 2 * 1024 * 1024
 MAX_OFFLINE_APPLICATION_BUNDLE_BYTES = MAX_JD_SOURCE_BYTES + MAX_SNAPSHOT_BYTES + 16 * 1024 * 1024 + 64 * 1024
 GUIDED_INTAKE_TTL_SECONDS = 30 * 60
+GUIDED_INTAKE_CANCELLABLE_STATUSES = {
+    "GUIDED_INTAKE_PAIRING",
+    "AWAITING_JOB_PAGE_CAPTURE",
+    "AWAITING_APPLICATION_FORM_CAPTURE",
+    "FORM_CAPTURE_FAILED",
+}
 MAX_GUIDED_JOB_TEXT_CHARS = 750_000
 MAX_GUIDED_FORM_HTML_CHARS = 1_750_000
 ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "portfolio", "ai_summary", "chatgpt_export"}
@@ -1485,13 +1491,9 @@ class OnboardingCenterService:
                 "GUIDED_INTAKE_COMPANY_URL_REQUIRED",
                 "Start with the role on the company's own website. JobFlow will accept the ATS page after you follow the company's Apply link.",
             )
-        recoverable_statuses = {
-            "GUIDED_INTAKE_PAIRING", "AWAITING_JOB_PAGE_CAPTURE",
-            "AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED",
-        }
         replaced = [
             (old_token, old_lease) for old_token, old_lease in self._guided_intakes.items()
-            if str(old_lease.get("status")) in recoverable_statuses
+            if str(old_lease.get("status")) in GUIDED_INTAKE_CANCELLABLE_STATUSES
         ]
         for old_token, old_lease in replaced:
             self._guided_intakes.pop(old_token, None)
@@ -1521,6 +1523,61 @@ class OnboardingCenterService:
             "intake_token": token, "intake_path": f"/intake/{token}",
             "protocol_version": 2, "official_url": official_url,
             "expires_at": expires_at, "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def cancel_guided_intake(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError(
+                "EXPLICIT_CONFIRMATION_REQUIRED",
+                "Cancelling the current guided job import requires explicit confirmation.",
+            )
+        intake_id = str(payload.get("intake_id", "")).strip()
+        if not re.fullmatch(r"GIN-[A-F0-9]{12}", intake_id):
+            raise JobOpsError(
+                "GUIDED_INTAKE_ID_INVALID",
+                "Choose the current guided job import before cancelling it.",
+            )
+        selected = next(
+            (
+                (token, lease) for token, lease in self._guided_intakes.items()
+                if str(lease.get("intake_id")) == intake_id
+            ),
+            None,
+        )
+        if selected is None:
+            return {
+                "status": "GUIDED_INTAKE_CANCELLED",
+                "intake_id": intake_id,
+                "active": False,
+                "already_ended": True,
+                "real_external_actions": 0,
+                "automatic_retry": False,
+            }
+        token, lease = selected
+        prior_status = str(lease.get("status", "UNKNOWN"))
+        if prior_status not in GUIDED_INTAKE_CANCELLABLE_STATUSES:
+            raise JobOpsError(
+                "GUIDED_INTAKE_CANCEL_UNAVAILABLE",
+                "This job import has already created or queued an application. Review that item instead of discarding it silently.",
+                intake_id=intake_id,
+                current_status=prior_status,
+                automatic_retry=False,
+            )
+        self._guided_intakes.pop(token, None)
+        lease["job_page"] = None
+        self._guided_event(
+            intake_id,
+            "FAILED",
+            {"prior_status": prior_status, "reason": "USER_CANCELLED"},
+        )
+        return {
+            "status": "GUIDED_INTAKE_CANCELLED",
+            "intake_id": intake_id,
+            "active": False,
+            "already_ended": False,
+            "real_external_actions": 0,
+            "automatic_retry": False,
         }
 
     @_synchronized

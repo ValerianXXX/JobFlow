@@ -305,6 +305,12 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertEqual(prepared["status"], "REVIEW_PACKET_READY")
             packet = service.review_packet(str(prepared["application_id"]))
             self.assertEqual(packet["application_id"], prepared["application_id"])
+            with self.assertRaises(JobOpsError) as completed_cancel:
+                service.cancel_guided_intake({
+                    "intake_id": paired["intake_id"],
+                    "user_confirmed": True,
+                })
+            self.assertEqual(completed_cancel.exception.code, "GUIDED_INTAKE_CANCEL_UNAVAILABLE")
             with database.connect() as connection:
                 events = [row[0] for row in connection.execute(
                     "SELECT event_type FROM guided_intake_events ORDER BY event_id"
@@ -356,6 +362,72 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertEqual(first_events, ["STARTED", "FAILED"])
             self.assertEqual(second_events, ["STARTED", "PAIRED"])
             self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 0)
+
+    def test_guided_browser_intake_cancel_releases_wrong_url_without_external_actions(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            readiness = {"application_readiness": {"status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION"}}
+            with mock.patch.object(service, "bootstrap", return_value=readiness):
+                started = service.start_guided_intake({
+                    "official_url": "https://example.com/careers/wrong-role",
+                    "user_confirmed": True,
+                })
+            token = str(started["intake_token"])
+            service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            service.capture_guided_job_page(
+                token,
+                {
+                    "url": "https://example.com/careers/wrong-role",
+                    "job_title": "Wrong Synthetic Role",
+                    "company_name": "Example Analytics Lab",
+                    "job_location": "Remote",
+                    "visible_text": "Wrong Synthetic Role\nThis is readable synthetic job content for cancellation testing.",
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            retained_lease = service._guided_intakes[token]
+            with self.assertRaises(JobOpsError) as missing_confirmation:
+                service.cancel_guided_intake({
+                    "intake_id": started["intake_id"],
+                    "user_confirmed": False,
+                })
+            self.assertEqual(missing_confirmation.exception.code, "EXPLICIT_CONFIRMATION_REQUIRED")
+            cancelled = service.cancel_guided_intake({
+                "intake_id": started["intake_id"],
+                "user_confirmed": True,
+            })
+            self.assertEqual(cancelled["status"], "GUIDED_INTAKE_CANCELLED")
+            self.assertFalse(cancelled["active"])
+            self.assertFalse(cancelled["already_ended"])
+            self.assertEqual(retained_lease["job_page"], None)
+            self.assertEqual(service._guided_public_status()["status"], "IDLE")
+            with self.assertRaises(JobOpsError) as stale:
+                service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            self.assertEqual(stale.exception.code, "GUIDED_INTAKE_NOT_FOUND")
+            cancelled_again = service.cancel_guided_intake({
+                "intake_id": started["intake_id"],
+                "user_confirmed": True,
+            })
+            self.assertTrue(cancelled_again["already_ended"])
+            with mock.patch.object(service, "bootstrap", return_value=readiness):
+                restarted = service.start_guided_intake({
+                    "official_url": "https://example.com/careers/correct-role",
+                    "user_confirmed": True,
+                })
+            self.assertEqual(restarted["status"], "GUIDED_INTAKE_PAIRING")
+            self.assertNotEqual(restarted["intake_id"], started["intake_id"])
+            with database.connect() as connection:
+                events = [str(row[0]) for row in connection.execute(
+                    "SELECT event_type FROM guided_intake_events WHERE intake_id=? ORDER BY event_id",
+                    (started["intake_id"],),
+                ).fetchall()]
+            self.assertEqual(events, ["STARTED", "PAIRED", "JOB_PAGE_INSPECTED", "FAILED"])
+            actions = audit_real_external_actions(database)
+            self.assertEqual(actions["attempt_count"], 0)
+            self.assertEqual(actions["real_external_actions"], 0)
 
     def test_completed_user_context_generates_encrypted_review_materials_without_external_actions(self) -> None:
         with project_temp() as temp:

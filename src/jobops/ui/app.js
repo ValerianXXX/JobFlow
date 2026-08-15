@@ -2,7 +2,7 @@
 
 const STRINGS = {
   zh: {
-    guidedIntakeEyebrow: "下一份岗位", guidedIntakeTitle: "粘贴岗位链接即可开始", guidedIntakeBody: "从公司官网岗位链接开始。浏览器伴侣只读取你主动选择的岗位页和申请表结构，随后自动准备岗位简历、按需求职信、作品集与审阅包。", guidedIntakeIdle: "尚未开始", guidedOfficialUrl: "公司官网岗位链接", guidedIntakeConsent: "我允许 JobFlow 在接下来的 30 分钟内，只读取我在浏览器中主动选择的公司岗位页和申请表结构；此阶段不填写、不上传、不点击网页按钮。", startGuidedIntake: "连接浏览器并开始", guidedOpenJob: "打开公司岗位页", guidedStepOneTitle: "打开公司岗位页", guidedStepOneBody: "粘贴一次链接并建立浏览器连接。", guidedStepTwoTitle: "读取岗位", guidedStepTwoBody: "在岗位页打开浏览器右上角的 JobFlow J，再点“读取当前公司岗位页”。", guidedStepThreeTitle: "读取申请表", guidedStepThreeBody: "亲自点击公司的 Apply；到申请表后再次打开 J。JobFlow 会自动准备材料。", guidedStepFourTitle: "一次审阅", guidedStepFourBody: "确认材料与岗位问题后，才会出现辅助填写入口。", guidedPairing: "正在连接浏览器伴侣…", guidedPaired: "已连接。请打开公司岗位页，再使用浏览器右上角的 JobFlow J。", guidedAwaitingJob: "等待你读取公司岗位页。", guidedAwaitingForm: "岗位已读取。请亲自点击公司页面的 Apply；进入申请表后再次使用 JobFlow J。", guidedPreparing: "正在根据岗位和表单准备岗位简历、按需材料与审阅包…", guidedReady: "材料与审阅包已准备好，请在下方一次审阅。", guidedDeferred: "待审批队列已满，这个岗位已安全排队；你处理一项后会继续。", guidedFailed: "本次读取没有完成，网页没有被填写或修改。请检查当前页面后重试。", guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认 JobFlow Browser Companion 已启用，然后重试。", guidedUrlRequired: "请粘贴公司官网上的 HTTPS 岗位链接。", guidedConsentRequired: "请先勾选这次只读岗位导入授权。", guidedReadinessRequired: "请先完成上方列出的资料准备项。", guidedWrongJobPage: "请先在公司自己的官网岗位页读取岗位，再亲自进入它链接的申请表。", guidedFormMissing: "当前页面没有找到申请字段。请先进入真正的申请表，再打开 JobFlow J。", guidedJobTitleMissing: "当前页面无法可靠识别岗位名称，请确认打开的是具体岗位页。", guidedLeaseInvalid: "这次岗位读取连接已过期，请重新开始。", advancedToolsTitle: "高级诊断与离线 QA", advancedToolsBody: "普通使用不需要这里。仅在开发测试或浏览器导入不可用时，才手动提供本地快照。", advancedToolsOpen: "展开", browserAssistEyebrow: "已批准的申请",
+    guidedIntakeEyebrow: "下一份岗位", guidedIntakeTitle: "粘贴岗位链接即可开始", guidedIntakeBody: "从公司官网岗位链接开始。浏览器伴侣只读取你主动选择的岗位页和申请表结构，随后自动准备岗位简历、按需求职信、作品集与审阅包。", guidedIntakeIdle: "尚未开始", guidedOfficialUrl: "公司官网岗位链接", guidedIntakeConsent: "我允许 JobFlow 在接下来的 30 分钟内，只读取我在浏览器中主动选择的公司岗位页和申请表结构；此阶段不填写、不上传、不点击网页按钮。", startGuidedIntake: "连接浏览器并开始", guidedOpenJob: "打开公司岗位页", cancelGuidedIntake: "取消本次读取并更换网址", cancelGuidedIntakeConfirm: "确认取消本次岗位读取并更换网址？这不会删除你的简历、Profile 或其他资料，也不会修改招聘网站。", cancellingGuidedIntake: "正在取消本次岗位读取…", guidedCancelled: "本次岗位读取已取消，现在可以填写其他网址。", guidedCancelledCompanionReload: "本次岗位读取已取消，但浏览器伴侣没有确认释放旧连接。请在扩展管理页重新加载 JobFlow Browser Companion 后再开始。", guidedCancelUnavailable: "这次岗位已经生成或排队。请在待审批列表处理它，不能静默删除。", guidedStepOneTitle: "打开公司岗位页", guidedStepOneBody: "粘贴一次链接并建立浏览器连接。", guidedStepTwoTitle: "读取岗位", guidedStepTwoBody: "在岗位页打开浏览器右上角的 JobFlow J，再点“读取当前公司岗位页”。", guidedStepThreeTitle: "读取申请表", guidedStepThreeBody: "亲自点击公司的 Apply；到申请表后再次打开 J。JobFlow 会自动准备材料。", guidedStepFourTitle: "一次审阅", guidedStepFourBody: "确认材料与岗位问题后，才会出现辅助填写入口。", guidedPairing: "正在连接浏览器伴侣…", guidedPaired: "已连接。请打开公司岗位页，再使用浏览器右上角的 JobFlow J。", guidedAwaitingJob: "等待你读取公司岗位页。", guidedAwaitingForm: "岗位已读取。请亲自点击公司页面的 Apply；进入申请表后再次使用 JobFlow J。", guidedPreparing: "正在根据岗位和表单准备岗位简历、按需材料与审阅包…", guidedReady: "材料与审阅包已准备好，请在下方一次审阅。", guidedDeferred: "待审批队列已满，这个岗位已安全排队；你处理一项后会继续。", guidedFailed: "本次读取没有完成，网页没有被填写或修改。请检查当前页面后重试。", guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认 JobFlow Browser Companion 已启用，然后重试。", guidedUrlRequired: "请粘贴公司官网上的 HTTPS 岗位链接。", guidedConsentRequired: "请先勾选这次只读岗位导入授权。", guidedReadinessRequired: "请先完成上方列出的资料准备项。", guidedWrongJobPage: "请先在公司自己的官网岗位页读取岗位，再亲自进入它链接的申请表。", guidedFormMissing: "当前页面没有找到申请字段。请先进入真正的申请表，再打开 JobFlow J。", guidedJobTitleMissing: "当前页面无法可靠识别岗位名称，请确认打开的是具体岗位页。", guidedLeaseInvalid: "这次岗位读取连接已过期，请重新开始。", advancedToolsTitle: "高级诊断与离线 QA", advancedToolsBody: "普通使用不需要这里。仅在开发测试或浏览器导入不可用时，才手动提供本地快照。", advancedToolsOpen: "展开", browserAssistEyebrow: "已批准的申请",
     retryCompanionPairing: "再次显示连接步骤",
     companionClickToPair: "本次连接已准备好。请停留在这个 JobFlow 页面，点击浏览器右上角的 JobFlow J，再点击“连接当前 JobFlow 页面”。",
     companionClickToReconnect: "浏览器伴侣已明确丢失本次绑定，但本次授权仍保留。请在这个 JobFlow 页面点击 J 重新连接；JobFlow 不会静默重试。",
@@ -10,7 +10,7 @@ const STRINGS = {
     companionSessionActive: "另一种浏览器任务仍在进行中。请先完成或明确停止它，再开始这个任务。",
     guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认扩展已启用并重新加载当前版本；无需把网站权限改成“在所有网站上”。",
     guidedExtensionOutdated: "浏览器伴侣版本不匹配。请重新运行安装命令，并在扩展管理页重新加载安装器打开的本机 BrowserCompanion 目录。",
-    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.6.0，然后刷新 JobFlow。",
+    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.6.1，然后刷新 JobFlow。",
     browserAssistRestartRequired: "扩展已重载，本次辅助已安全停止。请重新打开这份申请的起始页，再建立一次连接；JobFlow 没有自动重试 Next/Continue。",
     browserAssistManualRestart: "这次一次性下一步证明没有安全建立。请结束并重新启动这项申请辅助；JobFlow 不会自动重试。",
     browserAssistReloadUnknown: "扩展在最终提交等待阶段被重载，结果已安全标记为未知。请回答“是否提交成功”；JobFlow 不会自动重试。",
@@ -59,7 +59,7 @@ const STRINGS = {
     browserAssistManualNavigation: "这个 Next/Continue 必须由你亲自点击。进入下一页后，再点浏览器伴侣中的“继续分析当前页”。",
   },
   en: {
-    guidedIntakeEyebrow: "NEXT JOB", guidedIntakeTitle: "Paste a job link to begin", guidedIntakeBody: "Start from the role on the company's website. The companion reads only the job page and form you explicitly choose, then prepares the tailored resume, optional Cover Letter, portfolio items, and one review packet.", guidedIntakeIdle: "Not started", guidedOfficialUrl: "Company job link", guidedIntakeConsent: "For the next 30 minutes, I allow JobFlow to read only the company job page and application-form structure I explicitly choose in the browser. This stage does not fill, upload, or click page controls.", startGuidedIntake: "Connect browser and begin", guidedOpenJob: "Open company job page", guidedStepOneTitle: "Open the company role", guidedStepOneBody: "Paste the link once and connect the browser.", guidedStepTwoTitle: "Read the role", guidedStepTwoBody: "On the role page, open the JobFlow J icon and choose Read this company job page.", guidedStepThreeTitle: "Read the application form", guidedStepThreeBody: "Click Apply yourself. On the form, open J again and JobFlow will prepare the materials.", guidedStepFourTitle: "Review once", guidedStepFourBody: "Assisted filling appears only after you approve the materials and job questions.", guidedPairing: "Connecting the browser companion…", guidedPaired: "Connected. Open the company job page, then use the JobFlow J icon in the browser toolbar.", guidedAwaitingJob: "Waiting for you to read the company job page.", guidedAwaitingForm: "Role captured. Click Apply on the company page yourself, then use JobFlow J again on the application form.", guidedPreparing: "Preparing the job-specific resume, requested materials, and review packet…", guidedReady: "Materials and the review packet are ready. Complete the single review below.", guidedDeferred: "The approval queue is full. This role is safely waiting and will continue after you handle one item.", guidedFailed: "This read did not complete and the page was not filled or changed. Check the current page and retry.", guidedExtensionMissing: "The browser companion did not respond. Make sure JobFlow Browser Companion is enabled, then retry.", guidedUrlRequired: "Paste an HTTPS role link from the company's own website.", guidedConsentRequired: "Check the read-only job-import permission for this session first.", guidedReadinessRequired: "Complete the readiness items listed above first.", guidedWrongJobPage: "Read the role on the company's own website first, then open the application form linked from it yourself.", guidedFormMissing: "No application fields were found. Open the actual application form, then use JobFlow J again.", guidedJobTitleMissing: "A role title could not be identified reliably. Confirm that this is a specific company job page.", guidedLeaseInvalid: "This job-import connection expired. Start again.", advancedToolsTitle: "Advanced diagnostics and offline QA", advancedToolsBody: "Ordinary use does not need this area. Provide local snapshots only for development tests or when browser import is unavailable.", advancedToolsOpen: "Expand", browserAssistEyebrow: "APPROVED APPLICATION",
+    guidedIntakeEyebrow: "NEXT JOB", guidedIntakeTitle: "Paste a job link to begin", guidedIntakeBody: "Start from the role on the company's website. The companion reads only the job page and form you explicitly choose, then prepares the tailored resume, optional Cover Letter, portfolio items, and one review packet.", guidedIntakeIdle: "Not started", guidedOfficialUrl: "Company job link", guidedIntakeConsent: "For the next 30 minutes, I allow JobFlow to read only the company job page and application-form structure I explicitly choose in the browser. This stage does not fill, upload, or click page controls.", startGuidedIntake: "Connect browser and begin", guidedOpenJob: "Open company job page", cancelGuidedIntake: "Cancel this read and choose another URL", cancelGuidedIntakeConfirm: "Cancel this job read and choose another URL? This will not delete your resume, Profile, or other materials, and it will not modify the recruiting site.", cancellingGuidedIntake: "Cancelling this job read…", guidedCancelled: "This job read was cancelled. You can enter another URL now.", guidedCancelledCompanionReload: "This job read was cancelled, but the browser companion did not confirm that it released the old connection. Reload JobFlow Browser Companion on the extensions page before starting again.", guidedCancelUnavailable: "This job has already been created or queued. Handle it in pending review instead of deleting it silently.", guidedStepOneTitle: "Open the company role", guidedStepOneBody: "Paste the link once and connect the browser.", guidedStepTwoTitle: "Read the role", guidedStepTwoBody: "On the role page, open the JobFlow J icon and choose Read this company job page.", guidedStepThreeTitle: "Read the application form", guidedStepThreeBody: "Click Apply yourself. On the form, open J again and JobFlow will prepare the materials.", guidedStepFourTitle: "Review once", guidedStepFourBody: "Assisted filling appears only after you approve the materials and job questions.", guidedPairing: "Connecting the browser companion…", guidedPaired: "Connected. Open the company job page, then use the JobFlow J icon in the browser toolbar.", guidedAwaitingJob: "Waiting for you to read the company job page.", guidedAwaitingForm: "Role captured. Click Apply on the company page yourself, then use JobFlow J again on the application form.", guidedPreparing: "Preparing the job-specific resume, requested materials, and review packet…", guidedReady: "Materials and the review packet are ready. Complete the single review below.", guidedDeferred: "The approval queue is full. This role is safely waiting and will continue after you handle one item.", guidedFailed: "This read did not complete and the page was not filled or changed. Check the current page and retry.", guidedExtensionMissing: "The browser companion did not respond. Make sure JobFlow Browser Companion is enabled, then retry.", guidedUrlRequired: "Paste an HTTPS role link from the company's own website.", guidedConsentRequired: "Check the read-only job-import permission for this session first.", guidedReadinessRequired: "Complete the readiness items listed above first.", guidedWrongJobPage: "Read the role on the company's own website first, then open the application form linked from it yourself.", guidedFormMissing: "No application fields were found. Open the actual application form, then use JobFlow J again.", guidedJobTitleMissing: "A role title could not be identified reliably. Confirm that this is a specific company job page.", guidedLeaseInvalid: "This job-import connection expired. Start again.", advancedToolsTitle: "Advanced diagnostics and offline QA", advancedToolsBody: "Ordinary use does not need this area. Provide local snapshots only for development tests or when browser import is unavailable.", advancedToolsOpen: "Expand", browserAssistEyebrow: "APPROVED APPLICATION",
     retryCompanionPairing: "Show connection steps again",
     companionClickToPair: "This connection is ready. Stay on this JobFlow page, click the JobFlow J in the browser toolbar, then choose Connect this JobFlow page.",
     companionClickToReconnect: "The companion explicitly lost this binding, but the authorization is still retained. Click J on this JobFlow page to reconnect; JobFlow will not retry silently.",
@@ -67,7 +67,7 @@ const STRINGS = {
     companionSessionActive: "Another browser task is still active. Complete or explicitly stop it before starting this task.",
     guidedExtensionMissing: "The browser companion did not respond. Confirm the current extension is enabled and reloaded; you do not need to grant access on every website.",
     guidedExtensionOutdated: "The Browser Companion version does not match. Run the installer again and reload the Local AppData BrowserCompanion folder it opens.",
-    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.6.0, then refresh JobFlow.",
+    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.6.1, then refresh JobFlow.",
     browserAssistRestartRequired: "The extension reloaded, so this assist stopped safely. Reopen the approved application start page and connect again. JobFlow did not retry Next/Continue.",
     browserAssistManualRestart: "The one-use Next proof was not armed safely. End this application assist and start it again. JobFlow will not retry automatically.",
     browserAssistReloadUnknown: "The extension reloaded during the final-submit window, so the result is safely marked unknown. Answer whether submission succeeded; JobFlow will not retry.",
@@ -117,10 +117,10 @@ const STRINGS = {
   }
 };
 
-const UI_PROTOCOL_VERSION = 24;
+const UI_PROTOCOL_VERSION = 25;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj";
-const COMPANION_VERSION = "0.6.0";
+const COMPANION_VERSION = "0.6.1";
 const COMPANION_PAIRING_STORAGE = "jobflow-companion-pairing-v2";
 const COMPANION_POLL_BASE_MS = 1500;
 const COMPANION_POLL_MAX_MS = 12000;
@@ -138,7 +138,7 @@ const ACTIVITY_ESTIMATES = {
   deletingSource: 7, transformingClaims: 8, reprocessing: 45,
   reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5, savingQueueDecision: 7, savingApplicationFields: 8,
   discoveringJobs: 8, approvingExternalClaims: 7, loadingTailoringManifest: 8, approvingTailoringManifest: 7,
-  preparingOfflineApplication: 150, startingGuidedIntake: 10, preparingGuidedApplication: 300, startingBrowserAssist: 10, resolvingSubmission: 5
+  preparingOfflineApplication: 150, startingGuidedIntake: 10, cancellingGuidedIntake: 5, preparingGuidedApplication: 300, startingBrowserAssist: 10, resolvingSubmission: 5
 };
 const STANDARD_CHATGPT_EXPORT_BYTES = 200 * 1024 * 1024;
 const MAX_RETAINED_SOURCE_BYTES = 64 * 1024 * 1024;
@@ -290,6 +290,17 @@ function postPendingCompanionPairing(){
   window.postMessage({type:"JOBFLOW_PAIR_REQUEST",protocol_version:2,pairing:record.pairing},location.origin);
 }
 
+async function releaseGuidedCompanionBinding(record){
+  if(!record||record.kind!=="guided")return false;
+  try{
+    const result=await companionExternalMessage({
+      type:"JOBFLOW_CANCEL_GUIDED",binding:record.pairing,intake_id:record.session?.intake_id
+    },2200);
+    if(!companionVersionCurrent(result))throw pairingError(result);
+    return result.status==="GUIDED_INTAKE_COMPANION_CLEARED";
+  }catch(_error){return false;}
+}
+
 function makeUiError(code, details={}) { const error=new Error(code); error.code=code; error.details=details; return error; }
 function isAiReady(engine){
   const capability=engine?.structured_capability_status;
@@ -388,6 +399,7 @@ const LOCAL_ERROR_KEYS = {
   GUIDED_INTAKE_JOB_PAGE_MISSING:"guidedFailed", GUIDED_INTAKE_STAGE_INVALID:"guidedFailed",
   GUIDED_INTAKE_TOKEN_INVALID:"guidedLeaseInvalid", GUIDED_INTAKE_NOT_FOUND:"guidedLeaseInvalid",
   GUIDED_INTAKE_EXPIRED:"guidedLeaseInvalid", ROUTE_URL_SENSITIVE_QUERY:"guidedUrlRequired",
+  GUIDED_INTAKE_ID_INVALID:"guidedLeaseInvalid", GUIDED_INTAKE_CANCEL_UNAVAILABLE:"guidedCancelUnavailable",
   BROWSER_COMPANION_ORIGIN_FORBIDDEN:"guidedExtensionMissing",
   APPLICATION_NOT_APPROVED:"browserAssistNotApproved", BROWSER_ASSIST_ROUTE_UNSUPPORTED:"browserAssistRouteUnsupported",
   BROWSER_ASSIST_ROUTE_UNSAFE:"browserAssistRouteUnsupported", BROWSER_ASSIST_ALREADY_ACTIVE:"browserAssistActive",
@@ -782,13 +794,15 @@ function renderGuidedIntake(){
   const recoverableStatuses=["GUIDED_INTAKE_PAIRING","AWAITING_JOB_PAGE_CAPTURE","AWAITING_APPLICATION_FORM_CAPTURE","FORM_CAPTURE_FAILED"];
   const retryPairing=active&&session?.paired!==true&&recoverableStatuses.includes(status)&&state.companionPairing?.kind==="guided";
   const restartPairing=active&&recoverableStatuses.includes(status)&&!state.companionPairing;
-  const input=document.querySelector("#guidedOfficialUrl"), confirm=document.querySelector("#guidedIntakeConfirm"), start=document.querySelector("#startGuidedIntake");
+  const input=document.querySelector("#guidedOfficialUrl"), confirm=document.querySelector("#guidedIntakeConfirm"), start=document.querySelector("#startGuidedIntake"), cancel=document.querySelector("#cancelGuidedIntake");
   if(!input||!confirm||!start)return;
   const validUrl=isHttpsUrl(input.value.trim());
   input.disabled=demo||!ready||assistActive||(active&&!terminal&&!restartPairing);
   confirm.disabled=demo||!ready||assistActive||(active&&!terminal&&!restartPairing);
   start.textContent=t(retryPairing||restartPairing?"retryCompanionPairing":"startGuidedIntake");
   start.disabled=demo||!ready||assistActive||(retryPairing?false:(!validUrl||!confirm.checked||(active&&!terminal&&!restartPairing)));
+  const cancellable=["GUIDED_INTAKE_PAIRING","GUIDED_INTAKE_PAIRED","AWAITING_JOB_PAGE_CAPTURE","AWAITING_APPLICATION_FORM_CAPTURE","FORM_CAPTURE_FAILED"].includes(status);
+  if(cancel){cancel.classList.toggle("hidden",demo||!active||!cancellable);cancel.disabled=assistActive;}
   const badge=document.querySelector("#guidedIntakeBadge"), message=document.querySelector("#guidedIntakeMessage");
   badge.textContent=guidedIntakeMessage(status);
   const connectionNotice=state.companionPairing?.kind==="guided"&&state.companionConnectionNotice?t(state.companionConnectionNotice):"";
@@ -1640,6 +1654,30 @@ function previewSelections(sourceId, forceSelected=null){
 }
 
 document.addEventListener("click", async event => {
+  const cancelGuided=event.target.closest("#cancelGuidedIntake");
+  if(cancelGuided){
+    const session=state.guidedIntakeSession||state.data?.guided_intake, intakeId=String(session?.intake_id||"");
+    if(!intakeId||!window.confirm(t("cancelGuidedIntakeConfirm")))return;
+    const pairing=state.companionPairing?.kind==="guided"?state.companionPairing:null;
+    try{
+      let companionCleared=true;
+      await withActivity("cancellingGuidedIntake",async()=>{
+        await api("cancel-guided-intake",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({intake_id:intakeId,user_confirmed:true})
+        });
+        companionCleared=await releaseGuidedCompanionBinding(pairing);
+      });
+      clearCompanionPairing();state.guidedIntakeSession=null;
+      document.querySelector("#guidedOfficialUrl").value="";
+      document.querySelector("#guidedIntakeConfirm").checked=false;
+      if(state.data)state.data.guided_intake={status:"IDLE",active:false,real_external_actions:0};
+      renderGuidedIntake();
+      try{await refreshLatest();}catch(_error){/* The local cancellation already succeeded; the next refresh reconciles state. */}
+      showToast(t(companionCleared?"guidedCancelled":"guidedCancelledCompanionReload"),!companionCleared,12000);
+    }catch(error){handleUiError(error);renderGuidedIntake();}
+    return;
+  }
   const startGuided=event.target.closest("#startGuidedIntake");
   if(startGuided){
     if(companionModeConflict("guided")){handleUiError(makeUiError("BROWSER_COMPANION_SESSION_ACTIVE"));return;}

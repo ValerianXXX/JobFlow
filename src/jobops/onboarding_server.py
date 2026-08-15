@@ -604,6 +604,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.start_browser_assist(self._json_body())
             elif route == "start-guided-intake":
                 result = self.server.service.start_guided_intake(self._json_body())
+            elif route == "cancel-guided-intake":
+                result = self.server.service.cancel_guided_intake(self._json_body())
             elif route == "resolve-browser-assist-unknown":
                 result = self.server.service.resolve_browser_assist_unknown(self._json_body())
             elif route == "prepare-synthetic-execution":

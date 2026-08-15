@@ -54,7 +54,7 @@ function signedPairResult(url, options) {
     assist_path: assistPath,
     base_url: parsed.origin,
     challenge: String(body.companion_binding.challenge),
-    extension_version: "0.6.0",
+    extension_version: "0.6.1",
     installation_id: String(body.companion_binding.installation_id),
     protocol_version: "2"
   };
@@ -79,7 +79,7 @@ function signedPairResult(url, options) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.6.0"}; },
+    getManifest() { return {version: "0.6.1"}; },
     getURL(pathname) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${pathname}`; },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },
@@ -163,9 +163,22 @@ async function waitUntil(predicate) {
   assert.equal(fakeLoopbackPair.code, "COMPANION_EXTERNAL_PAIR_FORBIDDEN");
   assert.equal(fetches.length, 0, "a loopback page must not initiate pairing");
 
+  delayNextPair = true;
+  const cancelledPendingPair = send(listeners.internal, {type: "JOBFLOW_PAIR", pairing}, tabSender);
+  await waitUntil(() => releaseDelayedPair !== null);
+  const cancelledWhilePairing = await send(listeners.external, {
+    type: "JOBFLOW_CANCEL_GUIDED", binding: pairing, intake_id: "GIN-SYNTHETIC-PAIRING"
+  }, sender);
+  assert.equal(cancelledWhilePairing.status, "GUIDED_INTAKE_COMPANION_CLEARED");
+  releaseDelayedPair();
+  releaseDelayedPair = null;
+  const cancelledPairResult = await cancelledPendingPair;
+  assert.equal(cancelledPairResult.code, "COMPANION_SESSION_GENERATION_CHANGED");
+  assert.equal(session.jobflowAssist, undefined, "a cancelled pairing must not restore its session");
+
   const paired = await send(listeners.internal, {type: "JOBFLOW_PAIR", pairing}, tabSender);
   assert.equal(paired.status, "GUIDED_INTAKE_PAIRED", JSON.stringify(paired));
-  assert.equal(fetches.length, 1);
+  assert.equal(fetches.length, 2);
   assert.ok(session.jobflowAssist.generation);
 
   invalidNextProof = true;
@@ -195,6 +208,27 @@ async function waitUntil(predicate) {
     type: "JOBFLOW_GET_STATUS", binding: {...pairing, assist_path: `/intake/${"b".repeat(54)}`}
   }, sender);
   assert.equal(wrongStatus.code, "COMPANION_STATUS_BINDING_INVALID");
+
+  const wrongCancel = await send(listeners.external, {
+    type: "JOBFLOW_CANCEL_GUIDED", binding: pairing, intake_id: "GIN-DIFFERENT-INTAKE"
+  }, sender);
+  assert.equal(wrongCancel.code, "COMPANION_CANCEL_BINDING_INVALID");
+  assert.equal(session.jobflowAssist.intake_id, "GIN-SYNTHETIC-PAIRING");
+  const wrongTabCancel = await send(listeners.external, {
+    type: "JOBFLOW_CANCEL_GUIDED", binding: pairing, intake_id: "GIN-SYNTHETIC-PAIRING"
+  }, {...sender, tab: {id: 12}});
+  assert.equal(wrongTabCancel.code, "COMPANION_CANCEL_BINDING_INVALID");
+  const cancelled = await send(listeners.external, {
+    type: "JOBFLOW_CANCEL_GUIDED", binding: pairing, intake_id: "GIN-SYNTHETIC-PAIRING"
+  }, sender);
+  assert.equal(cancelled.status, "GUIDED_INTAKE_COMPANION_CLEARED");
+  assert.equal(session.jobflowAssist, undefined);
+  const cancelledAgain = await send(listeners.external, {
+    type: "JOBFLOW_CANCEL_GUIDED", binding: pairing, intake_id: "GIN-SYNTHETIC-PAIRING"
+  }, sender);
+  assert.equal(cancelledAgain.status, "GUIDED_INTAKE_COMPANION_CLEARED");
+  const pairedAfterCancel = await send(listeners.internal, {type: "JOBFLOW_PAIR", pairing}, tabSender);
+  assert.equal(pairedAfterCancel.status, "GUIDED_INTAKE_PAIRED");
 
   const fetchCountBeforeModeAttack = fetches.length;
   session.jobflowAssist = {...session.jobflowAssist, mode: "APPLICATION_ASSIST"};
@@ -249,7 +283,8 @@ async function waitUntil(predicate) {
     installation_hmac_required: true, fake_loopback_rejected: true, unsigned_routing_change_rejected: true,
     different_mode_blocked: true, stale_async_completion_blocked: true,
     final_review_immutable: true, unrelated_tab_update_ignored: true,
-    same_bound_tab_result_observed: true, binding_scoped_status: true, capability_values_redacted: true,
+    same_bound_tab_result_observed: true, binding_scoped_status: true, scoped_cancel_releases_session: true,
+    capability_values_redacted: true,
     network_calls: fetches.length, real_external_actions: 0
   }));
 })().catch((error) => {

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260814-jobflow-v24-companion-v5">
+  <link rel="stylesheet" href="styles.css?v=20260814-jobflow-v25-guided-cancel-v1">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -98,6 +98,7 @@
             <div class="guided-intake-actions">
               <button id="startGuidedIntake" class="primary" type="button" data-i18n="startGuidedIntake" disabled>连接浏览器并开始</button>
               <a id="guidedOpenJob" class="button-link compact hidden" target="_blank" rel="noopener noreferrer" data-i18n="guidedOpenJob">打开公司岗位页</a>
+              <button id="cancelGuidedIntake" class="secondary compact guided-cancel hidden" type="button" data-i18n="cancelGuidedIntake">取消本次读取并更换网址</button>
             </div>
             <p id="guidedIntakeMessage" class="guided-intake-message" aria-live="polite"></p>
           </div>
@@ -425,6 +426,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260814-jobflow-v24-windows-hermes-v1"></script>
+  <script src="app.js?v=20260814-jobflow-v25-guided-cancel-v1"></script>
 </body>
 </html>

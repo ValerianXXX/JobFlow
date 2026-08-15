@@ -1998,6 +1998,8 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("function collectApplicationFieldResolutions()", app)
         self.assertIn('api("queue-limit"', app)
         self.assertIn('api("external-action-kill-switch"', app)
+        self.assertIn('api("cancel-guided-intake"', app)
+        self.assertIn('id="cancelGuidedIntake"', html)
         self.assertIn('api("review-packet"', app)
         self.assertIn('api("resolve-application-fields"', app)
         self.assertIn('api("queue-decision"', app)

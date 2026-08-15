@@ -497,6 +497,47 @@ function externalBindingMatches(message, senderOrigin, state) {
   );
 }
 
+async function cancelGuidedBinding(message, senderOrigin, senderTabId) {
+  const state = await sessionState();
+  if (!state) {
+    return {
+      status: "GUIDED_INTAKE_COMPANION_CLEARED", paired: false,
+      protocol_version: PROTOCOL, extension_version: EXTENSION_VERSION
+    };
+  }
+  if (
+    !externalBindingMatches(message, senderOrigin, state) ||
+    state.mode !== "JOB_CAPTURE" ||
+    typeof message.intake_id !== "string" || !message.intake_id ||
+    (state.intake_id && message.intake_id !== state.intake_id) ||
+    !Number.isInteger(senderTabId) ||
+    (Number.isInteger(state.jobflow_tab_id) && senderTabId !== state.jobflow_tab_id)
+  ) {
+    return {
+      status: "BLOCKED", code: "COMPANION_CANCEL_BINDING_INVALID",
+      protocol_version: PROTOCOL, extension_version: EXTENSION_VERSION,
+      automatic_retry: false
+    };
+  }
+  const cleared = await clearSessionCAS(state);
+  if (!cleared) {
+    return {
+      status: "BLOCKED", code: "COMPANION_SESSION_GENERATION_CHANGED",
+      protocol_version: PROTOCOL, extension_version: EXTENSION_VERSION,
+      automatic_retry: false
+    };
+  }
+  return {
+    status: "GUIDED_INTAKE_COMPANION_CLEARED",
+    intake_id: state.intake_id || message.intake_id,
+    paired: false,
+    protocol_version: PROTOCOL,
+    extension_version: EXTENSION_VERSION,
+    automatic_retry: false,
+    real_external_actions: 0
+  };
+}
+
 async function sha256(value) {
   const bytes = new TextEncoder().encode(String(value));
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
@@ -1128,6 +1169,9 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
         message: "Open the JobFlow companion and connect from its popup.",
         protocol_version: PROTOCOL, extension_version: EXTENSION_VERSION
       };
+    }
+    if (message.type === "JOBFLOW_CANCEL_GUIDED") {
+      return await cancelGuidedBinding(message, senderOrigin, sender?.tab?.id);
     }
     if (message.type === "JOBFLOW_GET_STATUS") {
       const state = await sessionState();

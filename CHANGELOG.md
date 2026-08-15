@@ -6,6 +6,11 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+## [0.2.2] - release candidate / 发布候选
+
+- Guided job intake now has an explicit bilingual cancel-and-reselect action. It revokes the selected in-memory intake, releases the matching Browser Companion session, unlocks the URL field, and records zero real external actions.
+- 岗位读取现在提供明确的中英双语“取消本次读取并更换网址”。它会撤销对应的本机内存授权、释放浏览器伴侣会话、重新解锁网址输入框，并保持真实外部动作数为 0。
+
 ## [0.2.1] - release candidate / 发布候选
 
 - Native Windows Hermes can now be discovered independently from its official Local AppData installation even when the JobFlow process inherited a stale `PATH`.
