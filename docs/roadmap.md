@@ -34,11 +34,11 @@ This roadmap separates implemented offline evidence from future capabilities tha
 ## Before a public GitHub release / GitHub 正式发布前
 
 - [x] Confirm or replace the public Git author identity without exposing a private email.
-- [ ] Run fresh independent QA from a frozen clean copy of the final commit.
+- [x] Run fresh independent QA from a frozen clean copy of the final commit.
 - [x] Capture sanitized bilingual screenshots from the completed local-only synthetic demo.
-- [ ] Perform first-time installation on a clean supported Windows user profile.
+- [x] Perform first-time installation on a clean supported Windows user profile.
 - [x] Confirm repository name, owner, description, topics and private vulnerability reporting.
-- [ ] Create the repository and upload only after explicit user authorization.
+- [x] Create the repository and upload only after explicit user authorization.
 
 ## Future, separately authorized / 未来需另行授权
 

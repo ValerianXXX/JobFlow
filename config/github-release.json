@@ -15,5 +15,5 @@
   "metadata_confirmed_by_user": true,
   "private_vulnerability_reporting_confirmed": true,
   "sanitized_screenshots_approved": true,
-  "clean_windows_profile_tested": false
+  "clean_windows_profile_tested": true
 }

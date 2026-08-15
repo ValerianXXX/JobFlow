@@ -6,12 +6,16 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
-## [0.2.4] - release candidate / 发布候选
+## [0.2.4] - 2026-08-15
 
 - Guided application-form analysis now starts one idempotent local background job and uses short Browser Companion status polls. Multi-minute AI and document preparation no longer fails at the former 15-second request limit, and raw browser `AbortSignal` messages are replaced by bilingual local guidance.
 - 申请表分析现在只启动一个幂等的本机后台任务，并由浏览器伴侣用短请求查询进度。耗时数分钟的 AI 与文档生成不再被原来的 15 秒请求上限中断，浏览器原始 `AbortSignal` 异常也改为中英双语本机提示。
 - Public-release readiness tests now keep their pending-decision checks inside isolated fixtures, so confirmed repository metadata and approved sanitized screenshots can be shipped without weakening the safe no-Git source-package block.
 - 公开发布门禁测试现在只在隔离夹具中验证“尚未确认”的决定，使已确认的仓库资料和获批脱敏截图可以进入发布提交，同时不放宽无 Git 源码包的安全阻断。
+- Windows launcher verification now uses a clean child environment and file-backed output capture, so full-suite process patches cannot hide one-click health-check results.
+- Windows 启动器验证现在使用干净子进程环境和文件式输出捕获，完整测试中的进程替身不会再吞掉一键健康检查结果。
+- Release archives are copied into destination-volume staging before atomic replacement, supporting clean GitHub Windows runners whose temporary and workspace directories use different drives.
+- 发布包会先复制到目标磁盘的暂存文件再原子替换，兼容临时目录与工作区位于不同盘符的干净 GitHub Windows runner。
 
 ## [0.2.3] - release candidate / 发布候选
 
