@@ -15,6 +15,7 @@ else {
 }
 
 $actions = @{
+    GIT_REPOSITORY_REQUIRED = @("源码包尚未初始化为本地 Git 仓库；这不影响 JobFlow 正常使用", "The source package is not initialized as a local Git repository; normal JobFlow use is unaffected")
     GIT_WORKTREE_NOT_CLEAN = @("先提交并验证本地改动", "Commit and verify the local changes")
     VERSION_METADATA_MISMATCH = @("统一版本号与变更记录", "Align the version metadata and changelog")
     LOCAL_RELEASE_VERIFICATION_NOT_PASSING = @("运行完整本地发布验证", "Run the complete local release verification")

@@ -71,43 +71,62 @@ def release_readiness(project: Path, database: JobOpsDB) -> dict[str, Any]:
     version = str(metadata.get("project", {}).get("version", ""))
     changelog = (project / "CHANGELOG.md").read_text(encoding="utf-8") if (project / "CHANGELOG.md").is_file() else ""
     version_consistent = version == __version__ and f"## [{version}]" in changelog
-    head_commit = _git(project, "rev-parse", "HEAD")
-    worktree_clean = not bool(_git(project, "status", "--porcelain", "--untracked-files=all"))
-    repository = verify_public_repository(project)
     try:
-        local = verify_release(project, database, require_independent=False)
-        local_status = "PASS" if local["status"] == "PASS" else "FAIL"
-        independent_fresh = bool(local.get("checks", {}).get("independent_qa"))
+        head_commit = _git(project, "rev-parse", "HEAD")
+        git_available = True
     except JobOpsError:
+        head_commit = "0" * 40
+        git_available = False
+
+    if git_available:
+        worktree_clean = not bool(_git(project, "status", "--porcelain", "--untracked-files=all"))
+        repository = verify_public_repository(project)
+        try:
+            local = verify_release(project, database, require_independent=False)
+            local_status = "PASS" if local["status"] == "PASS" else "FAIL"
+            independent_fresh = bool(local.get("checks", {}).get("independent_qa"))
+        except (JobOpsError, RuntimeError):
+            local_status = "MISSING_OR_STALE"
+            independent_fresh = False
+
+        candidate_path = project / "reports" / "release-candidate.json"
+        if not candidate_path.is_file():
+            candidate_status = "MISSING"
+        else:
+            try:
+                candidate = load_json(candidate_path)
+                if candidate.get("commit") != head_commit:
+                    candidate_status = "STALE"
+                elif (
+                    candidate.get("status") == "RELEASE_CANDIDATE_BUILT"
+                    and candidate.get("archive", {}).get("status") == "PASS"
+                    and candidate.get("source_smoke", {}).get("status") == "PASS"
+                    and candidate.get("uploaded") is False
+                ):
+                    candidate_status = "PASS"
+                else:
+                    candidate_status = "FAIL"
+            except (OSError, ValueError, TypeError):
+                candidate_status = "FAIL"
+        tags = {item for item in _git(project, "tag", "--points-at", "HEAD").splitlines() if item}
+    else:
+        worktree_clean = False
+        repository = {
+            "status": "FAIL",
+            "author_identity": {"status": "REVIEW_REQUIRED"},
+            "public_release_blockers": [],
+        }
         local_status = "MISSING_OR_STALE"
         independent_fresh = False
-
-    candidate_path = project / "reports" / "release-candidate.json"
-    if not candidate_path.is_file():
         candidate_status = "MISSING"
-    else:
-        try:
-            candidate = load_json(candidate_path)
-            if candidate.get("commit") != head_commit:
-                candidate_status = "STALE"
-            elif (
-                candidate.get("status") == "RELEASE_CANDIDATE_BUILT"
-                and candidate.get("archive", {}).get("status") == "PASS"
-                and candidate.get("source_smoke", {}).get("status") == "PASS"
-                and candidate.get("uploaded") is False
-            ):
-                candidate_status = "PASS"
-            else:
-                candidate_status = "FAIL"
-        except (OSError, ValueError, TypeError):
-            candidate_status = "FAIL"
-
-    tags = {item for item in _git(project, "tag", "--points-at", "HEAD").splitlines() if item}
+        tags = set()
     expected_tag = f"v{version}"
     release_tag_status = "PRESENT" if expected_tag in tags else "MISMATCH" if tags else "MISSING"
     manual_gates = github_release_gates(project)
     blockers: list[str] = []
-    if not worktree_clean:
+    if not git_available:
+        blockers.append("GIT_REPOSITORY_REQUIRED")
+    elif not worktree_clean:
         blockers.append("GIT_WORKTREE_NOT_CLEAN")
     if not version_consistent:
         blockers.append("VERSION_METADATA_MISMATCH")
@@ -132,6 +151,7 @@ def release_readiness(project: Path, database: JobOpsDB) -> dict[str, Any]:
         blockers.append(f"RELEASE_TAG_{release_tag_status}")
     blockers = list(dict.fromkeys(blockers))
     next_actions = {
+        "GIT_REPOSITORY_REQUIRED": "initialize or restore the local Git repository before checking public-release readiness",
         "GIT_WORKTREE_NOT_CLEAN": "commit the verified local changes",
         "VERSION_METADATA_MISMATCH": "align pyproject, package version and changelog",
         "LOCAL_RELEASE_VERIFICATION_NOT_PASSING": "run the full local release verification",

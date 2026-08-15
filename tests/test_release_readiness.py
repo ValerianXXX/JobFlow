@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import unittest
+from unittest.mock import patch
 
 from _support import PROJECT, project_temp
-from jobops.release_readiness import github_release_gates
+from jobops.errors import JobOpsError
+from jobops.release_readiness import github_release_gates, release_readiness
 
 
 class ReleaseReadinessContractTests(unittest.TestCase):
@@ -67,6 +69,21 @@ class ReleaseReadinessContractTests(unittest.TestCase):
                     "clean_windows_profile": "PASS",
                 },
             )
+
+    def test_extracted_source_without_git_returns_a_safe_release_block(self) -> None:
+        with patch(
+            "jobops.release_readiness._git",
+            side_effect=JobOpsError("RELEASE_GIT_FAILED", "synthetic missing Git metadata"),
+        ):
+            result = release_readiness(PROJECT, object())  # type: ignore[arg-type]
+        self.assertEqual(result["status"], "PUBLIC_RELEASE_BLOCKED")
+        self.assertEqual(result["head_commit"], "0" * 40)
+        self.assertFalse(result["worktree_clean"])
+        self.assertIn("GIT_REPOSITORY_REQUIRED", result["blockers"])
+        self.assertIn("GITHUB_REPOSITORY_METADATA_REQUIRED", result["blockers"])
+        self.assertFalse(result["upload_performed"])
+        self.assertEqual(result["network_actions"], 0)
+        self.assertEqual(result["real_external_actions"], 0)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,8 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 - WSL 自动发现同时支持各发行版中的 `venv` 与 `.venv` Hermes 环境。
 - JobFlow does not extract, return, log or persist Agent API keys, tokens, cookies or other credential values; Hermes resolves its own configured provider inside the isolated child process.
 - JobFlow 不提取、不回传、不记录也不持久化 Agent 的 API Key、Token、Cookie 或其他凭据值；Hermes 仅在隔离子进程内自行解析其已配置的 provider。
+- Extracted source packages without `.git` now return a clear, schema-valid public-release block while normal JobFlow startup remains available.
+- 未初始化 `.git` 的解压源码包现在会给出清晰且符合 Schema 的发布阻断；JobFlow 的正常启动不受影响。
 
 ## [0.2.0] - release candidate / 发布候选
 
