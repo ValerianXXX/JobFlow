@@ -1973,6 +1973,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="applicationFieldResolutionPanel"', html)
         self.assertIn('id="applicationFieldResolutionList"', html)
         self.assertIn('id="applicationFieldResolutionConfirm"', html)
+
         self.assertIn('id="saveApplicationFieldResolutions"', html)
         self.assertIn('id="officialSnapshotFile"', html)
         self.assertIn('id="analyzeOfficialSnapshot"', html)
@@ -2006,6 +2007,37 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="packetDecisionConfirm"', html)
         self.assertIn('id="confirmPacketDecision"', html)
         self.assertNotIn("showToast(e.message", app)
+
+    def test_ui_distinguishes_windows_hermes_failures_and_preserves_success_before_refresh(self) -> None:
+        app = (PROJECT / "src" / "jobops" / "ui" / "app.js").read_text(encoding="utf-8")
+        html = (PROJECT / "src" / "jobops" / "ui" / "index.html").read_text(encoding="utf-8")
+        expected_error_mappings = {
+            "AI_WINDOWS_HERMES_AUTH_REQUIRED": "aiWindowsHermesAuthRequired",
+            "AI_WINDOWS_HERMES_CONNECTION_FAILED": "aiWindowsHermesConnectionFailed",
+            "AI_WINDOWS_HERMES_PROXY_FAILED": "aiWindowsHermesProxyFailed",
+            "AI_AGENT_UNAVAILABLE": "aiAgentConnectionFailed",
+            "AI_AGENT_HANDSHAKE_FAILED": "aiAgentHandshakeFailed",
+            "AI_AGENT_MODEL_UNAVAILABLE": "aiAgentModelUnavailable",
+        }
+        for code, key in expected_error_mappings.items():
+            self.assertIn(f'{code}: "{key}"', app)
+        for bilingual_fragment in (
+            "已在 Windows 找到 Hermes",
+            "Hermes was found on Windows",
+            "终端能正常对话不代表",
+            "A working Hermes chat does not mean",
+            "连接已经保存；请刷新此页面，不要重复连接",
+            "The connection was saved; refresh this page instead of connecting again",
+        ):
+            self.assertIn(bilingual_fragment, app)
+        self.assertIn("const connectionResult=await api(\"connect-ai\"", app)
+        self.assertIn("state.data.ai_engine=connectionResult.ai_engine", app)
+        self.assertIn("state.data.ai_connection=connectionResult.ai_connection", app)
+        self.assertIn("try{await refresh(true);}", app)
+        self.assertIn("catch(_refreshError)", app)
+        self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
+        self.assertIn("state.aiConnectionErrorCode=error?.code", app)
+        self.assertIn("windows-hermes-v1", html)
 
 
 if __name__ == "__main__":

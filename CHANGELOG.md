@@ -6,6 +6,17 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+## [0.2.1] - release candidate / 发布候选
+
+- Native Windows Hermes can now be discovered independently from its official Local AppData installation even when the JobFlow process inherited a stale `PATH`.
+- 原生 Windows Hermes 现在可从官方 Local AppData 安装位置独立发现；即使 JobFlow 进程继承了旧的 `PATH`，也无需用户重新安装或手工填写路径。
+- JobFlow uses Hermes' currently selected provider and model through a zero-tool stdin channel. `hermes proxy` remains a compatibility fallback rather than a connection prerequisite.
+- JobFlow 通过零工具 stdin 通道调用 Hermes 当前已选择的 provider 与 model；`hermes proxy` 仅作为兼容回退，不再是连接前提。
+- WSL discovery recognizes both `venv` and `.venv` Hermes environments across installed distributions.
+- WSL 自动发现同时支持各发行版中的 `venv` 与 `.venv` Hermes 环境。
+- JobFlow does not extract, return, log or persist Agent API keys, tokens, cookies or other credential values; Hermes resolves its own configured provider inside the isolated child process.
+- JobFlow 不提取、不回传、不记录也不持久化 Agent 的 API Key、Token、Cookie 或其他凭据值；Hermes 仅在隔离子进程内自行解析其已配置的 provider。
+
 ## [0.2.0] - release candidate / 发布候选
 
 - Added user-present, per-application multi-page assistance for bound company, Greenhouse, Lever and Workday routes. Every page gets fresh form classification, a rotated action session, approved-only prefill/material attachment, and one-use authorization for one explicit non-final Next/Continue control.

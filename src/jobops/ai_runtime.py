@@ -86,6 +86,7 @@ def _run_bounded_ai_command(
     *,
     timeout_seconds: int,
     cwd: Path | None = None,
+    env: dict[str, str] | None = None,
 ) -> tuple[int, str]:
     """Run a local AI adapter without ever buffering unbounded process output."""
     creation_flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
@@ -99,6 +100,7 @@ def _run_bounded_ai_command(
             shell=False,
             creationflags=creation_flags,
             cwd=cwd,
+            env=env,
         )
     except OSError as exc:
         raise JobOpsError("AI_ENGINE_UNAVAILABLE", "The configured local AI engine could not start.") from exc

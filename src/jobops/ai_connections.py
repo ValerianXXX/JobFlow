@@ -26,7 +26,7 @@ from .ai_runtime import (
     configured_ai_engine,
 )
 from .errors import JobOpsError
-from .util import iso_utc
+from .util import has_reparse_component, iso_utc
 from .source_quality import safe_ai_failure_category
 
 
@@ -41,6 +41,7 @@ AI_CAPABILITY_TEST_TEXT = (
 )
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 AGENT_CONNECTORS = {
+    "hermes_agent",
     "hermes_proxy",
     "wsl_hermes_proxy",
     "wsl_hermes_agent",
@@ -81,16 +82,27 @@ HTTPJSON = Callable[..., dict[str, Any]]
 CommandResolver = Callable[[str], str | None]
 
 
+def _is_safe_model_ref(value: Any) -> bool:
+    """Accept public model identifiers, never paths, URIs, or traversal segments."""
+    if not isinstance(value, str) or SAFE_MODEL_REF.fullmatch(value) is None:
+        return False
+    lowered = value.casefold()
+    if lowered.startswith("file:") or re.match(r"^[a-z]:/", lowered):
+        return False
+    segments = value.split("/")
+    return all(segment not in {"", ".", ".."} for segment in segments)
+
+
 _HERMES_METADATA_PROBE_CODE = r'''
 # JOBOPS_HERMES_METADATA_V1
 import contextlib
-import io
 import json
 import logging
+import os
 
 try:
     logging.disable(logging.CRITICAL)
-    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+    with open(os.devnull, "w", encoding="utf-8") as sink, contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
         from hermes_cli.config import load_config
         config = load_config()
         model_config = config.get("model", {}) if isinstance(config, dict) else {}
@@ -112,7 +124,6 @@ except BaseException:
 _HERMES_SAFE_ADAPTER_CODE = r'''
 # JOBOPS_HERMES_SAFE_ADAPTER_V1
 import contextlib
-import io
 import json
 import logging
 import os
@@ -143,9 +154,7 @@ try:
         tool_calls.append("blocked")
         raise RuntimeError("JobOps blocks every Hermes tool during document analysis")
 
-    captured_stdout = io.StringIO()
-    captured_stderr = io.StringIO()
-    with contextlib.redirect_stdout(captured_stdout), contextlib.redirect_stderr(captured_stderr):
+    with open(os.devnull, "w", encoding="utf-8") as sink, contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
         from hermes_cli.config import load_config
         from hermes_cli.runtime_provider import resolve_runtime_provider
         from run_agent import AIAgent
@@ -218,6 +227,23 @@ except SystemExit:
     raise
 except BaseException:
     emit({"ok": False, "status": "error", "toolSummary": {"calls": len(tool_calls), "tools": []}}, 5)
+'''.strip()
+
+
+_WSL_HERMES_PYTHON_SELECTION = r'''
+jobops_python=""
+for jobops_candidate in \
+  "$HOME/.hermes/hermes-agent/venv/bin/python3" \
+  "$HOME/.hermes/hermes-agent/.venv/bin/python3" \
+  "$HOME/.hermes/hermes-agent/venv/bin/python" \
+  "$HOME/.hermes/hermes-agent/.venv/bin/python"
+do
+  if [ -x "$jobops_candidate" ]; then
+    jobops_python="$jobops_candidate"
+    break
+  fi
+done
+[ -n "$jobops_python" ] || exit 127
 '''.strip()
 
 
@@ -411,9 +437,12 @@ def _model_names(value: dict[str, Any], *, api_style: str) -> list[str]:
         if not isinstance(row, dict):
             continue
         name = row.get("name") if api_style == "ollama" else row.get("id")
-        if not isinstance(name, str) or not name.strip() or len(name) > 300:
+        if not isinstance(name, str):
             continue
-        output.append(name.strip())
+        normalized = name.strip()
+        if not _is_safe_model_ref(normalized):
+            continue
+        output.append(normalized)
     non_embedding = [item for item in output if not any(marker in item.casefold() for marker in ("embed", "whisper", "tts"))]
     return non_embedding or output
 
@@ -479,6 +508,7 @@ def _run_bounded_agent_command(
     *,
     timeout_seconds: int,
     cwd: Path | None = None,
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     try:
         returncode, stdout = _run_bounded_ai_command(
@@ -486,6 +516,7 @@ def _run_bounded_agent_command(
             request,
             timeout_seconds=timeout_seconds,
             cwd=cwd,
+            env=env,
         )
     except JobOpsError as exc:
         if exc.code == "AI_ENGINE_FAILED":
@@ -665,7 +696,7 @@ class AgentCLIEngine(AIAnalysisEngine):
     ) -> None:
         if connector_id != "openclaw" or not Path(executable).is_file():
             raise JobOpsError("AI_AGENT_CONNECTOR_INVALID", "The selected local Agent connector is unavailable.")
-        if not SAFE_MODEL_REF.fullmatch(model):
+        if not _is_safe_model_ref(model):
             raise JobOpsError("AI_AGENT_MODEL_INVALID", "OpenClaw did not report a safe configured model identifier.")
         self.executable = executable
         self.connector_id = connector_id
@@ -778,7 +809,7 @@ class WSLAgentCLIEngine(AgentCLIEngine):
         timeout_seconds: int = 240,
         process_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
     ) -> None:
-        if not SAFE_MODEL_REF.fullmatch(model):
+        if not _is_safe_model_ref(model):
             raise JobOpsError("AI_AGENT_MODEL_INVALID", "OpenClaw did not report a safe configured model identifier.")
         self.wsl_executable = wsl_executable
         self.distribution = distribution
@@ -847,6 +878,100 @@ class WSLAgentCLIEngine(AgentCLIEngine):
         return _validated_agent_result(completed)
 
 
+class WindowsHermesCLIEngine(AgentCLIEngine):
+    """Native Windows Hermes using its managed runtime and a zero-tool stdin adapter."""
+
+    def __init__(
+        self,
+        python_executable: str,
+        *,
+        model: str,
+        provider_id: str,
+        hermes_home: Path,
+        working_directory: Path,
+        timeout_seconds: int = 240,
+        process_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    ) -> None:
+        runtime = Path(python_executable)
+        if not runtime.is_file() or runtime.name.casefold() not in {"python.exe", "python3.exe"}:
+            raise JobOpsError("AI_AGENT_CONNECTOR_INVALID", "The native Hermes runtime is unavailable.")
+        if not _is_safe_model_ref(model):
+            raise JobOpsError("AI_AGENT_MODEL_INVALID", "Hermes did not report a safe configured model identifier.")
+        if not SAFE_PROVIDER_REF.fullmatch(provider_id):
+            raise JobOpsError("AI_AGENT_PROVIDER_INVALID", "Hermes did not report a safe configured provider identifier.")
+        self.python_executable = str(runtime)
+        self.hermes_home = hermes_home
+        self.executable = "hermes"
+        self.connector_id = "hermes_agent"
+        self.model = model
+        self.provider_id = provider_id
+        self.working_directory = working_directory
+        self.timeout_seconds = max(30, min(int(timeout_seconds), 600))
+        self.process_runner = process_runner
+        self._capability = {
+            "structured_capability_status": "NOT_TESTED",
+            "capability_test_version": AI_CAPABILITY_TEST_VERSION,
+            "capability_repair_required": False,
+            "capability_private_content_sent": False,
+        }
+
+    def public_status(self) -> dict[str, Any]:
+        provider_label = "OpenAI Codex" if self.provider_id == "openai-codex" else self.provider_id
+        return {
+            "status": "READY" if self._capability["structured_capability_status"] == "VERIFIED" else "CONNECTED_UNVERIFIED",
+            "mode": "AI_CORE_STRUCTURED_ANALYSIS",
+            "provider": "HERMES_AGENT_WINDOWS",
+            "connection_kind": "EXISTING_AGENT",
+            "connection_id": self.connector_id,
+            "display_name": f"Hermes (Windows) · {provider_label}",
+            "model": self.model,
+            "private_transport": "WINDOWS_EPHEMERAL_STDIN_STDOUT",
+            "data_route": "FOLLOWS_AGENT_MODEL_CONFIGURATION",
+            "tool_policy": "NO_TOOLS",
+            "tool_calls_required": 0,
+            "automatic_claim_selection": False,
+            "claim_output_allowed": True,
+            "quality_contract": AI_QUALITY_CONTRACT,
+            **self._capability,
+        }
+
+    def _invoke(self, request: dict[str, Any]) -> Any:
+        creation_flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+        self.working_directory.mkdir(parents=True, exist_ok=True)
+        try:
+            with tempfile.TemporaryDirectory(prefix="jobops-hermes-", dir=self.working_directory) as temporary:
+                isolated_workspace = Path(temporary)
+                command = [self.python_executable, "-I", "-X", "utf8", "-c", _HERMES_SAFE_ADAPTER_CODE]
+                environment = os.environ.copy()
+                environment["HERMES_HOME"] = str(self.hermes_home)
+                if self.process_runner is subprocess.run:
+                    completed = _run_bounded_agent_command(
+                        command,
+                        request,
+                        timeout_seconds=self.timeout_seconds + 10,
+                        cwd=isolated_workspace,
+                        env=environment,
+                    )
+                else:
+                    completed = self.process_runner(
+                        command,
+                        input=json.dumps(request, ensure_ascii=False),
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="strict",
+                        timeout=self.timeout_seconds + 10,
+                        check=False,
+                        shell=False,
+                        cwd=isolated_workspace,
+                        creationflags=creation_flags,
+                        env=environment,
+                    )
+        except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+            raise JobOpsError("AI_AGENT_UNAVAILABLE", "Native Windows Hermes could not complete a private structured request.") from exc
+        return _validated_agent_result(completed)
+
+
 class WSLHermesCLIEngine(AgentCLIEngine):
     """Hermes in WSL, using its configured model through a zero-tool stdin adapter."""
 
@@ -860,7 +985,7 @@ class WSLHermesCLIEngine(AgentCLIEngine):
         timeout_seconds: int = 240,
         process_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
     ) -> None:
-        if not SAFE_MODEL_REF.fullmatch(model):
+        if not _is_safe_model_ref(model):
             raise JobOpsError("AI_AGENT_MODEL_INVALID", "Hermes did not report a safe configured model identifier.")
         if not SAFE_PROVIDER_REF.fullmatch(provider_id):
             raise JobOpsError("AI_AGENT_PROVIDER_INVALID", "Hermes did not report a safe configured provider identifier.")
@@ -904,8 +1029,7 @@ class WSLHermesCLIEngine(AgentCLIEngine):
         adapter = shlex.quote(_HERMES_SAFE_ADAPTER_CODE)
         script = "\n".join((
             "set -eu",
-            'jobops_python="$HOME/.hermes/hermes-agent/venv/bin/python3"',
-            '[ -x "$jobops_python" ] || exit 127',
+            _WSL_HERMES_PYTHON_SELECTION,
             "umask 077",
             'jobops_tmp=$(mktemp -d "${TMPDIR:-/tmp}/jobops-hermes.XXXXXX") || exit 125',
             'trap \'rm -rf -- "$jobops_tmp"\' EXIT HUP INT TERM',
@@ -1065,12 +1189,16 @@ class AIConnectionManager:
         *,
         initial_engine: AIAnalysisEngine | None = None,
         command_resolver: CommandResolver = shutil.which,
+        native_hermes_runtime_resolver: Callable[[], str | None] | None = None,
         http_json: HTTPJSON = _loopback_json,
         process_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
         process_launcher: Callable[..., subprocess.Popen[Any]] = subprocess.Popen,
     ) -> None:
         self.config_path = config_path
         self.command_resolver = command_resolver
+        self.native_hermes_runtime_resolver = (
+            native_hermes_runtime_resolver or self._official_windows_hermes_runtime
+        )
         self.http_json = http_json
         self.process_runner = process_runner
         self.process_launcher = process_launcher
@@ -1146,6 +1274,66 @@ class AIConnectionManager:
 
     def _wsl_executable(self) -> str | None:
         return self.command_resolver("wsl.exe") or self.command_resolver("wsl")
+
+    def _official_windows_hermes_root(self) -> Path:
+        return self.config_path.parent.parent / "hermes"
+
+    def _official_windows_hermes_runtime(self) -> str | None:
+        """Resolve only official per-user Hermes runtimes without relying on a stale process PATH."""
+        root = self._official_windows_hermes_root()
+        candidates = (
+            root / "hermes-agent" / "venv" / "Scripts" / "python.exe",
+            root / "hermes-agent" / ".venv" / "Scripts" / "python.exe",
+        )
+        try:
+            if has_reparse_component(root):
+                return None
+            resolved_root = root.resolve(strict=False)
+        except OSError:
+            return None
+        for candidate in candidates:
+            try:
+                if not candidate.is_file():
+                    continue
+                if has_reparse_component(candidate, root):
+                    continue
+                resolved = candidate.resolve(strict=True)
+                if not resolved.is_relative_to(resolved_root):
+                    continue
+            except OSError:
+                continue
+            return str(resolved)
+        return None
+
+    def _official_windows_hermes_command(self) -> str | None:
+        root = self._official_windows_hermes_root()
+        candidates = (
+            root / "hermes-agent" / "bin" / "hermes.exe",
+            root / "hermes-agent" / "bin" / "hermes.cmd",
+            root / "bin" / "hermes.cmd",  # Legacy native installer layout.
+        )
+        try:
+            if has_reparse_component(root):
+                return None
+            resolved_root = root.resolve(strict=False)
+        except OSError:
+            return None
+        for candidate in candidates:
+            try:
+                if not candidate.is_file():
+                    continue
+                if has_reparse_component(candidate, root):
+                    continue
+                resolved = candidate.resolve(strict=True)
+                if not resolved.is_relative_to(resolved_root):
+                    continue
+            except OSError:
+                continue
+            return str(resolved)
+        return None
+
+    def _native_hermes_command(self) -> str | None:
+        return self.command_resolver("hermes") or self._official_windows_hermes_command()
 
     def _wsl_distributions(self, executable: str) -> list[str]:
         creation_flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
@@ -1402,13 +1590,27 @@ class AIConnectionManager:
                     process_runner=self.process_runner,
                 )
             return None
+        if connector_id == "hermes_agent":
+            runtime = self.native_hermes_runtime_resolver()
+            if not runtime:
+                return None
+            configured = self._native_hermes_configuration(runtime)
+            if configured is None:
+                return None
+            configured_model, configured_provider = configured
+            return WindowsHermesCLIEngine(
+                runtime,
+                model=configured_model,
+                provider_id=configured_provider,
+                hermes_home=self._official_windows_hermes_root(),
+                working_directory=self.config_path.parent,
+                process_runner=self.process_runner,
+            )
         if connector_id == "wsl_hermes_agent":
             executable = self._wsl_executable()
             if not executable:
                 return None
             for distribution in self._wsl_distributions(executable):
-                if not self._wsl_has_command(executable, distribution, "hermes"):
-                    continue
                 configured = self._wsl_hermes_configuration(executable, distribution)
                 if configured is None:
                     continue
@@ -1527,8 +1729,7 @@ class AIConnectionManager:
         probe = shlex.quote(_HERMES_METADATA_PROBE_CODE)
         script = "\n".join((
             "set -eu",
-            'jobops_python="$HOME/.hermes/hermes-agent/venv/bin/python3"',
-            '[ -x "$jobops_python" ] || exit 127',
+            _WSL_HERMES_PYTHON_SELECTION,
             f'"$jobops_python" -I -c {probe}',
         ))
         try:
@@ -1551,7 +1752,47 @@ class AIConnectionManager:
             return None
         model = value.get("model")
         provider = value.get("provider")
-        if not isinstance(model, str) or not SAFE_MODEL_REF.fullmatch(model):
+        if not _is_safe_model_ref(model):
+            return None
+        if not isinstance(provider, str):
+            return None
+        provider_id = re.sub(r"[^a-z0-9]+", "-", provider.casefold()).strip("-")
+        if not SAFE_PROVIDER_REF.fullmatch(provider_id):
+            return None
+        return model, provider_id
+
+    def _native_hermes_configuration(self, python_executable: str) -> tuple[str, str] | None:
+        """Read only the active model/provider from the official native Hermes runtime."""
+        creation_flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+        self.config_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            completed = self.process_runner(
+                [python_executable, "-I", "-X", "utf8", "-c", _HERMES_METADATA_PROBE_CODE],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="strict",
+                timeout=20,
+                check=False,
+                shell=False,
+                cwd=self.config_path.parent,
+                creationflags=creation_flags,
+                env={**os.environ, "HERMES_HOME": str(self._official_windows_hermes_root())},
+            )
+        except (OSError, UnicodeError, subprocess.SubprocessError):
+            return None
+        encoded = completed.stdout.encode("utf-8")
+        if completed.returncode != 0 or not encoded or len(encoded) > 4_096:
+            return None
+        try:
+            value = json.loads(completed.stdout)
+        except json.JSONDecodeError:
+            return None
+        if not isinstance(value, dict) or value.get("ok") is not True:
+            return None
+        model = value.get("model")
+        provider = value.get("provider")
+        if not _is_safe_model_ref(model):
             return None
         if not isinstance(provider, str):
             return None
@@ -1581,6 +1822,28 @@ class AIConnectionManager:
         bridge_failed = False
         bridge_missing = False
         for distribution in self._wsl_distributions(executable):
+            configured = self._wsl_hermes_configuration(executable, distribution)
+            if configured is not None:
+                configured_model, configured_provider = configured
+                engine = WSLHermesCLIEngine(
+                    executable,
+                    distribution,
+                    model=configured_model,
+                    provider_id=configured_provider,
+                    process_runner=self.process_runner,
+                )
+                try:
+                    engine.connection_test()
+                except JobOpsError as exc:
+                    if exc.code in {
+                        "AI_AGENT_TOOL_AUDIT_MISSING",
+                        "AI_AGENT_TOOL_CALL_BLOCKED",
+                        "AI_STRUCTURED_CAPABILITY_FAILED",
+                    }:
+                        raise
+                    auth_required = True
+                    continue
+                return engine
             if not self._wsl_has_command(executable, distribution, "hermes"):
                 continue
             transport = (
@@ -1597,24 +1860,6 @@ class AIConnectionManager:
                     engine = self._wsl_local_engine("hermes_proxy", running_models[0], http_json=transport)
                     engine.connection_test()
                     return engine
-            configured = self._wsl_hermes_configuration(executable, distribution)
-            if configured is not None:
-                configured_model, configured_provider = configured
-                engine = WSLHermesCLIEngine(
-                    executable,
-                    distribution,
-                    model=configured_model,
-                    provider_id=configured_provider,
-                    process_runner=self.process_runner,
-                )
-                try:
-                    engine.connection_test()
-                except JobOpsError as exc:
-                    if exc.code in {"AI_AGENT_TOOL_AUDIT_MISSING", "AI_AGENT_TOOL_CALL_BLOCKED"}:
-                        raise
-                    auth_required = True
-                    continue
-                return engine
             status_text = self._wsl_hermes_status(executable, distribution)
             if self._wsl_hermes_needs_model(status_text):
                 auth_required = True
@@ -1672,11 +1917,42 @@ class AIConnectionManager:
             )
         return None
 
-    def _connect_hermes(self) -> LoopbackModelAIEngine | None:
+    def _connect_hermes(self) -> AIAnalysisEngine | None:
+        runtime = self.native_hermes_runtime_resolver()
+        if runtime:
+            configured = self._native_hermes_configuration(runtime)
+            if configured is None:
+                raise JobOpsError(
+                    "AI_WINDOWS_HERMES_AUTH_REQUIRED",
+                    "Native Windows Hermes was found, but its active model/provider could not be read safely.",
+                )
+            configured_model, configured_provider = configured
+            engine = WindowsHermesCLIEngine(
+                runtime,
+                model=configured_model,
+                provider_id=configured_provider,
+                hermes_home=self._official_windows_hermes_root(),
+                working_directory=self.config_path.parent,
+                process_runner=self.process_runner,
+            )
+            try:
+                engine.connection_test()
+            except JobOpsError as exc:
+                if exc.code in {
+                    "AI_AGENT_TOOL_AUDIT_MISSING",
+                    "AI_AGENT_TOOL_CALL_BLOCKED",
+                    "AI_STRUCTURED_CAPABILITY_FAILED",
+                }:
+                    raise
+                raise JobOpsError(
+                    "AI_WINDOWS_HERMES_CONNECTION_FAILED",
+                    "Native Windows Hermes was found, but its isolated zero-tool connection test failed.",
+                ) from exc
+            return engine
         try:
             models = self._models("hermes_proxy")
         except JobOpsError:
-            executable = self.command_resolver("hermes")
+            executable = self._native_hermes_command()
             if not executable:
                 return None
             self._start_hermes_proxy(executable)
@@ -1691,7 +1967,10 @@ class AIConnectionManager:
                 except JobOpsError:
                     continue
         if not models:
-            return None
+            raise JobOpsError(
+                "AI_WINDOWS_HERMES_PROXY_FAILED",
+                "Hermes was found on Windows, but its optional local proxy did not expose a ready model.",
+            )
         engine = self._local_engine("hermes_proxy", models[0])
         engine.connection_test()
         return engine
@@ -1761,7 +2040,7 @@ class AIConnectionManager:
         if not isinstance(value, dict):
             raise JobOpsError("AI_AGENT_MODEL_UNAVAILABLE", "WSL OpenClaw model status was not a JSON object.")
         model = value.get("resolvedDefault") or value.get("defaultModel")
-        if not isinstance(model, str) or not SAFE_MODEL_REF.fullmatch(model):
+        if not _is_safe_model_ref(model):
             raise JobOpsError("AI_AGENT_MODEL_UNAVAILABLE", "WSL OpenClaw has no safe configured default model.")
         return model
 
@@ -1795,7 +2074,7 @@ class AIConnectionManager:
         if not isinstance(value, dict):
             raise JobOpsError("AI_AGENT_MODEL_UNAVAILABLE", "OpenClaw model status was not a JSON object.")
         model = value.get("resolvedDefault") or value.get("defaultModel")
-        if not isinstance(model, str) or not SAFE_MODEL_REF.fullmatch(model):
+        if not _is_safe_model_ref(model):
             raise JobOpsError("AI_AGENT_MODEL_UNAVAILABLE", "OpenClaw has no safe configured default model.")
         return model
 

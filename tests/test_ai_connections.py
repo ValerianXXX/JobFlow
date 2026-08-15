@@ -10,6 +10,7 @@ import threading
 import unittest
 import warnings
 from pathlib import Path
+from unittest.mock import patch
 
 import _support  # noqa: F401  # Adds the project src directory to sys.path.
 
@@ -21,6 +22,7 @@ from jobops.ai_connections import (
     _assert_loopback_url,
     _decode_wsl_distribution_output,
     _json_from_text,
+    _is_safe_model_ref,
     _loopback_json,
     _run_bounded_agent_command,
 )
@@ -51,6 +53,50 @@ def _capability_payload() -> dict[str, object]:
             "line_end": 1,
             "reason": "Grounded synthetic capability fixture.",
         }],
+    }
+
+
+def _zero_tool_hermes_result(
+    request: dict[str, object],
+    *,
+    private_statement: str | None = None,
+) -> dict[str, object]:
+    task = request.get("task")
+    if task == "JOBOPS_AI_CONNECTION_TEST":
+        content = '{"status":"READY","protocol":1}'
+    elif task == "JOBOPS_STRUCTURED_CAPABILITY_TEST_V1":
+        content = json.dumps(_capability_payload())
+    elif private_statement is not None:
+        content = json.dumps({
+            "schema_version": 2,
+            "entities": [{
+                "entity_key": "synthetic-private-project",
+                "entity_type": "project",
+                "organization": "Synthetic Studio",
+                "role": "Project Lead",
+                "start_date": "",
+                "end_date": "",
+                "line_start": 1,
+                "line_end": 1,
+            }],
+            "candidates": [{
+                "statement": private_statement,
+                "category": "project",
+                "claim_kind": "achievement",
+                "entity_key": "synthetic-private-project",
+                "confidence": "HIGH",
+                "line_start": 1,
+                "line_end": 1,
+                "reason": "Explicit source statement.",
+            }],
+        })
+    else:
+        raise AssertionError(f"Unexpected Hermes task: {task}")
+    return {
+        "ok": True,
+        "status": "ok",
+        "toolSummary": {"calls": 0, "tools": []},
+        "result": {"content": content},
     }
 
 
@@ -464,6 +510,340 @@ class AIConnectionTests(unittest.TestCase):
             self.assertEqual(len(commands), 1)
             self.assertEqual(commands[0][-3:], ["models", "status", "--json"])
 
+    def test_native_windows_hermes_uses_official_runtime_when_path_is_stale(self) -> None:
+        private_value = "At Synthetic Studio, a Project Lead built a private career tracker."
+        adapter_calls: list[tuple[list[str], str, Path]] = []
+        metadata_calls: list[list[str]] = []
+        hermes_homes: list[str] = []
+
+        def unexpected_http(*_args: object, **_kwargs: object) -> dict[str, object]:
+            raise AssertionError("Native Hermes direct mode must not probe or start the optional proxy.")
+
+        def unexpected_launcher(*_args: object, **_kwargs: object) -> object:
+            raise AssertionError("Native Hermes direct mode must not launch the optional proxy.")
+
+        def fake_runner(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+            joined = "\n".join(command)
+            if "JOBOPS_HERMES_METADATA_V1" in joined:
+                metadata_calls.append(list(command))
+                hermes_homes.append(str(dict(kwargs["env"])["HERMES_HOME"]))
+                return subprocess.CompletedProcess(
+                    command,
+                    0,
+                    stdout=json.dumps({"ok": True, "model": "gpt-5.6-sol", "provider": "OpenAI Codex"}),
+                    stderr="",
+                )
+            if "JOBOPS_HERMES_SAFE_ADAPTER_V1" in joined:
+                body = str(kwargs["input"])
+                cwd = Path(str(kwargs["cwd"]))
+                hermes_homes.append(str(dict(kwargs["env"])["HERMES_HOME"]))
+                adapter_calls.append((list(command), body, cwd))
+                result = _zero_tool_hermes_result(json.loads(body), private_statement=private_value)
+                return subprocess.CompletedProcess(command, 0, stdout=json.dumps(result), stderr="")
+            raise AssertionError(command)
+
+        with tempfile.TemporaryDirectory(prefix="jobops-windows-hermes-") as directory:
+            local_app_data = Path(directory)
+            config = local_app_data / "JobOps" / "ai-connection.json"
+            runtime = local_app_data / "hermes" / "hermes-agent" / "venv" / "Scripts" / "python.exe"
+            runtime.parent.mkdir(parents=True)
+            runtime.write_bytes(b"synthetic native Hermes runtime")
+            manager = AIConnectionManager(
+                config,
+                initial_engine=AIAnalysisEngine(),
+                command_resolver=lambda _name: None,
+                http_json=unexpected_http,
+                process_runner=fake_runner,
+                process_launcher=unexpected_launcher,
+            )
+
+            engine = manager.connect("agent")
+            candidates, summary = engine.analyze_document(
+                private_value,
+                source_id="SRC-WINDOWS-HERMES",
+                source_type="project_case",
+            )
+            status = engine.public_status()
+
+            self.assertEqual(status["connection_id"], "hermes_agent")
+            self.assertEqual(status["provider"], "HERMES_AGENT_WINDOWS")
+            self.assertEqual(status["model"], "gpt-5.6-sol")
+            self.assertIn("OpenAI Codex", status["display_name"])
+            self.assertEqual(status["private_transport"], "WINDOWS_EPHEMERAL_STDIN_STDOUT")
+            self.assertEqual(status["tool_policy"], "NO_TOOLS")
+            self.assertEqual(status["structured_capability_status"], "VERIFIED")
+            self.assertEqual(candidates[0]["statement"], private_value)
+            self.assertEqual(summary["analysis_mode"], "AI_CORE_ENTITY_ANALYSIS")
+            self.assertGreaterEqual(len(adapter_calls), 3)
+            self.assertTrue(any(private_value in body for _, body, _ in adapter_calls))
+            self.assertTrue(all(private_value not in " ".join(command) for command, _, _ in adapter_calls))
+            self.assertTrue(all(not cwd.exists() for _, _, cwd in adapter_calls))
+            self.assertTrue(all(command[0] == str(runtime.resolve()) for command in metadata_calls))
+            self.assertTrue(hermes_homes)
+            self.assertEqual(set(hermes_homes), {str(local_app_data / "hermes")})
+
+            saved = json.loads(config.read_text(encoding="utf-8"))
+            self.assertEqual(saved["connector_id"], "hermes_agent")
+            self.assertFalse(saved["contains_credentials"])
+            self.assertFalse(saved["contains_executable_paths"])
+            saved_text = json.dumps(saved, ensure_ascii=False)
+            self.assertNotIn(str(local_app_data), saved_text)
+            self.assertNotIn(str(runtime), saved_text)
+            self.assertNotIn(private_value, saved_text)
+            self.assertNotIn("api_key", saved_text.casefold())
+            self.assertNotIn("token", saved_text.casefold())
+
+    def test_model_identifiers_reject_paths_uris_and_traversal(self) -> None:
+        drive_path = "".join((chr(67), chr(58), chr(47), "synthetic/private-model"))
+        for value in (
+            "gpt-5.6-sol",
+            "openai/gpt-oss:20b",
+            "org/model-v2.1",
+            "custom:model@2026",
+        ):
+            with self.subTest(value=value):
+                self.assertTrue(_is_safe_model_ref(value))
+        for value in (
+            drive_path,
+            "file:private-model",
+            "org/../private-model",
+            "org/./private-model",
+            "org//private-model",
+            "../private-model",
+            "/private-model",
+            "org\\private-model",
+        ):
+            with self.subTest(value=value):
+                self.assertFalse(_is_safe_model_ref(value))
+
+    def test_native_windows_hermes_rejects_reparse_install_roots(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobops-windows-hermes-reparse-") as directory:
+            local_app_data = Path(directory)
+            config = local_app_data / "JobOps" / "ai-connection.json"
+            runtime = local_app_data / "hermes" / "hermes-agent" / "venv" / "Scripts" / "python.exe"
+            runtime.parent.mkdir(parents=True)
+            runtime.write_bytes(b"synthetic native Hermes runtime")
+            command = local_app_data / "hermes" / "hermes-agent" / "bin" / "hermes.exe"
+            command.parent.mkdir(parents=True)
+            command.write_bytes(b"synthetic native Hermes command")
+            manager = AIConnectionManager(
+                config,
+                initial_engine=AIAnalysisEngine(),
+                command_resolver=lambda _name: None,
+            )
+            with patch("jobops.ai_connections.has_reparse_component", return_value=True):
+                self.assertIsNone(manager._official_windows_hermes_runtime())
+                self.assertIsNone(manager._official_windows_hermes_command())
+            official_root = local_app_data / "hermes"
+
+            def candidate_is_reparse(path: Path, _stop_at: Path | None = None) -> bool:
+                return Path(path) != official_root
+
+            with patch("jobops.ai_connections.has_reparse_component", side_effect=candidate_is_reparse):
+                self.assertIsNone(manager._official_windows_hermes_runtime())
+                self.assertIsNone(manager._official_windows_hermes_command())
+
+    def test_native_windows_hermes_never_persists_path_shaped_model(self) -> None:
+        path_shaped_model = "".join((chr(67), chr(58), chr(47), "synthetic/private-model"))
+        with tempfile.TemporaryDirectory(prefix="jobops-windows-hermes-path-model-") as directory:
+            local_app_data = Path(directory)
+            config = local_app_data / "JobOps" / "ai-connection.json"
+            runtime = local_app_data / "hermes" / "hermes-agent" / "venv" / "Scripts" / "python.exe"
+            runtime.parent.mkdir(parents=True)
+            runtime.write_bytes(b"synthetic native Hermes runtime")
+
+            def fake_runner(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+                if "JOBOPS_HERMES_METADATA_V1" in "\n".join(command):
+                    return subprocess.CompletedProcess(
+                        command,
+                        0,
+                        stdout=json.dumps({
+                            "ok": True,
+                            "model": path_shaped_model,
+                            "provider": "OpenAI Codex",
+                        }),
+                        stderr="",
+                    )
+                raise AssertionError(command)
+
+            manager = AIConnectionManager(
+                config,
+                initial_engine=AIAnalysisEngine(),
+                command_resolver=lambda _name: None,
+                process_runner=fake_runner,
+            )
+            with self.assertRaises(JobOpsError) as caught:
+                manager.connect("agent")
+            self.assertEqual(caught.exception.code, "AI_WINDOWS_HERMES_AUTH_REQUIRED")
+            self.assertFalse(config.exists())
+
+    def test_native_windows_hermes_connection_restores_without_persisting_runtime(self) -> None:
+        metadata_count = 0
+        adapter_count = 0
+
+        def fake_runner(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+            nonlocal metadata_count, adapter_count
+            joined = "\n".join(command)
+            if "JOBOPS_HERMES_METADATA_V1" in joined:
+                metadata_count += 1
+                return subprocess.CompletedProcess(
+                    command,
+                    0,
+                    stdout=json.dumps({"ok": True, "model": "gpt-5.6-sol", "provider": "OpenAI Codex"}),
+                    stderr="",
+                )
+            if "JOBOPS_HERMES_SAFE_ADAPTER_V1" in joined:
+                adapter_count += 1
+                request = json.loads(str(kwargs["input"]))
+                result = _zero_tool_hermes_result(request)
+                return subprocess.CompletedProcess(command, 0, stdout=json.dumps(result), stderr="")
+            raise AssertionError(command)
+
+        with tempfile.TemporaryDirectory(prefix="jobops-windows-hermes-restore-") as directory:
+            local_app_data = Path(directory)
+            config = local_app_data / "JobOps" / "ai-connection.json"
+            runtime = local_app_data / "hermes" / "hermes-agent" / "venv" / "Scripts" / "python.exe"
+            runtime.parent.mkdir(parents=True)
+            runtime.write_bytes(b"synthetic native Hermes runtime")
+
+            first = AIConnectionManager(
+                config,
+                initial_engine=AIAnalysisEngine(),
+                command_resolver=lambda _name: None,
+                http_json=lambda *_args, **_kwargs: (_ for _ in ()).throw(
+                    AssertionError("The native Hermes restore path must not use HTTP.")
+                ),
+                process_runner=fake_runner,
+                process_launcher=lambda *_args, **_kwargs: (_ for _ in ()).throw(
+                    AssertionError("The native Hermes restore path must not launch a proxy.")
+                ),
+            )
+            first.connect("agent")
+            first.close()
+            saved_before_restart = config.read_text(encoding="utf-8")
+
+            restored = AIConnectionManager(
+                config,
+                initial_engine=AIAnalysisEngine(),
+                command_resolver=lambda _name: None,
+                http_json=lambda *_args, **_kwargs: (_ for _ in ()).throw(
+                    AssertionError("The native Hermes restore path must not use HTTP.")
+                ),
+                process_runner=fake_runner,
+                process_launcher=lambda *_args, **_kwargs: (_ for _ in ()).throw(
+                    AssertionError("The native Hermes restore path must not launch a proxy.")
+                ),
+            )
+            restored_status = restored.current_engine.public_status()
+            self.assertEqual(restored_status["connection_id"], "hermes_agent")
+            self.assertEqual(restored_status["status"], "READY")
+            self.assertEqual(restored_status["structured_capability_status"], "VERIFIED")
+            self.assertGreaterEqual(metadata_count, 2)
+            self.assertGreaterEqual(adapter_count, 4)
+            self.assertEqual(config.read_text(encoding="utf-8"), saved_before_restart)
+            self.assertNotIn(str(runtime), saved_before_restart)
+            self.assertNotIn(str(local_app_data), saved_before_restart)
+
+    def test_native_windows_hermes_invalid_configuration_is_not_reported_as_not_found(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobops-windows-hermes-invalid-") as directory:
+            local_app_data = Path(directory)
+            config = local_app_data / "JobOps" / "ai-connection.json"
+            runtime = local_app_data / "hermes" / "hermes-agent" / "venv" / "Scripts" / "python.exe"
+            runtime.parent.mkdir(parents=True)
+            runtime.write_bytes(b"synthetic native Hermes runtime")
+
+            def fake_runner(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+                if "JOBOPS_HERMES_METADATA_V1" in "\n".join(command):
+                    return subprocess.CompletedProcess(command, 0, stdout='{"ok":false}', stderr="")
+                raise AssertionError(command)
+
+            manager = AIConnectionManager(
+                config,
+                initial_engine=AIAnalysisEngine(),
+                command_resolver=lambda _name: None,
+                process_runner=fake_runner,
+            )
+            with self.assertRaises(JobOpsError) as caught:
+                manager.connect("agent")
+            self.assertEqual(caught.exception.code, "AI_WINDOWS_HERMES_AUTH_REQUIRED")
+            self.assertNotEqual(caught.exception.code, "AI_CONNECTION_NOT_FOUND")
+            self.assertFalse(config.exists())
+
+    def test_native_windows_hermes_exited_proxy_has_actionable_error(self) -> None:
+        launched_commands: list[list[str]] = []
+
+        class ExitedProcess:
+            def poll(self) -> int:
+                return 2
+
+        def fake_launcher(command: list[str], **_kwargs: object) -> ExitedProcess:
+            launched_commands.append(list(command))
+            return ExitedProcess()
+
+        with tempfile.TemporaryDirectory(prefix="jobops-windows-hermes-proxy-") as directory:
+            config = Path(directory) / "JobOps" / "ai-connection.json"
+            manager = AIConnectionManager(
+                config,
+                initial_engine=AIAnalysisEngine(),
+                command_resolver=lambda name: "C:\\Synthetic\\hermes.cmd" if name == "hermes" else None,
+                native_hermes_runtime_resolver=lambda: None,
+                http_json=lambda *_args, **_kwargs: (_ for _ in ()).throw(
+                    JobOpsError("AI_LOCAL_ENDPOINT_UNAVAILABLE", "not running")
+                ),
+                process_launcher=fake_launcher,
+            )
+            with self.assertRaises(JobOpsError) as caught:
+                manager.connect("agent")
+            self.assertEqual(caught.exception.code, "AI_WINDOWS_HERMES_PROXY_FAILED")
+            self.assertNotEqual(caught.exception.code, "AI_CONNECTION_NOT_FOUND")
+            self.assertEqual(len(launched_commands), 1)
+            self.assertIn("proxy", launched_commands[0])
+            self.assertIn("127.0.0.1", launched_commands[0])
+            self.assertFalse(config.exists())
+
+    def test_wsl_hermes_direct_runtime_does_not_require_hermes_command_on_path(self) -> None:
+        scripts: list[str] = []
+
+        def fake_runner(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[object]:
+            if command[-2:] == ["--list", "--quiet"]:
+                return subprocess.CompletedProcess(command, 0, stdout="Ubuntu\r\n".encode("utf-16"), stderr=b"")
+            script = command[-1] if command and isinstance(command[-1], str) else ""
+            scripts.append(script)
+            if "command -v hermes" in script:
+                raise AssertionError("A direct WSL Hermes runtime must not require the launcher on PATH.")
+            if "JOBOPS_HERMES_METADATA_V1" in script:
+                return subprocess.CompletedProcess(
+                    command,
+                    0,
+                    stdout=json.dumps({"ok": True, "model": "gpt-5.6-sol", "provider": "OpenAI Codex"}),
+                    stderr="",
+                )
+            if "JOBOPS_HERMES_SAFE_ADAPTER_V1" in script:
+                request = json.loads(str(kwargs["input"]))
+                result = _zero_tool_hermes_result(request)
+                return subprocess.CompletedProcess(command, 0, stdout=json.dumps(result), stderr="")
+            raise AssertionError(command)
+
+        with tempfile.TemporaryDirectory(prefix="jobops-wsl-hermes-no-launcher-") as directory:
+            config = Path(directory) / "JobOps" / "ai-connection.json"
+            manager = AIConnectionManager(
+                config,
+                initial_engine=AIAnalysisEngine(),
+                command_resolver=lambda name: "wsl.exe" if name in {"wsl.exe", "wsl"} else None,
+                native_hermes_runtime_resolver=lambda: None,
+                http_json=lambda *_args, **_kwargs: (_ for _ in ()).throw(
+                    JobOpsError("AI_LOCAL_ENDPOINT_UNAVAILABLE", "not running")
+                ),
+                process_runner=fake_runner,
+            )
+            engine = manager.connect("agent")
+            status = engine.public_status()
+            self.assertEqual(status["connection_id"], "wsl_hermes_agent")
+            self.assertEqual(status["model"], "gpt-5.6-sol")
+            self.assertTrue(any("JOBOPS_HERMES_METADATA_V1" in script for script in scripts))
+            self.assertTrue(any("JOBOPS_HERMES_SAFE_ADAPTER_V1" in script for script in scripts))
+            self.assertFalse(any("command -v hermes" in script for script in scripts))
+
     def test_wsl_hermes_uses_active_codex_provider_with_zero_tools_and_private_stdin(self) -> None:
         private_value = "Built a synthetic private career project for Hermes."
         adapter_calls: list[tuple[list[str], str]] = []
@@ -753,6 +1133,8 @@ class AIConnectionTests(unittest.TestCase):
         def fake_runner(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[object]:
             if command[-2:] == ["--list", "--quiet"]:
                 return subprocess.CompletedProcess(command, 0, stdout="Ubuntu\r\n".encode("utf-16"), stderr=b"")
+            if "JOBOPS_HERMES_METADATA_V1" in command[-1]:
+                return subprocess.CompletedProcess(command, 127, stdout='{"ok":false}', stderr="")
             if "models status --json" in command[-1]:
                 return subprocess.CompletedProcess(
                     command, 0, stdout=json.dumps({"resolvedDefault": "synthetic/wsl-agent-model"}), stderr="",
