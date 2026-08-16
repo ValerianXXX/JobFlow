@@ -6,13 +6,16 @@ const SESSION_KEY = "jobflowAssist";
 const RESULT_ALARM = "jobflow-result-observer";
 const NAVIGATION_ALARM = "jobflow-navigation-observer";
 const GUIDED_PREPARATION_ALARM = "jobflow-guided-preparation-observer";
+const GUIDED_AUTOPILOT_ALARM = "jobflow-guided-autopilot";
+const APPLICATION_AUTOPILOT_ALARM = "jobflow-application-autopilot";
+const MANUAL_NAVIGATION_RESUME_ALARM = "jobflow-manual-navigation-resume";
 const NAVIGATION_SETTLE_MS = 20000;
 const BINDING_SCHEMA_VERSION = 1;
 const BINDING_ALGORITHM = "HMAC-SHA256";
 const PAIR_RESPONSE_FIELDS = [
   "allowed_company_domain", "allowed_page_origin", "application_id", "assist_id",
-  "capture_status", "current_step", "expires_at", "intake_id", "max_steps", "mode",
-  "provider", "route_kind", "status"
+  "capture_status", "current_step", "discovery_mode", "expires_at", "intake_id", "max_steps", "mode",
+  "official_url", "provider", "preferred_tab_id", "route_kind", "search_query", "status"
 ];
 const MANUAL_CHALLENGE_FIELDS = [
   "application_id", "assist_id", "challenge_hash", "challenge_id", "client_ref",
@@ -37,7 +40,8 @@ const TERMINAL_STAGES = new Set([
 ]);
 const SAFE_REPAIR_STAGES = new Set([
   "PAIRING", "BROWSER_COMPANION_PAIRED", "GUIDED_INTAKE_PAIRED",
-  "AWAITING_JOB_PAGE_CAPTURE", "AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED",
+  "AWAITING_JOB_DISCOVERY", "SEARCH_SELECTION_REQUIRED", "AWAITING_JOB_PAGE_CAPTURE",
+  "AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED",
   "PREPARING_APPLICATION"
 ]);
 
@@ -62,6 +66,10 @@ function sameGeneration(left, right) {
     left?.generation && right?.generation && left.generation === right.generation &&
     Number(left.revision) === Number(right.revision)
   );
+}
+
+function sameSessionGeneration(left, right) {
+  return Boolean(left?.generation && right?.generation && left.generation === right.generation);
 }
 
 function staleSessionError() {
@@ -407,9 +415,11 @@ function publicSessionStatus(state) {
     application_id: state.application_id,
     allowed_page_origin: state.allowed_page_origin,
     allowed_company_domain: state.allowed_company_domain,
+    discovery_mode: state.discovery_mode,
     provider: state.provider,
     current_step: state.current_step,
     max_steps: state.max_steps,
+    preferred_tab_id: state.preferred_tab_id,
     handoff_kind: state.handoff_kind,
     manual_field_count: state.manual_field_count,
     expires_at: state.expires_at,
@@ -427,11 +437,12 @@ function publicResult(result) {
   const safe = {};
   for (const key of [
     "status", "code", "message", "mode", "assist_id", "intake_id", "application_id",
-    "allowed_page_origin", "allowed_company_domain", "provider", "route_kind",
+    "allowed_page_origin", "allowed_company_domain", "provider", "route_kind", "discovery_mode",
     "current_step", "max_steps", "capture_status", "handoff_kind", "manual_field_count",
     "dynamic_field_count", "removed_separate_action_count", "packet_version",
     "expires_at", "automatic_retry", "real_external_actions", "submit_capability",
-    "final_submit", "field_attempt_count", "file_attempt_count", "poll_count", "retry_after_ms"
+    "final_submit", "field_attempt_count", "file_attempt_count", "poll_count", "retry_after_ms",
+    "preferred_tab_id"
   ]) {
     if (["string", "number", "boolean"].includes(typeof result[key])) safe[key] = result[key];
   }
@@ -441,6 +452,17 @@ function publicResult(result) {
         typeof item === "string" && /^[A-Za-z0-9:_-]{1,120}$/.test(item)
       ));
     }
+  }
+  if (Array.isArray(result.candidate_options)) {
+    safe.candidate_options = result.candidate_options.slice(0, 3).flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const candidateRef = String(item.candidate_ref || "");
+      const title = String(item.title || "").replace(/\s+/g, " ").trim();
+      const companyDomain = String(item.company_domain || "").toLowerCase();
+      if (!/^JDC-[A-F0-9]{12}$/.test(candidateRef) || !title || title.length > 300 ||
+          !/^[a-z0-9.-]{1,253}$/.test(companyDomain)) return [];
+      return [{candidate_ref: candidateRef, title, company_domain: companyDomain}];
+    });
   }
   return safe;
 }
@@ -476,10 +498,14 @@ async function pairWithJobFlow(pairing, senderOrigin, senderTabId = null) {
       application_id: result.application_id,
       allowed_page_origin: result.allowed_page_origin,
       allowed_company_domain: result.allowed_company_domain,
+      discovery_mode: result.discovery_mode,
+      selected_official_url: result.official_url,
+      search_query: result.search_query,
       provider: result.provider,
       route_kind: result.route_kind,
       current_step: result.current_step,
       max_steps: result.max_steps,
+      preferred_tab_id: Number.isInteger(result.preferred_tab_id) ? result.preferred_tab_id : null,
       expires_at: result.expires_at,
       paired: true,
       stage: result.capture_status || result.status,
@@ -494,6 +520,14 @@ async function pairWithJobFlow(pairing, senderOrigin, senderTabId = null) {
     await assertCurrentSession(state);
     if (state.mode === "JOB_CAPTURE" && state.stage === "PREPARING_APPLICATION") {
       chrome.alarms.create(GUIDED_PREPARATION_ALARM, {delayInMinutes: 0.05});
+    }
+    if (state.mode === "JOB_CAPTURE" && [
+      "AWAITING_JOB_DISCOVERY", "AWAITING_JOB_PAGE_CAPTURE", "AWAITING_APPLICATION_FORM_CAPTURE"
+    ].includes(state.stage)) {
+      chrome.alarms.create(GUIDED_AUTOPILOT_ALARM, {delayInMinutes: 0.01});
+    }
+    if (state.mode === "APPLICATION_ASSIST" && state.stage === "READY" && Number.isInteger(state.preferred_tab_id)) {
+      chrome.alarms.create(APPLICATION_AUTOPILOT_ALARM, {delayInMinutes: 0.01});
     }
     return {...publicResult(result), protocol_version: PROTOCOL, extension_version: EXTENSION_VERSION};
   } catch (error) {
@@ -719,6 +753,204 @@ async function ensureDOMScript(tabId) {
   return typeof topFrame?.documentId === "string" && topFrame.documentId ? topFrame.documentId : null;
 }
 
+async function automationPermissionsGranted() {
+  return await chrome.permissions.contains({permissions: ["search"], origins: ["https://*/*"]});
+}
+
+function waitForTabPage(tabId, priorUrl = "", maximumMilliseconds = 30000) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (error, tab) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      chrome.tabs.onUpdated.removeListener(updated);
+      chrome.tabs.onRemoved.removeListener(removed);
+      if (error) reject(error); else resolve(tab);
+    };
+    const acceptable = (tab) => Boolean(
+      tab?.status === "complete" && typeof tab.url === "string" && /^https:\/\//i.test(tab.url) &&
+      (!priorUrl || tab.url !== priorUrl)
+    );
+    const updated = (updatedTabId, changeInfo, tab) => {
+      if (updatedTabId === tabId && changeInfo.status === "complete" && acceptable(tab)) finish(null, tab);
+    };
+    const removed = (removedTabId) => {
+      if (removedTabId === tabId) finish(Object.assign(new Error("The JobFlow browser tab was closed."), {
+        jobflow: {status: "BLOCKED", code: "COMPANION_AUTOPILOT_TAB_CLOSED", automatic_retry: false}
+      }));
+    };
+    const timer = setTimeout(() => finish(Object.assign(new Error("The browser page did not finish loading."), {
+      jobflow: {status: "BLOCKED", code: "COMPANION_AUTOPILOT_PAGE_TIMEOUT", automatic_retry: false}
+    })), maximumMilliseconds);
+    chrome.tabs.onUpdated.addListener(updated);
+    chrome.tabs.onRemoved.addListener(removed);
+    chrome.tabs.get(tabId).then((tab) => { if (acceptable(tab)) finish(null, tab); }).catch(() => undefined);
+  });
+}
+
+async function runDefaultSearch(tabId, text) {
+  const prior = (await chrome.tabs.get(tabId)).url || "about:blank";
+  await new Promise((resolve, reject) => {
+    chrome.search.query({text, tabId}, () => {
+      const failure = chrome.runtime.lastError;
+      if (failure) reject(new Error(failure.message)); else resolve();
+    });
+  });
+  return await waitForTabPage(tabId, prior);
+}
+
+async function setAutopilotFailure(snapshot, error, messageType) {
+  const current = await sessionState();
+  if (!sameSessionGeneration(current, snapshot)) return publicError(error);
+  const failure = publicError(error);
+  const saved = await saveSessionCAS(current, {
+    ...current, autopilot_in_progress: false, last_result: failure
+  });
+  await notifyJobFlow(failure, messageType, saved).catch(() => undefined);
+  return failure;
+}
+
+async function runGuidedAutopilot() {
+  let state = await sessionState();
+  if (!state || state.mode !== "JOB_CAPTURE" || !state.paired) {
+    return {status: "BLOCKED", code: "GUIDED_INTAKE_NOT_PAIRED", automatic_retry: false};
+  }
+  if (state.autopilot_in_progress) return {status: "IN_PROGRESS", automatic_retry: false};
+  if (!["AWAITING_JOB_DISCOVERY", "AWAITING_JOB_PAGE_CAPTURE", "AWAITING_APPLICATION_FORM_CAPTURE"].includes(state.stage)) {
+    return publicSessionStatus(state);
+  }
+  if (!await automationPermissionsGranted()) {
+    const error = Object.assign(new Error("Open the JobFlow J once and allow browser search and company-site access."), {
+      jobflow: {
+        status: state.stage, code: "COMPANION_AUTOMATION_PERMISSION_REQUIRED",
+        message: "Open the JobFlow J once and allow browser search and company-site access.",
+        automatic_retry: false, real_external_actions: 0
+      }
+    });
+    return await setAutopilotFailure(state, error, "JOBFLOW_INTAKE_STATUS");
+  }
+  state = await saveSessionCAS(state, {...state, autopilot_in_progress: true});
+  const owner = state;
+  try {
+    let tab = Number.isInteger(state.automation_tab_id)
+      ? await chrome.tabs.get(state.automation_tab_id).catch(() => null) : null;
+    if (state.stage === "AWAITING_JOB_DISCOVERY") {
+      if (!state.search_query || typeof state.search_query !== "string") {
+        throw Object.assign(new Error("The local search request is unavailable."), {
+          jobflow: {status: "BLOCKED", code: "COMPANION_SEARCH_QUERY_MISSING", automatic_retry: false}
+        });
+      }
+      if (!tab) tab = await chrome.tabs.create({url: "about:blank", active: true});
+      state = await saveSessionCAS(await assertCurrentSession(state), {
+        ...state, automation_tab_id: tab.id
+      });
+      tab = await runDefaultSearch(tab.id, state.search_query);
+      await ensureDOMScript(tab.id);
+      state = await assertCurrentSession(state);
+      const collected = await chrome.tabs.sendMessage(tab.id, {type: "JOBFLOW_COLLECT_SEARCH_RESULTS"});
+      if (!collected || collected.status !== "COLLECTED") {
+        throw Object.assign(new Error("Visible browser search results could not be read."), {
+          jobflow: collected || {status: "BLOCKED", code: "COMPANION_SEARCH_RESULTS_UNAVAILABLE", automatic_retry: false}
+        });
+      }
+      const selected = await postJSON(endpoint(state, "/capture-search"), collected.payload);
+      state = await assertCurrentSession(state);
+      state = await saveSessionCAS(state, {
+        ...state, stage: selected.status, allowed_company_domain: selected.allowed_company_domain,
+        selected_official_url: selected.official_url || null, last_result: selected
+      });
+      await notifyJobFlow(selected, "JOBFLOW_INTAKE_STATUS", state);
+      if (selected.status !== "AWAITING_JOB_PAGE_CAPTURE") {
+        const stopped = await saveSessionCAS(state, {...state, autopilot_in_progress: false});
+        return publicSessionStatus(stopped);
+      }
+    }
+    if (state.stage === "AWAITING_JOB_PAGE_CAPTURE") {
+      const officialUrl = state.selected_official_url || state.last_result?.official_url;
+      if (!officialUrl || !/^https:\/\//i.test(officialUrl)) {
+        throw Object.assign(new Error("The selected official job URL is unavailable."), {
+          jobflow: {status: "BLOCKED", code: "COMPANION_OFFICIAL_JOB_URL_MISSING", automatic_retry: false}
+        });
+      }
+      if (!tab) {
+        tab = await chrome.tabs.create({url: officialUrl, active: true});
+        tab = await waitForTabPage(tab.id, "");
+      }
+      else {
+        const prior = tab.url || "";
+        tab = await chrome.tabs.update(tab.id, {url: officialUrl, active: true});
+        tab = await waitForTabPage(tab.id, prior === officialUrl ? "" : prior);
+      }
+      state = await assertCurrentSession(state);
+      if (state.automation_tab_id !== tab.id) {
+        state = await saveSessionCAS(state, {...state, automation_tab_id: tab.id});
+      }
+      const capturedJob = await captureGuidedCurrentTab(tab.id, tab.url);
+      state = await sessionState();
+      if (!state || state.mode !== "JOB_CAPTURE") throw staleSessionError();
+      if (!capturedJob.application_url) {
+        const stopped = await saveSessionCAS(state, {...state, autopilot_in_progress: false});
+        return publicSessionStatus(stopped);
+      }
+      const prior = tab.url || "";
+      tab = await chrome.tabs.update(tab.id, {url: capturedJob.application_url, active: true});
+      tab = await waitForTabPage(tab.id, prior === capturedJob.application_url ? "" : prior);
+    }
+    state = await sessionState();
+    if (!state || state.mode !== "JOB_CAPTURE") throw staleSessionError();
+    if (state.stage === "AWAITING_APPLICATION_FORM_CAPTURE") {
+      if (!tab) tab = await chrome.tabs.get(state.automation_tab_id).catch(() => null);
+      if (!tab?.id || !tab.url) throw Object.assign(new Error("The application tab is unavailable."), {
+        jobflow: {status: "BLOCKED", code: "COMPANION_APPLICATION_TAB_MISSING", automatic_retry: false}
+      });
+      const capturedForm = await captureGuidedCurrentTab(tab.id, tab.url);
+      const current = await sessionState();
+      if (current && current.mode === "JOB_CAPTURE" && current.autopilot_in_progress) {
+        await saveSessionCAS(current, {...current, autopilot_in_progress: false, preferred_tab_id: tab.id});
+      }
+      return capturedForm;
+    }
+    const current = await sessionState();
+    if (current && current.mode === "JOB_CAPTURE" && current.autopilot_in_progress) {
+      return publicSessionStatus(await saveSessionCAS(current, {...current, autopilot_in_progress: false}));
+    }
+    return publicSessionStatus(current);
+  } catch (error) {
+    return await setAutopilotFailure(owner, error, "JOBFLOW_INTAKE_STATUS");
+  }
+}
+
+async function runApplicationAutopilot() {
+  let state = await sessionState();
+  if (!state || state.mode !== "APPLICATION_ASSIST" || !state.paired || state.stage !== "READY") {
+    return publicSessionStatus(state);
+  }
+  if (state.autopilot_in_progress) return {status: "IN_PROGRESS", automatic_retry: false};
+  const tabId = state.preferred_tab_id;
+  if (!Number.isInteger(tabId) || tabId <= 0) {
+    return {status: "READY", code: "COMPANION_APPLICATION_TAB_MISSING", automatic_retry: false};
+  }
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab?.url || !sameApprovedOrigin(tab.url, state)) {
+    return {status: "READY", code: "COMPANION_WRONG_TAB", automatic_retry: false};
+  }
+  state = await saveSessionCAS(state, {...state, autopilot_in_progress: true});
+  const owner = state;
+  try {
+    const result = await fillCurrentTab(tabId, tab.url);
+    const current = await sessionState();
+    if (current && sameGeneration(current, owner)) {
+      await saveSessionCAS(current, {...current, autopilot_in_progress: false});
+    } else if (current?.autopilot_in_progress) {
+      await saveSessionCAS(current, {...current, autopilot_in_progress: false}).catch(() => undefined);
+    }
+    return result;
+  } catch (error) {
+    return await setAutopilotFailure(owner, error, "JOBFLOW_ASSIST_STATUS");
+  }
+}
+
 async function captureGuidedCurrentTab(tabId, tabUrl) {
   let state = await sessionState();
   if (!state || state.mode !== "JOB_CAPTURE" || !state.paired) {
@@ -938,7 +1170,9 @@ async function fillCurrentTab(tabId, tabUrl) {
   }
   const browserDocumentId = await ensureDOMScript(tabId);
   state = await assertCurrentSession(state);
-  const collected = await chrome.tabs.sendMessage(tabId, {type: "JOBFLOW_COLLECT_FORM"});
+  const collected = state.stage === "MANUAL_NAVIGATION_REQUIRED" && state.manual_navigation_evidence
+    ? await collectStableForm(tabId)
+    : await chrome.tabs.sendMessage(tabId, {type: "JOBFLOW_COLLECT_FORM"});
   state = await assertCurrentSession(state);
   if (!collected || collected.status !== "COLLECTED") {
     throw Object.assign(new Error("The current form could not be read safely."), {
@@ -994,6 +1228,7 @@ async function fillCurrentTab(tabId, tabUrl) {
       manual_navigation_evidence: null,
       manual_navigation_browser_document_id: null,
       manual_navigation_resume_failed: false,
+      manual_navigation_resume_in_progress: false,
       authorized_navigation_proof: null,
       current_page_observation_hash: resumed.next_page_content_hash,
       last_result: resumed
@@ -1177,6 +1412,39 @@ async function fillCurrentTab(tabId, tabUrl) {
   return completed;
 }
 
+async function resumeManualNavigationAfterTrustedClick(tabId, tabUrl) {
+  let state = await sessionState();
+  if (
+    !state || state.mode !== "APPLICATION_ASSIST" ||
+    state.stage !== "MANUAL_NAVIGATION_REQUIRED" ||
+    state.tab_id !== tabId || !state.manual_navigation_evidence ||
+    state.manual_navigation_resume_failed === true ||
+    state.manual_navigation_resume_in_progress === true ||
+    !sameApprovedOrigin(tabUrl, state)
+  ) return publicSessionStatus(state);
+  state = await saveSessionCAS(state, {...state, manual_navigation_resume_in_progress: true});
+  const owner = state;
+  try {
+    return await fillCurrentTab(tabId, tabUrl);
+  } catch (error) {
+    const current = await sessionState();
+    if (
+      sameSessionGeneration(current, owner) && current?.tab_id === tabId &&
+      current.stage === "MANUAL_NAVIGATION_REQUIRED"
+    ) {
+      const failure = publicError(error);
+      const failed = await saveSessionCAS(current, {
+        ...current,
+        manual_navigation_resume_in_progress: false,
+        manual_navigation_resume_failed: true,
+        last_result: failure
+      });
+      await notifyJobFlow(failure, "JOBFLOW_ASSIST_STATUS", failed).catch(() => undefined);
+    }
+    throw error;
+  }
+}
+
 async function observeNavigation(tabId, tabUrl) {
   if (navigationObservationInFlight) return;
   navigationObservationInFlight = true;
@@ -1262,6 +1530,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "JOBFLOW_CAPTURE_CURRENT") {
       return await captureGuidedCurrentTab(Number(message.tab_id), String(message.tab_url || ""));
     }
+    if (message.type === "JOBFLOW_RUN_GUIDED_AUTOPILOT") {
+      return await runGuidedAutopilot();
+    }
+    if (message.type === "JOBFLOW_RUN_APPLICATION_AUTOPILOT") {
+      return await runApplicationAutopilot();
+    }
     if (message.type === "JOBFLOW_CONTINUE_CURRENT") {
       return await navigateCurrentTab(Number(message.tab_id));
     }
@@ -1329,8 +1603,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           manual_navigation_stage: String(payload.manual_navigation_stage),
           manual_navigation_client_ref: String(payload.manual_navigation_client_ref),
           manual_navigation_default_prevented: false
-        }
+        },
+        manual_navigation_resume_in_progress: false
       });
+      // The trusted click can unload the old document before Chrome reports
+      // the new page as complete.  onUpdated is the primary trigger; this
+      // one-shot alarm closes the race where the completion event arrives
+      // just before the evidence message is committed.  Neither path retries
+      // a failed or ambiguous page operation.
+      chrome.alarms.create(MANUAL_NAVIGATION_RESUME_ALARM, {delayInMinutes: 0.01});
       return {
         status: "MANUAL_NAVIGATION_RECORDED",
         assist_id: next.assist_id,
@@ -1452,6 +1733,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (!state || state.tab_id !== tabId) return;
     if (state?.submission_observed) return observeResult(tabId);
     if (state?.stage === "AWAITING_NAVIGATION" && tab.url) return observeNavigation(tabId, tab.url);
+    if (
+      state?.stage === "MANUAL_NAVIGATION_REQUIRED" &&
+      state.manual_navigation_evidence && tab.url
+    ) return resumeManualNavigationAfterTrustedClick(tabId, tab.url);
   })().catch(async (error) => {
     const state = await sessionState();
     if (state?.tab_id === tabId) await notifyJobFlow(publicError(error), "JOBFLOW_ASSIST_STATUS", state).catch(() => undefined);
@@ -1460,6 +1745,33 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   const state = await sessionState();
+  if (alarm.name === GUIDED_AUTOPILOT_ALARM && state?.mode === "JOB_CAPTURE") {
+    await runGuidedAutopilot().catch(async (error) => {
+      const current = await sessionState();
+      if (sameSessionGeneration(current, state)) {
+        await setAutopilotFailure(current, error, "JOBFLOW_INTAKE_STATUS").catch(() => undefined);
+      }
+    });
+  }
+  if (alarm.name === APPLICATION_AUTOPILOT_ALARM && state?.mode === "APPLICATION_ASSIST") {
+    await runApplicationAutopilot().catch(async (error) => {
+      const current = await sessionState();
+      if (sameSessionGeneration(current, state)) {
+        await setAutopilotFailure(current, error, "JOBFLOW_ASSIST_STATUS").catch(() => undefined);
+      }
+    });
+  }
+  if (
+    alarm.name === MANUAL_NAVIGATION_RESUME_ALARM &&
+    state?.mode === "APPLICATION_ASSIST" &&
+    state.stage === "MANUAL_NAVIGATION_REQUIRED" &&
+    state.manual_navigation_evidence && Number.isInteger(state.tab_id)
+  ) {
+    const tab = await chrome.tabs.get(state.tab_id).catch(() => null);
+    if (tab?.status === "complete" && tab.url) {
+      await resumeManualNavigationAfterTrustedClick(state.tab_id, tab.url).catch(() => undefined);
+    }
+  }
   if (alarm.name === GUIDED_PREPARATION_ALARM && state?.mode === "JOB_CAPTURE") {
     await pollGuidedPreparation(state).catch(async (error) => {
       const current = await sessionState();

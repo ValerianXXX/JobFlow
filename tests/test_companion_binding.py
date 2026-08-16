@@ -65,7 +65,7 @@ class CompanionBindingTests(unittest.TestCase):
             }
             proof = sign_pair_response(
                 protocol_version=2,
-                extension_version="0.6.5",
+                extension_version="0.7.0",
                 base_url="http://127.0.0.1:43123",
                 assist_path="/assist/" + "x" * 54,
                 binding_request=request,
@@ -74,7 +74,7 @@ class CompanionBindingTests(unittest.TestCase):
             )
             message = canonical_pair_message(
                 protocol_version=2,
-                extension_version="0.6.5",
+                extension_version="0.7.0",
                 base_url="http://127.0.0.1:43123",
                 assist_path="/assist/" + "x" * 54,
                 installation_id=installation_id,
@@ -89,7 +89,7 @@ class CompanionBindingTests(unittest.TestCase):
             tampered = dict(response, provider="company")
             tampered_message = canonical_pair_message(
                 protocol_version=2,
-                extension_version="0.6.5",
+                extension_version="0.7.0",
                 base_url="http://127.0.0.1:43123",
                 assist_path="/assist/" + "x" * 54,
                 installation_id=installation_id,
@@ -134,7 +134,7 @@ class CompanionBindingTests(unittest.TestCase):
             request = self._install(local_app_data, installation_id="f" * 32, secret=b"h" * 32)
             payload = {
                 "protocol_version": 2,
-                "extension_version": "0.6.5",
+                "extension_version": "0.7.0",
                 "companion_binding": request,
             }
             handler = object.__new__(OnboardingRequestHandler)

@@ -69,6 +69,7 @@ class WindowsLauncherTests(unittest.TestCase):
         wrapper = (PROJECT / "Install JobFlow.cmd").read_text(encoding="utf-8")
         self.assertIn('set "JOBFLOW_INSTALL_EXIT=%ERRORLEVEL%"', wrapper)
         self.assertIn("JobFlow installation is ready.", wrapper)
+        self.assertIn('start "JobFlow" "%~dp0Start JobFlow.cmd"', wrapper)
         self.assertIn("pause", wrapper)
         self.assertIn("exit /b %JOBFLOW_INSTALL_EXIT%", wrapper)
 
@@ -104,6 +105,8 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn("-m pip check", script)
         self.assertIn("setuptools>=77,<81", script)
         self.assertIn("wheel>=0.43,<1", script)
+        self.assertIn('install-jobflow-browser-companion.ps1', script)
+        self.assertIn('powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $companionInstaller', script)
 
     def test_launcher_messages_are_bilingual_and_external_actions_are_absent(self) -> None:
         install = (PROJECT / "scripts" / "install-jobflow.ps1").read_text(encoding="utf-8-sig")

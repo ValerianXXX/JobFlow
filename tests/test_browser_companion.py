@@ -47,6 +47,7 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertEqual(set(manifest["permissions"]), {"activeTab", "alarms", "scripting", "storage"})
         self.assertEqual(set(manifest["host_permissions"]), {"http://127.0.0.1/*", "http://localhost/*"})
         self.assertEqual(manifest["optional_host_permissions"], ["https://*/*"])
+        self.assertEqual(manifest["optional_permissions"], ["search"])
         self.assertEqual(manifest["version"], COMPANION_EXTENSION_VERSION)
         self.assertEqual(
             manifest["externally_connectable"],
@@ -99,14 +100,16 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn("__jobflowPairBridgeGeneration", pair)
         self.assertIn("globalThis.__jobflowPairBridgeGeneration !== GENERATION", pair)
         self.assertIn("chrome.runtime.getManifest().version", pair)
-        self.assertIn("岗位导入", popup)
+        self.assertIn("岗位任务", popup)
         self.assertIn("approved application", popup)
         self.assertIn('["MANUAL_NAVIGATION_RESTART_REQUIRED", "APPLY_RESTART_REQUIRED"].includes(status?.status) ? text.restartButton', popup)
         self.assertIn('"MANUAL_NAVIGATION_RESTART_REQUIRED", "APPLY_RESTART_REQUIRED", "CONFIRMED"', popup)
         self.assertIn("这次一次性下一步证明没有安全建立", popup)
         self.assertIn("The one-use Next proof was not armed safely", popup)
         self.assertIn("chrome.runtime.getManifest().version", popup)
-        self.assertNotIn("chrome.permissions.request", popup)
+        self.assertIn("chrome.permissions.request", popup)
+        self.assertIn("async function ensureAutomationPermissions()", popup)
+        self.assertIn('elements.fill.addEventListener("click"', popup)
         self.assertIn("assist_id: state.assist_id", worker)
         self.assertIn("loopbackOrigin(tab.url || \"\") !== state.base_url", worker)
         self.assertIn("state.jobflow_tab_id", worker)
@@ -179,17 +182,29 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn("guidedCompanionActive()||browserCompanionActive()", app)
 
     def test_companion_has_one_scoped_navigation_call_and_no_programmatic_final_submit(self) -> None:
-        sources = "\n".join(
+        worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
+        guided = worker.split("async function runGuidedAutopilot()", 1)[1].split(
+            "async function runApplicationAutopilot()", 1
+        )[0]
+        worker_without_guided = worker.replace(guided, "")
+        other_sources = "\n".join(
             (PROJECT / "browser-companion" / name).read_text(encoding="utf-8")
-            for name in ("dom.js", "service-worker.js", "pair.js", "popup.js")
+            for name in ("dom.js", "pair.js", "popup.js")
         )
+        sources = worker + "\n" + other_sources
         for forbidden in (
             r"\.requestSubmit\s*\(",
             r"\.submit\s*\(",
-            r"chrome\.tabs\.update\s*\(",
-            r"chrome\.tabs\.create\s*\(",
         ):
             self.assertIsNone(re.search(forbidden, sources), forbidden)
+        # Opening a visible browser-search result and its verified direct Apply
+        # URL is allowed only during read-only guided intake.  Application assist
+        # still has no general tab-navigation capability and final Submit remains
+        # a DOM/user-only boundary.
+        self.assertRegex(guided, r"chrome\.tabs\.update\s*\(")
+        self.assertRegex(guided, r"chrome\.tabs\.create\s*\(")
+        self.assertIsNone(re.search(r"chrome\.tabs\.(?:update|create)\s*\(", worker_without_guided))
+        self.assertIsNone(re.search(r"chrome\.tabs\.(?:update|create)\s*\(", other_sources))
         self.assertEqual(len(re.findall(r"\.click\s*\(", sources)), 1)
         self.assertIn('type: "JOBFLOW_CHECK_NAVIGATION"', sources)
         self.assertIn('type: "JOBFLOW_NAVIGATE_APPROVED"', sources)
@@ -230,7 +245,7 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
         self.assertIn("const PROTOCOL = 2;", pair)
         self.assertIn("const PROTOCOL = 2;", worker)
-        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.6.5";', popup)
+        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.7.0";', popup)
         self.assertIn("chrome.runtime.reload()", popup)
         self.assertIn("protocol_version:2", app)
         self.assertIn("pairing:{protocol_version:result.protocol_version", app)

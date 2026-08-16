@@ -58,5 +58,16 @@ finally {
     Pop-Location
 }
 
+Write-Host "正在准备一次性浏览器伴侣…… / Preparing the one-time Browser Companion setup..."
+$companionInstaller = Join-Path $PSScriptRoot "install-jobflow-browser-companion.ps1"
+if (-not (Test-Path -LiteralPath $companionInstaller -PathType Leaf)) {
+    throw "浏览器伴侣安装入口缺失。请重新解压完整 JobFlow 包。 / Browser Companion installer is missing; extract the complete JobFlow package again."
+}
+& powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $companionInstaller
+if ($LASTEXITCODE -ne 0) {
+    throw "浏览器伴侣准备未完成。 / Browser Companion setup did not finish."
+}
+
 Write-Host "JobFlow 安装完成（Python $($python.Version)）。 / JobFlow installation is ready."
-Write-Host "以后双击 Start JobFlow.cmd 即可启动。 / Start later by double-clicking Start JobFlow.cmd."
+Write-Host "浏览器只要求一次安全操作：在已经打开的扩展页选择 Load unpacked，并选择已打开的 BrowserCompanion 文件夹。 / The browser requires one security action: choose Load unpacked and select the BrowserCompanion folder that is already open."
+Write-Host "JobFlow 现在会自动打开；以后双击 Start JobFlow.cmd 即可。 / JobFlow will open now; later, double-click Start JobFlow.cmd."

@@ -189,7 +189,7 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
         with project_temp() as temp:
             database = JobOpsDB(temp / "fresh.db")
             database.initialize()
-            self.assertEqual(database.schema_version(), 11)
+            self.assertEqual(database.schema_version(), 12)
             with database.connect() as connection:
                 definition = str(connection.execute(
                     "SELECT sql FROM sqlite_master WHERE type='table' AND name='browser_assist_runs'"
@@ -269,7 +269,7 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                     ("RPK-PACKET-1", "APP-PACKET", HASH_A, "secure-ref:SYNTHETIC_PACKET_1", "AWAITING_APPROVAL", now),
                 )
 
-            self.assertEqual(database.migrate(), [4, 5, 6, 7, 8, 9, 10, 11])
+            self.assertEqual(database.migrate(), [4, 5, 6, 7, 8, 9, 10, 11, 12])
             with database.connect() as connection:
                 row = connection.execute(
                     "SELECT packet_id,packet_version,supersedes_packet_id,status FROM review_packets"

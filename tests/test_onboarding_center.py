@@ -2171,8 +2171,14 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('api("approve-external-claims"', app)
         self.assertIn('api("tailoring-manifest-proposal"', app)
         self.assertIn('api("approve-tailoring-manifest"', app)
-        self.assertIn('id="packetDecisionConfirm"', html)
+        self.assertNotIn('id="packetDecisionConfirm"', html)
         self.assertIn('id="confirmPacketDecision"', html)
+        self.assertIn('data-i18n="confirmApproveAndStart"', html)
+        self.assertNotIn('id="guidedIntakeConfirm"', html)
+        self.assertIn('button.disabled=!state.reviewDecision||!fieldsReady', app)
+        self.assertIn('if(canDecide&&!state.reviewDecision)state.reviewDecision="APPROVE"', app)
+        self.assertNotIn('state.reviewDecisionConfirmed', app)
+        self.assertIn('status==="PREPARING_APPLICATION"&&!state.guidedIntakeActivity', app)
         self.assertNotIn("showToast(e.message", app)
 
     def test_ui_distinguishes_windows_hermes_failures_and_preserves_success_before_refresh(self) -> None:
@@ -2204,7 +2210,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v27-guided-failure-v2", html)
+        self.assertIn("jobflow-v28-one-confirmation", html)
 
 
 if __name__ == "__main__":

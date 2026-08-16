@@ -533,6 +533,10 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                     result = self.server.service.capture_guided_job_page(
                         token, self._json_body(), extension_origin=origin,
                     )
+                elif route_parts == ["capture-search"]:
+                    result = self.server.service.capture_guided_search_results(
+                        token, self._json_body(), extension_origin=origin,
+                    )
                 elif route_parts == ["capture-form"]:
                     result = self.server.service.start_guided_application_form_preparation(
                         token, self._json_body(), extension_origin=origin,
@@ -645,6 +649,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.start_guided_intake(self._json_body())
             elif route == "cancel-guided-intake":
                 result = self.server.service.cancel_guided_intake(self._json_body())
+            elif route == "select-guided-search-candidate":
+                result = self.server.service.select_guided_search_candidate(self._json_body())
             elif route == "resolve-browser-assist-unknown":
                 result = self.server.service.resolve_browser_assist_unknown(self._json_body())
             elif route == "pair-local-agent-assist":
@@ -678,6 +684,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.resolve_application_fields(self._json_body())
             elif route == "queue-decision":
                 result = self.server.service.decide_review_packet(self._json_body())
+            elif route == "approve-and-start-application":
+                result = self.server.service.approve_and_start_application(self._json_body())
             elif route == "approve-external-claims":
                 result = self.server.service.approve_external_claims(self._json_body())
             elif route == "tailoring-manifest-proposal":

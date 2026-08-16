@@ -114,6 +114,19 @@ class AIOperatorTests(unittest.TestCase):
             )
         self.assertEqual(conflict.exception.code, "AI_OPERATOR_JOB_URL_CONFLICT")
 
+    def test_one_line_search_intent_is_valid_without_a_pasted_url(self) -> None:
+        command, url = resolve_new_job_command(
+            "Find matching credit risk analyst roles in New York on official company career sites"
+        )
+        self.assertEqual(
+            command,
+            "Find matching credit risk analyst roles in New York on official company career sites",
+        )
+        self.assertEqual(url, "")
+        with self.assertRaises(JobOpsError) as missing:
+            resolve_new_job_command("   ")
+        self.assertEqual(missing.exception.code, "AI_OPERATOR_SEARCH_INTENT_REQUIRED")
+
     def test_form_semantics_explain_exact_controls_without_answers_or_authority(self) -> None:
         engine = OperatorEngine({
             "schema_version": 1,
@@ -235,6 +248,30 @@ class AIOperatorTests(unittest.TestCase):
         self.assertNotIn("tracking=private", request)
         self.assertEqual(plan["final_submit"], "USER_ONLY")
 
+    def test_new_job_search_intent_requires_official_job_discovery(self) -> None:
+        result = valid_result()
+        result["steps"] = [{
+            "tool": "jobflow.search_official_jobs",
+            "reason": "Search visibly through the user's browser and return only official company role candidates.",
+            "requires_user_approval": False,
+            "expected_status": "AWAITING_JOB_DISCOVERY",
+        }]
+        engine = OperatorEngine(result)
+        plan = plan_new_job(
+            engine,
+            command="Find matching credit risk analyst roles in New York",
+            official_url="",
+            readiness={"status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION", "blockers": []},
+            guided_status={"status": "IDLE", "active": False},
+            read_only_intake_confirmed=True,
+        )
+        self.assertEqual(plan["steps"][0]["tool"], "jobflow.search_official_jobs")
+        current = engine.request["current_task_state"]
+        self.assertEqual(current["stage"], "JOB_DISCOVERY")
+        self.assertEqual(current["job_source"]["mode"], "OFFICIAL_COMPANY_SEARCH")
+        self.assertNotIn("company_host", current["job_source"])
+        self.assertEqual(current["private_answer_values_in_context"], 0)
+
     def test_new_job_unwraps_real_agent_execution_envelope_without_weakening_contract(self) -> None:
         result = valid_result()
         result["steps"] = [{
@@ -309,6 +346,41 @@ class AIOperatorTests(unittest.TestCase):
         }])
         self.assertNotIn("https://", json.dumps(service.ai_engine.request, ensure_ascii=False))
 
+    def test_service_starts_browser_discovery_when_the_command_has_no_url(self) -> None:
+        result = valid_result()
+        result["steps"] = [{
+            "tool": "jobflow.search_official_jobs",
+            "reason": "Use the visible browser search surface to discover official company role pages.",
+            "requires_user_approval": False,
+            "expected_status": "AWAITING_JOB_DISCOVERY",
+        }]
+        service = object.__new__(OnboardingCenterService)
+        service._lock = threading.RLock()
+        service.ai_engine = OperatorEngine(result)
+        service.bootstrap = lambda: {
+            "application_readiness": {
+                "status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION", "blockers": [],
+            },
+            "dashboard": {"guided_intake": {"status": "IDLE", "active": False}},
+        }
+        calls: list[dict[str, object]] = []
+        service.start_guided_intake = lambda payload: calls.append(payload) or {
+            "status": "GUIDED_INTAKE_PAIRING", "intake_id": "GIN-DISCOVERY",
+        }
+        response = service.start_job_with_ai({
+            "command": "Find matching credit risk analyst roles in New York",
+            "user_confirmed": True,
+        })
+        self.assertEqual(response["status"], "AI_OPERATOR_TASK_STARTED")
+        self.assertEqual(calls, [{
+            "search_intent": "Find matching credit risk analyst roles in New York",
+            "user_confirmed": True,
+        }])
+        self.assertEqual(
+            response["operator_execution"]["host_executed_tools"],
+            ["jobflow.search_official_jobs"],
+        )
+
     def test_application_operator_executes_only_host_owned_lease_action(self) -> None:
         service = object.__new__(OnboardingCenterService)
         service._lock = threading.RLock()
@@ -328,6 +400,80 @@ class AIOperatorTests(unittest.TestCase):
         self.assertFalse(result["operator_execution"]["all_selected_tools_executed"])
         self.assertEqual(calls, [{"application_id": "APP-ABCDEF123456", "user_confirmed": True}])
         self.assertEqual(result["real_external_actions"], 0)
+
+    def test_one_confirmation_resolves_fields_approves_rebound_packet_and_starts(self) -> None:
+        service = object.__new__(OnboardingCenterService)
+        service._lock = threading.RLock()
+        calls: list[tuple[str, dict[str, object]]] = []
+
+        def resolve(payload: dict[str, object]) -> dict[str, object]:
+            calls.append(("resolve", dict(payload)))
+            return {
+                "status": "JOB_SPECIFIC_ANSWERS_ENCRYPTED",
+                "packet_hash": "sha256:" + "2" * 64,
+                "remaining_unresolved_count": 0,
+            }
+
+        def decide(payload: dict[str, object]) -> dict[str, object]:
+            calls.append(("decide", dict(payload)))
+            self.assertEqual(payload["expected_packet_hash"], "sha256:" + "2" * 64)
+            return {"status": "APPROVED", "application_id": "APP-ONE-CONFIRMATION"}
+
+        def start(payload: dict[str, object]) -> dict[str, object]:
+            calls.append(("start", dict(payload)))
+            return {
+                "status": "AI_OPERATOR_TASK_STARTED",
+                "operator_plan": {"status": "AI_OPERATOR_PLAN_READY"},
+                "operator_execution": {"host_executed_tools": ["jobflow.start_user_present_assist"]},
+                "browser_assist": {"status": "BROWSER_COMPANION_PAIRING"},
+            }
+
+        service.resolve_application_fields = resolve
+        service.decide_review_packet = decide
+        service.start_application_with_ai = start
+        result = service.approve_and_start_application({
+            "application_id": "APP-ONE-CONFIRMATION",
+            "expected_packet_hash": "sha256:" + "1" * 64,
+            "resolutions": [{
+                "control_ref": "FLD-SYNTHETIC",
+                "decision": "CONFIRMED_VALUE",
+                "value": "Synthetic confirmed value",
+            }],
+            "non_form_resolutions": [],
+            "user_confirmed": True,
+        })
+
+        self.assertEqual([name for name, _payload in calls], ["resolve", "decide", "start"])
+        self.assertEqual(calls[0][1]["expected_packet_hash"], "sha256:" + "1" * 64)
+        self.assertEqual(calls[1][1]["decision"], "APPROVE")
+        self.assertEqual(calls[2][1], {
+            "application_id": "APP-ONE-CONFIRMATION", "user_confirmed": True,
+        })
+        self.assertEqual(result["status"], "APPROVED_APPLICATION_AUTOPILOT_STARTED")
+        self.assertEqual(result["final_submit"], "USER_ONLY")
+        self.assertFalse(result["automatic_retry"])
+        self.assertEqual(result["real_external_actions"], 0)
+
+    def test_generic_search_command_uses_only_approved_job_preferences(self) -> None:
+        service = object.__new__(OnboardingCenterService)
+        service._base_profile = lambda: {
+            "candidate_display_name": "MUST NOT LEAK",
+            "email": "must-not-leak@example.test",
+            "work_authorization": "MUST NOT LEAK",
+            "minimum_salary": 987654,
+            "target_functions": ["Credit Risk Analyst", "Portfolio Risk"],
+            "target_levels": ["Entry level"],
+            "locations": ["New York, NY"],
+            "remote_preference": "Hybrid",
+        }
+        expanded = service._effective_job_search_command("Find and handle the best matching role for me")
+        self.assertIn("Credit Risk Analyst", expanded)
+        self.assertIn("New York, NY", expanded)
+        self.assertIn("Hybrid", expanded)
+        self.assertNotIn("MUST NOT LEAK", expanded)
+        self.assertNotIn("987654", expanded)
+        explicit = "Find a treasury analyst role in Boston"
+        self.assertEqual(service._effective_job_search_command(explicit), explicit)
 
     def test_execution_trace_never_claims_a_planned_stage_already_ran(self) -> None:
         plan = plan_application(OperatorEngine(valid_result()), displayed_packet())

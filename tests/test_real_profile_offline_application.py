@@ -25,7 +25,7 @@ from jobops.private_onboarding import PrivateOnboarding
 from jobops.queue_manager import QueueManager
 from jobops.resume_tailoring import build_resume_tailoring_manifest, build_tailoring_proposal
 from jobops.secure_store import WindowsDPAPIStore
-from jobops.util import canonical_json, iso_utc, parse_iso, sha256_bytes, sha256_file
+from jobops.util import canonical_json, iso_utc, parse_iso, sha256_bytes, sha256_file, stable_id
 
 
 def manual_navigation_evidence(service, token: str, completed: dict) -> dict:
@@ -74,6 +74,10 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         portfolio = onboarding.import_file("onboarding_source_document", fixtures / "synthetic-forward-jd.pdf", synthetic=False)
         profile = json.loads((fixtures / "synthetic-forward-profile.json").read_text(encoding="utf-8"))
         profile.update({
+            "first_name": "Synthetic",
+            "last_name": "Candidate",
+            "email": "synthetic-candidate@example.test",
+            "phone": "+1 555 010 0200",
             "github_url": "https://github.com/synthetic-candidate",
             "portfolio_url": "https://portfolio.example.test/synthetic-candidate",
             "portfolio_file_ref": portfolio["secure_ref"],
@@ -231,6 +235,47 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         self.assertEqual(decision["status"], "APPROVED")
         return service, application_id, packet
 
+    def test_resume_contact_fields_are_ready_without_reasking_in_single_review(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            form = b"""<!doctype html><html><body><form action='/careers/apply/contact-ready'>
+                <label for='first-name'>First name</label><input id='first-name' name='first_name' type='text' required>
+                <label for='last-name'>Last name</label><input id='last-name' name='last_name' type='text' required>
+                <label for='email'>Email</label><input id='email' name='email' type='email' required>
+                <label for='phone'>Phone</label><input id='phone' name='phone' type='tel' required>
+                <button type='submit'>Submit application</button>
+            </form></body></html>"""
+            prepared = service.prepare_offline_application_bundle(
+                metadata={
+                    "official_url": "https://example.com/careers/contact-ready",
+                    "application_url": "https://example.com/careers/apply/contact-ready",
+                    "guest_available": True,
+                    "research_title": "Synthetic contact-ready role",
+                    "evidence_excerpt": "Synthetic Data Analyst",
+                },
+                files={
+                    "jd": (".txt", (PROJECT / "tests" / "fixtures" / "synthetic-forward-jd.txt").read_bytes()),
+                    "official": (".html", b"<h1>Synthetic Data Analyst</h1><a href='/careers/apply/contact-ready'>Apply</a>"),
+                    "form": (".html", form),
+                },
+            )
+            reviewed = service.review_packet(str(prepared["application_id"]))
+            self.assertEqual(reviewed["field_resolution"]["unresolved_count"], 0)
+            questions = {
+                str(item["answer_key"]): item
+                for item in reviewed["packet"]["form_questions"]
+                if item.get("answer_key") in {"first_name", "last_name", "email", "phone"}
+            }
+            self.assertEqual(set(questions), {"first_name", "last_name", "email", "phone"})
+            self.assertTrue(all(item["status"] == "READY" for item in questions.values()))
+            self.assertTrue(all(item["redacted_summary"] == "PRIVATE_VALUE_PRESENT" for item in questions.values()))
+            serialized = json.dumps(reviewed)
+            self.assertNotIn("synthetic-candidate@example.test", serialized)
+            self.assertNotIn("+1 555 010 0200", serialized)
+
     def approved_workday_v2_application(
         self, database: JobOpsDB, onboarding: PrivateOnboarding,
         *, initial_form: str = "synthetic-v2-workday-step-1.html",
@@ -283,6 +328,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         token = str(started["assist_token"])
         paired = service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
         self.assertEqual(paired["status"], "BROWSER_COMPANION_PAIRED")
+        self.assertEqual(paired["capture_status"], "READY")
         paired_again = service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
         self.assertEqual(paired_again["assist_id"], paired["assist_id"])
         with service.database.connect() as connection:
@@ -348,6 +394,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                     "SELECT COUNT(*) FROM guided_intake_events WHERE intake_id=? AND event_type='PAIRED'",
                     (paired["intake_id"],),
                 ).fetchone()[0], 1)
+
             prepared = service.start_guided_application_form_preparation(
                 token,
                 {
@@ -380,7 +427,8 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                     "SELECT event_type FROM guided_intake_events ORDER BY event_id"
                 ).fetchall()]
                 self.assertEqual(events, [
-                    "STARTED", "PAIRED", "JOB_PAGE_INSPECTED", "FORM_INSPECTED", "REVIEW_PACKET_READY",
+                    "STARTED", "PAIRED", "JOB_PAGE_INSPECTED", "APPLY_ROUTE_INSPECTED",
+                    "FORM_INSPECTED", "REVIEW_PACKET_READY",
                 ])
                 with self.assertRaises(Exception):
                     connection.execute("UPDATE guided_intake_events SET event_type='FAILED' WHERE event_id=1")
@@ -389,6 +437,128 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             audit = audit_real_external_actions(database)
             self.assertEqual(audit["attempt_count"], 0)
             self.assertEqual(audit["real_external_actions"], 0)
+
+    def test_guided_browser_discovery_selects_only_an_official_company_job_page(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding, master_kind="onboarding_source_document")
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            official_url = "https://careers.example.com/us/en/job/CR-102/Credit-Risk-Analyst?source=search"
+            candidate_ref = stable_id("JDC", official_url)
+            engine = mock.Mock()
+            engine.ready = True
+            engine.public_status.return_value = {
+                "status": "READY", "structured_capability_status": "VERIFIED",
+            }
+            engine.execute_structured_task.return_value = {
+                "schema_version": 1, "status": "SELECTED",
+                "ranked_candidate_refs": [candidate_ref],
+                "summary": "The official company role matches the requested title and location.",
+            }
+            service.ai_engine = engine
+            with mock.patch.object(service, "bootstrap", return_value={
+                "application_readiness": {"status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION"},
+            }):
+                started = service.start_guided_intake({
+                    "search_intent": "Find credit risk analyst roles in New York",
+                    "user_confirmed": True,
+                })
+            token = str(started["intake_token"])
+            self.assertEqual(started["discovery_mode"], "VISIBLE_BROWSER_SEARCH")
+            paired = service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            self.assertEqual(paired["capture_status"], "AWAITING_JOB_DISCOVERY")
+            self.assertIn("official company careers jobs", paired["search_query"])
+            selected = service.capture_guided_search_results(
+                token,
+                {
+                    "search_origin": "https://www.google.com/search",
+                    "results": [
+                        {
+                            "url": official_url,
+                            "title": "Credit Risk Analyst | Example Careers",
+                            "snippet": "Join the Example credit risk team in New York.",
+                        },
+                        {
+                            "url": "https://www.indeed.com/viewjob?jk=abc",
+                            "title": "Credit Risk Analyst",
+                            "snippet": "Aggregator copy.",
+                        },
+                    ],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(selected["status"], "AWAITING_JOB_PAGE_CAPTURE")
+            self.assertEqual(selected["official_url"], official_url)
+            self.assertEqual(selected["allowed_company_domain"], "example.com")
+            self.assertEqual(service._guided_intakes[token]["company_domain"], "example.com")
+            with database.connect() as connection:
+                events = [row[0] for row in connection.execute(
+                    "SELECT event_type FROM guided_intake_events WHERE intake_id=? ORDER BY event_id",
+                    (paired["intake_id"],),
+                ).fetchall()]
+            self.assertEqual(events, ["STARTED", "PAIRED", "SEARCH_RESULTS_INSPECTED"])
+
+    def test_guided_browser_discovery_ambiguity_accepts_only_a_displayed_candidate(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding, master_kind="onboarding_source_document")
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            first_url = "https://careers.alpha-example.com/jobs/risk-analyst"
+            second_url = "https://jobs.beta-example.com/careers/risk-analyst"
+            engine = mock.Mock()
+            engine.ready = True
+            engine.public_status.return_value = {
+                "status": "READY", "structured_capability_status": "VERIFIED",
+            }
+            engine.execute_structured_task.return_value = {
+                "schema_version": 1, "status": "NEEDS_USER_SELECTION",
+                "ranked_candidate_refs": [],
+                "summary": "Both verified company roles match the saved goal.",
+            }
+            service.ai_engine = engine
+            with mock.patch.object(service, "bootstrap", return_value={
+                "application_readiness": {"status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION"},
+            }):
+                started = service.start_guided_intake({
+                    "search_intent": "credit risk analyst",
+                    "user_confirmed": True,
+                })
+            token = str(started["intake_token"])
+            service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            ambiguous = service.capture_guided_search_results(
+                token,
+                {
+                    "search_origin": "https://www.google.com/search",
+                    "results": [
+                        {"url": first_url, "title": "Risk Analyst | Alpha Careers", "snippet": "Company role."},
+                        {"url": second_url, "title": "Risk Analyst | Beta Careers", "snippet": "Company role."},
+                    ],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(ambiguous["status"], "SEARCH_SELECTION_REQUIRED")
+            self.assertEqual(len(ambiguous["candidate_options"]), 2)
+            self.assertEqual(service._guided_public_status()["candidate_options"], ambiguous["candidate_options"])
+            with self.assertRaises(JobOpsError) as invented:
+                service.select_guided_search_candidate({
+                    "intake_id": started["intake_id"],
+                    "candidate_ref": "JDC-FFFFFFFFFFFF",
+                    "user_confirmed": True,
+                })
+            self.assertEqual(invented.exception.code, "OFFICIAL_JOB_SELECTION_INVALID")
+            chosen_ref = stable_id("JDC", second_url)
+            selected = service.select_guided_search_candidate({
+                "intake_id": started["intake_id"],
+                "candidate_ref": chosen_ref,
+                "user_confirmed": True,
+            })
+            self.assertEqual(selected["official_url"], second_url)
+            self.assertEqual(selected["status"], "AWAITING_JOB_PAGE_CAPTURE")
+            repaired_pair = service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            self.assertEqual(repaired_pair["official_url"], second_url)
+            self.assertEqual(repaired_pair["capture_status"], "AWAITING_JOB_PAGE_CAPTURE")
 
     def test_guided_form_preparation_runs_once_in_background_and_is_pollable(self) -> None:
         with project_temp() as temp:
@@ -557,7 +727,9 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                     "SELECT event_type FROM guided_intake_events WHERE intake_id=? ORDER BY event_id",
                     (started["intake_id"],),
                 ).fetchall()]
-            self.assertEqual(events, ["STARTED", "PAIRED", "JOB_PAGE_INSPECTED", "FAILED"])
+            self.assertEqual(events, [
+                "STARTED", "PAIRED", "JOB_PAGE_INSPECTED", "APPLY_ROUTE_INSPECTED", "FAILED",
+            ])
             actions = audit_real_external_actions(database)
             self.assertEqual(actions["attempt_count"], 0)
             self.assertEqual(actions["real_external_actions"], 0)

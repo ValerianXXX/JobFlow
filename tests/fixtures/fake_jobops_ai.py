@@ -40,15 +40,16 @@ if request.get("task") == "JOBFLOW_APPLICATION_MATERIAL_DECISION_V1":
     raise SystemExit(0)
 if request.get("task") in {"JOBFLOW_APPLICATION_OPERATOR_PLAN_V1", "JOBFLOW_NEW_JOB_OPERATOR_PLAN_V1"}:
     new_job = request.get("task") == "JOBFLOW_NEW_JOB_OPERATOR_PLAN_V1"
+    discovery = new_job and request.get("current_task_state", {}).get("stage") == "JOB_DISCOVERY"
     json.dump({
         "schema_version": 1,
         "status": "READY",
         "summary": "The job is ready for a bounded AI-directed JobFlow run.",
         "steps": ([{
-            "tool": "jobflow.start_guided_intake",
-            "reason": "Create the read-only browser lease for this company job.",
-            "requires_user_approval": True,
-            "expected_status": "GUIDED_INTAKE_PAIRING",
+            "tool": "jobflow.search_official_jobs" if discovery else "jobflow.start_guided_intake",
+            "reason": "Discover an official company role in the visible browser." if discovery else "Create the read-only browser lease for this company job.",
+            "requires_user_approval": False if discovery else True,
+            "expected_status": "AWAITING_JOB_DISCOVERY" if discovery else "GUIDED_INTAKE_PAIRING",
         }] if new_job else [
             {
                 "tool": "jobflow.read_current_job",

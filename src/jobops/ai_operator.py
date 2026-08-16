@@ -12,6 +12,15 @@ from .util import canonical_json, sha256_bytes, stable_id
 
 OPERATOR_PROTOCOL_VERSION = 1
 OPERATOR_TOOLS: dict[str, dict[str, object]] = {
+    "jobflow.search_official_jobs": {
+        "phase": "DISCOVER", "external_action": False, "host_action": True,
+        "execution_mode": "HOST_COMMAND",
+        "description": (
+            "Open a visible search in the user's default browser, collect only public result metadata, and select "
+            "a candidate only after JobFlow verifies that it is an official company career page."
+        ),
+        "result": "A short-lived read-only discovery lease or a truthful no-match/user-selection stop.",
+    },
     "jobflow.start_guided_intake": {
         "phase": "DISCOVER", "external_action": False, "host_action": True,
         "execution_mode": "HOST_COMMAND",
@@ -101,7 +110,8 @@ FORM_SEMANTIC_ROLES = frozenset({
     "navigation", "final_submit", "legal_or_sensitive", "other",
 })
 RECOVERABLE_GUIDED_STATUSES = frozenset({
-    "IDLE", "GUIDED_INTAKE_PAIRING", "AWAITING_JOB_PAGE_CAPTURE",
+    "IDLE", "GUIDED_INTAKE_PAIRING", "AWAITING_JOB_DISCOVERY", "SEARCH_SELECTION_REQUIRED",
+    "AWAITING_JOB_PAGE_CAPTURE",
     "AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED",
 })
 _HTTPS_URL_IN_COMMAND = re.compile(r"https://[^\s<>\"']+", re.IGNORECASE)
@@ -129,15 +139,21 @@ def resolve_new_job_command(command: object, official_url: object = "") -> tuple
             "The AI command and the separate job-link field contain different URLs.",
         )
     selected_url = explicit or (embedded[0] if embedded else "")
-    parsed = urlparse(selected_url)
-    if parsed.scheme.casefold() != "https" or not parsed.hostname or len(selected_url) > 4096:
-        raise JobOpsError("AI_OPERATOR_JOB_URL_INVALID", "The AI operator needs one company HTTPS job URL.")
+    if selected_url:
+        parsed = urlparse(selected_url)
+        if parsed.scheme.casefold() != "https" or not parsed.hostname or len(selected_url) > 4096:
+            raise JobOpsError("AI_OPERATOR_JOB_URL_INVALID", "The supplied company job link must be an HTTPS URL.")
     instruction = raw_command
     if raw_embedded:
         instruction = instruction.replace(raw_embedded[0], " ", 1)
     instruction = re.sub(r"\s+", " ", instruction).strip(" -:：,，.;!?。！？")
-    if not instruction:
+    if not instruction and selected_url:
         instruction = "Handle this job for me."
+    if not instruction:
+        raise JobOpsError(
+            "AI_OPERATOR_SEARCH_INTENT_REQUIRED",
+            "Describe the role, location, or companies to search when no company job link is supplied.",
+        )
     return _bounded_text(instruction, field="user command", limit=300), selected_url
 
 
@@ -323,21 +339,28 @@ def new_job_operator_context(
     read_only_intake_confirmed: bool = False,
 ) -> dict[str, Any]:
     command, official_url = resolve_new_job_command(command, official_url)
-    parsed = urlparse(official_url)
-    if parsed.scheme != "https" or not parsed.hostname:
-        raise JobOpsError("AI_OPERATOR_JOB_URL_INVALID", "The AI operator needs a company HTTPS job URL.")
+    parsed = urlparse(official_url) if official_url else None
+    if official_url and (parsed is None or parsed.scheme != "https" or not parsed.hostname):
+        raise JobOpsError("AI_OPERATOR_JOB_URL_INVALID", "The supplied company job link must be an HTTPS URL.")
     blockers = readiness.get("blockers") if isinstance(readiness.get("blockers"), list) else []
     guided_stage = str(guided_status.get("status", "IDLE"))[:100]
     return {
-        "task_id": stable_id("AIT", parsed.hostname.casefold(), command),
-        "stage": "NEW_JOB",
+        "task_id": stable_id("AIT", parsed.hostname.casefold() if parsed else "official-search", command),
+        "stage": "NEW_JOB" if parsed else "JOB_DISCOVERY",
         "user_command": command,
-        "job_source": {
+        "job_source": ({
+            "mode": "SUPPLIED_OFFICIAL_URL",
             "scheme": "https",
             "company_host": parsed.hostname.casefold()[:253],
             "path_present": bool(parsed.path and parsed.path != "/"),
             "query_values_exposed": False,
-        },
+        } if parsed else {
+            "mode": "OFFICIAL_COMPANY_SEARCH",
+            "scheme": "https",
+            "public_result_metadata_only": True,
+            "official_company_page_required": True,
+            "query_values_exposed": False,
+        }),
         "readiness": {
             "status": str(readiness.get("status", "UNKNOWN"))[:100],
             "blocker_codes": sorted({
@@ -369,7 +392,8 @@ def operator_request(context: dict[str, Any], *, task: str = "JOBFLOW_APPLICATIO
         "instruction": (
             "Act as the decision and understanding layer inside JobFlow. Choose only the listed high-level JobFlow "
             "tools in a safe execution order. JobFlow, not you, executes every selected tool after validating its "
-            "state and authorization. For NEW_JOB, include jobflow.start_guided_intake. For an approved application, "
+            "state and authorization. For NEW_JOB with a supplied official URL, include jobflow.start_guided_intake. "
+            "For JOB_DISCOVERY without a URL, include jobflow.search_official_jobs. For an approved application, "
             "include jobflow.start_user_present_assist only when the supplied state is ready. Do not invent "
             "candidate facts or field answers. Login, account creation, CAPTCHA, MFA, legal declarations, signatures, "
             "unknown questions, and final Submit always require the user. If a NEW_JOB task is locally ready, its "
@@ -557,11 +581,12 @@ def plan_new_job(
     result = _operator_plan_payload(engine.execute_structured_task(
         operator_request(context, task="JOBFLOW_NEW_JOB_OPERATOR_PLAN_V1")
     ))
+    required_tool = "jobflow.start_guided_intake" if official_url else "jobflow.search_official_jobs"
     return validate_operator_plan(
         result,
         context=context,
         provider=status.get("display_name") or status.get("provider"),
-        required_host_tool="jobflow.start_guided_intake",
+        required_host_tool=required_tool,
     )
 
 

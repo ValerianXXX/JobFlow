@@ -6,6 +6,28 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-16
+
+### Added
+
+- Added a one-instruction, visible-browser workflow that searches for matching roles, rejects aggregators and direct ATS search results, asks the connected AI to rank only supplied candidate references, and opens only a subsequently verified official-company job page.
+- Added verified company-published Apply-route continuation into the application form without a programmatic Apply-button click or an invented URL.
+- Added a single job-specific review decision that binds the exact role, approved answers, tailored materials, uploads, and user-present assistance before continuous page handling begins.
+- Added automatic post-approval reuse of the verified application tab and automatic resume after a cryptographically bound, trusted user click on a submit-like Next/Continue control.
+- Added persistent home-page progress, a bounded ambiguity picker, and a safe cancel-and-reselect path for a mistaken job URL.
+
+### Changed
+
+- Unified installation, launch, and Browser Companion preparation under `Install JobFlow.cmd`; the browser's one unavoidable Load unpacked gesture remains explicit.
+- Moved legacy three-snapshot preparation tools under Advanced diagnostics and offline QA, while keeping source intake and onboarding above the application console.
+- Upgraded the Browser Companion to 0.7.0 and the local product to 0.3.0.
+
+### Safety
+
+- Search-result text remains untrusted; the AI can select only exact host-supplied references and never receives raw browser authority.
+- Login, account creation, CAPTCHA, MFA, legal/signature questions, unknown or sensitive answers, ambiguous routes, and changed page identity all stop for the user.
+- Final Submit remains user-only. Ambiguous or partially applied external state is audited and never retried automatically.
+
 ## [0.2.5] - release candidate
 
 ### Highlights

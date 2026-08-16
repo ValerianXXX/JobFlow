@@ -7,11 +7,9 @@ const vm = require("node:vm");
 
 const project = path.resolve(__dirname, "..");
 const source = fs.readFileSync(path.join(project, "browser-companion", "popup.js"), "utf8");
-assert.doesNotMatch(
-  source,
-  /chrome\.permissions\.request\s*\(/,
-  "the popup must rely on the user-click activeTab grant instead of requiring optional host access"
-);
+assert.match(source, /chrome\.permissions\.request\s*\(/);
+assert.match(source, /permissions:\s*\["search"\]/);
+assert.match(source, /origins:\s*\["https:\/\/\*\/\*"\]/);
 
 function element(id) {
   return {
@@ -32,6 +30,7 @@ const elements = Object.fromEntries(
 const activeTab = {id: 73, url: "https://careers.example.test/jobs/role-1"};
 const runtimeMessages = [];
 let permissionRequests = 0;
+let permissionGranted = false;
 
 let pairedStatus = {
   status: "AWAITING_JOB_PAGE_CAPTURE",
@@ -48,11 +47,11 @@ const sandbox = {
   },
   chrome: {
     runtime: {
-      getManifest() { return {version: "0.6.5"}; },
+      getManifest() { return {version: "0.7.0"}; },
       async sendMessage(message) {
         runtimeMessages.push(message);
         if (message.type === "JOBFLOW_GET_STATUS") return pairedStatus;
-        if (message.type === "JOBFLOW_CAPTURE_CURRENT") {
+        if (message.type === "JOBFLOW_RUN_GUIDED_AUTOPILOT") {
           const result = {
             status: pairedStatus.status === "AWAITING_APPLICATION_FORM_CAPTURE"
               ? "PREPARING_APPLICATION" : "AWAITING_APPLICATION_FORM_CAPTURE",
@@ -75,9 +74,10 @@ const sandbox = {
       async executeScript() { throw new Error("pairing injection is not expected for an already paired capture"); }
     },
     permissions: {
+      async contains() { return permissionGranted; },
       async request() {
         permissionRequests += 1;
-        return false;
+        return permissionGranted;
       }
     }
   },
@@ -94,15 +94,20 @@ vm.runInContext(source, sandbox, {filename: "popup.js"});
   assert.equal(elements.fill.listeners.click.length, 1);
 
   await elements.fill.listeners.click[0]();
+  assert.equal(permissionRequests, 1, "the first explicit click must request search and company-site access");
+  assert.match(elements.message.textContent, /未获得浏览器搜索/);
+  assert.equal(runtimeMessages.filter((message) => message.type === "JOBFLOW_RUN_GUIDED_AUTOPILOT").length, 0);
 
-  const captureMessages = runtimeMessages.filter((message) => message.type === "JOBFLOW_CAPTURE_CURRENT");
-  assert.equal(captureMessages.length, 1, "the popup must send the guided capture request");
+  permissionGranted = true;
+  await elements.fill.listeners.click[0]();
+
+  const captureMessages = runtimeMessages.filter((message) => message.type === "JOBFLOW_RUN_GUIDED_AUTOPILOT");
+  assert.equal(captureMessages.length, 1, "the popup must start the bounded guided autopilot");
   assert.deepEqual(
     JSON.parse(JSON.stringify(captureMessages[0])),
-    {type: "JOBFLOW_CAPTURE_CURRENT", tab_id: activeTab.id, tab_url: activeTab.url}
+    {type: "JOBFLOW_RUN_GUIDED_AUTOPILOT"}
   );
-  assert.equal(permissionRequests, 0, "optional host permission denial must not be consulted or block activeTab");
-  assert.equal(elements.message.textContent.includes("Apply"), true, "the successful capture should advance the user instruction");
+  assert.equal(elements.message.textContent.includes("Apply"), true, "the successful automation should advance the user instruction");
 
   pairedStatus = {
     status: "AWAITING_APPLICATION_FORM_CAPTURE",
@@ -140,8 +145,9 @@ vm.runInContext(source, sandbox, {filename: "popup.js"});
 
   process.stdout.write(JSON.stringify({
     status: "PASS",
-    active_tab_already_granted: true,
-    optional_host_permission_available: false,
+    user_gesture_permission_required: true,
+    permission_denial_fail_closed: true,
+    optional_host_permission_available: true,
     optional_permission_requests: permissionRequests,
     capture_messages: captureMessages.length,
     restart_required_bilingual: true,

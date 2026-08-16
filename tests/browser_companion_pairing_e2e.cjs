@@ -35,6 +35,7 @@ function pairResult(url) {
   const isAssist = String(url).includes("/assist/");
   return isAssist ? {
     status: "BROWSER_COMPANION_PAIRED", mode: "APPLICATION_ASSIST",
+    capture_status: "READY",
     assist_id: "BAS-SYNTHETIC-PAIRING", application_id: "APP-SYNTHETIC-PAIRING",
     allowed_page_origin: "https://apply.example.test", provider: "company",
     route_kind: "OFFICIAL_DIRECT", current_step: 1, max_steps: 20,
@@ -42,6 +43,7 @@ function pairResult(url) {
   } : {
     status: "GUIDED_INTAKE_PAIRED", capture_status: "AWAITING_JOB_PAGE_CAPTURE",
     mode: "JOB_CAPTURE", intake_id: "GIN-SYNTHETIC-PAIRING",
+    official_url: "https://careers.example.test/jobs/risk-analyst",
     allowed_company_domain: "example.test", expires_at: "2099-01-01T00:00:00Z",
     real_external_actions: 0
   };
@@ -56,14 +58,14 @@ function signedPairResult(url, options) {
     assist_path: assistPath,
     base_url: parsed.origin,
     challenge: String(body.companion_binding.challenge),
-    extension_version: "0.6.5",
+    extension_version: "0.7.0",
     installation_id: String(body.companion_binding.installation_id),
     protocol_version: "2"
   };
   for (const key of [
     "allowed_company_domain", "allowed_page_origin", "application_id", "assist_id",
-    "capture_status", "current_step", "expires_at", "intake_id", "max_steps", "mode",
-    "provider", "route_kind", "status"
+    "capture_status", "current_step", "discovery_mode", "expires_at", "intake_id", "max_steps", "mode",
+    "official_url", "provider", "preferred_tab_id", "route_kind", "search_query", "status"
   ]) values[`response.${key}`] = result[key] === null || result[key] === undefined ? "" : String(result[key]);
   const canonical = JSON.stringify(Object.fromEntries(Object.entries(values).sort(([left], [right]) => left.localeCompare(right))));
   const proof = invalidNextProof ? Buffer.alloc(32, 0x00) : createHmac("sha256", installationSecret).update(canonical).digest();
@@ -81,7 +83,7 @@ function signedPairResult(url, options) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.6.5"}; },
+    getManifest() { return {version: "0.7.0"}; },
     getURL(pathname) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${pathname}`; },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },

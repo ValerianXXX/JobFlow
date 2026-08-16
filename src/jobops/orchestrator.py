@@ -737,6 +737,16 @@ class JobOpsOrchestrator:
                 answer_key = str(item["answer_key"])
                 if item["classification"] == "private_fixed" and answer_key == "full_name" and profile.get("candidate_display_name"):
                     bindings[str(item["control_ref"])] = {"kind": "secure_ref", "value": profile_ref}
+                elif (
+                    item["classification"] == "private_fixed"
+                    and answer_key in profile
+                    and profile[answer_key] not in (None, "", "UNKNOWN", "UNANSWERED")
+                ):
+                    # Resume-provided contact values live only inside the encrypted
+                    # Candidate Profile.  Binding the profile reference here avoids
+                    # asking the applicant to type the same name, email, or phone on
+                    # every application while keeping the plaintext out of the packet.
+                    bindings[str(item["control_ref"])] = {"kind": "secure_ref", "value": profile_ref}
                 elif item["classification"] == "private_fixed" and answer_key in answers and answers[answer_key] not in (None, "", "UNKNOWN", "UNANSWERED"):
                     bindings[str(item["control_ref"])] = {"kind": "secure_ref", "value": answer_bank_ref}
                 elif item["classification"] == "ordinary_fixed" and answer_key in public_answers:

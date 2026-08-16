@@ -555,6 +555,20 @@
     const siteName = compact(document.querySelector('meta[property="og:site_name"]')?.content, 300);
     const company = compact(posting?.hiringOrganization?.name, 300) || siteName;
     const title = compact(posting?.title, 500) || heading || compact(document.title, 500);
+    const applyCandidates = [];
+    const seenApplyUrls = new Set();
+    for (const anchor of deepQueryAll("a[href]")) {
+      if (!visible(anchor)) continue;
+      const label = compact(anchor.innerText || anchor.textContent || anchor.getAttribute("aria-label"), 200);
+      if (!/(?:^|\b)(?:apply(?:\s+now)?|start\s+(?:an?\s+)?application)(?:\b|$)|申请|立即申请|开始申请/i.test(label)) continue;
+      let url;
+      try { url = new URL(anchor.href, location.href); }
+      catch (_error) { continue; }
+      if (url.protocol !== "https:" || seenApplyUrls.has(url.href)) continue;
+      seenApplyUrls.add(url.href);
+      applyCandidates.push({url: url.href, label});
+      if (applyCandidates.length >= 20) break;
+    }
     return {
       status: "COLLECTED",
       payload: {
@@ -565,9 +579,32 @@
         job_location: locationText(posting),
         visible_text: visibleText,
         blocker_signals: blockerSignals(),
-        application_fields_present: Boolean(deepQuery("input:not([type=hidden]),select,textarea"))
+        application_fields_present: Boolean(deepQuery("input:not([type=hidden]),select,textarea")),
+        apply_candidates: applyCandidates
       }
     };
+  }
+
+  function collectSearchResults() {
+    const results = [];
+    const seen = new Set();
+    for (const anchor of deepQueryAll("a[href]")) {
+      if (!visible(anchor)) continue;
+      let url;
+      try { url = new URL(anchor.href, location.href); }
+      catch (_error) { continue; }
+      if (url.protocol !== "https:" || url.origin === location.origin || seen.has(url.href)) continue;
+      const title = compact(anchor.innerText || anchor.textContent || anchor.getAttribute("aria-label"), 300);
+      if (!title) continue;
+      const container = deepClosest(anchor, "article,li,[role='listitem'],.g,.b_algo,.result") || anchor.parentElement;
+      const containerText = compact(container?.innerText || container?.textContent, 900);
+      const snippet = compact(containerText.replace(title, ""), 500);
+      seen.add(url.href);
+      results.push({url: url.href, title, snippet});
+      if (results.length >= 100) break;
+    }
+    if (!results.length) return {status: "BLOCKED", code: "COMPANION_SEARCH_RESULTS_UNAVAILABLE"};
+    return {status: "COLLECTED", payload: {search_origin: location.origin, results}};
   }
 
   async function sha256(bytesOrText) {
@@ -1213,6 +1250,7 @@
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     (async () => {
       if (message?.type === "JOBFLOW_COLLECT_JOB_PAGE") return collectJobPage();
+      if (message?.type === "JOBFLOW_COLLECT_SEARCH_RESULTS") return collectSearchResults();
       if (message?.type === "JOBFLOW_COLLECT_FORM") return await collectFormWhenReady();
       if (message?.type === "JOBFLOW_APPLY_APPROVED") return await applyApproved(message);
       if (message?.type === "JOBFLOW_ARM_MANUAL_NAVIGATION") return await armManualNavigation(message);

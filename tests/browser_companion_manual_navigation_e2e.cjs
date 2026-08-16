@@ -105,7 +105,7 @@ function evidencePayload(manual, overrides = {}) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.6.5"}; },
+    getManifest() { return {version: "0.7.0"}; },
     getURL(value) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${value}`; },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },
@@ -218,6 +218,14 @@ function internal(message, sender = {}) { return send(listeners.internal, messag
 function manualSender(overrides = {}) {
   return {tab: {id: 42, url: "https://apply.example.test/step-1"}, documentId: oldBrowserDocument, ...overrides};
 }
+async function eventually(predicate, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (predicate()) return;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error("Timed out waiting for the browser companion state transition.");
+}
 
 (async () => {
   session.jobflowAssist = {...baseState(), tab_id: null};
@@ -277,10 +285,11 @@ function manualSender(overrides = {}) {
 
   currentCollected = collected("https://apply.example.test/advanced", oldDocumentInstance, "spa-new-form");
   currentBrowserDocument = oldBrowserDocument;
-  const spaResult = await internal({
-    type: "JOBFLOW_FILL_CURRENT", tab_id: 42, tab_url: "https://apply.example.test/advanced"
+  listeners.tabUpdated(42, {status: "complete"}, {
+    id: 42, status: "complete", url: "https://apply.example.test/advanced"
   });
-  assert.equal(spaResult.status, "AWAITING_USER_SUBMIT");
+  await eventually(() => session.jobflowAssist?.stage === "AWAITING_USER_SUBMIT");
+  assert.equal(session.jobflowAssist.stage, "AWAITING_USER_SUBMIT");
   const resumedBody = requests.filter((item) => item.url.endsWith("/resume-manual-navigation")).at(-1).body;
   assert.equal(resumedBody.url, "https://apply.example.test/advanced", "the new page URL must not be overwritten by old evidence");
   assert.equal(resumedBody.companion_tab_id, 42);
@@ -413,7 +422,8 @@ function manualSender(overrides = {}) {
     status: "PASS", arm_before_stage_commit: true, companion_tab_injected: true,
     forged_nonce_rejected: true, wrong_tab_rejected: true, wrong_document_rejected: true,
     prevented_default_rejected: true, replay_rejected: true, immediate_unload_recorded: true,
-    spa_resume_supported: true, unrelated_same_origin_rejected: true, no_automatic_retry: true,
+    automatic_resume_after_trusted_next: true, spa_resume_supported: true,
+    unrelated_same_origin_rejected: true, no_automatic_retry: true,
     expired_challenge_rejected: true, public_nonce_redacted: true,
     arm_failure_restart_required: true, arm_failure_no_retry: true,
     explicit_button_fresh_proof_required: true, dynamic_review_before_complete: true,

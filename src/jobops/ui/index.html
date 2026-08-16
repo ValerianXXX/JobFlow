@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260816-jobflow-v27-guided-failure-v2">
+  <link rel="stylesheet" href="styles.css?v=20260816-jobflow-v28-one-confirmation">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -88,21 +88,22 @@
       </section>
       <section id="guidedIntakePanel" class="guided-intake-board" aria-labelledby="guidedIntakeTitle">
         <div class="subheading">
-          <div><p class="eyebrow" data-i18n="guidedIntakeEyebrow">NEXT JOB</p><h3 id="guidedIntakeTitle" data-i18n="guidedIntakeTitle">添加一个岗位</h3><small data-i18n="guidedIntakeBody">粘贴公司官网上的岗位链接。JobFlow 会通过浏览器伴侣读取你主动选择的岗位页和申请表结构，然后自动生成同一份审阅包。</small></div>
+          <div><p class="eyebrow" data-i18n="guidedIntakeEyebrow">NEXT JOB</p><h3 id="guidedIntakeTitle" data-i18n="guidedIntakeTitle">一句话即可开始</h3><small data-i18n="guidedIntakeBody">输入岗位方向，或粘贴已有官网岗位链接。JobFlow 会自动搜索、核验官网、沿安全 Apply 路径读取申请表并准备材料。</small></div>
           <span id="guidedIntakeBadge" class="guard-badge" data-i18n="guidedIntakeIdle">尚未开始</span>
         </div>
         <div class="guided-intake-layout">
           <div class="guided-intake-start">
-            <label><span data-i18n="aiOperatorCommandLabel">一句话交给 AI</span><input id="aiOperatorCommand" type="text" maxlength="4600" autocomplete="off" spellcheck="false" value="帮我处理这个岗位" placeholder="帮我处理这个岗位 https://company.example/careers/role"></label>
-            <small class="field-help" data-i18n="aiOperatorCommandHelp">可以直接输入“帮我处理这个岗位”并粘贴公司岗位链接。AI 会连续理解与决策；浏览器、材料和安全门仍由 JobFlow 执行。</small>
-            <label><span data-i18n="guidedOfficialUrl">公司官网岗位链接（也可放在上一句里）</span><input id="guidedOfficialUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://company.example/careers/role"></label>
-            <label class="guided-intake-consent"><input id="guidedIntakeConfirm" type="checkbox"><span data-i18n="guidedIntakeConsent">我允许 JobFlow 在接下来的 30 分钟内，只读取我在浏览器中主动选择的公司岗位页和申请表结构；此阶段不填写、不上传、不点击网页按钮。</span></label>
+            <label><span data-i18n="aiOperatorCommandLabel">一句话交给 AI</span><input id="aiOperatorCommand" type="text" maxlength="4600" autocomplete="off" spellcheck="false" value="帮我寻找并处理最匹配的岗位" placeholder="例如：在纽约寻找适合我的信用风险岗位并处理最匹配的一份"></label>
+            <small class="field-help" data-i18n="aiOperatorCommandHelp">说清岗位方向和地点即可；也可以粘贴一个公司官网岗位链接。JobFlow 会在可见浏览器标签页中搜索、核验官网、进入 Apply 并准备申请。</small>
+            <label><span data-i18n="guidedOfficialUrl">已有公司官网岗位链接（可选）</span><input id="guidedOfficialUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://company.example/careers/role"></label>
+            <p class="guided-intake-consent"><span data-i18n="guidedIntakeConsent">点击开始即允许 JobFlow 在接下来的 30 分钟内进行可见搜索、只读核验官网岗位与申请表并准备材料；看到具体岗位和材料后，你只需批准一次，JobFlow 才能预填和上传。最终 Submit 永远由你点击。</span></p>
             <div class="guided-intake-actions">
               <button id="startGuidedIntake" class="primary" type="button" data-i18n="startGuidedIntake" disabled>连接浏览器并开始</button>
               <a id="guidedOpenJob" class="button-link compact hidden" target="_blank" rel="noopener noreferrer" data-i18n="guidedOpenJob">打开公司岗位页</a>
               <button id="cancelGuidedIntake" class="secondary compact guided-cancel hidden" type="button" data-i18n="cancelGuidedIntake">取消本次读取并更换网址</button>
             </div>
             <p id="guidedIntakeMessage" class="guided-intake-message" aria-live="polite"></p>
+            <div id="guidedSearchChoices" class="guided-search-choices hidden" aria-live="polite"></div>
             <div id="guidedAiOperatorPlan" class="ai-operator-plan hidden">
               <strong data-i18n="aiOperatorTitle">AI 任务规划</strong>
               <p id="guidedAiOperatorSummary"></p>
@@ -111,9 +112,9 @@
             </div>
           </div>
           <ol class="guided-intake-steps">
-            <li id="guidedStepOne"><b>1</b><span><strong data-i18n="guidedStepOneTitle">打开公司岗位页</strong><small data-i18n="guidedStepOneBody">只需粘贴一次链接并建立浏览器连接。</small></span></li>
-            <li id="guidedStepTwo"><b>2</b><span><strong data-i18n="guidedStepTwoTitle">读取岗位</strong><small data-i18n="guidedStepTwoBody">在岗位页点击浏览器右上角的 JobFlow J，再点“读取当前公司岗位页”。</small></span></li>
-            <li id="guidedStepThree"><b>3</b><span><strong data-i18n="guidedStepThreeTitle">读取申请表</strong><small data-i18n="guidedStepThreeBody">亲自点击公司页面的 Apply；到申请表后再次点击 J。JobFlow 会自动生成材料和审阅包。</small></span></li>
+            <li id="guidedStepOne"><b>1</b><span><strong data-i18n="guidedStepOneTitle">自动搜索与核验</strong><small data-i18n="guidedStepOneBody">JobFlow 使用你的岗位目标搜索可见结果，并只选择经过核验的公司官网岗位。</small></span></li>
+            <li id="guidedStepTwo"><b>2</b><span><strong data-i18n="guidedStepTwoTitle">读取岗位</strong><small data-i18n="guidedStepTwoBody">自动读取选中的官网 JD；结果不唯一时才请你选择。</small></span></li>
+            <li id="guidedStepThree"><b>3</b><span><strong data-i18n="guidedStepThreeTitle">读取申请表</strong><small data-i18n="guidedStepThreeBody">JobFlow 沿公司公布的安全 Apply 链接进入申请表，并自动生成材料和审阅包。</small></span></li>
             <li id="guidedStepFour"><b>4</b><span><strong data-i18n="guidedStepFourTitle">一次审阅</strong><small data-i18n="guidedStepFourBody">确认材料与岗位问题后，才会出现浏览器辅助填写入口。</small></span></li>
           </ol>
         </div>
@@ -212,8 +213,8 @@
           <p data-i18n="packetFieldBody">这些答案只用于当前岗位，并立即保存为本机 DPAPI 加密引用。审阅包、项目文件和普通数据库不会保存明文。</p>
           <p class="field-gate-help" data-i18n="packetFieldSeparateHelp">上传、页面导航、账号动作和最终提交由各自的授权门控制，不会被误算成尚未回答。</p>
           <div id="applicationFieldResolutionList" class="application-field-resolution-list"></div>
-          <label class="packet-decision-confirm"><input id="applicationFieldResolutionConfirm" type="checkbox"><span data-i18n="packetFieldConsent">我确认这些是当前岗位的准确答案，并同意仅在本机加密保存。</span></label>
-          <button id="saveApplicationFieldResolutions" type="button" disabled data-i18n="savePacketFields">加密保存并生成新版审阅包</button>
+          <label class="packet-decision-confirm hidden"><input id="applicationFieldResolutionConfirm" type="checkbox"><span data-i18n="packetFieldConsent">我确认这些是当前岗位的准确答案，并同意仅在本机加密保存。</span></label>
+          <button id="saveApplicationFieldResolutions" class="hidden" type="button" disabled data-i18n="savePacketFields">加密保存并生成新版审阅包</button>
         </fieldset>
         <fieldset id="packetDecisionPanel" class="packet-decision-panel">
           <legend data-i18n="packetDecisionTitle">你对这份审阅包的决定</legend>
@@ -223,8 +224,8 @@
             <label><input type="radio" name="packetDecision" value="REVISE"><span><strong data-i18n="decisionRevise">退回修改</strong><small data-i18n="decisionReviseHelp">标记材料需要修订；任何旧批准都会失效。</small></span></label>
             <label><input type="radio" name="packetDecision" value="REJECT"><span><strong data-i18n="decisionReject">不申请这个岗位</strong><small data-i18n="decisionRejectHelp">关闭这项申请并释放一个待审批位置。</small></span></label>
           </div>
-          <label class="packet-decision-confirm"><input id="packetDecisionConfirm" type="checkbox"><span data-i18n="decisionConfirm">我确认这是我对当前审阅包的决定，并理解本轮真实外部动作仍为 0。</span></label>
-          <button id="confirmPacketDecision" type="button" disabled data-i18n="confirmDecision">确认这个决定</button>
+          <p class="packet-decision-confirm" data-i18n="decisionConfirm">点击下方按钮即确认当前哈希版本、上方岗位专属答案和所选决定。批准会立即开始在场预填与材料上传；JobFlow 永远不会点击最终 Submit。</p>
+          <button id="confirmPacketDecision" type="button" disabled data-i18n="confirmApproveAndStart">批准一次并开始填写</button>
         </fieldset>
       </section>
       <section id="browserAssistPanel" class="browser-assist-board hidden" aria-labelledby="browserAssistTitle">
@@ -440,6 +441,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260816-jobflow-v27-guided-failure-v2"></script>
+  <script src="app.js?v=20260816-jobflow-v28-one-confirmation"></script>
 </body>
 </html>

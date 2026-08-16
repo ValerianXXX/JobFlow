@@ -25,7 +25,7 @@ from .util import canonical_json, iso_utc, parse_iso, project_root, sha256_bytes
 
 
 COMPANION_PROTOCOL_VERSION = 2
-COMPANION_EXTENSION_VERSION = "0.6.5"
+COMPANION_EXTENSION_VERSION = "0.7.0"
 COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj"
 COMPANION_EXTENSION_ORIGIN = f"chrome-extension://{COMPANION_EXTENSION_ID}"
 ASSIST_TTL_MINUTES = 30
@@ -136,6 +136,7 @@ class _AssistLease:
     allowed_page_origin: str
     provider: str
     route_kind: str
+    preferred_tab_id: int | None
     created_at: str
     expires_at: str
     status: str = "PAIRING"
@@ -545,6 +546,7 @@ class BrowserAssistManager:
         application_id: str,
         source_route: dict[str, Any],
         user_confirmed: bool,
+        preferred_tab_id: int | None = None,
     ) -> dict[str, Any]:
         with self._lock:
             if not user_confirmed:
@@ -576,6 +578,7 @@ class BrowserAssistManager:
                     "multi_page": True,
                     "max_steps": lease.max_steps,
                     "approved_url": str(lease.source_route["current_url"]),
+                    "preferred_tab_id": lease.preferred_tab_id,
                     "expires_at": lease.expires_at,
                     "extension_id": COMPANION_EXTENSION_ID,
                     "submit_capability": False,
@@ -617,6 +620,7 @@ class BrowserAssistManager:
                 allowed_page_origin=_safe_origin(str(source_route["current_url"])),
                 provider=str(source_route["provider"]),
                 route_kind=str(source_route["route_kind"]),
+                preferred_tab_id=(preferred_tab_id if isinstance(preferred_tab_id, int) and preferred_tab_id > 0 else None),
                 created_at=iso_utc(current),
                 expires_at=iso_utc(current + timedelta(minutes=ASSIST_TTL_MINUTES)),
                 profile_ref=profile_ref,
@@ -659,6 +663,7 @@ class BrowserAssistManager:
                 "multi_page": True,
                 "max_steps": lease.max_steps,
                 "approved_url": str(source_route["current_url"]),
+                "preferred_tab_id": lease.preferred_tab_id,
                 "expires_at": lease.expires_at,
                 "extension_id": COMPANION_EXTENSION_ID,
                 "submit_capability": False,
@@ -736,12 +741,18 @@ class BrowserAssistManager:
                 "status": (
                     "LOCAL_AI_AGENT_PAIRED" if execution_channel == "LOCAL_AI_AGENT" else "BROWSER_COMPANION_PAIRED"
                 ),
+                # Keep the transport acknowledgement separate from the lease
+                # state.  The Browser Companion uses capture_status to start
+                # the already-approved application in preferred_tab_id without
+                # requiring another user click after the one packet approval.
+                "capture_status": lease.status,
                 "assist_id": lease.assist_id,
                 "application_id": lease.application_id,
                 "execution_channel": execution_channel,
                 "allowed_page_origin": lease.allowed_page_origin,
                 "provider": lease.provider,
                 "route_kind": lease.route_kind,
+                "preferred_tab_id": lease.preferred_tab_id,
                 "current_step": lease.current_step,
                 "max_steps": lease.max_steps,
                 "expires_at": lease.expires_at,
@@ -2300,6 +2311,7 @@ class BrowserAssistManager:
                     allowed_page_origin=str(row["allowed_origin"]),
                     provider="company",
                     route_kind="OFFICIAL_DIRECT",
+                    preferred_tab_id=None,
                     created_at=str(row["created_at"]),
                     expires_at=str(row["expires_at"]),
                     status="SUBMISSION_UNKNOWN",

@@ -12,9 +12,10 @@ This roadmap separates implemented offline evidence from future capabilities tha
 - [x] Encrypted Master Resume designation plus separate, exact-wording Claim-use approval and a bilingual blocker-by-blocker readiness board.
 - [x] AI-to-paragraph mapping for ordinary DOCX masters with one-time applicant approval of hash-bound safe tailoring positions.
 - [x] Completed real-user onboarding context can produce an encrypted, rendered offline application review packet from explicitly saved JD, official-page and form evidence through the bilingual home page, with automatic route construction, one-time staging, failure rollback and zero live transport.
-- [x] The normal bilingual path accepts one company role URL, pairs the fixed Browser Companion for two explicit read-only captures, automatically prepares local materials, and opens one review packet; three-file snapshot input is now advanced QA only.
+- [x] The normal bilingual path accepts one job-search instruction or an optional known company URL, performs visible official-company discovery, follows one verified company-published Apply route, captures the form, prepares local materials, and opens one review packet; three-file snapshot input is advanced QA only.
+- [x] One approval binds the exact packet, missing per-job answers, material uploads, and user-present browser assist. The companion continues in the already inspected application tab and stops before final Submit; ordinary pages no longer require repeated start clicks.
 - [x] Transactional pending-review queue with explicit approve/reject/revise/defer decisions.
-- [x] Separate short-lived one-time final-submit authorization bound to the exact execution plan, review packet, route, form, uploads and freshness evidence; review approval alone cannot submit.
+- [x] A synthetic-only final-authorization proof that validates receipt-state safety without adding any live final-submit implementation; real review approval can never submit.
 - [x] Append-only isolated execution checkpoints from approved plan through fake receipt confirmation, including fail-closed site drift and non-retryable unknown-submission recovery evidence.
 - [x] Per-application, expiring, one-use action sessions for live read/form inspection/prefill/upload contracts, including complete-scope preflight before any use, plus a user-visible global emergency stop that defaults off and invalidates every active session.
 - [x] Hash-only fake material-upload contract integrated into the isolated execution chain after scoped prefill/upload authorization and before fresh final-submit confirmation; it opens and uploads zero files.
@@ -42,7 +43,7 @@ This roadmap separates implemented offline evidence from future capabilities tha
 
 ## Future, separately authorized / 未来需另行授权
 
-- [ ] Read-only live official-careers freshness checks that comply with site terms.
+- [x] User-started, visible read-only official-company search and page freshness verification with untrusted-result filtering and site-term compliance required for every run.
 - [x] Browser-assisted per-page company/ATS form inspection with exact bound origin, per-application consent and rotated per-page action sessions.
 - [x] User-present approved fill, later-page material attachment, explicit one-use non-final Next/Continue, and human login/CAPTCHA/MFA handoff, with a hard stop before final Submit and zero automatic retry.
 - [ ] Provider-specific live Greenhouse, Lever and Workday compatibility evidence.
