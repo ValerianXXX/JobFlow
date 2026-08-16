@@ -133,6 +133,13 @@ class CompositeRequirementAndFitTests(unittest.TestCase):
         self.assertNotIn("location", eligibility.hard_gaps)
         self.assertNotIn("level", eligibility.hard_gaps)
 
+    def test_senior_management_in_duties_does_not_make_role_senior(self) -> None:
+        jd = analyze_jd(
+            "Company: Example\nRole: Credit Risk Review Analyst\nLocation: New York\n"
+            "Responsibilities:\n- Present findings to senior management\n"
+        )
+        self.assertEqual(jd.level, "UNKNOWN")
+
     def test_or_parentheses_choose_one_and_at_least_n_are_modeled(self) -> None:
         text = """职位：分析师\n工作地点：Remote\n任职要求：\n- Python and (SQL or Tableau)\n- At least 2 of Python, SQL, Tableau\n- 英语或中文\n- 任选其一：AWS or Azure\n"""
         jd = analyze_jd(text)

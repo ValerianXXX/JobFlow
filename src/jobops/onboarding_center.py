@@ -1753,7 +1753,7 @@ class OnboardingCenterService:
                 "read_only_page_inspections": inspections,
                 "real_external_actions": 0,
             }
-        return {
+        public = {
             "status": str(active["status"]), "active": True,
             "intake_id": str(active["intake_id"]),
             "paired": bool(active.get("paired")),
@@ -1761,6 +1761,10 @@ class OnboardingCenterService:
             "read_only_page_inspections": inspections,
             "real_external_actions": 0,
         }
+        failure = active.get("last_failure")
+        if isinstance(failure, dict) and str(active.get("status")) == "FORM_CAPTURE_FAILED":
+            public.update(deepcopy(failure))
+        return public
 
     @_synchronized
     def start_guided_intake(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -2015,6 +2019,7 @@ class OnboardingCenterService:
         preferred_excerpt = re.sub(r"\s+", " ", str(job_page["title"])).strip()
         excerpt = preferred_excerpt if len(preferred_excerpt) >= 12 and preferred_excerpt in normalized_official else normalized_official[:500]
         lease["status"] = "PREPARING_APPLICATION"
+        lease.pop("last_failure", None)
         self._guided_event(
             str(lease["intake_id"]), "FORM_INSPECTED",
             {"form_hash": sha256_bytes(sanitized_html.encode("utf-8")), "url_hash": sha256_bytes(application_url.encode("utf-8"))},
@@ -2036,14 +2041,27 @@ class OnboardingCenterService:
             )
         except Exception as exc:
             lease["status"] = "FORM_CAPTURE_FAILED"
+            failure_code = exc.code if isinstance(exc, JobOpsError) else "LOCAL_PREPARATION_FAILED"
+            safe_failure: dict[str, Any] = {"code": failure_code}
+            if failure_code == "INELIGIBLE" and isinstance(exc, JobOpsError):
+                safe_failure["hard_gap_codes"] = [
+                    str(value)[:120] for value in exc.details.get("hard_gaps", [])[:20]
+                    if re.fullmatch(r"[A-Za-z0-9:_-]{1,120}", str(value))
+                ]
+                safe_failure["unknown_condition_codes"] = [
+                    str(value)[:120] for value in exc.details.get("unknowns", [])[:20]
+                    if re.fullmatch(r"[A-Za-z0-9:_-]{1,120}", str(value))
+                ]
+            lease["last_failure"] = safe_failure
             self._guided_event(
                 str(lease["intake_id"]), "FAILED",
-                {"code": exc.code if isinstance(exc, JobOpsError) else "LOCAL_PREPARATION_FAILED"},
+                {"code": failure_code},
             )
             raise
         application_id = str(result.get("application_id") or "") or None
         final_status = "REVIEW_PACKET_READY" if application_id else "DEFERRED"
         lease["status"] = final_status
+        lease.pop("last_failure", None)
         lease["application_id"] = application_id
         lease["job_page"] = None
         self._guided_event(

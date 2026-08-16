@@ -504,6 +504,10 @@ textarea { min-height: 96px; resize: vertical; }
 #toast.show { opacity: 1; transform: translateY(0); }
 #toast.error { background: #8d3e34; }
 .activity-indicator { position: fixed; right: 24px; bottom: 24px; display: flex; align-items: flex-start; gap: 13px; min-width: 340px; max-width: 460px; padding: 15px 17px; color: #fff; background: linear-gradient(135deg,var(--green-dark),var(--ink)); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 18px 45px rgba(22,32,42,.28); z-index: 60; }
+.activity-indicator.failed { background: linear-gradient(135deg,#81483f,var(--ink)); }
+.activity-indicator.failed .activity-spinner { animation: none; border-color: rgba(255,255,255,.35); position: relative; }
+.activity-indicator.failed .activity-spinner::after { content: "!"; position: absolute; inset: -1px 0 0; text-align: center; color: #fff; font-weight: 800; line-height: 22px; }
+.activity-indicator.failed .activity-progress i { background: #f0b6a9; }
 #activityIndicator.hidden { display: none; }
 .activity-copy { min-width: 0; flex: 1; }
 .activity-indicator strong, .activity-indicator small { display: block; }

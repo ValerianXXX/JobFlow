@@ -161,8 +161,11 @@ def check_eligibility(jd: NormalizedJD, profile: dict[str, Any]) -> EligibilityR
         unknowns.append("job_level")
         checks.append({"gate": "level", "result": "UNKNOWN", "reason": "level not reliably inferable"})
     elif target_levels and job_level not in target_levels:
-        gaps.append("level")
-        checks.append({"gate": "level", "result": "FAIL", "reason": f"{jd.level} is outside target levels"})
+        # A target level is a search preference, not proof that the applicant
+        # is ineligible. Keep the mismatch visible for review without
+        # preventing creation of the review packet.
+        unknowns.append("level_preference_conflict")
+        checks.append({"gate": "level", "result": "UNKNOWN", "reason": f"{jd.level} is outside target preferences"})
     else:
         checks.append({"gate": "level", "result": "PASS", "reason": "level matches or no restrictive preference"})
 

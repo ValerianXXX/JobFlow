@@ -121,6 +121,31 @@ const STRINGS = {
   }
 };
 
+Object.assign(STRINGS.zh,{
+  guidedStoppedTitle:"本次处理已停止",
+  guidedStoppedHint:"错误状态会保留在这里，直到你重试或取消本次读取。网页没有被填写或修改。",
+  guidedEligibilityReview:"岗位和申请表已经读取完成，但发现需要你确认的匹配条件：{gaps}。没有生成申请材料，也没有修改招聘网页。",
+  guidedLevelPreferenceMismatch:"职位级别与已保存的目标偏好不同",
+  guidedGapWorkAuthorization:"工作授权条件冲突",
+  guidedGapVisa:"签证担保条件冲突",
+  guidedGapLocation:"地点偏好不一致",
+  guidedGapSalary:"薪资偏好不一致",
+  guidedGapRequirement:"岗位硬性要求仍有冲突",
+  guidedGapUnknown:"未识别的匹配条件"
+});
+Object.assign(STRINGS.en,{
+  guidedStoppedTitle:"This run stopped",
+  guidedStoppedHint:"This error stays visible until you retry or cancel the read. The recruiting page was not filled or changed.",
+  guidedEligibilityReview:"The role and form were read, but these match conditions need your review: {gaps}. No application material was generated and the recruiting page was not changed.",
+  guidedLevelPreferenceMismatch:"Role level differs from the saved target preference",
+  guidedGapWorkAuthorization:"Work-authorization conflict",
+  guidedGapVisa:"Visa-sponsorship conflict",
+  guidedGapLocation:"Location preference mismatch",
+  guidedGapSalary:"Salary preference mismatch",
+  guidedGapRequirement:"A stated job requirement still conflicts",
+  guidedGapUnknown:"Unrecognized match condition"
+});
+
 const UI_PROTOCOL_VERSION = 27;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj";
@@ -175,6 +200,9 @@ function arrangePrimaryWorkflow() {
   if(review&&browser&&review.nextElementSibling!==browser)review.after(browser);
   if(execution&&advanced&&execution.nextElementSibling!==advanced)execution.after(advanced);
 }
+// Establish the user-facing order before any later listener or bootstrap code
+// can fail. Materials and onboarding must remain above the application console.
+arrangePrimaryWorkflow();
 function isCompleteAiAnalysis(value) {
   const chunks=Number(value?.ai_chunks||0), input=Number(value?.ai_input_characters??-1), covered=Number(value?.ai_covered_characters??-2);
   return value?.analysis_mode==="AI_CORE_ENTITY_ANALYSIS" && value?.quality_contract===AI_QUALITY_CONTRACT && value?.ai_input_truncated===false && chunks>=1 && input>0 && covered===input;
@@ -488,11 +516,24 @@ function formatBytes(value) {
 
 function renderActivity() {
   const indicator=document.querySelector("#activityIndicator"), main=document.querySelector("main");
-  const activity=state.activities[state.activities.length-1];
+  const guided=state.guidedIntakeSession||state.data?.guided_intake||{};
+  const terminalGuided=["FORM_CAPTURE_FAILED","FAILED"].includes(guided.status)
+    ?{terminal:true,key:"guidedStoppedTitle",detail:guidedFailureMessage(guided)}:null;
+  const activity=state.activities[state.activities.length-1]||terminalGuided;
   if(!activity){indicator.classList.add("hidden");document.body.classList.remove("is-busy");main?.removeAttribute("aria-busy");return;}
-  const seconds=Math.max(0,Math.floor((Date.now()-activity.started)/1000));
   const progressBar=document.querySelector("#activityProgress");
-  indicator.classList.remove("hidden"); document.body.classList.add("is-busy"); main?.setAttribute("aria-busy","true");
+  indicator.classList.remove("hidden");
+  indicator.classList.toggle("failed",Boolean(activity.terminal));
+  if(activity.terminal){
+    document.body.classList.remove("is-busy");main?.removeAttribute("aria-busy");
+    document.querySelector("#activityTitle").textContent=t(activity.key);
+    document.querySelector("#activityStage").textContent=activity.detail;
+    document.querySelector("#activityElapsed").textContent=t("guidedStoppedHint");
+    progressBar.classList.remove("indeterminate");progressBar.style.width="100%";
+    return;
+  }
+  indicator.classList.remove("failed");document.body.classList.add("is-busy");main?.setAttribute("aria-busy","true");
+  const seconds=Math.max(0,Math.floor((Date.now()-activity.started)/1000));
   document.querySelector("#activityTitle").textContent=t(activity.key);
   if(activity.phase==="uploading"){
     const loaded=Math.max(0,Number(activity.loadedBytes)||0),total=Math.max(1,Number(activity.totalBytes)||1);
@@ -826,6 +867,22 @@ function guidedIntakeMessage(status){
   return t(keys[status]||"guidedIntakeIdle");
 }
 
+function guidedFailureMessage(session){
+  if(session?.code==="INELIGIBLE"){
+    const labels={
+      level:"guidedLevelPreferenceMismatch",work_authorization:"guidedGapWorkAuthorization",
+      visa_sponsorship:"guidedGapVisa",location:"guidedGapLocation",salary:"guidedGapSalary"
+    };
+    const gaps=(Array.isArray(session.hard_gap_codes)?session.hard_gap_codes:[]).map(code=>{
+      if(String(code).startsWith("hard_requirement:"))return t("guidedGapRequirement");
+      return t(labels[code]||"guidedGapUnknown");
+    });
+    return t("guidedEligibilityReview").replace("{gaps}",[...new Set(gaps.length?gaps:[t("guidedGapUnknown")])].join("、"));
+  }
+  if(session?.code&&LOCAL_ERROR_KEYS[session.code])return localizedErrorMessage(session);
+  return guidedIntakeMessage(session?.status||"FORM_CAPTURE_FAILED");
+}
+
 function renderGuidedIntake(){
   const bootstrap=state.data?.guided_intake||{}, session=state.guidedIntakeSession||bootstrap;
   const status=session?.status||"IDLE", ready=state.data?.application_readiness?.status==="READY_FOR_OFFLINE_APPLICATION_PREPARATION";
@@ -845,9 +902,10 @@ function renderGuidedIntake(){
   const cancellable=["GUIDED_INTAKE_PAIRING","GUIDED_INTAKE_PAIRED","AWAITING_JOB_PAGE_CAPTURE","AWAITING_APPLICATION_FORM_CAPTURE","FORM_CAPTURE_FAILED"].includes(status);
   if(cancel){cancel.classList.toggle("hidden",demo||!active||!cancellable);cancel.disabled=assistActive;}
   const badge=document.querySelector("#guidedIntakeBadge"), message=document.querySelector("#guidedIntakeMessage");
-  badge.textContent=guidedIntakeMessage(status);
+  const statusMessage=["FORM_CAPTURE_FAILED","FAILED"].includes(status)?guidedFailureMessage(session):guidedIntakeMessage(status);
+  badge.textContent=statusMessage;
   const connectionNotice=state.companionPairing?.kind==="guided"&&state.companionConnectionNotice?t(state.companionConnectionNotice):"";
-  message.textContent=assistActive?t("companionSessionActive"):ready?[guidedIntakeMessage(status),connectionNotice].filter(Boolean).join(" "):t("guidedReadinessRequired");
+  message.textContent=assistActive?t("companionSessionActive"):ready?[statusMessage,connectionNotice].filter(Boolean).join(" "):t("guidedReadinessRequired");
   message.classList.toggle("working",["GUIDED_INTAKE_PAIRING","PREPARING_APPLICATION"].includes(status));
   const operatorPanel=document.querySelector("#guidedAiOperatorPlan"), operatorPlan=state.aiOperatorPlan;
   if(operatorPanel){
@@ -964,7 +1022,7 @@ async function handleGuidedCompanionStatus(result){
   }else if(["FORM_CAPTURE_FAILED","FAILED"].includes(result.status)){
     state.companionTerminalHandled=terminalKey;
     const error=Object.assign(new Error(result.message||result.code||t("guidedFailed")),result);
-    showToast(LOCAL_ERROR_KEYS[error.code]?localizedErrorMessage(error):t("guidedFailed"),true,9000);
+    showToast(guidedFailureMessage(error),true,12000);
   }
   return true;
 }
@@ -2252,7 +2310,6 @@ document.querySelector("#completeOnboarding").addEventListener("click",async()=>
   try{await withActivity("completingOnboarding",async()=>{await api("complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_confirmed:true})});await refresh();});document.querySelector("#completionMessage").textContent=t("completeSuccess");renderReadiness();showToast(t("completeSuccess"));}catch(e){handleUiError(e);}
 });
 
-arrangePrimaryWorkflow();
 withActivity("loadingInitial",async()=>{
   await refresh();
   const record=restoreCompanionPairing();

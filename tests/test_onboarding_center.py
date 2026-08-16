@@ -8,6 +8,7 @@ import shutil
 import struct
 import sys
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.request
@@ -328,6 +329,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("function arrangePrimaryWorkflow()", script)
         self.assertIn("finish.after(dashboard)", script)
         self.assertIn("arrangePrimaryWorkflow();", script)
+        self.assertLess(script.index("arrangePrimaryWorkflow();"), script.index('document.querySelector("#documentFile").addEventListener'))
         self.assertIn('id="sourceIntakeNotice"', html)
         self.assertEqual(html.count("data-start-revision"), 2)
         self.assertIn("sourceIntakeDemoTitle", script)
@@ -1872,6 +1874,30 @@ class OnboardingCenterTests(unittest.TestCase):
                 server.server_close()
                 thread.join(timeout=5)
 
+    def test_guided_public_status_keeps_safe_failure_reason_visible(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            token = "g" * 54
+            service._guided_intakes[token] = {
+                "token": token,
+                "intake_id": "GIN-123456789ABC",
+                "status": "FORM_CAPTURE_FAILED",
+                "paired": True,
+                "started_epoch": time.time(),
+                "expires_epoch": time.time() + 600,
+                "expires_at": "2099-01-01T00:00:00Z",
+                "last_failure": {
+                    "code": "INELIGIBLE",
+                    "hard_gap_codes": ["level"],
+                    "unknown_condition_codes": ["job_salary"],
+                },
+            }
+            status = service._guided_public_status()
+            self.assertEqual(status["status"], "FORM_CAPTURE_FAILED")
+            self.assertEqual(status["code"], "INELIGIBLE")
+            self.assertEqual(status["hard_gap_codes"], ["level"])
+            self.assertNotIn("message", status)
+
     def test_local_binary_upload_transport_fails_closed(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
@@ -2178,7 +2204,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v27-ai-operator-v4", html)
+        self.assertIn("jobflow-v27-guided-failure-v2", html)
 
 
 if __name__ == "__main__":
