@@ -2,6 +2,7 @@
 
 const STRINGS = {
   zh: {
+    aiOperatorCommandLabel: "一句话交给 AI", aiOperatorCommandHelp: "可以直接输入“帮我处理这个岗位”并粘贴公司岗位链接。AI 会连续理解与决策；浏览器、材料和安全门仍由 JobFlow 执行。", aiOperatorCommandDefault: "帮我处理这个岗位", aiOperatorDelegated: "由 JobFlow 接力执行", aiOperatorUserGate: "到这里才需要你",
     guidedIntakeEyebrow: "下一份岗位", guidedIntakeTitle: "粘贴岗位链接即可开始", guidedIntakeBody: "从公司官网岗位链接开始。浏览器伴侣只读取你主动选择的岗位页和申请表结构，随后自动准备岗位简历、按需求职信、作品集与审阅包。", guidedIntakeIdle: "尚未开始", guidedOfficialUrl: "公司官网岗位链接", guidedIntakeConsent: "我允许 JobFlow 在接下来的 30 分钟内，只读取我在浏览器中主动选择的公司岗位页和申请表结构；此阶段不填写、不上传、不点击网页按钮。", startGuidedIntake: "连接浏览器并开始", guidedOpenJob: "打开公司岗位页", cancelGuidedIntake: "取消本次读取并更换网址", cancelGuidedIntakeConfirm: "确认取消本次岗位读取并更换网址？这不会删除你的简历、Profile 或其他资料，也不会修改招聘网站。", cancellingGuidedIntake: "正在取消本次岗位读取…", guidedCancelled: "本次岗位读取已取消，现在可以填写其他网址。", guidedCancelledCompanionReload: "本次岗位读取已取消，但浏览器伴侣没有确认释放旧连接。请在扩展管理页重新加载 JobFlow Browser Companion 后再开始。", guidedCancelUnavailable: "这次岗位已经生成或排队。请在待审批列表处理它，不能静默删除。", guidedStepOneTitle: "打开公司岗位页", guidedStepOneBody: "粘贴一次链接并建立浏览器连接。", guidedStepTwoTitle: "读取岗位", guidedStepTwoBody: "在岗位页打开浏览器右上角的 JobFlow J，再点“读取当前公司岗位页”。", guidedStepThreeTitle: "读取申请表", guidedStepThreeBody: "亲自点击公司的 Apply；到申请表后再次打开 J。JobFlow 会自动准备材料。", guidedStepFourTitle: "一次审阅", guidedStepFourBody: "确认材料与岗位问题后，才会出现辅助填写入口。", guidedPairing: "正在连接浏览器伴侣…", guidedPaired: "已连接。请打开公司岗位页，再使用浏览器右上角的 JobFlow J。", guidedAwaitingJob: "等待你读取公司岗位页。", guidedAwaitingForm: "岗位已读取。请亲自点击公司页面的 Apply；进入申请表后再次使用 JobFlow J。", guidedPreparing: "正在根据岗位和表单准备岗位简历、按需材料与审阅包…", guidedReady: "材料与审阅包已准备好，请在下方一次审阅。", guidedDeferred: "待审批队列已满，这个岗位已安全排队；你处理一项后会继续。", guidedFailed: "本次读取没有完成，网页没有被填写或修改。请检查当前页面后重试。", guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认 JobFlow Browser Companion 已启用，然后重试。", guidedUrlRequired: "请粘贴公司官网上的 HTTPS 岗位链接。", guidedConsentRequired: "请先勾选这次只读岗位导入授权。", guidedReadinessRequired: "请先完成上方列出的资料准备项。", guidedWrongJobPage: "请先在公司自己的官网岗位页读取岗位，再亲自进入它链接的申请表。", guidedFormMissing: "当前页面没有找到申请字段。请先进入真正的申请表，再打开 JobFlow J。", guidedJobTitleMissing: "当前页面无法可靠识别岗位名称，请确认打开的是具体岗位页。", guidedLeaseInvalid: "这次岗位读取连接已过期，请重新开始。", advancedToolsTitle: "高级诊断与离线 QA", advancedToolsBody: "普通使用不需要这里。仅在开发测试或浏览器导入不可用时，才手动提供本地快照。", advancedToolsOpen: "展开", browserAssistEyebrow: "已批准的申请",
     retryCompanionPairing: "再次显示连接步骤",
     companionClickToPair: "本次连接已准备好。请停留在这个 JobFlow 页面，点击浏览器右上角的 JobFlow J，再点击“连接当前 JobFlow 页面”。",
@@ -10,8 +11,9 @@ const STRINGS = {
     companionSessionActive: "另一种浏览器任务仍在进行中。请先完成或明确停止它，再开始这个任务。",
     guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认扩展已启用并重新加载当前版本；无需把网站权限改成“在所有网站上”。",
     guidedExtensionOutdated: "浏览器伴侣版本不匹配。请重新运行安装命令，并在扩展管理页重新加载安装器打开的本机 BrowserCompanion 目录。",
-    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.6.2，然后刷新 JobFlow。",
+    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.7.0，然后刷新 JobFlow。",
     browserAssistRestartRequired: "扩展已重载，本次辅助已安全停止。请重新打开这份申请的起始页，再建立一次连接；JobFlow 没有自动重试 Next/Continue。",
+    browserAssistApplyRestart: "页面可能已经填写或上传了一部分，但整页验证没有完成。本轮已停止并记入审计，绝不会自动重复填写或上传；请重新打开申请起始页再开始。",
     browserAssistManualRestart: "这次一次性下一步证明没有安全建立。请结束并重新启动这项申请辅助；JobFlow 不会自动重试。",
     browserAssistReloadUnknown: "扩展在最终提交等待阶段被重载，结果已安全标记为未知。请回答“是否提交成功”；JobFlow 不会自动重试。",
     brandSubtitle: "找工流水线", localOnly: "仅限本机 · DPAPI 加密", eyebrow: "JOBFLOW SETUP", pageTitle: "JobFlow · 找工流水线",
@@ -23,11 +25,11 @@ const STRINGS = {
     offlineApplicationTitle: "准备一个离线申请", offlineApplicationBody: "选择已保存的岗位说明、公司官网岗位页和申请表；JobFlow 只在本机生成岗位材料与审阅包。", offlineApplicationGuard: "只到待审批", applicationOfficialUrl: "公司官网岗位 URL", applicationFormUrl: "申请表原始 URL", applicationGuestMode: "是否可访客申请", guestUnknown: "不确定", guestYes: "可以", guestNo: "不可以", applicationJdFile: "岗位说明（JD）", applicationOfficialFile: "已保存的官网岗位页", applicationFormFile: "已保存的申请表", applicationEvidenceExcerpt: "官网页中的一段公司原文", applicationEvidencePlaceholder: "粘贴官网岗位页中一段至少 12 个字符的原文，用于有依据地生成求职信。", applicationEvidenceHelp: "必须能在所选官网页中逐字找到；不会被当作你的个人经历。", offlineApplicationReadyHint: "资料准备度全部通过后即可生成。", offlineApplicationReady: "准备度已通过，可以选择本地岗位资料。", offlineApplicationNeedsReadiness: "先完成上方自动投递准备度中的所有项目。", offlineApplicationInputsRequired: "请填写两个 HTTPS URL、选择三个本地文件，并粘贴一段官网原文。", prepareOfflineApplication: "生成材料并加入待审批", preparingOfflineApplication: "正在分析岗位并生成本机材料…", offlineApplicationPrepared: "岗位材料已生成并加入待审批。", offlineApplicationDeferred: "待审批队列已满；该岗位的三份本地证据已加密排队，释放名额后会自动继续。", applicationBundleInvalid: "所选岗位文件或页面信息无法安全对应，请检查后重试。", deferredBundleTooLarge: "队列已满，且这组本地证据过大，无法安全暂存。请先处理一项待审批申请，再重新选择这组文件。",
     progressLabel: "问卷完成度", draftSaved: "草稿保存时直接加密", stepSources: "资料来源", stepQuestions: "完整问卷", stepReview: "资料与 Claim 审阅", stepFinish: "确认完成",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "本地投递控制台", pipelineBody: "统一查看资料准备度、待审批容量和安全边界。这里不会打开招聘网站或执行外部动作。", refreshDashboard: "刷新状态", dashboardRefreshed: "本地控制台已刷新", profileReadiness: "资料准备", awaitingApproval: "待你审批", approvalQueueOnly: "只生成本地审阅包", availableSlots: "剩余容量", deferredJobs: "排队等待", continuesUntilLimit: "达到上限前继续处理其他岗位", pendingReviewTitle: "待审批申请", pendingReviewBody: "只显示安全岗位摘要；私人答案和材料正文不会出现在此处。", safetyBoardTitle: "当前安全边界", realSites: "真实网站访问", externalActions: "真实外部动作", knowledgeWrites: "知识库写入", networkMode: "运行模式", externalControl: "外部动作总开关", externalControlLocked: "已关闭", externalControlEnabled: "已启用", emergencyStop: "立即停止全部外部动作", emergencyStopConfirm: "确认立即关闭全部外部动作并使现有动作授权失效？", emergencyStopped: "全部外部动作已关闭，现有动作授权已失效。", stoppingExternalActions: "正在关闭全部外部动作…", pipelineReady: "已完成", pipelineNeedsSetup: "待完成", aiReadyShort: "AI 已连接", aiMissingShort: "AI 未连接", queueLimit: "上限 {limit}", pendingEmpty: "目前没有等待你审批的申请。离线处理完成的岗位会出现在这里。", packetHash: "审阅包 {hash}", packetVersion: "第 {version} 版", awaitingApprovalStatus: "等待你的决定", safetyGuardOn: "外部动作锁定", offlineMode: "仅限本地离线", refreshingDashboard: "刷新本地控制台…", deferredListTitle: "等待处理的岗位", deferredListBody: "达到上限后进入这里；释放位置时按顺序继续。", deferredEmpty: "目前没有因容量而等待的岗位。", recentDecisionsTitle: "最近的队列决定", recentDecisionsBody: "显示本地状态变化；不会把批准当成已提交。", recentEmpty: "还没有已处理的队列决定。", safeQueueId: "安全队列编号", queuedAt: "进入时间", viewRecord: "查看记录", approvalExpiry: "本地批准有效至 {time}", statusApproved: "本地已批准", statusClosed: "已关闭", statusRevision: "等待修改", statusDeferred: "等待容量", statusOther: "本地状态：{status}", executionRunsTitle: "自动投递执行状态", executionRunsBody: "只显示安全状态、最近检查点和下一步；不显示私人答案、文件内容或网站会话。", executionRunsEmpty: "目前没有自动投递执行记录。审阅批准不会被显示为已提交。", executionStatusAwaiting: "等待一次性最终确认", executionStatusConfirmed: "已由可靠回执确认", executionStatusUnknown: "提交结果未知，必须人工核验", executionStatusInvalidated: "已失效", executionStatusInterrupted: "发现中断，必须恢复核验", executionStatusOther: "执行状态：{status}", executionCheckpoint: "检查点 {sequence}", executionPhaseNow: "最近阶段：{phase}", executionNoRetry: "禁止自动重试", executionNextFinal: "下一步：取得一次性最终确认；当前实时动作仍关闭", executionNextNone: "下一步：无，流程已确认完成", executionNextManual: "下一步：人工核验外部证据，绝不自动重投", executionNextRebuild: "下一步：重新生成并审阅申请包", executionNextRestart: "下一步：本机恢复器核验持久化状态，不重新发送", executionNextOther: "下一步：人工检查本机状态",
-    pipelineBody: "统一查看资料准备、审批队列和用户在场的公司官网与 ATS 辅助投递。每个申请都必须单独授权。", safetyGuardOn: "最终提交与自动重试始终锁定", offlineMode: "本地准备 + 用户在场辅助", assistedMode: "本地准备 + 用户在场辅助", authorizedActionsAudited: "已授权动作均已审计", browserAssistTitle: "审阅后辅助填写", browserAssistBody: "只有当前审阅包批准后，这里才会逐页预填获批字段、附加材料并安全通过明确的 Next/Continue。最终 Submit 永远留给你。", browserAssistIdle: "等待已批准申请", browserCompanionStep: "同一个浏览器伴侣", browserCompanionHelp: "岗位读取与审阅后的辅助填写都使用同一个 JobFlow J 扩展；首次加载后无需重复安装。", browserCompanionNotPaired: "尚未与本次申请配对", browserCompanionPaired: "浏览器伴侣已配对", browserAssistBoundaryTitle: "不可越过的边界", browserAssistBoundary: "JobFlow 只会在当前页校验通过后，使用一次性授权点击一个明确的 Next/Continue；不会登录、注册、绕过验证码或点击最终 Submit。结果不明确时只会询问你，绝不自动重试。", browserAssistCompanyOnly: "支持已审批的公司官网、Greenhouse、Lever 与 Workday 路线；每一页仍会按当前结构重新校验，不会把离线测试当成实时兼容证明。", browserAssistConsent: "我授权这一个申请在 30 分钟内逐页读取表单结构、预填获批字段、附加获批材料并通过明确的非最终 Next/Continue；登录、验证、未知问题和最终 Submit 由我处理。", startBrowserAssist: "开始辅助投递", startBrowserAssistNow: "建立浏览器连接", startingBrowserAssist: "正在建立一次性浏览器连接…", browserAssistConfirmFirst: "请先勾选本次真实辅助授权。", browserAssistPairing: "正在与浏览器伴侣配对…", browserAssistPaired: "配对成功。请打开已批准的申请页，再点击浏览器右上角的 JobFlow J 图标。", browserAssistExtensionMissing: "没有收到浏览器伴侣响应。请先运行安装入口并在浏览器中加载扩展。", openApprovedApplication: "打开已批准的申请页", browserAssistAwaitingSubmit: "所有已支持页面已处理；请检查后亲自点击最终 Submit。", browserAssistPageReview: "当前页仍有需要你填写或确认的项目；完成后在浏览器伴侣中继续。", browserAssistHandoff: "当前页需要你亲自完成登录、账号、验证码或 MFA；完成后在浏览器伴侣中恢复。", browserAssistNavigating: "当前页已通过校验，正在进入下一页…", browserAssistStepMeta: "{provider} · 第 {step}/{max} 页", browserAssistObserving: "已检测到你点击最终 Submit，正在读取结果页。", browserAssistConfirmed: "提交成功，结果页回执已记录。", browserAssistUnknown: "结果无法可靠判断：是否提交成功？", browserAssistFailed: "页面明确显示提交未成功；未自动重试，需要重新审阅后再操作。", submittedYes: "是，已提交成功", submittedNo: "否，没有提交成功", resolveUnknownConfirm: "确认你的判断？JobFlow 不会自动重试。", resolvingSubmission: "正在保存你的提交结果判断…", browserAssistResolved: "提交结果已保存。", statusSubmitted: "等待结果", statusSubmissionUnknown: "结果待确认", statusConfirmed: "已确认提交", installCompanion: "安装浏览器伴侣",
+    pipelineBody: "统一查看资料准备、审批队列和用户在场的公司官网与 ATS 辅助投递。每个申请都必须单独授权。", safetyGuardOn: "最终提交与自动重试始终锁定", offlineMode: "本地准备 + 用户在场辅助", assistedMode: "本地准备 + 用户在场辅助", authorizedActionsAudited: "已授权动作均已审计", browserAssistTitle: "审阅后辅助填写", browserAssistBody: "只有当前审阅包批准后，这里才会逐页预填获批字段、附加材料并安全通过明确的 Next/Continue。最终 Submit 永远留给你。", browserAssistIdle: "等待已批准申请", browserCompanionStep: "同一个浏览器伴侣", browserCompanionHelp: "岗位读取与审阅后的辅助填写都使用同一个 JobFlow J 扩展；首次加载后无需重复安装。", browserCompanionNotPaired: "尚未与本次申请配对", browserCompanionPaired: "浏览器伴侣已配对", browserAssistBoundaryTitle: "不可越过的边界", browserAssistBoundary: "JobFlow 只会在当前页校验通过后，使用一次性授权点击一个明确的 Next/Continue；不会登录、注册、绕过验证码或点击最终 Submit。结果不明确时只会询问你，绝不自动重试。", browserAssistCompanyOnly: "支持已审批的公司官网、Greenhouse、Lever 与 Workday 路线；每一页仍会按当前结构重新校验，不会把离线测试当成实时兼容证明。", browserAssistConsent: "我授权这一个申请在 30 分钟内逐页读取表单结构、预填获批字段、附加获批材料并通过明确的非最终 Next/Continue；登录、验证、未知问题和最终 Submit 由我处理。", startBrowserAssist: "开始辅助投递", startBrowserAssistNow: "让 AI 规划并开始", startingBrowserAssist: "AI 正在规划并建立一次性浏览器连接…", aiOperatorTitle: "AI 任务规划", aiOperatorBoundary: "AI 只选择 JobFlow 的受限工具；浏览器、文件和最终提交权限仍由 JobFlow 控制。", aiOperatorRequired: "请先连接并验证 AI，再让它处理这份申请。", aiOperatorReady: "AI 已生成受限任务计划，JobFlow 正按批准边界执行。", aiOperatorExecuted: "JobFlow 已执行", aiOperatorPending: "等待页面状态后执行", browserAssistConfirmFirst: "请先勾选本次真实辅助授权。", browserAssistPairing: "正在与浏览器伴侣配对…", browserAssistPaired: "配对成功。请打开已批准的申请页，再点击浏览器右上角的 JobFlow J 图标。", browserAssistExtensionMissing: "没有收到浏览器伴侣响应。请先运行安装入口并在浏览器中加载扩展。", openApprovedApplication: "打开已批准的申请页", browserAssistAwaitingSubmit: "所有已支持页面已处理；请检查后亲自点击最终 Submit。", browserAssistPageReview: "当前页仍有需要你填写或确认的项目；完成后在浏览器伴侣中继续。", browserAssistSupplementalReview: "页面动态显示了新的问题。JobFlow 已保留此前确认内容，只需审阅新增项；没有触碰最终 Submit。", browserAssistHandoff: "当前页需要你亲自完成登录、账号、验证码或 MFA；完成后在浏览器伴侣中恢复。", browserAssistNavigating: "当前页已通过校验，正在进入下一页…", browserAssistStepMeta: "{provider} · 第 {step}/{max} 页", browserAssistObserving: "已检测到你点击最终 Submit，正在读取结果页。", browserAssistConfirmed: "提交成功，结果页回执已记录。", browserAssistUnknown: "结果无法可靠判断：是否提交成功？", browserAssistFailed: "页面明确显示提交未成功；未自动重试，需要重新审阅后再操作。", submittedYes: "是，已提交成功", submittedNo: "否，没有提交成功", resolveUnknownConfirm: "确认你的判断？JobFlow 不会自动重试。", resolvingSubmission: "正在保存你的提交结果判断…", browserAssistResolved: "提交结果已保存。", statusSubmitted: "等待结果", statusSubmissionUnknown: "结果待确认", statusConfirmed: "已确认提交", installCompanion: "安装浏览器伴侣",
     browserAssistNotApproved: "这份申请尚未完成审阅批准，请先批准当前审阅包。", browserAssistRouteUnsupported: "该页面不属于已批准的公司官网、Greenhouse、Lever 或 Workday 路线，JobFlow 已安全停止。", browserAssistActive: "已有一份申请正在辅助处理中，请先完成或点击紧急停止。", browserAssistWrongPage: "当前页面不在已批准路线内，或表单在审批后发生了不安全变化。JobFlow 已停止。", browserAssistSafetyStop: "页面需要登录、注册、验证码、MFA 或其他人工步骤。请亲自完成后再从浏览器伴侣恢复；JobFlow 不读取凭据。", browserAssistUnsupportedControl: "表单包含当前无法安全自动填写的控件；JobFlow 没有修改页面。", browserAssistUploadMismatch: "已批准材料与当前上传控件无法一一对应；JobFlow 没有上传。", browserAssistFinalLocked: "最终 Submit 在代码层锁定，只能由你亲自点击。", browserAssistLeaseInvalid: "本次 30 分钟授权已失效，请从该申请重新开始。",
-    queuePreferences: "待审批数量上限", queuePreferencesBody: "JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。", pendingLimitLabel: "最多等待", saveLimit: "保存上限", limitSaved: "待审批上限已保存", viewPacket: "查看审阅包", closePacket: "关闭审阅包", reviewPacketEyebrow: "LOCAL REVIEW PACKET", reviewPacketTitlePlaceholder: "本地审阅包", loadingReviewPacket: "解密并核验本地审阅包…", packetJob: "岗位", packetFit: "匹配分析", packetGaps: "硬性缺口", packetBullets: "简历表述与证据", packetPrefillProposal: "准备预填的字段", packetQuestions: "完整表单字段", packetSensitive: "必须停下确认的敏感字段", packetUploads: "待上传材料", packetActions: "审批将绑定的动作", packetRoute: "官网与 ATS 路径", packetNone: "无", packetOverall: "总体匹配", packetStatus: "状态", packetCreated: "生成时间", packetClaims: "Claim", packetEvidence: "证据", prefillPrivateSource: "来自本机加密 Profile / Answer Bank；不显示明文", prefillPublicSource: "来自你确认的公开链接；只显示内容哈希", prefillReady: "已准备，仍等待独立预填授权", prefillMissing: "没有可用答案，禁止预填", pendingLimitInvalid: "请输入 1 到 1000 之间的整数。", pendingLimitBelowActive: "上限不能低于当前已占用的审批位置。请先处理一项申请。", reviewPacketUnavailable: "无法安全打开这个审阅包；内容未被显示，请刷新后重试。", packetDecisionTitle: "你对这份审阅包的决定", packetDecisionBody: "决定只保存在本机。当前不会打开网站、上传材料或提交申请。", decisionApprove: "批准这份审阅包", decisionApproveHelp: "保存与当前哈希绑定的一次性本地批准；真实外部动作仍锁定。", decisionRevise: "退回修改", decisionReviseHelp: "标记材料需要修订；任何旧批准都会失效。", decisionReject: "不申请这个岗位", decisionRejectHelp: "关闭这项申请并释放一个待审批位置。", decisionConfirm: "我确认这是我对当前审阅包的决定，并理解本轮真实外部动作仍为 0。", confirmDecision: "确认这个决定", chooseDecision: "请先选择批准、退回修改或不申请。", confirmDecisionFirst: "请勾选确认框后再保存决定。", decisionApproved: "审阅包已批准；真实外部动作仍为 0。", decisionRevised: "已退回修改；旧批准已失效。", decisionRejected: "已关闭这项申请并释放队列位置。", savingQueueDecision: "正在保存决定；如有等待岗位，将继续准备下一项…", nextApplicationPrepared: "下一份岗位材料已自动生成并进入待审批。", nextApplicationNeedsRepair: "下一项本地资料需要修正；其余安全队列未丢失。", reviewPacketStale: "这份审阅包已经变化。为防止误批，请重新打开并审阅最新版本。", reviewDecisionUnavailable: "当前申请已不在待审批状态，请刷新队列。",
+    queuePreferences: "待审批数量上限", queuePreferencesBody: "JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。", pendingLimitLabel: "最多等待", saveLimit: "保存上限", limitSaved: "待审批上限已保存", viewPacket: "查看审阅包", closePacket: "关闭审阅包", reviewPacketEyebrow: "LOCAL REVIEW PACKET", reviewPacketTitlePlaceholder: "本地审阅包", loadingReviewPacket: "解密并核验本地审阅包…", packetJob: "岗位", packetFit: "匹配分析", packetGaps: "硬性缺口", packetBullets: "简历表述与证据", packetPrefillProposal: "准备预填的字段", packetQuestions: "完整表单字段", packetSensitive: "必须停下确认的敏感字段", packetUploads: "待上传材料", packetActions: "审批将绑定的动作", packetRoute: "官网与 ATS 路径", packetNone: "无", packetOverall: "总体匹配", packetStatus: "状态", packetCreated: "生成时间", packetClaims: "Claim", packetEvidence: "证据", prefillPrivateSource: "来自本机加密 Profile / Answer Bank；不显示明文", prefillPublicSource: "来自你确认的公开链接；只显示内容哈希", prefillReady: "已准备，等待本次一次批准", prefillMissing: "没有可用答案，禁止预填", pendingLimitInvalid: "请输入 1 到 1000 之间的整数。", pendingLimitBelowActive: "上限不能低于当前已占用的审批位置。请先处理一项申请。", reviewPacketUnavailable: "无法安全打开这个审阅包；内容未被显示，请刷新后重试。", packetDecisionTitle: "一次决定，然后连续执行", packetDecisionBody: "普通流程默认批准；如需退回或放弃可切换选项。批准按钮同时确认当前哈希、岗位专属答案和在场预填授权，但不包含最终 Submit。", decisionApprove: "批准并开始填写", decisionApproveHelp: "一次绑定当前哈希、岗位答案、材料上传和在场预填；最终 Submit 仍锁定。", decisionRevise: "退回修改", decisionReviseHelp: "标记材料需要修订；任何旧批准都会失效。", decisionReject: "不申请这个岗位", decisionRejectHelp: "关闭这项申请并释放一个待审批位置。", decisionConfirm: "点击下方按钮即确认当前哈希版本、上方岗位专属答案和所选决定。批准会立即开始在场预填与材料上传；JobFlow 永远不会点击最终 Submit。", confirmDecision: "确认这个决定", confirmApproveAndStart: "批准一次并开始填写", confirmReviseDecision: "确认退回修改", confirmRejectDecision: "确认不申请", chooseDecision: "请先选择批准、退回修改或不申请。", confirmDecisionFirst: "请确认当前决定。", decisionApproved: "已批准并启动在场填写；最终 Submit 仍由你点击。", decisionRevised: "已退回修改；旧批准已失效。", decisionRejected: "已关闭这项申请并释放队列位置。", savingQueueDecision: "正在保存决定；如有等待岗位，将继续准备下一项…", nextApplicationPrepared: "下一份岗位材料已自动生成并进入待审批。", nextApplicationNeedsRepair: "下一项本地资料需要修正；其余安全队列未丢失。", reviewPacketStale: "这份审阅包已经变化。为防止误批，请重新打开并审阅最新版本。", reviewDecisionUnavailable: "当前申请已不在待审批状态，请刷新队列。",
     demoExecutionTitle: "合成自动投递演练", demoExecutionBody: "用虚构资料验证审阅批准、隔离预填、材料暂存、一次性最终确认和可靠假回执。真实浏览器、网络和外部动作始终为 0。", demoExecutionApproveFirst: "先打开上方虚构申请的审阅包并批准，演练按钮才会出现。", demoExecutionReady: "审阅包已批准。可以运行自动步骤，但会严格停在假的最终提交之前。", demoRehearsalConsent: "我确认只运行本机合成演练，不访问或修改任何真实网站。", demoRunRehearsal: "运行到最终确认前", demoRehearsalConfirmFirst: "请先确认这只是本机合成演练。", demoPreparingRehearsal: "正在用零网络假适配器验证预填和材料暂存…", demoRehearsalPrepared: "自动步骤已完成并停在最终确认前；临时文件已清理。", demoFinalConsent: "我确认执行一次假的最终提交，并只生成本机合成回执。", demoCompleteRehearsal: "确认假的最终提交", demoFinalConfirmFirst: "请先确认这是假的最终提交。", demoCompletingRehearsal: "正在消费一次性假授权并验证合成回执…", demoRehearsalComplete: "完整合成闭环已确认；真实网站访问和真实外部动作均为 0。",
-    packetFieldTitle: "先确认这个岗位的专属问题", packetFieldBody: "这些答案只用于当前岗位，并立即保存为本机 DPAPI 加密引用。审阅包、项目文件和普通数据库不会保存明文。", packetFieldSeparateHelp: "上传、页面导航、账号动作和最终提交由各自的授权门控制，不会被误算成尚未回答。", packetFieldRequired: "必答", packetFieldOptional: "选答", packetFieldDecision: "处理方式", packetFieldValue: "本岗位答案", packetFieldConfirmValue: "填写并确认", packetFieldPreferNot: "不愿回答", packetFieldNotApplicable: "不适用", packetFieldValuePlaceholder: "输入这个岗位要求的准确答案", packetFieldConsent: "我确认这些是当前岗位的准确答案，并同意仅在本机加密保存。", savePacketFields: "加密保存并生成新版审阅包", savingApplicationFields: "正在加密岗位专属答案并重新绑定审阅包…", packetFieldsSaved: "岗位专属答案已加密；请审阅新版审阅包。", packetFieldsRequired: "先完成所有标出的岗位专属问题，才能批准审阅包。", packetFieldInvalid: "有一个岗位专属答案不完整或不属于当前表单，请检查后重试。", packetFieldUnknowns: "仍有无法由当前表单解决的硬条件，请重新生成岗位材料。",
+    packetFieldTitle: "先确认这个岗位的专属问题", packetFieldBody: "这些答案只用于当前岗位，并立即保存为本机 DPAPI 加密引用。审阅包、项目文件和普通数据库不会保存明文。", packetFieldSeparateHelp: "上传、页面导航、账号动作和最终提交由各自的授权门控制，不会被误算成尚未回答。", packetFieldRequired: "必答", packetFieldOptional: "选答", packetFieldDecision: "处理方式", packetFieldValue: "本岗位答案", packetFieldConfirmValue: "填写并确认", packetFieldPreferNot: "不愿回答", packetFieldNotApplicable: "不适用", packetFieldValuePlaceholder: "输入这个岗位要求的准确答案", packetFieldConsent: "我确认这些是当前岗位的准确答案，并同意仅在本机加密保存。", savePacketFields: "加密保存并生成新版审阅包", savingApplicationFields: "正在加密岗位专属答案并重新绑定审阅包…", packetFieldsSaved: "岗位专属答案已加密；请审阅新版审阅包。", packetFieldsRequired: "先完成所有标出的岗位专属问题，才能批准审阅包。", packetFieldInvalid: "有一个岗位专属答案不完整或不属于当前表单，请检查后重试。", packetFieldUnknowns: "这个条件在岗位页面中没有明确答案。你可以确认已知晓该不确定性；JobFlow 不会把它改写成事实。", packetFieldAcknowledgeUnknown: "知晓并保留为未知",
     sourceTitle: "把已有信息交给 JobFlow", sourceBody: "资料必须先通过 AI 的实体归并、分类和完整性检查，才会进入 Claim；规则拆分结果不再显示。",
     sourceIntakeDemoTitle: "当前是合成演示，不接收真实文件", sourceIntakeDemoBody: "请关闭演示启动窗口，然后双击 Start JobFlow.cmd 进入可上传的真实本机工作区。", sourceIntakeReadonlyTitle: "当前资料版本已完成，因此文件接入已锁定", sourceIntakeReadonlyBody: "历史版本不会被覆盖。建立一个可编辑新版本后，即可继续添加、删除和重新分析资料。", sourceIntakeAiTitle: "连接 AI 后才能分析文件", sourceIntakeAiBody: "点击右上角“连接 AI”，选择已准备的 Agent 或本地模型。连接成功后文件选择会自动开放。",
     docsTitle: "简历与项目材料", docsBody: "DOCX、PDF、TXT、MD 或 JSON。适用于简历、案例、证书、作品集与补充材料。", materialType: "材料类型", resume: "简历", projectCase: "项目案例", supporting: "补充材料", portfolioFile: "作品集文件",
@@ -59,6 +61,7 @@ const STRINGS = {
     browserAssistManualNavigation: "这个 Next/Continue 必须由你亲自点击。进入下一页后，再点浏览器伴侣中的“继续分析当前页”。",
   },
   en: {
+    aiOperatorCommandLabel: "Give AI one instruction", aiOperatorCommandHelp: "Type “Handle this job for me” and paste the company job link. AI keeps understanding and deciding; JobFlow retains browser, material, and safety authority.", aiOperatorCommandDefault: "Handle this job for me", aiOperatorDelegated: "Continues through JobFlow", aiOperatorUserGate: "Needs you only here",
     guidedIntakeEyebrow: "NEXT JOB", guidedIntakeTitle: "Paste a job link to begin", guidedIntakeBody: "Start from the role on the company's website. The companion reads only the job page and form you explicitly choose, then prepares the tailored resume, optional Cover Letter, portfolio items, and one review packet.", guidedIntakeIdle: "Not started", guidedOfficialUrl: "Company job link", guidedIntakeConsent: "For the next 30 minutes, I allow JobFlow to read only the company job page and application-form structure I explicitly choose in the browser. This stage does not fill, upload, or click page controls.", startGuidedIntake: "Connect browser and begin", guidedOpenJob: "Open company job page", cancelGuidedIntake: "Cancel this read and choose another URL", cancelGuidedIntakeConfirm: "Cancel this job read and choose another URL? This will not delete your resume, Profile, or other materials, and it will not modify the recruiting site.", cancellingGuidedIntake: "Cancelling this job read…", guidedCancelled: "This job read was cancelled. You can enter another URL now.", guidedCancelledCompanionReload: "This job read was cancelled, but the browser companion did not confirm that it released the old connection. Reload JobFlow Browser Companion on the extensions page before starting again.", guidedCancelUnavailable: "This job has already been created or queued. Handle it in pending review instead of deleting it silently.", guidedStepOneTitle: "Open the company role", guidedStepOneBody: "Paste the link once and connect the browser.", guidedStepTwoTitle: "Read the role", guidedStepTwoBody: "On the role page, open the JobFlow J icon and choose Read this company job page.", guidedStepThreeTitle: "Read the application form", guidedStepThreeBody: "Click Apply yourself. On the form, open J again and JobFlow will prepare the materials.", guidedStepFourTitle: "Review once", guidedStepFourBody: "Assisted filling appears only after you approve the materials and job questions.", guidedPairing: "Connecting the browser companion…", guidedPaired: "Connected. Open the company job page, then use the JobFlow J icon in the browser toolbar.", guidedAwaitingJob: "Waiting for you to read the company job page.", guidedAwaitingForm: "Role captured. Click Apply on the company page yourself, then use JobFlow J again on the application form.", guidedPreparing: "Preparing the job-specific resume, requested materials, and review packet…", guidedReady: "Materials and the review packet are ready. Complete the single review below.", guidedDeferred: "The approval queue is full. This role is safely waiting and will continue after you handle one item.", guidedFailed: "This read did not complete and the page was not filled or changed. Check the current page and retry.", guidedExtensionMissing: "The browser companion did not respond. Make sure JobFlow Browser Companion is enabled, then retry.", guidedUrlRequired: "Paste an HTTPS role link from the company's own website.", guidedConsentRequired: "Check the read-only job-import permission for this session first.", guidedReadinessRequired: "Complete the readiness items listed above first.", guidedWrongJobPage: "Read the role on the company's own website first, then open the application form linked from it yourself.", guidedFormMissing: "No application fields were found. Open the actual application form, then use JobFlow J again.", guidedJobTitleMissing: "A role title could not be identified reliably. Confirm that this is a specific company job page.", guidedLeaseInvalid: "This job-import connection expired. Start again.", advancedToolsTitle: "Advanced diagnostics and offline QA", advancedToolsBody: "Ordinary use does not need this area. Provide local snapshots only for development tests or when browser import is unavailable.", advancedToolsOpen: "Expand", browserAssistEyebrow: "APPROVED APPLICATION",
     retryCompanionPairing: "Show connection steps again",
     companionClickToPair: "This connection is ready. Stay on this JobFlow page, click the JobFlow J in the browser toolbar, then choose Connect this JobFlow page.",
@@ -67,8 +70,9 @@ const STRINGS = {
     companionSessionActive: "Another browser task is still active. Complete or explicitly stop it before starting this task.",
     guidedExtensionMissing: "The browser companion did not respond. Confirm the current extension is enabled and reloaded; you do not need to grant access on every website.",
     guidedExtensionOutdated: "The Browser Companion version does not match. Run the installer again and reload the Local AppData BrowserCompanion folder it opens.",
-    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.6.2, then refresh JobFlow.",
+    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.7.0, then refresh JobFlow.",
     browserAssistRestartRequired: "The extension reloaded, so this assist stopped safely. Reopen the approved application start page and connect again. JobFlow did not retry Next/Continue.",
+    browserAssistApplyRestart: "The page may already contain some approved fields or an attachment, but whole-page verification did not finish. This run stopped and was audited; nothing will be filled or uploaded again automatically. Reopen the application start page and begin again.",
     browserAssistManualRestart: "The one-use Next proof was not armed safely. End this application assist and start it again. JobFlow will not retry automatically.",
     browserAssistReloadUnknown: "The extension reloaded during the final-submit window, so the result is safely marked unknown. Answer whether submission succeeded; JobFlow will not retry.",
     brandSubtitle: "Job application pipeline", localOnly: "Local only · DPAPI encrypted", eyebrow: "JOBFLOW SETUP", pageTitle: "JobFlow · Job pipeline",
@@ -80,11 +84,11 @@ const STRINGS = {
     offlineApplicationTitle: "Prepare one offline application", offlineApplicationBody: "Choose a saved JD, official-company job page, and application form. JobFlow only creates local materials and a review packet.", offlineApplicationGuard: "Stops at review", applicationOfficialUrl: "Official company job URL", applicationFormUrl: "Original application-form URL", applicationGuestMode: "Guest application available", guestUnknown: "Unknown", guestYes: "Yes", guestNo: "No", applicationJdFile: "Job description (JD)", applicationOfficialFile: "Saved official job page", applicationFormFile: "Saved application form", applicationEvidenceExcerpt: "One exact company excerpt from the official page", applicationEvidencePlaceholder: "Paste an exact excerpt of at least 12 characters from the official page for grounded Cover Letter generation.", applicationEvidenceHelp: "It must occur in the selected official page and is never treated as personal experience.", offlineApplicationReadyHint: "Finish every readiness item above to enable generation.", offlineApplicationReady: "Readiness passed; choose the saved job files to continue.", offlineApplicationNeedsReadiness: "Complete every item in Application readiness first.", offlineApplicationInputsRequired: "Enter both HTTPS URLs, choose all three local files, and paste an exact official-page excerpt.", prepareOfflineApplication: "Generate materials and add to review", preparingOfflineApplication: "Analyzing the job and generating local materials…", offlineApplicationPrepared: "Job materials generated and added to pending review.", offlineApplicationDeferred: "The review queue is full. All three local evidence files are encrypted in order and will continue automatically when a slot opens.", applicationBundleInvalid: "The selected job files or page metadata could not be safely matched. Check them and retry.", deferredBundleTooLarge: "The queue is full and this local evidence set is too large for safe retention. Review one pending application, then select these files again.",
     progressLabel: "Questionnaire progress", draftSaved: "Drafts are encrypted when saved", stepSources: "Sources", stepQuestions: "Full questionnaire", stepReview: "Profile & Claim review", stepFinish: "Finish",
     pipelineEyebrow: "JOBFLOW CONTROL", pipelineTitle: "Local application control center", pipelineBody: "See profile readiness, approval capacity, and safety boundaries in one place. This screen never opens recruiting sites or performs external actions.", refreshDashboard: "Refresh status", dashboardRefreshed: "Local control center refreshed", profileReadiness: "Profile readiness", awaitingApproval: "Awaiting you", approvalQueueOnly: "Local review packets only", availableSlots: "Available capacity", deferredJobs: "Waiting in line", continuesUntilLimit: "Other jobs continue until the limit", pendingReviewTitle: "Applications awaiting approval", pendingReviewBody: "Only safe job summaries appear here; private answers and document bodies never do.", safetyBoardTitle: "Active safety boundary", realSites: "Real-site visits", externalActions: "Real external actions", knowledgeWrites: "Knowledge writes", networkMode: "Run mode", externalControl: "External-action master switch", externalControlLocked: "Off", externalControlEnabled: "Enabled", emergencyStop: "Stop all external actions now", emergencyStopConfirm: "Stop all external actions now and invalidate every active action authorization?", emergencyStopped: "All external actions are off and active action authorizations are invalidated.", stoppingExternalActions: "Stopping all external actions…", pipelineReady: "Complete", pipelineNeedsSetup: "Needs setup", aiReadyShort: "AI connected", aiMissingShort: "AI not connected", queueLimit: "limit {limit}", pendingEmpty: "No application currently needs your approval. Offline-processed roles will appear here.", packetHash: "packet {hash}", packetVersion: "version {version}", awaitingApprovalStatus: "Awaiting your decision", safetyGuardOn: "External actions locked", offlineMode: "Local offline only", refreshingDashboard: "Refreshing local control center…", deferredListTitle: "Waiting roles", deferredListBody: "Roles wait here at capacity and resume in order when a slot opens.", deferredEmpty: "No role is currently waiting for queue capacity.", recentDecisionsTitle: "Recent queue decisions", recentDecisionsBody: "Shows local state changes and never labels approval as submission.", recentEmpty: "No queue decision has been completed yet.", safeQueueId: "Safe queue ID", queuedAt: "Queued", viewRecord: "View record", approvalExpiry: "Local approval valid until {time}", statusApproved: "Locally approved", statusClosed: "Closed", statusRevision: "Revision needed", statusDeferred: "Waiting for capacity", statusOther: "Local state: {status}", executionRunsTitle: "Automatic-application execution status", executionRunsBody: "Shows only safe status, the latest checkpoint, and the next step; no private answers, file content, or site session is exposed.", executionRunsEmpty: "No automatic-application execution record exists yet. Review approval is never shown as submission.", executionStatusAwaiting: "Awaiting one-time final confirmation", executionStatusConfirmed: "Confirmed by reliable receipt", executionStatusUnknown: "Submission outcome unknown; manual verification required", executionStatusInvalidated: "Invalidated", executionStatusInterrupted: "Interruption detected; reconciliation required", executionStatusOther: "Execution state: {status}", executionCheckpoint: "checkpoint {sequence}", executionPhaseNow: "latest phase: {phase}", executionNoRetry: "Automatic retry prohibited", executionNextFinal: "Next: obtain one-time final confirmation; live actions remain off", executionNextNone: "Next: none; the run is confirmed", executionNextManual: "Next: manually verify external evidence; never resubmit automatically", executionNextRebuild: "Next: rebuild and review the application packet", executionNextRestart: "Next: reconcile persisted local state without sending again", executionNextOther: "Next: inspect local state manually",
-    pipelineBody: "See readiness, approval queues, and user-present company/ATS application status in one place. Every application requires its own authorization.", safetyGuardOn: "Final Submit and automatic retry always locked", offlineMode: "Local prep + user-present assist", assistedMode: "Local prep + user-present assist", authorizedActionsAudited: "Authorized actions audited", browserAssistTitle: "Assisted filling after review", browserAssistBody: "This appears only after the current review packet is approved. JobFlow then fills approved fields, attaches approved materials, and safely advances through explicit Next/Continue controls. Final Submit always stays with you.", browserAssistIdle: "Waiting for an approved application", browserCompanionStep: "Use the same browser companion", browserCompanionHelp: "Job capture and post-review assisted filling use the same JobFlow J extension. Load it once; no repeated installation is needed.", browserCompanionNotPaired: "Not paired for this application", browserCompanionPaired: "Browser companion paired", browserAssistBoundaryTitle: "Non-negotiable boundary", browserAssistBoundary: "JobFlow may click one unambiguous Next/Continue only after page validation and fresh one-use authorization. It never signs in, creates accounts, bypasses verification, or clicks final Submit. Unknown outcomes are never retried.", browserAssistCompanyOnly: "Approved company, Greenhouse, Lever, and Workday routes are supported, but every current page is revalidated; offline evidence is never treated as proof of live compatibility.", browserAssistConsent: "For this application only, I authorize 30 minutes of page-by-page form inspection, approved prefill, approved attachment, and explicit non-final Next/Continue navigation. I handle login, verification, unknown answers, and final Submit.", startBrowserAssist: "Start assisted application", startBrowserAssistNow: "Connect browser", startingBrowserAssist: "Creating the one-time browser connection…", browserAssistConfirmFirst: "Check the authorization box for this real assisted session first.", browserAssistPairing: "Pairing the browser companion…", browserAssistPaired: "Paired. Open the approved application page, then use the JobFlow J icon in the browser toolbar.", browserAssistExtensionMissing: "No companion response arrived. Run the installer entry and load the extension in your browser first.", openApprovedApplication: "Open approved application page", browserAssistAwaitingSubmit: "All supported pages are ready. Review them and click final Submit yourself.", browserAssistPageReview: "This page still has fields for you to answer or verify. Complete them, then continue in the browser companion.", browserAssistHandoff: "This page needs your login, account, CAPTCHA, or MFA action. Complete it yourself, then resume in the companion.", browserAssistNavigating: "This page passed validation; moving to the next page…", browserAssistStepMeta: "{provider} · page {step}/{max}", browserAssistObserving: "Your final Submit click was detected; reading the result page.", browserAssistConfirmed: "Submission confirmed and result-page receipt recorded.", browserAssistUnknown: "The outcome cannot be verified: was it submitted successfully?", browserAssistFailed: "The page clearly reports failure. Nothing was retried; review and approve again before another attempt.", submittedYes: "Yes, submitted successfully", submittedNo: "No, it was not submitted", resolveUnknownConfirm: "Confirm your answer? JobFlow will not retry automatically.", resolvingSubmission: "Saving your submission result…", browserAssistResolved: "Submission result saved.", statusSubmitted: "Reading result", statusSubmissionUnknown: "Outcome needs confirmation", statusConfirmed: "Submission confirmed", installCompanion: "Install browser companion",
+    pipelineBody: "See readiness, approval queues, and user-present company/ATS application status in one place. Every application requires its own authorization.", safetyGuardOn: "Final Submit and automatic retry always locked", offlineMode: "Local prep + user-present assist", assistedMode: "Local prep + user-present assist", authorizedActionsAudited: "Authorized actions audited", browserAssistTitle: "Assisted filling after review", browserAssistBody: "This appears only after the current review packet is approved. JobFlow then fills approved fields, attaches approved materials, and safely advances through explicit Next/Continue controls. Final Submit always stays with you.", browserAssistIdle: "Waiting for an approved application", browserCompanionStep: "Use the same browser companion", browserCompanionHelp: "Job capture and post-review assisted filling use the same JobFlow J extension. Load it once; no repeated installation is needed.", browserCompanionNotPaired: "Not paired for this application", browserCompanionPaired: "Browser companion paired", browserAssistBoundaryTitle: "Non-negotiable boundary", browserAssistBoundary: "JobFlow may click one unambiguous Next/Continue only after page validation and fresh one-use authorization. It never signs in, creates accounts, bypasses verification, or clicks final Submit. Unknown outcomes are never retried.", browserAssistCompanyOnly: "Approved company, Greenhouse, Lever, and Workday routes are supported, but every current page is revalidated; offline evidence is never treated as proof of live compatibility.", browserAssistConsent: "For this application only, I authorize 30 minutes of page-by-page form inspection, approved prefill, approved attachment, and explicit non-final Next/Continue navigation. I handle login, verification, unknown answers, and final Submit.", startBrowserAssist: "Start assisted application", startBrowserAssistNow: "Let AI plan and start", startingBrowserAssist: "AI is planning and creating the one-time browser connection…", aiOperatorTitle: "AI task plan", aiOperatorBoundary: "AI may choose only bounded JobFlow tools; JobFlow retains browser, file, and final-submit authority.", aiOperatorRequired: "Connect and verify AI before asking it to operate this application.", aiOperatorReady: "AI produced a bounded task plan; JobFlow is executing it within the approved boundary.", aiOperatorExecuted: "Executed by JobFlow", aiOperatorPending: "Runs after fresh page state", browserAssistConfirmFirst: "Check the authorization box for this real assisted session first.", browserAssistPairing: "Pairing the browser companion…", browserAssistPaired: "Paired. Open the approved application page, then use the JobFlow J icon in the browser toolbar.", browserAssistExtensionMissing: "No companion response arrived. Run the installer entry and load the extension in your browser first.", openApprovedApplication: "Open approved application page", browserAssistAwaitingSubmit: "All supported pages are ready. Review them and click final Submit yourself.", browserAssistPageReview: "This page still has fields for you to answer or verify. Complete them, then continue in the browser companion.", browserAssistSupplementalReview: "The page revealed new conditional questions. JobFlow kept every prior confirmation and asks you to review only the new items; final Submit was untouched.", browserAssistHandoff: "This page needs your login, account, CAPTCHA, or MFA action. Complete it yourself, then resume in the companion.", browserAssistNavigating: "This page passed validation; moving to the next page…", browserAssistStepMeta: "{provider} · page {step}/{max}", browserAssistObserving: "Your final Submit click was detected; reading the result page.", browserAssistConfirmed: "Submission confirmed and result-page receipt recorded.", browserAssistUnknown: "The outcome cannot be verified: was it submitted successfully?", browserAssistFailed: "The page clearly reports failure. Nothing was retried; review and approve again before another attempt.", submittedYes: "Yes, submitted successfully", submittedNo: "No, it was not submitted", resolveUnknownConfirm: "Confirm your answer? JobFlow will not retry automatically.", resolvingSubmission: "Saving your submission result…", browserAssistResolved: "Submission result saved.", statusSubmitted: "Reading result", statusSubmissionUnknown: "Outcome needs confirmation", statusConfirmed: "Submission confirmed", installCompanion: "Install browser companion",
     browserAssistNotApproved: "This application has not been approved yet. Approve the current review packet first.", browserAssistRouteUnsupported: "This page is outside the approved company, Greenhouse, Lever, or Workday route, so JobFlow stopped safely.", browserAssistActive: "Another application is already in an assisted session. Finish it or use the emergency stop first.", browserAssistWrongPage: "This page is outside the approved route, or the form changed unsafely after review. JobFlow stopped.", browserAssistSafetyStop: "The page needs login, registration, CAPTCHA, MFA, or another human step. Complete it yourself and resume from the companion; JobFlow never reads credentials.", browserAssistUnsupportedControl: "The form contains a control that cannot yet be filled safely. JobFlow made no page changes.", browserAssistUploadMismatch: "The approved materials do not map one-to-one to the current upload controls. Nothing was uploaded.", browserAssistFinalLocked: "Final Submit is locked in code and only you can click it.", browserAssistLeaseInvalid: "This 30-minute authorization expired. Start again from the application.",
-    queuePreferences: "Pending-approval limit", queuePreferencesBody: "JobFlow pauses new intake at this number and continues after you resolve one item.", pendingLimitLabel: "Maximum waiting", saveLimit: "Save limit", limitSaved: "Pending-approval limit saved", viewPacket: "View review packet", closePacket: "Close packet", reviewPacketEyebrow: "LOCAL REVIEW PACKET", reviewPacketTitlePlaceholder: "Local review packet", loadingReviewPacket: "Decrypting and validating local review packet…", packetJob: "Job", packetFit: "Fit analysis", packetGaps: "Hard gaps", packetBullets: "Resume wording and evidence", packetPrefillProposal: "Fields proposed for prefill", packetQuestions: "Complete form field map", packetSensitive: "Sensitive fields requiring a stop", packetUploads: "Pending uploads", packetActions: "Actions bound by approval", packetRoute: "Official-site and ATS route", packetNone: "None", packetOverall: "Overall fit", packetStatus: "Status", packetCreated: "Created", packetClaims: "Claim", packetEvidence: "Evidence", prefillPrivateSource: "From the encrypted local Profile / Answer Bank; plaintext hidden", prefillPublicSource: "From a confirmed public link; content hash only", prefillReady: "Prepared; separate prefill authorization still required", prefillMissing: "No usable answer; prefill prohibited", pendingLimitInvalid: "Enter a whole number from 1 to 1000.", pendingLimitBelowActive: "The limit cannot be below the number of occupied approval slots. Resolve one application first.", reviewPacketUnavailable: "This review packet could not be opened safely. No content was shown; refresh and retry.", packetDecisionTitle: "Your decision on this review packet", packetDecisionBody: "The decision is saved locally only. No site opens, material uploads, or application submission occurs now.", decisionApprove: "Approve this review packet", decisionApproveHelp: "Save a one-time local approval bound to this exact hash; real external actions remain locked.", decisionRevise: "Return for revision", decisionReviseHelp: "Mark materials for revision and invalidate any earlier approval.", decisionReject: "Do not apply", decisionRejectHelp: "Close this application and release one pending-review slot.", decisionConfirm: "I confirm this is my decision on the current packet and understand real external actions remain 0 in this run.", confirmDecision: "Confirm this decision", chooseDecision: "Choose approve, revise, or do not apply first.", confirmDecisionFirst: "Check the confirmation box before saving the decision.", decisionApproved: "Review packet approved; real external actions remain 0.", decisionRevised: "Returned for revision; prior approval invalidated.", decisionRejected: "Application closed and queue capacity released.", savingQueueDecision: "Saving the decision; if a role is waiting, preparing the next one…", nextApplicationPrepared: "The next job package was prepared automatically and is awaiting review.", nextApplicationNeedsRepair: "The next saved local evidence needs correction; the remaining safe queue was preserved.", reviewPacketStale: "This packet changed. To prevent stale approval, reopen and review the current version.", reviewDecisionUnavailable: "This application is no longer awaiting a decision. Refresh the queue.",
+    queuePreferences: "Pending-approval limit", queuePreferencesBody: "JobFlow pauses new intake at this number and continues after you resolve one item.", pendingLimitLabel: "Maximum waiting", saveLimit: "Save limit", limitSaved: "Pending-approval limit saved", viewPacket: "View review packet", closePacket: "Close packet", reviewPacketEyebrow: "LOCAL REVIEW PACKET", reviewPacketTitlePlaceholder: "Local review packet", loadingReviewPacket: "Decrypting and validating local review packet…", packetJob: "Job", packetFit: "Fit analysis", packetGaps: "Hard gaps", packetBullets: "Resume wording and evidence", packetPrefillProposal: "Fields proposed for prefill", packetQuestions: "Complete form field map", packetSensitive: "Sensitive fields requiring a stop", packetUploads: "Pending uploads", packetActions: "Actions bound by approval", packetRoute: "Official-site and ATS route", packetNone: "None", packetOverall: "Overall fit", packetStatus: "Status", packetCreated: "Created", packetClaims: "Claim", packetEvidence: "Evidence", prefillPrivateSource: "From the encrypted local Profile / Answer Bank; plaintext hidden", prefillPublicSource: "From a confirmed public link; content hash only", prefillReady: "Prepared for this one approval", prefillMissing: "No usable answer; prefill prohibited", pendingLimitInvalid: "Enter a whole number from 1 to 1000.", pendingLimitBelowActive: "The limit cannot be below the number of occupied approval slots. Resolve one application first.", reviewPacketUnavailable: "This review packet could not be opened safely. No content was shown; refresh and retry.", packetDecisionTitle: "One decision, then continuous execution", packetDecisionBody: "The ordinary path defaults to approve; switch only to revise or decline. The approval button confirms this hash, job-specific answers, material uploads, and user-present prefill, but never final Submit.", decisionApprove: "Approve and start filling", decisionApproveHelp: "Bind this hash, job answers, uploads, and user-present prefill once; final Submit stays locked.", decisionRevise: "Return for revision", decisionReviseHelp: "Mark materials for revision and invalidate any earlier approval.", decisionReject: "Do not apply", decisionRejectHelp: "Close this application and release one pending-review slot.", decisionConfirm: "The button below confirms the current hash, the job-specific answers above, and your selected decision. Approval immediately starts user-present fill and material upload; JobFlow never clicks final Submit.", confirmDecision: "Confirm this decision", confirmApproveAndStart: "Approve once and start filling", confirmReviseDecision: "Confirm return for revision", confirmRejectDecision: "Confirm do not apply", chooseDecision: "Choose approve, revise, or do not apply first.", confirmDecisionFirst: "Confirm the current decision.", decisionApproved: "Approved and user-present filling started; only you may click final Submit.", decisionRevised: "Returned for revision; prior approval invalidated.", decisionRejected: "Application closed and queue capacity released.", savingQueueDecision: "Saving the decision; if a role is waiting, preparing the next one…", nextApplicationPrepared: "The next job package was prepared automatically and is awaiting review.", nextApplicationNeedsRepair: "The next saved local evidence needs correction; the remaining safe queue was preserved.", reviewPacketStale: "This packet changed. To prevent stale approval, reopen and review the current version.", reviewDecisionUnavailable: "This application is no longer awaiting a decision. Refresh the queue.",
     demoExecutionTitle: "Synthetic automatic-application rehearsal", demoExecutionBody: "Uses fictional data to verify review approval, isolated prefill, material staging, one-time final confirmation, and a reliable fake receipt. Real browser, network, and external actions stay at 0.", demoExecutionApproveFirst: "Open and approve the fictional review packet above before the rehearsal control appears.", demoExecutionReady: "The review packet is approved. Automatic steps can run, but they will stop before the fake final submission.", demoRehearsalConsent: "I confirm this is a local synthetic rehearsal that will not visit or modify a real site.", demoRunRehearsal: "Run to final confirmation", demoRehearsalConfirmFirst: "Confirm that this is only a local synthetic rehearsal.", demoPreparingRehearsal: "Validating prefill and material staging with zero-network fake adapters…", demoRehearsalPrepared: "Automatic steps finished at the final-confirmation gate; temporary files were removed.", demoFinalConsent: "I confirm one fake final submission that creates only a local synthetic receipt.", demoCompleteRehearsal: "Confirm fake final submission", demoFinalConfirmFirst: "Confirm that this is a fake final submission.", demoCompletingRehearsal: "Consuming the one-time fake authorization and validating the synthetic receipt…", demoRehearsalComplete: "The full synthetic loop is confirmed; real-site visits and real external actions remain 0.",
-    packetFieldTitle: "Confirm job-specific questions first", packetFieldBody: "These answers apply only to this job and are immediately stored as a local DPAPI-encrypted reference. No plaintext is written to the review packet, project files, or ordinary database fields.", packetFieldSeparateHelp: "Uploads, navigation, account actions, and final submission use their own authorization gates and are not mislabelled as unanswered questions.", packetFieldRequired: "Required", packetFieldOptional: "Optional", packetFieldDecision: "Decision", packetFieldValue: "Answer for this job", packetFieldConfirmValue: "Enter and confirm", packetFieldPreferNot: "Prefer not to answer", packetFieldNotApplicable: "Not applicable", packetFieldValuePlaceholder: "Enter the exact answer requested by this job", packetFieldConsent: "I confirm these answers are accurate for this job and agree to store them encrypted on this device only.", savePacketFields: "Encrypt answers and create a new packet", savingApplicationFields: "Encrypting job-specific answers and rebinding the review packet…", packetFieldsSaved: "Job-specific answers encrypted; review the new packet.", packetFieldsRequired: "Complete every highlighted job-specific question before approving the packet.", packetFieldInvalid: "A job-specific answer is incomplete or does not belong to the current form. Check it and retry.", packetFieldUnknowns: "A hard condition cannot be resolved by this form; rebuild the job materials.",
+    packetFieldTitle: "Confirm job-specific questions first", packetFieldBody: "These answers apply only to this job and are immediately stored as a local DPAPI-encrypted reference. No plaintext is written to the review packet, project files, or ordinary database fields.", packetFieldSeparateHelp: "Uploads, navigation, account actions, and final submission use their own authorization gates and are not mislabelled as unanswered questions.", packetFieldRequired: "Required", packetFieldOptional: "Optional", packetFieldDecision: "Decision", packetFieldValue: "Answer for this job", packetFieldConfirmValue: "Enter and confirm", packetFieldPreferNot: "Prefer not to answer", packetFieldNotApplicable: "Not applicable", packetFieldValuePlaceholder: "Enter the exact answer requested by this job", packetFieldConsent: "I confirm these answers are accurate for this job and agree to store them encrypted on this device only.", savePacketFields: "Encrypt answers and create a new packet", savingApplicationFields: "Encrypting job-specific answers and rebinding the review packet…", packetFieldsSaved: "Job-specific answers encrypted; review the new packet.", packetFieldsRequired: "Complete every highlighted job-specific question before approving the packet.", packetFieldInvalid: "A job-specific answer is incomplete or does not belong to the current form. Check it and retry.", packetFieldUnknowns: "This condition is not stated on the job page. You may acknowledge the uncertainty; JobFlow will not turn it into a fact.", packetFieldAcknowledgeUnknown: "Acknowledge and keep unknown",
     sourceTitle: "Bring your existing information into JobFlow", sourceBody: "A source must pass AI entity consolidation, classification, and completeness checks before anything can enter Claim review. Rule-split output is no longer shown.",
     sourceIntakeDemoTitle: "Synthetic demo mode does not accept real files", sourceIntakeDemoBody: "Close the demo launch window, then double-click Start JobFlow.cmd to open the real local workspace with file intake enabled.", sourceIntakeReadonlyTitle: "File intake is locked because this profile revision is complete", sourceIntakeReadonlyBody: "Historical revisions are preserved. Create an editable revision to add, delete, or re-analyze sources.", sourceIntakeAiTitle: "Connect AI before analyzing files", sourceIntakeAiBody: "Use Connect AI at the top right and choose a prepared Agent or local model. File selection opens automatically after a successful connection.",
     docsTitle: "Resume & project materials", docsBody: "DOCX, PDF, TXT, MD, or JSON for resumes, cases, certificates, portfolios, and supporting material.", materialType: "Material type", resume: "Resume", projectCase: "Project case", supporting: "Supporting material", portfolioFile: "Portfolio file",
@@ -117,14 +121,118 @@ const STRINGS = {
   }
 };
 
-const UI_PROTOCOL_VERSION = 25;
+Object.assign(STRINGS.zh,{
+  guidedIntakeTitle:"一句话即可开始",
+  guidedIntakeBody:"输入岗位方向，或粘贴已有官网岗位链接。JobFlow 会在可见标签页中搜索、核验官网、沿公司公布的 Apply 路径读取申请表，并自动准备岗位材料。",
+  guidedOfficialUrl:"已有公司官网岗位链接（可选）",
+  guidedIntakeConsent:"点击开始即授权 30 分钟可见搜索和只读页面核验；看到具体岗位与材料后只需批准一次，才会预填和上传。最终 Submit 永远由你点击。",
+  startGuidedIntake:"开始连续处理",
+  guidedStepOneTitle:"自动搜索与核验",
+  guidedStepOneBody:"JobFlow 使用你的岗位目标搜索可见结果，并只选择经过核验的公司官网岗位。",
+  guidedStepTwoBody:"自动读取选中的官网 JD；结果不唯一时才请你选择。",
+  guidedStepThreeBody:"沿公司公布且验证通过的 Apply 路径进入申请表并准备材料。",
+  guidedStoppedTitle:"本次处理已停止",
+  guidedStoppedHint:"错误状态会保留在这里，直到你重试或取消本次读取。网页没有被填写或修改。",
+  guidedEligibilityReview:"岗位和申请表已经读取完成，但发现需要你确认的匹配条件：{gaps}。没有生成申请材料，也没有修改招聘网页。",
+  guidedLevelPreferenceMismatch:"职位级别与已保存的目标偏好不同",
+  guidedGapWorkAuthorization:"工作授权条件冲突",
+  guidedGapVisa:"签证担保条件冲突",
+  guidedGapLocation:"地点偏好不一致",
+  guidedGapSalary:"薪资偏好不一致",
+  guidedGapRequirement:"岗位硬性要求仍有冲突",
+  guidedGapUnknown:"未识别的匹配条件"
+});
+Object.assign(STRINGS.en,{
+  guidedIntakeTitle:"Start with one instruction",
+  guidedIntakeBody:"Describe the role you want, or paste an existing official job URL. JobFlow searches visibly, verifies the company page, follows its published Apply route, reads the form, and prepares the materials.",
+  guidedOfficialUrl:"Official company job URL (optional)",
+  guidedIntakeConsent:"Starting grants a 30-minute visible-search and read-only page-verification session. After the exact role and materials appear, one approval enables prefill and upload. Only you may click final Submit.",
+  startGuidedIntake:"Start continuous workflow",
+  guidedStepOneTitle:"Search and verify automatically",
+  guidedStepOneBody:"JobFlow searches visible results from your role goal and selects only a verified official company job.",
+  guidedStepTwoBody:"The selected official JD is read automatically; you choose only when the result is genuinely ambiguous.",
+  guidedStepThreeBody:"JobFlow follows a verified company-published Apply route, reads the form, and prepares materials.",
+  guidedStoppedTitle:"This run stopped",
+  guidedStoppedHint:"This error stays visible until you retry or cancel the read. The recruiting page was not filled or changed.",
+  guidedEligibilityReview:"The role and form were read, but these match conditions need your review: {gaps}. No application material was generated and the recruiting page was not changed.",
+  guidedLevelPreferenceMismatch:"Role level differs from the saved target preference",
+  guidedGapWorkAuthorization:"Work-authorization conflict",
+  guidedGapVisa:"Visa-sponsorship conflict",
+  guidedGapLocation:"Location preference mismatch",
+  guidedGapSalary:"Salary preference mismatch",
+  guidedGapRequirement:"A stated job requirement still conflicts",
+  guidedGapUnknown:"Unrecognized match condition"
+});
+
+Object.assign(STRINGS.zh,{
+  aiOperatorCommandHelp:"说清岗位方向和地点即可；也可以粘贴公司官网岗位链接。JobFlow 会在可见标签页中搜索、核验官网、进入 Apply 并准备申请。",
+  aiOperatorCommandDefault:"帮我寻找并处理最匹配的岗位",
+  guidedIntakeTitle:"说出目标，一步运行到最终提交前",
+  guidedIntakeBody:"JobFlow 会自动搜索并核验公司官网岗位、进入安全 Apply 路径、读取申请表并准备材料。你只需审阅一次；最终 Submit 永远由你点击。",
+  guidedOfficialUrl:"已有公司官网岗位链接（可选）",
+  guidedIntakeConsent:"我确认本次岗位目标，并允许 JobFlow 在接下来的 30 分钟内进行可见搜索、读取官网岗位与申请表、准备材料；批准审阅包后可预填和上传，但最终 Submit 永远由我点击。",
+  startGuidedIntake:"确认并运行",
+  guidedStepOneTitle:"搜索并核验官网",guidedStepOneBody:"JobFlow 使用可见浏览器搜索，只保留公司官网岗位。",
+  guidedStepTwoTitle:"读取岗位并进入 Apply",guidedStepTwoBody:"核验岗位后沿官网发布的安全 Apply 路径进入申请表。",
+  guidedStepThreeTitle:"读取表单并准备材料",guidedStepThreeBody:"生成岗位简历和按需材料，只列出真正需要确认的问题。",
+  guidedStepFourTitle:"一次审阅后持续填写",guidedStepFourBody:"批准后自动逐页预填和上传，停在最终 Submit 前。",
+  guidedPairing:"正在连接浏览器伴侣并开始任务…",guidedPaired:"浏览器已连接，正在自动搜索或核验岗位。",
+  guidedAwaitingJob:"正在打开并核验公司官网岗位页。",guidedAwaitingForm:"岗位已核验，正在沿安全 Apply 路径进入申请表。",
+  guidedUrlRequired:"请说清要寻找的岗位方向，或粘贴公司官网 HTTPS 岗位链接。",
+  guidedConsentRequired:"请先确认本次岗位目标和运行授权。",
+  guidedExtensionMissing:"没有收到浏览器伴侣响应。请确认扩展已启用；首次使用请打开 J 授权一次。",
+  guidedSearchChoiceTitle:"AI 找到多个同样可信的公司官网岗位，请选择一个继续：",
+  guidedSearchChoiceAction:"选择并继续",
+  guidedSearchChoiceSaving:"正在绑定你选择的公司岗位并继续…",
+  packetFieldTitle:"只补充简历和既有资料无法确定的问题",
+  packetFieldBody:"把当前岗位确实需要、但简历与已确认资料中没有的答案填在这里。它们会随下面同一次批准在本机加密保存，不需要另点保存。",
+  packetDecisionTitle:"一次确认：答案、材料与开始填写",
+  packetDecisionBody:"批准会加密保存上面的岗位专属答案，并立即在刚才的申请标签页预填和上传。登录、验证码、敏感或未知问题会停下；最终 Submit 永远由你点击。",
+  decisionApprove:"批准并运行到最终提交前",
+  decisionApproveHelp:"绑定当前审阅包和上面的答案，随后连续逐页填写与上传；不会点击最终 Submit。",
+  decisionConfirm:"我已审阅当前岗位、材料和补充答案，并允许 JobFlow 在我在场时运行到最终 Submit 前。",
+  confirmDecision:"确认并开始填写",
+  decisionApprovedAndStarted:"审阅已批准，JobFlow 正在刚才的申请标签页继续预填和上传。最终 Submit 仍由你点击。"
+});
+Object.assign(STRINGS.en,{
+  aiOperatorCommandHelp:"Describe the role direction and location, or paste a company job link. JobFlow searches in a visible tab, verifies the official page, follows Apply, and prepares the application.",
+  aiOperatorCommandDefault:"Find and handle the best matching role for me",
+  guidedIntakeTitle:"State the goal; run to final review",
+  guidedIntakeBody:"JobFlow searches and verifies official company roles, enters the safe Apply route, reads the form, and prepares materials. Review once; only you click final Submit.",
+  guidedOfficialUrl:"Existing company job link (optional)",
+  guidedIntakeConsent:"I confirm this job goal and allow JobFlow for 30 minutes to perform visible search, read the official job and application form, and prepare materials. After packet approval it may prefill and upload, but only I click final Submit.",
+  startGuidedIntake:"Confirm and run",
+  guidedStepOneTitle:"Search and verify official roles",guidedStepOneBody:"JobFlow uses a visible browser search and keeps only company careers pages.",
+  guidedStepTwoTitle:"Read the role and enter Apply",guidedStepTwoBody:"After verification, JobFlow follows the safe Apply route published by the company.",
+  guidedStepThreeTitle:"Read the form and prepare materials",guidedStepThreeBody:"Build the job resume and requested materials, then list only questions that truly need you.",
+  guidedStepFourTitle:"Review once, then keep filling",guidedStepFourBody:"Approval starts continuous page-by-page prefill and upload, stopping before final Submit.",
+  guidedPairing:"Connecting the browser companion and starting the task…",guidedPaired:"Browser connected; automatically searching or verifying the role.",
+  guidedAwaitingJob:"Opening and verifying the official company role.",guidedAwaitingForm:"Role verified; following the safe Apply route to the form.",
+  guidedUrlRequired:"Describe the role you want, or paste an HTTPS role link from the company website.",
+  guidedConsentRequired:"Confirm this job goal and run permission first.",
+  guidedExtensionMissing:"The browser companion did not respond. Make sure it is enabled; on first use, open J once to grant access.",
+  guidedSearchChoiceTitle:"AI found several equally credible company roles. Choose one to continue:",
+  guidedSearchChoiceAction:"Choose and continue",
+  guidedSearchChoiceSaving:"Binding the selected company role and continuing…",
+  packetFieldTitle:"Only answer what the resume and approved profile cannot determine",
+  packetFieldBody:"Provide only application-specific answers missing from the resume and confirmed profile. They are encrypted with the single approval below; there is no separate save step.",
+  packetDecisionTitle:"One confirmation: answers, materials, and start",
+  packetDecisionBody:"Approval encrypts the application-specific answers above and immediately continues prefill and uploads in the inspected application tab. Login, verification, sensitive, or unknown questions pause; only you click final Submit.",
+  decisionApprove:"Approve and run to final review",
+  decisionApproveHelp:"Bind this packet and the answers above, then continue page by page without ever clicking final Submit.",
+  decisionConfirm:"I reviewed this role, its materials, and the answers above, and allow JobFlow to run while I am present until final Submit.",
+  confirmDecision:"Confirm and start filling",
+  decisionApprovedAndStarted:"Review approved. JobFlow is continuing prefill and uploads in the application tab it just inspected. Only you click final Submit."
+});
+
+const UI_PROTOCOL_VERSION = 28;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj";
-const COMPANION_VERSION = "0.6.2";
+const COMPANION_VERSION = "0.7.0";
 const COMPANION_PAIRING_STORAGE = "jobflow-companion-pairing-v2";
 const COMPANION_POLL_BASE_MS = 1500;
 const COMPANION_POLL_MAX_MS = 12000;
-const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, reviewDecision: "", reviewDecisionConfirmed: false, officialDiscovery: null, tailoringProposal: null, guidedIntakeSession: null, guidedIntakePairTimer: null, guidedIntakeActivity: null, browserAssistSelection: null, browserAssistSession: null, browserAssistPairTimer: null, companionPairing: null, companionStatusTimer: null, companionPollInFlight: false, companionPollFailures: 0, companionConnectionNotice: null, companionTerminalHandled: null, aiConnectionErrorCode: null, aiConnectionRefreshWarning: false, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [], activityDurations: {} };
+const state = { locale: "zh", data: null, serviceCompatible: false, lastBlockingError: null, reviewPacket: null, reviewDecision: "", officialDiscovery: null, tailoringProposal: null, guidedIntakeSession: null, guidedIntakePairTimer: null, guidedIntakeActivity: null, browserAssistSelection: null, browserAssistSession: null, aiOperatorPlan: null, aiOperatorExecution: null, browserAssistPairTimer: null, companionPairing: null, companionStatusTimer: null, companionPollInFlight: false, companionPollFailures: 0, companionConnectionNotice: null, companionTerminalHandled: null, aiConnectionErrorCode: null, aiConnectionRefreshWarning: false, answerDraft: {}, claimDraft: {}, claimEditDraft: {}, conflictDraft: {}, selectedClaims: new Set(), activities: [], activityDurations: {} };
 const sessionToken = location.pathname.split("/")[2];
 const base = `/session/${sessionToken}/`;
 let activitySequence = 0;
@@ -150,6 +258,16 @@ const MAX_APPLICATION_FORM_BYTES = 16 * 1024 * 1024;
 
 function t(key) { return (STRINGS[state.locale] || STRINGS.zh)[key] || key; }
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
+function aiOperatorStepsHtml(plan){
+  if(!plan)return "";
+  const executed=new Set(state.aiOperatorExecution?.host_executed_tools||[]);
+  const delegated=new Set(state.aiOperatorExecution?.event_driven_pipeline_tools||[]);
+  const userGates=new Set(state.aiOperatorExecution?.pending_user_gates||[]);
+  return plan.steps.map(step=>{
+    const stage=executed.has(step.tool)?t("aiOperatorExecuted"):userGates.has(step.tool)?t("aiOperatorUserGate"):delegated.has(step.tool)?t("aiOperatorDelegated"):t("aiOperatorPending");
+    return `<li><strong>${escapeHtml(step.tool)}</strong><span>${escapeHtml(stage)} · ${escapeHtml(step.reason)}</span></li>`;
+  }).join("");
+}
 function isReadonly() { return state.data?.status === "ONBOARDING_COMPLETE"; }
 function disabledAttr(condition=true) { return condition ? " disabled" : ""; }
 function arrangePrimaryWorkflow() {
@@ -161,6 +279,9 @@ function arrangePrimaryWorkflow() {
   if(review&&browser&&review.nextElementSibling!==browser)review.after(browser);
   if(execution&&advanced&&execution.nextElementSibling!==advanced)execution.after(advanced);
 }
+// Establish the user-facing order before any later listener or bootstrap code
+// can fail. Materials and onboarding must remain above the application console.
+arrangePrimaryWorkflow();
 function isCompleteAiAnalysis(value) {
   const chunks=Number(value?.ai_chunks||0), input=Number(value?.ai_input_characters??-1), covered=Number(value?.ai_covered_characters??-2);
   return value?.analysis_mode==="AI_CORE_ENTITY_ANALYSIS" && value?.quality_contract===AI_QUALITY_CONTRACT && value?.ai_input_truncated===false && chunks>=1 && input>0 && covered===input;
@@ -196,7 +317,7 @@ function guidedCompanionActive(){
 }
 function browserCompanionActive(){
   const info=state.data?.browser_assist||{}, session=state.browserAssistSession;
-  const terminal=new Set(["CONFIRMED","SUBMISSION_UNKNOWN","AWAITING_APPROVAL","REVOKED","FAILED"]);
+  const terminal=new Set(["CONFIRMED","SUBMISSION_UNKNOWN","AWAITING_APPROVAL","SUPPLEMENTAL_REVIEW_REQUIRED","APPLY_RESTART_REQUIRED","REVOKED","FAILED"]);
   return Boolean((session?.assist_id&&!terminal.has(session.status))||(info.active_assist_id&&!terminal.has(info.active_status)));
 }
 function companionModeConflict(kind){return kind==="guided"?browserCompanionActive():guidedCompanionActive();}
@@ -280,8 +401,24 @@ function awaitExplicitCompanionPairing(record){
   state.companionConnectionNotice=record.paired?null:"companionClickToPair";
   startCompanionStatusPolling();
   renderGuidedIntake();renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
-  showToast(t(record.paired?"companionStatusTemporary":"companionClickToPair"),false,12000);
+  if(record.paired){showToast(t("companionStatusTemporary"),false,12000);return true;}
+  attemptAutomaticCompanionPairing(record);
   return true;
+}
+async function attemptAutomaticCompanionPairing(record){
+  if(!record||state.companionPairing!==record||record.paired)return false;
+  try{
+    const result=await companionExternalMessage({type:"JOBFLOW_PAIR",pairing:record.pairing},4200);
+    if(state.companionPairing!==record)return false;
+    return acceptCompanionPairResult(result);
+  }catch(error){
+    if(state.companionPairing!==record)return false;
+    state.companionConnectionNotice=error?.code==="BROWSER_COMPANION_UPDATE_REQUIRED"
+      ?"guidedExtensionOutdated":"companionClickToPair";
+    renderCompanionConnectionState();
+    showToast(t(state.companionConnectionNotice),error?.code==="BROWSER_COMPANION_UPDATE_REQUIRED",12000);
+    return false;
+  }
 }
 function postPendingCompanionPairing(){
   const record=state.companionPairing;if(!record)return;
@@ -321,7 +458,9 @@ const LOCAL_ERROR_KEYS = {
   COMPANION_BINDING_MISSING:"guidedBindingMissing", COMPANION_BINDING_INVALID:"guidedBindingMissing", COMPANION_BINDING_PROOF_INVALID:"guidedBindingMissing",
   BROWSER_COMPANION_BINDING_MISSING:"guidedBindingMissing", BROWSER_COMPANION_BINDING_INVALID:"guidedBindingMissing", BROWSER_COMPANION_BINDING_MISMATCH:"guidedBindingMissing", BROWSER_COMPANION_BINDING_REQUEST_INVALID:"guidedBindingMissing",
   BROWSER_COMPANION_SESSION_ACTIVE:"companionSessionActive",
-  BROWSER_ASSIST_RESTART_REQUIRED:"browserAssistRestartRequired", COMPANION_MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart", BROWSER_ASSIST_SUBMISSION_UNKNOWN:"browserAssistReloadUnknown",
+  AI_OPERATOR_REQUIRED:"aiOperatorRequired", AI_OPERATOR_RESPONSE_INVALID:"localRequestFailed", AI_OPERATOR_REQUIRED_TOOL_MISSING:"localRequestFailed", AI_OPERATOR_JOB_URL_INVALID:"guidedUrlRequired",
+  AI_OPERATOR_BOUNDARY_REJECTED:"localRequestFailed", AI_OPERATOR_TOOL_FORBIDDEN:"localRequestFailed",
+  BROWSER_ASSIST_RESTART_REQUIRED:"browserAssistRestartRequired", COMPANION_MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart", COMPANION_APPLY_RESTART_REQUIRED:"browserAssistApplyRestart", BROWSER_ASSIST_SUBMISSION_UNKNOWN:"browserAssistReloadUnknown",
   PENDING_LIMIT_INVALID:"pendingLimitInvalid", PENDING_LIMIT_BELOW_ACTIVE:"pendingLimitBelowActive",
   REVIEW_PACKET_NOT_FOUND:"reviewPacketUnavailable", REVIEW_PACKET_SIZE_INVALID:"reviewPacketUnavailable",
   REVIEW_PACKET_INVALID:"reviewPacketUnavailable", REVIEW_PACKET_BINDING_INVALID:"reviewPacketUnavailable",
@@ -456,11 +595,24 @@ function formatBytes(value) {
 
 function renderActivity() {
   const indicator=document.querySelector("#activityIndicator"), main=document.querySelector("main");
-  const activity=state.activities[state.activities.length-1];
+  const guided=state.guidedIntakeSession||state.data?.guided_intake||{};
+  const terminalGuided=["FORM_CAPTURE_FAILED","FAILED"].includes(guided.status)
+    ?{terminal:true,key:"guidedStoppedTitle",detail:guidedFailureMessage(guided)}:null;
+  const activity=state.activities[state.activities.length-1]||terminalGuided;
   if(!activity){indicator.classList.add("hidden");document.body.classList.remove("is-busy");main?.removeAttribute("aria-busy");return;}
-  const seconds=Math.max(0,Math.floor((Date.now()-activity.started)/1000));
   const progressBar=document.querySelector("#activityProgress");
-  indicator.classList.remove("hidden"); document.body.classList.add("is-busy"); main?.setAttribute("aria-busy","true");
+  indicator.classList.remove("hidden");
+  indicator.classList.toggle("failed",Boolean(activity.terminal));
+  if(activity.terminal){
+    document.body.classList.remove("is-busy");main?.removeAttribute("aria-busy");
+    document.querySelector("#activityTitle").textContent=t(activity.key);
+    document.querySelector("#activityStage").textContent=activity.detail;
+    document.querySelector("#activityElapsed").textContent=t("guidedStoppedHint");
+    progressBar.classList.remove("indeterminate");progressBar.style.width="100%";
+    return;
+  }
+  indicator.classList.remove("failed");document.body.classList.add("is-busy");main?.setAttribute("aria-busy","true");
+  const seconds=Math.max(0,Math.floor((Date.now()-activity.started)/1000));
   document.querySelector("#activityTitle").textContent=t(activity.key);
   if(activity.phase==="uploading"){
     const loaded=Math.max(0,Number(activity.loadedBytes)||0),total=Math.max(1,Number(activity.totalBytes)||1);
@@ -563,6 +715,14 @@ function fileExtension(file){
 
 function isHttpsUrl(value){
   try{return new URL(String(value)).protocol==="https:";}catch(_){return false;}
+}
+
+function jobUrlFromOperatorInputs(){
+  const explicit=document.querySelector("#guidedOfficialUrl")?.value.trim()||"";
+  if(isHttpsUrl(explicit))return explicit;
+  const command=document.querySelector("#aiOperatorCommand")?.value||"";
+  const match=command.match(/https:\/\/[^\s<>"']+/i);
+  return match&&isHttpsUrl(match[0].replace(/[),.;!?\]}，。！？]+$/u,""))?match[0].replace(/[),.;!?\]}，。！？]+$/u,""):"";
 }
 
 function buildOfflineApplicationBundle(metadata,parts){
@@ -779,6 +939,7 @@ function renderApplicationReadiness(){
 function guidedIntakeMessage(status){
   const keys={
     IDLE:"guidedIntakeIdle", GUIDED_INTAKE_PAIRING:"guidedPairing", GUIDED_INTAKE_PAIRED:"guidedPaired",
+    AWAITING_JOB_DISCOVERY:"guidedPairing", SEARCH_SELECTION_REQUIRED:"guidedStoppedTitle",
     AWAITING_JOB_PAGE_CAPTURE:"guidedAwaitingJob", AWAITING_APPLICATION_FORM_CAPTURE:"guidedAwaitingForm",
     PREPARING_APPLICATION:"guidedPreparing", REVIEW_PACKET_READY:"guidedReady", DEFERRED:"guidedDeferred",
     FORM_CAPTURE_FAILED:"guidedFailed", FAILED:"guidedFailed"
@@ -786,33 +947,68 @@ function guidedIntakeMessage(status){
   return t(keys[status]||"guidedIntakeIdle");
 }
 
+function guidedFailureMessage(session){
+  if(session?.code==="INELIGIBLE"){
+    const labels={
+      level:"guidedLevelPreferenceMismatch",work_authorization:"guidedGapWorkAuthorization",
+      visa_sponsorship:"guidedGapVisa",location:"guidedGapLocation",salary:"guidedGapSalary"
+    };
+    const gaps=(Array.isArray(session.hard_gap_codes)?session.hard_gap_codes:[]).map(code=>{
+      if(String(code).startsWith("hard_requirement:"))return t("guidedGapRequirement");
+      return t(labels[code]||"guidedGapUnknown");
+    });
+    return t("guidedEligibilityReview").replace("{gaps}",[...new Set(gaps.length?gaps:[t("guidedGapUnknown")])].join("、"));
+  }
+  if(session?.code&&LOCAL_ERROR_KEYS[session.code])return localizedErrorMessage(session);
+  return guidedIntakeMessage(session?.status||"FORM_CAPTURE_FAILED");
+}
+
 function renderGuidedIntake(){
   const bootstrap=state.data?.guided_intake||{}, session=state.guidedIntakeSession||bootstrap;
   const status=session?.status||"IDLE", ready=state.data?.application_readiness?.status==="READY_FOR_OFFLINE_APPLICATION_PREPARATION";
   const demo=state.data?.demo_mode===true, active=Boolean(session?.active||state.guidedIntakeSession), assistActive=browserCompanionActive();
   const terminal=["REVIEW_PACKET_READY","DEFERRED","FAILED"].includes(status);
-  const recoverableStatuses=["GUIDED_INTAKE_PAIRING","AWAITING_JOB_PAGE_CAPTURE","AWAITING_APPLICATION_FORM_CAPTURE","FORM_CAPTURE_FAILED"];
+  const recoverableStatuses=["GUIDED_INTAKE_PAIRING","AWAITING_JOB_DISCOVERY","SEARCH_SELECTION_REQUIRED","AWAITING_JOB_PAGE_CAPTURE","AWAITING_APPLICATION_FORM_CAPTURE","FORM_CAPTURE_FAILED"];
   const retryPairing=active&&session?.paired!==true&&recoverableStatuses.includes(status)&&state.companionPairing?.kind==="guided";
   const restartPairing=active&&recoverableStatuses.includes(status)&&!state.companionPairing;
-  const input=document.querySelector("#guidedOfficialUrl"), confirm=document.querySelector("#guidedIntakeConfirm"), start=document.querySelector("#startGuidedIntake"), cancel=document.querySelector("#cancelGuidedIntake");
-  if(!input||!confirm||!start)return;
-  const validUrl=isHttpsUrl(input.value.trim());
+  const input=document.querySelector("#guidedOfficialUrl"), command=document.querySelector("#aiOperatorCommand"), start=document.querySelector("#startGuidedIntake"), cancel=document.querySelector("#cancelGuidedIntake");
+  if(!input||!start)return;
+  const hasGoal=(command?.value||"").trim().length>=3;
   input.disabled=demo||!ready||assistActive||(active&&!terminal&&!restartPairing);
-  confirm.disabled=demo||!ready||assistActive||(active&&!terminal&&!restartPairing);
+  if(command)command.disabled=input.disabled;
   start.textContent=t(retryPairing||restartPairing?"retryCompanionPairing":"startGuidedIntake");
-  start.disabled=demo||!ready||assistActive||(retryPairing?false:(!validUrl||!confirm.checked||(active&&!terminal&&!restartPairing)));
-  const cancellable=["GUIDED_INTAKE_PAIRING","GUIDED_INTAKE_PAIRED","AWAITING_JOB_PAGE_CAPTURE","AWAITING_APPLICATION_FORM_CAPTURE","FORM_CAPTURE_FAILED"].includes(status);
+  start.disabled=demo||!ready||assistActive||(retryPairing?false:(!hasGoal||(active&&!terminal&&!restartPairing)));
+  const cancellable=["GUIDED_INTAKE_PAIRING","GUIDED_INTAKE_PAIRED","AWAITING_JOB_DISCOVERY","SEARCH_SELECTION_REQUIRED","AWAITING_JOB_PAGE_CAPTURE","AWAITING_APPLICATION_FORM_CAPTURE","FORM_CAPTURE_FAILED"].includes(status);
   if(cancel){cancel.classList.toggle("hidden",demo||!active||!cancellable);cancel.disabled=assistActive;}
   const badge=document.querySelector("#guidedIntakeBadge"), message=document.querySelector("#guidedIntakeMessage");
-  badge.textContent=guidedIntakeMessage(status);
+  const statusMessage=["FORM_CAPTURE_FAILED","FAILED"].includes(status)?guidedFailureMessage(session):guidedIntakeMessage(status);
+  badge.textContent=statusMessage;
   const connectionNotice=state.companionPairing?.kind==="guided"&&state.companionConnectionNotice?t(state.companionConnectionNotice):"";
-  message.textContent=assistActive?t("companionSessionActive"):ready?[guidedIntakeMessage(status),connectionNotice].filter(Boolean).join(" "):t("guidedReadinessRequired");
+  message.textContent=assistActive?t("companionSessionActive"):ready?[statusMessage,connectionNotice].filter(Boolean).join(" "):t("guidedReadinessRequired");
   message.classList.toggle("working",["GUIDED_INTAKE_PAIRING","PREPARING_APPLICATION"].includes(status));
+  if(status==="PREPARING_APPLICATION"&&!state.guidedIntakeActivity){
+    state.guidedIntakeActivity=beginActivity("preparingGuidedApplication",{estimatedSeconds:300});
+  }else if(status!=="PREPARING_APPLICATION"&&state.guidedIntakeActivity){
+    endActivity(state.guidedIntakeActivity,status==="REVIEW_PACKET_READY");state.guidedIntakeActivity=null;
+  }
+  const operatorPanel=document.querySelector("#guidedAiOperatorPlan"), operatorPlan=state.aiOperatorPlan;
+  if(operatorPanel){
+    operatorPanel.classList.toggle("hidden",!operatorPlan||Boolean(operatorPlan.application_id));
+    document.querySelector("#guidedAiOperatorSummary").textContent=operatorPlan?.summary||"";
+    document.querySelector("#guidedAiOperatorSteps").innerHTML=operatorPlan&&!operatorPlan.application_id
+      ?aiOperatorStepsHtml(operatorPlan):"";
+  }
   const link=document.querySelector("#guidedOpenJob"), officialUrl=session?.official_url;
   if(officialUrl&&isHttpsUrl(officialUrl)){link.href=officialUrl;link.classList.remove("hidden");}
   else{link.removeAttribute("href");link.classList.add("hidden");}
+  const choices=document.querySelector("#guidedSearchChoices"),candidateOptions=Array.isArray(session?.candidate_options)?session.candidate_options:[];
+  if(status==="SEARCH_SELECTION_REQUIRED"&&candidateOptions.length){
+    choices.innerHTML=`<strong>${escapeHtml(t("guidedSearchChoiceTitle"))}</strong>${candidateOptions.slice(0,3).map(item=>`<button type="button" class="guided-search-choice secondary" data-candidate-ref="${escapeHtml(item.candidate_ref)}"><span>${escapeHtml(item.title||item.company_domain)}</span><small>${escapeHtml(item.company_domain||"")}</small><b>${escapeHtml(t("guidedSearchChoiceAction"))}</b></button>`).join("")}`;
+    choices.classList.remove("hidden");
+  }else{choices.replaceChildren();choices.classList.add("hidden");}
   let completed=0, current=0;
-  if(["GUIDED_INTAKE_PAIRED","AWAITING_JOB_PAGE_CAPTURE"].includes(status)){completed=1;current=1;}
+  if(["GUIDED_INTAKE_PAIRED","AWAITING_JOB_DISCOVERY"].includes(status)){completed=0;current=0;}
+  else if(["SEARCH_SELECTION_REQUIRED","AWAITING_JOB_PAGE_CAPTURE"].includes(status)){completed=1;current=1;}
   else if(status==="AWAITING_APPLICATION_FORM_CAPTURE"){completed=2;current=2;}
   else if(["PREPARING_APPLICATION","FORM_CAPTURE_FAILED"].includes(status)){completed=3;current=3;}
   else if(["REVIEW_PACKET_READY","DEFERRED"].includes(status)){completed=4;current=4;}
@@ -827,7 +1023,8 @@ function browserAssistResultMessage(status){
   const keys={
     BROWSER_COMPANION_PAIRING:"browserAssistPairing", BROWSER_COMPANION_PAIRED:"browserAssistPaired",
     READY:"browserAssistPaired", PAGE_PREPARED:"browserAssistPaired",
-    PAGE_REVIEW_REQUIRED:"browserAssistPageReview", MANUAL_NAVIGATION_REQUIRED:"browserAssistManualNavigation", MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart", HANDOFF_REQUIRED:"browserAssistHandoff",
+    PAGE_REVIEW_REQUIRED:"browserAssistPageReview", MANUAL_NAVIGATION_REQUIRED:"browserAssistManualNavigation", MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart", APPLY_RESTART_REQUIRED:"browserAssistApplyRestart", HANDOFF_REQUIRED:"browserAssistHandoff",
+    SUPPLEMENTAL_REVIEW_REQUIRED:"browserAssistSupplementalReview",
     AWAITING_NAVIGATION:"browserAssistNavigating", NAVIGATION_STARTED:"browserAssistNavigating",
     NAVIGATION_PENDING:"browserAssistNavigating", NAVIGATION_STALLED:"browserAssistNavigationStalled",
     AWAITING_USER_SUBMIT:"browserAssistAwaitingSubmit", OBSERVING_RESULT_PAGE:"browserAssistObserving",
@@ -861,10 +1058,17 @@ function renderBrowserAssist(recent){
   const max=state.browserAssistSession?.max_steps||run?.max_steps;
   const meta=provider&&step&&max?t("browserAssistStepMeta").replace("{provider}",provider).replace("{step}",String(step)).replace("{max}",String(max)):"";
   document.querySelector("#browserAssistApplication").textContent=[item.application_id,meta].filter(Boolean).join(" · ");
+  const operatorPanel=document.querySelector("#aiOperatorPlan"), operatorPlan=state.aiOperatorPlan;
+  const currentPlan=operatorPlan&&operatorPlan.application_id===item.application_id?operatorPlan:null;
+  operatorPanel.classList.toggle("hidden",!currentPlan);
+  document.querySelector("#aiOperatorSummary").textContent=currentPlan?.summary||"";
+  document.querySelector("#aiOperatorSteps").innerHTML=currentPlan?aiOperatorStepsHtml(currentPlan):"";
   const confirm=document.querySelector("#browserAssistConfirm"), start=document.querySelector("#startBrowserAssistNow");
   const guidedActive=guidedCompanionActive();
   const canRepeatPairingHelp=localPairing&&state.companionPairing?.paired!==true;
-  start.disabled=guidedActive||(browserCompanionActive()&&!canRepeatPairingHelp)||!confirm.checked||item.status!=="APPROVED";
+  const aiReady=state.data?.ai_engine?.status==="READY";
+  start.disabled=guidedActive||(browserCompanionActive()&&!canRepeatPairingHelp)||!confirm.checked||item.status!=="APPROVED"||!aiReady;
+  start.title=aiReady?"":t("aiOperatorRequired");
   const link=document.querySelector("#browserAssistOpenPage");
   if(state.browserAssistSession?.approved_url){
     link.href=state.browserAssistSession.approved_url;link.classList.remove("hidden");
@@ -884,12 +1088,6 @@ async function handleGuidedCompanionStatus(result){
     state.companionPairing.session={...state.guidedIntakeSession};
     persistCompanionPairing(state.companionPairing);
   }
-  if(result.status==="PREPARING_APPLICATION"&&!state.guidedIntakeActivity){
-    state.guidedIntakeActivity=beginActivity("preparingGuidedApplication",{estimatedSeconds:300});
-  }
-  if(["REVIEW_PACKET_READY","DEFERRED","FORM_CAPTURE_FAILED","FAILED"].includes(result.status)&&state.guidedIntakeActivity){
-    endActivity(state.guidedIntakeActivity,result.status==="REVIEW_PACKET_READY");state.guidedIntakeActivity=null;
-  }
   renderGuidedIntake();
   const terminalKey=`guided:${result.intake_id}:${result.status}`;
   if(state.companionTerminalHandled===terminalKey)return true;
@@ -898,7 +1096,7 @@ async function handleGuidedCompanionStatus(result){
     try{
       await refreshLatest();
       state.reviewPacket=await api("review-packet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({application_id:result.application_id})});
-      state.reviewDecision="";state.reviewDecisionConfirmed=false;renderReviewPacket();
+      state.reviewDecision="";renderReviewPacket();
       document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});showToast(t("guidedReady"),false,9000);
       clearCompanionPairing();
     }catch(error){handleUiError(error);}
@@ -908,7 +1106,7 @@ async function handleGuidedCompanionStatus(result){
   }else if(["FORM_CAPTURE_FAILED","FAILED"].includes(result.status)){
     state.companionTerminalHandled=terminalKey;
     const error=Object.assign(new Error(result.message||result.code||t("guidedFailed")),result);
-    showToast(LOCAL_ERROR_KEYS[error.code]?localizedErrorMessage(error):t("guidedFailed"),true,9000);
+    showToast(guidedFailureMessage(error),true,12000);
   }
   return true;
 }
@@ -924,11 +1122,20 @@ async function handleBrowserCompanionStatus(result){
     persistCompanionPairing(state.companionPairing);
   }
   renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
-  if(["CONFIRMED","SUBMISSION_UNKNOWN","AWAITING_APPROVAL"].includes(result.status)){
+  if(["CONFIRMED","SUBMISSION_UNKNOWN","AWAITING_APPROVAL","SUPPLEMENTAL_REVIEW_REQUIRED","APPLY_RESTART_REQUIRED"].includes(result.status)){
     const terminalKey=`assist:${result.application_id}:${result.status}`;
     if(state.companionTerminalHandled!==terminalKey){
       state.companionTerminalHandled=terminalKey;
-      try{await refreshLatest();clearCompanionPairing();}catch(error){handleUiError(error);}
+      try{
+        await refreshLatest();
+        if(result.status==="SUPPLEMENTAL_REVIEW_REQUIRED"){
+          state.reviewPacket=await api("review-packet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({application_id:result.application_id})});
+          state.reviewDecision="";renderReviewPacket();
+          document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});
+          showToast(t("browserAssistSupplementalReview"),false,10000);
+        }
+        clearCompanionPairing();
+      }catch(error){handleUiError(error);}
     }
   }
   return true;
@@ -1011,6 +1218,7 @@ async function resumeCompanionPairing(record){
   state.companionConnectionNotice=record.paired?null:"companionClickToPair";
   renderCompanionConnectionState();
   startCompanionStatusPolling();
+  if(!record.paired)await attemptAutomaticCompanionPairing(record);
 }
 
 function recentApplicationActions(item){
@@ -1182,7 +1390,7 @@ function applicationFieldValueControl(field){
 }
 function updateApplicationFieldResolutionButton(){
   const panel=document.querySelector("#applicationFieldResolutionPanel");
-  if(panel.classList.contains("hidden"))return;
+  if(panel.classList.contains("hidden")){updatePacketDecisionButton();return;}
   let valid=true;
   panel.querySelectorAll(".application-field-row").forEach(row=>{
     const decision=row.querySelector(".application-field-decision").value;
@@ -1192,17 +1400,36 @@ function updateApplicationFieldResolutionButton(){
     if(decision==="CONFIRMED_VALUE"&&!value.value.trim())valid=false;
   });
   document.querySelector("#saveApplicationFieldResolutions").disabled=!valid||!document.querySelector("#applicationFieldResolutionConfirm").checked;
+  updatePacketDecisionButton();
+}
+function applicationFieldResolutionReady(){
+  const panel=document.querySelector("#applicationFieldResolutionPanel");
+  if(!panel||panel.classList.contains("hidden"))return true;
+  return collectApplicationFieldResolutions()!==null;
+}
+function updatePacketDecisionButton(){
+  const button=document.querySelector("#confirmPacketDecision");
+  if(!button)return;
+  const fieldsReady=state.reviewDecision!=="APPROVE"||applicationFieldResolutionReady();
+  button.disabled=!state.reviewDecision||!fieldsReady;
+  const key=state.reviewDecision==="APPROVE"?"confirmApproveAndStart":state.reviewDecision==="REVISE"?"confirmReviseDecision":"confirmRejectDecision";
+  button.textContent=t(key);
 }
 function renderApplicationFieldResolution(result){
-  const summary=result?.field_resolution||{},fields=summary.unresolved_fields||[];
+  const summary=result?.field_resolution||{},fields=summary.unresolved_fields||[],unknowns=summary.remaining_non_form_unknowns||[];
   const panel=document.querySelector("#applicationFieldResolutionPanel"),list=document.querySelector("#applicationFieldResolutionList");
   document.querySelector("#applicationFieldResolutionConfirm").checked=false;
-  if(!fields.length){list.replaceChildren();panel.classList.add("hidden");return;}
-  list.innerHTML=fields.map(field=>`<article class="application-field-row" data-control-ref="${escapeHtml(field.control_ref)}">
+  if(!fields.length&&!unknowns.length){list.replaceChildren();panel.classList.add("hidden");return;}
+  const fieldRows=fields.map(field=>`<article class="application-field-row" data-control-ref="${escapeHtml(field.control_ref)}">
     <div><strong>${escapeHtml(field.label||field.answer_key||field.control_ref)}</strong><small>${escapeHtml(field.required?t("packetFieldRequired"):t("packetFieldOptional"))} · ${escapeHtml(field.classification)}</small></div>
     <label><span>${escapeHtml(t("packetFieldDecision"))}</span><select class="application-field-decision">${applicationFieldDecisionOptions(field)}</select></label>
     <label><span>${escapeHtml(t("packetFieldValue"))}</span>${applicationFieldValueControl(field)}</label>
   </article>`).join("");
+  const unknownRows=unknowns.map(unknownId=>`<article class="application-non-form-row" data-unknown-id="${escapeHtml(unknownId)}">
+    <div><strong>${escapeHtml(unknownId)}</strong><small>${escapeHtml(t("packetFieldUnknowns"))}</small></div>
+    <label><span>${escapeHtml(t("packetFieldDecision"))}</span><select disabled><option>${escapeHtml(t("packetFieldAcknowledgeUnknown"))}</option></select></label>
+  </article>`).join("");
+  list.innerHTML=fieldRows+unknownRows;
   panel.classList.remove("hidden");updateApplicationFieldResolutionButton();
 }
 function collectApplicationFieldResolutions(){
@@ -1214,7 +1441,9 @@ function collectApplicationFieldResolutions(){
     if(decision==="CONFIRMED_VALUE"&&!value)return null;
     values.push({control_ref:row.dataset.controlRef,decision,value:decision==="CONFIRMED_VALUE"?value:""});
   }
-  return values;
+  const nonForm=[...document.querySelectorAll("#applicationFieldResolutionList .application-non-form-row")]
+    .map(row=>({unknown_id:row.dataset.unknownId,decision:"ACKNOWLEDGED_UNKNOWN"}));
+  return {fields:values,nonForm};
 }
 function renderReviewPacket(){
   const result=state.reviewPacket;if(!result)return;
@@ -1230,7 +1459,7 @@ function renderReviewPacket(){
     ["packetGaps",packetList(packet.hard_gaps,item=>escapeHtml(packetValue(item))),false],
     ["packetBullets",packetList(packet.resume_bullets,item=>`<strong>${escapeHtml(packetValue(item.text))}</strong><br><small>${escapeHtml(t("packetClaims"))}: ${escapeHtml(packetValue(item.claim_id))} · ${escapeHtml(t("packetEvidence"))}: ${escapeHtml(packetValue(item.evidence))}</small>`),true],
     ["packetPrefillProposal",renderPrefillProposal(packet.form_questions),true],
-    ["packetQuestions",packetList(packet.form_questions,item=>`${escapeHtml(packetValue(item.label||item.id))} · ${escapeHtml(packetValue(item.classification||item.action||item.status))}`),false],
+    ["packetQuestions",packetList(packet.form_questions,item=>`${escapeHtml(packetValue(item.label||item.id))} · ${escapeHtml(packetValue(item.classification||item.action||item.status))}${item.ai_semantic_role?` · AI: ${escapeHtml(packetValue(item.ai_semantic_role))}`:""}`),false],
     ["packetSensitive",packetList(packet.sensitive_fields,item=>`${escapeHtml(packetValue(item.label||item.id))} · ${escapeHtml(packetValue(item.classification||item.action||item.status))}`),false],
     ["packetUploads",packetList(packet.uploads,item=>`${escapeHtml(packetValue(item.filename))} · ${escapeHtml(packetValue(item.purpose))} · ${escapeHtml(packetValue(item.sha256).slice(0,15))}`),false],
     ["packetMaterialPlan",materialPlanBody,true],
@@ -1240,15 +1469,13 @@ function renderReviewPacket(){
   ];
   document.querySelector("#reviewPacketBody").innerHTML=sections.map(([key,body,wide])=>`<section class="packet-section${wide?" wide":""}"><h4>${escapeHtml(t(key))}</h4>${body}</section>`).join("");
   renderApplicationFieldResolution(result);
-  document.querySelectorAll('input[name="packetDecision"]').forEach(input=>{input.checked=input.value===state.reviewDecision;});
-  const confirmation=document.querySelector("#packetDecisionConfirm");confirmation.checked=state.reviewDecisionConfirmed;
-  document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecision||!state.reviewDecisionConfirmed;
   const canDecide=result.application_status==="AWAITING_APPROVAL"&&result.status==="AWAITING_APPROVAL";
-  const fieldsBlocked=Number(result.field_resolution?.unresolved_count||0)>0||(result.field_resolution?.remaining_non_form_unknowns||[]).length>0;
-  const approveInput=document.querySelector('input[name="packetDecision"][value="APPROVE"]');approveInput.disabled=fieldsBlocked;
-  if(fieldsBlocked&&state.reviewDecision==="APPROVE"){state.reviewDecision="";state.reviewDecisionConfirmed=false;approveInput.checked=false;}
+  if(canDecide&&!state.reviewDecision)state.reviewDecision="APPROVE";
+  document.querySelectorAll('input[name="packetDecision"]').forEach(input=>{input.checked=input.value===state.reviewDecision;});
+  updatePacketDecisionButton();
+  const approveInput=document.querySelector('input[name="packetDecision"][value="APPROVE"]');approveInput.disabled=false;
   document.querySelector("#packetDecisionPanel").classList.toggle("hidden",!canDecide);
-  if(!canDecide){state.reviewDecision="";state.reviewDecisionConfirmed=false;}
+  if(!canDecide)state.reviewDecision="";
   const panel=document.querySelector("#reviewPacketPanel");panel.classList.remove("hidden");
 }
 
@@ -1297,6 +1524,13 @@ function inputControl(field, answer) {
   return `<input id="${escapeHtml(controlId)}" type="text" class="answer-input" data-field="${field.id}" aria-label="${escapeHtml(accessibleName)}" value="${escapeHtml(value)}"${disabled}>`;
 }
 
+function answerForField(field) {
+  const answer=state.data?.answers?.[field.id];
+  return answer&&typeof answer==="object"
+    ?answer
+    :{value:null,status:"UNKNOWN",source:"UNKNOWN",use_policy:field.default_policy||"reuse",updated_at:null};
+}
+
 function collectAnswerDraft() {
   if (!state.data) return {};
   const answers={};
@@ -1306,7 +1540,7 @@ function collectAnswerDraft() {
     if(field.input_type==="tags") value=value.split(/[,，;；|\n]/).map(x=>x.trim()).filter(Boolean);
     let status=row.querySelector(".status-select").value;
     if(status==="UNKNOWN" && (Array.isArray(value)?value.length>0:String(value||"").trim().length>0)) status="CONFIRMED";
-    answers[id]={value,status,use_policy:row.querySelector(".policy-select")?.value || state.data.answers[id].use_policy};
+    answers[id]={value,status,use_policy:row.querySelector(".policy-select")?.value || answerForField(field).use_policy};
   });
   return answers;
 }
@@ -1315,7 +1549,7 @@ function renderQuestions() {
   const catalog = state.data.catalog;
   const groups = catalog.groups.map(group => {
     const rows = catalog.fields.filter(f=>f.group===group.id).map(field => {
-      const answer = state.data.answers[field.id];
+      const answer = answerForField(field);
       const fieldLabel=field.label[state.locale];
       const answerId=`answer-${field.id}`;
       const policyId=`policy-${field.id}`;
@@ -1669,8 +1903,8 @@ document.addEventListener("click", async event => {
         companionCleared=await releaseGuidedCompanionBinding(pairing);
       });
       clearCompanionPairing();state.guidedIntakeSession=null;
+      state.aiOperatorPlan=null;state.aiOperatorExecution=null;
       document.querySelector("#guidedOfficialUrl").value="";
-      document.querySelector("#guidedIntakeConfirm").checked=false;
       if(state.data)state.data.guided_intake={status:"IDLE",active:false,real_external_actions:0};
       renderGuidedIntake();
       try{await refreshLatest();}catch(_error){/* The local cancellation already succeeded; the next refresh reconciles state. */}
@@ -1678,23 +1912,48 @@ document.addEventListener("click", async event => {
     }catch(error){handleUiError(error);renderGuidedIntake();}
     return;
   }
+  const guidedSearchChoice=event.target.closest(".guided-search-choice");
+  if(guidedSearchChoice){
+    const record=state.companionPairing,session=state.guidedIntakeSession||state.data?.guided_intake;
+    if(record?.kind!=="guided"||!session?.intake_id)return;
+    try{
+      let selected;
+      await withActivity("guidedSearchChoiceSaving",async()=>{
+        selected=await api("select-guided-search-candidate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+          intake_id:session.intake_id,candidate_ref:guidedSearchChoice.dataset.candidateRef,user_confirmed:true
+        })});
+        state.guidedIntakeSession={...session,...selected,active:true,paired:true};
+        record.session={...state.guidedIntakeSession};persistCompanionPairing(record);renderGuidedIntake();
+        const paired=await companionExternalMessage({type:"JOBFLOW_PAIR",pairing:record.pairing},4200);
+        acceptCompanionPairResult(paired);
+      },{estimatedSeconds:8});
+    }catch(error){handleUiError(error);renderGuidedIntake();}
+    return;
+  }
   const startGuided=event.target.closest("#startGuidedIntake");
   if(startGuided){
     if(companionModeConflict("guided")){handleUiError(makeUiError("BROWSER_COMPANION_SESSION_ACTIVE"));return;}
     const ready=state.data?.application_readiness?.status==="READY_FOR_OFFLINE_APPLICATION_PREPARATION";
-    const officialUrl=document.querySelector("#guidedOfficialUrl").value.trim();
+    const officialUrl=jobUrlFromOperatorInputs();
+    const command=(document.querySelector("#aiOperatorCommand")?.value||t("aiOperatorCommandDefault")).trim();
     const retryRecord=state.companionPairing?.kind==="guided"&&!state.guidedIntakeSession?.paired?state.companionPairing:null;
     if(!ready){showToast(t("guidedReadinessRequired"),true);return;}
-    if(!retryRecord&&!isHttpsUrl(officialUrl)){showToast(t("guidedUrlRequired"),true);return;}
-    if(!retryRecord&&!document.querySelector("#guidedIntakeConfirm").checked){showToast(t("guidedConsentRequired"),true);return;}
+    if(!retryRecord&&command.length<3){showToast(t("guidedUrlRequired"),true);return;}
     try{
       await withActivity("startingGuidedIntake",async()=>{
         let record=retryRecord;
         if(!record){
-          const result=await api("start-guided-intake",{
+          const operated=await api("start-job-with-ai",{
             method:"POST",headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({official_url:officialUrl,user_confirmed:true})
+            body:JSON.stringify({command,official_url:officialUrl,user_confirmed:true})
           });
+          state.aiOperatorPlan=operated.operator_plan;state.aiOperatorExecution=operated.operator_execution||null;
+          const result=operated.guided_intake;
+          if(!result){
+            renderGuidedIntake();
+            showToast(state.aiOperatorPlan?.summary||t("localRequestFailed"),true,12000);
+            return;
+          }
           state.guidedIntakeSession={...result,active:true,paired:false};
           record={kind:"guided",paired:false,expires_epoch:Date.parse(result.expires_at),session:{...state.guidedIntakeSession},pairing:{protocol_version:result.protocol_version,base_url:location.origin,assist_path:result.intake_path}};
           persistCompanionPairing(record);renderGuidedIntake();
@@ -1710,7 +1969,7 @@ document.addEventListener("click", async event => {
     const applicationId=chooseBrowserAssist.dataset.id;
     const item=(state.data?.dashboard?.recent_applications||[]).find(value=>value.application_id===applicationId);
     if(!item||item.status!=="APPROVED"){showToast(t("reviewDecisionUnavailable"),true);return;}
-    clearCompanionPairing();state.browserAssistSelection={...item};state.browserAssistSession=null;
+    clearCompanionPairing();state.browserAssistSelection={...item};state.browserAssistSession=null;state.aiOperatorPlan=null;state.aiOperatorExecution=null;
     document.querySelector("#browserAssistConfirm").checked=false;
     document.querySelector("#browserAssistMessage").textContent="";
     renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
@@ -1726,10 +1985,16 @@ document.addEventListener("click", async event => {
       await withActivity("startingBrowserAssist",async()=>{
         let record=state.companionPairing?.kind==="assist"&&!state.browserAssistSession?.paired?state.companionPairing:null;
         if(!record){
-          const result=await api("start-browser-assist",{
+          const operated=await api("start-application-with-ai",{
             method:"POST",headers:{"Content-Type":"application/json"},
             body:JSON.stringify({application_id:state.browserAssistSelection.application_id,user_confirmed:true})
           });
+          state.aiOperatorPlan=operated.operator_plan;state.aiOperatorExecution=operated.operator_execution||null;renderBrowserAssist(state.data?.dashboard?.recent_applications||[]);
+          const result=operated.browser_assist;
+          if(!result){
+            showToast(state.aiOperatorPlan?.summary||t("localRequestFailed"),true,12000);
+            return;
+          }
           state.browserAssistSession={...result,paired:false};
           record={kind:"assist",paired:false,expires_epoch:Date.parse(result.expires_at),session:{...state.browserAssistSession},pairing:{protocol_version:result.protocol_version,base_url:location.origin,assist_path:result.assist_path}};
           persistCompanionPairing(record);
@@ -1878,7 +2143,7 @@ document.addEventListener("click", async event => {
       },{estimatedSeconds:300});
       if(result?.application_id){
         state.reviewPacket=openedPacket;
-        state.reviewDecision="";state.reviewDecisionConfirmed=false;renderReviewPacket();
+        state.reviewDecision="";renderReviewPacket();
         document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});
         showToast(t("offlineApplicationPrepared"));
       }else{showToast(t("offlineApplicationDeferred"));}
@@ -1930,29 +2195,30 @@ document.addEventListener("click", async event => {
         result=await api("review-packet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({application_id:openPacket.dataset.id})});
       });
       state.reviewPacket=result;
-      state.reviewDecision="";state.reviewDecisionConfirmed=false;
+      state.reviewDecision="";
       renderReviewPacket();
       document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});
     }catch(error){state.reviewPacket=null;document.querySelector("#reviewPacketPanel").classList.add("hidden");handleUiError(error);}
     return;
   }
   const closePacket=event.target.closest("#closeReviewPacket");
-  if(closePacket){state.reviewPacket=null;state.reviewDecision="";state.reviewDecisionConfirmed=false;document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#applicationFieldResolutionList").replaceChildren();document.querySelector("#applicationFieldResolutionPanel").classList.add("hidden");document.querySelector("#reviewPacketPanel").classList.add("hidden");return;}
+  if(closePacket){state.reviewPacket=null;state.reviewDecision="";document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#applicationFieldResolutionList").replaceChildren();document.querySelector("#applicationFieldResolutionPanel").classList.add("hidden");document.querySelector("#reviewPacketPanel").classList.add("hidden");return;}
   const saveApplicationFields=event.target.closest("#saveApplicationFieldResolutions");
   if(saveApplicationFields){
-    const packet=state.reviewPacket?.packet,resolutions=collectApplicationFieldResolutions();
-    if(!packet||!resolutions||!resolutions.length||!document.querySelector("#applicationFieldResolutionConfirm").checked){showToast(t("packetFieldInvalid"),true);return;}
+    const packet=state.reviewPacket?.packet,resolutionDraft=collectApplicationFieldResolutions();
+    if(!packet||!resolutionDraft||(resolutionDraft.fields.length+resolutionDraft.nonForm.length)<1||!document.querySelector("#applicationFieldResolutionConfirm").checked){showToast(t("packetFieldInvalid"),true);return;}
     try{
       let refreshedPacket=null;
       await withActivity("savingApplicationFields",async()=>{
         await api("resolve-application-fields",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-          application_id:state.reviewPacket.application_id,expected_packet_hash:packet.content_hash,resolutions,user_confirmed:true
+          application_id:state.reviewPacket.application_id,expected_packet_hash:packet.content_hash,
+          resolutions:resolutionDraft.fields,non_form_resolutions:resolutionDraft.nonForm,user_confirmed:true
         })});
         document.querySelectorAll("#applicationFieldResolutionList .application-field-value").forEach(input=>{input.value="";});
         refreshedPacket=await api("review-packet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({application_id:state.reviewPacket.application_id})});
         await refreshLatest();
       });
-      state.reviewPacket=refreshedPacket;state.reviewDecision="";state.reviewDecisionConfirmed=false;renderReviewPacket();
+      state.reviewPacket=refreshedPacket;state.reviewDecision="";renderReviewPacket();
       document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});showToast(t("packetFieldsSaved"));
     }catch(error){handleUiError(error);}
     return;
@@ -1960,24 +2226,42 @@ document.addEventListener("click", async event => {
   const confirmPacketDecision=event.target.closest("#confirmPacketDecision");
   if(confirmPacketDecision){
     if(!state.reviewDecision){showToast(t("chooseDecision"),true);return;}
-    if(!state.reviewDecisionConfirmed){showToast(t("confirmDecisionFirst"),true);return;}
     const decision=state.reviewDecision,packet=state.reviewPacket?.packet;
     if(!packet){showToast(t("reviewPacketUnavailable"),true);return;}
     try{
       let decisionResult;
       const waitingCount=Number(state.data?.dashboard?.queue?.deferred_intake||0);
       await withActivity("savingQueueDecision",async()=>{
-        decisionResult=await api("queue-decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-          application_id:state.reviewPacket.application_id,decision,expected_packet_hash:packet.content_hash,user_confirmed:true
-        })});
-        state.reviewPacket=null;state.reviewDecision="";state.reviewDecisionConfirmed=false;
+        if(decision==="APPROVE"){
+          const job=packet.job||{};
+          const resolutionDraft=collectApplicationFieldResolutions();
+          if(!resolutionDraft){throw Object.assign(new Error(t("packetFieldInvalid")),{code:"APPLICATION_FIELD_RESOLUTIONS_INCOMPLETE"});}
+          decisionResult=await api("approve-and-start-application",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+            application_id:state.reviewPacket.application_id,expected_packet_hash:packet.content_hash,
+            resolutions:resolutionDraft.fields,non_form_resolutions:resolutionDraft.nonForm,user_confirmed:true
+          })});
+          const result=decisionResult.browser_assist;
+          if(!result)throw Object.assign(new Error(decisionResult.operator_plan?.summary||t("localRequestFailed")),{code:"AI_OPERATOR_NEEDS_USER_INPUT"});
+          clearCompanionPairing();
+          state.browserAssistSelection={application_id:decisionResult.application_id,title:job.title||"",company:job.company||"",status:"APPROVED"};
+          state.aiOperatorPlan=decisionResult.operator_plan||null;state.aiOperatorExecution=decisionResult.operator_execution||null;
+          state.browserAssistSession={...result,paired:false};
+          const record={kind:"assist",paired:false,expires_epoch:Date.parse(result.expires_at),session:{...state.browserAssistSession},pairing:{protocol_version:result.protocol_version,base_url:location.origin,assist_path:result.assist_path}};
+          persistCompanionPairing(record);awaitExplicitCompanionPairing(record);
+        }else{
+          decisionResult=await api("queue-decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+            application_id:state.reviewPacket.application_id,decision,expected_packet_hash:packet.content_hash,user_confirmed:true
+          })});
+        }
+        state.reviewPacket=null;state.reviewDecision="";
         document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#reviewPacketPanel").classList.add("hidden");
         await refreshLatest();
       },{estimatedSeconds:waitingCount>0?180:7});
-      const baseMessage=t(decision==="APPROVE"?"decisionApproved":decision==="REVISE"?"decisionRevised":"decisionRejected");
-      const continued=Number(decisionResult?.continued_intake?.prepared_count||0)>0
+      const baseMessage=t(decision==="APPROVE"?"decisionApprovedAndStarted":decision==="REVISE"?"decisionRevised":"decisionRejected");
+      const queueDecision=decision==="APPROVE"?decisionResult?.decision:decisionResult;
+      const continued=Number(queueDecision?.continued_intake?.prepared_count||0)>0
         ?` ${t("nextApplicationPrepared")}`
-        :Number(decisionResult?.continued_intake?.failed_count||0)>0?` ${t("nextApplicationNeedsRepair")}`:"";
+        :Number(queueDecision?.continued_intake?.failed_count||0)>0?` ${t("nextApplicationNeedsRepair")}`:"";
       showToast(baseMessage+continued);
     }catch(error){handleUiError(error);}
     return;
@@ -2107,13 +2391,12 @@ function syncAiFileType(){document.querySelector("#aiFile").accept=document.quer
 document.querySelector("#aiType").addEventListener("change",syncAiFileType);
 syncAiFileType();
 document.addEventListener("change",event=>{
-  if(event.target.matches("#guidedOfficialUrl,#guidedIntakeConfirm")){renderGuidedIntake();return;}
+  if(event.target.matches("#guidedOfficialUrl,#aiOperatorCommand")){renderGuidedIntake();return;}
   if(event.target.matches("#officialCompanyDomain,#officialCareersUrl,#officialSnapshotFile")){
     clearOfficialDiscovery();
     return;
   }
-  if(event.target.matches('input[name="packetDecision"]')){state.reviewDecision=event.target.value;document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecisionConfirmed;}
-  if(event.target.matches("#packetDecisionConfirm")){state.reviewDecisionConfirmed=event.target.checked;document.querySelector("#confirmPacketDecision").disabled=!state.reviewDecision||!state.reviewDecisionConfirmed;}
+  if(event.target.matches('input[name="packetDecision"]')){state.reviewDecision=event.target.value;updatePacketDecisionButton();}
   if(event.target.matches("#applicationFieldResolutionConfirm,.application-field-decision,.application-field-value")){updateApplicationFieldResolutionButton();}
   if(event.target.matches("#externalClaimConfirm")){renderApplicationReadiness();}
   if(event.target.matches("#browserAssistConfirm")){
@@ -2131,7 +2414,7 @@ document.addEventListener("change",event=>{
   if(event.target.matches(".conflict-resolution")){state.conflictDraft[event.target.dataset.conflict]=event.target.value;updateReviewProgress();}
 });
 document.addEventListener("input",event=>{
-  if(event.target.matches("#guidedOfficialUrl")){renderGuidedIntake();return;}
+  if(event.target.matches("#guidedOfficialUrl,#aiOperatorCommand")){renderGuidedIntake();return;}
   if(event.target.matches(".application-field-value")){updateApplicationFieldResolutionButton();return;}
   if(!event.target.matches(".claim-statement,.claim-category"))return;
   const row=event.target.closest("[data-claim-row]"),id=row.dataset.claimRow,item=state.data.claims.find(claim=>claim.claim_id===id);
@@ -2156,7 +2439,6 @@ document.querySelector("#completeOnboarding").addEventListener("click",async()=>
   try{await withActivity("completingOnboarding",async()=>{await api("complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_confirmed:true})});await refresh();});document.querySelector("#completionMessage").textContent=t("completeSuccess");renderReadiness();showToast(t("completeSuccess"));}catch(e){handleUiError(e);}
 });
 
-arrangePrimaryWorkflow();
 withActivity("loadingInitial",async()=>{
   await refresh();
   const record=restoreCompanionPairing();

@@ -25,7 +25,7 @@ from jobops.private_onboarding import PrivateOnboarding
 from jobops.queue_manager import QueueManager
 from jobops.resume_tailoring import build_resume_tailoring_manifest, build_tailoring_proposal
 from jobops.secure_store import WindowsDPAPIStore
-from jobops.util import canonical_json, iso_utc, parse_iso, sha256_bytes, sha256_file
+from jobops.util import canonical_json, iso_utc, parse_iso, sha256_bytes, sha256_file, stable_id
 
 
 def manual_navigation_evidence(service, token: str, completed: dict) -> dict:
@@ -74,6 +74,10 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         portfolio = onboarding.import_file("onboarding_source_document", fixtures / "synthetic-forward-jd.pdf", synthetic=False)
         profile = json.loads((fixtures / "synthetic-forward-profile.json").read_text(encoding="utf-8"))
         profile.update({
+            "first_name": "Synthetic",
+            "last_name": "Candidate",
+            "email": "synthetic-candidate@example.test",
+            "phone": "+1 555 010 0200",
             "github_url": "https://github.com/synthetic-candidate",
             "portfolio_url": "https://portfolio.example.test/synthetic-candidate",
             "portfolio_file_ref": portfolio["secure_ref"],
@@ -231,6 +235,47 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         self.assertEqual(decision["status"], "APPROVED")
         return service, application_id, packet
 
+    def test_resume_contact_fields_are_ready_without_reasking_in_single_review(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            form = b"""<!doctype html><html><body><form action='/careers/apply/contact-ready'>
+                <label for='first-name'>First name</label><input id='first-name' name='first_name' type='text' required>
+                <label for='last-name'>Last name</label><input id='last-name' name='last_name' type='text' required>
+                <label for='email'>Email</label><input id='email' name='email' type='email' required>
+                <label for='phone'>Phone</label><input id='phone' name='phone' type='tel' required>
+                <button type='submit'>Submit application</button>
+            </form></body></html>"""
+            prepared = service.prepare_offline_application_bundle(
+                metadata={
+                    "official_url": "https://example.com/careers/contact-ready",
+                    "application_url": "https://example.com/careers/apply/contact-ready",
+                    "guest_available": True,
+                    "research_title": "Synthetic contact-ready role",
+                    "evidence_excerpt": "Synthetic Data Analyst",
+                },
+                files={
+                    "jd": (".txt", (PROJECT / "tests" / "fixtures" / "synthetic-forward-jd.txt").read_bytes()),
+                    "official": (".html", b"<h1>Synthetic Data Analyst</h1><a href='/careers/apply/contact-ready'>Apply</a>"),
+                    "form": (".html", form),
+                },
+            )
+            reviewed = service.review_packet(str(prepared["application_id"]))
+            self.assertEqual(reviewed["field_resolution"]["unresolved_count"], 0)
+            questions = {
+                str(item["answer_key"]): item
+                for item in reviewed["packet"]["form_questions"]
+                if item.get("answer_key") in {"first_name", "last_name", "email", "phone"}
+            }
+            self.assertEqual(set(questions), {"first_name", "last_name", "email", "phone"})
+            self.assertTrue(all(item["status"] == "READY" for item in questions.values()))
+            self.assertTrue(all(item["redacted_summary"] == "PRIVATE_VALUE_PRESENT" for item in questions.values()))
+            serialized = json.dumps(reviewed)
+            self.assertNotIn("synthetic-candidate@example.test", serialized)
+            self.assertNotIn("+1 555 010 0200", serialized)
+
     def approved_workday_v2_application(
         self, database: JobOpsDB, onboarding: PrivateOnboarding,
         *, initial_form: str = "synthetic-v2-workday-step-1.html",
@@ -283,6 +328,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         token = str(started["assist_token"])
         paired = service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
         self.assertEqual(paired["status"], "BROWSER_COMPANION_PAIRED")
+        self.assertEqual(paired["capture_status"], "READY")
         paired_again = service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
         self.assertEqual(paired_again["assist_id"], paired["assist_id"])
         with service.database.connect() as connection:
@@ -348,6 +394,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                     "SELECT COUNT(*) FROM guided_intake_events WHERE intake_id=? AND event_type='PAIRED'",
                     (paired["intake_id"],),
                 ).fetchone()[0], 1)
+
             prepared = service.start_guided_application_form_preparation(
                 token,
                 {
@@ -380,7 +427,8 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                     "SELECT event_type FROM guided_intake_events ORDER BY event_id"
                 ).fetchall()]
                 self.assertEqual(events, [
-                    "STARTED", "PAIRED", "JOB_PAGE_INSPECTED", "FORM_INSPECTED", "REVIEW_PACKET_READY",
+                    "STARTED", "PAIRED", "JOB_PAGE_INSPECTED", "APPLY_ROUTE_INSPECTED",
+                    "FORM_INSPECTED", "REVIEW_PACKET_READY",
                 ])
                 with self.assertRaises(Exception):
                     connection.execute("UPDATE guided_intake_events SET event_type='FAILED' WHERE event_id=1")
@@ -389,6 +437,128 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             audit = audit_real_external_actions(database)
             self.assertEqual(audit["attempt_count"], 0)
             self.assertEqual(audit["real_external_actions"], 0)
+
+    def test_guided_browser_discovery_selects_only_an_official_company_job_page(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding, master_kind="onboarding_source_document")
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            official_url = "https://careers.example.com/us/en/job/CR-102/Credit-Risk-Analyst?source=search"
+            candidate_ref = stable_id("JDC", official_url)
+            engine = mock.Mock()
+            engine.ready = True
+            engine.public_status.return_value = {
+                "status": "READY", "structured_capability_status": "VERIFIED",
+            }
+            engine.execute_structured_task.return_value = {
+                "schema_version": 1, "status": "SELECTED",
+                "ranked_candidate_refs": [candidate_ref],
+                "summary": "The official company role matches the requested title and location.",
+            }
+            service.ai_engine = engine
+            with mock.patch.object(service, "bootstrap", return_value={
+                "application_readiness": {"status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION"},
+            }):
+                started = service.start_guided_intake({
+                    "search_intent": "Find credit risk analyst roles in New York",
+                    "user_confirmed": True,
+                })
+            token = str(started["intake_token"])
+            self.assertEqual(started["discovery_mode"], "VISIBLE_BROWSER_SEARCH")
+            paired = service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            self.assertEqual(paired["capture_status"], "AWAITING_JOB_DISCOVERY")
+            self.assertIn("official company careers jobs", paired["search_query"])
+            selected = service.capture_guided_search_results(
+                token,
+                {
+                    "search_origin": "https://www.google.com/search",
+                    "results": [
+                        {
+                            "url": official_url,
+                            "title": "Credit Risk Analyst | Example Careers",
+                            "snippet": "Join the Example credit risk team in New York.",
+                        },
+                        {
+                            "url": "https://www.indeed.com/viewjob?jk=abc",
+                            "title": "Credit Risk Analyst",
+                            "snippet": "Aggregator copy.",
+                        },
+                    ],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(selected["status"], "AWAITING_JOB_PAGE_CAPTURE")
+            self.assertEqual(selected["official_url"], official_url)
+            self.assertEqual(selected["allowed_company_domain"], "example.com")
+            self.assertEqual(service._guided_intakes[token]["company_domain"], "example.com")
+            with database.connect() as connection:
+                events = [row[0] for row in connection.execute(
+                    "SELECT event_type FROM guided_intake_events WHERE intake_id=? ORDER BY event_id",
+                    (paired["intake_id"],),
+                ).fetchall()]
+            self.assertEqual(events, ["STARTED", "PAIRED", "SEARCH_RESULTS_INSPECTED"])
+
+    def test_guided_browser_discovery_ambiguity_accepts_only_a_displayed_candidate(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding, master_kind="onboarding_source_document")
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            first_url = "https://careers.alpha-example.com/jobs/risk-analyst"
+            second_url = "https://jobs.beta-example.com/careers/risk-analyst"
+            engine = mock.Mock()
+            engine.ready = True
+            engine.public_status.return_value = {
+                "status": "READY", "structured_capability_status": "VERIFIED",
+            }
+            engine.execute_structured_task.return_value = {
+                "schema_version": 1, "status": "NEEDS_USER_SELECTION",
+                "ranked_candidate_refs": [],
+                "summary": "Both verified company roles match the saved goal.",
+            }
+            service.ai_engine = engine
+            with mock.patch.object(service, "bootstrap", return_value={
+                "application_readiness": {"status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION"},
+            }):
+                started = service.start_guided_intake({
+                    "search_intent": "credit risk analyst",
+                    "user_confirmed": True,
+                })
+            token = str(started["intake_token"])
+            service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            ambiguous = service.capture_guided_search_results(
+                token,
+                {
+                    "search_origin": "https://www.google.com/search",
+                    "results": [
+                        {"url": first_url, "title": "Risk Analyst | Alpha Careers", "snippet": "Company role."},
+                        {"url": second_url, "title": "Risk Analyst | Beta Careers", "snippet": "Company role."},
+                    ],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(ambiguous["status"], "SEARCH_SELECTION_REQUIRED")
+            self.assertEqual(len(ambiguous["candidate_options"]), 2)
+            self.assertEqual(service._guided_public_status()["candidate_options"], ambiguous["candidate_options"])
+            with self.assertRaises(JobOpsError) as invented:
+                service.select_guided_search_candidate({
+                    "intake_id": started["intake_id"],
+                    "candidate_ref": "JDC-FFFFFFFFFFFF",
+                    "user_confirmed": True,
+                })
+            self.assertEqual(invented.exception.code, "OFFICIAL_JOB_SELECTION_INVALID")
+            chosen_ref = stable_id("JDC", second_url)
+            selected = service.select_guided_search_candidate({
+                "intake_id": started["intake_id"],
+                "candidate_ref": chosen_ref,
+                "user_confirmed": True,
+            })
+            self.assertEqual(selected["official_url"], second_url)
+            self.assertEqual(selected["status"], "AWAITING_JOB_PAGE_CAPTURE")
+            repaired_pair = service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            self.assertEqual(repaired_pair["official_url"], second_url)
+            self.assertEqual(repaired_pair["capture_status"], "AWAITING_JOB_PAGE_CAPTURE")
 
     def test_guided_form_preparation_runs_once_in_background_and_is_pollable(self) -> None:
         with project_temp() as temp:
@@ -557,7 +727,9 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                     "SELECT event_type FROM guided_intake_events WHERE intake_id=? ORDER BY event_id",
                     (started["intake_id"],),
                 ).fetchall()]
-            self.assertEqual(events, ["STARTED", "PAIRED", "JOB_PAGE_INSPECTED", "FAILED"])
+            self.assertEqual(events, [
+                "STARTED", "PAIRED", "JOB_PAGE_INSPECTED", "APPLY_ROUTE_INSPECTED", "FAILED",
+            ])
             actions = audit_real_external_actions(database)
             self.assertEqual(actions["attempt_count"], 0)
             self.assertEqual(actions["real_external_actions"], 0)
@@ -915,6 +1087,264 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM applications").fetchone()[0], 2)
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0], 0)
 
+    def test_dynamic_questions_create_supplemental_review_without_losing_confirmed_fields(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service, application_id, original_packet = self.approved_company_application(database, onboarding)
+            started = service.start_browser_assist({"application_id": application_id, "user_confirmed": True})
+            token = str(started["assist_token"])
+            service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            bundle, _, _ = service.browser_assist._bundle_manager.load_current(application_id)
+            initial_html = (PROJECT / "tests" / "fixtures" / "synthetic-material-form.html").read_text(encoding="utf-8")
+            initial_count = len(bundle["form_snapshot"]["fields"])
+            prepared = service.browser_assist.prepare(
+                token,
+                {
+                    "url": started["approved_url"],
+                    "sanitized_html": initial_html,
+                    "client_refs": [f"DOM-{index:012d}" for index in range(1, initial_count + 1)],
+                    "blocker_signals": [],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            material_bindings = []
+            for item in prepared["files"]:
+                file_token = str(item["download_path"]).rsplit("/", 1)[-1]
+                raw, _metadata = service.browser_assist.take_file(
+                    token, file_token, extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+                raw[:] = b"\0" * len(raw)
+                material_bindings.append({
+                    "client_ref": item["client_ref"], "purpose": item["purpose"], "sha256": item["sha256"],
+                })
+            field_bindings = [
+                {"client_ref": item["client_ref"], "value_sha256": item["value_sha256"]}
+                for item in prepared["fields"]
+            ]
+            dynamic_html = initial_html.replace(
+                '<button id="submit" type="submit">Submit application</button>',
+                '<label for="conditional_reason">Why are you interested in this role?</label>'
+                '<input id="conditional_reason" name="conditional_reason" type="text" required>'
+                '<button id="submit" type="submit">Submit application</button>',
+            )
+            supplemental = service.browser_assist.discover_dynamic_fields(
+                token,
+                {
+                    "url": started["approved_url"],
+                    "sanitized_html": dynamic_html,
+                    "client_refs": [f"DOM-{index:012d}" for index in range(1, initial_count + 2)],
+                    "blocker_signals": [],
+                    "field_bindings": field_bindings,
+                    "material_bindings": material_bindings,
+                    "submit_events": 0,
+                    "navigation_actions": 0,
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(supplemental["status"], "SUPPLEMENTAL_REVIEW_REQUIRED")
+            self.assertEqual(supplemental["dynamic_field_count"], 1)
+            self.assertEqual(supplemental["real_external_actions"], 2)
+            current = service.review_packet(application_id)
+            self.assertEqual(current["packet_version"], int(original_packet.get("packet_version", 1)) + 1)
+            self.assertEqual(current["field_resolution"]["unresolved_count"], 1)
+            unresolved = current["field_resolution"]["unresolved_fields"][0]
+            self.assertEqual(unresolved["answer_key"], "UNKNOWN")
+            self.assertEqual(unresolved["label"], "Why are you interested in this role?")
+            self.assertEqual(current["application_status"], "AWAITING_APPROVAL")
+
+            resolved = service.resolve_application_fields({
+                "application_id": application_id,
+                "expected_packet_hash": current["packet"]["content_hash"],
+                "resolutions": [{
+                    "control_ref": unresolved["control_ref"],
+                    "decision": "CONFIRMED_VALUE",
+                    "value": "Synthetic finance and risk analysis role",
+                }],
+                "non_form_resolutions": [],
+                "user_confirmed": True,
+            })
+            rebound = service.review_packet(application_id)
+            self.assertEqual(resolved["remaining_unresolved_count"], 0)
+            self.assertEqual(rebound["field_resolution"]["unresolved_count"], 0)
+            approved = service.decide_review_packet({
+                "application_id": application_id,
+                "decision": "APPROVE",
+                "expected_packet_hash": rebound["packet"]["content_hash"],
+                "user_confirmed": True,
+            })
+            self.assertEqual(approved["status"], "APPROVED")
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 2)
+
+    def test_successful_upload_control_replacement_does_not_create_false_dynamic_review(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service, application_id, _ = self.approved_company_application(database, onboarding)
+            started = service.start_browser_assist({"application_id": application_id, "user_confirmed": True})
+            token = str(started["assist_token"])
+            service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            bundle, _, _ = service.browser_assist._bundle_manager.load_current(application_id)
+            initial_html = (PROJECT / "tests" / "fixtures" / "synthetic-material-form.html").read_text(encoding="utf-8")
+            initial_count = len(bundle["form_snapshot"]["fields"])
+            prepared = service.browser_assist.prepare(
+                token,
+                {
+                    "url": started["approved_url"], "sanitized_html": initial_html,
+                    "client_refs": [f"DOM-{index:012d}" for index in range(1, initial_count + 1)],
+                    "blocker_signals": [],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            material_bindings = []
+            for item in prepared["files"]:
+                file_token = str(item["download_path"]).rsplit("/", 1)[-1]
+                raw, _ = service.browser_assist.take_file(
+                    token, file_token, extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+                raw[:] = b"\0" * len(raw)
+                material_bindings.append({
+                    "client_ref": item["client_ref"], "purpose": item["purpose"], "sha256": item["sha256"],
+                })
+            field_bindings = [
+                {"client_ref": item["client_ref"], "value_sha256": item["value_sha256"]}
+                for item in prepared["fields"]
+            ]
+            after_upload_html = initial_html
+            for snippet in (
+                '        <label for="resume">Resume</label>\n        <input id="resume" name="resume" type="file" required>\n',
+                '        <label for="cover_letter">Cover Letter</label>\n        <input id="cover_letter" name="cover_letter" type="file" required>\n',
+                '        <label for="portfolio_file">Portfolio work sample</label>\n        <input id="portfolio_file" name="portfolio_file" type="file">\n',
+            ):
+                after_upload_html = after_upload_html.replace(snippet, "")
+            reviewed = service.browser_assist.discover_dynamic_fields(
+                token,
+                {
+                    "url": started["approved_url"], "sanitized_html": after_upload_html,
+                    "client_refs": [f"DOM-{index:012d}" for index in range(1, initial_count - 2)],
+                    "blocker_signals": [], "field_bindings": field_bindings,
+                    "material_bindings": material_bindings, "submit_events": 0, "navigation_actions": 0,
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(reviewed["status"], "NO_DYNAMIC_FIELDS")
+            completed = service.browser_assist.complete(
+                token,
+                {
+                    "field_bindings": field_bindings, "material_bindings": material_bindings,
+                    "submit_events": 0, "navigation_actions": 0,
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(completed["status"], "AWAITING_USER_SUBMIT")
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 2)
+            service.close()
+
+    def test_partial_page_apply_is_audited_once_and_requires_explicit_restart(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service, application_id, _ = self.approved_company_application(database, onboarding)
+            started = service.start_browser_assist({"application_id": application_id, "user_confirmed": True})
+            token = str(started["assist_token"])
+            service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            bundle, _, _ = service.browser_assist._bundle_manager.load_current(application_id)
+            prepared = service.browser_assist.prepare(
+                token,
+                {
+                    "url": started["approved_url"],
+                    "sanitized_html": (PROJECT / "tests" / "fixtures" / "synthetic-material-form.html").read_text(encoding="utf-8"),
+                    "client_refs": [
+                        f"DOM-{index:012d}"
+                        for index in range(1, len(bundle["form_snapshot"]["fields"]) + 1)
+                    ],
+                    "blocker_signals": [],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            first_file = prepared["files"][0]
+            file_token = str(first_file["download_path"]).rsplit("/", 1)[-1]
+            raw, _ = service.browser_assist.take_file(
+                token, file_token, extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            raw[:] = b"\0" * len(raw)
+            first_field = prepared["fields"][0]
+            aborted = service.browser_assist.abort_page_apply(
+                token,
+                {
+                    "cause_code": "COMPANION_CONTROL_REBIND_FAILED",
+                    "attempted_field_bindings": [{
+                        "client_ref": first_field["client_ref"],
+                        "value_sha256": first_field["value_sha256"],
+                    }],
+                    "attempted_material_bindings": [],
+                    "submit_events": 0,
+                    "navigation_actions": 0,
+                    "companion_tab_id": 17,
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(aborted["status"], "APPLY_RESTART_REQUIRED")
+            self.assertEqual(aborted["code"], "COMPANION_APPLY_RESTART_REQUIRED")
+            self.assertEqual(aborted["field_attempt_count"], 1)
+            self.assertEqual(aborted["file_attempt_count"], 1)
+            self.assertEqual(aborted["real_external_actions"], 2)
+            self.assertFalse(aborted["submit_capability"])
+            self.assertFalse(aborted["final_submit"])
+            self.assertFalse(aborted["automatic_retry"])
+            with database.connect() as connection:
+                run = connection.execute(
+                    "SELECT status FROM browser_assist_runs WHERE assist_id=?", (started["assist_id"],),
+                ).fetchone()
+                events = [str(row[0]) for row in connection.execute(
+                    "SELECT event_type FROM browser_assist_events WHERE assist_id=? ORDER BY event_id",
+                    (started["assist_id"],),
+                ).fetchall()]
+            self.assertEqual(str(run["status"]), "FAILED")
+            self.assertEqual(events[-1], "PAGE_APPLY_ABORTED")
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 2)
+            with self.assertRaises(JobOpsError) as replay:
+                service.browser_assist.abort_page_apply(
+                    token,
+                    {
+                        "cause_code": "COMPANION_CONTROL_REBIND_FAILED",
+                        "attempted_field_bindings": [], "attempted_material_bindings": [],
+                        "submit_events": 0, "navigation_actions": 0,
+                    },
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(replay.exception.code, "BROWSER_ASSIST_TOKEN_INVALID")
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 2)
+            service.close()
+
+    def test_initial_semantic_equivalence_rebinds_ephemeral_control_refs(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service, application_id, _ = self.approved_company_application(database, onboarding)
+            started = service.start_browser_assist({"application_id": application_id, "user_confirmed": True})
+            token = str(started["assist_token"])
+            service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            bundle, _, _ = service.browser_assist._bundle_manager.load_current(application_id)
+            html = (PROJECT / "tests" / "fixtures" / "synthetic-material-form.html").read_text(encoding="utf-8")
+            html = html.replace(">Full name</label>", ">Full name *</label>")
+            prepared = service.browser_assist.prepare(
+                token,
+                {
+                    "url": started["approved_url"], "sanitized_html": html,
+                    "client_refs": [
+                        f"DOM-{index:012d}"
+                        for index in range(1, len(bundle["form_snapshot"]["fields"]) + 1)
+                    ],
+                    "blocker_signals": [],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(prepared["status"], "LIVE_PAGE_APPROVED_FOR_ASSIST")
+            self.assertGreaterEqual(prepared["field_count"], 3)
+            self.assertEqual(prepared["file_count"], 3)
+            service.close()
+
     def test_user_present_company_assist_prefills_uploads_and_stops_before_submit(self) -> None:
         with project_temp() as temp:
             database, onboarding, _ = self.build(temp)
@@ -937,7 +1367,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             }
             with self.assertRaises(JobOpsError) as drifted:
                 service.browser_assist.prepare(
-                    token, {**live, "sanitized_html": live["sanitized_html"].replace("</form>", "<input name='new_field'></form>")},
+                    token, {**live, "sanitized_html": live["sanitized_html"].replace("Full name", "Changed legal identity")},
                     extension_origin=COMPANION_EXTENSION_ORIGIN,
                 )
             self.assertEqual(drifted.exception.code, "SITE_CHANGED")
@@ -1019,6 +1449,112 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 ("upload_materials", 1),
             ])
             self.assertEqual(list((onboarding.store.private_root / "staging").iterdir()), [])
+
+    def test_local_ai_agent_uses_same_approved_page_tools_and_cannot_submit(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service, application_id, _ = self.approved_company_application(database, onboarding)
+
+            started = service.start_browser_assist({"application_id": application_id, "user_confirmed": True})
+            token = str(started["assist_token"])
+            paired = service.pair_local_agent_assist({"assist_token": token, "user_confirmed": True})
+            self.assertEqual(paired["status"], "LOCAL_AI_AGENT_PAIRED")
+            self.assertEqual(paired["execution_channel"], "LOCAL_AI_AGENT")
+            self.assertEqual(paired["model_private_values"], 0)
+
+            bundle, _, _ = service.browser_assist._bundle_manager.load_current(application_id)
+            field_count = len(bundle["form_snapshot"]["fields"])
+            prepared = service.prepare_local_agent_assist({
+                "assist_token": token,
+                "page": {
+                    "url": started["approved_url"],
+                    "sanitized_html": (PROJECT / "tests" / "fixtures" / "synthetic-material-form.html").read_text(encoding="utf-8"),
+                    "client_refs": [f"DOM-{index:012d}" for index in range(1, field_count + 1)],
+                    "blocker_signals": [],
+                },
+            })
+            self.assertEqual(prepared["status"], "LIVE_PAGE_APPROVED_FOR_ASSIST")
+            self.assertEqual(prepared["execution_channel"], "LOCAL_AI_AGENT")
+            self.assertEqual(prepared["model_private_values"], 0)
+            self.assertFalse(prepared["submit_capability"])
+            self.assertTrue(prepared["stop_before_submit"])
+
+            material_bindings = []
+            for item in prepared["files"]:
+                file_token = str(item["download_path"]).rsplit("/", 1)[-1]
+                raw, metadata = service.take_local_agent_assist_file(
+                    assist_token=token, file_token=file_token,
+                )
+                try:
+                    self.assertEqual(sha256_bytes(bytes(raw)), item["sha256"])
+                    self.assertEqual(metadata["filename"], item["filename"])
+                finally:
+                    raw[:] = b"\0" * len(raw)
+                material_bindings.append({
+                    "client_ref": item["client_ref"], "purpose": item["purpose"], "sha256": item["sha256"],
+                })
+            field_bindings = [
+                {"client_ref": item["client_ref"], "value_sha256": item["value_sha256"]}
+                for item in prepared["fields"]
+            ]
+            with self.assertRaises(JobOpsError) as forbidden:
+                service.complete_local_agent_assist({
+                    "assist_token": token,
+                    "evidence": {
+                        "field_bindings": field_bindings,
+                        "material_bindings": material_bindings,
+                        "submit_events": 1,
+                        "navigation_actions": 0,
+                    },
+                })
+            self.assertEqual(forbidden.exception.code, "FINAL_SUBMIT_FORBIDDEN")
+            completed = service.complete_local_agent_assist({
+                "assist_token": token,
+                "evidence": {
+                    "field_bindings": field_bindings,
+                    "material_bindings": material_bindings,
+                    "submit_events": 0,
+                    "navigation_actions": 0,
+                },
+            })
+            self.assertEqual(completed["status"], "AWAITING_USER_SUBMIT")
+            self.assertEqual(completed["execution_channel"], "LOCAL_AI_AGENT")
+            self.assertEqual(completed["final_submit"], "USER_ONLY")
+            self.assertFalse(completed["submit_capability"])
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 2)
+            service.browser_assist.stop(user_confirmed=True)
+
+    def test_expired_unchanged_packet_is_renewed_only_by_fresh_start_confirmation(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service, application_id, _ = self.approved_company_application(database, onboarding)
+            with database.connect() as connection:
+                connection.execute(
+                    "UPDATE approvals SET expires_at='2000-01-01T00:00:00Z' WHERE application_id=? AND status='APPROVED'",
+                    (application_id,),
+                )
+            with self.assertRaises(JobOpsError) as confirmation:
+                service.start_browser_assist({"application_id": application_id, "user_confirmed": False})
+            self.assertEqual(confirmation.exception.code, "EXPLICIT_CONFIRMATION_REQUIRED")
+
+            started = service.start_browser_assist({"application_id": application_id, "user_confirmed": True})
+            self.assertTrue(started["approval_renewed"])
+            with database.connect() as connection:
+                rows = connection.execute(
+                    "SELECT status FROM approvals WHERE application_id=? ORDER BY issued_at",
+                    (application_id,),
+                ).fetchall()
+                event = connection.execute(
+                    "SELECT event_type,from_state,to_state FROM events WHERE application_id=? AND event_type='APPROVAL_RENEWED' ORDER BY event_id DESC LIMIT 1",
+                    (application_id,),
+                ).fetchone()
+            self.assertEqual([str(row["status"]) for row in rows], ["INVALIDATED", "APPROVED"])
+            self.assertEqual((event["event_type"], event["from_state"], event["to_state"]), (
+                "APPROVAL_RENEWED", "APPROVED", "APPROVED",
+            ))
+            service.browser_assist.stop(user_confirmed=True)
 
     def test_unreadable_result_requires_manual_answer_and_never_retries(self) -> None:
         with project_temp() as temp:

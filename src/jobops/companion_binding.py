@@ -23,12 +23,16 @@ PAIR_RESPONSE_FIELDS = (
     "assist_id",
     "capture_status",
     "current_step",
+    "discovery_mode",
     "expires_at",
     "intake_id",
     "max_steps",
     "mode",
+    "official_url",
     "provider",
+    "preferred_tab_id",
     "route_kind",
+    "search_query",
     "status",
 )
 _B64URL = re.compile(r"[A-Za-z0-9_-]+")

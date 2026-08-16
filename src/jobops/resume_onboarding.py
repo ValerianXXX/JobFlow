@@ -534,7 +534,16 @@ def _profile_draft(resume: dict[str, Any], master_ref: str, created_at: str) -> 
             "value": resume["candidate_display_name"],
             "status": "APPLICANT_PROVIDED_UNCONFIRMED" if resume["candidate_display_name"] else "UNKNOWN",
         },
-        "contact_fields_present": resume["contact_fields_present"], "resume_facts": resume["facts"],
+        "contact_fields_present": resume["contact_fields_present"],
+        # This draft is DPAPI-protected.  Keeping the exact resume-provided
+        # values here prevents asking for the same email/phone/name on every
+        # application after the user approves onboarding once.
+        "resume_contact_values": {
+            key: list(values[:10])
+            for key, values in resume["contact_values"].items()
+            if key in {"email", "phone", "address", "linkedin", "website"} and values
+        },
+        "resume_facts": resume["facts"],
         "target_preferences": {
             field: {"value": None, "status": "UNKNOWN"}
             for field in ("target_roles", "target_industries", "target_levels", "preferred_locations", "remote_preference")

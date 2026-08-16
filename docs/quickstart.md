@@ -1,79 +1,73 @@
-# JobFlow quick start / JobFlow 快速开始
+# Quick Start
 
-This guide gets a Windows user from an extracted JobFlow source package to a safe local tour without entering a project path, API key, resume, or personal answer.
+## Install once
 
-本指南帮助 Windows 用户从解压后的 JobFlow 源码包进入安全的本机体验；无需输入项目路径、API Key、简历或个人答案。
+1. Extract the complete JobFlow source ZIP.
+2. Double-click `Install JobFlow.cmd`.
+3. Wait for installation to finish. The installer opens the browser extension page and the Local AppData Browser Companion folder.
+4. Enable **Developer mode**, choose **Load unpacked**, and select the opened Local AppData runtime folder. Do not select the project source folder.
+5. Confirm the displayed JobFlow Browser Companion version matches the release notes.
 
-## 60-second synthetic tour / 60 秒合成体验
+The browser requires this one manual security gesture. JobFlow cannot bypass it.
 
-1. Extract the complete source ZIP to a normal Windows folder. Do not run it inside the ZIP preview. / 将完整源码 ZIP 解压到普通 Windows 文件夹，不要直接在压缩包预览中运行。
-2. Double-click `Install JobFlow.cmd` once. Keep the window open until it says the installation is ready. / 第一次双击 `Install JobFlow.cmd`，窗口提示安装完成前不要关闭。
-3. Double-click `Start JobFlow Demo.cmd`. / 双击 `Start JobFlow Demo.cmd`。
-4. In the browser, use “View AI and conflict review” and “View pending application.” Open the fictional packet to inspect its field-by-field redacted prefill proposal, then approve it. / 在浏览器中点击“查看 AI 与冲突审阅”和“查看待审批申请”；打开虚构审阅包，检查逐字段脱敏预填提案，然后批准。
-5. In “Automatic application execution status,” confirm and run the synthetic rehearsal. It stops before the fake final submission. Use the separate final confirmation to create the verified fake receipt. / 在“自动投递执行状态”中确认并运行合成演练；它会停在假的最终提交前，再通过独立最终确认生成经验证的假回执。
-6. Close the launch window or press `Ctrl+C`. The demo server, port, database, DPAPI directory and synthetic ciphertext are removed. / 关闭启动窗口或按 `Ctrl+C`；演示服务、端口、数据库、DPAPI 目录和合成密文都会清理。
+## Start JobFlow
 
-The demo rejects file intake and real AI connections at the server boundary. Do not type real personal information into it. Its “submission” and receipt are built-in fictional adapters: it never opens a recruiting site, uploads a file, submits a real application, sends a message, creates an account, or starts a scheduler.
+Double-click `Start JobFlow.cmd`. Keep the PowerShell window open while JobFlow is running. Closing it stops the local server and the browser page will show a connection-refused message.
 
-演示模式在服务端拒绝文件接入和真实 AI 连接。请勿在演示中填写真实个人信息。“提交”和回执均来自内置假适配器；它不会打开招聘网站、上传文件、提交真实申请、发送消息、创建账号或启动定时任务。
+For a fictional, auto-cleaned tour, run `Start JobFlow Demo.cmd` instead.
 
-## Start the real local workspace / 启动真实本机工作区
+## First setup
 
-After installation, double-click `Start JobFlow.cmd`. The local page opens on `127.0.0.1` with a session token. Private values are encrypted with Windows DPAPI outside the project; ordinary project files keep only opaque `secure-ref` values.
+1. Connect an existing Agent or supported loopback model.
+2. Import a resume and optional project or portfolio material.
+3. Complete the Candidate Profile and Answer Bank review.
+4. Review every proposed Claim and resolve conflicts.
+5. Approve the exact resume positions and Claim wording that may be used in application materials.
 
-安装后双击 `Start JobFlow.cmd`。页面只在带会话令牌的 `127.0.0.1` 打开。私人值通过 Windows DPAPI 在项目外加密；普通项目文件只保留不透明的 `secure-ref`。
+Private values are stored with DPAPI and are never written into the public project tree.
 
-Use the page in this order:
+## Process one job
 
-1. Connect an already configured Agent or local model. The page unlocks intake only after a non-private structured capability test passes; a simple connection response is not enough. / 连接已经配置好的 Agent 或本地模型；页面只有在不含私人资料的结构化能力测试通过后才开放接入，简单连接响应不算完成。
-2. Add a resume, project material, portfolio file, AI summary, or ChatGPT official export. PDF text quality is checked locally before the AI receives it. / 添加简历、项目材料、作品集文件、AI 总结或 ChatGPT 官方导出；PDF 会先在本机检查提取质量。
-3. Answer the 25 required one-time questions, including explicit unknown or prefer-not-to-answer choices; GitHub and portfolio URLs are optional. / 一次完成 25 个必答问题；可明确选择未知或不愿披露，GitHub 与作品集链接为可选项。
-4. Review every AI-proposed entity, Claim and conflict. Nothing becomes externally approved automatically. / 审阅每个 AI 候选实体、Claim 与冲突；系统不会自动批准对外使用。
-5. Complete the local profile and review future offline application packets in the bounded queue. / 完成本机资料，并在有上限的队列中审阅后续离线申请包。
+1. Enter a job-search instruction or paste an official company job URL.
+2. Authorize the visible, time-limited browser read.
+3. Use the Browser Companion on the selected job page and application form when prompted.
+4. Review the single application packet, missing answers, and planned materials.
+5. Approve this application-specific user-present session.
+6. Let JobFlow fill approved values, attach approved materials, and handle verified non-final navigation.
+7. Review the completed page and personally click final Submit.
 
-After the Application readiness panel has no blockers, paste the role URL from the company's own website into **Paste a job link to begin** and approve the 30-minute read-only capture. Open that role, use the JobFlow J companion to read it, click the company's Apply control yourself, then use J once more on the application form. JobFlow reads no existing input values and performs no fill, upload, or page click during capture. It prepares and verifies the job-specific materials and opens one encrypted review packet.
+A local approval is not a submission. Final Submit is always user-only.
 
-“自动投递准备度”没有阻挡项后，在“粘贴岗位链接即可开始”中贴入公司官网岗位链接，并确认 30 分钟只读授权。打开岗位页后用一次 JobFlow J 读取岗位；你亲自点击公司的 Apply，进入申请表后再用一次 J。读取阶段不读取既有输入值，也不填写、上传或点击网页按钮；JobFlow 会自动生成并检查岗位材料，然后打开唯一的加密审阅包。
+## Expected handoffs
 
-The former three-file JD/official-page/form workflow is still available under **Advanced diagnostics and offline QA** for development or when guided browser capture cannot be used; it is not part of the normal path. / 原来的 JD、官网页、申请表三文件流程只保留在“高级诊断与离线 QA”，用于开发或浏览器读取不可用时的排障，不属于普通流程。
+JobFlow pauses for login, existing-account verification, CAPTCHA, MFA, legal declarations, signatures, sensitive questions, unsupported controls, and unknown answers. Complete the required step yourself and resume only when the UI says it is safe.
 
-When PDF extraction changes only numeric presentation or an obvious sentence wrap, the Claim preview labels that adjustment and still leaves the Claim unchecked for the user. A candidate with new, calculated, rounded, scaled or unrelated-line numbers is filtered and never becomes a Claim, while the readable source can still be securely retained for user review. / PDF 仅出现数字显示格式或明显同句换行差异时，预览会标出调整且 Claim 仍保持未选择；包含新增、计算、四舍五入、单位缩放或无关行数字的候选会被过滤且绝不进入 Claim，但可读原文件仍可安全保留供用户审阅。
+If JobFlow cannot determine whether a write or submission succeeded, it records an unknown result and never retries automatically.
 
-For each offline application packet, JobFlow derives a job-specific DOCX/PDF from the same approved Master Resume and leaves the master unchanged. For a normal DOCX without JobFlow placeholders, first use the readiness panel to review AI-mapped original paragraphs and approve the exact positions that may be tailored; the encrypted manifest stores hashes and structure rather than paragraph text. A Cover Letter is generated only when the saved form contains a matching upload field. Confirmed GitHub/portfolio URLs and an encrypted portfolio file are bound only when corresponding fields exist; the ordinary packet shows hashes/statuses instead of the URL value or file body. / 每份离线申请包都从同一份已批准 Master Resume 派生岗位版 DOCX/PDF，母版保持不变。普通 DOCX 无需手工添加占位符：先在准备度面板审阅 AI 映射的原段落，并一次性批准可改写位置；加密清单只保存哈希和结构，不保存段落原文。只有保存的表单含对应字段时才生成求职信或绑定 GitHub/作品集链接及加密作品集文件，普通审阅包只显示哈希与状态。
+## Troubleshooting
 
-To assist one approved application on a bound company, Greenhouse, Lever, or Workday route, run `Install JobFlow Browser Companion.cmd` once, load the Local AppData `BrowserCompanion` runtime folder opened by the installer as an unpacked Edge/Chrome extension, and confirm version `0.6.2`. Do not load the project source-template folder. The installer creates an installation-specific local HMAC binding and never prints or packages its secret. During guided intake, use **Cancel this read and choose another URL** if the wrong role link was selected; this releases both the local authorization and companion binding. Form analysis starts one local background job and uses short status polls, so the companion popup may be closed while JobFlow builds the review packet. Then start the per-application assist from JobFlow. The extension reclassifies each page, fills approved reusable values, attaches matching approved materials, and may use one fresh one-use authorization for one explicit non-final Next/Continue control after page validation. Submit-like Next/Continue controls stay manual: after clicking one, open the companion again on the changed page to resume. JobFlow stops at `AWAITING_USER_SUBMIT`; the user must click final Submit. It then observes the result and asks “Was it submitted successfully?” when evidence is unclear. It never retries automatically.
+### Startup or `Failed to fetch`
 
-如需在已绑定的公司官网、Greenhouse、Lever 或 Workday 路线上辅助一项已批准申请，先运行一次 `Install JobFlow Browser Companion.cmd`，把安装器打开的本机 Local AppData `BrowserCompanion` 运行目录加载为解压缩扩展（不要加载项目源码目录），并确认版本为 `0.6.2`。安装器会生成安装级本机 HMAC 绑定，不打印、也不打包秘密。岗位读取时若选错网址，点击“取消本次读取并更换网址”，即可同时释放本机授权和浏览器伴侣绑定。申请表分析只启动一个本机后台任务，并通过短请求查询状态，因此生成审阅包时可以关闭扩展小窗口。再从 JobFlow 启动逐岗位辅助。扩展会逐页重新分类，只填写可安全复用的获批值、挂载匹配材料，并在页内校验通过后用新的单次授权通过一个明确的非最终 Next/Continue。提交型 Next/Continue 必须由用户亲自点击；进入新页后再次打开浏览器伴侣即可恢复。JobFlow 停在 `AWAITING_USER_SUBMIT`，必须由用户亲自点击最终 Submit；随后只观察结果，证据不明确时询问“是否提交成功？”，绝不自动重试。
+1. Close the stale JobFlow tab.
+2. Double-click `Check JobFlow.cmd`.
+3. Follow the first failed check.
+4. Start JobFlow again and use the newly opened page. Old session URLs intentionally stop working after restart.
 
-Login, existing-account checks, CAPTCHA, and MFA are user handoffs: complete them yourself and resume from the companion; JobFlow never reads credentials or bypasses verification. Cross-origin forms, account creation, final Submit, automatic retry, email, recruiter contact, and scheduling remain unavailable. A local approval is not a submission. / 登录、已有账号验证、CAPTCHA 与 MFA 会交给用户亲自完成后再恢复；JobFlow 不读取凭据也不绕过验证。跨域表单、账号创建、最终 Submit、自动重试、邮件、招聘者联系与定时任务仍不可运行；批准本机审阅包不等于已经投递。
+The health check is offline and does not print private values or the project path.
 
-## Saved careers pages / 已保存招聘页
+### Browser Companion does not respond
 
-In the local dashboard, **Parse a saved company careers page / 解析已保存的公司招聘页** accepts a saved UTF-8 `.html`, `.htm`, or JobFlow page-snapshot `.json` file up to 32 MB. Enter the matching official company domain and original careers-page HTTPS URL. JobFlow parses the selected file in memory, does not execute its scripts, does not retain the snapshot, and does not add results to the application queue. Results are offline candidates only and still require separately authorized live freshness and route verification.
+- Confirm the extension is enabled.
+- Confirm it was loaded from the Local AppData runtime folder.
+- Reload the JobFlow page after updating the extension.
+- Use the JobFlow cancel action before selecting a different job URL.
 
-在本地主界面中，“解析已保存的公司招聘页”可读取不超过 32 MB 的 UTF-8 `.html`、`.htm` 或 JobFlow 页面快照 `.json`。请同时填写相符的公司官网域名和原始招聘页 HTTPS 地址。JobFlow 只在内存中解析所选文件，不执行其中的脚本、不保留快照、不把结果加入申请队列。解析结果只是离线候选；以后如需实时复验，仍须取得单独授权。
+### Windows and WSL
 
-## If the page says `Failed to fetch` / 页面显示 `Failed to fetch`
+Run JobFlow itself from Windows with the `.cmd` files. WSL is used only when JobFlow detects an already configured WSL Agent or local model.
 
-1. Close the stale browser tab. / 关闭旧浏览器标签页。
-2. Double-click `Check JobFlow.cmd`. / 双击 `Check JobFlow.cmd`。
-3. Follow the first failed bilingual check. Usually this means running `Install JobFlow.cmd` again or restoring an incomplete extracted package. / 按第一条失败项的中英文提示操作；通常只需重新安装或重新解压完整源码包。
-4. When all checks pass, double-click `Start JobFlow.cmd` and use the newly opened page. Old session URLs intentionally stop working after restart. / 全部通过后重新启动并使用新页面；旧会话链接在重启后按设计失效。
+## Reporting a problem
 
-The health check does not read private values, enumerate private files, connect to a network, or print the project path.
+Use synthetic or fully redacted data. Include the JobFlow version, the first health-check failure ID, expected behavior, and actual behavior. Never attach a real resume, database, DPAPI file, token, absolute user path, or private screenshot to a public issue.
 
-一键自检不会读取私人值、枚举私人文件、联网或显示项目路径。
-
-## Windows versus WSL / Windows 与 WSL
-
-Run JobFlow itself from Windows by double-clicking the `.cmd` files. PowerShell syntax such as `$env:USERPROFILE` does not work in an Ubuntu shell. WSL is used only when JobFlow detects an already configured WSL Agent or local model; you do not need to move the project into WSL.
-
-JobFlow 本身应从 Windows 双击 `.cmd` 文件运行。`$env:USERPROFILE` 之类的 PowerShell 写法不能在 Ubuntu 终端执行。只有自动检测已配置的 WSL Agent 或本地模型时才会使用 WSL；无需把项目移动到 WSL。
-
-## Before reporting a problem / 报告问题前
-
-- Reproduce with the synthetic demo whenever possible. / 尽量使用合成演示复现。
-- Never attach a real resume, export, Candidate Profile, Answer Bank, database, DPAPI file, token, absolute path, or private screenshot to a public issue. / 不要在公开 Issue 附上真实简历、导出、Candidate Profile、Answer Bank、数据库、DPAPI 文件、令牌、绝对路径或私人截图。
-- Include the non-sensitive JobFlow version shown by the health check (or `jobflow --version`), first failed health-check ID, expected behavior and actual behavior. / 提供一键自检（或 `jobflow --version`）显示的非敏感版本、第一条失败检查 ID、预期行为和实际行为。
-
-See [Security / 安全](../SECURITY.md) for private vulnerability reporting rules.
+See the [security policy](../SECURITY.md) for private vulnerability reports.

@@ -18,9 +18,9 @@ from xml.etree import ElementTree as ET
 
 from . import UI_PROTOCOL_VERSION, __version__
 from .adapters import audit_real_external_actions
-from .approvals import ApprovalContext, issue_approval
+from .approvals import ApprovalContext, issue_approval, validate_approval
 from .ats_capabilities import offline_ats_capabilities
-from .browser_assist import BrowserAssistManager
+from .browser_assist import BrowserAssistManager, COMPANION_EXTENSION_ORIGIN
 from .application_readiness import build_application_readiness
 from .application_execution import validate_application_execution_plan_integrity
 from .application_field_resolution import (
@@ -36,6 +36,13 @@ from .ai_runtime import (
     configured_ai_engine,
 )
 from .ai_connections import AIConnectionManager
+from .ai_operator import (
+    operator_execution_trace,
+    operator_public_manifest,
+    plan_application,
+    plan_new_job,
+    resolve_new_job_command,
+)
 from .db import JobOpsDB
 from .continuous_intake import (
     ContinuousIntakeDescriptorStore,
@@ -55,6 +62,11 @@ from .external_actions import ExternalActionGateway, ExternalActionPolicy
 from .external_action_sessions import ExternalActionSessionManager, ExternalActionSessionPolicy
 from .execution_controller import IsolatedApplicationExecutionController
 from .official_discovery import MAX_SNAPSHOT_BYTES, discover_official_jobs
+from .live_official_search import (
+    browser_search_query,
+    prepare_official_job_candidates,
+    select_official_job_candidate,
+)
 from .orchestrator import JobOpsOrchestrator, MAX_JD_SOURCE_BYTES, _read_jd
 from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, REQUIRED_FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
 from .private_onboarding import PrivateOnboarding
@@ -104,6 +116,8 @@ MAX_OFFLINE_APPLICATION_BUNDLE_BYTES = MAX_JD_SOURCE_BYTES + MAX_SNAPSHOT_BYTES 
 GUIDED_INTAKE_TTL_SECONDS = 30 * 60
 GUIDED_INTAKE_CANCELLABLE_STATUSES = {
     "GUIDED_INTAKE_PAIRING",
+    "AWAITING_JOB_DISCOVERY",
+    "SEARCH_SELECTION_REQUIRED",
     "AWAITING_JOB_PAGE_CAPTURE",
     "AWAITING_APPLICATION_FORM_CAPTURE",
     "FORM_CAPTURE_FAILED",
@@ -705,6 +719,9 @@ class OnboardingCenterService:
         # poll with short requests while the bounded local job is running.
         self._guided_form_jobs_lock = threading.Lock()
         self._guided_form_jobs: dict[str, dict[str, Any]] = {}
+        # Ephemeral browser tab continuity only.  Tab identifiers never enter
+        # project files or the ordinary database and disappear on restart.
+        self._application_browser_tabs: dict[str, int] = {}
 
     def _latest_ref(self, kind: str) -> str | None:
         with self.database.connect() as connection:
@@ -936,6 +953,59 @@ class OnboardingCenterService:
         reference = self._latest_ref("candidate_profile")
         return self._read_json_ref(reference) if reference else {}
 
+    def _effective_job_search_command(self, command: str) -> str:
+        """Expand the generic one-click command with approved profile targets.
+
+        Only job-search preferences are used.  Identity, contact, authorization,
+        salary, and other private answers never enter the browser query or AI
+        operator context through this helper.
+        """
+        normalized = re.sub(r"\s+", " ", str(command or "")).strip()
+        generic = normalized.casefold() in {
+            "帮我寻找并处理最匹配的岗位",
+            "帮我处理这个岗位",
+            "find and handle the best matching role for me",
+            "handle this job for me.",
+            "handle this job for me",
+        }
+        if not generic:
+            return normalized
+        profile = self._base_profile()
+
+        def public_values(key: str, maximum: int) -> list[str]:
+            raw = profile.get(key)
+            if not isinstance(raw, list):
+                return []
+            values: list[str] = []
+            for item in raw:
+                value = re.sub(r"\s+", " ", str(item or "")).strip()
+                if (
+                    value and value not in {"UNKNOWN", "UNANSWERED"}
+                    and len(value) <= 80
+                    and not re.search(r"[\x00-\x1f\x7f]", value)
+                ):
+                    values.append(value)
+                if len(values) >= maximum:
+                    break
+            return list(dict.fromkeys(values))
+
+        roles = public_values("target_functions", 3)
+        levels = public_values("target_levels", 2)
+        locations = public_values("locations", 3)
+        remote = re.sub(r"\s+", " ", str(profile.get("remote_preference") or "")).strip()
+        parts = []
+        if roles:
+            parts.append("roles: " + ", ".join(roles))
+        if levels:
+            parts.append("levels: " + ", ".join(levels))
+        if locations:
+            parts.append("locations: " + ", ".join(locations))
+        if remote and remote not in {"UNKNOWN", "UNANSWERED"} and len(remote) <= 80:
+            parts.append("work setting: " + remote)
+        if not parts:
+            return normalized
+        return ("Find and handle the best matching official company job; " + "; ".join(parts))[:300]
+
     def _default_state(self) -> dict[str, Any]:
         claims = [item for item in self._claim_bundle().get("claims", []) if _is_ai_qualified_claim(item)]
         claim_decisions = {str(item.get("claim_id")): "PENDING" for item in claims if item.get("claim_id")}
@@ -967,6 +1037,13 @@ class OnboardingCenterService:
 
         state["schema_version"] = 3
         state["strict_ai_claims"] = True
+        answers = state.get("answers")
+        if not isinstance(answers, dict):
+            answers = {}
+        for field_id, fallback in empty_answers().items():
+            current = answers.get(field_id)
+            answers[field_id] = {**fallback, **current} if isinstance(current, dict) else fallback
+        state["answers"] = answers
         state.setdefault("pending_sources", [])
         state.setdefault("claim_overrides", {})
         state.setdefault("master_resume", None)
@@ -1358,6 +1435,49 @@ class OnboardingCenterService:
             "automatic_retry": False,
         }
 
+    def _renew_expired_review_approval(
+        self,
+        *,
+        application_id: str,
+        user_confirmed: bool,
+    ) -> bool:
+        """Renew only the unchanged, already-reviewed packet at assist start.
+
+        The start checkbox is the fresh per-application confirmation.  Renewal
+        never changes the packet, answers, uploads, route, or allowed actions;
+        any mismatch remains an invalidation instead of becoming a renewal.
+        """
+        with self.database.connect() as connection:
+            binding = connection.execute(
+                "SELECT context_hash,context_json FROM application_bindings WHERE application_id=?",
+                (application_id,),
+            ).fetchone()
+            approval_row = connection.execute(
+                "SELECT * FROM approvals WHERE application_id=? ORDER BY issued_at DESC LIMIT 1",
+                (application_id,),
+            ).fetchone()
+        if binding is None or approval_row is None:
+            raise JobOpsError("APPLICATION_BINDING_MISSING", "The current application approval binding is incomplete.")
+        context = ApprovalContext.from_dict(json.loads(str(binding["context_json"]))).normalized()
+        if context.context_hash != str(binding["context_hash"]):
+            raise JobOpsError("APPROVAL_INVALIDATED", "The application changed after its review packet was approved.")
+        previous = ExternalActionGateway._approval_from_row(approval_row)
+        decision = validate_approval(previous, context=context)
+        if decision == "APPROVAL_VALID":
+            return False
+        if decision != "APPROVAL_EXPIRED":
+            raise JobOpsError(decision, "The review-packet approval is no longer current.")
+        if not user_confirmed:
+            raise JobOpsError(
+                "EXPLICIT_CONFIRMATION_REQUIRED",
+                "Renewing an expired review approval requires the current per-application confirmation.",
+            )
+        refreshed = issue_approval(context=context, user_confirmed=True)
+        result = ExternalActionGateway(
+            self.database, ExternalActionPolicy.production_disabled(),
+        ).persist_approval(refreshed, context, renew_expired=True)
+        return bool(result.get("renewed"))
+
     @_synchronized
     def start_browser_assist(self, payload: dict[str, Any]) -> dict[str, Any]:
         active_guided = next((
@@ -1381,14 +1501,127 @@ class OnboardingCenterService:
                 "APPLICATION_NOT_APPROVED",
                 "Review and approve the current packet before starting live prefill and upload.",
             )
+        approval_renewed = self._renew_expired_review_approval(
+            application_id=application_id,
+            user_confirmed=payload.get("user_confirmed") is True,
+        )
         source_route = displayed["packet"].get("source_route")
         if not isinstance(source_route, dict):
             raise JobOpsError("SOURCE_ROUTE_MISSING", "The approved review packet has no verified company route.")
-        return self.browser_assist.start(
+        result = self.browser_assist.start(
             application_id=application_id,
             source_route=source_route,
             user_confirmed=payload.get("user_confirmed") is True,
+            preferred_tab_id=self._application_browser_tabs.get(application_id),
         )
+        return {**result, "approval_renewed": approval_renewed}
+
+    @_synchronized
+    def plan_application_with_ai(self, payload: dict[str, Any]) -> dict[str, Any]:
+        application_id = str(payload.get("application_id", "")).strip()
+        displayed = self.review_packet(application_id)
+        if displayed["status"] != "APPROVED" or displayed["application_status"] != "APPROVED":
+            raise JobOpsError(
+                "APPLICATION_NOT_APPROVED",
+                "Approve the exact current review packet before asking AI to plan the assisted application.",
+            )
+        plan = plan_application(self.ai_engine, displayed)
+        return {
+            "status": "AI_OPERATOR_PLAN_READY",
+            "operator_plan": plan,
+            "application_id": application_id,
+            "private_values_persisted_to_project": 0,
+            "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def start_application_with_ai(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Let the connected AI decide the bounded workflow, then execute only the host-owned lease action."""
+        application_id = str(payload.get("application_id", "")).strip()
+        displayed = self.review_packet(application_id)
+        if displayed["status"] != "APPROVED" or displayed["application_status"] != "APPROVED":
+            raise JobOpsError(
+                "APPLICATION_NOT_APPROVED",
+                "Approve the exact current review packet before asking AI to operate the application.",
+            )
+        plan = plan_application(
+            self.ai_engine,
+            displayed,
+            user_present_assist_confirmed=payload.get("user_confirmed") is True,
+        )
+        if plan["status"] != "READY":
+            return {
+                "status": "AI_OPERATOR_NEEDS_USER_INPUT",
+                "operator_plan": plan,
+                "application_id": application_id,
+                "browser_assist": None,
+                "real_external_actions": 0,
+            }
+        assist = self.start_browser_assist({
+            "application_id": application_id,
+            "user_confirmed": payload.get("user_confirmed") is True,
+        })
+        trace = operator_execution_trace(plan, executed_tools=["jobflow.start_user_present_assist"])
+        return {
+            "status": "AI_OPERATOR_TASK_STARTED",
+            "operator_plan": plan,
+            "application_id": application_id,
+            "browser_assist": assist,
+            "host_executed_tools": trace["host_executed_tools"],
+            "operator_execution": trace,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+            "private_values_persisted_to_project": 0,
+            "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def start_job_with_ai(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Turn one user command and company URL into a validated read-only JobFlow task."""
+        command, official_url = resolve_new_job_command(
+            payload.get("command") or "Handle this job for me.",
+            payload.get("official_url", ""),
+        )
+        if not official_url:
+            command = self._effective_job_search_command(command)
+        snapshot = self.bootstrap()
+        plan = plan_new_job(
+            self.ai_engine,
+            command=command,
+            official_url=official_url,
+            readiness=dict(snapshot.get("application_readiness") or {}),
+            guided_status=dict((snapshot.get("dashboard") or {}).get("guided_intake") or {}),
+            read_only_intake_confirmed=payload.get("user_confirmed") is True,
+        )
+        if plan["status"] != "READY":
+            return {
+                "status": "AI_OPERATOR_NEEDS_USER_INPUT",
+                "operator_plan": plan,
+                "guided_intake": None,
+                "real_external_actions": 0,
+            }
+        guided_payload: dict[str, Any] = {
+            "user_confirmed": payload.get("user_confirmed") is True,
+        }
+        executed_tool = "jobflow.start_guided_intake"
+        if official_url:
+            guided_payload["official_url"] = official_url
+        else:
+            guided_payload["search_intent"] = command
+            executed_tool = "jobflow.search_official_jobs"
+        guided = self.start_guided_intake(guided_payload)
+        trace = operator_execution_trace(plan, executed_tools=[executed_tool])
+        return {
+            "status": "AI_OPERATOR_TASK_STARTED",
+            "operator_plan": plan,
+            "guided_intake": guided,
+            "host_executed_tools": trace["host_executed_tools"],
+            "operator_execution": trace,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+            "private_values_persisted_to_project": 0,
+            "real_external_actions": 0,
+        }
 
     def _guided_event(
         self,
@@ -1457,6 +1690,16 @@ class OnboardingCenterService:
                     "message": "The local application review packet could not be prepared.",
                     "details": {},
                 }
+            details = failure.get("details") if isinstance(failure.get("details"), dict) else {}
+            if failure.get("code") == "INELIGIBLE":
+                failure["hard_gap_codes"] = [
+                    str(value)[:120] for value in details.get("hard_gaps", [])[:20]
+                    if re.fullmatch(r"[A-Za-z0-9:_-]{1,120}", str(value))
+                ]
+                failure["unknown_condition_codes"] = [
+                    str(value)[:120] for value in details.get("unknowns", [])[:20]
+                    if re.fullmatch(r"[A-Za-z0-9:_-]{1,120}", str(value))
+                ]
             result = {
                 **failure,
                 "status": "FORM_CAPTURE_FAILED",
@@ -1582,7 +1825,7 @@ class OnboardingCenterService:
                 "read_only_page_inspections": inspections,
                 "real_external_actions": 0,
             }
-        return {
+        public = {
             "status": str(active["status"]), "active": True,
             "intake_id": str(active["intake_id"]),
             "paired": bool(active.get("paired")),
@@ -1590,6 +1833,14 @@ class OnboardingCenterService:
             "read_only_page_inspections": inspections,
             "real_external_actions": 0,
         }
+        failure = active.get("last_failure")
+        if isinstance(failure, dict) and str(active.get("status")) == "FORM_CAPTURE_FAILED":
+            public.update(deepcopy(failure))
+        if str(active.get("status")) == "SEARCH_SELECTION_REQUIRED":
+            options = active.get("candidate_options")
+            if isinstance(options, list):
+                public["candidate_options"] = deepcopy(options[:3])
+        return public
 
     @_synchronized
     def start_guided_intake(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -1614,21 +1865,38 @@ class OnboardingCenterService:
                 "Finish the one-time profile and material readiness items before importing a job.",
                 blockers=[str(item.get("code")) for item in readiness.get("blockers", []) if isinstance(item, dict)],
             )
-        official_url = _canonical_url(str(payload.get("official_url", "")).strip())
-        if url_has_sensitive_query(official_url):
+        raw_official_url = str(payload.get("official_url", "")).strip()
+        raw_search_intent = str(payload.get("search_intent", "")).strip()
+        if bool(raw_official_url) == bool(raw_search_intent):
             raise JobOpsError(
-                "ROUTE_URL_SENSITIVE_QUERY",
-                "Use the public company job URL without login, identity, session, or signature parameters.",
+                "GUIDED_INTAKE_SOURCE_INVALID",
+                "Provide either one company job link or one official-job search request.",
             )
-        host = _host(urlparse(official_url).hostname or "")
-        company_domain = registrable_domain(host)
         policy = load_json(self.project / "config" / "policy.json")
         approved_ats = {_host(value) for value in policy["approved_ats_hosts"]}
-        if any(host == suffix or host.endswith("." + suffix) for suffix in approved_ats):
-            raise JobOpsError(
-                "GUIDED_INTAKE_COMPANY_URL_REQUIRED",
-                "Start with the role on the company's own website. JobFlow will accept the ATS page after you follow the company's Apply link.",
-            )
+        if raw_official_url:
+            official_url = _canonical_url(raw_official_url)
+            if url_has_sensitive_query(official_url):
+                raise JobOpsError(
+                    "ROUTE_URL_SENSITIVE_QUERY",
+                    "Use the public company job URL without login, identity, session, or signature parameters.",
+                )
+            host = _host(urlparse(official_url).hostname or "")
+            company_domain = registrable_domain(host)
+            if any(host == suffix or host.endswith("." + suffix) for suffix in approved_ats):
+                raise JobOpsError(
+                    "GUIDED_INTAKE_COMPANY_URL_REQUIRED",
+                    "Start with the role on the company's own website. JobFlow will accept the ATS page after the company Apply route.",
+                )
+            discovery_mode = "SUPPLIED_OFFICIAL_URL"
+            search_intent = ""
+            search_query = ""
+        else:
+            search_intent = re.sub(r"\s+", " ", raw_search_intent)
+            search_query = browser_search_query(search_intent)
+            official_url = ""
+            company_domain = ""
+            discovery_mode = "VISIBLE_BROWSER_SEARCH"
         replaced = [
             (old_token, old_lease) for old_token, old_lease in self._guided_intakes.items()
             if str(old_lease.get("status")) in GUIDED_INTAKE_CANCELLABLE_STATUSES
@@ -1649,6 +1917,8 @@ class OnboardingCenterService:
         lease = {
             "token": token, "intake_id": intake_id,
             "official_url": official_url, "company_domain": company_domain,
+            "discovery_mode": discovery_mode, "search_intent": search_intent,
+            "search_query": search_query,
             "started_epoch": started_epoch, "expires_epoch": expires_epoch,
             "expires_at": expires_at, "paired": False,
             "status": "GUIDED_INTAKE_PAIRING", "job_page": None,
@@ -1656,12 +1926,17 @@ class OnboardingCenterService:
         self._guided_intakes[token] = lease
         self._guided_event(
             intake_id, "STARTED",
-            {"company_domain_hash": sha256_bytes(company_domain.encode("utf-8")), "mode": "USER_PRESENT_READ_ONLY"},
+            {
+                "company_domain_hash": sha256_bytes(company_domain.encode("utf-8")) if company_domain else None,
+                "search_intent_hash": sha256_bytes(search_intent.encode("utf-8")) if search_intent else None,
+                "discovery_mode": discovery_mode, "mode": "USER_PRESENT_READ_ONLY",
+            },
         )
         return {
             "status": "GUIDED_INTAKE_PAIRING", "intake_id": intake_id,
             "intake_token": token, "intake_path": f"/intake/{token}",
             "protocol_version": 2, "official_url": official_url,
+            "discovery_mode": discovery_mode,
             "expires_at": expires_at, "real_external_actions": 0,
         }
 
@@ -1729,15 +2004,129 @@ class OnboardingCenterService:
         lease = self._guided_lease(token)
         if not lease.get("paired"):
             lease["paired"] = True
-            lease["status"] = "AWAITING_JOB_PAGE_CAPTURE"
+            lease["status"] = (
+                "AWAITING_JOB_DISCOVERY"
+                if lease.get("discovery_mode") == "VISIBLE_BROWSER_SEARCH"
+                else "AWAITING_JOB_PAGE_CAPTURE"
+            )
             self._guided_event(str(lease["intake_id"]), "PAIRED", {"protocol_version": 2})
-        return {
+        result = {
             "status": "GUIDED_INTAKE_PAIRED", "mode": "JOB_CAPTURE",
             "capture_status": str(lease["status"]),
             "intake_id": str(lease["intake_id"]),
             "allowed_company_domain": str(lease["company_domain"]),
             "expires_at": str(lease["expires_at"]),
             "real_external_actions": 0,
+        }
+        if lease.get("discovery_mode") == "VISIBLE_BROWSER_SEARCH":
+            result.update({
+                "discovery_mode": "VISIBLE_BROWSER_SEARCH",
+                "search_query": str(lease["search_query"]),
+            })
+        if lease.get("official_url"):
+            result["official_url"] = str(lease["official_url"])
+        return result
+
+    @_synchronized
+    def capture_guided_search_results(
+        self, token: str, payload: dict[str, Any], *, extension_origin: str | None,
+    ) -> dict[str, Any]:
+        if not BrowserAssistManager.extension_origin_allowed(extension_origin):
+            raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "Only the fixed JobFlow Browser Companion may capture search results.")
+        lease = self._guided_lease(token)
+        if not lease.get("paired") or lease.get("status") not in {"AWAITING_JOB_DISCOVERY", "SEARCH_SELECTION_REQUIRED"}:
+            raise JobOpsError("GUIDED_INTAKE_STAGE_INVALID", "This guided import is not waiting for browser search results.")
+        if lease.get("discovery_mode") != "VISIBLE_BROWSER_SEARCH":
+            raise JobOpsError("GUIDED_INTAKE_STAGE_INVALID", "This guided import already has a supplied company job link.")
+        policy = load_json(self.project / "config" / "policy.json")
+        candidates = prepare_official_job_candidates(
+            payload.get("results"),
+            approved_ats_hosts=policy["approved_ats_hosts"],
+            search_origin=str(payload.get("search_origin", "")),
+        )
+        lease["search_candidates"] = deepcopy(candidates)
+        selected = select_official_job_candidate(
+            self.ai_engine, intent=str(lease["search_intent"]), candidates=candidates,
+        )
+        self._guided_event(
+            str(lease["intake_id"]), "SEARCH_RESULTS_INSPECTED",
+            {
+                "candidate_set_hash": sha256_bytes(canonical_json([
+                    {"candidate_ref": item["candidate_ref"], "company_domain": item["company_domain"]}
+                    for item in candidates
+                ])),
+                "candidate_count": len(candidates), "selection_status": str(selected["status"]),
+            },
+        )
+        if selected["status"] != "SELECTED":
+            lease["status"] = "SEARCH_SELECTION_REQUIRED"
+            lease["candidate_options"] = deepcopy(selected.get("candidate_options", []))
+            return {
+                **selected, "status": "SEARCH_SELECTION_REQUIRED", "mode": "JOB_CAPTURE",
+                "intake_id": str(lease["intake_id"]), "automatic_retry": False,
+            }
+        official_url = str(selected["official_url"])
+        company_domain = str(selected["company_domain"])
+        lease["official_url"] = official_url
+        lease["company_domain"] = company_domain
+        lease["selected_candidate_ref"] = str(selected["candidate_ref"])
+        lease["status"] = "AWAITING_JOB_PAGE_CAPTURE"
+        lease.pop("search_candidates", None)
+        lease.pop("candidate_options", None)
+        return {
+            "status": "AWAITING_JOB_PAGE_CAPTURE", "mode": "JOB_CAPTURE",
+            "intake_id": str(lease["intake_id"]), "official_url": official_url,
+            "allowed_company_domain": company_domain,
+            "candidate_ref": str(selected["candidate_ref"]), "summary": str(selected["summary"]),
+            "next_safe_action": "COMPANION_OPENS_AND_VERIFIES_SELECTED_JOB_PAGE",
+            "automatic_retry": False, "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def select_guided_search_candidate(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Resolve a genuine search ambiguity without accepting an arbitrary URL."""
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError(
+                "EXPLICIT_CONFIRMATION_REQUIRED",
+                "Choosing between matched company roles requires the current user's confirmation.",
+            )
+        intake_id = str(payload.get("intake_id", "")).strip()
+        candidate_ref = str(payload.get("candidate_ref", "")).strip()
+        if not re.fullmatch(r"GIN-[A-F0-9]{12}", intake_id) or not re.fullmatch(r"JDC-[A-F0-9]{12}", candidate_ref):
+            raise JobOpsError("OFFICIAL_JOB_SELECTION_INVALID", "Choose one of the displayed company-role matches.")
+        selected = next(
+            (lease for lease in self._guided_intakes.values() if str(lease.get("intake_id")) == intake_id),
+            None,
+        )
+        if selected is None or str(selected.get("status")) != "SEARCH_SELECTION_REQUIRED":
+            raise JobOpsError("GUIDED_INTAKE_STAGE_INVALID", "This job search is no longer waiting for a role choice.")
+        candidates = selected.get("search_candidates")
+        if not isinstance(candidates, list):
+            raise JobOpsError("OFFICIAL_JOB_SELECTION_INVALID", "The verified search candidates are no longer available.")
+        candidate = next((item for item in candidates if str(item.get("candidate_ref")) == candidate_ref), None)
+        if not isinstance(candidate, dict):
+            raise JobOpsError("OFFICIAL_JOB_SELECTION_INVALID", "Choose one of the displayed company-role matches.")
+        selected["official_url"] = str(candidate["url"])
+        selected["company_domain"] = str(candidate["company_domain"])
+        selected["selected_candidate_ref"] = candidate_ref
+        selected["status"] = "AWAITING_JOB_PAGE_CAPTURE"
+        selected.pop("search_candidates", None)
+        selected.pop("candidate_options", None)
+        self._guided_event(
+            intake_id, "SEARCH_RESULTS_INSPECTED",
+            {
+                "candidate_count": len(candidates),
+                "selection_status": "USER_SELECTED",
+                "selected_candidate_ref_hash": sha256_bytes(candidate_ref.encode("utf-8")),
+            },
+        )
+        return {
+            "status": "AWAITING_JOB_PAGE_CAPTURE", "mode": "JOB_CAPTURE",
+            "intake_id": intake_id, "official_url": str(candidate["url"]),
+            "allowed_company_domain": str(candidate["company_domain"]),
+            "candidate_ref": candidate_ref,
+            "next_safe_action": "COMPANION_OPENS_AND_VERIFIES_SELECTED_JOB_PAGE",
+            "automatic_retry": False, "real_external_actions": 0,
         }
 
     @staticmethod
@@ -1781,21 +2170,80 @@ class OnboardingCenterService:
         jd_text = "\n".join((
             f"Company: {company}", f"Title: {title}", f"Location: {location or 'UNKNOWN'}", "", visible_text,
         )).strip()
+        raw_apply_candidates = payload.get("apply_candidates", [])
+        if not isinstance(raw_apply_candidates, list) or len(raw_apply_candidates) > 20:
+            raise JobOpsError("GUIDED_APPLY_ROUTE_INVALID", "The company page returned an invalid Apply-route list.")
+        policy = load_json(self.project / "config" / "policy.json")
+        approved_ats = {_host(value) for value in policy["approved_ats_hosts"]}
+        application_fields_present = payload.get("application_fields_present") is True
+        application_routes: list[dict[str, str]] = []
+        seen_routes: set[str] = set()
+        for candidate in raw_apply_candidates:
+            if not isinstance(candidate, dict) or set(candidate) != {"url", "label"}:
+                raise JobOpsError("GUIDED_APPLY_ROUTE_INVALID", "An Apply route does not match the browser contract.")
+            label = re.sub(r"\s+", " ", str(candidate.get("label", ""))).strip()[:200]
+            if not re.search(
+                r"(?:^|\b)(?:apply(?:\s+now)?|start\s+(?:an?\s+)?application)(?:\b|$)|申请|立即申请|开始申请",
+                label, re.IGNORECASE,
+            ):
+                continue
+            try:
+                candidate_url = _canonical_url(str(candidate.get("url", "")))
+            except JobOpsError:
+                continue
+            if url_has_sensitive_query(candidate_url) or candidate_url in seen_routes:
+                continue
+            candidate_host = _host(urlparse(candidate_url).hostname or "")
+            same_company = host_matches_registered(candidate_host, str(lease["company_domain"]))
+            approved_ats_route = any(
+                candidate_host == suffix or candidate_host.endswith("." + suffix)
+                for suffix in approved_ats
+            )
+            if not same_company and not approved_ats_route:
+                continue
+            if approved_ats_route:
+                _provider_and_tenant(candidate_host, candidate_url)
+            seen_routes.add(candidate_url)
+            application_routes.append({"url": candidate_url, "label": label})
+        if application_fields_present:
+            application_url = page_url
+        elif len(application_routes) == 1:
+            application_url = application_routes[0]["url"]
+        else:
+            exact = [
+                item for item in application_routes
+                if re.fullmatch(r"(?:apply(?:\s+now)?|start\s+(?:an?\s+)?application|申请|立即申请|开始申请)", item["label"], re.IGNORECASE)
+            ]
+            application_url = exact[0]["url"] if len({item["url"] for item in exact}) == 1 else ""
         lease["official_url"] = page_url
         lease["job_page"] = {
             "visible_text": visible_text, "jd_text": jd_text,
             "title": title, "company": company, "location": location or "UNKNOWN",
         }
         lease["status"] = "AWAITING_APPLICATION_FORM_CAPTURE"
+        lease["application_entry_url"] = application_url
         self._guided_event(
             str(lease["intake_id"]), "JOB_PAGE_INSPECTED",
             {"page_hash": sha256_bytes(visible_text.encode("utf-8")), "url_hash": sha256_bytes(page_url.encode("utf-8"))},
         )
+        self._guided_event(
+            str(lease["intake_id"]), "APPLY_ROUTE_INSPECTED",
+            {
+                "candidate_count": len(application_routes),
+                "selected_url_hash": sha256_bytes(application_url.encode("utf-8")) if application_url else None,
+                "application_fields_present": application_fields_present,
+            },
+        )
         return {
             "status": "AWAITING_APPLICATION_FORM_CAPTURE", "mode": "JOB_CAPTURE",
             "intake_id": str(lease["intake_id"]), "company": company,
-            "title": title, "real_external_actions": 0,
-            "next_safe_action": "USER_OPENS_COMPANY_APPLY_LINK_THEN_CAPTURES_FORM",
+            "title": title, "application_url": application_url,
+            "apply_route_status": "SELECTED" if application_url else "USER_SELECTION_REQUIRED",
+            "real_external_actions": 0,
+            "next_safe_action": (
+                "COMPANION_OPENS_APPLICATION_FORM"
+                if application_url else "USER_OPENS_COMPANY_APPLY_LINK_THEN_CAPTURES_FORM"
+            ),
         }
 
     @_synchronized
@@ -1844,6 +2292,7 @@ class OnboardingCenterService:
         preferred_excerpt = re.sub(r"\s+", " ", str(job_page["title"])).strip()
         excerpt = preferred_excerpt if len(preferred_excerpt) >= 12 and preferred_excerpt in normalized_official else normalized_official[:500]
         lease["status"] = "PREPARING_APPLICATION"
+        lease.pop("last_failure", None)
         self._guided_event(
             str(lease["intake_id"]), "FORM_INSPECTED",
             {"form_hash": sha256_bytes(sanitized_html.encode("utf-8")), "url_hash": sha256_bytes(application_url.encode("utf-8"))},
@@ -1865,14 +2314,30 @@ class OnboardingCenterService:
             )
         except Exception as exc:
             lease["status"] = "FORM_CAPTURE_FAILED"
+            failure_code = exc.code if isinstance(exc, JobOpsError) else "LOCAL_PREPARATION_FAILED"
+            safe_failure: dict[str, Any] = {"code": failure_code}
+            if failure_code == "INELIGIBLE" and isinstance(exc, JobOpsError):
+                safe_failure["hard_gap_codes"] = [
+                    str(value)[:120] for value in exc.details.get("hard_gaps", [])[:20]
+                    if re.fullmatch(r"[A-Za-z0-9:_-]{1,120}", str(value))
+                ]
+                safe_failure["unknown_condition_codes"] = [
+                    str(value)[:120] for value in exc.details.get("unknowns", [])[:20]
+                    if re.fullmatch(r"[A-Za-z0-9:_-]{1,120}", str(value))
+                ]
+            lease["last_failure"] = safe_failure
             self._guided_event(
                 str(lease["intake_id"]), "FAILED",
-                {"code": exc.code if isinstance(exc, JobOpsError) else "LOCAL_PREPARATION_FAILED"},
+                {"code": failure_code},
             )
             raise
         application_id = str(result.get("application_id") or "") or None
+        companion_tab_id = payload.get("companion_tab_id")
+        if application_id and isinstance(companion_tab_id, int) and companion_tab_id > 0:
+            self._application_browser_tabs[application_id] = companion_tab_id
         final_status = "REVIEW_PACKET_READY" if application_id else "DEFERRED"
         lease["status"] = final_status
+        lease.pop("last_failure", None)
         lease["application_id"] = application_id
         lease["job_page"] = None
         self._guided_event(
@@ -1895,6 +2360,86 @@ class OnboardingCenterService:
             application_id=str(payload.get("application_id", "")).strip(),
             submitted=submitted,
             user_confirmed=payload.get("user_confirmed") is True,
+        )
+
+    @staticmethod
+    def _local_agent_assist_token(payload: dict[str, Any]) -> str:
+        token = str(payload.get("assist_token", "")).strip()
+        if len(token) < 40 or len(token) > 256 or not re.fullmatch(r"[A-Za-z0-9_-]+", token):
+            raise JobOpsError("BROWSER_ASSIST_TOKEN_INVALID", "The local Agent assist lease is invalid or expired.")
+        return token
+
+    def pair_local_agent_assist(self, payload: dict[str, Any]) -> dict[str, Any]:
+        token = self._local_agent_assist_token(payload)
+        result = self.browser_assist.pair_local_agent(
+            token, user_confirmed=payload.get("user_confirmed") is True,
+        )
+        return {
+            **result,
+            "model_private_values": 0,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+        }
+
+    def prepare_local_agent_assist(self, payload: dict[str, Any]) -> dict[str, Any]:
+        token = self._local_agent_assist_token(payload)
+        page = payload.get("page")
+        if not isinstance(page, dict):
+            raise JobOpsError("ATS_FORM_SNAPSHOT_INVALID", "The local Agent did not provide one sanitized browser page.")
+        result = self.browser_assist.prepare(
+            token, page, extension_origin=COMPANION_EXTENSION_ORIGIN,
+        )
+        return {
+            **result,
+            "execution_channel": "LOCAL_AI_AGENT",
+            "ai_selected_tool": "jobflow.apply_approved_page",
+            "host_validation_required_before_apply": True,
+            "model_private_values": 0,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+        }
+
+    def discover_local_agent_dynamic_fields(self, payload: dict[str, Any]) -> dict[str, Any]:
+        token = self._local_agent_assist_token(payload)
+        page = payload.get("page")
+        if not isinstance(page, dict):
+            raise JobOpsError("ATS_FORM_SNAPSHOT_INVALID", "The local Agent did not provide one sanitized browser page.")
+        result = self.browser_assist.discover_dynamic_fields(
+            token, page, extension_origin=COMPANION_EXTENSION_ORIGIN,
+        )
+        return {
+            **result,
+            "execution_channel": "LOCAL_AI_AGENT",
+            "model_private_values": 0,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+        }
+
+    def complete_local_agent_assist(self, payload: dict[str, Any]) -> dict[str, Any]:
+        token = self._local_agent_assist_token(payload)
+        evidence = payload.get("evidence")
+        if not isinstance(evidence, dict):
+            raise JobOpsError("BROWSER_APPLY_EVIDENCE_INVALID", "The local Agent did not return bounded apply evidence.")
+        result = self.browser_assist.complete(
+            token, evidence, extension_origin=COMPANION_EXTENSION_ORIGIN,
+        )
+        return {
+            **result,
+            "execution_channel": "LOCAL_AI_AGENT",
+            "host_executed_tool": "jobflow.apply_approved_page",
+            "model_private_values": 0,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+        }
+
+    def take_local_agent_assist_file(
+        self, *, assist_token: str, file_token: str,
+    ) -> tuple[bytearray, dict[str, str]]:
+        token = self._local_agent_assist_token({"assist_token": assist_token})
+        if not re.fullmatch(r"[A-Za-z0-9_-]{40,256}", str(file_token)):
+            raise JobOpsError("BROWSER_FILE_TOKEN_INVALID", "The approved material token is invalid or expired.")
+        return self.browser_assist.take_file(
+            token, str(file_token), extension_origin=COMPANION_EXTENSION_ORIGIN,
         )
 
     def prepare_synthetic_execution(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -2018,6 +2563,7 @@ class OnboardingCenterService:
             application_id=application_id,
             expected_packet_hash=expected_hash,
             raw_resolutions=payload.get("resolutions"),
+            raw_non_form_resolutions=payload.get("non_form_resolutions"),
             user_confirmed=payload.get("user_confirmed") is True,
         )
         return {
@@ -2082,6 +2628,59 @@ class OnboardingCenterService:
                 "REBUILD_OFFLINE_REVIEW_PACKET" if decision == "REVISE" else
                 str(promoted.get("next_safe_action", "NONE"))
             ),
+        }
+
+    @_synchronized
+    def approve_and_start_application(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Use one packet confirmation for approval and the bounded user-present assist.
+
+        This does not authorize final submission.  It only replaces two adjacent
+        local confirmation screens with one hash-bound decision.  The Browser
+        Companion still revalidates every page and pauses at protected questions,
+        login/verification, ambiguous state, and the final Submit control.
+        """
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError(
+                "EXPLICIT_CONFIRMATION_REQUIRED",
+                "Approving and starting this application requires the current user's confirmation.",
+            )
+        application_id = str(payload.get("application_id", "")).strip()
+        expected_packet_hash = str(payload.get("expected_packet_hash", "")).strip()
+        resolution = None
+        raw_resolutions = payload.get("resolutions")
+        raw_non_form = payload.get("non_form_resolutions")
+        if raw_resolutions or raw_non_form:
+            resolution = self.resolve_application_fields({
+                "application_id": application_id,
+                "expected_packet_hash": expected_packet_hash,
+                "resolutions": raw_resolutions,
+                "non_form_resolutions": raw_non_form,
+                "user_confirmed": True,
+            })
+            expected_packet_hash = str(resolution["packet_hash"])
+
+        decision_payload = {
+            "application_id": application_id,
+            "decision": "APPROVE",
+            "expected_packet_hash": expected_packet_hash,
+            "user_confirmed": True,
+        }
+        decision = self.decide_review_packet(decision_payload)
+        operated = self.start_application_with_ai({
+            "application_id": decision["application_id"],
+            "user_confirmed": True,
+        })
+        return {
+            "status": "APPROVED_APPLICATION_AUTOPILOT_STARTED",
+            "field_resolution": resolution,
+            "decision": decision,
+            "application_id": decision["application_id"],
+            "operator_plan": operated.get("operator_plan"),
+            "operator_execution": operated.get("operator_execution"),
+            "browser_assist": operated.get("browser_assist"),
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+            "real_external_actions": 0,
         }
 
     @_synchronized
@@ -2162,6 +2761,14 @@ class OnboardingCenterService:
             "conflicts": conflicts, "profile_review": state.get("profile_review", "PENDING"),
             "state_ref": reference, "privacy": {"storage": "WINDOWS_DPAPI", "network": "LOCALHOST_ONLY", "plaintext_project_files": 0},
             "ai_engine": self.ai_engine.public_status(),
+            "ai_operator": {
+                **operator_public_manifest(),
+                "current_task": {
+                    "guided_intake_status": str((dashboard.get("guided_intake") or {}).get("status", "IDLE")),
+                    "browser_assist_status": str((dashboard.get("browser_assist") or {}).get("active_status", "IDLE")),
+                    "pending_review_count": len(dashboard.get("pending_applications", [])),
+                },
+            },
             "ai_connection": self.ai_connections.public_state(),
             "claim_quality": {
                 "strict_ai_only": True,
@@ -2259,7 +2866,12 @@ class OnboardingCenterService:
                 )
             research_path = staging / "research.txt"
             research_path.write_text(normalized_research, encoding="utf-8")
-            orchestrator = JobOpsOrchestrator(self.project, self.database, self.onboarding)
+            orchestrator = JobOpsOrchestrator(
+                self.project,
+                self.database,
+                self.onboarding,
+                ai_engine=self.ai_engine if self.ai_engine.ready else None,
+            )
             result = orchestrator.run_to_awaiting(
                 paths["jd"], profile_ref=None, master_resume_ref=None, answer_bank_ref=None,
                 route_fixture=route_path, form_fixture=paths["form"],
@@ -3471,6 +4083,19 @@ class OnboardingCenterService:
             "skills": skills, "languages": languages, "certifications": certifications, "education": education,
             "years_experience": years_experience,
         }
+        contact_values = base.get("resume_contact_values")
+        if isinstance(contact_values, dict):
+            for key in ("email", "phone"):
+                values = contact_values.get(key)
+                if isinstance(values, list):
+                    unique = [str(value).strip() for value in values if str(value).strip()]
+                    unique = list(dict.fromkeys(unique))
+                    if len(unique) == 1:
+                        profile[key] = unique[0]
+        name_parts = str(display_name or "").split()
+        if len(name_parts) >= 2 and all(re.fullmatch(r"[A-Za-z][A-Za-z'’-]*", part) for part in name_parts):
+            profile["first_name"] = name_parts[0]
+            profile["last_name"] = " ".join(name_parts[1:])
         github_url = self._answer_value(answers, "github_url")
         portfolio_url = self._answer_value(answers, "portfolio_url")
         if github_url:

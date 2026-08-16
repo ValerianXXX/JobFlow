@@ -8,6 +8,7 @@ import shutil
 import struct
 import sys
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.request
@@ -269,6 +270,24 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertTrue(field["label"]["zh"])
             self.assertTrue(field["label"]["en"])
 
+    def test_legacy_state_backfills_new_optional_answers_without_inventing_values(self) -> None:
+        with project_temp() as root:
+            service, onboarding, _, _, _ = self.make_service(root)
+            state_ref, state = service.ensure_state()
+            legacy = json.loads(json.dumps(state))
+            legacy["answers"].pop("github_url")
+            legacy["answers"].pop("portfolio_url")
+            onboarding.rotate(state_ref, canonical_json(legacy))
+
+            bootstrap = service.bootstrap()
+
+            self.assertEqual(bootstrap["answers"]["github_url"]["status"], "UNKNOWN")
+            self.assertIsNone(bootstrap["answers"]["github_url"]["value"])
+            self.assertEqual(bootstrap["answers"]["portfolio_url"]["status"], "UNKNOWN")
+            self.assertIsNone(bootstrap["answers"]["portfolio_url"]["value"])
+            self.assertEqual(bootstrap["completion"]["total"], len(REQUIRED_FIELD_IDS))
+            self.assertEqual(onboarding.read_bytes(state_ref), canonical_json(legacy))
+
     def test_pdf_import_compares_local_extraction_modes_and_selects_cleaner_grounding_text(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
@@ -310,6 +329,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("function arrangePrimaryWorkflow()", script)
         self.assertIn("finish.after(dashboard)", script)
         self.assertIn("arrangePrimaryWorkflow();", script)
+        self.assertLess(script.index("arrangePrimaryWorkflow();"), script.index('document.querySelector("#documentFile").addEventListener'))
         self.assertIn('id="sourceIntakeNotice"', html)
         self.assertEqual(html.count("data-start-revision"), 2)
         self.assertIn("sourceIntakeDemoTitle", script)
@@ -1743,6 +1763,62 @@ class OnboardingCenterTests(unittest.TestCase):
                 server.server_close()
                 thread.join(timeout=5)
 
+    def test_companion_material_stream_uses_origin_authenticated_post(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            payload = b"synthetic approved resume"
+            with mock.patch.object(
+                service.browser_assist,
+                "take_file",
+                return_value=(bytearray(payload), {"filename": "resume.docx"}),
+            ) as take_file:
+                server = create_server(service, token="synthetic-session-token")
+                thread = threading.Thread(target=server.serve_forever, daemon=True)
+                thread.start()
+                try:
+                    request_body = json.dumps({"protocol_version": 2}).encode("utf-8")
+                    connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                    connection.request(
+                        "POST",
+                        "/assist/synthetic-assist-token/file/synthetic-file-token",
+                        body=request_body,
+                        headers={
+                            "Origin": COMPANION_EXTENSION_ORIGIN,
+                            "Content-Type": "application/json",
+                            "Content-Length": str(len(request_body)),
+                        },
+                    )
+                    response = connection.getresponse()
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.read(), payload)
+                    self.assertEqual(response.headers["Access-Control-Allow-Origin"], COMPANION_EXTENSION_ORIGIN)
+                    take_file.assert_called_once_with(
+                        "synthetic-assist-token",
+                        "synthetic-file-token",
+                        extension_origin=COMPANION_EXTENSION_ORIGIN,
+                    )
+                    connection.close()
+
+                    untrusted = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                    untrusted.request(
+                        "POST",
+                        "/assist/synthetic-assist-token/file/synthetic-file-token",
+                        body=request_body,
+                        headers={
+                            "Origin": "chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                            "Content-Type": "application/json",
+                            "Content-Length": str(len(request_body)),
+                        },
+                    )
+                    blocked = untrusted.getresponse()
+                    self.assertEqual(blocked.status, 403)
+                    self.assertEqual(json.loads(blocked.read())["code"], "BROWSER_COMPANION_ORIGIN_FORBIDDEN")
+                    untrusted.close()
+                finally:
+                    server.shutdown()
+                    server.server_close()
+                    thread.join(timeout=5)
+
     def test_guided_form_http_returns_quick_start_then_poll_result(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
@@ -1797,6 +1873,30 @@ class OnboardingCenterTests(unittest.TestCase):
                 server.shutdown()
                 server.server_close()
                 thread.join(timeout=5)
+
+    def test_guided_public_status_keeps_safe_failure_reason_visible(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            token = "g" * 54
+            service._guided_intakes[token] = {
+                "token": token,
+                "intake_id": "GIN-123456789ABC",
+                "status": "FORM_CAPTURE_FAILED",
+                "paired": True,
+                "started_epoch": time.time(),
+                "expires_epoch": time.time() + 600,
+                "expires_at": "2099-01-01T00:00:00Z",
+                "last_failure": {
+                    "code": "INELIGIBLE",
+                    "hard_gap_codes": ["level"],
+                    "unknown_condition_codes": ["job_salary"],
+                },
+            }
+            status = service._guided_public_status()
+            self.assertEqual(status["status"], "FORM_CAPTURE_FAILED")
+            self.assertEqual(status["code"], "INELIGIBLE")
+            self.assertEqual(status["hard_gap_codes"], ["level"])
+            self.assertNotIn("message", status)
 
     def test_local_binary_upload_transport_fails_closed(self) -> None:
         with project_temp() as root:
@@ -2054,15 +2154,31 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('api("queue-limit"', app)
         self.assertIn('api("external-action-kill-switch"', app)
         self.assertIn('api("cancel-guided-intake"', app)
+        self.assertIn('api("start-job-with-ai"', app)
+        self.assertIn('api("start-application-with-ai"', app)
+        self.assertIn("state.aiOperatorExecution=operated.operator_execution||null", app)
+        self.assertIn('aiOperatorExecuted: "JobFlow 已执行"', app)
+        self.assertIn('aiOperatorPending: "Runs after fresh page state"', app)
+        self.assertIn("function aiOperatorStepsHtml(plan)", app)
+        self.assertIn("function jobUrlFromOperatorInputs()", app)
+        self.assertIn('aiOperatorDelegated: "由 JobFlow 接力执行"', app)
         self.assertIn('id="cancelGuidedIntake"', html)
+        self.assertIn('id="aiOperatorCommand"', html)
+        self.assertIn('id="guidedAiOperatorPlan"', html)
         self.assertIn('api("review-packet"', app)
         self.assertIn('api("resolve-application-fields"', app)
         self.assertIn('api("queue-decision"', app)
         self.assertIn('api("approve-external-claims"', app)
         self.assertIn('api("tailoring-manifest-proposal"', app)
         self.assertIn('api("approve-tailoring-manifest"', app)
-        self.assertIn('id="packetDecisionConfirm"', html)
+        self.assertNotIn('id="packetDecisionConfirm"', html)
         self.assertIn('id="confirmPacketDecision"', html)
+        self.assertIn('data-i18n="confirmApproveAndStart"', html)
+        self.assertNotIn('id="guidedIntakeConfirm"', html)
+        self.assertIn('button.disabled=!state.reviewDecision||!fieldsReady', app)
+        self.assertIn('if(canDecide&&!state.reviewDecision)state.reviewDecision="APPROVE"', app)
+        self.assertNotIn('state.reviewDecisionConfirmed', app)
+        self.assertIn('status==="PREPARING_APPLICATION"&&!state.guidedIntakeActivity', app)
         self.assertNotIn("showToast(e.message", app)
 
     def test_ui_distinguishes_windows_hermes_failures_and_preserves_success_before_refresh(self) -> None:
@@ -2094,7 +2210,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("guided-background-v1", html)
+        self.assertIn("jobflow-v28-one-confirmation", html)
 
 
 if __name__ == "__main__":

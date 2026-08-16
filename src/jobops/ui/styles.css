@@ -105,6 +105,12 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .secondary.compact.guided-cancel:hover { color: #fff; border-color: #8f352d; background: #8f352d; }
 .guided-intake-message { min-height: 20px; margin: 12px 0 0; color: var(--green-dark); font-size: 11px; font-weight: 700; }
 .guided-intake-message.working::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 7px; border: 2px solid #b8d0c7; border-top-color: var(--green); border-radius: 50%; vertical-align: -2px; animation: activity-spin .8s linear infinite; }
+.guided-search-choices { display: grid; gap: 8px; margin-top: 12px; padding: 12px; border: 1px solid #b8d0c7; background: var(--green-soft); }
+.guided-search-choices > strong { font-size: 12px; }
+.guided-search-choice { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 3px 12px; width: 100%; text-align: left; }
+.guided-search-choice span,.guided-search-choice small { overflow-wrap: anywhere; }
+.guided-search-choice small { color: var(--muted); }
+.guided-search-choice b { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
 .guided-intake-steps { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .guided-intake-steps li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; padding: 11px; border: 1px solid var(--line); background: rgba(255,255,255,.75); }
 .guided-intake-steps li > b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: var(--green); background: #fff; border: 1px solid #b8d0c7; }
@@ -234,11 +240,12 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .application-field-resolution > p { margin: 0 0 8px; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .application-field-resolution .field-gate-help { color: #6b552e; }
 .application-field-resolution-list { display: grid; gap: 10px; margin: 14px 0; }
-.application-field-row { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(150px,.7fr) minmax(0,1fr); gap: 10px; align-items: end; padding: 13px; border: 1px solid #e1c996; background: #fff; }
-.application-field-row > div > strong,.application-field-row > div > small { display: block; overflow-wrap: anywhere; }
-.application-field-row > div > small { margin-top: 4px; color: var(--muted); font-size: 10px; }
-.application-field-row label { display: grid; gap: 5px; color: var(--muted); font-size: 10px; }
-.application-field-row select,.application-field-row input { width: 100%; min-width: 0; min-height: 40px; border: 1px solid var(--line); padding: 8px; background: #fff; }
+.application-field-row,.application-non-form-row { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(150px,.7fr) minmax(0,1fr); gap: 10px; align-items: end; padding: 13px; border: 1px solid #e1c996; background: #fff; }
+.application-non-form-row { grid-template-columns: minmax(0,1.5fr) minmax(220px,1fr); }
+.application-field-row > div > strong,.application-field-row > div > small,.application-non-form-row > div > strong,.application-non-form-row > div > small { display: block; overflow-wrap: anywhere; }
+.application-field-row > div > small,.application-non-form-row > div > small { margin-top: 4px; color: var(--muted); font-size: 10px; }
+.application-field-row label,.application-non-form-row label { display: grid; gap: 5px; color: var(--muted); font-size: 10px; }
+.application-field-row select,.application-field-row input,.application-non-form-row select { width: 100%; min-width: 0; min-height: 40px; border: 1px solid var(--line); padding: 8px; background: #fff; }
 .application-field-resolution > button { min-width: 260px; }
 .packet-decision-panel { margin: 18px 0 0; padding: 18px; border: 1px solid var(--line); background: var(--green-soft); }
 .packet-decision-panel legend { padding: 0 8px; font: 600 18px/1.2 Georgia, "Songti SC", serif; }
@@ -485,6 +492,12 @@ textarea { min-height: 96px; resize: vertical; }
 .browser-assist-grid small { color: var(--green-dark); font-weight: 700; }
 .browser-assist-selection { display: grid; gap: 12px; margin-top: 15px; padding: 16px; border: 1px solid var(--green); background: #fff; }
 .browser-assist-board.hidden,.browser-assist-selection.hidden { display: none; }
+.ai-operator-plan { border: 1px solid var(--green); background: #f1f8f5; padding: 14px; }
+.ai-operator-plan.hidden { display: none; }
+.ai-operator-plan > p { margin: 6px 0 10px; }
+.ai-operator-plan ol { margin: 0 0 10px; padding-left: 22px; display: grid; gap: 7px; }
+.ai-operator-plan li strong,.ai-operator-plan li span { display: block; }
+.ai-operator-plan li strong { font-size: 11px; color: var(--green); }
 .browser-assist-selection > div:first-child strong,.browser-assist-selection > div:first-child small { display: block; }
 .browser-assist-selection > div:first-child small { margin-top: 3px; color: var(--muted); }
 .browser-assist-selection label { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: var(--green-soft); font-size: 12px; line-height: 1.55; }
@@ -497,6 +510,10 @@ textarea { min-height: 96px; resize: vertical; }
 #toast.show { opacity: 1; transform: translateY(0); }
 #toast.error { background: #8d3e34; }
 .activity-indicator { position: fixed; right: 24px; bottom: 24px; display: flex; align-items: flex-start; gap: 13px; min-width: 340px; max-width: 460px; padding: 15px 17px; color: #fff; background: linear-gradient(135deg,var(--green-dark),var(--ink)); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 18px 45px rgba(22,32,42,.28); z-index: 60; }
+.activity-indicator.failed { background: linear-gradient(135deg,#81483f,var(--ink)); }
+.activity-indicator.failed .activity-spinner { animation: none; border-color: rgba(255,255,255,.35); position: relative; }
+.activity-indicator.failed .activity-spinner::after { content: "!"; position: absolute; inset: -1px 0 0; text-align: center; color: #fff; font-weight: 800; line-height: 22px; }
+.activity-indicator.failed .activity-progress i { background: #f0b6a9; }
 #activityIndicator.hidden { display: none; }
 .activity-copy { min-width: 0; flex: 1; }
 .activity-indicator strong, .activity-indicator small { display: block; }

@@ -1,18 +1,14 @@
-# Sanitized screenshots / 脱敏截图
+# Sanitized Screenshots
 
-Both images in this directory were captured at 1440×1000 from JobFlow's temporary synthetic demo. The demo disables real file intake and real AI connections and automatically removes its temporary runtime when closed.
-
-本目录两张图片均以 1440×1000 从 JobFlow 临时合成演示截取。演示环境关闭真实文件接入和真实 AI 连接，并在关闭后自动清理临时运行状态。
+These images were captured from JobFlow's temporary synthetic demo. The demo disables real file intake and AI connections and removes its temporary runtime when closed.
 
 Release review confirmed:
 
 - fictional content only;
-- no resume, Candidate Profile, Answer Bank, secure reference or real job data;
-- no email address, absolute user path, browser URL or session token;
+- no resume, Candidate Profile, Answer Bank, secure reference, or real job data;
+- no email address, absolute user path, browser URL, or session token;
 - no embedded PNG metadata;
-- no real external action.
-
-发布审阅确认：仅含虚构内容；不含简历、Candidate Profile、Answer Bank、secure-ref、真实岗位、邮箱、用户绝对路径、浏览器 URL 或会话令牌；PNG 无嵌入元数据；真实外部动作数为 0。
+- zero real external actions.
 
 | File | SHA-256 |
 |---|---|

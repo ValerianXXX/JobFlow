@@ -22,6 +22,8 @@ let prepareMode = "manual";
 let resumeFailureCode = null;
 let armStateWasUncommitted = false;
 let armFailureMode = null;
+let dynamicReviewMode = false;
+let applyFailureMode = false;
 
 function event(name) { return {addListener(listener) { listeners[name] = listener; }}; }
 function digest(value) { return `sha256:${createHash("sha256").update(value).digest("hex")}`; }
@@ -103,7 +105,7 @@ function evidencePayload(manual, overrides = {}) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.6.2"}; },
+    getManifest() { return {version: "0.7.0"}; },
     getURL(value) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${value}`; },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },
@@ -118,6 +120,12 @@ const chrome = {
       domMessages.push({tabId, message});
       if (message.type === "JOBFLOW_COLLECT_FORM") return currentCollected;
       if (message.type === "JOBFLOW_APPLY_APPROVED") {
+        if (applyFailureMode) return {
+          status: "BLOCKED", code: "COMPANION_CONTROL_REBIND_FAILED",
+          field_bindings: [], material_bindings: [],
+          attempted_field_bindings: [{client_ref: "field-1", value_sha256: digest("synthetic-value")}],
+          attempted_material_bindings: [], partial_effects: true
+        };
         return {status: "APPLIED", field_bindings: [], material_bindings: []};
       }
       if (message.type === "JOBFLOW_ARM_MANUAL_NAVIGATION") {
@@ -170,12 +178,25 @@ const sandbox = {
       } : null,
       final_submit_client_refs: prepareMode === "manual" ? [] : ["nav-1"]
     }; }};
+    if (String(url).endsWith("/discover-dynamic-fields")) return {ok: true, async json() { return dynamicReviewMode ? {
+      status: "SUPPLEMENTAL_REVIEW_REQUIRED", dynamic_field_count: 4,
+      packet_version: 3, real_external_actions: 2, automatic_retry: false
+    } : {
+      status: "NO_DYNAMIC_FIELDS", dynamic_field_count: 0, real_external_actions: 0
+    }; }};
     if (String(url).endsWith("/complete")) return {ok: true, async json() { return prepareMode === "manual" ? {
       status: "MANUAL_NAVIGATION_REQUIRED", current_step: 1, manual_field_count: 0,
       manual_navigation: manualNavigation(), automatic_retry: false
     } : {
       status: "AWAITING_USER_SUBMIT", current_step: 2, manual_field_count: 0,
       final_submit: false, submit_capability: "USER_ONLY"
+    }; }};
+    if (String(url).endsWith("/abort-page-apply")) return {ok: true, async json() { return {
+      status: "APPLY_RESTART_REQUIRED", code: "COMPANION_APPLY_RESTART_REQUIRED",
+      field_attempt_count: body.attempted_field_bindings.length,
+      file_attempt_count: body.attempted_material_bindings.length,
+      real_external_actions: body.attempted_field_bindings.length ? 1 : 0,
+      submit_capability: false, final_submit: false, automatic_retry: false
     }; }};
     if (String(url).endsWith("/authorize-navigation")) return {ok: true, async json() { return {
       status: "NAVIGATION_AUTHORIZED", page_content_hash: body.page_content_hash,
@@ -197,13 +218,22 @@ function internal(message, sender = {}) { return send(listeners.internal, messag
 function manualSender(overrides = {}) {
   return {tab: {id: 42, url: "https://apply.example.test/step-1"}, documentId: oldBrowserDocument, ...overrides};
 }
+async function eventually(predicate, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (predicate()) return;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error("Timed out waiting for the browser companion state transition.");
+}
 
 (async () => {
-  session.jobflowAssist = baseState();
+  session.jobflowAssist = {...baseState(), tab_id: null};
   const armedResult = await internal({
     type: "JOBFLOW_FILL_CURRENT", tab_id: 42, tab_url: "https://apply.example.test/step-1"
   });
   assert.equal(armedResult.status, "MANUAL_NAVIGATION_REQUIRED");
+  assert.equal(session.jobflowAssist.tab_id, 42, "the first approved application tab must be bound before writes");
   assert.equal(armStateWasUncommitted, true, "the manual stage must be saved only after the DOM arms it");
   assert.equal(session.jobflowAssist.stage, "MANUAL_NAVIGATION_REQUIRED");
   assert.equal(session.jobflowAssist.manual_navigation_browser_document_id, oldBrowserDocument);
@@ -255,10 +285,11 @@ function manualSender(overrides = {}) {
 
   currentCollected = collected("https://apply.example.test/advanced", oldDocumentInstance, "spa-new-form");
   currentBrowserDocument = oldBrowserDocument;
-  const spaResult = await internal({
-    type: "JOBFLOW_FILL_CURRENT", tab_id: 42, tab_url: "https://apply.example.test/advanced"
+  listeners.tabUpdated(42, {status: "complete"}, {
+    id: 42, status: "complete", url: "https://apply.example.test/advanced"
   });
-  assert.equal(spaResult.status, "AWAITING_USER_SUBMIT");
+  await eventually(() => session.jobflowAssist?.stage === "AWAITING_USER_SUBMIT");
+  assert.equal(session.jobflowAssist.stage, "AWAITING_USER_SUBMIT");
   const resumedBody = requests.filter((item) => item.url.endsWith("/resume-manual-navigation")).at(-1).body;
   assert.equal(resumedBody.url, "https://apply.example.test/advanced", "the new page URL must not be overwritten by old evidence");
   assert.equal(resumedBody.companion_tab_id, 42);
@@ -334,14 +365,70 @@ function manualSender(overrides = {}) {
   assert.equal(navigation.page_content_hash, authorization.body.page_content_hash);
   assert.equal(navigation.control_semantics_hash, authorization.body.control_semantics_hash);
 
+  session.jobflowAssist = {...baseState(), revision: 50};
+  prepareMode = "final";
+  dynamicReviewMode = true;
+  currentCollected = collected("https://apply.example.test/step-1", oldDocumentInstance, "conditional-form");
+  currentBrowserDocument = oldBrowserDocument;
+  const completeCountBeforeDynamicReview = requests.filter((item) => item.url.endsWith("/complete")).length;
+  const supplemental = await internal({
+    type: "JOBFLOW_FILL_CURRENT", tab_id: 42, tab_url: "https://apply.example.test/step-1"
+  });
+  assert.equal(supplemental.status, "SUPPLEMENTAL_REVIEW_REQUIRED");
+  assert.equal(supplemental.dynamic_field_count, 4);
+  assert.equal(session.jobflowAssist.stage, "SUPPLEMENTAL_REVIEW_REQUIRED");
+  assert.equal(
+    requests.filter((item) => item.url.endsWith("/complete")).length,
+    completeCountBeforeDynamicReview,
+    "a newly revealed question must return to review before completion"
+  );
+  assert.equal(session.jobflowAssist.last_result.automatic_retry, false);
+  dynamicReviewMode = false;
+
+  session.jobflowAssist = {...baseState(), revision: 60};
+  prepareMode = "final";
+  applyFailureMode = true;
+  currentCollected = collected("https://apply.example.test/step-1", oldDocumentInstance, "partial-apply");
+  const partialApply = await internal({
+    type: "JOBFLOW_FILL_CURRENT", tab_id: 42, tab_url: "https://apply.example.test/step-1"
+  });
+  assert.equal(partialApply.status, "APPLY_RESTART_REQUIRED");
+  assert.equal(partialApply.code, "COMPANION_APPLY_RESTART_REQUIRED");
+  assert.equal(partialApply.field_attempt_count, 1);
+  assert.equal(partialApply.file_attempt_count, 0);
+  assert.equal(partialApply.automatic_retry, false);
+  assert.equal(session.jobflowAssist.stage, "APPLY_RESTART_REQUIRED");
+  const abortRequest = requests.filter((item) => item.url.endsWith("/abort-page-apply")).at(-1);
+  assert.equal(abortRequest.body.cause_code, "COMPANION_CONTROL_REBIND_FAILED");
+  assert.equal(abortRequest.body.attempted_field_bindings.length, 1);
+  assert.equal(abortRequest.body.submit_events, 0);
+  assert.equal(abortRequest.body.navigation_actions, 0);
+  const abortCount = requests.filter((item) => item.url.endsWith("/abort-page-apply")).length;
+  const partialRetry = await internal({
+    type: "JOBFLOW_FILL_CURRENT", tab_id: 42, tab_url: "https://apply.example.test/step-1"
+  });
+  assert.equal(partialRetry.code, "COMPANION_APPLY_RESTART_REQUIRED");
+  assert.equal(requests.filter((item) => item.url.endsWith("/abort-page-apply")).length, abortCount);
+  const partialPublic = await send(listeners.external, {
+    type: "JOBFLOW_GET_STATUS",
+    binding: {base_url: session.jobflowAssist.base_url, assist_path: session.jobflowAssist.assist_path}
+  }, {url: `${session.jobflowAssist.base_url}/session/synthetic/`});
+  assert.equal(partialPublic.status, "APPLY_RESTART_REQUIRED");
+  assert.equal(partialPublic.last_result.field_attempt_count, 1);
+  assert.equal(JSON.stringify(partialPublic).includes("attempted_field_bindings"), false);
+  applyFailureMode = false;
+
   process.stdout.write(JSON.stringify({
     status: "PASS", arm_before_stage_commit: true, companion_tab_injected: true,
     forged_nonce_rejected: true, wrong_tab_rejected: true, wrong_document_rejected: true,
     prevented_default_rejected: true, replay_rejected: true, immediate_unload_recorded: true,
-    spa_resume_supported: true, unrelated_same_origin_rejected: true, no_automatic_retry: true,
+    automatic_resume_after_trusted_next: true, spa_resume_supported: true,
+    unrelated_same_origin_rejected: true, no_automatic_retry: true,
     expired_challenge_rejected: true, public_nonce_redacted: true,
     arm_failure_restart_required: true, arm_failure_no_retry: true,
-    explicit_button_fresh_proof_required: true, final_submit_user_only: true,
+    explicit_button_fresh_proof_required: true, dynamic_review_before_complete: true,
+    partial_apply_audited_once: true, partial_apply_no_retry: true,
+    final_submit_user_only: true,
     real_external_actions: 0
   }));
 })().catch((error) => {

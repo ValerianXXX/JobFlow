@@ -26,6 +26,17 @@
       "type": "array", "uniqueItems": true,
       "items": {"enum": ["email", "phone", "address", "linkedin", "website"]}
     },
+    "resume_contact_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "email": {"type": "array", "items": {"type": "string", "minLength": 3}, "maxItems": 10},
+        "phone": {"type": "array", "items": {"type": "string", "minLength": 3}, "maxItems": 10},
+        "address": {"type": "array", "items": {"type": "string", "minLength": 3}, "maxItems": 10},
+        "linkedin": {"type": "array", "items": {"type": "string", "minLength": 3}, "maxItems": 10},
+        "website": {"type": "array", "items": {"type": "string", "minLength": 3}, "maxItems": 10}
+      }
+    },
     "resume_facts": {
       "type": "array",
       "items": {

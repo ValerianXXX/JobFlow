@@ -1,50 +1,48 @@
-name: Feature request / 功能建议
-description: Propose a bounded improvement with explicit privacy and action impact. / 提出边界明确、说明隐私与动作影响的改进。
+name: Feature request
+description: Propose a bounded improvement with explicit privacy and action impact.
 title: "[Feature] "
 labels: ["enhancement", "needs-triage"]
 body:
   - type: markdown
     attributes:
-      value: |
-        Describe the user problem without attaching real applicant or recruiting-site data.
-        请说明用户问题，但不要附上真实求职者或招聘网站资料。
+      value: Describe the user problem without attaching real applicant or recruiting-site data.
   - type: textarea
     id: problem
     attributes:
-      label: User problem / 用户问题
+      label: User problem
     validations:
       required: true
   - type: textarea
     id: outcome
     attributes:
-      label: Desired outcome / 期望结果
+      label: Desired outcome
     validations:
       required: true
   - type: dropdown
     id: ai
     attributes:
-      label: AI impact / AI 影响
-      options: ["No AI change / 不改变 AI", "Changes AI analysis / 改变 AI 分析", "Adds an AI adapter / 新增 AI 适配器", "Unsure / 不确定"]
+      label: AI impact
+      options: ["No AI change", "Changes AI analysis", "Adds an AI adapter", "Unsure"]
     validations:
       required: true
   - type: dropdown
     id: private_data
     attributes:
-      label: Private-data impact / 私人数据影响
-      options: ["None / 无", "Secure-ref only / 仅 secure-ref", "New private field / 新私人字段", "Unsure / 不确定"]
+      label: Private-data impact
+      options: ["None", "Secure-ref only", "New private field", "Unsure"]
     validations:
       required: true
   - type: dropdown
     id: external_action
     attributes:
-      label: External-action impact / 外部动作影响
-      options: ["None / 无", "Offline synthetic only / 仅离线合成", "Would require future authorization / 未来需另行授权", "Unsure / 不确定"]
+      label: External-action impact
+      options: ["None", "Offline synthetic only", "Would require future authorization", "Unsure"]
     validations:
       required: true
   - type: textarea
     id: acceptance
     attributes:
-      label: Acceptance criteria / 验收标准
-      description: List observable results and tests. / 列出可观察结果与测试。
+      label: Acceptance criteria
+      description: List observable results and tests.
     validations:
       required: true

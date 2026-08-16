@@ -209,7 +209,18 @@ def _sections(text: str) -> dict[str, list[str]]:
 
 
 def _level(title: str, text: str) -> str:
-    material = f"{title} {text[:2000]}".casefold()
+    # Seniority words in duties (for example, "present to senior management")
+    # do not describe the role itself. Infer a level only from the role title
+    # or from an explicit level/seniority field; otherwise leave it UNKNOWN for
+    # the applicant to review.
+    explicit = " ".join(
+        match.group(1)
+        for match in re.finditer(
+            r"(?im)^(?:level|seniority|job level|职位级别|职级)\s*[:：]\s*([^\r\n]{1,80})$",
+            text,
+        )
+    )
+    material = f"{title} {explicit}".casefold()
     levels = (
         ("executive", ("chief ", "vice president", "vp ", "总裁", "首席")),
         ("director", ("director", "head of", "负责人", "总监")),

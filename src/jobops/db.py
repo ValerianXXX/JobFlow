@@ -12,7 +12,7 @@ from .state_machine import BLOCKING_STATES, assert_transition
 from .util import iso_utc
 
 
-LATEST_SCHEMA_VERSION = 11
+LATEST_SCHEMA_VERSION = 12
 
 
 MIGRATION_001_SQL = """
@@ -592,6 +592,44 @@ COMMIT;
 """
 
 
+MIGRATION_012_SQL = """
+BEGIN IMMEDIATE;
+
+DROP TRIGGER guided_intake_events_append_only_update;
+DROP TRIGGER guided_intake_events_append_only_delete;
+DROP INDEX idx_guided_intake_events_intake;
+ALTER TABLE guided_intake_events RENAME TO guided_intake_events_v11;
+
+CREATE TABLE guided_intake_events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    intake_id TEXT NOT NULL,
+    event_type TEXT NOT NULL CHECK(event_type IN (
+        'STARTED','PAIRED','SEARCH_RESULTS_INSPECTED','JOB_PAGE_INSPECTED',
+        'APPLY_ROUTE_INSPECTED','FORM_INSPECTED','REVIEW_PACKET_READY',
+        'DEFERRED','FAILED','EXPIRED'
+    )),
+    evidence_hash TEXT NOT NULL,
+    application_id TEXT,
+    created_at TEXT NOT NULL
+);
+INSERT INTO guided_intake_events(event_id,intake_id,event_type,evidence_hash,application_id,created_at)
+SELECT event_id,intake_id,event_type,evidence_hash,application_id,created_at
+FROM guided_intake_events_v11;
+CREATE INDEX idx_guided_intake_events_intake
+ON guided_intake_events(intake_id,event_id);
+CREATE TRIGGER guided_intake_events_append_only_update
+BEFORE UPDATE ON guided_intake_events
+BEGIN SELECT RAISE(ABORT, 'guided intake events are append-only'); END;
+CREATE TRIGGER guided_intake_events_append_only_delete
+BEFORE DELETE ON guided_intake_events
+BEGIN SELECT RAISE(ABORT, 'guided intake events are append-only'); END;
+
+DROP TABLE guided_intake_events_v11;
+INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','12');
+COMMIT;
+"""
+
+
 def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
@@ -696,6 +734,10 @@ class JobOpsDB:
             if version == 10:
                 connection.executescript(MIGRATION_011_SQL)
                 applied.append(11)
+                version = 11
+            if version == 11:
+                connection.executescript(MIGRATION_012_SQL)
+                applied.append(12)
         return applied
 
     def initialize(self) -> None:

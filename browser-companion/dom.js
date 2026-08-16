@@ -15,9 +15,91 @@
   let manualSignalSent = false;
   let pendingManualClick = null;
   let submitSignalSent = false;
+  let applicationScopeHint = null;
 
   function compact(value, limit = MAX_TEXT) {
     return String(value || "").replace(/\s+/g, " ").trim().slice(0, limit);
+  }
+
+  function composedParent(element) {
+    if (!element) return null;
+    if (element.parentElement) return element.parentElement;
+    const root = element.getRootNode?.();
+    return root instanceof ShadowRoot ? root.host : null;
+  }
+
+  function shadowRootFor(element) {
+    if (!element) return null;
+    try {
+      const privileged = chrome?.dom?.openOrClosedShadowRoot?.(element);
+      if (privileged) return privileged;
+    } catch (_error) {
+      // Fall back to standards-visible open roots on browsers without chrome.dom.
+    }
+    return element.shadowRoot || null;
+  }
+
+  function openRoots() {
+    const roots = [document];
+    const seen = new Set(roots);
+    for (let index = 0; index < roots.length && roots.length < 256; index += 1) {
+      const root = roots[index];
+      for (const element of root.querySelectorAll("*")) {
+        const shadow = shadowRootFor(element);
+        if (shadow && !seen.has(shadow)) {
+          seen.add(shadow);
+          roots.push(shadow);
+          if (roots.length >= 256) break;
+        }
+      }
+    }
+    return roots;
+  }
+
+  function deepQueryAll(selector) {
+    const output = [];
+    const seen = new Set();
+    for (const root of openRoots()) {
+      for (const element of root.querySelectorAll(selector)) {
+        if (!seen.has(element)) {
+          seen.add(element);
+          output.push(element);
+        }
+      }
+    }
+    return output;
+  }
+
+  function deepQuery(selector) {
+    return deepQueryAll(selector)[0] || null;
+  }
+
+  function deepClosest(element, selector) {
+    let current = element;
+    for (let depth = 0; current && depth < 64; depth += 1) {
+      const found = current.closest?.(selector);
+      if (found) return found;
+      current = composedParent(current);
+    }
+    return null;
+  }
+
+  function composedAncestors(element) {
+    const output = [];
+    let current = element;
+    for (let depth = 0; current && depth < 96; depth += 1) {
+      output.push(current);
+      current = composedParent(current);
+    }
+    return output;
+  }
+
+  function rootElementById(element, id) {
+    const root = element?.getRootNode?.();
+    // Salesforce/LWC deliberately throws for ShadowRoot.getElementById;
+    // standards-compatible querySelector remains available on open roots.
+    const local = root?.querySelector?.(`[id="${CSS.escape(id)}"]`);
+    return local || document.getElementById(id) || deepQueryAll(`[id="${CSS.escape(id)}"]`)[0] || null;
   }
 
   function escapeHTML(value) {
@@ -32,8 +114,14 @@
   }
 
   function visible(element) {
-    const style = getComputedStyle(element);
-    return style.display !== "none" && style.visibility !== "hidden" && !element.hidden;
+    let current = element;
+    for (let depth = 0; current && depth < 64; depth += 1) {
+      const style = getComputedStyle(current);
+      if (style.display === "none" || style.visibility === "hidden" || current.hidden) return false;
+      current = composedParent(current);
+    }
+    if (element instanceof HTMLInputElement && element.type.toLowerCase() === "file") return true;
+    return element.getClientRects().length > 0;
   }
 
   function controlType(element) {
@@ -44,17 +132,160 @@
     return "other";
   }
 
+  function referencedLabelText(element) {
+    const direct = directText(element);
+    if (direct) return direct;
+    const clone = element?.cloneNode?.(true);
+    if (!clone?.querySelectorAll) return compact(element?.innerText || element?.textContent);
+    for (const child of clone.querySelectorAll(
+      "input,select,textarea,button,[role='alert'],.slds-assistive-text,.slds-form-element__help,[data-help-message]"
+    )) child.remove();
+    return compact(clone.innerText || clone.textContent);
+  }
+
   function labelFor(element) {
     const labels = element.labels ? Array.from(element.labels) : [];
-    const text = compact(labels.map((item) => item.innerText || item.textContent).join(" "));
-    return text || compact(element.getAttribute("aria-label")) || compact(element.getAttribute("placeholder"));
+    const text = compact(labels.map(referencedLabelText).join(" "));
+    if (text) return text;
+    const labelledBy = compact(element.getAttribute("aria-labelledby"));
+    if (labelledBy) {
+      const labelled = labelledBy.split(/\s+/).map((id) => rootElementById(element, id))
+        .filter(Boolean).map(referencedLabelText).join(" ");
+      if (compact(labelled)) return compact(labelled);
+    }
+    const id = compact(element.getAttribute("id"));
+    if (id) {
+      const root = element.getRootNode?.();
+      const explicit = root?.querySelector?.(`label[for="${CSS.escape(id)}"]`);
+      if (compact(explicit?.innerText || explicit?.textContent)) return compact(explicit.innerText || explicit.textContent);
+    }
+    let current = element;
+    for (let depth = 0; current && depth < 12; depth += 1) {
+      for (const attribute of ["label", "data-label", "aria-label", "placeholder"]) {
+        const candidate = compact(current.getAttribute?.(attribute));
+        if (candidate) return candidate;
+      }
+      current = composedParent(current);
+    }
+    return compact(element.getAttribute("placeholder")) || compact(element.getAttribute("name"));
+  }
+
+  function meaningfulApplicantControl(element) {
+    const type = controlType(element);
+    if (element instanceof HTMLInputElement && ["file", "radio", "checkbox"].includes(type)) return true;
+    if (element instanceof HTMLButtonElement && element.getAttribute("aria-haspopup")?.toLowerCase() === "true") return true;
+    if (labelFor(element)) return true;
+    if (element instanceof HTMLSelectElement && Array.from(element.options).some((option) => compact(option.textContent))) return true;
+    return Boolean(compact(
+      element.getAttribute?.("name") || element.getAttribute?.("placeholder") ||
+      element.getAttribute?.("aria-label") || element.getAttribute?.("autocomplete") ||
+      element.innerText || element.textContent || element.value
+    ));
+  }
+
+  function choiceContainer(element) {
+    return deepClosest(element, ".as-questions-container") || deepClosest(
+      element,
+      ".as-answers-container,fieldset,[role='radiogroup'],[role='group'],.slds-form-element,lightning-radio-group,lightning-checkbox-group"
+    );
+  }
+
+  function choiceQuestion(elements) {
+    const first = elements[0];
+    if (!first) return "";
+    const labelledBy = compact(first.getAttribute("aria-labelledby"));
+    if (labelledBy) {
+      const text = labelledBy.split(/\s+/).map((id) => rootElementById(first, id))
+        .filter(Boolean).map((item) => item.innerText || item.textContent).join(" ");
+      if (compact(text)) return compact(text);
+    }
+    const container = choiceContainer(first);
+    const labelled = shadowRootFor(container)?.querySelector("legend,.as-question-title,.slds-form-element__label,[data-jobflow-question]") ||
+      container?.querySelector("legend,.as-question-title,.slds-form-element__label,[data-jobflow-question]");
+    const text = compact(labelled?.innerText || labelled?.textContent);
+    if (text && !elements.some((element) => labelFor(element) === text)) return text;
+    return compact(first.getAttribute("name")).replace(/[_-]+/g, " ");
+  }
+
+  function choiceDescriptor(elements, type) {
+    return {
+      jobflowChoiceGroup: true,
+      type,
+      elements,
+      question: choiceQuestion(elements),
+      options: elements.map((element) => labelFor(element)).filter(Boolean)
+    };
+  }
+
+  function directText(element) {
+    if (!element) return "";
+    return compact(Array.from(element.childNodes || [])
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .map((node) => node.textContent || "")
+      .join(" "));
+  }
+
+  function customSelectQuestion(element) {
+    for (const ancestor of composedAncestors(element).slice(0, 12)) {
+      const label = ancestor.matches?.(".labelTextDropDown,[data-jobflow-select-label]")
+        ? ancestor
+        : shadowRootFor(ancestor)?.querySelector(".labelTextDropDown,[data-jobflow-select-label]") ||
+          ancestor.querySelector?.(".labelTextDropDown,[data-jobflow-select-label]");
+      const text = directText(label) || compact(label?.getAttribute?.("data-jobflow-select-label"));
+      if (text) return text.replace(/\s*\*\s*$/, "");
+    }
+    return labelFor(element).replace(/\s*\*\s*$/, "");
+  }
+
+  function customSelectOwner(element) {
+    return deepClosest(element, "c-lwc-drop-down-menu,[data-jobflow-custom-select]") || composedParent(element);
+  }
+
+  function customSelectCurrentLabel(binding) {
+    const element = binding?.element;
+    const owner = binding?.owner;
+    const raw = compact(
+      element?.getAttribute?.("data-selected-value") ||
+      owner?.getAttribute?.("data-selected-value") ||
+      element?.getAttribute?.("aria-valuetext") ||
+      directText(element) || element?.innerText || element?.textContent || element?.value ||
+      element?.getAttribute?.("aria-label") || owner?.getAttribute?.("aria-label")
+    );
+    // Salesforce/LWC buttons commonly expose the current choice together with
+    // an accessibility affordance (for example, "Mobile Show menu").  The
+    // affordance is not part of the applicant's selected value.
+    return compact(raw
+      .replace(/\s+(?:show|hide|open|close)\s+(?:the\s+)?(?:menu|options?)\s*$/i, "")
+      .replace(/\s*(?:显示|隐藏|展开|收起)(?:菜单|选项)\s*$/, ""));
+  }
+
+  function customSelectDescriptor(element) {
+    const owner = customSelectOwner(element);
+    const question = customSelectQuestion(element);
+    const label = shadowRootFor(owner)?.querySelector(".labelTextDropDown,[data-jobflow-select-label]") ||
+      owner?.querySelector?.(".labelTextDropDown,[data-jobflow-select-label]");
+    return {
+      jobflowCustomSelect: true,
+      element,
+      owner,
+      question,
+      name: compact(owner?.getAttribute?.("data-id") || element.getAttribute("name")),
+      required: /\*/.test(compact(label?.textContent || question)) || element.getAttribute("aria-required") === "true"
+    };
   }
 
   function sectionFor(element) {
-    const fieldset = element.closest("fieldset");
+    const fieldset = deepClosest(element, "fieldset");
     const legend = fieldset?.querySelector(":scope > legend");
     if (legend) return compact(legend.innerText || legend.textContent);
-    const headings = Array.from(document.querySelectorAll("h1,h2,h3"));
+    const container = deepClosest(element, ".slds-form-element,[role='group'],section");
+    const containerLabel = shadowRootFor(container)?.querySelector("legend,.slds-form-element__label,h1,h2,h3") ||
+      container?.querySelector(":scope > legend,:scope > .slds-form-element__label,:scope > h1,:scope > h2,:scope > h3");
+    if (compact(containerLabel?.innerText || containerLabel?.textContent)) {
+      return compact(containerLabel.innerText || containerLabel.textContent);
+    }
+    const root = element.getRootNode?.() || document;
+    const headings = Array.from(root.querySelectorAll?.("h1,h2,h3") || []);
     let latest = "";
     for (const heading of headings) {
       const relation = heading.compareDocumentPosition(element);
@@ -63,18 +294,27 @@
     return latest;
   }
 
+  function relevantEmbeddedFrame(frame) {
+    if (!frame || !visible(frame) || frame.getAttribute("aria-hidden") === "true") return false;
+    const rect = frame.getBoundingClientRect();
+    // Analytics and consent vendors commonly inject zero-sized cross-origin
+    // frames. They cannot contain an applicant-visible control and must not
+    // turn an otherwise first-party form into a false security stop.
+    return rect.width >= 80 && rect.height >= 50 && rect.width * rect.height >= 8_000;
+  }
+
   function blockerSignals() {
     const text = compact(document.body?.innerText || "", 250000).toLowerCase();
     const signals = [];
     if (/captcha|recaptcha|hcaptcha|verify you are human|人机验证/.test(text)) signals.push("CAPTCHA");
     if (/multi[- ]factor|two[- ]factor|one[- ]time password|verification code|验证码|动态口令/.test(text)) signals.push("MFA");
-    if (/sign in|log in|login required|登录/.test(text) && document.querySelector('input[type="password"]')) signals.push("LOGIN");
+    if (/sign in|log in|login required|登录/.test(text) && deepQuery('input[type="password"]')) signals.push("LOGIN");
     if (/create account|register account|sign up|创建账号|注册账号/.test(text)) signals.push("ACCOUNT_CREATION");
-    for (const frame of document.querySelectorAll("iframe[src]")) {
+    for (const frame of deepQueryAll("iframe[src]").filter(relevantEmbeddedFrame)) {
       try { if (new URL(frame.src, location.href).origin !== location.origin) signals.push("CROSS_ORIGIN_IFRAME"); }
       catch (_error) { signals.push("CROSS_ORIGIN_IFRAME"); }
     }
-    for (const form of document.forms) {
+    for (const form of deepQueryAll("form")) {
       try { if (new URL(form.action || location.href, location.href).origin !== location.origin) signals.push("CROSS_ORIGIN_FORM"); }
       catch (_error) { signals.push("CROSS_ORIGIN_FORM"); }
     }
@@ -82,20 +322,108 @@
   }
 
   function serializedFormSnapshot() {
-    const controls = Array.from(document.querySelectorAll("input,select,textarea,button"))
-      .filter((element) => !(element instanceof HTMLInputElement && element.type.toLowerCase() === "hidden"));
+    const allControls = deepQueryAll("input,select,textarea,button")
+      .filter((element) => !(element instanceof HTMLInputElement && element.type.toLowerCase() === "hidden"))
+      .filter((element) => visible(element))
+      .filter(meaningfulApplicantControl);
+    const applicationSignals = allControls.filter((element) => (
+      element instanceof HTMLInputElement && (
+        element.type.toLowerCase() === "file" ||
+        (element.required && ["text", "email", "tel", "url"].includes(element.type.toLowerCase()))
+      )
+    ));
+    const signalChains = applicationSignals.map((element) => composedAncestors(element));
+    const applicationScope = signalChains.length >= 2 ? signalChains[0].find((candidate) => (
+      candidate !== document.body && candidate !== document.documentElement &&
+      signalChains.every((chain) => chain.includes(candidate))
+    )) : null;
+    const formScores = new Map();
+    for (const element of allControls) {
+      const form = deepClosest(element, "form");
+      if (!form) continue;
+      const type = controlType(element);
+      const score = (formScores.get(form) || 0) + (type === "file" ? 20 : ["submit", "button"].includes(type) ? 1 : 4);
+      formScores.set(form, score);
+    }
+    const bestForm = [...formScores.entries()].sort((left, right) => right[1] - left[1])[0]?.[0] || null;
+    // Once a resume upload succeeds, some ATS pages remove the file input.  If
+    // the remaining required text fields live in a nested Contact section, an
+    // application-signal-only scope would incorrectly hide every later
+    // qualification question and the final Submit boundary.  A concrete form
+    // is the stronger application container, so keep its complete control set.
+    const hintedControls = applicationScopeHint?.isConnected
+      ? allControls.filter((element) => composedAncestors(element).includes(applicationScopeHint))
+      : [];
+    const scopedControls = hintedControls.length ? hintedControls : bestForm ? allControls.filter((element) => {
+      const owner = deepClosest(element, "form");
+      if (owner === bestForm) return true;
+      if (owner) return false;
+      if (!(element instanceof HTMLButtonElement || element instanceof HTMLInputElement)) return false;
+      const label = compact(element.innerText || element.textContent || element.value || element.getAttribute("aria-label"));
+      return /next|continue|review|submit|apply|send|finish|complete|下一步|继续|提交|投递|发送|完成/i.test(label);
+    }) : applicationScope
+      ? allControls.filter((element) => composedAncestors(element).includes(applicationScope))
+      : allControls;
+    if (!applicationScopeHint?.isConnected) {
+      applicationScopeHint = applicationScope || bestForm || null;
+    }
+    const rawControls = scopedControls;
+    const controls = [];
+    const consumed = new Set();
+    for (const element of rawControls) {
+      if (consumed.has(element)) continue;
+      if (
+        element instanceof HTMLButtonElement &&
+        element.getAttribute("aria-haspopup")?.toLowerCase() === "true"
+      ) {
+        consumed.add(element);
+        controls.push(customSelectDescriptor(element));
+      } else if (element instanceof HTMLInputElement && ["radio", "checkbox"].includes(element.type.toLowerCase())) {
+        const name = compact(element.getAttribute("name"));
+        const container = choiceContainer(element);
+        const peers = rawControls.filter((candidate) => (
+          candidate instanceof HTMLInputElement && candidate.type.toLowerCase() === element.type.toLowerCase() &&
+          (container ? choiceContainer(candidate) === container : name
+            ? compact(candidate.getAttribute("name")) === name : candidate === element)
+        ));
+        peers.forEach((peer) => consumed.add(peer));
+        controls.push(choiceDescriptor(peers, element.type.toLowerCase()));
+      } else {
+        consumed.add(element);
+        controls.push(element);
+      }
+    }
     const clientRefs = [];
     const parts = ["<!doctype html><html><body>"];
-    for (const form of document.forms) {
+    for (const form of deepQueryAll("form")) {
       parts.push(`<form${safeAttribute("action", form.getAttribute("action") || "")}></form>`);
     }
-    for (const frame of document.querySelectorAll("iframe[src]")) {
+    for (const frame of deepQueryAll("iframe[src]").filter(relevantEmbeddedFrame)) {
       parts.push(`<iframe${safeAttribute("src", frame.getAttribute("src"))}></iframe>`);
     }
-    controls.forEach((element, index) => {
+    controls.forEach((binding, index) => {
       const clientRef = `DOM-${String(index + 1).padStart(12, "0")}`;
       clientRefs.push(clientRef);
       const syntheticId = `jobflow-control-${index + 1}`;
+      if (binding?.jobflowChoiceGroup) {
+        const question = binding.question || binding.options.join(" / ") || "Choice";
+        parts.push(`<h3>${escapeHTML(sectionFor(binding.elements[0]))}</h3>`);
+        parts.push(`<label for="${syntheticId}">${escapeHTML(question)}</label>`);
+        const required = binding.elements.some((element) => element.required || element.getAttribute("aria-required") === "true") ? " required" : "";
+        parts.push(`<select${safeAttribute("id", syntheticId)}${safeAttribute("name", binding.elements[0]?.getAttribute("name"))}${required}>`);
+        for (const option of binding.options) parts.push(`<option>${escapeHTML(option)}</option>`);
+        parts.push("</select>");
+        return;
+      }
+      if (binding?.jobflowCustomSelect) {
+        const question = binding.question || binding.name || "Choice";
+        parts.push(`<h3>${escapeHTML(sectionFor(binding.element))}</h3>`);
+        parts.push(`<label for="${syntheticId}">${escapeHTML(question)}</label>`);
+        const required = binding.required ? " required" : "";
+        parts.push(`<select${safeAttribute("id", syntheticId)}${safeAttribute("name", binding.name)}${safeAttribute("aria-label", question)}${required} data-jobflow-custom-select="true"></select>`);
+        return;
+      }
+      const element = binding;
       const section = sectionFor(element);
       if (section) parts.push(`<h3>${escapeHTML(section)}</h3>`);
       const label = labelFor(element);
@@ -103,7 +431,8 @@
       const required = element.required || element.getAttribute("aria-required") === "true" ? " required" : "";
       const common = `${safeAttribute("id", syntheticId)}${safeAttribute("name", element.getAttribute("name"))}` +
         `${safeAttribute("autocomplete", element.getAttribute("autocomplete"))}${safeAttribute("placeholder", element.getAttribute("placeholder"))}` +
-        `${safeAttribute("aria-label", element.getAttribute("aria-label"))}${required}`;
+        `${safeAttribute("aria-label", element.getAttribute("aria-label"))}${safeAttribute("maxlength", element.getAttribute("maxlength"))}` +
+        `${safeAttribute("minlength", element.getAttribute("minlength"))}${safeAttribute("pattern", element.getAttribute("pattern"))}${required}`;
       if (element instanceof HTMLSelectElement) {
         parts.push(`<select${common}>`);
         for (const option of element.options) parts.push(`<option>${escapeHTML(compact(option.textContent, 200))}</option>`);
@@ -141,6 +470,18 @@
         blocker_signals: blockerSignals()
       }
     };
+  }
+
+  async function collectFormWhenReady() {
+    let collected = collectForm();
+    if (collected.payload.client_refs.length > 0) return collected;
+    const deadline = Date.now() + 20000;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      collected = collectForm();
+      if (collected.payload.client_refs.length > 0) return collected;
+    }
+    return collected;
   }
 
   function readableLines(value, limit = 750000) {
@@ -199,12 +540,35 @@
 
   function collectJobPage() {
     const posting = structuredJobPosting();
-    const jobRoot = document.querySelector("main,[role=main],article") || document.body;
+    // Component-driven career sites often leave an empty <main> shell while
+    // rendering the actual posting in a sibling/custom-element subtree.  Pick
+    // the richest visible candidate instead of accepting the first structural
+    // landmark and falsely reporting an empty role.
+    const jobRoots = [...document.querySelectorAll("main,[role=main],article"), document.body]
+      .filter((element, index, values) => element && values.indexOf(element) === index);
+    const jobRoot = jobRoots.reduce((best, candidate) => (
+      compact(candidate?.innerText || "", 750000).length > compact(best?.innerText || "", 750000).length
+        ? candidate : best
+    ), document.body);
     const visibleText = readableLines(jobRoot?.innerText || "");
-    const heading = compact(document.querySelector("main h1,h1")?.textContent, 500);
+    const heading = compact(deepQuery("main h1,h1")?.textContent, 500);
     const siteName = compact(document.querySelector('meta[property="og:site_name"]')?.content, 300);
     const company = compact(posting?.hiringOrganization?.name, 300) || siteName;
     const title = compact(posting?.title, 500) || heading || compact(document.title, 500);
+    const applyCandidates = [];
+    const seenApplyUrls = new Set();
+    for (const anchor of deepQueryAll("a[href]")) {
+      if (!visible(anchor)) continue;
+      const label = compact(anchor.innerText || anchor.textContent || anchor.getAttribute("aria-label"), 200);
+      if (!/(?:^|\b)(?:apply(?:\s+now)?|start\s+(?:an?\s+)?application)(?:\b|$)|申请|立即申请|开始申请/i.test(label)) continue;
+      let url;
+      try { url = new URL(anchor.href, location.href); }
+      catch (_error) { continue; }
+      if (url.protocol !== "https:" || seenApplyUrls.has(url.href)) continue;
+      seenApplyUrls.add(url.href);
+      applyCandidates.push({url: url.href, label});
+      if (applyCandidates.length >= 20) break;
+    }
     return {
       status: "COLLECTED",
       payload: {
@@ -215,9 +579,32 @@
         job_location: locationText(posting),
         visible_text: visibleText,
         blocker_signals: blockerSignals(),
-        application_fields_present: Boolean(document.querySelector("input:not([type=hidden]),select,textarea"))
+        application_fields_present: Boolean(deepQuery("input:not([type=hidden]),select,textarea")),
+        apply_candidates: applyCandidates
       }
     };
+  }
+
+  function collectSearchResults() {
+    const results = [];
+    const seen = new Set();
+    for (const anchor of deepQueryAll("a[href]")) {
+      if (!visible(anchor)) continue;
+      let url;
+      try { url = new URL(anchor.href, location.href); }
+      catch (_error) { continue; }
+      if (url.protocol !== "https:" || url.origin === location.origin || seen.has(url.href)) continue;
+      const title = compact(anchor.innerText || anchor.textContent || anchor.getAttribute("aria-label"), 300);
+      if (!title) continue;
+      const container = deepClosest(anchor, "article,li,[role='listitem'],.g,.b_algo,.result") || anchor.parentElement;
+      const containerText = compact(container?.innerText || container?.textContent, 900);
+      const snippet = compact(containerText.replace(title, ""), 500);
+      seen.add(url.href);
+      results.push({url: url.href, title, snippet});
+      if (results.length >= 100) break;
+    }
+    if (!results.length) return {status: "BLOCKED", code: "COMPANION_SEARCH_RESULTS_UNAVAILABLE"};
+    return {status: "COLLECTED", payload: {search_origin: location.origin, results}};
   }
 
   async function sha256(bytesOrText) {
@@ -245,6 +632,194 @@
     }
     element.dispatchEvent(new Event("input", {bubbles: true}));
     element.dispatchEvent(new Event("change", {bubbles: true}));
+  }
+
+  function normalizedChoice(value) {
+    return compact(value, 500).toLocaleLowerCase().replace(/[\s_-]+/g, " ");
+  }
+
+  function choiceApplied(element) {
+    return Boolean(element?.checked || element?.getAttribute?.("aria-checked") === "true");
+  }
+
+  function waitForChoiceApplied(element, maximumMilliseconds = 1200) {
+    const started = Date.now();
+    return new Promise((resolve) => {
+      const inspect = () => {
+        if (choiceApplied(element)) return resolve(true);
+        if (Date.now() - started >= maximumMilliseconds) return resolve(false);
+        setTimeout(inspect, 40);
+      };
+      inspect();
+    });
+  }
+
+  async function applyChoiceValue(binding, value) {
+    const desired = normalizedChoice(value);
+    const target = binding.elements.find((element) => {
+      const label = normalizedChoice(labelFor(element));
+      const raw = normalizedChoice(element.getAttribute("value"));
+      return desired === label || (raw && desired === raw);
+    });
+    if (!target) throw new Error("CHOICE_OPTION_NOT_FOUND");
+    if (!choiceApplied(target)) {
+      const label = target.labels ? Array.from(target.labels).find((item) => visible(item)) : null;
+      if (label) HTMLElement.prototype.click.call(label);
+      else HTMLInputElement.prototype.click.call(target);
+    }
+    if (!(await waitForChoiceApplied(target))) {
+      // Some component frameworks do not forward a synthetic label click.
+      // Retry the underlying input exactly once and then fail closed.
+      HTMLInputElement.prototype.click.call(target);
+    }
+    if (!(await waitForChoiceApplied(target))) {
+      throw new Error("CHOICE_VALUE_NOT_APPLIED");
+    }
+    return target;
+  }
+
+  function customOptionValue(element) {
+    return compact(
+      element?.getAttribute?.("data-value") || element?.getAttribute?.("value") ||
+      element?.getAttribute?.("label") || element?.getAttribute?.("aria-label") ||
+      element?.innerText || element?.textContent
+    );
+  }
+
+  function waitForExactCustomOption(value, maximumMilliseconds = 7000) {
+    const desired = normalizedChoice(value);
+    const started = Date.now();
+    return new Promise((resolve, reject) => {
+      const inspect = () => {
+        const option = deepQueryAll("lightning-menu-item,[role='menuitem'],[role='option'],[data-value]")
+          .find((candidate) => visible(candidate) && normalizedChoice(customOptionValue(candidate)) === desired);
+        if (option) return resolve(option);
+        if (Date.now() - started >= maximumMilliseconds) return reject(new Error("CUSTOM_SELECT_OPTION_NOT_FOUND"));
+        setTimeout(inspect, 80);
+      };
+      inspect();
+    });
+  }
+
+  async function applyCustomSelectValue(binding, value) {
+    const element = binding?.element;
+    if (!(element instanceof HTMLButtonElement) || !element.isConnected || element.disabled) {
+      throw new Error("CUSTOM_SELECT_CHANGED");
+    }
+    if (normalizedChoice(customSelectCurrentLabel(binding)) === normalizedChoice(value)) return;
+    HTMLElement.prototype.click.call(element);
+    const option = await waitForExactCustomOption(value);
+    HTMLElement.prototype.click.call(option);
+    await waitForDomQuiet({quietMilliseconds: 250, maximumMilliseconds: 5000});
+    if (normalizedChoice(customSelectCurrentLabel(binding)) !== normalizedChoice(value)) {
+      throw new Error("CUSTOM_SELECT_VERIFY_FAILED");
+    }
+    // Some LWC menus retain their overlay after a successful option click.
+    // Close only the same non-navigation choice button that JobFlow just
+    // verified; this never targets Next or final Submit.
+    if (element.getAttribute("aria-expanded") === "true") {
+      element.blur();
+      element.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "Escape", code: "Escape", bubbles: true, cancelable: true
+      }));
+      await new Promise((resolve) => setTimeout(resolve, 120));
+      if (element.getAttribute("aria-expanded") === "true") {
+        HTMLElement.prototype.click.call(element);
+        await waitForDomQuiet({quietMilliseconds: 180, maximumMilliseconds: 1800});
+      }
+      if (element.getAttribute("aria-expanded") === "true") {
+        throw new Error("CUSTOM_SELECT_CLOSE_FAILED");
+      }
+    }
+  }
+
+  function waitForDomQuiet({quietMilliseconds = 900, maximumMilliseconds = 30000} = {}) {
+    return new Promise((resolve) => {
+      let quietTimer = null;
+      let maximumTimer = null;
+      const finish = () => {
+        observer.disconnect();
+        if (quietTimer) clearTimeout(quietTimer);
+        if (maximumTimer) clearTimeout(maximumTimer);
+        resolve();
+      };
+      const armQuiet = () => {
+        if (quietTimer) clearTimeout(quietTimer);
+        quietTimer = setTimeout(finish, quietMilliseconds);
+      };
+      const observer = new MutationObserver(armQuiet);
+      observer.observe(document.documentElement, {subtree: true, childList: true, attributes: true, characterData: true});
+      maximumTimer = setTimeout(finish, maximumMilliseconds);
+      armQuiet();
+    });
+  }
+
+  function exactFileEvidence(scope, filename) {
+    const text = compact((scope?.isConnected ? scope : document.body)?.innerText || "", 250000);
+    if (!text.includes(filename)) return false;
+    return /upload(?:ed)?|success|attach(?:ed)?|received|已上传|上传成功|附件/i.test(text);
+  }
+
+  async function attachApprovedFile(element, item) {
+    const verificationScope = deepClosest(element, "form") || element.parentElement || document.body;
+    const blob = await streamFile(item.download_url);
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    if (await sha256(bytes) !== item.sha256) throw new Error("COMPANION_FILE_HASH_MISMATCH");
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([bytes], item.filename, {type: "application/octet-stream", lastModified: Date.now()}));
+    element.files = transfer.files;
+    element.dispatchEvent(new Event("input", {bubbles: true}));
+    element.dispatchEvent(new Event("change", {bubbles: true}));
+    await waitForDomQuiet();
+    const retained = element.isConnected && element.files && element.files.length === 1 && element.files[0].name === item.filename;
+    if (!retained && !exactFileEvidence(verificationScope, item.filename)) {
+      throw new Error("COMPANION_FILE_VERIFY_FAILED");
+    }
+  }
+
+  function bindingRebindSignature(binding) {
+    if (binding?.jobflowChoiceGroup) {
+      return JSON.stringify([
+        "choice", controlType(binding.elements[0]), compact(binding.elements[0]?.getAttribute("name")),
+        compact(binding.question), binding.options.map((item) => normalizedChoice(item))
+      ]);
+    }
+    if (binding?.jobflowCustomSelect) {
+      return JSON.stringify([
+        "custom-select", compact(binding.name), compact(binding.question),
+        compact(binding.element?.getAttribute("aria-label"))
+      ]);
+    }
+    const element = binding;
+    const type = controlType(element);
+    const stableIdentity = [
+      compact(element?.getAttribute?.("name")), compact(element?.getAttribute?.("autocomplete")),
+      compact(element?.getAttribute?.("placeholder")), compact(element?.getAttribute?.("aria-label"))
+    ];
+    return JSON.stringify([
+      "control", type, ...stableIdentity,
+      type === "button" || type === "submit"
+        ? compact(element?.innerText || element?.textContent || element?.value)
+        : stableIdentity.some(Boolean) ? "" : compact(labelFor(element))
+    ]);
+  }
+
+  function rebindControlsAfterUpload(requiredRefs, signatures) {
+    const snapshot = serializedFormSnapshot();
+    const current = snapshot.controls.map((binding, index) => ({
+      binding, clientRef: snapshot.clientRefs[index], signature: bindingRebindSignature(binding)
+    }));
+    const rebound = new Map();
+    for (const clientRef of requiredRefs) {
+      const expected = signatures.get(clientRef);
+      const matches = current.filter((item) => item.signature === expected);
+      if (matches.length !== 1) {
+        return {status: "BLOCKED", code: "COMPANION_CONTROL_REBIND_FAILED", client_ref: clientRef};
+      }
+      rebound.set(clientRef, matches[0].binding);
+    }
+    for (const [clientRef, binding] of rebound) controlMap.set(clientRef, binding);
+    return {status: "REBOUND"};
   }
 
   function streamFile(url) {
@@ -275,26 +850,42 @@
   async function applyApproved(message) {
     const fieldBindings = [];
     const materialBindings = [];
+    const attemptedFieldBindings = [];
+    const attemptedMaterialBindings = [];
+    const blockedApply = (code, clientRef = null) => ({
+      status: "BLOCKED",
+      code,
+      ...(clientRef ? {client_ref: clientRef} : {}),
+      field_bindings: fieldBindings,
+      material_bindings: materialBindings,
+      attempted_field_bindings: attemptedFieldBindings,
+      attempted_material_bindings: attemptedMaterialBindings,
+      partial_effects: attemptedFieldBindings.length > 0 || attemptedMaterialBindings.length > 0
+    });
     finalSubmitElements.clear();
     navigationElement = null;
     navigationProof = null;
     armedManualChallenge = null;
     manualSignalSent = false;
     pendingManualClick = null;
-    for (const clientRef of message.final_submit_client_refs || []) {
-      const element = controlMap.get(clientRef);
-      if (!element || !document.contains(element)) {
-        return {status: "BLOCKED", code: "COMPANION_FINAL_CONTROL_CHANGED", client_ref: clientRef};
-      }
-      finalSubmitElements.add(element);
+    const finalSubmitRefs = (message.final_submit_client_refs || []).map(String);
+    const navigationRef = message.navigation?.client_ref ? String(message.navigation.client_ref) : null;
+    const rebindRefs = [...new Set([
+      ...(message.fields || []).map((item) => String(item.client_ref)),
+      ...finalSubmitRefs, ...(navigationRef ? [navigationRef] : [])
+    ])];
+    const rebindSignatures = new Map();
+    for (const clientRef of rebindRefs) {
+      const binding = controlMap.get(clientRef);
+      if (!binding) return blockedApply("COMPANION_CONTROL_CHANGED", clientRef);
+      rebindSignatures.set(clientRef, bindingRebindSignature(binding));
+    }
+    if (navigationRef && finalSubmitRefs.includes(navigationRef)) {
+      return blockedApply("COMPANION_NAVIGATION_CONTROL_CHANGED");
     }
     if (message.navigation?.client_ref) {
-      navigationElement = controlMap.get(message.navigation.client_ref) || null;
-      if (!navigationElement || !document.contains(navigationElement) || finalSubmitElements.has(navigationElement)) {
-        return {status: "BLOCKED", code: "COMPANION_NAVIGATION_CONTROL_CHANGED"};
-      }
       navigationProof = {
-        client_ref: String(message.navigation.client_ref),
+        client_ref: navigationRef,
         mode: String(message.navigation.mode || ""),
         control_type: String(message.navigation.control_type || ""),
         page_content_hash: String(message.navigation.page_content_hash || ""),
@@ -302,42 +893,66 @@
         display_label: compact(message.navigation.display_label || "")
       };
     }
-    for (const item of message.fields || []) {
+    for (const item of message.files || []) {
       const element = controlMap.get(item.client_ref);
-      if (!element || !document.contains(element) || element.disabled || !visible(element)) {
-        return {status: "BLOCKED", code: "COMPANION_CONTROL_CHANGED"};
+      if (!(element instanceof HTMLInputElement) || element.type !== "file" || !element.isConnected || element.disabled) {
+        return blockedApply("COMPANION_FILE_CONTROL_CHANGED", item.client_ref);
+      }
+      attemptedMaterialBindings.push({client_ref: item.client_ref, purpose: item.purpose, sha256: item.sha256});
+      try { await attachApprovedFile(element, item); }
+      catch (error) {
+        const code = ["COMPANION_FILE_HASH_MISMATCH", "COMPANION_FILE_VERIFY_FAILED"].includes(error?.message)
+          ? error.message : "COMPANION_FILE_FETCH_FAILED";
+        return blockedApply(code, item.client_ref);
+      }
+      materialBindings.push({client_ref: item.client_ref, purpose: item.purpose, sha256: item.sha256});
+    }
+    if (materialBindings.length) {
+      const rebound = rebindControlsAfterUpload(rebindRefs, rebindSignatures);
+      if (rebound.status !== "REBOUND") return blockedApply(rebound.code, rebound.client_ref);
+    }
+    for (const clientRef of finalSubmitRefs) {
+      const element = controlMap.get(clientRef);
+      if (!element || !element.isConnected) {
+        return blockedApply("COMPANION_FINAL_CONTROL_CHANGED", clientRef);
+      }
+      finalSubmitElements.add(element);
+    }
+    if (navigationRef) {
+      navigationElement = controlMap.get(navigationRef) || null;
+      if (!navigationElement || !navigationElement.isConnected || finalSubmitElements.has(navigationElement)) {
+        return blockedApply("COMPANION_NAVIGATION_CONTROL_CHANGED");
+      }
+    }
+    for (const item of message.fields || []) {
+      const binding = controlMap.get(item.client_ref);
+      const element = binding?.jobflowChoiceGroup ? binding.elements[0] : binding?.jobflowCustomSelect ? binding.element : binding;
+      if (!element || !element.isConnected || element.disabled || (!binding?.jobflowChoiceGroup && !visible(element))) {
+        return blockedApply("COMPANION_CONTROL_CHANGED", item.client_ref);
       }
       if (await sha256(String(item.value)) !== item.value_sha256) {
-        return {status: "BLOCKED", code: "COMPANION_VALUE_HASH_MISMATCH"};
+        return blockedApply("COMPANION_VALUE_HASH_MISMATCH", item.client_ref);
       }
-      try { setTextValue(element, String(item.value)); }
-      catch (_error) { return {status: "BLOCKED", code: "COMPANION_FIELD_APPLY_FAILED", client_ref: item.client_ref}; }
-      if (String(element.value) !== String(item.value) && !(element instanceof HTMLSelectElement)) {
-        return {status: "BLOCKED", code: "COMPANION_FIELD_VERIFY_FAILED", client_ref: item.client_ref};
+      attemptedFieldBindings.push({client_ref: item.client_ref, value_sha256: item.value_sha256});
+      try {
+        if (binding?.jobflowChoiceGroup) await applyChoiceValue(binding, String(item.value));
+        else if (binding?.jobflowCustomSelect) await applyCustomSelectValue(binding, String(item.value));
+        else setTextValue(element, String(item.value));
+      }
+      catch (_error) { return blockedApply("COMPANION_FIELD_APPLY_FAILED", item.client_ref); }
+      if (
+        !binding?.jobflowChoiceGroup && !binding?.jobflowCustomSelect &&
+        String(element.value) !== String(item.value) && !(element instanceof HTMLSelectElement)
+      ) {
+        return blockedApply("COMPANION_FIELD_VERIFY_FAILED", item.client_ref);
       }
       fieldBindings.push({client_ref: item.client_ref, value_sha256: item.value_sha256});
     }
-    for (const item of message.files || []) {
-      const element = controlMap.get(item.client_ref);
-      if (!(element instanceof HTMLInputElement) || element.type !== "file" || !document.contains(element) || element.disabled) {
-        return {status: "BLOCKED", code: "COMPANION_FILE_CONTROL_CHANGED", client_ref: item.client_ref};
-      }
-      let blob;
-      try { blob = await streamFile(item.download_url); }
-      catch (_error) { return {status: "BLOCKED", code: "COMPANION_FILE_FETCH_FAILED", client_ref: item.client_ref}; }
-      const bytes = new Uint8Array(await blob.arrayBuffer());
-      if (await sha256(bytes) !== item.sha256) {
-        return {status: "BLOCKED", code: "COMPANION_FILE_HASH_MISMATCH", client_ref: item.client_ref};
-      }
-      const transfer = new DataTransfer();
-      transfer.items.add(new File([bytes], item.filename, {type: "application/octet-stream", lastModified: Date.now()}));
-      element.files = transfer.files;
-      element.dispatchEvent(new Event("input", {bubbles: true}));
-      element.dispatchEvent(new Event("change", {bubbles: true}));
-      if (!element.files || element.files.length !== 1 || element.files[0].name !== item.filename) {
-        return {status: "BLOCKED", code: "COMPANION_FILE_VERIFY_FAILED", client_ref: item.client_ref};
-      }
-      materialBindings.push({client_ref: item.client_ref, purpose: item.purpose, sha256: item.sha256});
+    if ([...finalSubmitElements].some((element) => !element.isConnected)) {
+      return blockedApply("COMPANION_FINAL_CONTROL_CHANGED");
+    }
+    if (navigationElement && !navigationElement.isConnected) {
+      return blockedApply("COMPANION_NAVIGATION_CONTROL_CHANGED");
     }
     return {
       status: "APPLIED",
@@ -378,7 +993,7 @@
     const element = controlMap.get(String(message.client_ref || ""));
     if (
       !element || element !== navigationElement || finalSubmitElements.has(element) ||
-      !document.contains(element) || element.disabled || !visible(element)
+      !element.isConnected || element.disabled || !visible(element)
     ) {
       return {status: "BLOCKED", code: "COMPANION_NAVIGATION_CONTROL_CHANGED"};
     }
@@ -429,7 +1044,7 @@
     const challenge = message?.challenge;
     if (
       !navigationProof || navigationProof.mode !== "MANUAL_USER_CLICK" ||
-      !navigationElement || !document.contains(navigationElement) ||
+      !navigationElement || !navigationElement.isConnected ||
       !challenge || typeof challenge !== "object"
     ) {
       return {status: "BLOCKED", code: "COMPANION_MANUAL_CHALLENGE_CONTEXT_CHANGED"};
@@ -536,10 +1151,10 @@
 
   async function collectResult() {
     const markers = resultMarkers();
-    const formPresent = Boolean(document.querySelector("form"));
-    const submitPresent = Boolean(document.querySelector('button[type="submit"],input[type="submit"],button:not([type])'));
+    const formPresent = Boolean(deepQuery("form"));
+    const submitPresent = Boolean(deepQuery('button[type="submit"],input[type="submit"],button:not([type])'));
     const successRoute = /\/(?:thank[-_]?you|confirmation|success|submitted|application[-_]?complete)(?:\/|$)/i.test(location.pathname);
-    const invalidCount = document.querySelectorAll(':invalid,[aria-invalid="true"]').length;
+    const invalidCount = deepQueryAll(':invalid,[aria-invalid="true"]').length;
     const fingerprint = await sha256(JSON.stringify({
       origin: location.origin,
       path: location.pathname,
@@ -581,6 +1196,13 @@
     }, 3500);
   }
 
+  function eventControl(event, selector) {
+    for (const candidate of event.composedPath?.() || [event.target]) {
+      if (candidate instanceof Element && candidate.matches(selector)) return candidate;
+    }
+    return null;
+  }
+
   document.addEventListener("submit", (event) => {
     if (!event.isTrusted) return;
     const submitter = event.submitter || null;
@@ -596,7 +1218,7 @@
   }, false);
   document.addEventListener("click", (event) => {
     if (!event.isTrusted) return;
-    const target = event.target instanceof Element ? event.target.closest("button,input") : null;
+    const target = eventControl(event, "button,input");
     if (target && target === navigationElement && navigationProof?.mode === "MANUAL_USER_CLICK") {
       // Capture only records the trusted candidate.  It never sends here:
       // later page listeners must still get an opportunity to preventDefault.
@@ -605,7 +1227,7 @@
   }, true);
   document.addEventListener("click", (event) => {
     if (!event.isTrusted) return;
-    const manualTarget = event.target instanceof Element ? event.target.closest("button,input") : null;
+    const manualTarget = eventControl(event, "button,input");
     if (manualTarget && manualTarget === navigationElement && navigationProof?.mode === "MANUAL_USER_CLICK") {
       pendingManualClick = {event, target: manualTarget};
       queueMicrotask(() => {
@@ -616,7 +1238,7 @@
         }
       });
     }
-    const target = event.target instanceof Element ? event.target.closest('button[type="submit"],input[type="submit"],button:not([type])') : null;
+    const target = eventControl(event, 'button[type="submit"],input[type="submit"],button:not([type])');
     if (target && target.form && finalSubmitElements.has(target)) signalUserSubmit("SUBMIT_CONTROL_CLICK");
   }, false);
   window.addEventListener("beforeunload", () => {
@@ -628,7 +1250,8 @@
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     (async () => {
       if (message?.type === "JOBFLOW_COLLECT_JOB_PAGE") return collectJobPage();
-      if (message?.type === "JOBFLOW_COLLECT_FORM") return collectForm();
+      if (message?.type === "JOBFLOW_COLLECT_SEARCH_RESULTS") return collectSearchResults();
+      if (message?.type === "JOBFLOW_COLLECT_FORM") return await collectFormWhenReady();
       if (message?.type === "JOBFLOW_APPLY_APPROVED") return await applyApproved(message);
       if (message?.type === "JOBFLOW_ARM_MANUAL_NAVIGATION") return await armManualNavigation(message);
       if (message?.type === "JOBFLOW_CHECK_NAVIGATION") return await validateNavigation(message);

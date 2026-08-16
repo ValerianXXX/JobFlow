@@ -55,7 +55,13 @@ class ExternalActionGateway:
         self._attempt(context.application_id, "submit_application", code, context.context_hash)
         raise JobOpsError(code, message)
 
-    def persist_approval(self, approval: ApprovalBinding, context: ApprovalContext) -> dict[str, object]:
+    def persist_approval(
+        self,
+        approval: ApprovalBinding,
+        context: ApprovalContext,
+        *,
+        renew_expired: bool = False,
+    ) -> dict[str, object]:
         normalized = context.normalized()
         result = validate_approval(approval, context=normalized)
         if result != "APPROVAL_VALID":
@@ -70,12 +76,30 @@ class ExternalActionGateway:
             binding = connection.execute(
                 "SELECT context_hash,context_json FROM application_bindings WHERE application_id=?", (normalized.application_id,)
             ).fetchone()
+            previous_approval = connection.execute(
+                "SELECT * FROM approvals WHERE application_id=? ORDER BY issued_at DESC LIMIT 1",
+                (normalized.application_id,),
+            ).fetchone()
             if application is None or binding is None:
                 raise JobOpsError("APPLICATION_BINDING_MISSING", "Application or persisted binding context is missing.")
-            if application["status"] != "AWAITING_APPROVAL":
+            renewal = application["status"] == "APPROVED" and renew_expired
+            if application["status"] != "AWAITING_APPROVAL" and not renewal:
                 raise JobOpsError("APPLICATION_NOT_AWAITING_APPROVAL", "Only an awaiting application can be approved.", status=application["status"])
             if binding["context_hash"] != normalized.context_hash or json.loads(binding["context_json"]) != normalized.as_dict():
                 raise JobOpsError("APPROVAL_INVALIDATED", "Persisted application content changed before approval.")
+            if renewal:
+                if previous_approval is None or str(previous_approval["status"]) != "APPROVED":
+                    raise JobOpsError("APPROVAL_INVALIDATED", "The prior review approval is no longer renewable.")
+                previous = self._approval_from_row(previous_approval)
+                if validate_approval(previous, context=normalized) != "APPROVAL_EXPIRED":
+                    raise JobOpsError(
+                        "APPROVAL_RENEWAL_NOT_REQUIRED",
+                        "Only an expired approval for the unchanged review packet can be renewed.",
+                    )
+                connection.execute(
+                    "UPDATE approvals SET status='INVALIDATED' WHERE approval_id=? AND status='APPROVED'",
+                    (str(previous_approval["approval_id"]),),
+                )
             connection.execute(
                 """INSERT INTO approvals(
                 approval_id,application_id,job_id,site,resume_hash,answers_hash,bound_at,expires_at,status,external_actions_json,
@@ -106,9 +130,21 @@ class ExternalActionGateway:
             )
             connection.execute(
                 "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
-                (normalized.application_id, "APPROVAL_PERSISTED", "AWAITING_APPROVAL", "APPROVED", json.dumps({"approval_id": approval.approval_id}), now),
+                (
+                    normalized.application_id,
+                    "APPROVAL_RENEWED" if renewal else "APPROVAL_PERSISTED",
+                    "APPROVED" if renewal else "AWAITING_APPROVAL",
+                    "APPROVED",
+                    json.dumps({"approval_id": approval.approval_id}),
+                    now,
+                ),
             )
-        return {"status": "APPROVED", "approval_id": approval.approval_id, "context_hash": approval.context_hash}
+        return {
+            "status": "APPROVED",
+            "approval_id": approval.approval_id,
+            "context_hash": approval.context_hash,
+            "renewed": renewal,
+        }
 
     @staticmethod
     def _approval_from_row(row) -> ApprovalBinding:
