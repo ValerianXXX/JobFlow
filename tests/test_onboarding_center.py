@@ -1352,6 +1352,45 @@ class OnboardingCenterTests(unittest.TestCase):
                 service.complete(user_confirmed=True)
             self.assertEqual(caught_again.exception.code, "ONBOARDING_ALREADY_COMPLETE")
 
+    def test_completed_profile_reuses_unique_resume_identity_and_contact_fields(self) -> None:
+        with project_temp() as root:
+            service, onboarding, _, _, _ = self.make_service(root)
+            resume_profile = {
+                "schema_version": 1,
+                "candidate_display_name": {
+                    "value": "Jordan Lee",
+                    "status": "APPLICANT_PROVIDED_UNCONFIRMED",
+                },
+                "resume_contact_values": {
+                    "email": ["jordan.lee@example.test"],
+                    "phone": ["+1 555 010 0200"],
+                    "address": ["100 Example Avenue, New York, NY 10001, United States"],
+                },
+                "resume_facts": [],
+            }
+            onboarding.import_bytes("candidate_profile", canonical_json(resume_profile), synthetic=True)
+            service.save_answers({"locale": "en", "answers": full_answers()})
+            bootstrap = service.bootstrap()
+            service.save_review({
+                "profile_review": "CONFIRMED",
+                "claim_decisions": {item["claim_id"]: "CONFIRMED" for item in bootstrap["claims"]},
+                "conflict_resolutions": {
+                    item["conflict_id"]: {"resolution": "USE_RESUME", "manual_value": None}
+                    for item in bootstrap["conflicts"]
+                },
+            })
+            completed = service.complete(user_confirmed=True)
+            profile = json.loads(onboarding.read_bytes(completed["profile_ref"]))
+            self.assertEqual(profile["first_name"], "Jordan")
+            self.assertEqual(profile["last_name"], "Lee")
+            self.assertEqual(profile["email"], "jordan.lee@example.test")
+            self.assertEqual(profile["phone"], "+1 555 010 0200")
+            self.assertEqual(profile["address"], "100 Example Avenue")
+            self.assertEqual(profile["city"], "New York")
+            self.assertEqual(profile["state"], "NY")
+            self.assertEqual(profile["postal_code"], "10001")
+            self.assertEqual(profile["country"], "United States")
+
     def test_external_claim_material_approval_is_explicit_encrypted_and_stale_on_revision(self) -> None:
         with project_temp() as root:
             service, onboarding, _, _, _ = self.make_service(root)
@@ -2210,7 +2249,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v28-one-confirmation", html)
+        self.assertIn("jobflow-v29-form-diagnostics", html)
 
 
 if __name__ == "__main__":

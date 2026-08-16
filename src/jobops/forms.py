@@ -26,7 +26,11 @@ CLASSIFICATION_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 ORDINARY_TERMS = ("portfolio", "linkedin", "github", "website", "personal site", "作品集", "个人网站")
-PRIVATE_TERMS = ("legal name", "full name", "first name", "last name", "email", "phone", "address", "姓名", "邮箱", "电话", "地址")
+PRIVATE_TERMS = (
+    "legal name", "full name", "first name", "last name", "email", "phone", "address",
+    "mailing address", "city", "state", "province", "zip code", "postal code", "country",
+    "姓名", "邮箱", "电话", "地址", "城市", "州", "省", "邮编", "国家",
+)
 FORWARD_NAVIGATION_TERMS = (
     "next", "continue", "save and continue", "save continue", "review application",
     "review and continue", "下一步", "继续", "保存并继续", "进入检查",

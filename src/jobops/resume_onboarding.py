@@ -70,7 +70,13 @@ EMAIL_PATTERN = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")
 PHONE_PATTERN = re.compile(r"(?<!\d)(?:\+?\d{1,3}[ .-]?)?(?:\(?\d{2,4}\)?[ .-]?)?\d{3,4}[ .-]\d{4}(?!\d)")
 LINKEDIN_PATTERN = re.compile(r"(?i)(?:https?://)?(?:www\.)?linkedin\.com/[^\s|]+")
 WEBSITE_PATTERN = re.compile(r"(?i)https?://[^\s|]+")
-ADDRESS_PATTERN = re.compile(r"(?i)\b\d{1,6}\s+[A-Z0-9.' -]{2,50}\s+(?:street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|drive|dr)\b")
+ADDRESS_PATTERN = re.compile(
+    r"(?i)\b\d{1,6}\s+[A-Z0-9.'# -]{2,50}\s+"
+    r"(?:street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|drive|dr)\b"
+    r"(?:\s+(?:apt|apartment|unit|suite|ste)\.?\s*[A-Z0-9-]+)?"
+    r"(?:,\s*[^,\r\n]{2,60},\s*[A-Z]{2}\s+\d{5}(?:-\d{4})?"
+    r"(?:,\s*(?:United States(?: of America)?|USA|US))?)?",
+)
 STOP_WORDS = {
     "the", "and", "for", "with", "from", "that", "this", "into", "using", "work", "experience",
     "professional", "responsible", "skills", "project", "projects", "summary", "education", "including",

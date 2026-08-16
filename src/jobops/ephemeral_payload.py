@@ -33,11 +33,16 @@ PROFILE_FIELD_ALIASES = {
     "last_name": "last_name",
     "email": "email",
     "phone": "phone",
+    "phone_type": "phone_type",
     "linkedin": "linkedin_url",
     "github": "github_url",
     "portfolio": "portfolio_url",
     "website": "website_url",
     "address": "address",
+    "city": "city",
+    "state": "state",
+    "postal_code": "postal_code",
+    "country": "country",
 }
 ANSWER_BANK_FIELD_ALIASES = {
     "linkedin": ("linkedin", "linkedin_url"),

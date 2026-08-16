@@ -29,7 +29,7 @@
           "control_type": {"enum": ["text", "email", "tel", "url", "number", "date", "datetime-local", "radio", "checkbox", "select", "textarea", "file", "password", "submit", "button", "image", "other"]},
           "required": {"type": "boolean"},
           "classification": {"enum": ["ordinary_fixed", "private_fixed", "sensitive_review", "work_authorization_stop", "compensation_stop", "legal_declaration_stop", "signature_stop", "voluntary_disclosure_stop", "account_creation_stop", "file_upload_stop", "navigation_control_stop", "final_submit_stop", "unknown_stop"]},
-          "answer_key": {"enum": ["UNKNOWN", "first_name", "last_name", "full_name", "email", "phone", "linkedin", "github", "portfolio", "portfolio_file", "website", "address", "work_authorization", "salary", "resume", "cover_letter"]},
+          "answer_key": {"enum": ["UNKNOWN", "first_name", "last_name", "full_name", "email", "phone", "phone_type", "linkedin", "github", "portfolio", "portfolio_file", "website", "address", "city", "state", "postal_code", "country", "work_authorization", "salary", "resume", "cover_letter"]},
           "display_label": {"type": "string", "maxLength": 500},
           "display_options": {"type": "array", "maxItems": 200, "items": {"type": "string", "minLength": 1, "maxLength": 200}},
           "logical_field_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},

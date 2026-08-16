@@ -446,6 +446,18 @@ function publicResult(result) {
   ]) {
     if (["string", "number", "boolean"].includes(typeof result[key])) safe[key] = result[key];
   }
+  const failureCode = String(result.failure_code || "");
+  if (/^[A-Z][A-Z0-9_]{0,99}$/.test(failureCode)) safe.failure_code = failureCode;
+  const failureControlType = String(result.failure_control_type || "");
+  if (/^[a-z][a-z0-9-]{0,39}$/.test(failureControlType)) safe.failure_control_type = failureControlType;
+  if (Number.isInteger(result.failure_page_position) && result.failure_page_position > 0 && result.failure_page_position <= 500) {
+    safe.failure_page_position = result.failure_page_position;
+  }
+  if (typeof result.failure_field_label === "string") {
+    const label = result.failure_field_label.replace(/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, "")
+      .replace(/\s+/g, " ").trim().slice(0, 200);
+    if (label) safe.failure_field_label = label;
+  }
   for (const key of ["hard_gap_codes", "unknown_condition_codes"]) {
     if (Array.isArray(result[key])) {
       safe[key] = result[key].slice(0, 20).filter((item) => (
@@ -1286,6 +1298,7 @@ async function fillCurrentTab(tabId, tabUrl) {
     try {
       aborted = await postJSON(endpoint(state, "/abort-page-apply"), {
         cause_code: String(applied?.code || "COMPANION_APPLY_INCOMPLETE"),
+        failed_client_ref: typeof applied?.client_ref === "string" ? applied.client_ref : null,
         attempted_field_bindings: attemptedFields,
         attempted_material_bindings: attemptedFiles,
         submit_events: 0,
@@ -1300,6 +1313,7 @@ async function fillCurrentTab(tabId, tabUrl) {
         automatic_retry: false,
         submit_capability: false,
         final_submit: false,
+        failure_code: String(applied?.code || "COMPANION_APPLY_INCOMPLETE"),
         field_attempt_count: attemptedFields.length,
         file_attempt_count: attemptedFiles.length
       };

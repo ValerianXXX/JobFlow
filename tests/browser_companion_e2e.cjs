@@ -577,8 +577,8 @@ function valueHash(value) {
     assert.equal(lwcCollected.payload.client_refs.length, 8, lwcCollected.payload.sanitized_html);
     assert.match(lwcCollected.payload.sanitized_html, /authorized to work[\s\S]*<option>Yes<\/option><option>No<\/option>/);
     assert.match(lwcCollected.payload.sanitized_html, /work settings[\s\S]*<option>Hybrid<\/option><option>On-site<\/option><option>Remote<\/option>/);
-    const lwcValues = ["Jordan", "Lee", "Yes", "On-site", "Mobile"];
-    const lwcFields = [1, 2, 3, 4, 6].map((index, valueIndex) => ({
+    const lwcValues = ["Jordan", "Lee", "Yes", "On-site", "Mobile", "Yes"];
+    const lwcFields = [1, 2, 3, 4, 6, 7].map((index, valueIndex) => ({
       client_ref: lwcCollected.payload.client_refs[index], value: lwcValues[valueIndex],
       value_sha256: valueHash(lwcValues[valueIndex])
     }));
@@ -596,7 +596,7 @@ function valueHash(value) {
       {refs: lwcCollected.payload.client_refs, fields: lwcFields, fileHash}
     );
     assert.equal(lwcApplied.status, "APPLIED", JSON.stringify(lwcApplied));
-    assert.equal(lwcApplied.field_bindings.length, 5);
+    assert.equal(lwcApplied.field_bindings.length, 6);
     assert.equal(lwcApplied.material_bindings.length, 1);
     assert.equal(lwcApplied.final_submit_armed, true);
     const lwcState = await lwcPage.evaluate(() => ({
@@ -607,6 +607,8 @@ function valueHash(value) {
       last: document.querySelector("#last-name")?.value,
       authorized: document.querySelector("#auth-yes")?.checked,
       onsite: document.querySelector("#onsite")?.checked,
+      references: globalThis.__jobflowClosedRoots.get(document.querySelector("#reference-group"))
+        ?.querySelector("#reference-yes")?.checked,
       finalClickMessages: globalThis.__jobflowMessages.filter((item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED").length
     }));
     assert.equal(lwcState.resumeInputGone, true);
@@ -615,6 +617,7 @@ function valueHash(value) {
     assert.deepEqual([lwcState.first, lwcState.last], ["Jordan", "Lee"]);
     assert.equal(lwcState.authorized, true);
     assert.equal(lwcState.onsite, true);
+    assert.equal(lwcState.references, true);
     assert.equal(lwcState.finalClickMessages, 0);
     assert.equal(await lwcPage.locator("#phone-type").evaluate(
       (host) => host.shadowRoot.querySelector("button").getAttribute("aria-expanded")
@@ -624,6 +627,22 @@ function valueHash(value) {
     assert.equal(lwcAfterUpload.payload.client_refs.length, 7, lwcAfterUpload.payload.sanitized_html);
     assert.match(lwcAfterUpload.payload.sanitized_html, /authorized to work[\s\S]*two professional references/);
     assert.match(lwcAfterUpload.payload.sanitized_html, /SUBMIT/);
+
+    const choiceFailure = await lwcPage.evaluate(
+      ({clientRef, value, hash}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED",
+        fields: [{client_ref: clientRef, value, value_sha256: hash}],
+        files: [], navigation: null, final_submit_client_refs: []
+      }),
+      {
+        clientRef: lwcAfterUpload.payload.client_refs[2],
+        value: "Not an offered choice",
+        hash: valueHash("Not an offered choice")
+      }
+    );
+    assert.equal(choiceFailure.status, "BLOCKED", JSON.stringify(choiceFailure));
+    assert.equal(choiceFailure.code, "COMPANION_CHOICE_OPTION_NOT_FOUND");
+    assert.equal(choiceFailure.client_ref, lwcAfterUpload.payload.client_refs[2]);
 
     const partialPage = await browser.newPage();
     await partialPage.route("https://apply.partial.example/**", (route) => route.fulfill({

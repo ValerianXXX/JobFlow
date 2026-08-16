@@ -4,7 +4,7 @@
 // Edge can keep an older manifest/service worker alive. A one-time popup open
 // therefore provides a safe, user-visible hot-upgrade path without asking the
 // user to operate edge://extensions (which normal webpages cannot control).
-const SOURCE_EXTENSION_VERSION = "0.7.0";
+const SOURCE_EXTENSION_VERSION = "0.7.1";
 if (chrome.runtime.getManifest().version !== SOURCE_EXTENSION_VERSION) {
   chrome.runtime.reload();
   window.close();
@@ -43,6 +43,41 @@ let status = null;
 let currentTab = null;
 
 const elements = Object.fromEntries(["subtitle","version","state","fill","boundary","message"].map((id) => [id, document.getElementById(id)]));
+
+function applyRestartMessage(result) {
+  const text = copy[locale];
+  const label = String(result?.failure_field_label || "")
+    .replace(/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, "")
+    .replace(/\s+/g, " ").trim().slice(0, 200);
+  const position = Number.isInteger(result?.failure_page_position) ? result.failure_page_position : null;
+  const reasons = locale === "zh" ? {
+    COMPANION_CHOICE_OPTION_NOT_FOUND: "当前网页没有审阅时批准的选项",
+    COMPANION_CHOICE_VALUE_NOT_APPLIED: "网页没有保留已选择的选项",
+    COMPANION_CUSTOM_SELECT_OPTION_NOT_FOUND: "下拉菜单没有审阅时批准的选项",
+    COMPANION_CUSTOM_SELECT_VERIFY_FAILED: "网页没有保留下拉菜单选择",
+    COMPANION_CONTROL_REBIND_FAILED: "上传或页面刷新后，该字段结构发生了变化",
+    COMPANION_CONTROL_CHANGED: "填写前该字段结构发生了变化",
+    COMPANION_FIELD_VERIFY_FAILED: "网页没有保留已填写的内容",
+    COMPANION_FILE_VERIFY_FAILED: "网页没有确认附件已经保留"
+  } : {
+    COMPANION_CHOICE_OPTION_NOT_FOUND: "the current page no longer offers the approved choice",
+    COMPANION_CHOICE_VALUE_NOT_APPLIED: "the page did not retain the selected choice",
+    COMPANION_CUSTOM_SELECT_OPTION_NOT_FOUND: "the menu no longer offers the approved choice",
+    COMPANION_CUSTOM_SELECT_VERIFY_FAILED: "the page did not retain the menu selection",
+    COMPANION_CONTROL_REBIND_FAILED: "the field structure changed after upload or page refresh",
+    COMPANION_CONTROL_CHANGED: "the field structure changed before it could be filled",
+    COMPANION_FIELD_VERIFY_FAILED: "the page did not retain the entered value",
+    COMPANION_FILE_VERIFY_FAILED: "the page did not confirm the attachment"
+  };
+  const reason = reasons[String(result?.failure_code || "")];
+  if (!label && !position && !reason) return text.applyRestart;
+  if (locale === "zh") {
+    const location = label ? `“${label}”` : position ? `第 ${position} 个控件` : "当前控件";
+    return `停止位置：${position ? `第 ${position} 项 ` : ""}${location}。原因：${reason || "网页没有通过安全验证"}。${text.applyRestart}`;
+  }
+  const location = label ? `“${label}”` : position ? `control ${position}` : "the current control";
+  return `Stopped at ${position ? `item ${position}, ` : ""}${location}: ${reason || "the page failed safe verification"}. ${text.applyRestart}`;
+}
 
 function isJobFlowTab(tab) {
   try {
@@ -84,7 +119,7 @@ async function refresh() {
   else if (status?.status === "PAGE_REVIEW_REQUIRED") elements.message.textContent = copy[locale].manual;
   else if (status?.status === "MANUAL_NAVIGATION_REQUIRED") elements.message.textContent = copy[locale].manualResume;
   else if (status?.status === "MANUAL_NAVIGATION_RESTART_REQUIRED") elements.message.textContent = copy[locale].restart;
-  else if (status?.status === "APPLY_RESTART_REQUIRED") elements.message.textContent = copy[locale].applyRestart;
+  else if (status?.status === "APPLY_RESTART_REQUIRED") elements.message.textContent = applyRestartMessage(status?.last_result || status);
   else if (status?.status === "AWAITING_NAVIGATION") elements.message.textContent = copy[locale].navigating;
   if (status?.last_result?.status === "NAVIGATION_STALLED") elements.message.textContent = copy[locale].stalled;
 }
@@ -104,8 +139,14 @@ async function ensureAutomationPermissions() {
   return await chrome.permissions.request(request);
 }
 
-document.getElementById("zh").addEventListener("click", () => {locale = "zh"; render();});
-document.getElementById("en").addEventListener("click", () => {locale = "en"; render();});
+document.getElementById("zh").addEventListener("click", async () => {
+  locale = "zh";
+  try { await refresh(); } catch (_error) { render(); }
+});
+document.getElementById("en").addEventListener("click", async () => {
+  locale = "en";
+  try { await refresh(); } catch (_error) { render(); }
+});
 elements.fill.addEventListener("click", async () => {
   const capture = status?.mode === "JOB_CAPTURE";
   if (!status?.paired) {
@@ -157,7 +198,7 @@ elements.fill.addEventListener("click", async () => {
       : result.status === "AWAITING_USER_SUBMIT" ? copy[locale].done :
       result.status === "HANDOFF_REQUIRED" ? copy[locale].handoff :
       result.status === "MANUAL_NAVIGATION_REQUIRED" ? copy[locale].manualResume :
-      result.status === "APPLY_RESTART_REQUIRED" ? copy[locale].applyRestart :
+      result.status === "APPLY_RESTART_REQUIRED" ? applyRestartMessage(result) :
       result.status === "PAGE_REVIEW_REQUIRED" ? copy[locale].manual : copy[locale].navigating;
     await refresh();
   } catch (error) {
