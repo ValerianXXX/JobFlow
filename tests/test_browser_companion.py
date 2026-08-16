@@ -11,10 +11,32 @@ from jobops.browser_assist import (
     COMPANION_EXTENSION_ID,
     COMPANION_EXTENSION_ORIGIN,
     COMPANION_EXTENSION_VERSION,
+    _semantic_field,
 )
 
 
 class BrowserCompanionStaticTests(unittest.TestCase):
+    def test_semantic_matching_ignores_accessibility_decoration_but_not_prompt_drift(self) -> None:
+        base = {
+            "control_type": "text", "required": True, "classification": "private_fixed",
+            "display_label": "First Name *", "prompt_hash": "sha256:" + "1" * 64,
+            "option_count": 0, "display_options": [],
+        }
+        refreshed = {**base, "display_label": "First Name", "prompt_hash": "sha256:" + "2" * 64}
+        changed = {**base, "display_label": "Last Name", "prompt_hash": "sha256:" + "3" * 64}
+        self.assertEqual(_semantic_field(base), _semantic_field(refreshed))
+        self.assertNotEqual(_semantic_field(base), _semantic_field(changed))
+
+        uploaded = {
+            **base, "control_type": "file", "required": False, "classification": "file_upload_stop",
+            "display_label": "Click to browse & upload", "prompt_hash": "sha256:" + "4" * 64,
+        }
+        decorated = {
+            **uploaded, "display_label": "File upload IconClick to browse & upload",
+            "prompt_hash": "sha256:" + "5" * 64,
+        }
+        self.assertEqual(_semantic_field(uploaded), _semantic_field(decorated))
+
     def test_manifest_has_stable_identity_and_least_privilege_defaults(self) -> None:
         manifest = json.loads((PROJECT / "browser-companion" / "manifest.json").read_text(encoding="utf-8"))
         digest = hashlib.sha256(base64.b64decode(manifest["key"])).hexdigest()[:32]
@@ -64,7 +86,7 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn("function releaseGuidedCompanionBinding(record)", app)
         self.assertNotIn("localStorage", app)
         self.assertIn("Number.isFinite(expiry)", app)
-        self.assertNotIn('companionExternalMessage({type:"JOBFLOW_PAIR"', app)
+        self.assertIn('companionExternalMessage({type:"JOBFLOW_PAIR"', app)
         self.assertIn('window.postMessage({type:"JOBFLOW_PAIR_REQUEST"', app)
         self.assertIn("BROWSER_COMPANION_UPDATE_REQUIRED", app)
         self.assertIn("JOBFLOW_COMPANION_READY", pair)
@@ -73,8 +95,8 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn("chrome.runtime.getManifest().version", pair)
         self.assertIn("岗位导入", popup)
         self.assertIn("approved application", popup)
-        self.assertIn('status?.status === "MANUAL_NAVIGATION_RESTART_REQUIRED" ? text.restartButton', popup)
-        self.assertIn('"MANUAL_NAVIGATION_RESTART_REQUIRED", "CONFIRMED"', popup)
+        self.assertIn('["MANUAL_NAVIGATION_RESTART_REQUIRED", "APPLY_RESTART_REQUIRED"].includes(status?.status) ? text.restartButton', popup)
+        self.assertIn('"MANUAL_NAVIGATION_RESTART_REQUIRED", "APPLY_RESTART_REQUIRED", "CONFIRMED"', popup)
         self.assertIn("这次一次性下一步证明没有安全建立", popup)
         self.assertIn("The one-use Next proof was not armed safely", popup)
         self.assertIn("chrome.runtime.getManifest().version", popup)
@@ -104,11 +126,19 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn('code: "COMPANION_MANUAL_NAVIGATION_RESTART_REQUIRED"', worker)
         self.assertIn('COMPANION_MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart"', app)
         self.assertIn('MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart"', app)
+        self.assertIn('APPLY_RESTART_REQUIRED:"browserAssistApplyRestart"', app)
+        self.assertIn('endpoint(state, "/abort-page-apply")', worker)
+        self.assertIn('elif route_parts == ["abort-page-apply"]:', server)
+        self.assertIn("attempted_field_bindings", worker)
+        self.assertIn("attempted_material_bindings", worker)
+        self.assertIn("页面可能已经填写或上传了一部分", popup)
+        self.assertIn("The page may already contain some approved fields or an attachment", popup)
         self.assertIn("请结束并重新启动这项申请辅助", app)
         self.assertIn("End this application assist and start it again", app)
 
     def test_ui_pairing_is_identity_bound_explicit_and_transport_resilient(self) -> None:
         app = (PROJECT / "src" / "jobops" / "ui" / "app.js").read_text(encoding="utf-8")
+        worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
 
         self.assertIn(
             'result?.application_id!==state.browserAssistSession.application_id||result?.assist_id!==state.browserAssistSession.assist_id',
@@ -124,7 +154,8 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         )
         self.assertIn("function awaitExplicitCompanionPairing(record)", app)
         self.assertNotIn("async function pairCompanion(record)", app)
-        self.assertNotIn('type:"JOBFLOW_PAIR",pairing:', app)
+        self.assertIn('type:"JOBFLOW_PAIR",pairing:', app)
+        self.assertIn('return await pairWithJobFlow(message.pairing, senderOrigin, sender?.tab?.id)', worker)
         self.assertIn("state.companionPollFailures+=1", app)
         self.assertIn("COMPANION_POLL_MAX_MS", app)
         self.assertIn("Transport failures never erase a valid lease or silently re-pair", app)
@@ -176,6 +207,7 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         helper = (PROJECT / "scripts" / "install-jobflow-browser-companion.ps1").read_text(encoding="utf-8")
         html = (PROJECT / "src" / "jobops" / "ui" / "index.html").read_text(encoding="utf-8")
         app = (PROJECT / "src" / "jobops" / "ui" / "app.js").read_text(encoding="utf-8")
+        popup = (PROJECT / "browser-companion" / "popup.js").read_text(encoding="utf-8")
         self.assertIn("pause", wrapper.casefold())
         self.assertIn(COMPANION_EXTENSION_ID, helper)
         self.assertIn("BrowserCompanion", helper)
@@ -192,9 +224,11 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
         self.assertIn("const PROTOCOL = 2;", pair)
         self.assertIn("const PROTOCOL = 2;", worker)
+        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.6.5";', popup)
+        self.assertIn("chrome.runtime.reload()", popup)
         self.assertIn("protocol_version:2", app)
         self.assertIn("pairing:{protocol_version:result.protocol_version", app)
-        self.assertIn("start-guided-intake", app)
+        self.assertIn("start-job-with-ai", app)
         self.assertIn("guidedIntakeTitle", html)
         self.assertIn('id="cancelGuidedIntake"', html)
         self.assertIn("取消本次读取并更换网址", app)

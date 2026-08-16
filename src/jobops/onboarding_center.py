@@ -18,9 +18,9 @@ from xml.etree import ElementTree as ET
 
 from . import UI_PROTOCOL_VERSION, __version__
 from .adapters import audit_real_external_actions
-from .approvals import ApprovalContext, issue_approval
+from .approvals import ApprovalContext, issue_approval, validate_approval
 from .ats_capabilities import offline_ats_capabilities
-from .browser_assist import BrowserAssistManager
+from .browser_assist import BrowserAssistManager, COMPANION_EXTENSION_ORIGIN
 from .application_readiness import build_application_readiness
 from .application_execution import validate_application_execution_plan_integrity
 from .application_field_resolution import (
@@ -36,6 +36,13 @@ from .ai_runtime import (
     configured_ai_engine,
 )
 from .ai_connections import AIConnectionManager
+from .ai_operator import (
+    operator_execution_trace,
+    operator_public_manifest,
+    plan_application,
+    plan_new_job,
+    resolve_new_job_command,
+)
 from .db import JobOpsDB
 from .continuous_intake import (
     ContinuousIntakeDescriptorStore,
@@ -967,6 +974,13 @@ class OnboardingCenterService:
 
         state["schema_version"] = 3
         state["strict_ai_claims"] = True
+        answers = state.get("answers")
+        if not isinstance(answers, dict):
+            answers = {}
+        for field_id, fallback in empty_answers().items():
+            current = answers.get(field_id)
+            answers[field_id] = {**fallback, **current} if isinstance(current, dict) else fallback
+        state["answers"] = answers
         state.setdefault("pending_sources", [])
         state.setdefault("claim_overrides", {})
         state.setdefault("master_resume", None)
@@ -1358,6 +1372,49 @@ class OnboardingCenterService:
             "automatic_retry": False,
         }
 
+    def _renew_expired_review_approval(
+        self,
+        *,
+        application_id: str,
+        user_confirmed: bool,
+    ) -> bool:
+        """Renew only the unchanged, already-reviewed packet at assist start.
+
+        The start checkbox is the fresh per-application confirmation.  Renewal
+        never changes the packet, answers, uploads, route, or allowed actions;
+        any mismatch remains an invalidation instead of becoming a renewal.
+        """
+        with self.database.connect() as connection:
+            binding = connection.execute(
+                "SELECT context_hash,context_json FROM application_bindings WHERE application_id=?",
+                (application_id,),
+            ).fetchone()
+            approval_row = connection.execute(
+                "SELECT * FROM approvals WHERE application_id=? ORDER BY issued_at DESC LIMIT 1",
+                (application_id,),
+            ).fetchone()
+        if binding is None or approval_row is None:
+            raise JobOpsError("APPLICATION_BINDING_MISSING", "The current application approval binding is incomplete.")
+        context = ApprovalContext.from_dict(json.loads(str(binding["context_json"]))).normalized()
+        if context.context_hash != str(binding["context_hash"]):
+            raise JobOpsError("APPROVAL_INVALIDATED", "The application changed after its review packet was approved.")
+        previous = ExternalActionGateway._approval_from_row(approval_row)
+        decision = validate_approval(previous, context=context)
+        if decision == "APPROVAL_VALID":
+            return False
+        if decision != "APPROVAL_EXPIRED":
+            raise JobOpsError(decision, "The review-packet approval is no longer current.")
+        if not user_confirmed:
+            raise JobOpsError(
+                "EXPLICIT_CONFIRMATION_REQUIRED",
+                "Renewing an expired review approval requires the current per-application confirmation.",
+            )
+        refreshed = issue_approval(context=context, user_confirmed=True)
+        result = ExternalActionGateway(
+            self.database, ExternalActionPolicy.production_disabled(),
+        ).persist_approval(refreshed, context, renew_expired=True)
+        return bool(result.get("renewed"))
+
     @_synchronized
     def start_browser_assist(self, payload: dict[str, Any]) -> dict[str, Any]:
         active_guided = next((
@@ -1381,14 +1438,118 @@ class OnboardingCenterService:
                 "APPLICATION_NOT_APPROVED",
                 "Review and approve the current packet before starting live prefill and upload.",
             )
+        approval_renewed = self._renew_expired_review_approval(
+            application_id=application_id,
+            user_confirmed=payload.get("user_confirmed") is True,
+        )
         source_route = displayed["packet"].get("source_route")
         if not isinstance(source_route, dict):
             raise JobOpsError("SOURCE_ROUTE_MISSING", "The approved review packet has no verified company route.")
-        return self.browser_assist.start(
+        result = self.browser_assist.start(
             application_id=application_id,
             source_route=source_route,
             user_confirmed=payload.get("user_confirmed") is True,
         )
+        return {**result, "approval_renewed": approval_renewed}
+
+    @_synchronized
+    def plan_application_with_ai(self, payload: dict[str, Any]) -> dict[str, Any]:
+        application_id = str(payload.get("application_id", "")).strip()
+        displayed = self.review_packet(application_id)
+        if displayed["status"] != "APPROVED" or displayed["application_status"] != "APPROVED":
+            raise JobOpsError(
+                "APPLICATION_NOT_APPROVED",
+                "Approve the exact current review packet before asking AI to plan the assisted application.",
+            )
+        plan = plan_application(self.ai_engine, displayed)
+        return {
+            "status": "AI_OPERATOR_PLAN_READY",
+            "operator_plan": plan,
+            "application_id": application_id,
+            "private_values_persisted_to_project": 0,
+            "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def start_application_with_ai(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Let the connected AI decide the bounded workflow, then execute only the host-owned lease action."""
+        application_id = str(payload.get("application_id", "")).strip()
+        displayed = self.review_packet(application_id)
+        if displayed["status"] != "APPROVED" or displayed["application_status"] != "APPROVED":
+            raise JobOpsError(
+                "APPLICATION_NOT_APPROVED",
+                "Approve the exact current review packet before asking AI to operate the application.",
+            )
+        plan = plan_application(
+            self.ai_engine,
+            displayed,
+            user_present_assist_confirmed=payload.get("user_confirmed") is True,
+        )
+        if plan["status"] != "READY":
+            return {
+                "status": "AI_OPERATOR_NEEDS_USER_INPUT",
+                "operator_plan": plan,
+                "application_id": application_id,
+                "browser_assist": None,
+                "real_external_actions": 0,
+            }
+        assist = self.start_browser_assist({
+            "application_id": application_id,
+            "user_confirmed": payload.get("user_confirmed") is True,
+        })
+        trace = operator_execution_trace(plan, executed_tools=["jobflow.start_user_present_assist"])
+        return {
+            "status": "AI_OPERATOR_TASK_STARTED",
+            "operator_plan": plan,
+            "application_id": application_id,
+            "browser_assist": assist,
+            "host_executed_tools": trace["host_executed_tools"],
+            "operator_execution": trace,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+            "private_values_persisted_to_project": 0,
+            "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def start_job_with_ai(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Turn one user command and company URL into a validated read-only JobFlow task."""
+        command, official_url = resolve_new_job_command(
+            payload.get("command") or "Handle this job for me.",
+            payload.get("official_url", ""),
+        )
+        snapshot = self.bootstrap()
+        plan = plan_new_job(
+            self.ai_engine,
+            command=command,
+            official_url=official_url,
+            readiness=dict(snapshot.get("application_readiness") or {}),
+            guided_status=dict((snapshot.get("dashboard") or {}).get("guided_intake") or {}),
+            read_only_intake_confirmed=payload.get("user_confirmed") is True,
+        )
+        if plan["status"] != "READY":
+            return {
+                "status": "AI_OPERATOR_NEEDS_USER_INPUT",
+                "operator_plan": plan,
+                "guided_intake": None,
+                "real_external_actions": 0,
+            }
+        guided = self.start_guided_intake({
+            "official_url": official_url,
+            "user_confirmed": payload.get("user_confirmed") is True,
+        })
+        trace = operator_execution_trace(plan, executed_tools=["jobflow.start_guided_intake"])
+        return {
+            "status": "AI_OPERATOR_TASK_STARTED",
+            "operator_plan": plan,
+            "guided_intake": guided,
+            "host_executed_tools": trace["host_executed_tools"],
+            "operator_execution": trace,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+            "private_values_persisted_to_project": 0,
+            "real_external_actions": 0,
+        }
 
     def _guided_event(
         self,
@@ -1457,6 +1618,16 @@ class OnboardingCenterService:
                     "message": "The local application review packet could not be prepared.",
                     "details": {},
                 }
+            details = failure.get("details") if isinstance(failure.get("details"), dict) else {}
+            if failure.get("code") == "INELIGIBLE":
+                failure["hard_gap_codes"] = [
+                    str(value)[:120] for value in details.get("hard_gaps", [])[:20]
+                    if re.fullmatch(r"[A-Za-z0-9:_-]{1,120}", str(value))
+                ]
+                failure["unknown_condition_codes"] = [
+                    str(value)[:120] for value in details.get("unknowns", [])[:20]
+                    if re.fullmatch(r"[A-Za-z0-9:_-]{1,120}", str(value))
+                ]
             result = {
                 **failure,
                 "status": "FORM_CAPTURE_FAILED",
@@ -1897,6 +2068,86 @@ class OnboardingCenterService:
             user_confirmed=payload.get("user_confirmed") is True,
         )
 
+    @staticmethod
+    def _local_agent_assist_token(payload: dict[str, Any]) -> str:
+        token = str(payload.get("assist_token", "")).strip()
+        if len(token) < 40 or len(token) > 256 or not re.fullmatch(r"[A-Za-z0-9_-]+", token):
+            raise JobOpsError("BROWSER_ASSIST_TOKEN_INVALID", "The local Agent assist lease is invalid or expired.")
+        return token
+
+    def pair_local_agent_assist(self, payload: dict[str, Any]) -> dict[str, Any]:
+        token = self._local_agent_assist_token(payload)
+        result = self.browser_assist.pair_local_agent(
+            token, user_confirmed=payload.get("user_confirmed") is True,
+        )
+        return {
+            **result,
+            "model_private_values": 0,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+        }
+
+    def prepare_local_agent_assist(self, payload: dict[str, Any]) -> dict[str, Any]:
+        token = self._local_agent_assist_token(payload)
+        page = payload.get("page")
+        if not isinstance(page, dict):
+            raise JobOpsError("ATS_FORM_SNAPSHOT_INVALID", "The local Agent did not provide one sanitized browser page.")
+        result = self.browser_assist.prepare(
+            token, page, extension_origin=COMPANION_EXTENSION_ORIGIN,
+        )
+        return {
+            **result,
+            "execution_channel": "LOCAL_AI_AGENT",
+            "ai_selected_tool": "jobflow.apply_approved_page",
+            "host_validation_required_before_apply": True,
+            "model_private_values": 0,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+        }
+
+    def discover_local_agent_dynamic_fields(self, payload: dict[str, Any]) -> dict[str, Any]:
+        token = self._local_agent_assist_token(payload)
+        page = payload.get("page")
+        if not isinstance(page, dict):
+            raise JobOpsError("ATS_FORM_SNAPSHOT_INVALID", "The local Agent did not provide one sanitized browser page.")
+        result = self.browser_assist.discover_dynamic_fields(
+            token, page, extension_origin=COMPANION_EXTENSION_ORIGIN,
+        )
+        return {
+            **result,
+            "execution_channel": "LOCAL_AI_AGENT",
+            "model_private_values": 0,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+        }
+
+    def complete_local_agent_assist(self, payload: dict[str, Any]) -> dict[str, Any]:
+        token = self._local_agent_assist_token(payload)
+        evidence = payload.get("evidence")
+        if not isinstance(evidence, dict):
+            raise JobOpsError("BROWSER_APPLY_EVIDENCE_INVALID", "The local Agent did not return bounded apply evidence.")
+        result = self.browser_assist.complete(
+            token, evidence, extension_origin=COMPANION_EXTENSION_ORIGIN,
+        )
+        return {
+            **result,
+            "execution_channel": "LOCAL_AI_AGENT",
+            "host_executed_tool": "jobflow.apply_approved_page",
+            "model_private_values": 0,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+        }
+
+    def take_local_agent_assist_file(
+        self, *, assist_token: str, file_token: str,
+    ) -> tuple[bytearray, dict[str, str]]:
+        token = self._local_agent_assist_token({"assist_token": assist_token})
+        if not re.fullmatch(r"[A-Za-z0-9_-]{40,256}", str(file_token)):
+            raise JobOpsError("BROWSER_FILE_TOKEN_INVALID", "The approved material token is invalid or expired.")
+        return self.browser_assist.take_file(
+            token, str(file_token), extension_origin=COMPANION_EXTENSION_ORIGIN,
+        )
+
     def prepare_synthetic_execution(self, payload: dict[str, Any]) -> dict[str, Any]:
         del payload
         raise JobOpsError(
@@ -2018,6 +2269,7 @@ class OnboardingCenterService:
             application_id=application_id,
             expected_packet_hash=expected_hash,
             raw_resolutions=payload.get("resolutions"),
+            raw_non_form_resolutions=payload.get("non_form_resolutions"),
             user_confirmed=payload.get("user_confirmed") is True,
         )
         return {
@@ -2162,6 +2414,14 @@ class OnboardingCenterService:
             "conflicts": conflicts, "profile_review": state.get("profile_review", "PENDING"),
             "state_ref": reference, "privacy": {"storage": "WINDOWS_DPAPI", "network": "LOCALHOST_ONLY", "plaintext_project_files": 0},
             "ai_engine": self.ai_engine.public_status(),
+            "ai_operator": {
+                **operator_public_manifest(),
+                "current_task": {
+                    "guided_intake_status": str((dashboard.get("guided_intake") or {}).get("status", "IDLE")),
+                    "browser_assist_status": str((dashboard.get("browser_assist") or {}).get("active_status", "IDLE")),
+                    "pending_review_count": len(dashboard.get("pending_applications", [])),
+                },
+            },
             "ai_connection": self.ai_connections.public_state(),
             "claim_quality": {
                 "strict_ai_only": True,
@@ -2259,7 +2519,12 @@ class OnboardingCenterService:
                 )
             research_path = staging / "research.txt"
             research_path.write_text(normalized_research, encoding="utf-8")
-            orchestrator = JobOpsOrchestrator(self.project, self.database, self.onboarding)
+            orchestrator = JobOpsOrchestrator(
+                self.project,
+                self.database,
+                self.onboarding,
+                ai_engine=self.ai_engine if self.ai_engine.ready else None,
+            )
             result = orchestrator.run_to_awaiting(
                 paths["jd"], profile_ref=None, master_resume_ref=None, answer_bank_ref=None,
                 route_fixture=route_path, form_fixture=paths["form"],

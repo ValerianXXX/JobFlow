@@ -23,11 +23,11 @@ Double-click `Check Release Readiness.cmd` at any time for a bilingual, local-on
 - [ ] Freeze the exact commit and run fresh independent QA on a clean copy.
 - [ ] Review sanitized Chinese and English screenshots; confirm they contain no personal data or user paths.
 - [ ] Confirm repository owner, name, description, topics, visibility and private vulnerability reporting.
-- [ ] Create an annotated or signed `v0.2.4` tag only after all evidence is fresh.
+- [ ] Create an annotated or signed `v0.2.5` tag only after all evidence is fresh.
 - [ ] Obtain explicit user authorization before creating a GitHub repository, pushing, uploading a candidate or publishing a Release.
 
 ## Release facts / 发布事实
 
 - The source ZIP is the complete Windows application candidate. The wheel is a CI code-build smoke artifact, not the standalone desktop distribution.
-- `0.2.4` is an Alpha release candidate and does not claim blanket live ATS compatibility.
+- `0.2.5` is an Alpha release candidate and does not claim blanket live ATS compatibility.
 - Real external actions must remain 0 throughout build, test and release QA. The product claim is limited to separately user-authorized, user-present Browser Companion sessions on bound company/Greenhouse/Lever/Workday origins: per-page inspection, approved fill/material attachment, and one-use non-final Next/Continue navigation. Final Submit and automatic retry remain absent.

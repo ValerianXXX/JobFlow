@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>Synthetic LWC application</title></head>
+  <body>
+    <main>
+      <h1>Credit Risk Review Analyst</h1>
+      <form action="/v1/s/">
+        <section id="resume-zone" class="slds-form-element">
+          <span class="slds-form-element__label">Resume Upload</span>
+          <label for="resume-lwc">Click to browse &amp; upload</label>
+          <input id="resume-lwc" name="resume" type="file" required>
+        </section>
+        <h2>Contact Information</h2>
+        <section id="contact-zone">
+          <label for="first-name">First Name</label><input id="first-name" name="firstName" type="text" required>
+          <label for="last-name">Last Name</label><input id="last-name" name="lastName" type="text" required>
+          <c-lwc-drop-down-menu id="phone-type" data-id="phoneType"></c-lwc-drop-down-menu>
+        </section>
+        <fieldset class="slds-form-element" id="authorization-group">
+          <legend class="slds-form-element__label">Are you currently authorized to work in the United States?</legend>
+          <input id="auth-yes" name="workAuthorization" type="radio" value="yes" aria-checked="false" required>
+          <label for="auth-yes"><span aria-label="Yes">Yes</span></label>
+          <input id="auth-no" name="workAuthorization" type="radio" value="no" aria-checked="false" required>
+          <label for="auth-no"><span aria-label="No">No</span></label>
+        </fieldset>
+        <fieldset class="slds-form-element" id="setting-group">
+          <legend class="slds-form-element__label">Which work settings are you open to?</legend>
+          <input id="hybrid" name="workSetting" type="checkbox" value="hybrid" aria-checked="false"><label for="hybrid">Hybrid</label>
+          <input id="onsite" name="workSetting" type="checkbox" value="onsite" aria-checked="false"><label for="onsite">On-site</label>
+          <input id="remote" name="workSetting" type="checkbox" value="remote" aria-checked="false"><label for="remote">Remote</label>
+        </fieldset>
+        <c-closed-radio-group id="reference-group"></c-closed-radio-group>
+        <button id="final-submit" type="button" aria-label="next button">SUBMIT</button>
+      </form>
+    </main>
+    <script>
+      globalThis.__jobflowClosedRoots = new WeakMap();
+      customElements.define("c-closed-radio-group", class extends HTMLElement {
+        constructor() {
+          super();
+          const root = this.attachShadow({mode: "closed"});
+          globalThis.__jobflowClosedRoots.set(this, root);
+          root.innerHTML = `<fieldset class="slds-form-element">
+            <legend class="slds-form-element__label">Are you willing to provide two professional references?</legend>
+            <input id="reference-yes" name="references" type="radio" value="yes" required>
+            <label for="reference-yes">Yes</label>
+            <input id="reference-no" name="references" type="radio" value="no" required>
+            <label for="reference-no">No</label>
+          </fieldset>`;
+        }
+      });
+      customElements.define("c-lwc-drop-down-menu", class extends HTMLElement {
+        constructor() {
+          super();
+          const root = this.attachShadow({mode: "open"});
+          root.innerHTML = `
+            <p class="labelTextDropDown">Phone Type *</p>
+            <lightning-button-menu>
+              <button type="button" aria-haspopup="true" aria-expanded="false">
+                <span data-jobflow-current>Select a Phone Type</span>
+                <span>Show menu</span>
+              </button>
+            </lightning-button-menu>`;
+          const button = root.querySelector("button");
+          const current = root.querySelector("[data-jobflow-current]");
+          button.addEventListener("click", () => {
+            if (button.getAttribute("aria-expanded") === "true") {
+              button.setAttribute("aria-expanded", "false");
+              root.querySelector("[role=menu]")?.remove();
+              return;
+            }
+            button.setAttribute("aria-expanded", "true");
+            if (root.querySelector("[role=menu]")) return;
+            const menu = document.createElement("div");
+            menu.setAttribute("role", "menu");
+            for (const value of ["Mobile", "Home", "Work"]) {
+              const item = document.createElement("button");
+              item.type = "button";
+              item.setAttribute("role", "menuitem");
+              item.setAttribute("data-value", value);
+              item.textContent = value;
+              item.addEventListener("click", () => {
+                current.textContent = value;
+                // Mirror the real TEKsystems component: selection succeeds,
+                // while the overlay stays open until the owner button closes.
+              });
+              menu.append(item);
+            }
+            root.append(menu);
+          });
+        }
+      });
+      for (const input of document.querySelectorAll('input[type="radio"],input[type="checkbox"]')) {
+        input.labels[0].addEventListener("click", () => {
+          queueMicrotask(() => input.setAttribute("aria-checked", String(input.checked)));
+        });
+      }
+      document.querySelector("#resume-lwc").addEventListener("change", (event) => {
+        const filename = event.target.files[0]?.name || "";
+        setTimeout(() => {
+          document.querySelector("#resume-zone").innerHTML = `<strong>Upload successful</strong><span>${filename}</span><button type="submit"></button><input type="text">`;
+          // Real LWC ATS implementations rebuild controls after the resume
+          // parser finishes.  Recreate both a writable field and the final
+          // boundary so the companion must rebind by exact semantics rather
+          // than retaining stale element objects.
+          const first = document.querySelector("#first-name");
+          first.replaceWith(first.cloneNode(true));
+          const finalSubmit = document.querySelector("#final-submit");
+          finalSubmit.replaceWith(finalSubmit.cloneNode(true));
+          document.querySelector("#first-name").setAttribute("data-resume-parser-complete", "true");
+        }, 120);
+      });
+    </script>
+  </body>
+</html>

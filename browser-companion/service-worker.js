@@ -33,7 +33,7 @@ let installationBindingPromise = null;
 
 const TERMINAL_STAGES = new Set([
   "CONFIRMED", "SUBMISSION_UNKNOWN", "AWAITING_APPROVAL", "REVIEW_PACKET_READY",
-  "DEFERRED", "FAILED", "REVOKED", "CANCELLED"
+  "SUPPLEMENTAL_REVIEW_REQUIRED", "APPLY_RESTART_REQUIRED", "DEFERRED", "FAILED", "REVOKED", "CANCELLED"
 ]);
 const SAFE_REPAIR_STAGES = new Set([
   "PAIRING", "BROWSER_COMPANION_PAIRED", "GUIDED_INTAKE_PAIRED",
@@ -429,10 +429,18 @@ function publicResult(result) {
     "status", "code", "message", "mode", "assist_id", "intake_id", "application_id",
     "allowed_page_origin", "allowed_company_domain", "provider", "route_kind",
     "current_step", "max_steps", "capture_status", "handoff_kind", "manual_field_count",
+    "dynamic_field_count", "removed_separate_action_count", "packet_version",
     "expires_at", "automatic_retry", "real_external_actions", "submit_capability",
-    "final_submit", "poll_count", "retry_after_ms"
+    "final_submit", "field_attempt_count", "file_attempt_count", "poll_count", "retry_after_ms"
   ]) {
     if (["string", "number", "boolean"].includes(typeof result[key])) safe[key] = result[key];
+  }
+  for (const key of ["hard_gap_codes", "unknown_condition_codes"]) {
+    if (Array.isArray(result[key])) {
+      safe[key] = result[key].slice(0, 20).filter((item) => (
+        typeof item === "string" && /^[A-Za-z0-9:_-]{1,120}$/.test(item)
+      ));
+    }
   }
   return safe;
 }
@@ -556,6 +564,42 @@ async function pageObservationHash(tabUrl, payload) {
     path: parsed.pathname,
     sanitized_html: String(payload?.sanitized_html || "")
   }));
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function collectStableForm(tabId, {minimumMilliseconds = 1800, maximumMilliseconds = 6000} = {}) {
+  const started = Date.now();
+  let priorFingerprint = null;
+  let matchingSamples = 0;
+  let latest = null;
+  while (Date.now() - started < maximumMilliseconds) {
+    await wait(250);
+    const collected = await chrome.tabs.sendMessage(tabId, {type: "JOBFLOW_COLLECT_FORM"});
+    if (!collected || collected.status !== "COLLECTED") {
+      throw Object.assign(new Error("The updated application form could not be read safely."), {
+        jobflow: collected || {status: "BLOCKED", code: "COMPANION_FORM_UNAVAILABLE"}
+      });
+    }
+    latest = collected;
+    const fingerprint = await sha256(JSON.stringify({
+      sanitized_html: String(collected.payload?.sanitized_html || ""),
+      client_refs: Array.isArray(collected.payload?.client_refs) ? collected.payload.client_refs : [],
+      blocker_signals: Array.isArray(collected.payload?.blocker_signals) ? collected.payload.blocker_signals : []
+    }));
+    if (fingerprint === priorFingerprint) matchingSamples += 1;
+    else matchingSamples = 0;
+    priorFingerprint = fingerprint;
+    // Require a real settling window as ATS components often reveal questions
+    // after their first apparently stable paint.
+    if (Date.now() - started >= minimumMilliseconds && matchingSamples >= 3) return latest;
+  }
+  if (latest) return latest;
+  throw Object.assign(new Error("The updated application form did not become readable."), {
+    jobflow: {status: "BLOCKED", code: "COMPANION_FORM_UNAVAILABLE", automatic_retry: false}
+  });
 }
 
 async function postJSON(url, body = {}, timeoutMs = 15000) {
@@ -859,6 +903,17 @@ async function fillCurrentTab(tabId, tabUrl) {
       jobflow: {status: "BLOCKED", code: "COMPANION_WRONG_TAB"}
     });
   }
+  if (!Number.isInteger(tabId) || tabId <= 0 || (state.tab_id != null && state.tab_id !== tabId)) {
+    throw Object.assign(new Error("This action came from a different browser tab."), {
+      jobflow: {status: "BLOCKED", code: "COMPANION_TAB_BINDING_CHANGED", automatic_retry: false}
+    });
+  }
+  if (state.tab_id == null) {
+    // Bind the application tab before prepare, upload, or field writes.  Later
+    // checks can then distinguish the same tab from an unrelated page without
+    // rejecting the first legitimate application page after it was filled.
+    state = await saveSessionCAS(state, {...state, tab_id: tabId});
+  }
   if (state.stage === "AWAITING_USER_SUBMIT") {
     throw Object.assign(new Error("Final review is locked for the user's submit decision."), {
       jobflow: {status: "BLOCKED", code: "COMPANION_FINAL_REVIEW_LOCKED", automatic_retry: false}
@@ -869,6 +924,15 @@ async function fillCurrentTab(tabId, tabUrl) {
       jobflow: {
         status: "BLOCKED", code: "COMPANION_MANUAL_NAVIGATION_RESTART_REQUIRED",
         message: "Return to JobFlow and restart this application assist.", automatic_retry: false
+      }
+    });
+  }
+  if (state.stage === "APPLY_RESTART_REQUIRED") {
+    throw Object.assign(new Error("Return to JobFlow and restart this application assist."), {
+      jobflow: {
+        status: "BLOCKED", code: "COMPANION_APPLY_RESTART_REQUIRED",
+        message: "The page may have been partially changed. Return to JobFlow and restart this assist; nothing will be retried automatically.",
+        automatic_retry: false
       }
     });
   }
@@ -947,6 +1011,15 @@ async function fillCurrentTab(tabId, tabUrl) {
     await notifyJobFlow(prepared, "JOBFLOW_ASSIST_STATUS", next);
     return prepared;
   }
+  if (prepared.status === "SUPPLEMENTAL_REVIEW_REQUIRED") {
+    const supplementalState = {
+      ...state, tab_id: tabId, stage: prepared.status, navigation: null,
+      manual_navigation: null, last_result: prepared
+    };
+    const next = await saveSessionCAS(state, supplementalState);
+    await notifyJobFlow(prepared, "JOBFLOW_ASSIST_STATUS", next);
+    return prepared;
+  }
   const applied = await chrome.tabs.sendMessage(tabId, {
     type: "JOBFLOW_APPLY_APPROVED",
     fields: prepared.fields,
@@ -959,8 +1032,85 @@ async function fillCurrentTab(tabId, tabUrl) {
   });
   state = await assertCurrentSession(state);
   if (!applied || applied.status !== "APPLIED") {
-    throw Object.assign(new Error("The browser could not apply every approved field and material."), {
-      jobflow: applied || {status: "BLOCKED", code: "COMPANION_APPLY_INCOMPLETE"}
+    const responsePresent = Boolean(applied && typeof applied === "object");
+    const attemptedFields = Array.isArray(applied?.attempted_field_bindings)
+      ? applied.attempted_field_bindings
+      : Array.isArray(applied?.field_bindings)
+      ? applied.field_bindings
+      : responsePresent
+      ? []
+      : prepared.fields.map((item) => ({client_ref: item.client_ref, value_sha256: item.value_sha256}));
+    const attemptedFiles = Array.isArray(applied?.attempted_material_bindings)
+      ? applied.attempted_material_bindings
+      : Array.isArray(applied?.material_bindings)
+      ? applied.material_bindings
+      : responsePresent
+      ? []
+      : prepared.files.map((item) => ({client_ref: item.client_ref, purpose: item.purpose, sha256: item.sha256}));
+    let aborted;
+    try {
+      aborted = await postJSON(endpoint(state, "/abort-page-apply"), {
+        cause_code: String(applied?.code || "COMPANION_APPLY_INCOMPLETE"),
+        attempted_field_bindings: attemptedFields,
+        attempted_material_bindings: attemptedFiles,
+        submit_events: 0,
+        navigation_actions: 0,
+        companion_tab_id: tabId
+      });
+    } catch (_error) {
+      aborted = {
+        status: "APPLY_RESTART_REQUIRED",
+        code: "COMPANION_APPLY_RESTART_REQUIRED",
+        message: "The page may have been partially changed. Return to JobFlow and restart this assist; nothing will be retried automatically.",
+        automatic_retry: false,
+        submit_capability: false,
+        final_submit: false,
+        field_attempt_count: attemptedFields.length,
+        file_attempt_count: attemptedFiles.length
+      };
+    }
+    state = await assertCurrentSession(state, {tabId});
+    const next = await saveSessionCAS(state, {
+      ...state,
+      stage: "APPLY_RESTART_REQUIRED",
+      navigation: null,
+      manual_navigation: null,
+      authorized_navigation_proof: null,
+      manual_navigation_evidence: null,
+      last_result: aborted
+    });
+    await notifyJobFlow(aborted, "JOBFLOW_ASSIST_STATUS", next);
+    return aborted;
+  }
+  const settled = await collectStableForm(tabId, applied.material_bindings.length ? {
+    // Resume parsers commonly replace and then restore several controls after
+    // upload.  A short quiet spell during that transition is not the final ATS
+    // form, so require a longer stable window before comparing page semantics.
+    minimumMilliseconds: 5000,
+    maximumMilliseconds: 12000
+  } : {});
+  state = await assertCurrentSession(state, {tabId});
+  const dynamicReview = await postJSON(endpoint(state, "/discover-dynamic-fields"), {
+    ...settled.payload,
+    companion_tab_id: tabId,
+    field_bindings: applied.field_bindings,
+    material_bindings: applied.material_bindings,
+    submit_events: 0,
+    navigation_actions: 0
+  });
+  state = await assertCurrentSession(state, {tabId});
+  if (dynamicReview.status === "SUPPLEMENTAL_REVIEW_REQUIRED") {
+    const next = await saveSessionCAS(state, {
+      ...state, tab_id: tabId, stage: dynamicReview.status,
+      navigation: null, manual_navigation: null, authorized_navigation_proof: null,
+      manual_navigation_evidence: null, last_result: dynamicReview
+    });
+    await notifyJobFlow(dynamicReview, "JOBFLOW_ASSIST_STATUS", next);
+    return dynamicReview;
+  }
+  if (dynamicReview.status !== "NO_DYNAMIC_FIELDS") {
+    throw Object.assign(new Error("The conditional application questions could not be reviewed safely."), {
+      jobflow: dynamicReview || {status: "BLOCKED", code: "COMPANION_DYNAMIC_REVIEW_FAILED"}
     });
   }
   const completed = await postJSON(endpoint(state, "/complete"), {
@@ -1235,11 +1385,10 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
       return {status: "AVAILABLE", protocol_version: PROTOCOL, extension_version: EXTENSION_VERSION};
     }
     if (message.type === "JOBFLOW_PAIR") {
-      return {
-        status: "BLOCKED", code: "COMPANION_EXTERNAL_PAIR_FORBIDDEN",
-        message: "Open the JobFlow companion and connect from its popup.",
-        protocol_version: PROTOCOL, extension_version: EXTENSION_VERSION
-      };
+      // A loopback page is not trusted merely because it is local. Pairing is
+      // accepted only after the addressed JobFlow service proves possession of
+      // this installation's private HMAC binding in pairWithJobFlow().
+      return await pairWithJobFlow(message.pairing, senderOrigin, sender?.tab?.id);
     }
     if (message.type === "JOBFLOW_CANCEL_GUIDED") {
       return await cancelGuidedBinding(message, senderOrigin, sender?.tab?.id);
@@ -1266,7 +1415,16 @@ chrome.runtime.onConnect.addListener((port) => {
       return;
     }
     try {
-      const response = await fetch(message.url, {cache: "no-store", credentials: "omit", redirect: "error"});
+      // Chromium may omit Origin on a cross-origin GET issued by an extension
+      // service worker.  Use a small JSON POST so the local JobFlow service can
+      // authenticate the fixed extension origin before releasing a one-use
+      // material stream.
+      const response = await fetch(message.url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({protocol_version: PROTOCOL}),
+        cache: "no-store", credentials: "omit", redirect: "error"
+      });
       state = await assertCurrentSession(state);
       if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`);
       const reader = response.body.getReader();

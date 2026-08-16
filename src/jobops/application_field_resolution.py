@@ -23,6 +23,7 @@ MAX_APPLICATION_ANSWER_BUNDLE_BYTES = 512 * 1024
 MAX_REVIEW_PACKET_BYTES = 2 * 1024 * 1024
 
 ANSWERABLE_STOP_CLASSES = frozenset({
+    "private_fixed",
     "sensitive_review",
     "work_authorization_stop",
     "compensation_stop",
@@ -44,6 +45,7 @@ RESOLUTION_DECISIONS = frozenset({
     "PREFER_NOT_TO_ANSWER",
     "NOT_APPLICABLE",
 })
+NON_FORM_RESOLUTION_DECISION = "ACKNOWLEDGED_UNKNOWN"
 
 _PLACEHOLDER_OPTIONS = frozenset({
     "", "select", "select one", "choose", "choose one", "please select",
@@ -219,7 +221,9 @@ class ApplicationFieldResolutionManager:
         questions: dict[str, dict[str, Any]],
         required_refs: set[str],
     ) -> list[dict[str, Any]]:
-        if not isinstance(raw_resolutions, list) or not 1 <= len(raw_resolutions) <= MAX_RESOLUTION_FIELDS:
+        if raw_resolutions is None and not required_refs:
+            return []
+        if not isinstance(raw_resolutions, list) or len(raw_resolutions) > MAX_RESOLUTION_FIELDS:
             raise JobOpsError(
                 "APPLICATION_FIELD_RESOLUTIONS_INCOMPLETE",
                 "Confirm every highlighted job-specific question together.",
@@ -280,6 +284,44 @@ class ApplicationFieldResolutionManager:
         return sorted(normalized, key=lambda item: item["control_ref"])
 
     @staticmethod
+    def _normalize_non_form_resolutions(
+        raw_resolutions: object,
+        required_unknowns: set[str],
+    ) -> list[dict[str, str]]:
+        if raw_resolutions is None and not required_unknowns:
+            return []
+        if not isinstance(raw_resolutions, list) or len(raw_resolutions) > MAX_RESOLUTION_FIELDS:
+            raise JobOpsError(
+                "APPLICATION_NON_FORM_RESOLUTIONS_INCOMPLETE",
+                "Acknowledge every highlighted non-form uncertainty together.",
+            )
+        normalized: list[dict[str, str]] = []
+        seen: set[str] = set()
+        for raw in raw_resolutions:
+            if not isinstance(raw, dict) or set(raw) != {"unknown_id", "decision"}:
+                raise JobOpsError("APPLICATION_NON_FORM_RESOLUTION_INVALID", "A non-form uncertainty decision is invalid.")
+            unknown_id = str(raw.get("unknown_id", "")).strip()
+            if (
+                not re.fullmatch(r"[A-Za-z][A-Za-z0-9_.:-]{0,199}", unknown_id)
+                or unknown_id in seen
+                or unknown_id not in required_unknowns
+            ):
+                raise JobOpsError("APPLICATION_NON_FORM_RESOLUTION_INVALID", "A non-form uncertainty is repeated or no longer current.")
+            if str(raw.get("decision", "")).strip().upper() != NON_FORM_RESOLUTION_DECISION:
+                raise JobOpsError(
+                    "APPLICATION_NON_FORM_RESOLUTION_INVALID",
+                    "A non-form uncertainty may only be acknowledged; it cannot be converted into a fact.",
+                )
+            seen.add(unknown_id)
+            normalized.append({"unknown_id": unknown_id, "decision": NON_FORM_RESOLUTION_DECISION})
+        if seen != required_unknowns:
+            raise JobOpsError(
+                "APPLICATION_NON_FORM_RESOLUTIONS_INCOMPLETE",
+                "Acknowledge every highlighted non-form uncertainty together.",
+            )
+        return sorted(normalized, key=lambda item: item["unknown_id"])
+
+    @staticmethod
     def _mark_packet_fields(
         packet: dict[str, Any],
         resolved_refs: set[str],
@@ -305,6 +347,74 @@ class ApplicationFieldResolutionManager:
                 if isinstance(item, dict) and "value" in item:
                     item["value"] = ""
 
+    def _existing_answer_bundle(
+        self,
+        application_id: str,
+        context: ApprovalContext,
+    ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+        with self.database.connect() as connection:
+            rows = connection.execute(
+                """SELECT DISTINCT secure_ref FROM application_fields
+                   WHERE application_id=? AND status='RESOLVED_FOR_APPLICATION' AND secure_ref IS NOT NULL""",
+                (application_id,),
+            ).fetchall()
+        references = [str(row["secure_ref"]) for row in rows]
+        if not references:
+            return [], []
+        if len(references) != 1:
+            raise JobOpsError(
+                "APPLICATION_ANSWER_BUNDLE_COUNT_INVALID",
+                "The current application must have one complete job-specific answer bundle.",
+            )
+        metadata = self.onboarding.reference_metadata(references[0])
+        if metadata["kind"] != "application_answer_bundle" or metadata["status"] != "ACTIVE":
+            raise JobOpsError(
+                "APPLICATION_ANSWER_BUNDLE_INVALID",
+                "The current encrypted job-specific answers are unavailable.",
+            )
+        raw = bytearray(self.onboarding.read_bytes(references[0]))
+        try:
+            bundle = json.loads(bytes(raw).decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise JobOpsError(
+                "APPLICATION_ANSWER_BUNDLE_INVALID",
+                "The current encrypted job-specific answers are invalid.",
+            ) from exc
+        finally:
+            raw[:] = b"\0" * len(raw)
+        if (
+            not isinstance(bundle, dict)
+            or bundle.get("application_id") != application_id
+            or not isinstance(bundle.get("fields"), list)
+            or not isinstance(bundle.get("non_form_unknowns", []), list)
+        ):
+            raise JobOpsError(
+                "APPLICATION_ANSWER_BUNDLE_INVALID",
+                "The current encrypted job-specific answers are invalid.",
+            )
+        fields = [deepcopy(item) for item in bundle["fields"] if isinstance(item, dict)]
+        non_form = [deepcopy(item) for item in bundle.get("non_form_unknowns", []) if isinstance(item, dict)]
+        if len(fields) != len(bundle["fields"]) or len(non_form) != len(bundle.get("non_form_unknowns", [])):
+            raise JobOpsError("APPLICATION_ANSWER_BUNDLE_INVALID", "A stored job-specific answer is invalid.")
+        expected_hash = sha256_bytes(canonical_json({
+            "prior_answers_hash": str(bundle.get("prior_answers_hash", "")),
+            "answer_bundle_content_hash": str(metadata["content_sha256"]),
+            "fields": sorted(
+                [
+                    {"control_ref": str(item.get("control_ref", "")), "decision": str(item.get("decision", ""))}
+                    for item in fields
+                ],
+                key=lambda item: item["control_ref"],
+            ),
+            "non_form_unknowns": sorted(non_form, key=lambda item: str(item.get("unknown_id", ""))),
+        }))
+        if expected_hash != context.answers_hash:
+            raise JobOpsError(
+                "APPLICATION_ANSWER_BINDING_CHANGED",
+                "The current encrypted job-specific answers differ from the application context.",
+            )
+        return fields, non_form
+
     def resolve(
         self,
         *,
@@ -312,6 +422,7 @@ class ApplicationFieldResolutionManager:
         expected_packet_hash: str,
         raw_resolutions: object,
         user_confirmed: bool,
+        raw_non_form_resolutions: object = None,
     ) -> dict[str, Any]:
         if not user_confirmed:
             raise JobOpsError("EXPLICIT_CONFIRMATION_REQUIRED", "Saving job-specific answers requires explicit confirmation.")
@@ -331,33 +442,90 @@ class ApplicationFieldResolutionManager:
                 and str(questions[control_ref].get("classification", "")) in ANSWERABLE_STOP_CLASSES
             }
             resolutions = self._normalize_resolutions(raw_resolutions, questions, required_refs)
+            required_non_form_unknowns = set(old_context.mandatory_unknowns) - set(questions)
+            non_form_resolutions = self._normalize_non_form_resolutions(
+                raw_non_form_resolutions, required_non_form_unknowns,
+            )
+            if not resolutions and not non_form_resolutions:
+                raise JobOpsError(
+                    "APPLICATION_FIELD_RESOLUTIONS_INCOMPLETE",
+                    "There are no current job-specific questions or uncertainties to confirm.",
+                )
+            existing_fields, existing_non_form = self._existing_answer_bundle(application_id, old_context)
+            existing_refs: set[str] = set()
+            for item in existing_fields:
+                control_ref = _safe_control_ref(item.get("control_ref"))
+                question = questions.get(control_ref)
+                if (
+                    control_ref in existing_refs
+                    or question is None
+                    or str(question.get("status", "")) != "RESOLVED_FOR_APPLICATION"
+                    or str(question.get("classification", "")) != str(item.get("classification", ""))
+                    or str(question.get("answer_key", "")) != str(item.get("answer_key", ""))
+                ):
+                    raise JobOpsError(
+                        "APPLICATION_ANSWER_FORM_BINDING_CHANGED",
+                        "A prior confirmed answer no longer matches the current reviewed form.",
+                    )
+                existing_refs.add(control_ref)
+            new_refs = {str(item["control_ref"]) for item in resolutions}
+            if existing_refs & new_refs:
+                raise JobOpsError(
+                    "APPLICATION_FIELD_RESOLUTION_INVALID",
+                    "A previously confirmed field was submitted as a new answer.",
+                )
+            combined_fields = sorted(
+                [*existing_fields, *resolutions], key=lambda item: str(item["control_ref"]),
+            )
+            existing_non_form_ids = {str(item.get("unknown_id", "")) for item in existing_non_form}
+            if existing_non_form_ids & {str(item["unknown_id"]) for item in non_form_resolutions}:
+                raise JobOpsError(
+                    "APPLICATION_NON_FORM_RESOLUTION_INVALID",
+                    "A previously acknowledged uncertainty was submitted again.",
+                )
+            combined_non_form = sorted(
+                [*existing_non_form, *non_form_resolutions], key=lambda item: str(item["unknown_id"]),
+            )
             resolved_refs = {str(item["control_ref"]) for item in resolutions}
             created_at = iso_utc()
-            private_bundle = {
-                "schema_version": 1,
-                "application_id": application_id,
-                "source_packet_id": str(row["packet_id"]),
-                "source_packet_hash": expected_packet_hash,
-                "prior_answers_hash": old_context.answers_hash,
-                "bundle_nonce": secrets.token_hex(32),
-                "fields": resolutions,
-                "created_at": created_at,
-            }
-            raw_bundle = bytearray(canonical_json(private_bundle))
-            try:
-                if len(raw_bundle) > MAX_APPLICATION_ANSWER_BUNDLE_BYTES:
-                    raise JobOpsError("APPLICATION_ANSWER_BUNDLE_TOO_LARGE", "The encrypted job-specific answer bundle is too large.")
-                old_packet_metadata = self.onboarding.reference_metadata(str(row["relative_path"]))
-                if old_packet_metadata["kind"] != "review_packet" or old_packet_metadata["status"] != "ACTIVE":
-                    raise JobOpsError("REVIEW_PACKET_BINDING_INVALID", "The current encrypted review packet is unavailable.")
-                bundle_ref = self.onboarding.import_bytes(
-                    "application_answer_bundle",
-                    bytes(raw_bundle),
-                    synthetic=bool(old_packet_metadata["synthetic"]),
-                )
-                created_references.append(bundle_ref)
-            finally:
-                raw_bundle[:] = b"\0" * len(raw_bundle)
+            old_packet_metadata = self.onboarding.reference_metadata(str(row["relative_path"]))
+            if old_packet_metadata["kind"] != "review_packet" or old_packet_metadata["status"] != "ACTIVE":
+                raise JobOpsError("REVIEW_PACKET_BINDING_INVALID", "The current encrypted review packet is unavailable.")
+            bundle_ref: dict[str, Any] | None = None
+            if combined_fields:
+                private_bundle = {
+                    "schema_version": 1,
+                    "application_id": application_id,
+                    "source_packet_id": str(row["packet_id"]),
+                    "source_packet_hash": expected_packet_hash,
+                    "prior_answers_hash": old_context.answers_hash,
+                    "bundle_nonce": secrets.token_hex(32),
+                    "fields": combined_fields,
+                    "non_form_unknowns": combined_non_form,
+                    "created_at": created_at,
+                }
+                raw_bundle = bytearray(canonical_json(private_bundle))
+                try:
+                    if len(raw_bundle) > MAX_APPLICATION_ANSWER_BUNDLE_BYTES:
+                        raise JobOpsError("APPLICATION_ANSWER_BUNDLE_TOO_LARGE", "The encrypted job-specific answer bundle is too large.")
+                    bundle_ref = self.onboarding.import_bytes(
+                        "application_answer_bundle",
+                        bytes(raw_bundle),
+                        synthetic=bool(old_packet_metadata["synthetic"]),
+                    )
+                    created_references.append(bundle_ref)
+                finally:
+                    raw_bundle[:] = b"\0" * len(raw_bundle)
+
+            answer_bundle_content_hash = (
+                str(bundle_ref["content_sha256"])
+                if bundle_ref is not None
+                else sha256_bytes(canonical_json({
+                    "application_id": application_id,
+                    "source_packet_hash": expected_packet_hash,
+                    "non_form_unknowns": non_form_resolutions,
+                }))
+            )
 
             updated_packet = deepcopy(packet)
             self._mark_packet_fields(updated_packet, resolved_refs)
@@ -366,7 +534,7 @@ class ApplicationFieldResolutionManager:
                 "RPK",
                 application_id,
                 str(row["packet_id"]),
-                str(bundle_ref["content_sha256"]),
+                answer_bundle_content_hash,
             )
             updated_packet.pop("content_hash", None)
             updated_packet["content_hash"] = sha256_bytes(canonical_json(updated_packet))
@@ -388,6 +556,7 @@ class ApplicationFieldResolutionManager:
             }
             remaining_stops = tuple(sorted(unresolved - resolved_refs - separate_refs))
             remaining_unknowns = set(old_context.mandatory_unknowns) - resolved_refs
+            remaining_unknowns -= {item["unknown_id"] for item in non_form_resolutions}
             if any(
                 item["answer_key"] == "work_authorization"
                 and item["decision"] == "CONFIRMED_VALUE"
@@ -396,11 +565,12 @@ class ApplicationFieldResolutionManager:
                 remaining_unknowns.discard("candidate_work_authorization")
             answer_binding_hash = sha256_bytes(canonical_json({
                 "prior_answers_hash": old_context.answers_hash,
-                "answer_bundle_content_hash": bundle_ref["content_sha256"],
+                "answer_bundle_content_hash": answer_bundle_content_hash,
                 "fields": [
                     {"control_ref": item["control_ref"], "decision": item["decision"]}
-                    for item in resolutions
+                    for item in combined_fields
                 ],
+                "non_form_unknowns": combined_non_form,
             }))
             new_context = replace(
                 old_context,
@@ -459,7 +629,10 @@ class ApplicationFieldResolutionManager:
                         application_id,
                     ),
                 )
-                for item in resolutions:
+                # Every resolved field must point at the newly composed bundle.  Keeping
+                # prior fields on their superseded secure-ref would leave two active
+                # answer bundles and make the ephemeral browser payload ambiguous.
+                for item in combined_fields:
                     field_id = stable_id("FLD", application_id, str(item["control_ref"]))
                     field = connection.execute(
                         "SELECT classification,field_hash FROM application_fields WHERE field_id=? AND application_id=?",
@@ -469,7 +642,7 @@ class ApplicationFieldResolutionManager:
                         raise JobOpsError("APPLICATION_FIELD_BINDING_INVALID", "A job-specific field changed before it was saved.")
                     revised_field_hash = sha256_bytes(canonical_json({
                         "prior_field_hash": str(field["field_hash"]),
-                        "answer_bundle_content_hash": bundle_ref["content_sha256"],
+                        "answer_bundle_content_hash": answer_bundle_content_hash,
                         "control_ref": item["control_ref"],
                         "decision": item["decision"],
                     }))
@@ -479,7 +652,7 @@ class ApplicationFieldResolutionManager:
                         "classification": item["classification"],
                         "action": "STOP",
                         "status": "RESOLVED_FOR_APPLICATION",
-                        "secure_ref": bundle_ref["secure_ref"],
+                        "secure_ref": bundle_ref["secure_ref"] if bundle_ref is not None else None,
                         "redacted_summary": "ENCRYPTED_JOB_SPECIFIC_CONFIRMATION",
                         "field_hash": revised_field_hash,
                     }
@@ -527,6 +700,7 @@ class ApplicationFieldResolutionManager:
                             "packet_id": updated_packet["packet_id"],
                             "packet_version": version,
                             "field_count": len(resolutions),
+                            "acknowledged_non_form_unknown_count": len(non_form_resolutions),
                             "answer_binding_hash": answer_binding_hash,
                         }),
                         created_at,
@@ -539,7 +713,7 @@ class ApplicationFieldResolutionManager:
                 "packet_id": updated_packet["packet_id"],
                 "packet_version": version,
                 "packet_hash": updated_packet["content_hash"],
-                "resolved_count": len(resolutions),
+                "resolved_count": len(resolutions) + len(non_form_resolutions),
                 "remaining_unresolved_count": len(new_context.unresolved_stops) + len(new_context.mandatory_unknowns),
                 "private_values_emitted": 0,
                 "real_external_actions": 0,

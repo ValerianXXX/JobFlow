@@ -269,6 +269,24 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertTrue(field["label"]["zh"])
             self.assertTrue(field["label"]["en"])
 
+    def test_legacy_state_backfills_new_optional_answers_without_inventing_values(self) -> None:
+        with project_temp() as root:
+            service, onboarding, _, _, _ = self.make_service(root)
+            state_ref, state = service.ensure_state()
+            legacy = json.loads(json.dumps(state))
+            legacy["answers"].pop("github_url")
+            legacy["answers"].pop("portfolio_url")
+            onboarding.rotate(state_ref, canonical_json(legacy))
+
+            bootstrap = service.bootstrap()
+
+            self.assertEqual(bootstrap["answers"]["github_url"]["status"], "UNKNOWN")
+            self.assertIsNone(bootstrap["answers"]["github_url"]["value"])
+            self.assertEqual(bootstrap["answers"]["portfolio_url"]["status"], "UNKNOWN")
+            self.assertIsNone(bootstrap["answers"]["portfolio_url"]["value"])
+            self.assertEqual(bootstrap["completion"]["total"], len(REQUIRED_FIELD_IDS))
+            self.assertEqual(onboarding.read_bytes(state_ref), canonical_json(legacy))
+
     def test_pdf_import_compares_local_extraction_modes_and_selects_cleaner_grounding_text(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
@@ -1743,6 +1761,62 @@ class OnboardingCenterTests(unittest.TestCase):
                 server.server_close()
                 thread.join(timeout=5)
 
+    def test_companion_material_stream_uses_origin_authenticated_post(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            payload = b"synthetic approved resume"
+            with mock.patch.object(
+                service.browser_assist,
+                "take_file",
+                return_value=(bytearray(payload), {"filename": "resume.docx"}),
+            ) as take_file:
+                server = create_server(service, token="synthetic-session-token")
+                thread = threading.Thread(target=server.serve_forever, daemon=True)
+                thread.start()
+                try:
+                    request_body = json.dumps({"protocol_version": 2}).encode("utf-8")
+                    connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                    connection.request(
+                        "POST",
+                        "/assist/synthetic-assist-token/file/synthetic-file-token",
+                        body=request_body,
+                        headers={
+                            "Origin": COMPANION_EXTENSION_ORIGIN,
+                            "Content-Type": "application/json",
+                            "Content-Length": str(len(request_body)),
+                        },
+                    )
+                    response = connection.getresponse()
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.read(), payload)
+                    self.assertEqual(response.headers["Access-Control-Allow-Origin"], COMPANION_EXTENSION_ORIGIN)
+                    take_file.assert_called_once_with(
+                        "synthetic-assist-token",
+                        "synthetic-file-token",
+                        extension_origin=COMPANION_EXTENSION_ORIGIN,
+                    )
+                    connection.close()
+
+                    untrusted = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                    untrusted.request(
+                        "POST",
+                        "/assist/synthetic-assist-token/file/synthetic-file-token",
+                        body=request_body,
+                        headers={
+                            "Origin": "chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                            "Content-Type": "application/json",
+                            "Content-Length": str(len(request_body)),
+                        },
+                    )
+                    blocked = untrusted.getresponse()
+                    self.assertEqual(blocked.status, 403)
+                    self.assertEqual(json.loads(blocked.read())["code"], "BROWSER_COMPANION_ORIGIN_FORBIDDEN")
+                    untrusted.close()
+                finally:
+                    server.shutdown()
+                    server.server_close()
+                    thread.join(timeout=5)
+
     def test_guided_form_http_returns_quick_start_then_poll_result(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
@@ -2054,7 +2128,17 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('api("queue-limit"', app)
         self.assertIn('api("external-action-kill-switch"', app)
         self.assertIn('api("cancel-guided-intake"', app)
+        self.assertIn('api("start-job-with-ai"', app)
+        self.assertIn('api("start-application-with-ai"', app)
+        self.assertIn("state.aiOperatorExecution=operated.operator_execution||null", app)
+        self.assertIn('aiOperatorExecuted: "JobFlow 已执行"', app)
+        self.assertIn('aiOperatorPending: "Runs after fresh page state"', app)
+        self.assertIn("function aiOperatorStepsHtml(plan)", app)
+        self.assertIn("function jobUrlFromOperatorInputs()", app)
+        self.assertIn('aiOperatorDelegated: "由 JobFlow 接力执行"', app)
         self.assertIn('id="cancelGuidedIntake"', html)
+        self.assertIn('id="aiOperatorCommand"', html)
+        self.assertIn('id="guidedAiOperatorPlan"', html)
         self.assertIn('api("review-packet"', app)
         self.assertIn('api("resolve-application-fields"', app)
         self.assertIn('api("queue-decision"', app)
@@ -2094,7 +2178,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("guided-background-v1", html)
+        self.assertIn("jobflow-v27-ai-operator-v4", html)
 
 
 if __name__ == "__main__":

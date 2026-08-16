@@ -82,6 +82,16 @@ HTTPJSON = Callable[..., dict[str, Any]]
 CommandResolver = Callable[[str], str | None]
 
 
+def _operator_capability_status() -> dict[str, Any]:
+    return {
+        "operator_mode": "AI_DECIDES_JOBFLOW_EXECUTES",
+        "operator_protocol_version": 1,
+        "jobflow_tool_authority": "HOST_VALIDATED_HIGH_LEVEL_TOOLS_ONLY",
+        "arbitrary_browser_shell_filesystem": False,
+        "final_submit_authority": "USER_ONLY",
+    }
+
+
 def _is_safe_model_ref(value: Any) -> bool:
     """Accept public model identifiers, never paths, URIs, or traversal segments."""
     if not isinstance(value, str) or SAFE_MODEL_REF.fullmatch(value) is None:
@@ -727,6 +737,7 @@ class AgentCLIEngine(AIAnalysisEngine):
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
             "quality_contract": AI_QUALITY_CONTRACT,
+            **_operator_capability_status(),
             **self._capability,
         }
 
@@ -773,6 +784,9 @@ class AgentCLIEngine(AIAnalysisEngine):
         except (OSError, subprocess.SubprocessError) as exc:
             raise JobOpsError("AI_AGENT_UNAVAILABLE", "The detected Agent could not complete a private structured request.") from exc
         return _validated_agent_result(completed)
+
+    def execute_structured_task(self, payload: dict[str, Any]) -> Any:
+        return self._invoke(payload)
 
     def connection_test(self) -> None:
         result = self._invoke({
@@ -932,6 +946,7 @@ class WindowsHermesCLIEngine(AgentCLIEngine):
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
             "quality_contract": AI_QUALITY_CONTRACT,
+            **_operator_capability_status(),
             **self._capability,
         }
 
@@ -1021,6 +1036,7 @@ class WSLHermesCLIEngine(AgentCLIEngine):
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
             "quality_contract": AI_QUALITY_CONTRACT,
+            **_operator_capability_status(),
             **self._capability,
         }
 
@@ -1113,6 +1129,7 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
             "quality_contract": AI_QUALITY_CONTRACT,
+            **_operator_capability_status(),
             **self._capability,
         }
 
@@ -1156,6 +1173,9 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
         if not isinstance(content, str) or not content.strip():
             raise JobOpsError("AI_LOCAL_RESPONSE_INVALID", "The connected local model returned no structured content.")
         return _json_from_text(content)
+
+    def execute_structured_task(self, payload: dict[str, Any]) -> Any:
+        return self._complete(payload)
 
     def connection_test(self) -> None:
         result = self._complete({

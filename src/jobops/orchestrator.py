@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from .adapters import FakeBrowserPrefillAdapter
+from .ai_operator import analyze_application_form_semantics, rank_application_claims
+from .ai_runtime import AIAnalysisEngine
 from .application_execution import build_application_execution_plan
 from .application_field_resolution import (
     approval_unresolved_stop_ids,
@@ -163,7 +165,14 @@ def _read_jd(path: Path, source_type: str | None = None) -> tuple[str, str, str 
 
 
 class JobOpsOrchestrator:
-    def __init__(self, project: Path, database: JobOpsDB, onboarding: PrivateOnboarding) -> None:
+    def __init__(
+        self,
+        project: Path,
+        database: JobOpsDB,
+        onboarding: PrivateOnboarding,
+        *,
+        ai_engine: AIAnalysisEngine | None = None,
+    ) -> None:
         self.project = project.resolve()
         self.database = database
         self.database.initialize()
@@ -171,6 +180,7 @@ class JobOpsOrchestrator:
         self.onboarding.assert_outside_project(self.project)
         self.queue = QueueManager(database)
         self.schemas = self.project / "schemas"
+        self.ai_engine = ai_engine
 
     @staticmethod
     def _remember_created_reference(record: dict[str, Any], created: set[str]) -> None:
@@ -642,6 +652,14 @@ class JobOpsOrchestrator:
         }
         validate_named("jd-analysis", analysis, self.schemas)
         analysis_hash = sha256_bytes(canonical_json(analysis))
+        preferred_claim_ids: list[str] | None = None
+        if not synthetic and self.ai_engine is not None:
+            material_decision = rank_application_claims(
+                self.ai_engine,
+                job_summary=analysis,
+                claims=claims,
+            )
+            preferred_claim_ids = list(material_decision["ranked_claim_ids"])
         self._crash(crash_after_step, "after_analysis")
 
         if synthetic:
@@ -705,6 +723,15 @@ class JobOpsOrchestrator:
             form_analysis = analyze_local_ats_form(
                 form_fixture.read_bytes(), route=route.as_dict(), blocked_categories=policy["blocked_form_categories"]
             )
+            ai_form_semantics: dict[str, Any] | None = None
+            if not synthetic and self.ai_engine is not None:
+                ai_form_semantics = analyze_application_form_semantics(
+                    self.ai_engine, form_analysis=form_analysis,
+                )
+            semantic_by_ref = {
+                str(item["control_ref"]): item
+                for item in (ai_form_semantics or {}).get("fields", [])
+            }
             bindings: dict[str, dict[str, str]] = {}
             for item in form_analysis["fields"]:
                 answer_key = str(item["answer_key"])
@@ -741,6 +768,8 @@ class JobOpsOrchestrator:
                     "status": "READY" if action["action"] == "PROPOSE_PREFILL" else "STOPPED",
                     "secure_ref": action["binding_ref"] if action["binding_kind"] == "SECURE_REF" else None,
                     "redacted_summary": "PRIVATE_VALUE_PRESENT" if action["binding_kind"] == "SECURE_REF" else ("PUBLIC_VALUE_HASH_PRESENT" if action["binding_kind"] == "PUBLIC_VALUE_HASH" else "UNANSWERED"),
+                    "ai_semantic_role": semantic_by_ref.get(str(item["control_ref"]), {}).get("semantic_role"),
+                    "ai_semantic_reason": semantic_by_ref.get(str(item["control_ref"]), {}).get("reason"),
                 })
             fields = {
                 "fields": safe_questions,
@@ -823,6 +852,7 @@ class JobOpsOrchestrator:
                     replacement_plan = choose_tailoring_replacements(
                         manifest=manifest, external_claim_set=external_claim_set,
                         job_text=normalized,
+                        preferred_claim_ids=preferred_claim_ids,
                     )
                     diff = tailor_master_resume_with_manifest(
                         master_path, resume_docx, manifest=manifest,
@@ -841,6 +871,7 @@ class JobOpsOrchestrator:
                         template_slots=slots, external_claim_set=external_claim_set,
                         job_text=normalized, candidate_display_name=str(profile["candidate_display_name"]),
                         target_role=jd.title,
+                        preferred_claim_ids=preferred_claim_ids,
                     )
                     diff = tailor_master_resume(
                         master_path, resume_docx, replacements=replacements,

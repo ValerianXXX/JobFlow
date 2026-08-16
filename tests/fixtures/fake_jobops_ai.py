@@ -5,6 +5,81 @@ import sys
 
 
 request = json.load(sys.stdin)
+if request.get("task") == "JOBFLOW_FORM_SEMANTIC_REVIEW_V1":
+    fields = []
+    for item in request.get("page", {}).get("fields", []):
+        classification = str(item.get("deterministic_classification", ""))
+        role = "other"
+        if classification == "file_upload_stop": role = "material_upload"
+        elif classification == "final_submit_stop": role = "final_submit"
+        elif classification == "navigation_control_stop": role = "navigation"
+        elif classification == "work_authorization_stop": role = "work_authorization"
+        elif classification in {"legal_declaration_stop", "signature_stop", "voluntary_disclosure_stop", "sensitive_review"}: role = "legal_or_sensitive"
+        elif classification == "private_fixed": role = "identity"
+        fields.append({
+            "control_ref": item.get("control_ref"),
+            "semantic_role": role,
+            "reason": "The role is based only on the sanitized prompt and deterministic JobFlow classification.",
+        })
+    json.dump({
+        "schema_version": 1,
+        "summary": "The current application controls were interpreted without receiving any entered values.",
+        "fields": fields,
+    }, sys.stdout)
+    raise SystemExit(0)
+if request.get("task") == "JOBFLOW_APPLICATION_MATERIAL_DECISION_V1":
+    claim_ids = [
+        str(item.get("claim_id")) for item in request.get("approved_claims", [])
+        if isinstance(item, dict) and item.get("claim_id")
+    ]
+    json.dump({
+        "schema_version": 1,
+        "ranked_claim_ids": claim_ids,
+        "summary": "The approved claims were ranked against the supplied job requirements.",
+    }, sys.stdout)
+    raise SystemExit(0)
+if request.get("task") in {"JOBFLOW_APPLICATION_OPERATOR_PLAN_V1", "JOBFLOW_NEW_JOB_OPERATOR_PLAN_V1"}:
+    new_job = request.get("task") == "JOBFLOW_NEW_JOB_OPERATOR_PLAN_V1"
+    json.dump({
+        "schema_version": 1,
+        "status": "READY",
+        "summary": "The job is ready for a bounded AI-directed JobFlow run.",
+        "steps": ([{
+            "tool": "jobflow.start_guided_intake",
+            "reason": "Create the read-only browser lease for this company job.",
+            "requires_user_approval": True,
+            "expected_status": "GUIDED_INTAKE_PAIRING",
+        }] if new_job else [
+            {
+                "tool": "jobflow.read_current_job",
+                "reason": "Confirm the active reviewed job binding before form work.",
+                "requires_user_approval": False,
+                "expected_status": "JOB_BOUND",
+            },
+            {
+                "tool": "jobflow.inspect_application_form",
+                "reason": "Re-read the current live form structure before each approved fill step.",
+                "requires_user_approval": False,
+                "expected_status": "FORM_INSPECTED",
+            },
+            {
+                "tool": "jobflow.prepare_fill_plan",
+                "reason": "Use only approved answers and approved application materials.",
+                "requires_user_approval": True,
+                "expected_status": "AWAITING_USER_SUBMIT",
+            },
+            {
+                "tool": "jobflow.start_user_present_assist",
+                "reason": "Start the host-validated Browser Companion lease.",
+                "requires_user_approval": True,
+                "expected_status": "BROWSER_COMPANION_PAIRING",
+            },
+        ]),
+        "stop_condition": "AWAITING_USER_SUBMIT",
+        "final_submit": "USER_ONLY",
+        "automatic_retry": False,
+    }, sys.stdout)
+    raise SystemExit(0)
 numbered = request.get("line_numbered_document", [])
 line_count = len(numbered)
 line_start = int(numbered[0].split("\t", 1)[0]) if numbered else 1

@@ -224,6 +224,14 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         )
         return payload
 
+    def _companion_file_body(self) -> None:
+        payload = self._json_body()
+        if payload != {"protocol_version": COMPANION_PROTOCOL_VERSION}:
+            raise JobOpsError(
+                "BROWSER_COMPANION_FILE_PROTOCOL_INVALID",
+                "The Browser Companion material request version is invalid.",
+            )
+
     def _companion_local_app_data(self) -> Path:
         store = self.server.service.onboarding.store
         configured = getattr(store, "local_app_data", None)
@@ -551,6 +559,18 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 return
             token, route_parts = assist
             try:
+                if len(route_parts) == 2 and route_parts[0] == "file":
+                    self._companion_file_body()
+                    raw: bytearray | None = None
+                    try:
+                        raw, _ = self.server.service.browser_assist.take_file(
+                            token, route_parts[1], extension_origin=origin,
+                        )
+                        self._send_assist_bytes(HTTPStatus.OK, raw, "application/octet-stream", origin)
+                    finally:
+                        if raw is not None:
+                            raw[:] = b"\0" * len(raw)
+                    return
                 if route_parts == ["pair"]:
                     pair_request = self._companion_pair_body()
                     result = self.server.service.browser_assist.pair(token, extension_origin=origin)
@@ -559,8 +579,16 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                     )
                 elif route_parts == ["prepare"]:
                     result = self.server.service.browser_assist.prepare(token, self._json_body(), extension_origin=origin)
+                elif route_parts == ["discover-dynamic-fields"]:
+                    result = self.server.service.browser_assist.discover_dynamic_fields(
+                        token, self._json_body(), extension_origin=origin,
+                    )
                 elif route_parts == ["complete"]:
                     result = self.server.service.browser_assist.complete(token, self._json_body(), extension_origin=origin)
+                elif route_parts == ["abort-page-apply"]:
+                    result = self.server.service.browser_assist.abort_page_apply(
+                        token, self._json_body(), extension_origin=origin,
+                    )
                 elif route_parts == ["authorize-navigation"]:
                     result = self.server.service.browser_assist.authorize_navigation(
                         token, self._json_body(), extension_origin=origin,
@@ -607,12 +635,39 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.disable_external_actions(self._json_body())
             elif route == "start-browser-assist":
                 result = self.server.service.start_browser_assist(self._json_body())
+            elif route == "plan-application-with-ai":
+                result = self.server.service.plan_application_with_ai(self._json_body())
+            elif route == "start-application-with-ai":
+                result = self.server.service.start_application_with_ai(self._json_body())
+            elif route == "start-job-with-ai":
+                result = self.server.service.start_job_with_ai(self._json_body())
             elif route == "start-guided-intake":
                 result = self.server.service.start_guided_intake(self._json_body())
             elif route == "cancel-guided-intake":
                 result = self.server.service.cancel_guided_intake(self._json_body())
             elif route == "resolve-browser-assist-unknown":
                 result = self.server.service.resolve_browser_assist_unknown(self._json_body())
+            elif route == "pair-local-agent-assist":
+                result = self.server.service.pair_local_agent_assist(self._json_body())
+            elif route == "prepare-local-agent-assist":
+                result = self.server.service.prepare_local_agent_assist(self._json_body())
+            elif route == "discover-local-agent-dynamic-fields":
+                result = self.server.service.discover_local_agent_dynamic_fields(self._json_body())
+            elif route == "complete-local-agent-assist":
+                result = self.server.service.complete_local_agent_assist(self._json_body())
+            elif route == "take-local-agent-assist-file":
+                file_request = self._json_body()
+                raw: bytearray | None = None
+                try:
+                    raw, _ = self.server.service.take_local_agent_assist_file(
+                        assist_token=str(file_request.get("assist_token", "")),
+                        file_token=str(file_request.get("file_token", "")),
+                    )
+                    self._send_bytes(HTTPStatus.OK, raw, "application/octet-stream")
+                finally:
+                    if raw is not None:
+                        raw[:] = b"\0" * len(raw)
+                return
             elif route == "prepare-synthetic-execution":
                 result = self.server.service.prepare_synthetic_execution(self._json_body())
             elif route == "complete-synthetic-execution":

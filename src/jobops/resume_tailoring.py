@@ -169,6 +169,7 @@ def validate_resume_tailoring_manifest_integrity(value: dict[str, Any]) -> None:
 
 def choose_tailoring_replacements(
     *, manifest: dict[str, Any], external_claim_set: dict[str, Any], job_text: str,
+    preferred_claim_ids: list[str] | None = None,
 ) -> list[dict[str, str]]:
     """Choose only exact approved Claim wording for approved paragraph categories.
 
@@ -183,17 +184,21 @@ def choose_tailoring_replacements(
     job_tokens = _tokens(job_text)
     if not job_tokens:
         raise JobOpsError("TAILORING_JOB_TEXT_INVALID", "The saved job description has no usable relevance terms.")
-    by_category: dict[str, list[tuple[int, str, dict[str, Any]]]] = {}
+    preference = {claim_id: index for index, claim_id in enumerate(preferred_claim_ids or [])}
+    by_category: dict[str, list[tuple[int, int, str, dict[str, Any]]]] = {}
     for claim in claims:
         wording = str(claim["allowed_wording"][0]).strip()
         claim_tokens = _tokens(wording)
         score = len(job_tokens & claim_tokens)
-        if score < 1:
+        claim_id = str(claim["claim_id"])
+        if score < 1 and claim_id not in preference:
             continue
         category = str(claim.get("category", ""))
-        by_category.setdefault(category, []).append((score, str(claim["claim_id"]), claim))
+        by_category.setdefault(category, []).append((
+            preference.get(claim_id, len(preference) + 1_000), -score, claim_id, claim,
+        ))
     for values in by_category.values():
-        values.sort(key=lambda item: (-item[0], item[1]))
+        values.sort(key=lambda item: (item[0], item[1], item[2]))
 
     used: set[str] = set()
     replacements: list[dict[str, str]] = []
@@ -201,7 +206,7 @@ def choose_tailoring_replacements(
         candidates = [item for item in by_category.get(str(block["category"]), []) if item[1] not in used]
         if not candidates:
             continue
-        _, claim_id, claim = candidates[0]
+        _, _, claim_id, claim = candidates[0]
         wording = str(claim["allowed_wording"][0]).strip()
         if len(wording) > int(block["maximum_characters"]):
             continue
@@ -218,6 +223,7 @@ def choose_tailoring_replacements(
 def choose_template_replacements(
     *, template_slots: list[str], external_claim_set: dict[str, Any], job_text: str,
     candidate_display_name: str, target_role: str,
+    preferred_claim_ids: list[str] | None = None,
 ) -> dict[str, str]:
     """Fill legacy explicit slots with exact approved wording and public job context."""
 
@@ -235,26 +241,27 @@ def choose_template_replacements(
     }
     job_tokens = _tokens(job_text)
     claims = approved_external_claims(external_claim_set, use="resume")
+    preference = {claim_id: index for index, claim_id in enumerate(preferred_claim_ids or [])}
     used: set[str] = set()
     for slot, categories in category_map.items():
         if slot not in slots:
             continue
-        ranked: list[tuple[int, str, dict[str, Any]]] = []
+        ranked: list[tuple[int, int, str, dict[str, Any]]] = []
         for claim in claims:
             claim_id = str(claim["claim_id"])
             if claim_id in used or str(claim.get("category")) not in categories:
                 continue
             score = len(job_tokens & _tokens(str(claim["allowed_wording"][0])))
-            if score:
-                ranked.append((score, claim_id, claim))
-        ranked.sort(key=lambda item: (-item[0], item[1]))
+            if score or claim_id in preference:
+                ranked.append((preference.get(claim_id, len(preference) + 1_000), -score, claim_id, claim))
+        ranked.sort(key=lambda item: (item[0], item[1], item[2]))
         if not ranked:
             raise JobOpsError(
                 "TAILORING_RELEVANCE_INSUFFICIENT",
                 "No applicant-approved Claim matches a required template slot and the saved job description.",
                 slot=slot,
             )
-        _, claim_id, claim = ranked[0]
+        _, _, claim_id, claim = ranked[0]
         used.add(claim_id)
         output[slot] = str(claim["allowed_wording"][0])
     return output

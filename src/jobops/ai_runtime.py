@@ -578,10 +578,16 @@ class AIAnalysisEngine:
             "private_transport": "NONE",
             "automatic_claim_selection": False,
             "claim_output_allowed": False,
+            "operator_mode": "UNAVAILABLE",
+            "jobflow_tool_authority": "NONE",
         }
 
     def analyze_document(self, text: str, *, source_id: str, source_type: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         raise JobOpsError("AI_ENGINE_NOT_CONFIGURED", "A private-document AI engine has not been configured.")
+
+    def execute_structured_task(self, payload: dict[str, Any]) -> Any:
+        """Run one bounded JobFlow-owned JSON task without granting model tools."""
+        raise JobOpsError("AI_ENGINE_NOT_CONFIGURED", "A structured AI engine has not been configured.")
 
 
 class LocalSubprocessAIEngine(AIAnalysisEngine):
@@ -604,8 +610,33 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "private_transport": "STDIN_STDOUT_MEMORY_ONLY",
             "automatic_claim_selection": False,
             "claim_output_allowed": True,
+            "operator_mode": "AI_DECIDES_JOBFLOW_EXECUTES",
+            "operator_protocol_version": 1,
+            "jobflow_tool_authority": "HOST_VALIDATED_HIGH_LEVEL_TOOLS_ONLY",
+            "arbitrary_browser_shell_filesystem": False,
+            "final_submit_authority": "USER_ONLY",
             "quality_contract": AI_QUALITY_CONTRACT,
         }
+
+    def execute_structured_task(self, payload: dict[str, Any]) -> Any:
+        if not isinstance(payload, dict):
+            raise JobOpsError("AI_REQUEST_INVALID", "The bounded AI task must be a JSON object.")
+        try:
+            returncode, stdout = _run_bounded_ai_command(
+                self.command,
+                payload,
+                timeout_seconds=self.timeout_seconds,
+            )
+        except JobOpsError:
+            raise
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise JobOpsError("AI_ENGINE_UNAVAILABLE", "The configured local AI engine could not complete the task.") from exc
+        if returncode != 0 or not stdout.encode("utf-8"):
+            raise JobOpsError("AI_ENGINE_FAILED", "The configured local AI engine returned no valid bounded result.")
+        try:
+            return json.loads(stdout)
+        except json.JSONDecodeError as exc:
+            raise JobOpsError("AI_RESPONSE_INVALID", "The configured local AI engine did not return JSON.") from exc
 
     @staticmethod
     def _request(
@@ -1070,24 +1101,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         return output
 
     def analyze_document(self, text: str, *, source_id: str, source_type: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-        def invoke(payload: dict[str, Any]) -> Any:
-            try:
-                returncode, stdout = _run_bounded_ai_command(
-                    self.command,
-                    payload,
-                    timeout_seconds=self.timeout_seconds,
-                )
-            except JobOpsError:
-                raise
-            except (OSError, subprocess.SubprocessError) as exc:
-                raise JobOpsError("AI_ENGINE_UNAVAILABLE", "The configured local AI engine could not complete the analysis.") from exc
-            encoded = stdout.encode("utf-8")
-            if returncode != 0 or not encoded:
-                raise JobOpsError("AI_ENGINE_FAILED", "The configured local AI engine returned no valid bounded result.")
-            try:
-                return json.loads(stdout)
-            except json.JSONDecodeError as exc:
-                raise JobOpsError("AI_RESPONSE_INVALID", "The configured local AI engine did not return JSON.") from exc
+        invoke = self.execute_structured_task
 
         requests, coverage = self._chunk_requests(text, source_id=source_id, source_type=source_type)
         batches: list[list[dict[str, Any]]] = []

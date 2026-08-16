@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260814-jobflow-v25-guided-cancel-v1">
+  <link rel="stylesheet" href="styles.css?v=20260816-jobflow-v27-ai-operator-v4">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -93,7 +93,9 @@
         </div>
         <div class="guided-intake-layout">
           <div class="guided-intake-start">
-            <label><span data-i18n="guidedOfficialUrl">公司官网岗位链接</span><input id="guidedOfficialUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://company.example/careers/role"></label>
+            <label><span data-i18n="aiOperatorCommandLabel">一句话交给 AI</span><input id="aiOperatorCommand" type="text" maxlength="4600" autocomplete="off" spellcheck="false" value="帮我处理这个岗位" placeholder="帮我处理这个岗位 https://company.example/careers/role"></label>
+            <small class="field-help" data-i18n="aiOperatorCommandHelp">可以直接输入“帮我处理这个岗位”并粘贴公司岗位链接。AI 会连续理解与决策；浏览器、材料和安全门仍由 JobFlow 执行。</small>
+            <label><span data-i18n="guidedOfficialUrl">公司官网岗位链接（也可放在上一句里）</span><input id="guidedOfficialUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://company.example/careers/role"></label>
             <label class="guided-intake-consent"><input id="guidedIntakeConfirm" type="checkbox"><span data-i18n="guidedIntakeConsent">我允许 JobFlow 在接下来的 30 分钟内，只读取我在浏览器中主动选择的公司岗位页和申请表结构；此阶段不填写、不上传、不点击网页按钮。</span></label>
             <div class="guided-intake-actions">
               <button id="startGuidedIntake" class="primary" type="button" data-i18n="startGuidedIntake" disabled>连接浏览器并开始</button>
@@ -101,6 +103,12 @@
               <button id="cancelGuidedIntake" class="secondary compact guided-cancel hidden" type="button" data-i18n="cancelGuidedIntake">取消本次读取并更换网址</button>
             </div>
             <p id="guidedIntakeMessage" class="guided-intake-message" aria-live="polite"></p>
+            <div id="guidedAiOperatorPlan" class="ai-operator-plan hidden">
+              <strong data-i18n="aiOperatorTitle">AI 任务规划</strong>
+              <p id="guidedAiOperatorSummary"></p>
+              <ol id="guidedAiOperatorSteps"></ol>
+              <small data-i18n="aiOperatorBoundary">AI 只选择 JobFlow 的受限工具；浏览器、文件和最终提交权限仍由 JobFlow 控制。</small>
+            </div>
           </div>
           <ol class="guided-intake-steps">
             <li id="guidedStepOne"><b>1</b><span><strong data-i18n="guidedStepOneTitle">打开公司岗位页</strong><small data-i18n="guidedStepOneBody">只需粘贴一次链接并建立浏览器连接。</small></span></li>
@@ -242,9 +250,15 @@
         </div>
         <div id="browserAssistSelection" class="browser-assist-selection hidden" aria-live="polite">
           <div><strong id="browserAssistJob"></strong><small id="browserAssistApplication"></small></div>
+          <div id="aiOperatorPlan" class="ai-operator-plan hidden">
+            <strong data-i18n="aiOperatorTitle">AI 任务规划</strong>
+            <p id="aiOperatorSummary"></p>
+            <ol id="aiOperatorSteps"></ol>
+            <small data-i18n="aiOperatorBoundary">AI 只选择 JobFlow 的受限工具；浏览器、文件和最终提交权限仍由 JobFlow 控制。</small>
+          </div>
           <label><input id="browserAssistConfirm" type="checkbox"><span data-i18n="browserAssistConsent">我授权这一个申请在 30 分钟内逐页读取表单结构、预填获批字段、附加获批材料并通过明确的非最终 Next/Continue；登录、验证、未知问题和最终 Submit 由我处理。</span></label>
           <div class="browser-assist-actions">
-            <button id="startBrowserAssistNow" class="primary" type="button" data-i18n="startBrowserAssistNow" disabled>建立浏览器连接</button>
+            <button id="startBrowserAssistNow" class="primary" type="button" data-i18n="startBrowserAssistNow" disabled>让 AI 规划并开始</button>
             <a id="browserAssistOpenPage" class="button-link compact hidden" target="_blank" rel="noopener noreferrer" data-i18n="openApprovedApplication">打开已批准的申请页</a>
           </div>
           <p id="browserAssistMessage"></p>
@@ -426,6 +440,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260815-jobflow-v26-guided-background-v1"></script>
+  <script src="app.js?v=20260816-jobflow-v27-ai-operator-v4"></script>
 </body>
 </html>

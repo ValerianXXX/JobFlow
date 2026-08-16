@@ -35,6 +35,10 @@ FINAL_SUBMIT_TERMS = (
     "submit application", "final submit", "send application", "finish application",
     "complete application", "提交申请", "最终提交", "发送申请", "完成申请",
 )
+SKIP_STEP_TERMS = (
+    "skip this step", "skip for now", "do this later", "not now",
+    "暂时跳过", "稍后完成", "以后再说",
+)
 
 PROGRAMMATIC_NAVIGATION_MODE = "PROGRAMMATIC_EXPLICIT_BUTTON"
 MANUAL_NAVIGATION_MODE = "MANUAL_USER_CLICK"
@@ -62,12 +66,15 @@ def _action_intent(field: dict[str, Any], page_context: str) -> tuple[bool, bool
     """
 
     visible_action = _field_material({**field, "type": ""}, page_context)
+    primary_label = normalized_name(" ".join(
+        str(field.get(key, "")) for key in ("label", "value", "adjacent_text")
+    )).replace("_", " ")
     has_forward_label = any(normalized_name(term) in visible_action for term in FORWARD_NAVIGATION_TERMS)
     has_final_label = (
         any(normalized_name(term) in visible_action for term in FINAL_SUBMIT_TERMS)
         or bool(re.search(
             r"(?:^|\s)(?:submit|apply|send|finish|complete)(?:\s|$)|提交|投递|发送|完成",
-            visible_action,
+            primary_label,
         ))
     )
     return has_forward_label, has_final_label
@@ -83,6 +90,9 @@ def classify_application_field(field: dict[str, Any], *, page_context: str = "",
         # be classified as forward navigation for review while remaining permanently
         # ineligible for programmatic clicking.
         has_forward_label, has_final_label = _action_intent(field, page_context)
+        visible_action = _field_material({**field, "type": ""}, page_context)
+        if any(normalized_name(term) in visible_action for term in SKIP_STEP_TERMS):
+            return "navigation_control_stop", "A skip-step submit control is a manual page action, never the final application Submit."
         if has_forward_label and not has_final_label:
             return "navigation_control_stop", "This submit-like forward control must be clicked manually by the user."
         return "final_submit_stop", "Final submit controls always require the external action gateway."

@@ -27,7 +27,7 @@ const windowObject = {
 const sandbox = {
   chrome: {
     runtime: {
-      getManifest() { return {version: "0.6.2"}; },
+      getManifest() { return {version: "0.6.5"}; },
       async sendMessage(message) {
         runtimeMessages.push(message);
         if (deferPair) {
@@ -38,7 +38,7 @@ const sandbox = {
           status: "GUIDED_INTAKE_PAIRED",
           intake_id: "GIN-PAIR-BRIDGE",
           protocol_version: 2,
-          extension_version: "0.6.2"
+          extension_version: "0.6.5"
         };
       },
       onMessage: {

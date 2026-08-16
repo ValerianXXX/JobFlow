@@ -1,5 +1,15 @@
 "use strict";
 
+// Unpacked extension resources are read from disk when the popup opens, while
+// Edge can keep an older manifest/service worker alive. A one-time popup open
+// therefore provides a safe, user-visible hot-upgrade path without asking the
+// user to operate edge://extensions (which normal webpages cannot control).
+const SOURCE_EXTENSION_VERSION = "0.6.5";
+if (chrome.runtime.getManifest().version !== SOURCE_EXTENSION_VERSION) {
+  chrome.runtime.reload();
+  window.close();
+}
+
 const copy = {
   zh: {
     subtitle: "浏览器伴侣", notPaired: "尚未与当前 JobFlow 任务配对。请返回 JobFlow，点击“连接浏览器并开始”；已批准申请则点击“建立浏览器连接”。",
@@ -12,7 +22,7 @@ const copy = {
     working: "正在核对表单、预填并附加材料……", wrong: "请先打开 JobFlow 指定的公司申请页面。",
     permission: "需要你允许本次申请页面访问，才能继续。", done: "已停在最终提交前。请检查内容并亲自点击提交。",
     handoff: "请在网页中亲自完成登录、CAPTCHA 或 MFA；不要把密码或验证码交给 JobFlow。完成并回到申请页后点击继续。",
-    manual: "JobFlow 已填写可安全复用的内容。请补完当前页标出的字段，再点击进入下一页。", manualResume: "这个 Next/Continue 必须由你亲自点击。进入新页面后再次打开 J，再点“继续”。", restartButton: "返回 JobFlow 重新开始", restart: "这次一次性下一步证明没有安全建立。请返回 JobFlow 结束并重新启动这项申请辅助；JobFlow 不会自动重试。", navigating: "正在进入下一页并重新验真……", stalled: "页面在 20 秒内没有可靠前进。JobFlow 已停止且不会重试；请返回 JobFlow 结束本次辅助后重新开始。"
+    manual: "JobFlow 已填写可安全复用的内容。请补完当前页标出的字段，再点击进入下一页。", manualResume: "这个 Next/Continue 必须由你亲自点击。进入新页面后再次打开 J，再点“继续”。", restartButton: "返回 JobFlow 重新开始", restart: "这次一次性下一步证明没有安全建立。请返回 JobFlow 结束并重新启动这项申请辅助；JobFlow 不会自动重试。", applyRestart: "页面可能已经填写或上传了一部分，但未能完成整页验证。本轮已停止并记入审计，绝不会自动重复填写或上传；请返回 JobFlow 重新开始。", navigating: "正在进入下一页并重新验真……", stalled: "页面在 20 秒内没有可靠前进。JobFlow 已停止且不会重试；请返回 JobFlow 结束本次辅助后重新开始。"
   },
   en: {
     subtitle: "Browser Companion", notPaired: "Not paired with the current JobFlow task. Return to JobFlow and choose Connect browser; for an approved application, choose Connect browser there.",
@@ -25,7 +35,7 @@ const copy = {
     working: "Matching the page, filling approved fields, and attaching materials…", wrong: "Open the application page selected by JobFlow first.",
     permission: "Allow access to this application page to continue.", done: "Stopped before final submission. Review everything and click Submit yourself.",
     handoff: "Complete login, CAPTCHA, or MFA yourself. Never give JobFlow a password or verification code. Return to the application page, then resume.",
-    manual: "Reusable fields are ready. Complete the remaining fields shown on this page, then continue.", manualResume: "This Next/Continue must be clicked by you. After the new page opens, open J again and choose continue.", restartButton: "Return to JobFlow — restart", restart: "The one-use Next proof was not armed safely. Return to JobFlow, end this application assist, and start it again. JobFlow will not retry automatically.", navigating: "Opening and re-validating the next page…", stalled: "The page did not reliably advance within 20 seconds. JobFlow stopped and will not retry; end this assist in JobFlow, then start again."
+    manual: "Reusable fields are ready. Complete the remaining fields shown on this page, then continue.", manualResume: "This Next/Continue must be clicked by you. After the new page opens, open J again and choose continue.", restartButton: "Return to JobFlow — restart", restart: "The one-use Next proof was not armed safely. Return to JobFlow, end this application assist, and start it again. JobFlow will not retry automatically.", applyRestart: "The page may already contain some approved fields or an attachment, but whole-page verification did not finish. This run stopped and was audited; nothing will be filled or uploaded again automatically. Return to JobFlow and restart.", navigating: "Opening and re-validating the next page…", stalled: "The page did not reliably advance within 20 seconds. JobFlow stopped and will not retry; end this assist in JobFlow, then start again."
   }
 };
 let locale = "zh";
@@ -55,10 +65,10 @@ function render() {
     ? (isJobFlowTab(currentTab) ? text.reconnect : text.returnToJobFlow)
     : capture
     ? (["AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED"].includes(status?.status) ? text.captureForm : text.captureJob)
-    : status?.status === "HANDOFF_REQUIRED" ? text.resume : status?.status === "MANUAL_NAVIGATION_REQUIRED" ? text.manualNext : status?.status === "MANUAL_NAVIGATION_RESTART_REQUIRED" ? text.restartButton : status?.status === "PAGE_REVIEW_REQUIRED" ? text.continue : text.fill;
+    : status?.status === "HANDOFF_REQUIRED" ? text.resume : status?.status === "MANUAL_NAVIGATION_REQUIRED" ? text.manualNext : ["MANUAL_NAVIGATION_RESTART_REQUIRED", "APPLY_RESTART_REQUIRED"].includes(status?.status) ? text.restartButton : status?.status === "PAGE_REVIEW_REQUIRED" ? text.continue : text.fill;
   elements.fill.disabled = (!status?.paired && !isJobFlowTab(currentTab)) || (status?.paired && (capture
     ? ["REVIEW_PACKET_READY", "DEFERRED", "PREPARING_APPLICATION"].includes(status?.status)
-    : ["AWAITING_USER_SUBMIT", "OBSERVING_RESULT_PAGE", "AWAITING_NAVIGATION", "MANUAL_NAVIGATION_RESTART_REQUIRED", "CONFIRMED"].includes(status?.status)));
+    : ["AWAITING_USER_SUBMIT", "OBSERVING_RESULT_PAGE", "AWAITING_NAVIGATION", "MANUAL_NAVIGATION_RESTART_REQUIRED", "APPLY_RESTART_REQUIRED", "CONFIRMED"].includes(status?.status)));
   elements.boundary.textContent = capture ? text.captureBoundary : text.boundary;
 }
 
@@ -74,6 +84,7 @@ async function refresh() {
   else if (status?.status === "PAGE_REVIEW_REQUIRED") elements.message.textContent = copy[locale].manual;
   else if (status?.status === "MANUAL_NAVIGATION_REQUIRED") elements.message.textContent = copy[locale].manualResume;
   else if (status?.status === "MANUAL_NAVIGATION_RESTART_REQUIRED") elements.message.textContent = copy[locale].restart;
+  else if (status?.status === "APPLY_RESTART_REQUIRED") elements.message.textContent = copy[locale].applyRestart;
   else if (status?.status === "AWAITING_NAVIGATION") elements.message.textContent = copy[locale].navigating;
   if (status?.last_result?.status === "NAVIGATION_STALLED") elements.message.textContent = copy[locale].stalled;
 }
@@ -115,7 +126,7 @@ elements.fill.addEventListener("click", async () => {
     const result = await chrome.runtime.sendMessage({type, tab_id: tab.id, tab_url: tab.url});
     const allowed = capture
       ? ["AWAITING_APPLICATION_FORM_CAPTURE", "PREPARING_APPLICATION", "REVIEW_PACKET_READY", "DEFERRED"]
-      : ["AWAITING_USER_SUBMIT", "PAGE_REVIEW_REQUIRED", "MANUAL_NAVIGATION_REQUIRED", "HANDOFF_REQUIRED", "NAVIGATION_STARTED"];
+      : ["AWAITING_USER_SUBMIT", "PAGE_REVIEW_REQUIRED", "MANUAL_NAVIGATION_REQUIRED", "HANDOFF_REQUIRED", "NAVIGATION_STARTED", "APPLY_RESTART_REQUIRED"];
     if (!result || !allowed.includes(result.status)) {
       throw new Error(result?.code === "COMPANION_LOCAL_REQUEST_TIMEOUT" ? copy[locale].localTimeout : (result?.message || result?.code || "JobFlow blocked the operation."));
     }
@@ -124,6 +135,7 @@ elements.fill.addEventListener("click", async () => {
       : result.status === "AWAITING_USER_SUBMIT" ? copy[locale].done :
       result.status === "HANDOFF_REQUIRED" ? copy[locale].handoff :
       result.status === "MANUAL_NAVIGATION_REQUIRED" ? copy[locale].manualResume :
+      result.status === "APPLY_RESTART_REQUIRED" ? copy[locale].applyRestart :
       result.status === "PAGE_REVIEW_REQUIRED" ? copy[locale].manual : copy[locale].navigating;
     await refresh();
   } catch (error) {

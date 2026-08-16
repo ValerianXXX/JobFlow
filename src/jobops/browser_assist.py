@@ -12,6 +12,7 @@ from urllib.parse import unquote, urlparse
 from .approvals import ApprovalContext
 from .ats_browser import analyze_local_ats_form
 from .db import JobOpsDB
+from .dynamic_form_review import DynamicFormReviewManager
 from .ephemeral_payload import EphemeralATSPayloadBroker
 from .errors import JobOpsError
 from .execution_bundle import ApplicationExecutionBundleManager
@@ -24,7 +25,7 @@ from .util import canonical_json, iso_utc, parse_iso, project_root, sha256_bytes
 
 
 COMPANION_PROTOCOL_VERSION = 2
-COMPANION_EXTENSION_VERSION = "0.6.2"
+COMPANION_EXTENSION_VERSION = "0.6.5"
 COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj"
 COMPANION_EXTENSION_ORIGIN = f"chrome-extension://{COMPANION_EXTENSION_ID}"
 ASSIST_TTL_MINUTES = 30
@@ -75,13 +76,30 @@ def _semantic_field(value: dict[str, Any]) -> tuple[Any, ...]:
     # The companion deliberately replaces raw DOM identifiers with ephemeral
     # references.  Approval matching therefore relies on visible semantics and
     # control order, never on a site-generated ID that may contain user data.
+    display_label = re.sub(r"\s+", " ", str(value.get("display_label", ""))).strip().casefold()
+    display_label = re.sub(r"\s*\*+\s*$", "", display_label).strip()
+    display_label = re.sub(
+        r"\s*limit reached\.\s*you can only use \d+ characters? in this field\.\s*$",
+        "", display_label, flags=re.IGNORECASE,
+    ).strip()
+    if str(value.get("control_type", "")) == "file":
+        # LWC accessibility wrappers may prepend the decorative upload icon's
+        # text to the same stable file prompt after a component refresh.
+        display_label = re.sub(r"^file upload icon\s*", "", display_label, flags=re.IGNORECASE).strip()
+    # Shadow-component text nodes may be concatenated without a separator in
+    # one browser build and separated in another.  Whitespace is not semantic
+    # field identity; punctuation and every actual word remain significant.
+    display_label = re.sub(r"\s+", "", display_label)
+    prompt_identity = ("label", display_label) if display_label else (
+        "hash", str(value.get("prompt_hash", ""))
+    )
     return (
         str(value.get("control_type", "")),
         bool(value.get("required", False)),
         str(value.get("classification", "")),
-        str(value.get("prompt_hash", "")),
+        prompt_identity,
         int(value.get("option_count", 0)),
-        tuple(str(item) for item in value.get("display_options", [])),
+        tuple(re.sub(r"\s+", " ", str(item)).strip().casefold() for item in value.get("display_options", [])),
     )
 
 
@@ -122,8 +140,12 @@ class _AssistLease:
     expires_at: str
     status: str = "PAIRING"
     paired: bool = False
+    execution_channel: str | None = None
     expected_fields: list[dict[str, str]] = field(default_factory=list)
     expected_files: list[dict[str, str]] = field(default_factory=list)
+    accepted_fields: list[dict[str, str]] = field(default_factory=list)
+    accepted_files: list[dict[str, str]] = field(default_factory=list)
+    applied_evidence_accepted: bool = False
     file_tokens: dict[str, dict[str, Any]] = field(default_factory=dict)
     submit_observed: bool = False
     prepared_hash: str | None = None
@@ -168,6 +190,7 @@ class BrowserAssistManager:
             database, ExternalActionSessionPolicy.assisted_user_present_mode(),
         )
         self._bundle_manager = ApplicationExecutionBundleManager(database, onboarding)
+        self._dynamic_reviews = DynamicFormReviewManager(database, onboarding)
         self._payload_broker = EphemeralATSPayloadBroker(onboarding)
         self._reconcile_startup()
 
@@ -644,9 +667,26 @@ class BrowserAssistManager:
             }
 
     def pair(self, token: str, *, extension_origin: str | None) -> dict[str, Any]:
+        if not self.extension_origin_allowed(extension_origin):
+            raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
+        return self._pair(token, execution_channel="BROWSER_COMPANION")
+
+    def pair_local_agent(self, token: str, *, user_confirmed: bool) -> dict[str, Any]:
+        """Pair the same fail-closed lease to a trusted local Agent host.
+
+        This entry point is called only behind the authenticated JobFlow session
+        API.  The model never receives the lease token or private field values;
+        its host adapter executes the approved tool calls.
+        """
+        if not user_confirmed:
+            raise JobOpsError(
+                "EXPLICIT_CONFIRMATION_REQUIRED",
+                "Pairing a local AI Agent to this application requires the current user-present confirmation.",
+            )
+        return self._pair(token, execution_channel="LOCAL_AI_AGENT")
+
+    def _pair(self, token: str, *, execution_channel: str) -> dict[str, Any]:
         with self._lock:
-            if not self.extension_origin_allowed(extension_origin):
-                raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
             lease = self._lease(token)
             if lease.status == "AWAITING_USER_SUBMIT":
                 self._mark_unknown(lease, reason="COMPANION_RELOADED_DURING_USER_SUBMIT_WINDOW")
@@ -668,6 +708,7 @@ class BrowserAssistManager:
                 )
             if not lease.paired:
                 lease.paired = True
+                lease.execution_channel = execution_channel
                 lease.status = "READY"
                 now = iso_utc()
                 with self.database.connect() as connection:
@@ -677,15 +718,27 @@ class BrowserAssistManager:
                     )
                     connection.execute(
                         "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
-                        (lease.assist_id, lease.application_id, "COMPANION_PAIRED", _safe_hash({
+                        (lease.assist_id, lease.application_id, (
+                            "LOCAL_AI_AGENT_PAIRED" if execution_channel == "LOCAL_AI_AGENT" else "COMPANION_PAIRED"
+                        ), _safe_hash({
                             "protocol_version": COMPANION_PROTOCOL_VERSION,
                             "extension_id": COMPANION_EXTENSION_ID,
+                            "execution_channel": execution_channel,
                         }), now),
                     )
+            elif lease.execution_channel != execution_channel:
+                raise JobOpsError(
+                    "BROWSER_ASSIST_CHANNEL_MISMATCH",
+                    "This application lease is already bound to a different execution channel.",
+                    automatic_retry=False,
+                )
             return {
-                "status": "BROWSER_COMPANION_PAIRED",
+                "status": (
+                    "LOCAL_AI_AGENT_PAIRED" if execution_channel == "LOCAL_AI_AGENT" else "BROWSER_COMPANION_PAIRED"
+                ),
                 "assist_id": lease.assist_id,
                 "application_id": lease.application_id,
+                "execution_channel": execution_channel,
                 "allowed_page_origin": lease.allowed_page_origin,
                 "provider": lease.provider,
                 "route_kind": lease.route_kind,
@@ -901,8 +954,12 @@ class BrowserAssistManager:
                     lease, context, signals=signals & HANDOFF_SIGNAL_CODES,
                     page_evidence={"sanitized_html_present": isinstance(payload.get("sanitized_html"), str)},
                 )
+            initial_page = lease.current_step == 1 and not lease.visited_page_hashes
             live, client_refs = self._live_snapshot(
-                lease=lease, payload=payload, expected_snapshot=bundle["form_snapshot"],
+                lease=lease,
+                payload=payload,
+                expected_snapshot=bundle["form_snapshot"],
+                enforce_initial_approval=not initial_page,
             )
             parser_handoffs = {
                 code.removesuffix("_STOP") for code in live["blockers"]
@@ -914,7 +971,35 @@ class BrowserAssistManager:
                     page_evidence={"page_content_hash": live["page_content_hash"]},
                 )
 
-            initial_page = lease.current_step == 1 and not lease.visited_page_hashes
+            if initial_page:
+                expected_fields = list(bundle["form_snapshot"]["fields"])
+                live_fields_for_match = list(live["fields"])
+                exact_match = (
+                    len(expected_fields) == len(live_fields_for_match)
+                    and all(
+                        _semantic_field(expected) == _semantic_field(current)
+                        for expected, current in zip(expected_fields, live_fields_for_match, strict=True)
+                    )
+                )
+                if not exact_match:
+                    result = self._dynamic_reviews.rebind(
+                        application_id=lease.application_id,
+                        live_snapshot=live,
+                        assist_id=lease.assist_id,
+                        session_id=lease.session_id,
+                    )
+                    if result["status"] == "SUPPLEMENTAL_REVIEW_REQUIRED":
+                        lease.status = "REVOKED"
+                        self._leases.pop(token, None)
+                        self._session_manager.disable(reason="DYNAMIC_REVIEW_REQUIRED")
+                    return result
+                initial_control_ref_map = {
+                    str(expected["control_ref"]): str(current["control_ref"])
+                    for expected, current in zip(expected_fields, live_fields_for_match, strict=True)
+                }
+            else:
+                initial_control_ref_map = {}
+
             live_fields = list(live["fields"])
             client_by_control = {
                 str(field["control_ref"]): client_ref
@@ -936,7 +1021,12 @@ class BrowserAssistManager:
                 resolved_values = [
                     {
                         **item,
-                        "control_type": str(fields_by_ref[str(item["control_ref"])]["control_type"]),
+                        "control_ref": initial_control_ref_map.get(
+                            str(item["control_ref"]), str(item["control_ref"]),
+                        ),
+                        "control_type": str(fields_by_ref[initial_control_ref_map.get(
+                            str(item["control_ref"]), str(item["control_ref"]),
+                        )]["control_type"]),
                         "value_sha256": sha256_bytes(str(item["value"]).encode("utf-8")),
                     }
                     for item in value_payload["fields"]
@@ -1047,6 +1137,9 @@ class BrowserAssistManager:
 
             lease.expected_fields = sorted(expected_field_results, key=lambda item: item["client_ref"])
             lease.expected_files = sorted(expected_file_results, key=lambda item: (item["purpose"], item["client_ref"]))
+            lease.accepted_fields = []
+            lease.accepted_files = []
+            lease.applied_evidence_accepted = False
             lease.file_tokens = file_tokens
             lease.current_page_hash = str(live["page_content_hash"])
             lease.current_page_kind = page_kind
@@ -1261,30 +1354,150 @@ class BrowserAssistManager:
         lease.manual_challenge_hash = _safe_hash(public)
         return {**public, "challenge_hash": lease.manual_challenge_hash}
 
-    def complete(self, token: str, payload: dict[str, Any], *, extension_origin: str | None) -> dict[str, Any]:
+    def _accept_applied_evidence(
+        self,
+        lease: _AssistLease,
+        payload: dict[str, Any],
+        context: ApprovalContext,
+    ) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+        """Validate and audit browser writes before any lease transition."""
+
+        if payload.get("submit_events") != 0 or payload.get("navigation_actions") != 0:
+            raise JobOpsError(
+                "FINAL_SUBMIT_FORBIDDEN",
+                "No submit or page navigation may occur before page evidence is accepted.",
+            )
+        fields = sorted(
+            self._binding_list(payload, "field_bindings", material=False),
+            key=lambda item: item["client_ref"],
+        )
+        files = sorted(
+            self._binding_list(payload, "material_bindings", material=True),
+            key=lambda item: (item["purpose"], item["client_ref"]),
+        )
+        if fields != lease.expected_fields or files != lease.expected_files:
+            raise JobOpsError(
+                "BROWSER_ASSIST_EVIDENCE_MISMATCH",
+                "The browser changed fewer or different approved fields than expected.",
+            )
+        if any(not item.get("used") for item in lease.file_tokens.values()):
+            raise JobOpsError(
+                "BROWSER_ASSIST_FILE_INCOMPLETE",
+                "At least one approved material was not fetched for the selected upload control.",
+            )
+        if lease.applied_evidence_accepted:
+            if fields != lease.accepted_fields or files != lease.accepted_files:
+                raise JobOpsError(
+                    "BROWSER_ASSIST_EVIDENCE_MISMATCH",
+                    "The browser completion evidence changed after it was accepted.",
+                )
+            return fields, files
+        if fields:
+            self._session_manager.record_assisted_use(
+                session_id=lease.session_id,
+                context=context,
+                action="prefill_application_form",
+                request_hash=_safe_hash(fields),
+                result_code="APPROVED_FIELDS_PREFILLED",
+                real_side_effect=True,
+            )
+        if files:
+            self._session_manager.record_assisted_use(
+                session_id=lease.session_id,
+                context=context,
+                action="upload_materials",
+                request_hash=_safe_hash(files),
+                result_code="APPROVED_MATERIALS_ATTACHED",
+                real_side_effect=True,
+            )
+            lease.uploaded_purposes.update(item["purpose"] for item in files)
+        lease.accepted_fields = fields
+        lease.accepted_files = files
+        lease.applied_evidence_accepted = True
+        return fields, files
+
+    def abort_page_apply(
+        self,
+        token: str,
+        payload: dict[str, Any],
+        *,
+        extension_origin: str | None,
+    ) -> dict[str, Any]:
+        """Audit a possibly partial browser write and end the lease without retrying."""
+
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
-                raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
+                raise JobOpsError(
+                    "BROWSER_COMPANION_ORIGIN_FORBIDDEN",
+                    "The request did not come from the bundled JobFlow companion.",
+                )
             lease = self._lease(token, statuses={"PAGE_PREPARED"})
-            if lease.prepared_hash is None:
-                raise JobOpsError("BROWSER_ASSIST_NOT_PREPARED", "The live form must pass approval matching before fields are changed.")
             if payload.get("submit_events") != 0 or payload.get("navigation_actions") != 0:
-                raise JobOpsError("FINAL_SUBMIT_FORBIDDEN", "No submit or page navigation may occur before page evidence is accepted.")
-            fields = sorted(self._binding_list(payload, "field_bindings", material=False), key=lambda item: item["client_ref"])
-            files = sorted(self._binding_list(payload, "material_bindings", material=True), key=lambda item: (item["purpose"], item["client_ref"]))
-            if fields != lease.expected_fields or files != lease.expected_files:
-                raise JobOpsError("BROWSER_ASSIST_EVIDENCE_MISMATCH", "The browser changed fewer or different approved fields than expected.")
-            if any(not item.get("used") for item in lease.file_tokens.values()):
-                raise JobOpsError("BROWSER_ASSIST_FILE_INCOMPLETE", "At least one approved material was not fetched for the selected upload control.")
-            bundle, context, _ = self._bundle_manager.load_current(lease.application_id)
-            del bundle
+                raise JobOpsError(
+                    "FINAL_SUBMIT_FORBIDDEN",
+                    "A failed page apply cannot include submit or navigation events.",
+                )
+            cause_code = str(payload.get("cause_code") or "COMPANION_APPLY_INCOMPLETE").strip().upper()
+            if not re.fullmatch(r"[A-Z][A-Z0-9_]{0,99}", cause_code):
+                raise JobOpsError(
+                    "BROWSER_ASSIST_EVIDENCE_INVALID",
+                    "The browser companion apply-failure code is invalid.",
+                )
+            attempted_fields = self._binding_list(payload, "attempted_field_bindings", material=False)
+            attempted_files = self._binding_list(payload, "attempted_material_bindings", material=True)
+
+            expected_field_keys = {
+                (item["client_ref"], item["value_sha256"]) for item in lease.expected_fields
+            }
+            field_keys = [(item["client_ref"], item["value_sha256"]) for item in attempted_fields]
+            if len(field_keys) != len(set(field_keys)) or any(key not in expected_field_keys for key in field_keys):
+                raise JobOpsError(
+                    "BROWSER_ASSIST_EVIDENCE_MISMATCH",
+                    "The failed page apply reported a field outside the approved binding set.",
+                )
+
+            expected_file_keys = {
+                (item["client_ref"], item["purpose"], item["sha256"]) for item in lease.expected_files
+            }
+            file_by_key = {
+                (item["client_ref"], item["purpose"], item["sha256"]): item
+                for item in attempted_files
+            }
+            if len(file_by_key) != len(attempted_files) or any(key not in expected_file_keys for key in file_by_key):
+                raise JobOpsError(
+                    "BROWSER_ASSIST_EVIDENCE_MISMATCH",
+                    "The failed page apply reported a material outside the approved binding set.",
+                )
+            # Fetching a one-use file token means the bytes crossed into the page
+            # process.  Even if the DOM could not verify the resulting widget, we
+            # conservatively audit that approved upload as a real attempted effect.
+            for item in lease.file_tokens.values():
+                if item.get("used") is not True:
+                    continue
+                evidence = {
+                    "client_ref": str(item["client_ref"]),
+                    "purpose": str(item["purpose"]),
+                    "sha256": str(item["sha256"]),
+                }
+                key = (evidence["client_ref"], evidence["purpose"], evidence["sha256"])
+                if key not in expected_file_keys:
+                    raise JobOpsError(
+                        "BROWSER_ASSIST_EVIDENCE_MISMATCH",
+                        "A consumed material token no longer matches the approved upload set.",
+                    )
+                file_by_key[key] = evidence
+
+            fields = sorted(attempted_fields, key=lambda item: item["client_ref"])
+            files = sorted(file_by_key.values(), key=lambda item: (item["purpose"], item["client_ref"]))
+            _bundle, context, _approval = self._bundle_manager.load_current(lease.application_id)
+            self._validate_private_sources(lease)
             if fields:
                 self._session_manager.record_assisted_use(
                     session_id=lease.session_id,
                     context=context,
                     action="prefill_application_form",
                     request_hash=_safe_hash(fields),
-                    result_code="APPROVED_FIELDS_PREFILLED",
+                    result_code="APPROVED_FIELD_APPLY_ABORTED",
                     real_side_effect=True,
                 )
             if files:
@@ -1293,10 +1506,153 @@ class BrowserAssistManager:
                     context=context,
                     action="upload_materials",
                     request_hash=_safe_hash(files),
-                    result_code="APPROVED_MATERIALS_ATTACHED",
+                    result_code="APPROVED_MATERIAL_APPLY_ABORTED",
                     real_side_effect=True,
                 )
-                lease.uploaded_purposes.update(item["purpose"] for item in files)
+
+            now = iso_utc()
+            evidence_hash = _safe_hash({
+                "assist_id": lease.assist_id,
+                "application_id": lease.application_id,
+                "cause_code": cause_code,
+                "attempted_field_bindings": fields,
+                "attempted_material_bindings": files,
+                "submit_events": 0,
+                "navigation_actions": 0,
+                "automatic_retry": False,
+            })
+            with self.database.connect() as connection:
+                connection.execute("BEGIN IMMEDIATE")
+                connection.execute(
+                    "UPDATE browser_assist_runs SET status='FAILED',updated_at=? WHERE assist_id=?",
+                    (now, lease.assist_id),
+                )
+                connection.execute(
+                    "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
+                    (lease.assist_id, lease.application_id, "PAGE_APPLY_ABORTED", evidence_hash, now),
+                )
+            lease.status = "FAILED"
+            lease.navigation_token = None
+            lease.navigation_ref = None
+            lease.file_tokens.clear()
+            self._leases.pop(token, None)
+            self._session_manager.disable(reason="PAGE_APPLY_ABORTED")
+            return {
+                "status": "APPLY_RESTART_REQUIRED",
+                "code": "COMPANION_APPLY_RESTART_REQUIRED",
+                "assist_id": lease.assist_id,
+                "application_id": lease.application_id,
+                "field_attempt_count": len(fields),
+                "file_attempt_count": len(files),
+                "real_external_actions": int(bool(fields)) + int(bool(files)),
+                "submit_capability": False,
+                "final_submit": False,
+                "automatic_retry": False,
+            }
+
+    def discover_dynamic_fields(
+        self,
+        token: str,
+        payload: dict[str, Any],
+        *,
+        extension_origin: str | None,
+    ) -> dict[str, Any]:
+        """Create a supplemental packet when approved writes reveal questions."""
+
+        with self._lock:
+            if not self.extension_origin_allowed(extension_origin):
+                raise JobOpsError(
+                    "BROWSER_COMPANION_ORIGIN_FORBIDDEN",
+                    "The request did not come from the bundled JobFlow companion.",
+                )
+            lease = self._lease(token, statuses={"PAGE_PREPARED"})
+            if lease.prepared_hash is None:
+                raise JobOpsError(
+                    "BROWSER_ASSIST_NOT_PREPARED",
+                    "The live form must pass approval matching before fields are changed.",
+                )
+            signals = self._security_signals(payload)
+            if signals & HARD_SIGNAL_CODES:
+                raise JobOpsError(
+                    "BROWSER_SECURITY_STOP",
+                    "Cross-origin form or iframe content is outside the approved application boundary.",
+                    blockers=sorted(signals & HARD_SIGNAL_CODES),
+                )
+            bundle, context, _ = self._bundle_manager.load_current(lease.application_id)
+            fields, files = self._accept_applied_evidence(lease, payload, context)
+            live, _client_refs = self._live_snapshot(
+                lease=lease,
+                payload=payload,
+                expected_snapshot=bundle["form_snapshot"],
+                enforce_initial_approval=False,
+            )
+            expected_fields = list(bundle["form_snapshot"]["fields"])
+            live_fields = list(live["fields"])
+            exact_match = (
+                len(expected_fields) == len(live_fields)
+                and all(
+                    _semantic_field(expected) == _semantic_field(current)
+                    for expected, current in zip(expected_fields, live_fields, strict=True)
+                )
+            )
+            if not exact_match and files:
+                # A successful ATS upload commonly replaces the one-use file
+                # input with a filename/status component.  That disappearance
+                # is already proven by the accepted material binding and does
+                # not constitute a new applicant question or require another
+                # review packet.  Every remaining control must still match in
+                # order and semantics; final Submit is never ignored here.
+                expected_without_consumed_uploads = [
+                    item for item in expected_fields
+                    if str(item.get("classification")) != "file_upload_stop"
+                ]
+                exact_match = (
+                    len(expected_without_consumed_uploads) == len(live_fields)
+                    and all(
+                        _semantic_field(expected) == _semantic_field(current)
+                        for expected, current in zip(expected_without_consumed_uploads, live_fields, strict=True)
+                    )
+                )
+            if exact_match:
+                return {
+                    "status": "NO_DYNAMIC_FIELDS",
+                    "application_id": lease.application_id,
+                    "dynamic_field_count": 0,
+                    "automatic_retry": False,
+                    "real_external_actions": int(bool(fields)) + int(bool(files)),
+                }
+
+            result = self._dynamic_reviews.rebind(
+                application_id=lease.application_id,
+                live_snapshot=live,
+                assist_id=lease.assist_id,
+                session_id=lease.session_id,
+            )
+            if result["status"] != "SUPPLEMENTAL_REVIEW_REQUIRED":
+                raise JobOpsError(
+                    "DYNAMIC_REVIEW_STATE_INVALID",
+                    "The changed live form did not create the required supplemental review.",
+                )
+            lease.status = "REVOKED"
+            self._leases.pop(token, None)
+            self._session_manager.disable(reason="DYNAMIC_REVIEW_REQUIRED")
+            return {
+                **result,
+                "field_count": len(fields),
+                "file_count": len(files),
+                "real_external_actions": int(bool(fields)) + int(bool(files)),
+            }
+
+    def complete(self, token: str, payload: dict[str, Any], *, extension_origin: str | None) -> dict[str, Any]:
+        with self._lock:
+            if not self.extension_origin_allowed(extension_origin):
+                raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
+            lease = self._lease(token, statuses={"PAGE_PREPARED"})
+            if lease.prepared_hash is None:
+                raise JobOpsError("BROWSER_ASSIST_NOT_PREPARED", "The live form must pass approval matching before fields are changed.")
+            bundle, context, _ = self._bundle_manager.load_current(lease.application_id)
+            del bundle
+            fields, files = self._accept_applied_evidence(lease, payload, context)
             if lease.current_page_kind == "FINAL_REVIEW":
                 lease.status = "AWAITING_USER_SUBMIT"
                 target_status = "AWAITING_USER_SUBMIT"

@@ -7,6 +7,41 @@ from typing import Any
 from .jd_analyzer import NormalizedJD, Requirement, UNKNOWN, _boolean_expression
 
 
+_LOCATION_ALIASES: dict[str, tuple[str, ...]] = {
+    "new york": ("new york", "new york city", "nyc", "纽约", "纽约市"),
+    "california": ("california", "ca", "加利福尼亚", "加州"),
+    "texas": ("texas", "tx", "德克萨斯", "德州"),
+}
+
+_LEVEL_ALIASES: dict[str, tuple[str, ...]] = {
+    "intern": ("intern", "internship", "实习", "实习生"),
+    "entry": ("entry", "entry level", "junior", "graduate", "入门", "初级", "应届"),
+    "mid": ("mid", "mid level", "intermediate", "associate", "中级"),
+    "senior": ("senior", "senior level", "lead", "高级", "资深"),
+    "executive": ("executive", "director", "vice president", "vp", "高管", "总监"),
+}
+
+
+def _canonical_preference(value: object, aliases: dict[str, tuple[str, ...]]) -> str:
+    normalized = re.sub(r"[\s_\-]+", " ", str(value).casefold()).strip()
+    for canonical, variants in aliases.items():
+        if normalized == canonical or normalized in variants:
+            return canonical
+    return normalized
+
+
+def _location_matches(preference: object, job_location: str) -> bool:
+    preferred = _canonical_preference(preference, _LOCATION_ALIASES)
+    if preferred in {"any", "flexible", "任意", "不限"}:
+        return True
+    job = str(job_location).casefold()
+    job_canonical = _canonical_preference(job, _LOCATION_ALIASES)
+    if preferred == job_canonical or preferred in job:
+        return True
+    aliases = _LOCATION_ALIASES.get(preferred, ())
+    return any(alias in job for alias in aliases if len(alias) > 2)
+
+
 @dataclass(frozen=True)
 class EligibilityResult:
     status: str
@@ -102,14 +137,14 @@ def check_eligibility(jd: NormalizedJD, profile: dict[str, Any]) -> EligibilityR
     else:
         checks.append({"gate": "work_authorization", "result": "PASS", "reason": "no verified conflict"})
 
-    allowed_locations = [str(value).casefold() for value in profile.get("locations", [])]
+    allowed_locations = list(profile.get("locations", []))
     if jd.location == UNKNOWN:
         unknowns.append("job_location")
         checks.append({"gate": "location", "result": "UNKNOWN", "reason": "JD location not stated"})
     elif not allowed_locations:
         unknowns.append("candidate_location_preferences")
         checks.append({"gate": "location", "result": "UNKNOWN", "reason": "candidate preferences not confirmed"})
-    elif not any(value in jd.location.casefold() or value in ("any", "flexible") for value in allowed_locations):
+    elif not any(_location_matches(value, jd.location) for value in allowed_locations):
         remote = str(profile.get("remote_preference", UNKNOWN)).casefold()
         if "remote" not in jd.location.casefold() or remote not in ("remote", "flexible"):
             gaps.append("location")
@@ -117,11 +152,15 @@ def check_eligibility(jd: NormalizedJD, profile: dict[str, Any]) -> EligibilityR
     else:
         checks.append({"gate": "location", "result": "PASS", "reason": "location matches confirmed preferences"})
 
-    target_levels = [str(value).casefold() for value in profile.get("target_levels", [])]
+    target_levels = {
+        _canonical_preference(value, _LEVEL_ALIASES)
+        for value in profile.get("target_levels", [])
+    }
+    job_level = _canonical_preference(jd.level, _LEVEL_ALIASES)
     if jd.level == UNKNOWN:
         unknowns.append("job_level")
         checks.append({"gate": "level", "result": "UNKNOWN", "reason": "level not reliably inferable"})
-    elif target_levels and jd.level.casefold() not in target_levels:
+    elif target_levels and job_level not in target_levels:
         gaps.append("level")
         checks.append({"gate": "level", "result": "FAIL", "reason": f"{jd.level} is outside target levels"})
     else:

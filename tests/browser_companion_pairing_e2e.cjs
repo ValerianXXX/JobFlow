@@ -56,7 +56,7 @@ function signedPairResult(url, options) {
     assist_path: assistPath,
     base_url: parsed.origin,
     challenge: String(body.companion_binding.challenge),
-    extension_version: "0.6.2",
+    extension_version: "0.6.5",
     installation_id: String(body.companion_binding.installation_id),
     protocol_version: "2"
   };
@@ -81,7 +81,7 @@ function signedPairResult(url, options) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.6.2"}; },
+    getManifest() { return {version: "0.6.5"}; },
     getURL(pathname) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${pathname}`; },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },
@@ -203,9 +203,20 @@ async function waitUntil(predicate) {
   const ping = await send(listeners.external, {type: "JOBFLOW_PING"}, sender);
   assert.equal(ping.status, "AVAILABLE");
 
+  invalidNextProof = true;
   const fakeLoopbackPair = await send(listeners.external, {type: "JOBFLOW_PAIR", pairing}, sender);
-  assert.equal(fakeLoopbackPair.code, "COMPANION_EXTERNAL_PAIR_FORBIDDEN");
-  assert.equal(fetches.length, 0, "a loopback page must not initiate pairing");
+  assert.equal(fakeLoopbackPair.code, "COMPANION_BINDING_PROOF_INVALID");
+  assert.equal(session.jobflowAssist, undefined, "an unsigned loopback service must not establish a pairing");
+  const missingTabPair = await send(listeners.external, {type: "JOBFLOW_PAIR", pairing}, {url: sender.url});
+  assert.equal(missingTabPair.code, "COMPANION_PAIR_PAYLOAD_INVALID");
+  const wrongOriginPair = await send(listeners.external, {type: "JOBFLOW_PAIR", pairing}, {
+    url: "http://127.0.0.1:43124/session/fake", tab: {id: 12}
+  });
+  assert.equal(wrongOriginPair.code, "COMPANION_PAIR_PAYLOAD_INVALID");
+
+  const externalPaired = await send(listeners.external, {type: "JOBFLOW_PAIR", pairing}, sender);
+  assert.equal(externalPaired.status, "GUIDED_INTAKE_PAIRED", JSON.stringify(externalPaired));
+  assert.equal(session.jobflowAssist.paired, true);
 
   delayNextPair = true;
   const cancelledPendingPair = send(listeners.internal, {type: "JOBFLOW_PAIR", pairing}, tabSender);
@@ -222,7 +233,7 @@ async function waitUntil(predicate) {
 
   const paired = await send(listeners.internal, {type: "JOBFLOW_PAIR", pairing}, tabSender);
   assert.equal(paired.status, "GUIDED_INTAKE_PAIRED", JSON.stringify(paired));
-  assert.equal(fetches.length, 2);
+  assert.equal(fetches.length, 4);
   assert.ok(session.jobflowAssist.generation);
 
   invalidNextProof = true;
@@ -342,7 +353,7 @@ async function waitUntil(predicate) {
   assert.equal(JSON.stringify(statusNotifications).includes("download_path"), false);
 
   process.stdout.write(JSON.stringify({
-    status: "PASS", external_pair_forbidden: true, explicit_popup_pair_only: true,
+    status: "PASS", signed_external_pairing: true, popup_pair_fallback: true,
     installation_hmac_required: true, fake_loopback_rejected: true, unsigned_routing_change_rejected: true,
     different_mode_blocked: true, stale_async_completion_blocked: true,
     final_review_immutable: true, unrelated_tab_update_ignored: true,

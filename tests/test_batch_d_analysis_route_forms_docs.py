@@ -113,6 +113,26 @@ class CompositeRequirementAndFitTests(unittest.TestCase):
         self.assertEqual(requirement["components"]["sql"], "UNKNOWN")
         self.assertEqual(eligibility.status, "NEEDS_USER_INPUT")
 
+    def test_bilingual_location_and_associate_level_preferences_match(self) -> None:
+        jd = analyze_jd(
+            "Company: Example\nRole: Credit Risk Review Analyst\n"
+            "Location: New York, New York\nRequired:\n- 2+ years of credit analysis\n"
+        )
+        profile = self.profile()
+        profile.update({
+            "locations": ["纽约"],
+            "target_levels": ["associate"],
+            "years_experience": 4,
+        })
+        # The live TEKsystems role is normalized to the mid-career band.
+        jd = jd.__class__(**{**jd.__dict__, "level": "mid"})
+        eligibility = check_eligibility(jd, profile)
+        checks = {item["gate"]: item for item in eligibility.checks}
+        self.assertEqual(checks["location"]["result"], "PASS")
+        self.assertEqual(checks["level"]["result"], "PASS")
+        self.assertNotIn("location", eligibility.hard_gaps)
+        self.assertNotIn("level", eligibility.hard_gaps)
+
     def test_or_parentheses_choose_one_and_at_least_n_are_modeled(self) -> None:
         text = """职位：分析师\n工作地点：Remote\n任职要求：\n- Python and (SQL or Tableau)\n- At least 2 of Python, SQL, Tableau\n- 英语或中文\n- 任选其一：AWS or Azure\n"""
         jd = analyze_jd(text)
@@ -206,6 +226,21 @@ class OfflineResearchAndFormTests(unittest.TestCase):
         )
         self.assertTrue(mapped["submit_blocked"])
 
+    def test_optional_skip_step_is_manual_navigation_not_final_submit(self) -> None:
+        mapped = map_fields(
+            [
+                {"id": "skip", "name": "skip", "label": "Skip this step, for now", "type": "submit"},
+                {"id": "final", "name": "submit", "label": "SUBMIT", "type": "submit"},
+            ],
+            {},
+            [],
+        )
+        self.assertEqual(
+            [item["classification"] for item in mapped["fields"]],
+            ["navigation_control_stop", "final_submit_stop"],
+        )
+        self.assertTrue(mapped["submit_blocked"])
+
     def test_explicit_button_requires_forward_only_wording_before_navigation(self) -> None:
         mapped = map_fields(
             [
@@ -216,6 +251,7 @@ class OfflineResearchAndFormTests(unittest.TestCase):
                 {"id": "finish", "label": "Finish application", "type": "button"},
                 {"id": "mixed_cn", "label": "继续并提交", "type": "button"},
                 {"id": "complete_cn", "label": "完成申请", "type": "button"},
+                {"id": "mislabelled", "label": "SUBMIT", "aria_label": "next button", "type": "button"},
             ],
             {},
             [],
@@ -225,7 +261,7 @@ class OfflineResearchAndFormTests(unittest.TestCase):
             [
                 "navigation_control_stop", "navigation_control_stop",
                 "final_submit_stop", "final_submit_stop", "final_submit_stop",
-                "final_submit_stop", "final_submit_stop",
+                "final_submit_stop", "final_submit_stop", "final_submit_stop",
             ],
         )
 

@@ -208,7 +208,12 @@ class EphemeralATSPayloadBroker:
             raise JobOpsError("EPHEMERAL_ANSWER_APPLICATION_MISMATCH", "The encrypted job-specific answers belong to another application.")
         prior_answers_hash = _sha256(bundle.get("prior_answers_hash"), code="EPHEMERAL_PRIOR_ANSWERS_HASH_INVALID")
         fields = bundle.get("fields")
-        if not isinstance(fields, list) or not 1 <= len(fields) <= 100:
+        non_form_unknowns = bundle.get("non_form_unknowns", [])
+        if (
+            not isinstance(fields, list) or len(fields) > 100 or
+            not isinstance(non_form_unknowns, list) or len(non_form_unknowns) > 100 or
+            (not fields and not non_form_unknowns)
+        ):
             raise JobOpsError("EPHEMERAL_ANSWER_BUNDLE_INVALID", "The encrypted job-specific answer list is invalid.")
         fields_by_ref = {str(item["control_ref"]): item for item in form_snapshot["fields"]}
         actions_by_ref = {str(item["control_ref"]): item for item in browser_plan["actions"]}
@@ -246,10 +251,26 @@ class EphemeralATSPayloadBroker:
                 if bool(field.get("required", False)) or item.get("value") is not None:
                     raise JobOpsError("EPHEMERAL_ANSWER_DECISION_INVALID", "A required field cannot be skipped and a skip decision cannot carry a value.")
                 skipped += 1
+        normalized_non_form: list[dict[str, str]] = []
+        non_form_seen: set[str] = set()
+        for item in non_form_unknowns:
+            if not isinstance(item, dict) or set(item) != {"unknown_id", "decision"}:
+                raise JobOpsError("EPHEMERAL_ANSWER_BUNDLE_INVALID", "A non-form uncertainty decision is invalid.")
+            unknown_id = str(item.get("unknown_id", ""))
+            decision = str(item.get("decision", ""))
+            if (
+                not re.fullmatch(r"[A-Za-z][A-Za-z0-9_.:-]{0,199}", unknown_id)
+                or unknown_id in non_form_seen
+                or decision != "ACKNOWLEDGED_UNKNOWN"
+            ):
+                raise JobOpsError("EPHEMERAL_ANSWER_BUNDLE_INVALID", "A non-form uncertainty decision is invalid.")
+            non_form_seen.add(unknown_id)
+            normalized_non_form.append({"unknown_id": unknown_id, "decision": decision})
         expected_answers_hash = sha256_bytes(canonical_json({
             "prior_answers_hash": prior_answers_hash,
             "answer_bundle_content_hash": str(metadata["content_sha256"]),
             "fields": sorted(decisions, key=lambda item: item["control_ref"]),
+            "non_form_unknowns": sorted(normalized_non_form, key=lambda item: item["unknown_id"]),
         }))
         if expected_answers_hash != context.answers_hash:
             raise JobOpsError("EPHEMERAL_ANSWER_BINDING_CHANGED", "The encrypted job-specific answers differ from the approved application context.")
