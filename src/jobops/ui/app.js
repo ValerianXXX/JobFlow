@@ -11,7 +11,7 @@ const STRINGS = {
     companionSessionActive: "另一种浏览器任务仍在进行中。请先完成或明确停止它，再开始这个任务。",
     guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认扩展已启用并重新加载当前版本；无需把网站权限改成“在所有网站上”。",
     guidedExtensionOutdated: "浏览器伴侣版本不匹配。请重新运行安装命令，并在扩展管理页重新加载安装器打开的本机 BrowserCompanion 目录。",
-    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.7.0，然后刷新 JobFlow。",
+    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.7.1，然后刷新 JobFlow。",
     browserAssistRestartRequired: "扩展已重载，本次辅助已安全停止。请重新打开这份申请的起始页，再建立一次连接；JobFlow 没有自动重试 Next/Continue。",
     browserAssistApplyRestart: "页面可能已经填写或上传了一部分，但整页验证没有完成。本轮已停止并记入审计，绝不会自动重复填写或上传；请重新打开申请起始页再开始。",
     browserAssistManualRestart: "这次一次性下一步证明没有安全建立。请结束并重新启动这项申请辅助；JobFlow 不会自动重试。",
@@ -70,7 +70,7 @@ const STRINGS = {
     companionSessionActive: "Another browser task is still active. Complete or explicitly stop it before starting this task.",
     guidedExtensionMissing: "The browser companion did not respond. Confirm the current extension is enabled and reloaded; you do not need to grant access on every website.",
     guidedExtensionOutdated: "The Browser Companion version does not match. Run the installer again and reload the Local AppData BrowserCompanion folder it opens.",
-    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.7.0, then refresh JobFlow.",
+    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.7.1, then refresh JobFlow.",
     browserAssistRestartRequired: "The extension reloaded, so this assist stopped safely. Reopen the approved application start page and connect again. JobFlow did not retry Next/Continue.",
     browserAssistApplyRestart: "The page may already contain some approved fields or an attachment, but whole-page verification did not finish. This run stopped and was audited; nothing will be filled or uploaded again automatically. Reopen the application start page and begin again.",
     browserAssistManualRestart: "The one-use Next proof was not armed safely. End this application assist and start it again. JobFlow will not retry automatically.",
@@ -225,10 +225,10 @@ Object.assign(STRINGS.en,{
   decisionApprovedAndStarted:"Review approved. JobFlow is continuing prefill and uploads in the application tab it just inspected. Only you click final Submit."
 });
 
-const UI_PROTOCOL_VERSION = 28;
+const UI_PROTOCOL_VERSION = 29;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj";
-const COMPANION_VERSION = "0.7.0";
+const COMPANION_VERSION = "0.7.1";
 const COMPANION_PAIRING_STORAGE = "jobflow-companion-pairing-v2";
 const COMPANION_POLL_BASE_MS = 1500;
 const COMPANION_POLL_MAX_MS = 12000;
@@ -1034,6 +1034,42 @@ function browserAssistResultMessage(status){
   return t(keys[status]||"browserAssistIdle");
 }
 
+function browserAssistApplyFailureMessage(result){
+  const label=String(result?.failure_field_label||"")
+    .replace(/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g,"")
+    .replace(/\s+/g," ").trim().slice(0,200);
+  const position=Number.isInteger(result?.failure_page_position)&&result.failure_page_position>0
+    ?result.failure_page_position:null;
+  const reasons=state.locale==="en"?{
+    COMPANION_CHOICE_OPTION_NOT_FOUND:"the current page no longer offers the approved choice",
+    COMPANION_CHOICE_VALUE_NOT_APPLIED:"the page did not retain the selected choice",
+    COMPANION_CUSTOM_SELECT_OPTION_NOT_FOUND:"the menu no longer offers the approved choice",
+    COMPANION_CUSTOM_SELECT_VERIFY_FAILED:"the page did not retain the menu selection",
+    COMPANION_CONTROL_REBIND_FAILED:"the field structure changed after upload or page refresh",
+    COMPANION_CONTROL_CHANGED:"the field structure changed before it could be filled",
+    COMPANION_FIELD_VERIFY_FAILED:"the page did not retain the entered value",
+    COMPANION_FILE_VERIFY_FAILED:"the page did not confirm the attachment"
+  }:{
+    COMPANION_CHOICE_OPTION_NOT_FOUND:"当前网页没有审阅时批准的选项",
+    COMPANION_CHOICE_VALUE_NOT_APPLIED:"网页没有保留已选择的选项",
+    COMPANION_CUSTOM_SELECT_OPTION_NOT_FOUND:"下拉菜单没有审阅时批准的选项",
+    COMPANION_CUSTOM_SELECT_VERIFY_FAILED:"网页没有保留下拉菜单选择",
+    COMPANION_CONTROL_REBIND_FAILED:"上传或页面刷新后，该字段结构发生了变化",
+    COMPANION_CONTROL_CHANGED:"填写前该字段结构发生了变化",
+    COMPANION_FIELD_VERIFY_FAILED:"网页没有保留已填写的内容",
+    COMPANION_FILE_VERIFY_FAILED:"网页没有确认附件已经保留"
+  };
+  const reason=reasons[String(result?.failure_code||"")]||"";
+  const base=t("browserAssistApplyRestart");
+  if(!label&&!position&&!reason)return base;
+  if(state.locale==="en"){
+    const location=label?`${position?`item ${position} `:""}\"${label}\"`:position?`item ${position}`:"the current control";
+    return `Stopped at ${location}. Reason: ${reason||"the page did not pass safe verification"}. ${base}`;
+  }
+  const location=label?`${position?`第 ${position} 项 `:""}“${label}”`:position?`第 ${position} 项`:"当前控件";
+  return `停止位置：${location}。原因：${reason||"网页没有通过安全验证"}。${base}`;
+}
+
 function renderBrowserAssist(recent){
   const info=state.data?.browser_assist||{};
   if(!state.browserAssistSelection&&info.active_application_id){
@@ -1075,7 +1111,10 @@ function renderBrowserAssist(recent){
   }else{link.removeAttribute("href");link.classList.add("hidden");}
   const message=document.querySelector("#browserAssistMessage");
   const connectionNotice=state.companionPairing?.kind==="assist"&&state.companionConnectionNotice?t(state.companionConnectionNotice):"";
-  message.textContent=guidedActive?t("companionSessionActive"):[activeStatus?browserAssistResultMessage(activeStatus):"",connectionNotice].filter(Boolean).join(" ");
+  const activeMessage=activeStatus==="APPLY_RESTART_REQUIRED"
+    ?browserAssistApplyFailureMessage(state.browserAssistSession?.last_result||state.browserAssistSession)
+    :activeStatus?browserAssistResultMessage(activeStatus):"";
+  message.textContent=guidedActive?t("companionSessionActive"):[activeMessage,connectionNotice].filter(Boolean).join(" ");
   selection.classList.remove("hidden");
 }
 
@@ -1126,6 +1165,7 @@ async function handleBrowserCompanionStatus(result){
     const terminalKey=`assist:${result.application_id}:${result.status}`;
     if(state.companionTerminalHandled!==terminalKey){
       state.companionTerminalHandled=terminalKey;
+      if(result.status==="APPLY_RESTART_REQUIRED")showToast(browserAssistApplyFailureMessage(result.last_result||result),true,20000);
       try{
         await refreshLatest();
         if(result.status==="SUPPLEMENTAL_REVIEW_REQUIRED"){

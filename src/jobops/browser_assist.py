@@ -25,7 +25,7 @@ from .util import canonical_json, iso_utc, parse_iso, project_root, sha256_bytes
 
 
 COMPANION_PROTOCOL_VERSION = 2
-COMPANION_EXTENSION_VERSION = "0.7.0"
+COMPANION_EXTENSION_VERSION = "0.7.1"
 COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj"
 COMPANION_EXTENSION_ORIGIN = f"chrome-extension://{COMPANION_EXTENSION_ID}"
 ASSIST_TTL_MINUTES = 30
@@ -59,6 +59,29 @@ FORWARD_NAVIGATION = re.compile(
     re.IGNORECASE,
 )
 BACKWARD_NAVIGATION = re.compile(r"(?:^|\b)(?:back|previous|cancel)(?:\b|$)|返回|上一步|取消", re.IGNORECASE)
+SAFE_APPLY_FAILURE_CODES = frozenset({
+    "COMPANION_APPLY_INCOMPLETE",
+    "COMPANION_CHOICE_OPTION_NOT_FOUND",
+    "COMPANION_CHOICE_VALUE_NOT_APPLIED",
+    "COMPANION_CONTROL_CHANGED",
+    "COMPANION_CONTROL_REBIND_FAILED",
+    "COMPANION_CONTROL_TYPE_UNSUPPORTED",
+    "COMPANION_CUSTOM_SELECT_CHANGED",
+    "COMPANION_CUSTOM_SELECT_CLOSE_FAILED",
+    "COMPANION_CUSTOM_SELECT_OPTION_NOT_FOUND",
+    "COMPANION_CUSTOM_SELECT_VERIFY_FAILED",
+    "COMPANION_FIELD_APPLY_FAILED",
+    "COMPANION_FIELD_VERIFY_FAILED",
+    "COMPANION_FILE_CONTROL_CHANGED",
+    "COMPANION_FILE_FETCH_FAILED",
+    "COMPANION_FILE_HASH_MISMATCH",
+    "COMPANION_FILE_VERIFY_FAILED",
+    "COMPANION_FINAL_CONTROL_CHANGED",
+    "COMPANION_NAVIGATION_CONTROL_CHANGED",
+    "COMPANION_SELECT_OPTION_NOT_FOUND",
+    "COMPANION_VALUE_HASH_MISMATCH",
+    "COMPANION_VALUE_SETTER_UNAVAILABLE",
+})
 
 
 def _now() -> datetime:
@@ -107,6 +130,13 @@ def _safe_hash(value: object) -> str:
     return sha256_bytes(canonical_json(value))
 
 
+def _safe_failure_label(value: object) -> str:
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
+    text = re.sub(r"[\u202a-\u202e\u2066-\u2069]", "", text)
+    return text[:200] or "Application field"
+
+
 def _source_identity_material(application_id: str, route: dict[str, Any]) -> list[str]:
     """Immutable application identity, deliberately separate from transient page routing."""
 
@@ -144,6 +174,7 @@ class _AssistLease:
     execution_channel: str | None = None
     expected_fields: list[dict[str, str]] = field(default_factory=list)
     expected_files: list[dict[str, str]] = field(default_factory=list)
+    field_diagnostics: dict[str, dict[str, Any]] = field(default_factory=dict)
     accepted_fields: list[dict[str, str]] = field(default_factory=list)
     accepted_files: list[dict[str, str]] = field(default_factory=list)
     applied_evidence_accepted: bool = False
@@ -1012,6 +1043,10 @@ class BrowserAssistManager:
                 initial_control_ref_map = {}
 
             live_fields = list(live["fields"])
+            live_position_by_control = {
+                str(field["control_ref"]): index
+                for index, field in enumerate(live_fields, start=1)
+            }
             client_by_control = {
                 str(field["control_ref"]): client_ref
                 for field, client_ref in zip(live_fields, client_refs, strict=True)
@@ -1048,6 +1083,9 @@ class BrowserAssistManager:
                     profile_reference=lease.profile_ref,
                     answer_bank_reference=lease.answer_bank_ref,
                 )
+            resolved_values.sort(
+                key=lambda item: live_position_by_control.get(str(item["control_ref"]), len(live_fields) + 1),
+            )
             outward_fields: list[dict[str, str]] = []
             expected_field_results: list[dict[str, str]] = []
             resolved_control_refs: set[str] = set()
@@ -1148,6 +1186,14 @@ class BrowserAssistManager:
 
             lease.expected_fields = sorted(expected_field_results, key=lambda item: item["client_ref"])
             lease.expected_files = sorted(expected_file_results, key=lambda item: (item["purpose"], item["client_ref"]))
+            lease.field_diagnostics = {
+                client_by_control[str(item["control_ref"])]: {
+                    "failure_field_label": _safe_failure_label(item.get("display_label")),
+                    "failure_control_type": str(item.get("control_type") or "other")[:40],
+                    "failure_page_position": live_position_by_control[str(item["control_ref"])],
+                }
+                for item in live_fields
+            }
             lease.accepted_fields = []
             lease.accepted_files = []
             lease.applied_evidence_accepted = False
@@ -1454,6 +1500,17 @@ class BrowserAssistManager:
                     "BROWSER_ASSIST_EVIDENCE_INVALID",
                     "The browser companion apply-failure code is invalid.",
                 )
+            failure_code = cause_code if cause_code in SAFE_APPLY_FAILURE_CODES else "COMPANION_FIELD_APPLY_FAILED"
+            failed_client_ref = payload.get("failed_client_ref")
+            failure_diagnostic: dict[str, Any] = {}
+            if failed_client_ref is not None:
+                failed_client_ref = str(failed_client_ref)
+                if not CLIENT_REF_PATTERN.fullmatch(failed_client_ref) or failed_client_ref not in lease.field_diagnostics:
+                    raise JobOpsError(
+                        "BROWSER_ASSIST_EVIDENCE_MISMATCH",
+                        "The failed page apply identified a control outside the prepared live page.",
+                    )
+                failure_diagnostic = dict(lease.field_diagnostics[failed_client_ref])
             attempted_fields = self._binding_list(payload, "attempted_field_bindings", material=False)
             attempted_files = self._binding_list(payload, "attempted_material_bindings", material=True)
 
@@ -1526,6 +1583,7 @@ class BrowserAssistManager:
                 "assist_id": lease.assist_id,
                 "application_id": lease.application_id,
                 "cause_code": cause_code,
+                "failed_client_ref": failed_client_ref,
                 "attempted_field_bindings": fields,
                 "attempted_material_bindings": files,
                 "submit_events": 0,
@@ -1551,6 +1609,8 @@ class BrowserAssistManager:
             return {
                 "status": "APPLY_RESTART_REQUIRED",
                 "code": "COMPANION_APPLY_RESTART_REQUIRED",
+                "failure_code": failure_code,
+                **failure_diagnostic,
                 "assist_id": lease.assist_id,
                 "application_id": lease.application_id,
                 "field_attempt_count": len(fields),

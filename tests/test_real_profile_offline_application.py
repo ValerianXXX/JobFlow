@@ -78,6 +78,12 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             "last_name": "Candidate",
             "email": "synthetic-candidate@example.test",
             "phone": "+1 555 010 0200",
+            "phone_type": "Mobile",
+            "address": "100 Example Avenue",
+            "city": "New York",
+            "state": "NY",
+            "postal_code": "10001",
+            "country": "United States",
             "github_url": "https://github.com/synthetic-candidate",
             "portfolio_url": "https://portfolio.example.test/synthetic-candidate",
             "portfolio_file_ref": portfolio["secure_ref"],
@@ -246,6 +252,18 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 <label for='last-name'>Last name</label><input id='last-name' name='last_name' type='text' required>
                 <label for='email'>Email</label><input id='email' name='email' type='email' required>
                 <label for='phone'>Phone</label><input id='phone' name='phone' type='tel' required>
+                <label for='phone-type'>Phone Type</label><select id='phone-type' name='phone_type' required>
+                  <option value='Mobile'>Mobile</option><option value='Home'>Home</option>
+                </select>
+                <label for='address'>Mailing Address</label><input id='address' name='mailing_address' type='text' required>
+                <label for='city'>City</label><input id='city' name='city' type='text' required>
+                <label for='state'>State</label><select id='state' name='state' required>
+                  <option value='NY'>New York</option><option value='NJ'>New Jersey</option>
+                </select>
+                <label for='postal-code'>Zip Code</label><input id='postal-code' name='postal_code' type='text' required>
+                <label for='country'>Country</label><select id='country' name='country' required>
+                  <option value='United States'>United States</option><option value='Canada'>Canada</option>
+                </select>
                 <button type='submit'>Submit application</button>
             </form></body></html>"""
             prepared = service.prepare_offline_application_bundle(
@@ -267,14 +285,21 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             questions = {
                 str(item["answer_key"]): item
                 for item in reviewed["packet"]["form_questions"]
-                if item.get("answer_key") in {"first_name", "last_name", "email", "phone"}
+                if item.get("answer_key") in {
+                    "first_name", "last_name", "email", "phone", "phone_type",
+                    "address", "city", "state", "postal_code", "country",
+                }
             }
-            self.assertEqual(set(questions), {"first_name", "last_name", "email", "phone"})
+            self.assertEqual(set(questions), {
+                "first_name", "last_name", "email", "phone", "phone_type",
+                "address", "city", "state", "postal_code", "country",
+            })
             self.assertTrue(all(item["status"] == "READY" for item in questions.values()))
             self.assertTrue(all(item["redacted_summary"] == "PRIVATE_VALUE_PRESENT" for item in questions.values()))
             serialized = json.dumps(reviewed)
             self.assertNotIn("synthetic-candidate@example.test", serialized)
             self.assertNotIn("+1 555 010 0200", serialized)
+            self.assertNotIn("100 Example Avenue", serialized)
 
     def approved_workday_v2_application(
         self, database: JobOpsDB, onboarding: PrivateOnboarding,
@@ -1108,6 +1133,14 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 },
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
             )
+            live_positions = {
+                f"DOM-{index:012d}": index
+                for index in range(1, initial_count + 1)
+            }
+            self.assertEqual(
+                [live_positions[item["client_ref"]] for item in prepared["fields"]],
+                sorted(live_positions[item["client_ref"]] for item in prepared["fields"]),
+            )
             material_bindings = []
             for item in prepared["files"]:
                 file_token = str(item["download_path"]).rsplit("/", 1)[-1]
@@ -1273,6 +1306,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 token,
                 {
                     "cause_code": "COMPANION_CONTROL_REBIND_FAILED",
+                    "failed_client_ref": first_field["client_ref"],
                     "attempted_field_bindings": [{
                         "client_ref": first_field["client_ref"],
                         "value_sha256": first_field["value_sha256"],
@@ -1288,6 +1322,10 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertEqual(aborted["code"], "COMPANION_APPLY_RESTART_REQUIRED")
             self.assertEqual(aborted["field_attempt_count"], 1)
             self.assertEqual(aborted["file_attempt_count"], 1)
+            self.assertEqual(aborted["failure_code"], "COMPANION_CONTROL_REBIND_FAILED")
+            self.assertEqual(aborted["failure_page_position"], 1)
+            self.assertEqual(aborted["failure_control_type"], first_field["control_type"])
+            self.assertTrue(aborted["failure_field_label"])
             self.assertEqual(aborted["real_external_actions"], 2)
             self.assertFalse(aborted["submit_capability"])
             self.assertFalse(aborted["final_submit"])

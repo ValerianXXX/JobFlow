@@ -47,7 +47,7 @@ const sandbox = {
   },
   chrome: {
     runtime: {
-      getManifest() { return {version: "0.7.0"}; },
+      getManifest() { return {version: "0.7.1"}; },
       async sendMessage(message) {
         runtimeMessages.push(message);
         if (message.type === "JOBFLOW_GET_STATUS") return pairedStatus;
@@ -143,6 +143,34 @@ vm.runInContext(source, sandbox, {filename: "popup.js"});
   await elements.en.listeners.click[0]();
   assert.equal(elements.fill.textContent, "Return to JobFlow — restart");
 
+  pairedStatus = {
+    status: "APPLY_RESTART_REQUIRED",
+    paired: true,
+    mode: "APPLICATION_ASSIST",
+    assist_id: "BAS-POPUP-APPLY-FAILURE",
+    application_id: "APP-POPUP-APPLY-FAILURE",
+    allowed_page_origin: "https://careers.example.test",
+    current_step: 1,
+    max_steps: 20,
+    last_result: {
+      status: "APPLY_RESTART_REQUIRED",
+      code: "COMPANION_APPLY_RESTART_REQUIRED",
+      failure_code: "COMPANION_CHOICE_OPTION_NOT_FOUND",
+      failure_control_type: "radio",
+      failure_page_position: 9,
+      failure_field_label: "Work authorization",
+      automatic_retry: false
+    }
+  };
+  await elements.zh.listeners.click[0]();
+  await vm.runInContext("refresh()", sandbox);
+  assert.match(elements.message.textContent, /第 9 项/);
+  assert.match(elements.message.textContent, /Work authorization/);
+  assert.match(elements.message.textContent, /没有审阅时批准的选项/);
+  await elements.en.listeners.click[0]();
+  assert.match(elements.message.textContent, /item 9/);
+  assert.match(elements.message.textContent, /no longer offers the approved choice/);
+
   process.stdout.write(JSON.stringify({
     status: "PASS",
     user_gesture_permission_required: true,
@@ -152,6 +180,7 @@ vm.runInContext(source, sandbox, {filename: "popup.js"});
     capture_messages: captureMessages.length,
     restart_required_bilingual: true,
     restart_required_disabled: true,
+    apply_failure_diagnostic_bilingual: true,
     real_external_actions: 0
   }));
 })().catch((error) => {

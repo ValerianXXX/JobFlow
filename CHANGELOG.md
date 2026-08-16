@@ -4,6 +4,18 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-16
+
+### Fixed
+
+- Reused confirmed resume identity, contact, and structured address fields instead of asking for them again per application.
+- Applied approved fields in live page order and improved TEKsystems-style choice controls after ATS redraws.
+- Reported the safe field label, page position, and failure reason when a partial page apply stops.
+
+### Safety
+
+- Upgraded the Browser Companion to 0.7.1 while preserving user-only final submission and no automatic retry after partial or unknown outcomes.
+
 ## [0.3.0] - 2026-08-16
 
 ### Added

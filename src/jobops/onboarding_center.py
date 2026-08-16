@@ -4085,13 +4085,29 @@ class OnboardingCenterService:
         }
         contact_values = base.get("resume_contact_values")
         if isinstance(contact_values, dict):
-            for key in ("email", "phone"):
+            for key in ("email", "phone", "address"):
                 values = contact_values.get(key)
                 if isinstance(values, list):
                     unique = [str(value).strip() for value in values if str(value).strip()]
                     unique = list(dict.fromkeys(unique))
                     if len(unique) == 1:
                         profile[key] = unique[0]
+            address = profile.get("address")
+            if isinstance(address, str):
+                us_address = re.fullmatch(
+                    r"\s*(?P<street>.+?),\s*(?P<city>[^,]+?),\s*"
+                    r"(?P<state>[A-Za-z]{2})\s+(?P<postal>\d{5}(?:-\d{4})?)"
+                    r"(?:,\s*(?P<country>United States(?: of America)?|USA|US))?\s*",
+                    address,
+                    flags=re.IGNORECASE,
+                )
+                if us_address:
+                    profile["address"] = us_address.group("street").strip()
+                    profile["city"] = us_address.group("city").strip()
+                    profile["state"] = us_address.group("state").upper()
+                    profile["postal_code"] = us_address.group("postal")
+                    if us_address.group("country"):
+                        profile["country"] = us_address.group("country").strip()
         name_parts = str(display_name or "").split()
         if len(name_parts) >= 2 and all(re.fullmatch(r"[A-Za-z][A-Za-z'’-]*", part) for part in name_parts):
             profile["first_name"] = name_parts[0]

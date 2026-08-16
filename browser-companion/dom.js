@@ -678,6 +678,29 @@
     return target;
   }
 
+  function fieldApplyFailureCode(error) {
+    const code = String(error?.message || "");
+    const supported = new Set([
+      "CHOICE_OPTION_NOT_FOUND", "CHOICE_VALUE_NOT_APPLIED",
+      "CUSTOM_SELECT_CHANGED", "CUSTOM_SELECT_OPTION_NOT_FOUND",
+      "CUSTOM_SELECT_VERIFY_FAILED", "CUSTOM_SELECT_CLOSE_FAILED",
+      "SELECT_OPTION_NOT_FOUND", "VALUE_SETTER_UNAVAILABLE", "UNSUPPORTED_CONTROL"
+    ]);
+    if (!supported.has(code)) return "COMPANION_FIELD_APPLY_FAILED";
+    const aliases = {
+      CHOICE_OPTION_NOT_FOUND: "COMPANION_CHOICE_OPTION_NOT_FOUND",
+      CHOICE_VALUE_NOT_APPLIED: "COMPANION_CHOICE_VALUE_NOT_APPLIED",
+      CUSTOM_SELECT_CHANGED: "COMPANION_CUSTOM_SELECT_CHANGED",
+      CUSTOM_SELECT_OPTION_NOT_FOUND: "COMPANION_CUSTOM_SELECT_OPTION_NOT_FOUND",
+      CUSTOM_SELECT_VERIFY_FAILED: "COMPANION_CUSTOM_SELECT_VERIFY_FAILED",
+      CUSTOM_SELECT_CLOSE_FAILED: "COMPANION_CUSTOM_SELECT_CLOSE_FAILED",
+      SELECT_OPTION_NOT_FOUND: "COMPANION_SELECT_OPTION_NOT_FOUND",
+      VALUE_SETTER_UNAVAILABLE: "COMPANION_VALUE_SETTER_UNAVAILABLE",
+      UNSUPPORTED_CONTROL: "COMPANION_CONTROL_TYPE_UNSUPPORTED"
+    };
+    return aliases[code];
+  }
+
   function customOptionValue(element) {
     return compact(
       element?.getAttribute?.("data-value") || element?.getAttribute?.("value") ||
@@ -727,9 +750,9 @@
         HTMLElement.prototype.click.call(element);
         await waitForDomQuiet({quietMilliseconds: 180, maximumMilliseconds: 1800});
       }
-      if (element.getAttribute("aria-expanded") === "true") {
-        throw new Error("CUSTOM_SELECT_CLOSE_FAILED");
-      }
+      // A verified selection is the important state. Some ATS components keep
+      // their menu open until focus changes; that cosmetic state must not turn
+      // an already-correct value into a destructive whole-page restart.
     }
   }
 
@@ -939,7 +962,7 @@
         else if (binding?.jobflowCustomSelect) await applyCustomSelectValue(binding, String(item.value));
         else setTextValue(element, String(item.value));
       }
-      catch (_error) { return blockedApply("COMPANION_FIELD_APPLY_FAILED", item.client_ref); }
+      catch (error) { return blockedApply(fieldApplyFailureCode(error), item.client_ref); }
       if (
         !binding?.jobflowChoiceGroup && !binding?.jobflowCustomSelect &&
         String(element.value) !== String(item.value) && !(element instanceof HTMLSelectElement)

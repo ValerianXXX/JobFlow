@@ -105,7 +105,7 @@ function evidencePayload(manual, overrides = {}) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.7.0"}; },
+    getManifest() { return {version: "0.7.1"}; },
     getURL(value) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${value}`; },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },
@@ -122,6 +122,7 @@ const chrome = {
       if (message.type === "JOBFLOW_APPLY_APPROVED") {
         if (applyFailureMode) return {
           status: "BLOCKED", code: "COMPANION_CONTROL_REBIND_FAILED",
+          client_ref: "field-1",
           field_bindings: [], material_bindings: [],
           attempted_field_bindings: [{client_ref: "field-1", value_sha256: digest("synthetic-value")}],
           attempted_material_bindings: [], partial_effects: true
@@ -193,6 +194,10 @@ const sandbox = {
     }; }};
     if (String(url).endsWith("/abort-page-apply")) return {ok: true, async json() { return {
       status: "APPLY_RESTART_REQUIRED", code: "COMPANION_APPLY_RESTART_REQUIRED",
+      failure_code: body.cause_code,
+      failure_control_type: "combobox",
+      failure_page_position: 7,
+      failure_field_label: "Phone Type",
       field_attempt_count: body.attempted_field_bindings.length,
       file_attempt_count: body.attempted_material_bindings.length,
       real_external_actions: body.attempted_field_bindings.length ? 1 : 0,
@@ -400,6 +405,7 @@ async function eventually(predicate, timeoutMs = 5000) {
   assert.equal(session.jobflowAssist.stage, "APPLY_RESTART_REQUIRED");
   const abortRequest = requests.filter((item) => item.url.endsWith("/abort-page-apply")).at(-1);
   assert.equal(abortRequest.body.cause_code, "COMPANION_CONTROL_REBIND_FAILED");
+  assert.equal(abortRequest.body.failed_client_ref, "field-1");
   assert.equal(abortRequest.body.attempted_field_bindings.length, 1);
   assert.equal(abortRequest.body.submit_events, 0);
   assert.equal(abortRequest.body.navigation_actions, 0);
@@ -415,6 +421,10 @@ async function eventually(predicate, timeoutMs = 5000) {
   }, {url: `${session.jobflowAssist.base_url}/session/synthetic/`});
   assert.equal(partialPublic.status, "APPLY_RESTART_REQUIRED");
   assert.equal(partialPublic.last_result.field_attempt_count, 1);
+  assert.equal(partialPublic.last_result.failure_code, "COMPANION_CONTROL_REBIND_FAILED");
+  assert.equal(partialPublic.last_result.failure_control_type, "combobox");
+  assert.equal(partialPublic.last_result.failure_page_position, 7);
+  assert.equal(partialPublic.last_result.failure_field_label, "Phone Type");
   assert.equal(JSON.stringify(partialPublic).includes("attempted_field_bindings"), false);
   applyFailureMode = false;
 

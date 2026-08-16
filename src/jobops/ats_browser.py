@@ -77,18 +77,28 @@ def _suggest_answer_key(field: dict[str, Any]) -> str:
         ("last_name", ("last_name", "family_name", "family-name", "姓_")),
         ("full_name", ("full_name", "legal_name", "candidate_name", "姓名", "type_name")),
         ("email", ("email", "邮箱")),
+        ("phone_type", ("phone_type", "telephone_type", "contact_phone_type", "电话类型", "手机类型")),
         ("phone", ("phone", "telephone", "mobile", "电话", "手机")),
         ("linkedin", ("linkedin",)),
         ("github", ("github",)),
         ("portfolio", ("portfolio", "作品集")),
         ("website", ("website", "personal_site", "个人网站")),
         ("address", ("address", "street", "地址")),
+        ("city", ("city", "address_locality", "城市")),
+        ("state", ("state", "province", "address_region", "州_", "省_")),
+        ("postal_code", ("postal_code", "postcode", "zip_code", "zipcode", "邮编")),
+        ("country", ("country", "nation", "国家")),
         ("work_authorization", ("work_authorization", "authorized_to_work", "工作授权", "工作资格")),
         ("salary", ("salary", "compensation", "薪资", "薪酬")),
         ("resume", ("resume", "cv", "简历")),
     )
     for answer_key, signals in candidates:
-        if any(signal in material for signal in signals):
+        if any(
+            bool(re.search(rf"(?:^|_){re.escape(signal)}(?:_|$)", material))
+            if signal in {"city", "state", "country"}
+            else signal in material
+            for signal in signals
+        ):
             return answer_key
     return "UNKNOWN"
 

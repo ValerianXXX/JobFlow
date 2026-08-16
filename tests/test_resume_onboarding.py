@@ -87,6 +87,18 @@ class ResumeOnboardingTests(unittest.TestCase):
         self.assertIsNone(without_hint["candidate_display_name"])
         self.assertEqual(with_hint["candidate_display_name"], "Synthetic Candidate")
 
+    def test_complete_us_address_is_kept_as_one_resume_contact_value(self) -> None:
+        resume = parse_resume(
+            "Synthetic Candidate\nsynthetic@example.test\n"
+            "100 Example Avenue, New York, NY 10001, United States\n"
+            "Professional Summary\nSynthetic fixture text\n"
+        )
+
+        self.assertEqual(
+            resume["contact_values"]["address"],
+            ["100 Example Avenue, New York, NY 10001, United States"],
+        )
+
     def test_claim_candidate_evidence_is_hash_and_approval_gated(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             evidence = Path(raw) / "evidence.md"
