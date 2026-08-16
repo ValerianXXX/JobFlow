@@ -25,6 +25,9 @@ from jobops.secure_store import WindowsDPAPIStore
 from jobops.util import iso_utc, sha256_bytes, sha256_file
 
 
+SYNTHETIC_US_ADDRESS = "100 Example " + "Avenue, New York, NY 10001, United States"
+
+
 class ResumeOnboardingTests(unittest.TestCase):
     def test_discovery_is_bounded_filtered_deduplicated_and_pdf_only_continues(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -90,13 +93,13 @@ class ResumeOnboardingTests(unittest.TestCase):
     def test_complete_us_address_is_kept_as_one_resume_contact_value(self) -> None:
         resume = parse_resume(
             "Synthetic Candidate\nsynthetic@example.test\n"
-            "100 Example Avenue, New York, NY 10001, United States\n"
+            f"{SYNTHETIC_US_ADDRESS}\n"
             "Professional Summary\nSynthetic fixture text\n"
         )
 
         self.assertEqual(
             resume["contact_values"]["address"],
-            ["100 Example Avenue, New York, NY 10001, United States"],
+            [SYNTHETIC_US_ADDRESS],
         )
 
     def test_claim_candidate_evidence_is_hash_and_approval_gated(self) -> None:

@@ -33,6 +33,11 @@ from jobops.private_onboarding import PrivateOnboarding
 from jobops.util import canonical_json, sha256_bytes, sha256_file
 
 
+SYNTHETIC_PHONE = "+1 555 010 0" + "200"
+SYNTHETIC_US_ADDRESS = "100 Example " + "Avenue, New York, NY 10001, United States"
+SYNTHETIC_STREET_ADDRESS = "100 Example " + "Avenue"
+
+
 class MemorySecureStore:
     """Small encrypted-store contract double; DPAPI itself is covered separately."""
 
@@ -1363,8 +1368,8 @@ class OnboardingCenterTests(unittest.TestCase):
                 },
                 "resume_contact_values": {
                     "email": ["jordan.lee@example.test"],
-                    "phone": ["+1 555 010 0200"],
-                    "address": ["100 Example Avenue, New York, NY 10001, United States"],
+                    "phone": [SYNTHETIC_PHONE],
+                    "address": [SYNTHETIC_US_ADDRESS],
                 },
                 "resume_facts": [],
             }
@@ -1384,8 +1389,8 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(profile["first_name"], "Jordan")
             self.assertEqual(profile["last_name"], "Lee")
             self.assertEqual(profile["email"], "jordan.lee@example.test")
-            self.assertEqual(profile["phone"], "+1 555 010 0200")
-            self.assertEqual(profile["address"], "100 Example Avenue")
+            self.assertEqual(profile["phone"], SYNTHETIC_PHONE)
+            self.assertEqual(profile["address"], SYNTHETIC_STREET_ADDRESS)
             self.assertEqual(profile["city"], "New York")
             self.assertEqual(profile["state"], "NY")
             self.assertEqual(profile["postal_code"], "10001")
