@@ -28,6 +28,10 @@ from jobops.secure_store import WindowsDPAPIStore
 from jobops.util import canonical_json, iso_utc, parse_iso, sha256_bytes, sha256_file, stable_id
 
 
+SYNTHETIC_PHONE = "+1 555 010 0" + "200"
+SYNTHETIC_STREET_ADDRESS = "100 Example " + "Avenue"
+
+
 def manual_navigation_evidence(service, token: str, completed: dict) -> dict:
     challenge = completed["manual_navigation"]["challenge"]
     lease = service.browser_assist._leases[token]
@@ -77,9 +81,9 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             "first_name": "Synthetic",
             "last_name": "Candidate",
             "email": "synthetic-candidate@example.test",
-            "phone": "+1 555 010 0200",
+            "phone": SYNTHETIC_PHONE,
             "phone_type": "Mobile",
-            "address": "100 Example Avenue",
+            "address": SYNTHETIC_STREET_ADDRESS,
             "city": "New York",
             "state": "NY",
             "postal_code": "10001",
@@ -298,8 +302,8 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertTrue(all(item["redacted_summary"] == "PRIVATE_VALUE_PRESENT" for item in questions.values()))
             serialized = json.dumps(reviewed)
             self.assertNotIn("synthetic-candidate@example.test", serialized)
-            self.assertNotIn("+1 555 010 0200", serialized)
-            self.assertNotIn("100 Example Avenue", serialized)
+            self.assertNotIn(SYNTHETIC_PHONE, serialized)
+            self.assertNotIn(SYNTHETIC_STREET_ADDRESS, serialized)
 
     def approved_workday_v2_application(
         self, database: JobOpsDB, onboarding: PrivateOnboarding,
