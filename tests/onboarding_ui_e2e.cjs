@@ -38,8 +38,8 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /guided-failure-v2/);
-    assert.match(initial.styleVersion, /guided-failure-v2/);
+    assert.match(initial.scriptVersion, /20260816-jobflow-v28-one-confirmation/);
+    assert.match(initial.styleVersion, /20260816-jobflow-v28-one-confirmation/);
     assert.deepEqual(pageErrors, []);
 
     const failureZh = await page.evaluate(() => {
