@@ -6,16 +6,25 @@ All notable JobFlow changes are recorded here. The project follows semantic vers
 
 ## [Unreleased]
 
-## [0.2.5] - release candidate / 发布候选
+## [0.2.5] - release candidate
 
-- Added a provider-neutral AI operator layer for Hermes, OpenClaw and local-model connections. A connected AI now receives JobFlow's redacted task state, tool contract, evidence boundaries and continuation rules, so one instruction such as “handle this job” can delegate the ordinary workflow while preserving explicit user gates.
-- 为 Hermes、OpenClaw 与本地模型连接新增供应商无关的 AI 操作层。连接后的 AI 会获得 JobFlow 的脱敏任务状态、工具契约、证据边界和续办规则，因此用户可用一句“帮我处理这个岗位”委托普通流程，同时保留明确的人工门禁。
-- Added AI-backed form-semantic review and dynamic rebinding for modern component-based application pages, including shadow-DOM controls, custom selects, address suggestions and upload controls. Partial application is recorded once and never retried automatically.
-- 新增由 AI 辅助的申请表语义审阅与动态重绑定，覆盖现代组件化页面中的 Shadow DOM 控件、自定义下拉框、地址建议和文件上传；部分填写只记录一次，绝不自动重试。
-- Browser Companion 0.6.5 now keeps the final Submit action user-only while safely filling approved fields and attaching approved per-job materials. Sensitive, legal, unknown or unsupported fields remain explicit user decisions.
-- 浏览器伴侣 0.6.5 在安全填写获批字段并挂载逐岗位获批材料的同时，继续把最终 Submit 严格保留给用户；敏感、法律、未知或不支持字段仍必须由用户明确决定。
-- A user-authorized live ATS acceptance run with a synthetic identity reached `AWAITING_USER_SUBMIT` with all required fields valid and the approved resume attached. Final submit, automatic retry and credential access remained disabled.
-- 一次经用户授权、使用合成身份的真实 ATS 验收已到达 `AWAITING_USER_SUBMIT`：全部必填字段有效且获批简历已挂载；最终提交、自动重试和凭据读取仍保持关闭。
+### Highlights
+
+- Added a provider-neutral AI Operator for Hermes, OpenClaw, and local-model connections. Connected agents receive a redacted JobFlow task state, tool contract, evidence boundaries, and safe continuation rules.
+- Expanded Browser Companion 0.6.5 with AI-assisted form understanding for modern component-based application pages, including Shadow DOM controls, custom selects, address suggestions, and approved material uploads.
+
+### Fixes and Improvements
+
+- Restored the intended workflow order so onboarding and material upload remain above the application console.
+- Fixed a startup error that could disable live UI updates, hide the floating progress indicator, and leave the page in a stale state.
+- Kept terminal intake failures visible with a persistent, actionable status instead of a disappearing notification.
+- Reduced false seniority and eligibility blocks caused by unrelated wording in job descriptions.
+
+### Safety
+
+- Final Submit remains user-only. Sensitive, legal, unknown, or unsupported fields remain explicit user decisions.
+- Partial application attempts are recorded once and never retried automatically.
+- A user-authorized live ATS acceptance run with a synthetic identity reached `AWAITING_USER_SUBMIT` with required fields valid and the approved resume attached; final submission and credential access remained disabled.
 
 ## [0.2.4] - 2026-08-15
 
