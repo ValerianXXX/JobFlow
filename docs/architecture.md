@@ -1,71 +1,57 @@
-# JobFlow architecture / JobFlow 架构
+# Architecture
 
-JobFlow is a Windows-first local application plus an embedded Codex Skill. The browser UI is only a local control surface; private values are encrypted outside the project, while the repository contains code, schemas and synthetic evidence only.
+JobFlow is a Windows-first local application with an optional Browser Companion. The repository contains code, schemas, tests, synthetic fixtures, and public documentation. Applicant data and runtime state live outside the public tree.
 
-JobFlow 是 Windows 优先的本地应用，并内嵌一个 Codex Skill。浏览器界面只是本机控制面；私人值在项目外加密，仓库只包含代码、Schema 与合成证据。
+## Main components
 
-```mermaid
-flowchart LR
-  U["User / 用户"] --> UI["Local bilingual UI / 本机双语界面"]
-  UI --> S["DPAPI secure store / DPAPI 安全存储"]
-  UI --> A["AI adapter gate / AI 适配门"]
-  A --> P["Proposed entities and Claims / 候选实体与 Claim"]
-  K["Read-only knowledge / 只读知识库"] --> E["Evidence gateway / 证据网关"]
-  P --> E
-  E --> R["Human review / 人工审阅"]
-  R --> C["Hash-bound Claim-use approval / 哈希绑定的 Claim 用途授权"]
-  C --> T["Approved DOCX tailoring map / 已批准 DOCX 改写映射"]
-  T --> M["Per-job material plan / 岗位材料计划"]
-  M --> Q
-  Q["Bounded approval queue / 有上限审批队列"]
-  O["Saved official-page snapshots / 已保存官网快照"] --> D["Offline discovery and ATS analysis / 离线找岗与 ATS 分析"]
-  UI --> B["One-time staged JD + official page + form / 单次临时 JD + 官网页 + 表单"]
-  B --> M
-  D --> Q
-  Q --> X["AWAITING_APPROVAL"]
-  X --> EB["Encrypted execution bundle / 加密执行包"]
-  EB --> F["Synthetic full-lifecycle proof / 合成全链路验收"]
-  X -. "closed / 关闭" .-> W["Real website actions / 真实网站动作"]
-```
+### Local UI and server
 
-## Trust boundaries / 信任边界
+The bilingual UI binds only to `127.0.0.1`. It manages onboarding, AI connection, application review, queue state, and user-present browser sessions.
 
-| Boundary | Enforced behavior | 强制行为 |
-|---|---|---|
-| Private values | DPAPI outside the project; ordinary records keep opaque `secure-ref` only | 项目外 DPAPI；普通记录只存不透明 `secure-ref` |
-| AI output | Entity completeness, provenance and grounding validation; format-only numeric equivalence and bounded same-sentence wraps are review-flagged, while calculations fail closed | 实体完整性、来源和依据校验；仅数字显示等价与同句有限换行可带标记进入审阅，计算仍失败关闭 |
-| AI readiness | Synthetic full-contract test before private intake; handshake alone is insufficient | 私人资料接入前通过合成全契约测试；简单握手不算就绪 |
-| Per-job materials | One immutable approved master; arbitrary DOCX files require an explicit safe-tailoring map; conditional Cover Letter and portfolio/link bindings | 同一不可变母版；普通 DOCX 必须先建立明确安全改写映射；求职信与作品集/链接按字段需要生成或绑定 |
-| Personal claims | Always proposed first; material use requires a separate approval bound to exact wording, profile, master and onboarding revision | 始终先作为候选；用于材料前须单独批准，并绑定精确措辞、Profile、母版与资料版本 |
-| Knowledge | Read-only fingerprints and zero-write verification | 只读指纹与零写入验证 |
-| Job discovery | Saved company/ATS HTML or Greenhouse/Lever JSON only; no live freshness claim | 只读已保存官网/ATS HTML 或 Greenhouse/Lever JSON；不声称实时有效 |
-| Offline application intake | Three explicitly selected saved inputs are framed in one localhost request, staged outside the project, never retained, and rolled back on preparation failure | 三份明确选择的本机输入通过单次 localhost 请求接入，只在项目外暂存，不保留；准备失败即回滚 |
-| Browser/ATS | Opaque field plans and zero-modification fake adapter | 不透明字段计划与零修改假适配器 |
-| Execution artifacts | Exact form, browser plan, public-value bindings and upload references are kept in one nonce-protected DPAPI bundle; ordinary records keep only secure-ref and hash | 精确表单、浏览器计划、公开值绑定及上传引用进入带随机 nonce 的 DPAPI 执行包；普通记录只保留 secure-ref 与哈希 |
-| Queue | Transactional capacity, FIFO deferred intake, hash-bound saved local descriptors, automatic same-process slot refill after a review decision, and redacted outcomes | 事务容量、延后任务 FIFO、哈希绑定的本地续跑描述、审阅释放名额后的同进程自动补位，以及脱敏结果 |
-| Final submission | Review approval is insufficient; a separate 1–30 minute, one-time authorization binds plan, packet, route, form, uploads and fresh evidence, then both approvals are consumed atomically | 审阅批准不足以提交；必须再取得绑定计划、审阅包、路线、表单、材料与新鲜证据的 1—30 分钟一次性授权，并原子消费两张授权 |
-| Action sessions | Live read, form inspection, prefill and upload are separate, expiring, one-use scopes; the global kill switch invalidates all sessions immediately and defaults off | 实时读取、表单检查、预填与上传是分离的限时单次权限；总急停可立即使全部会话失效且默认关闭 |
-| External actions | Production transport absent and fail-closed | 生产传输不存在且失败关闭 |
+### Secure storage
 
-## Main packages / 主要模块
+Candidate Profile, Answer Bank, master resume, material copies, and approval packets are encrypted with Windows DPAPI under Local AppData. Project records retain only opaque references and non-sensitive metadata.
 
-- `onboarding_center`, `onboarding_server`, `ui/`: bilingual profile and Claim review plus a linear guided intake: company role URL, user-selected read-only role/form capture, automatic local material preparation, one review packet, then separately authorized browser assistance. The former three-snapshot bundle is an advanced diagnostic path.
-- The local dashboard exposes redacted execution-run status and performs isolated startup reconciliation before rendering; it never exposes private payloads or offers a live-submit shortcut.
-- `ai_runtime`, `ai_connections`, `source_quality`, `onboarding_extraction`: capability-tested local/Agent AI connection and multi-mode extraction quality gates.
-- `secure_store`, `private_onboarding`, `resume_onboarding`, `external_claims`, `resume_tailoring`, `application_readiness`: DPAPI lifecycle, Master Resume designation, exact Claim-use approval, applicant-approved paragraph mappings and redacted local-readiness reporting.
-- `knowledge`, `claims`, `claim_registry`, `evidence`: read-only evidence and approval lifecycle.
-- `official_discovery`, `sourcing`, `ats_browser`, `ats_capabilities`: offline official-source and ATS safety framework.
-- `application_materials`, `orchestrator`, `queue_manager`, `continuous_intake`: one-master per-job material planning and content-bound processing to the bounded review queue. Both the synthetic tour and a completed DPAPI-backed user profile use this same offline pipeline; a real-profile manual tick requires explicit local route, form and research evidence for every job, continues after isolated local failures, and emits only redacted per-job outcomes. Project-manifest jobs retain opaque references plus project-relative paths. A UI-uploaded job that reaches capacity instead retains its exact JD, official page, form, route and research evidence in one hash-bound DPAPI bundle; the descriptor contains only its secure reference, and continuation deletes the queued ciphertext before using a one-use staging directory. A later review decision can therefore fill the freed slot in the same local process without a background scheduler.
-- `application_execution`: hash-bound six-step runbook for freshness, guest entry, prefill, upload, protected questions and user final submission. Offline providers remain planning-only; the Browser Companion may execute only its separately approved user-present inspect/fill/upload subset.
-- `execution_bundle`, `application_field_resolution`: encrypted persistence of the exact reviewed ATS artifacts plus one-shot per-job answer confirmation. Protected values are rebound into a new packet version and never written to ordinary SQLite fields.
-- `final_submission`, `external_actions`: separate fresh final-confirmation artifact, database persistence, expiry/replay checks and atomic dual-approval consumption; only isolated fake transport can exercise the transition.
-- `execution_controller`: append-only, hash-only checkpoints for the approved-plan lifecycle; scoped prefill/upload intent must be consumed before the final-confirmation gate, the fake upload adapter accepts hashes only and opens/uploads zero files, and interruption reconciliation uses persisted application/receipt evidence to select only confirmed or non-retryable `SUBMISSION_UNKNOWN` without replay.
-- `external_action_sessions`: exact per-action scopes, expiry, replay protection, revocation and a generation-bound global kill switch. `ASSISTED_USER_PRESENT` is available only for one approved application's form inspection, fill and attachment; final submit is excluded from every regular session.
-- `browser_assist`, `ephemeral_payload`, `browser-companion`: a fixed-extension-origin localhost broker, in-memory approved private-value resolution, one-use material byte streams, exact-page and semantic-form revalidation, native browser field setters and file-input attachment. The companion contains no submit/navigation call. A trusted human Submit event starts result observation; uncertain results and interrupted submit windows converge to non-retryable `SUBMISSION_UNKNOWN`.
-- `ats_transport`: one provider-neutral, hash-only offline envelope across Company, Greenhouse, Lever and Workday. `browser_companion` is the only registered real transport and is intentionally not a claim of arbitrary live ATS compatibility.
-- `synthetic_lifecycle`: complete isolated Greenhouse acceptance proof that remains zero-network and separate from the user-present Browser Companion path.
-- `public_release`, `release_candidate`, `release`: current-tree/history privacy gates and release evidence.
+### AI Operator
 
-Every persisted transition is content-bound or auditable. `SUBMISSION_UNKNOWN`, CAPTCHA, MFA, OTP, login and account creation do not have an automatic continuation path.
+The AI Operator gives an approved Hermes, OpenClaw, or loopback model a constrained task contract and redacted workflow state. Document understanding runs through an isolated zero-tool channel. AI output must pass structure, source coverage, metric, and provenance checks before review.
 
-每个持久化状态迁移都有内容绑定或审计记录。`SUBMISSION_UNKNOWN`、CAPTCHA、MFA、验证码、登录和账号创建均无自动继续路径。
+### Evidence and workflow gates
+
+External claims require approved personal evidence. The internal workflow moves through deterministic, persisted states and normally stops at `AWAITING_APPROVAL`. Changed evidence, forms, answers, materials, or routes invalidate approval.
+
+### Browser Companion
+
+The fixed-ID extension is installed into a Local AppData runtime directory. Pairing uses an installation-specific local binding secret that is excluded from Git and release archives.
+
+For one approved application, the companion can:
+
+- inspect sanitized structure on a bound company or supported ATS origin;
+- fill approved fields;
+- attach approved materials;
+- activate one verified, explicitly non-final navigation control;
+- observe the result after a trusted user Submit click.
+
+It cannot submit, read credentials, bypass verification, create accounts, send messages, or retry unknown external state.
+
+## Trust boundaries
+
+- Job descriptions, pages, files, email, and AI output are untrusted input.
+- Knowledge sources are read-only.
+- Applicant values never enter ordinary logs, reports, command arguments, or public files.
+- Browser permissions are granted by the user and scoped to the active application.
+- Login, CAPTCHA, MFA, legal, signature, sensitive, and unknown fields are user handoffs.
+- Final Submit is not implemented.
+
+## Public and private paths
+
+| Location | Purpose |
+|---|---|
+| Repository | Code, schemas, synthetic fixtures, public docs |
+| `%LOCALAPPDATA%\JobOps\private` | DPAPI-encrypted applicant data |
+| `%LOCALAPPDATA%\JobOps\BrowserCompanion` | Installed extension runtime and local binding |
+| Project `state`, `reports`, and `dist` | Local runtime or release artifacts excluded from Git |
+
+## Recovery
+
+Persisted internal steps may resume after revalidation. Any interruption during an uncertain external write or submission window becomes `SUBMISSION_UNKNOWN`; JobFlow never retries it automatically.

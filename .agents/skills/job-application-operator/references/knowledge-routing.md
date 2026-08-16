@@ -9,9 +9,8 @@ Use sources as follows:
 - `joint_navigation`: approved routing entry point. Context only.
 - `personal_redacted`: redacted Case, Project, SOP, artifact/configuration health and personal-practice bridge records. This can propose evidence, but external wording still requires an approved Claim Registry entry.
 
-Prefer `PAI-CASE-0033-求职品牌重构一页咨询简历.md`, the completed-work ledger, Project overview, verified SOP, current health records, the TikTok AI Strategic Analyst bridge, and the interview learning/evidence matrix when present inside the configured allowlist.
+Prefer the configured brand-rebuild case, completed-work ledger, project overview, verified SOP, current health records, strategic-analyst bridge, and interview evidence matrix when present inside the allowlist.
 
 Return source ID, relative path, title, heading/paragraph, content SHA-256, historical-completion flag and current-health flag. Resolve Obsidian links only inside the selected source; block ambiguous or escaping links.
 
 Never route into data import areas, original exports/backups, raw attachments, original session logs, browser cookies, passwords, tokens, verification codes or unredacted/private material. Do not enumerate a hard-excluded subtree before rejecting it.
-
