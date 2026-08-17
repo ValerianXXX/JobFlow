@@ -62,7 +62,7 @@ function signedPairResult(url, options) {
     assist_path: assistPath,
     base_url: parsed.origin,
     challenge: String(body.companion_binding.challenge),
-    extension_version: "0.7.2",
+    extension_version: "0.8.0",
     installation_id: String(body.companion_binding.installation_id),
     protocol_version: "2"
   };
@@ -103,7 +103,7 @@ session.jobflowAssist = {
 const chrome = {
   runtime: {
     lastError: null,
-    getManifest() { return {version: "0.7.2"}; },
+    getManifest() { return {version: "0.8.0"}; },
     getURL(value) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${value}`; },
     onMessage: event("internal"),
     onMessageExternal: event("external"),

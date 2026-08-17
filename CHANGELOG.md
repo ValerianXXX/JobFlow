@@ -4,6 +4,24 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-16
+
+### Added
+
+- Added an adaptive Candidate Profile that reuses resume-backed identity and contact facts while asking only unresolved or sensitive questions once.
+- Added persistent linear progress, one-click browser continuation, and a continuous AI Operator decision ledger.
+- Added ranked official-company job discovery with AI-bound live-page verification and safe automatic fallback to the next candidate.
+
+### Fixed
+
+- Accepted ATS controls may now disappear after an exact, audited write without being misreported as site tampering; unapplied fields, navigation, and final Submit remain protected.
+- Aligned offline ATS evidence, user-present prefill and upload support, scoped non-final navigation, and live compatibility wording across the schema and UI.
+
+### Safety
+
+- Browser Companion 0.8.0 keeps final Submit user-only, rejects unknown or changed page identity, and never automatically retries partial or unknown external outcomes.
+- Official-job ranking and AI decisions remain hash-bound, value-minimized, and subject to local deterministic revalidation.
+
 ## [0.3.1] - 2026-08-16
 
 ### Fixed

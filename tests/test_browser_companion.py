@@ -260,7 +260,7 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
         self.assertIn("const PROTOCOL = 2;", pair)
         self.assertIn("const PROTOCOL = 2;", worker)
-        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.7.2";', popup)
+        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.8.0";', popup)
         self.assertIn("chrome.runtime.reload()", popup)
         self.assertIn("protocol_version:2", app)
         self.assertIn("pairing:{protocol_version:result.protocol_version", app)

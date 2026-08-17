@@ -25,7 +25,7 @@ from .util import canonical_json, iso_utc, parse_iso, project_root, sha256_bytes
 
 
 COMPANION_PROTOCOL_VERSION = 2
-COMPANION_EXTENSION_VERSION = "0.7.2"
+COMPANION_EXTENSION_VERSION = "0.8.0"
 COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj"
 COMPANION_EXTENSION_ORIGIN = f"chrome-extension://{COMPANION_EXTENSION_ID}"
 ASSIST_TTL_MINUTES = 30

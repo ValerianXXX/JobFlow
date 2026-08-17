@@ -11,7 +11,7 @@ const STRINGS = {
     companionSessionActive: "另一种浏览器任务仍在进行中。请先完成或明确停止它，再开始这个任务。",
     guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认扩展已启用并重新加载当前版本；无需把网站权限改成“在所有网站上”。",
     guidedExtensionOutdated: "浏览器伴侣版本不匹配。请重新运行安装命令，并在扩展管理页重新加载安装器打开的本机 BrowserCompanion 目录。",
-    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.7.2，然后刷新 JobFlow。",
+    guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行安装命令，重新加载版本 0.8.0，然后刷新 JobFlow。",
     browserCompanionChecking: "正在自动检测浏览器伴侣", browserCompanionReady: "浏览器伴侣已就绪，任务会自动连接", browserCompanionUnavailable: "未检测到浏览器伴侣；运行安装入口后只需加载一次", browserCompanionUpdateRequired: "浏览器伴侣需要更新到当前版本",
     browserAssistRestartRequired: "扩展已重载，本次辅助已安全停止。请重新打开这份申请的起始页，再建立一次连接；JobFlow 没有自动重试 Next/Continue。",
     browserAssistApplyRestart: "页面可能已经填写或上传了一部分，但整页验证没有完成。本轮已停止并记入审计，绝不会自动重复填写或上传；请重新打开申请起始页再开始。",
@@ -71,7 +71,7 @@ const STRINGS = {
     companionSessionActive: "Another browser task is still active. Complete or explicitly stop it before starting this task.",
     guidedExtensionMissing: "The browser companion did not respond. Confirm the current extension is enabled and reloaded; you do not need to grant access on every website.",
     guidedExtensionOutdated: "The Browser Companion version does not match. Run the installer again and reload the Local AppData BrowserCompanion folder it opens.",
-    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.7.2, then refresh JobFlow.",
+    guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the installer again, reload version 0.8.0, then refresh JobFlow.",
     browserCompanionChecking: "Detecting the browser companion automatically", browserCompanionReady: "Browser companion ready; tasks connect automatically", browserCompanionUnavailable: "Browser companion not detected; run the installer and load it once", browserCompanionUpdateRequired: "Browser companion must be updated to the current version",
     browserAssistRestartRequired: "The extension reloaded, so this assist stopped safely. Reopen the approved application start page and connect again. JobFlow did not retry Next/Continue.",
     browserAssistApplyRestart: "The page may already contain some approved fields or an attachment, but whole-page verification did not finish. This run stopped and was audited; nothing will be filled or uploaded again automatically. Reopen the application start page and begin again.",
@@ -297,10 +297,10 @@ Object.assign(STRINGS.en,{
   aiToolStartUserPresentAssist:"Start user-present filling"
 });
 
-const UI_PROTOCOL_VERSION = 30;
+const UI_PROTOCOL_VERSION = 31;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj";
-const COMPANION_VERSION = "0.7.2";
+const COMPANION_VERSION = "0.8.0";
 const COMPANION_PAIRING_STORAGE = "jobflow-companion-pairing-v2";
 const COMPANION_POLL_BASE_MS = 1500;
 const COMPANION_POLL_MAX_MS = 12000;

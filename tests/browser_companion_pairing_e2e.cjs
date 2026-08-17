@@ -58,7 +58,7 @@ function signedPairResult(url, options) {
     assist_path: assistPath,
     base_url: parsed.origin,
     challenge: String(body.companion_binding.challenge),
-    extension_version: "0.7.2",
+    extension_version: "0.8.0",
     installation_id: String(body.companion_binding.installation_id),
     protocol_version: "2"
   };
@@ -83,7 +83,7 @@ function signedPairResult(url, options) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.7.2"}; },
+    getManifest() { return {version: "0.8.0"}; },
     getURL(pathname) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${pathname}`; },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },
