@@ -38,8 +38,8 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260816-jobflow-v29-linear-workflow/);
-    assert.match(initial.styleVersion, /20260816-jobflow-v29-linear-workflow/);
+    assert.match(initial.scriptVersion, /20260816-jobflow-v29-companion-auto-connect/);
+    assert.match(initial.styleVersion, /20260816-jobflow-v29-companion-auto-connect/);
     assert.deepEqual(pageErrors, []);
 
     const adaptiveProfile = await page.evaluate(() => {

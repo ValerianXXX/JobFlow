@@ -4,7 +4,7 @@
 // Edge can keep an older manifest/service worker alive. A one-time popup open
 // therefore provides a safe, user-visible hot-upgrade path without asking the
 // user to operate edge://extensions (which normal webpages cannot control).
-const SOURCE_EXTENSION_VERSION = "0.7.1";
+const SOURCE_EXTENSION_VERSION = "0.7.2";
 if (chrome.runtime.getManifest().version !== SOURCE_EXTENSION_VERSION) {
   chrome.runtime.reload();
   window.close();
@@ -14,27 +14,27 @@ const copy = {
   zh: {
     subtitle: "浏览器伴侣", notPaired: "尚未与当前 JobFlow 任务配对。请返回 JobFlow，点击“连接浏览器并开始”；已批准申请则点击“建立浏览器连接”。",
     reconnect: "连接当前 JobFlow 页面", returnToJobFlow: "请先返回 JobFlow 页面", reconnecting: "正在恢复本机配对……", reconnectFailed: "当前 JobFlow 页面没有待配对任务。请先点击页面中的连接按钮。",
-    paired: "已配对：返回已批准的公司/ATS 申请页。", fill: "分析并填写当前页", continue: "检查后进入下一页", resume: "我已完成登录/验证，继续", manualNext: "等待你在网页点击下一步",
+    paired: "已自动连接：打开已批准的公司/ATS 申请页即可继续。", fill: "分析并填写当前页", continue: "检查后进入下一页", resume: "我已完成登录/验证，继续", manualNext: "等待你在网页点击下一步",
     capturePaired: "岗位任务已配对。JobFlow 会在可见标签页中搜索、核验公司岗位并读取申请表。", captureJob: "继续自动搜索与读取", captureForm: "继续读取申请表并生成审阅包",
     captureWorking: "正在搜索、核验官网并沿安全 Apply 路径继续……", capturePreparing: "本机 AI 正在后台生成审阅包，可能需要几分钟。你可以关闭这个小窗口；完成后 JobFlow 会自动更新。", captureNext: "岗位页已核验。JobFlow 正在沿官网公布的安全 Apply 链接进入申请表；若网页要求登录、验证或无法证明链接来源，会停下交给你。", captureReady: "审阅包已生成。返回 JobFlow 完成一次审阅。", localTimeout: "本机 JobFlow 暂时没有响应。请保持 JobFlow 窗口运行，然后重试；系统不会自动重复生成或执行外部操作。",
     captureBoundary: "准备阶段会在可见标签页中搜索，只打开核验后的公司官网岗位和其公布的 Apply 链接，并只读表单结构；不会填写、上传、点击网页控件，也不读取密码、验证码或现有输入值。",
     boundary: "JobFlow 可在你在场时逐页填写并点击明确的 Next/Continue，但绝不会点击最终 Submit、创建账号或绕过验证码。最终提交只能由你亲自点击。",
     working: "正在核对表单、预填并附加材料……", wrong: "请先打开 JobFlow 指定的公司申请页面。",
     permission: "首次使用需要允许浏览器搜索和公司招聘网站访问；授权只需一次，JobFlow 不会读取密码、验证码或其他标签页内容。", permissionDenied: "未获得浏览器搜索与公司网站访问权限。JobFlow 已停止，没有填写、上传或点击网页。再次打开 J 即可重新授权。", done: "已停在最终提交前。请检查内容并亲自点击提交。",
-    handoff: "请在网页中亲自完成登录、CAPTCHA 或 MFA；不要把密码或验证码交给 JobFlow。完成并回到申请页后点击继续。",
+    handoff: "请在网页中亲自完成登录、CAPTCHA 或 MFA；不要把密码或验证码交给 JobFlow。完成并回到申请页后点击继续。", tabChanged: "这项申请已在另一标签页开始处理。若尚未填写或上传，请回到 JobFlow 重新开始；JobFlow 不会在两个标签页重复操作。", siteChanged: "当前申请表与审阅时的结构不同。JobFlow 已在写入前停止，请返回 JobFlow 只审阅变化的项目。", privateSourceInvalid: "本机批准材料已变化或不可用。请返回 JobFlow 重新生成并批准本岗位材料。",
     manual: "JobFlow 已填写可安全复用的内容。请补完当前页标出的字段，再点击进入下一页。", manualResume: "这个 Next/Continue 必须由你亲自点击。新页面加载后 JobFlow 会自动继续，不需要再次打开 J。", restartButton: "返回 JobFlow 重新开始", restart: "这次一次性下一步证明没有安全建立。请返回 JobFlow 结束并重新启动这项申请辅助；JobFlow 不会自动重试。", applyRestart: "页面可能已经填写或上传了一部分，但未能完成整页验证。本轮已停止并记入审计，绝不会自动重复填写或上传；请返回 JobFlow 重新开始。", navigating: "正在进入下一页并重新验真……", stalled: "页面在 20 秒内没有可靠前进。JobFlow 已停止且不会重试；请返回 JobFlow 结束本次辅助后重新开始。"
   },
   en: {
     subtitle: "Browser Companion", notPaired: "Not paired with the current JobFlow task. Return to JobFlow and choose Connect browser; for an approved application, choose Connect browser there.",
     reconnect: "Connect this JobFlow page", returnToJobFlow: "Return to the JobFlow page first", reconnecting: "Restoring the local pairing…", reconnectFailed: "This JobFlow page has no pending pairing. Choose its Connect button first.",
-    paired: "Paired. Return to the approved company/ATS application page.", fill: "Analyze and fill this page", continue: "Review, then continue", resume: "Login/verification done — resume", manualNext: "Waiting for your page-level Next click",
+    paired: "Connected automatically. Open the approved company/ATS application page to continue.", fill: "Analyze and fill this page", continue: "Review, then continue", resume: "Login/verification done — resume", manualNext: "Waiting for your page-level Next click",
     capturePaired: "The job task is paired. JobFlow searches in a visible tab, verifies the company job page, and reads the application form.", captureJob: "Continue automatic search and read", captureForm: "Continue form read and build review packet",
     captureWorking: "Searching, verifying the official site, and following the safe Apply route…", capturePreparing: "Local AI is building the review packet in the background and may need several minutes. You may close this popup; JobFlow updates automatically when it finishes.", captureNext: "The official role is verified. JobFlow is following the company-published Apply link; it stops for login, verification, or any route it cannot prove.", captureReady: "The review packet is ready. Return to JobFlow for one review.", localTimeout: "Local JobFlow did not respond in time. Keep the JobFlow window running and try again; no preparation or external action will be repeated automatically.",
     captureBoundary: "Preparation searches in a visible tab, opens only a verified company role and its published Apply URL, and reads only form structure. It does not fill, upload, click page controls, or read passwords, verification codes, or existing values.",
     boundary: "While you are present, JobFlow may fill each page and activate an explicit Next/Continue control. It never clicks final Submit, creates an account, or bypasses verification. Only you submit.",
     working: "Matching the page, filling approved fields, and attaching materials…", wrong: "Open the application page selected by JobFlow first.",
     permission: "First use needs browser-search and company-careers-site access. This is granted once; JobFlow does not read passwords, verification codes, or unrelated tabs.", permissionDenied: "Browser-search and company-site access were not granted. JobFlow stopped without filling, uploading, or clicking the page. Open J again to retry.", done: "Stopped before final submission. Review everything and click Submit yourself.",
-    handoff: "Complete login, CAPTCHA, or MFA yourself. Never give JobFlow a password or verification code. Return to the application page, then resume.",
+    handoff: "Complete login, CAPTCHA, or MFA yourself. Never give JobFlow a password or verification code. Return to the application page, then resume.", tabChanged: "This application already started in another tab. If nothing was filled or uploaded, return to JobFlow and restart; JobFlow will not operate in two tabs.", siteChanged: "The live form differs from the reviewed structure. JobFlow stopped before writing; return to JobFlow to review only the changed items.", privateSourceInvalid: "The locally approved material changed or is unavailable. Return to JobFlow to rebuild and approve this role's materials.",
     manual: "Reusable fields are ready. Complete the remaining fields shown on this page, then continue.", manualResume: "You must click this Next/Continue yourself. JobFlow resumes automatically after the new page loads; you do not need to open J again.", restartButton: "Return to JobFlow — restart", restart: "The one-use Next proof was not armed safely. Return to JobFlow, end this application assist, and start it again. JobFlow will not retry automatically.", applyRestart: "The page may already contain some approved fields or an attachment, but whole-page verification did not finish. This run stopped and was audited; nothing will be filled or uploaded again automatically. Return to JobFlow and restart.", navigating: "Opening and re-validating the next page…", stalled: "The page did not reliably advance within 20 seconds. JobFlow stopped and will not retry; end this assist in JobFlow, then start again."
   }
 };
@@ -77,6 +77,16 @@ function applyRestartMessage(result) {
   }
   const location = label ? `“${label}”` : position ? `control ${position}` : "the current control";
   return `Stopped at ${position ? `item ${position}, ` : ""}${location}: ${reason || "the page failed safe verification"}. ${text.applyRestart}`;
+}
+
+function operationErrorMessage(result) {
+  const text = copy[locale];
+  const code = String(result?.code || "");
+  if (code === "COMPANION_TAB_BINDING_CHANGED") return text.tabChanged;
+  if (["SITE_CHANGED", "FORM_ROUTE_BINDING_CHANGED", "FORM_ROUTE_IDENTITY_CHANGED"].includes(code)) return text.siteChanged;
+  if (["APPLICATION_PRIVATE_REFERENCE_INVALID", "APPLICATION_PRIVATE_REFERENCE_HASH_INVALID", "BROWSER_PRIVATE_SOURCE_CHANGED"].includes(code)) return text.privateSourceInvalid;
+  if (code === "COMPANION_LOCAL_REQUEST_TIMEOUT") return text.localTimeout;
+  return String(result?.message || code || "JobFlow blocked the operation.");
 }
 
 function isJobFlowTab(tab) {
@@ -160,10 +170,10 @@ elements.fill.addEventListener("click", async () => {
       if (!await waitForPairing()) throw new Error(copy[locale].reconnectFailed);
       if (status?.mode === "JOB_CAPTURE") {
         const result = await chrome.runtime.sendMessage({type: "JOBFLOW_RUN_GUIDED_AUTOPILOT"});
-        if (result?.status === "BLOCKED") throw new Error(result.message || result.code || copy[locale].wrong);
+        if (result?.status === "BLOCKED") throw new Error(operationErrorMessage(result));
       } else if (status?.mode === "APPLICATION_ASSIST" && status?.status === "READY") {
         const result = await chrome.runtime.sendMessage({type: "JOBFLOW_RUN_APPLICATION_AUTOPILOT"});
-        if (result?.status === "BLOCKED") throw new Error(result.message || result.code || copy[locale].wrong);
+        if (result?.status === "BLOCKED") throw new Error(operationErrorMessage(result));
       }
     } catch (error) {
       elements.message.textContent = String(error?.message || error);
@@ -177,7 +187,7 @@ elements.fill.addEventListener("click", async () => {
     if (capture && ["AWAITING_JOB_DISCOVERY", "AWAITING_JOB_PAGE_CAPTURE", "AWAITING_APPLICATION_FORM_CAPTURE"].includes(status?.status)) {
       if (!await ensureAutomationPermissions()) throw new Error(copy[locale].permissionDenied);
       const result = await chrome.runtime.sendMessage({type: "JOBFLOW_RUN_GUIDED_AUTOPILOT"});
-      if (!result || result.status === "BLOCKED") throw new Error(result?.message || result?.code || copy[locale].wrong);
+      if (!result || result.status === "BLOCKED") throw new Error(operationErrorMessage(result));
       await refresh();
       return;
     }
@@ -191,7 +201,7 @@ elements.fill.addEventListener("click", async () => {
       ? ["AWAITING_APPLICATION_FORM_CAPTURE", "PREPARING_APPLICATION", "REVIEW_PACKET_READY", "DEFERRED"]
       : ["AWAITING_USER_SUBMIT", "PAGE_REVIEW_REQUIRED", "MANUAL_NAVIGATION_REQUIRED", "HANDOFF_REQUIRED", "NAVIGATION_STARTED", "APPLY_RESTART_REQUIRED"];
     if (!result || !allowed.includes(result.status)) {
-      throw new Error(result?.code === "COMPANION_LOCAL_REQUEST_TIMEOUT" ? copy[locale].localTimeout : (result?.message || result?.code || "JobFlow blocked the operation."));
+      throw new Error(operationErrorMessage(result));
     }
     elements.message.textContent = capture
       ? (result.status === "AWAITING_APPLICATION_FORM_CAPTURE" ? copy[locale].captureNext : result.status === "PREPARING_APPLICATION" ? copy[locale].capturePreparing : copy[locale].captureReady)

@@ -149,6 +149,55 @@ function sameApprovedOrigin(value, state) {
   }
 }
 
+function mayHandoffInitialApplicationTab(state) {
+  const last = state?.last_result || {};
+  return Boolean(
+    state?.mode === "APPLICATION_ASSIST" && state?.paired === true &&
+    state?.stage === "READY" && Number(state?.current_step || 1) === 1 &&
+    !state?.navigation && !state?.manual_navigation &&
+    state?.submission_observed !== true && state?.result_final !== true &&
+    Number(state?.manual_field_count || 0) === 0 &&
+    Number(last?.field_attempt_count || 0) === 0 &&
+    Number(last?.file_attempt_count || 0) === 0 &&
+    !["PAGE_PREPARED", "PAGE_REVIEW_REQUIRED", "MANUAL_NAVIGATION_REQUIRED",
+      "AWAITING_NAVIGATION", "AWAITING_USER_SUBMIT", "OBSERVING_RESULT_PAGE",
+      "APPLY_RESTART_REQUIRED"].includes(String(last?.status || ""))
+  );
+}
+
+async function bindApplicationTab(state, tabId, tabUrl) {
+  if (!Number.isInteger(tabId) || tabId <= 0) {
+    throw Object.assign(new Error("The current application tab is unavailable."), {
+      jobflow: {status: "BLOCKED", code: "COMPANION_TAB_BINDING_INVALID", automatic_retry: false}
+    });
+  }
+  if (!sameApprovedOrigin(tabUrl, state)) {
+    throw Object.assign(new Error("Return to the approved company/ATS application tab."), {
+      jobflow: {status: "BLOCKED", code: "COMPANION_WRONG_TAB", automatic_retry: false}
+    });
+  }
+  if (state.tab_id == null || state.tab_id === tabId) {
+    return state.tab_id === tabId ? state : await saveSessionCAS(state, {
+      ...state, tab_id: tabId, preferred_tab_id: tabId
+    });
+  }
+  if (!mayHandoffInitialApplicationTab(state)) {
+    throw Object.assign(new Error("This application is already bound to another browser tab."), {
+      jobflow: {status: "BLOCKED", code: "COMPANION_TAB_BINDING_CHANGED", automatic_retry: false}
+    });
+  }
+  // The toolbar click is the user's explicit choice of the visible application
+  // tab.  A handoff is allowed only before prepare, field writes, uploads,
+  // navigation, or final review.  The backend still validates the exact
+  // approved application route before returning any values to write.
+  return await saveSessionCAS(state, {
+    ...state,
+    tab_id: tabId,
+    preferred_tab_id: tabId,
+    initial_tab_handoff_count: Number(state.initial_tab_handoff_count || 0) + 1
+  });
+}
+
 function loopbackOrigin(value) {
   try {
     const parsed = new URL(value);
@@ -1142,22 +1191,7 @@ async function fillCurrentTab(tabId, tabUrl) {
       jobflow: {status: "BLOCKED", code: "COMPANION_NOT_PAIRED"}
     });
   }
-  if (!sameApprovedOrigin(tabUrl, state)) {
-    throw Object.assign(new Error("Return to the approved company/ATS application tab."), {
-      jobflow: {status: "BLOCKED", code: "COMPANION_WRONG_TAB"}
-    });
-  }
-  if (!Number.isInteger(tabId) || tabId <= 0 || (state.tab_id != null && state.tab_id !== tabId)) {
-    throw Object.assign(new Error("This action came from a different browser tab."), {
-      jobflow: {status: "BLOCKED", code: "COMPANION_TAB_BINDING_CHANGED", automatic_retry: false}
-    });
-  }
-  if (state.tab_id == null) {
-    // Bind the application tab before prepare, upload, or field writes.  Later
-    // checks can then distinguish the same tab from an unrelated page without
-    // rejecting the first legitimate application page after it was filled.
-    state = await saveSessionCAS(state, {...state, tab_id: tabId});
-  }
+  state = await bindApplicationTab(state, tabId, tabUrl);
   if (state.stage === "AWAITING_USER_SUBMIT") {
     throw Object.assign(new Error("Final review is locked for the user's submit decision."), {
       jobflow: {status: "BLOCKED", code: "COMPANION_FINAL_REVIEW_LOCKED", automatic_retry: false}

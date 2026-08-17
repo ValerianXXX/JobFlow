@@ -14,7 +14,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ### Safety
 
-- Upgraded the Browser Companion to 0.7.1 while preserving user-only final submission and no automatic retry after partial or unknown outcomes.
+- Upgraded the Browser Companion to 0.7.2 with automatic signed pairing, preflight detection, and safe initial-tab handoff while preserving user-only final submission and no automatic retry after partial or unknown outcomes.
 
 ## [0.3.0] - 2026-08-16
 

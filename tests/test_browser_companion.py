@@ -166,7 +166,11 @@ class BrowserCompanionStaticTests(unittest.TestCase):
             'result?.intake_id!==state.guidedIntakeSession.intake_id||result?.intake_id!==record.session?.intake_id',
             app,
         )
-        self.assertIn("function awaitExplicitCompanionPairing(record)", app)
+        self.assertIn("async function beginCompanionPairing(record)", app)
+        self.assertIn('companionExternalMessage({type:"JOBFLOW_PING"}', app)
+        self.assertGreaterEqual(app.count("await requireCurrentCompanion();"), 3)
+        self.assertGreaterEqual(app.count("await beginCompanionPairing(record);"), 3)
+        self.assertIn('target:"guidedIntakePanel",action:t("workflowFailureAction")', app)
         self.assertNotIn("async function pairCompanion(record)", app)
         self.assertIn('type:"JOBFLOW_PAIR",pairing:', app)
         self.assertIn('return await pairWithJobFlow(message.pairing, senderOrigin, sender?.tab?.id)', worker)
@@ -177,7 +181,7 @@ class BrowserCompanionStaticTests(unittest.TestCase):
             "function startCompanionStatusPolling(){", 1
         )[0]
         self.assertNotIn("record.paired=false", poll)
-        self.assertNotIn("awaitExplicitCompanionPairing", poll)
+        self.assertNotIn("beginCompanionPairing", poll)
         self.assertNotIn("JOBFLOW_PAIR", poll)
         self.assertIn("scheduleCompanionStatusPoll", poll)
         self.assertIn('state.companionConnectionNotice=record.paired?null:"companionClickToPair"', app)
@@ -185,6 +189,12 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn('companionModeConflict("guided")', app)
         self.assertIn('companionModeConflict("assist")', app)
         self.assertIn("guidedCompanionActive()||browserCompanionActive()", app)
+        self.assertIn("function mayHandoffInitialApplicationTab(state)", worker)
+        self.assertIn("async function bindApplicationTab(state, tabId, tabUrl)", worker)
+        self.assertIn('state?.stage === "READY"', worker)
+        self.assertIn('Number(last?.field_attempt_count || 0) === 0', worker)
+        self.assertIn('Number(last?.file_attempt_count || 0) === 0', worker)
+        self.assertIn("state = await bindApplicationTab(state, tabId, tabUrl);", worker)
 
     def test_companion_has_one_scoped_navigation_call_and_no_programmatic_final_submit(self) -> None:
         worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
@@ -250,7 +260,7 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
         self.assertIn("const PROTOCOL = 2;", pair)
         self.assertIn("const PROTOCOL = 2;", worker)
-        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.7.1";', popup)
+        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.7.2";', popup)
         self.assertIn("chrome.runtime.reload()", popup)
         self.assertIn("protocol_version:2", app)
         self.assertIn("pairing:{protocol_version:result.protocol_version", app)

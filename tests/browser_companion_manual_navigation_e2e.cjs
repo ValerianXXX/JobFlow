@@ -105,7 +105,7 @@ function evidencePayload(manual, overrides = {}) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.7.1"}; },
+    getManifest() { return {version: "0.7.2"}; },
     getURL(value) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${value}`; },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },
@@ -428,6 +428,35 @@ async function eventually(predicate, timeoutMs = 5000) {
   assert.equal(JSON.stringify(partialPublic).includes("attempted_field_bindings"), false);
   applyFailureMode = false;
 
+  session.jobflowAssist = {...baseState(), revision: 70, tab_id: 41, preferred_tab_id: 41};
+  prepareMode = "final";
+  currentCollected = collected("https://apply.example.test/step-1", oldDocumentInstance, "initial-handoff");
+  currentBrowserDocument = oldBrowserDocument;
+  const handedOff = await internal({
+    type: "JOBFLOW_FILL_CURRENT", tab_id: 42, tab_url: "https://apply.example.test/step-1"
+  });
+  assert.equal(handedOff.status, "AWAITING_USER_SUBMIT");
+  assert.equal(session.jobflowAssist.tab_id, 42);
+  assert.equal(session.jobflowAssist.preferred_tab_id, 42);
+  assert.equal(session.jobflowAssist.initial_tab_handoff_count, 1);
+
+  session.jobflowAssist = {
+    ...baseState(), revision: 80, tab_id: 41, preferred_tab_id: 41,
+    stage: "PAGE_REVIEW_REQUIRED", navigation: {client_ref: "next-1"}
+  };
+  const lateHandoff = await internal({
+    type: "JOBFLOW_FILL_CURRENT", tab_id: 42, tab_url: "https://apply.example.test/step-1"
+  });
+  assert.equal(lateHandoff.code, "COMPANION_TAB_BINDING_CHANGED");
+  assert.equal(session.jobflowAssist.tab_id, 41);
+
+  session.jobflowAssist = {...baseState(), revision: 90, tab_id: 41, preferred_tab_id: 41};
+  const wrongOriginHandoff = await internal({
+    type: "JOBFLOW_FILL_CURRENT", tab_id: 42, tab_url: "https://other.example.test/step-1"
+  });
+  assert.equal(wrongOriginHandoff.code, "COMPANION_WRONG_TAB");
+  assert.equal(session.jobflowAssist.tab_id, 41);
+
   process.stdout.write(JSON.stringify({
     status: "PASS", arm_before_stage_commit: true, companion_tab_injected: true,
     forged_nonce_rejected: true, wrong_tab_rejected: true, wrong_document_rejected: true,
@@ -438,6 +467,7 @@ async function eventually(predicate, timeoutMs = 5000) {
     arm_failure_restart_required: true, arm_failure_no_retry: true,
     explicit_button_fresh_proof_required: true, dynamic_review_before_complete: true,
     partial_apply_audited_once: true, partial_apply_no_retry: true,
+    initial_tab_handoff: true, post_write_tab_handoff_blocked: true, wrong_origin_handoff_blocked: true,
     final_submit_user_only: true,
     real_external_actions: 0
   }));
