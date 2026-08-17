@@ -39,7 +39,7 @@ Homepage URL
 https://github.com/ValerianXXX/JobFlow
 
 Support URL
-https://github.com/ValerianXXX/JobFlow/issues
+https://valerianxxx.github.io/JobFlow/support.html
 
 Adult content
 No / Off

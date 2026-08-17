@@ -74,6 +74,7 @@ The project is intentionally Windows-first because secure applicant storage uses
 ## Documentation
 
 - [Quick start](docs/quickstart.md)
+- [Support](https://valerianxxx.github.io/JobFlow/support.html)
 - [Browser Companion privacy](PRIVACY.md)
 - [Architecture](docs/architecture.md)
 - [Roadmap](docs/roadmap.md)

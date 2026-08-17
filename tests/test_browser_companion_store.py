@@ -49,6 +49,9 @@ class BrowserCompanionStoreTests(unittest.TestCase):
         policy = (PROJECT / "PRIVACY.md").read_text(encoding="utf-8")
         listing = (PROJECT / "docs" / "browser-companion-store-listing.md").read_text(encoding="utf-8")
         privacy_html = (PROJECT / "docs" / "privacy.html").read_text(encoding="utf-8")
+        support_html = (PROJECT / "docs" / "support.html").read_text(encoding="utf-8")
+        chrome_values = (PROJECT / "docs" / "chrome-web-store-form-values.txt").read_text(encoding="utf-8")
+        edge_values = (PROJECT / "docs" / "edge-addons-form-values.txt").read_text(encoding="utf-8")
         self.assertIn("Final submission always remains a user action", policy)
         self.assertIn("nativeMessaging", listing)
         self.assertIn("https://valerianxxx.github.io/JobFlow/privacy.html", listing)
@@ -56,6 +59,10 @@ class BrowserCompanionStoreTests(unittest.TestCase):
         self.assertIn("Chrome Web Store User Data Policy, including the Limited Use requirements", policy)
         self.assertIn("Chrome Web Store User Data Policy, including the Limited Use requirements", privacy_html)
         self.assertIn("Final Submit", privacy_html)
+        self.assertIn("JobFlow Support", support_html)
+        self.assertIn("Never include a resume", support_html)
+        self.assertIn("https://valerianxxx.github.io/JobFlow/support.html", chrome_values)
+        self.assertIn("https://valerianxxx.github.io/JobFlow/support.html", edge_values)
         for path, size in {
             "small-promo-440x280.png": (440, 280),
             "screenshot-1-local-workflow-1280x800.png": (1280, 800),

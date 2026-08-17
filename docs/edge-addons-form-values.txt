@@ -14,7 +14,7 @@ Category
 Productivity
 
 Support contact
-https://github.com/ValerianXXX/JobFlow/issues
+https://valerianxxx.github.io/JobFlow/support.html
 
 Privacy policy
 https://valerianxxx.github.io/JobFlow/privacy.html

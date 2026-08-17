@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JobFlow Support</title>
+  <style>
+    :root{--ink:#17212b;--muted:#64748b;--green:#2f6f5f;--soft:#e9f2ef;--line:#cad8d3;--paper:#fbfaf6}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 Arial,sans-serif}
+    header,main{max-width:900px;margin:auto}header{padding:46px 26px 26px;display:flex;gap:18px;align-items:center}
+    .logo{display:grid;place-items:center;width:58px;height:58px;border-radius:8px;background:var(--green);color:#fff;font:700 36px Georgia,serif}
+    h1,h2{font-family:Georgia,serif}h1{margin:0;font-size:34px}header p{margin:2px 0;color:var(--muted)}
+    main{margin-bottom:60px;padding:34px 42px;background:#fff;border:1px solid var(--line);box-shadow:0 16px 40px rgba(23,33,43,.08)}
+    h2{margin-top:34px;color:var(--green)}code{padding:2px 5px;background:var(--soft)}a{color:var(--green)}
+    .summary{padding:18px 20px;border-left:5px solid var(--green);background:var(--soft)}
+  </style>
+</head>
+<body>
+  <header><div class="logo">J</div><div><h1>JobFlow Support</h1><p>Local-first job application assistance</p></div></header>
+  <main>
+    <p class="summary">JobFlow and Browser Companion run on the user's Windows computer. Final Submit always remains a user action.</p>
+    <h2>Get help</h2>
+    <p>Report a reproducible problem in the public <a href="https://github.com/ValerianXXX/JobFlow/issues">JobFlow issue tracker</a>. If GitHub is temporarily unavailable, check <a href="https://www.githubstatus.com/">GitHub Status</a> and try again later.</p>
+    <p>Never include a resume, applicant name, address, phone number, email address, application answers, credentials, screenshots containing private data, or local file paths in a public issue.</p>
+    <h2>Before reporting a problem</h2>
+    <ol>
+      <li>Confirm that JobFlow is running and its local health check passes.</li>
+      <li>Confirm that Browser Companion is enabled and updated to the version requested by JobFlow.</li>
+      <li>Retry only from JobFlow. Do not retry a submission whose result is unknown.</li>
+      <li>Record the redacted error code, JobFlow version, Browser Companion version, browser name, and the step that stopped.</li>
+    </ol>
+    <h2>Safety boundaries</h2>
+    <p>Browser Companion does not automate login, account creation, passwords, CAPTCHA, MFA, OTP, signatures, protected voluntary disclosures, or Final Submit. Unknown or changed pages stop safely.</p>
+    <h2>Documentation</h2>
+    <p>See the <a href="https://github.com/ValerianXXX/JobFlow#readme">JobFlow README</a>, <a href="https://github.com/ValerianXXX/JobFlow/blob/main/docs/quickstart.md">quick start</a>, and <a href="privacy.html">privacy policy</a>.</p>
+  </main>
+</body>
+</html>
