@@ -21,6 +21,13 @@ from .adapters import audit_real_external_actions
 from .approvals import ApprovalContext, issue_approval, validate_approval
 from .ats_capabilities import offline_ats_capabilities
 from .browser_assist import BrowserAssistManager, COMPANION_EXTENSION_ORIGIN
+from .candidate_profile import (
+    PROFILE_SCHEMA_VERSION,
+    parse_mailing_address,
+    resume_profile_hints,
+    split_display_name,
+    unique_values,
+)
 from .application_readiness import build_application_readiness
 from .application_execution import validate_application_execution_plan_integrity
 from .application_field_resolution import (
@@ -76,6 +83,7 @@ from .resume_tailoring import (
     build_tailoring_proposal,
     validate_resume_tailoring_manifest_integrity,
 )
+from .resume_onboarding import parse_resume
 from .runtime_schema import validate_named
 from .security import assert_no_plaintext_secret
 from .source_quality import document_quality_rank, document_text_preflight, safe_ai_failure_category
@@ -190,6 +198,16 @@ def _synchronized(method):
 
 
 FIELD_ALIASES: dict[str, tuple[str, ...]] = {
+    "first_name": ("first name", "given name", "名字", "名"),
+    "last_name": ("last name", "family name", "surname", "姓氏", "姓"),
+    "email": ("email", "email address", "邮箱", "电子邮箱"),
+    "phone": ("phone", "phone number", "mobile", "telephone", "电话", "手机"),
+    "phone_type": ("phone type", "telephone type", "电话类型"),
+    "address": ("mailing address", "street address", "address", "通讯地址", "街道地址"),
+    "city": ("city", "城市"),
+    "state": ("state", "province", "region", "州", "省", "地区"),
+    "postal_code": ("postal code", "zip code", "postcode", "邮编", "邮政编码"),
+    "country": ("country", "country or region", "国家", "国家或地区"),
     "target_roles": ("target role", "target roles", "target function", "目标岗位", "目标职位", "求职方向"),
     "target_industries": ("target industry", "target industries", "目标行业"),
     "target_levels": ("target level", "seniority", "目标级别", "职级"),
@@ -206,6 +224,10 @@ FIELD_ALIASES: dict[str, tuple[str, ...]] = {
     "why_role": ("why role", "role motivation", "岗位动机", "为什么岗位"),
     "referral_source": ("referral source", "application source", "申请来源", "推荐来源"),
     "previous_employment": ("previous employment", "worked here before", "曾任职", "过去任职"),
+    "github_url": ("github", "github url", "github link"),
+    "linkedin_url": ("linkedin", "linkedin url", "linkedin link"),
+    "website_url": ("personal website", "website", "个人网站"),
+    "portfolio_url": ("portfolio", "portfolio url", "作品集"),
     "background_check": ("background check", "背景调查"),
     "non_compete": ("non-compete", "non compete", "竞业限制", "竞业"),
     "truthfulness_attestation": ("truthfulness attestation", "accuracy declaration", "真实性声明"),
@@ -952,6 +974,45 @@ class OnboardingCenterService:
     def _base_profile(self) -> dict[str, Any]:
         reference = self._latest_ref("candidate_profile")
         return self._read_json_ref(reference) if reference else {}
+
+    @staticmethod
+    def _apply_profile_hints(state: dict[str, Any], hints: object) -> int:
+        """Seed only missing one-time Profile facts from an uploaded resume.
+
+        Hints remain inside encrypted onboarding state, never overwrite an
+        applicant decision, and still require the ordinary Profile review and
+        final onboarding confirmation.
+        """
+
+        if not isinstance(hints, dict):
+            return 0
+        answers = state.get("answers")
+        if not isinstance(answers, dict):
+            return 0
+        changed = 0
+        updated_at = iso_utc()
+        for field_id, raw in hints.items():
+            if field_id not in FIELD_BY_ID or not isinstance(raw, str):
+                continue
+            value = re.sub(r"\s+", " ", raw).strip()
+            if not value or len(value) > 2_000 or re.search(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", value):
+                continue
+            current = answers.get(field_id)
+            if not isinstance(current, dict) or current.get("status") != "UNKNOWN":
+                continue
+            if field_id.endswith("_url") and not re.fullmatch(r"https://[^\s]{3,2000}", value):
+                continue
+            answers[field_id] = {
+                "value": value,
+                "status": "CONFIRMED",
+                "source": "APPLICANT_PROVIDED_UNCONFIRMED",
+                "use_policy": str(FIELD_BY_ID[field_id]["default_policy"]),
+                "updated_at": updated_at,
+            }
+            changed += 1
+        if changed:
+            state["profile_review"] = "PENDING"
+        return changed
 
     def _effective_job_search_command(self, command: str) -> str:
         """Expand the generic one-click command with approved profile targets.
@@ -2756,7 +2817,10 @@ class OnboardingCenterService:
                 }
                 for item in state.get("sources", [])
             ],
-            "pending_sources": deepcopy(state.get("pending_sources", [])),
+            "pending_sources": [
+                {key: deepcopy(value) for key, value in item.items() if key != "profile_hints"}
+                for item in state.get("pending_sources", []) if isinstance(item, dict)
+            ],
             "suggestions": deepcopy(active_suggestions), "claims": claims,
             "conflicts": conflicts, "profile_review": state.get("profile_review", "PENDING"),
             "state_ref": reference, "privacy": {"storage": "WINDOWS_DPAPI", "network": "LOCALHOST_ONLY", "plaintext_project_files": 0},
@@ -2978,7 +3042,7 @@ class OnboardingCenterService:
             answer = _split_values(answer)
         if status == "CONFIRMED" and answer in (None, "", []):
             raise JobOpsError("ONBOARDING_ANSWER_REQUIRED", "A confirmed onboarding answer needs a value.", field_id=field_id)
-        if field_id in {"github_url", "portfolio_url"} and status == "CONFIRMED":
+        if field_id in {"github_url", "linkedin_url", "website_url", "portfolio_url"} and status == "CONFIRMED":
             if not isinstance(answer, str) or not re.fullmatch(r"https://[^\s]{3,2000}", answer):
                 raise JobOpsError(
                     "ONBOARDING_PUBLIC_URL_INVALID",
@@ -3254,7 +3318,10 @@ class OnboardingCenterService:
                     "The local document extraction quality is too low for grounded AI analysis. Nothing was imported.",
                     document_quality=quality,
                 )
-        return self._analyze_prepared_text(
+        profile_hints: dict[str, str] = {}
+        if source_type == "resume":
+            profile_hints = resume_profile_hints(parse_resume(text))
+        prepared = self._analyze_prepared_text(
             source_type=source_type,
             extension=extension,
             source_hash=source_hash,
@@ -3264,6 +3331,8 @@ class OnboardingCenterService:
             intake_mode="STANDARD_MEMORY",
             source_selection=source_selection,
         )
+        prepared["profile_hints"] = profile_hints
+        return prepared
 
     def _prepare_large_chatgpt_export(
         self,
@@ -3441,6 +3510,7 @@ class OnboardingCenterService:
             "source_id": prepared["source_id"], "metadata": metadata,
             "candidates": prepared["candidates"], "suggestions": prepared["suggestions"],
             "extraction_summary": prepared["extraction_summary"], "replace_existing": False,
+            "profile_hints": deepcopy(prepared.get("profile_hints", {})),
         }
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != prepared["source_id"]]
         state["pending_sources"].append(pending)
@@ -3483,12 +3553,14 @@ class OnboardingCenterService:
             raise JobOpsError("SOURCE_PREVIEW_MISSING", "The selected source preview no longer exists.")
         counts = self._commit_pending_source(state, pending, selections)
         master = self._designate_master_resume(state, pending)
+        profile_hints_applied = self._apply_profile_hints(state, pending.get("profile_hints"))
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != source_id]
         self._save_state(reference, state)
         return {
             "status": "SOURCE_SECURELY_IMPORTED", "source_id": source_id, **counts,
             "master_resume_designated": master is not None,
             "editable_master_docx": bool(master and master.get("editable_docx")),
+            "profile_hints_applied": profile_hints_applied,
             "private_values_emitted": 0, "real_external_actions": 0,
         }
 
@@ -3625,6 +3697,7 @@ class OnboardingCenterService:
             },
             "candidates": prepared["candidates"], "suggestions": prepared["suggestions"],
             "extraction_summary": prepared["extraction_summary"], "replace_existing": True,
+            "profile_hints": deepcopy(prepared.get("profile_hints", {})),
         }
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != source_id]
         state["pending_sources"].append(pending)
@@ -3649,12 +3722,14 @@ class OnboardingCenterService:
             "source_id": prepared["source_id"], "metadata": metadata,
             "candidates": prepared["candidates"], "suggestions": prepared["suggestions"],
             "extraction_summary": prepared["extraction_summary"], "replace_existing": False,
+            "profile_hints": deepcopy(prepared.get("profile_hints", {})),
         }
         counts = self._commit_pending_source(state, pending, [
             {"candidate_id": item["candidate_id"], "selected": True, "statement": item["statement"], "category": item["category"]}
             for item in prepared["candidates"]
         ])
         master = self._designate_master_resume(state, pending)
+        profile_hints_applied = self._apply_profile_hints(state, pending.get("profile_hints"))
         prepared_reference = str(prepared["secure_ref"])
         try:
             self._save_state(reference, state)
@@ -3684,6 +3759,7 @@ class OnboardingCenterService:
             "raw_retained": prepared["raw_retained"], "excluded_secret_fragments": prepared["excluded_secret_fragments"],
             "master_resume_designated": master is not None,
             "editable_master_docx": bool(master and master.get("editable_docx")),
+            "profile_hints_applied": profile_hints_applied,
             **counts,
             "private_values_emitted": 0, "real_external_actions": 0,
         }
@@ -4072,6 +4148,7 @@ class OnboardingCenterService:
             match = re.search(r"\d[\d,]*(?:\.\d+)?", minimum)
             minimum = float(match.group(0).replace(",", "")) if match else 0
         profile = {
+            "profile_schema_version": PROFILE_SCHEMA_VERSION,
             "profile_ref": profile_ref, "profile_version": stable_id("PRF", state["updated_at"], profile_ref),
             "candidate_display_name": str(display_name or "UNKNOWN"),
             "target_functions": list(self._answer_value(answers, "target_roles", [])),
@@ -4083,41 +4160,40 @@ class OnboardingCenterService:
             "skills": skills, "languages": languages, "certifications": certifications, "education": education,
             "years_experience": years_experience,
         }
+        reusable_profile_fields = (
+            "first_name", "last_name", "email", "phone", "phone_type",
+            "address", "city", "state", "postal_code", "country",
+            "github_url", "linkedin_url", "website_url", "portfolio_url",
+        )
+        for field_id in reusable_profile_fields:
+            direct_value = self._answer_value(answers, field_id)
+            if direct_value not in (None, "", [], "UNKNOWN", "UNANSWERED"):
+                profile[field_id] = str(direct_value)
+            elif base.get(field_id) not in (None, "", [], "UNKNOWN", "UNANSWERED"):
+                profile[field_id] = str(base[field_id])
         contact_values = base.get("resume_contact_values")
         if isinstance(contact_values, dict):
             for key in ("email", "phone", "address"):
+                if profile.get(key):
+                    continue
                 values = contact_values.get(key)
-                if isinstance(values, list):
-                    unique = [str(value).strip() for value in values if str(value).strip()]
-                    unique = list(dict.fromkeys(unique))
-                    if len(unique) == 1:
-                        profile[key] = unique[0]
+                unique = unique_values(values)
+                if len(unique) == 1:
+                    profile[key] = unique[0]
             address = profile.get("address")
             if isinstance(address, str):
-                us_address = re.fullmatch(
-                    r"\s*(?P<street>.+?),\s*(?P<city>[^,]+?),\s*"
-                    r"(?P<state>[A-Za-z]{2})\s+(?P<postal>\d{5}(?:-\d{4})?)"
-                    r"(?:,\s*(?P<country>United States(?: of America)?|USA|US))?\s*",
-                    address,
-                    flags=re.IGNORECASE,
-                )
-                if us_address:
-                    profile["address"] = us_address.group("street").strip()
-                    profile["city"] = us_address.group("city").strip()
-                    profile["state"] = us_address.group("state").upper()
-                    profile["postal_code"] = us_address.group("postal")
-                    if us_address.group("country"):
-                        profile["country"] = us_address.group("country").strip()
-        name_parts = str(display_name or "").split()
-        if len(name_parts) >= 2 and all(re.fullmatch(r"[A-Za-z][A-Za-z'’-]*", part) for part in name_parts):
-            profile["first_name"] = name_parts[0]
-            profile["last_name"] = " ".join(name_parts[1:])
-        github_url = self._answer_value(answers, "github_url")
-        portfolio_url = self._answer_value(answers, "portfolio_url")
-        if github_url:
-            profile["github_url"] = str(github_url)
-        if portfolio_url:
-            profile["portfolio_url"] = str(portfolio_url)
+                address_parts = parse_mailing_address(address)
+                if any(key in address_parts for key in ("city", "state", "postal_code")):
+                    profile["address"] = address_parts["address"]
+                for key, value in address_parts.items():
+                    if key != "address":
+                        profile.setdefault(key, value)
+        if not profile.get("first_name") or not profile.get("last_name"):
+            for key, value in split_display_name(display_name).items():
+                if key in {"first_name", "last_name"}:
+                    profile.setdefault(key, value)
+        if profile.get("first_name") and profile.get("last_name"):
+            profile["candidate_display_name"] = f"{profile['first_name']} {profile['last_name']}"
         portfolio_sources = [
             item for item in state.get("sources", [])
             if item.get("category") == "portfolio" and item.get("raw_retained")

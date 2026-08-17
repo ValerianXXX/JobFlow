@@ -83,6 +83,10 @@ def full_answers() -> dict[str, dict[str, object]]:
             value = "2026-09-01"
         elif field_id == "github_url":
             value = "https://github.com/synthetic-candidate"
+        elif field_id == "linkedin_url":
+            value = "https://www.linkedin.com/in/synthetic-candidate"
+        elif field_id == "website_url":
+            value = "https://synthetic-candidate.example.test"
         elif field_id == "portfolio_url":
             value = "https://portfolio.example.test/synthetic-candidate"
         answers[field_id] = {
@@ -264,8 +268,8 @@ class OnboardingCenterTests(unittest.TestCase):
 
     def test_catalog_is_complete_and_bilingual(self) -> None:
         catalog = public_catalog()
-        self.assertEqual(len(catalog["fields"]), 27)
-        self.assertEqual(len(set(FIELD_IDS)), 27)
+        self.assertEqual(len(catalog["fields"]), 39)
+        self.assertEqual(len(set(FIELD_IDS)), 39)
         self.assertEqual(catalog["required_field_count"], 25)
         self.assertEqual(len(set(REQUIRED_FIELD_IDS)), 25)
         for group in catalog["groups"]:
@@ -280,16 +284,20 @@ class OnboardingCenterTests(unittest.TestCase):
             service, onboarding, _, _, _ = self.make_service(root)
             state_ref, state = service.ensure_state()
             legacy = json.loads(json.dumps(state))
-            legacy["answers"].pop("github_url")
-            legacy["answers"].pop("portfolio_url")
+            added_profile_fields = (
+                "first_name", "last_name", "email", "phone", "phone_type",
+                "address", "city", "state", "postal_code", "country",
+                "github_url", "linkedin_url", "website_url", "portfolio_url",
+            )
+            for field_id in added_profile_fields:
+                legacy["answers"].pop(field_id)
             onboarding.rotate(state_ref, canonical_json(legacy))
 
             bootstrap = service.bootstrap()
 
-            self.assertEqual(bootstrap["answers"]["github_url"]["status"], "UNKNOWN")
-            self.assertIsNone(bootstrap["answers"]["github_url"]["value"])
-            self.assertEqual(bootstrap["answers"]["portfolio_url"]["status"], "UNKNOWN")
-            self.assertIsNone(bootstrap["answers"]["portfolio_url"]["value"])
+            for field_id in added_profile_fields:
+                self.assertEqual(bootstrap["answers"][field_id]["status"], "UNKNOWN")
+                self.assertIsNone(bootstrap["answers"][field_id]["value"])
             self.assertEqual(bootstrap["completion"]["total"], len(REQUIRED_FIELD_IDS))
             self.assertEqual(onboarding.read_bytes(state_ref), canonical_json(legacy))
 
@@ -744,6 +752,44 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(source["ai_input_characters"], source["ai_covered_characters"])
             self.assertFalse(source["ai_input_truncated"])
             self.assertGreaterEqual(source["ai_chunks"], 1)
+
+    def test_resume_preview_seeds_one_time_profile_facts_only_after_commit(self) -> None:
+        with project_temp() as root:
+            service, _, store, _, _ = self.make_service(root)
+            resume_text = (
+                "Jordan Alex Lee\n"
+                f"jordan.lee@example.test | {SYNTHETIC_PHONE} | https://www.linkedin.com/in/jordan-lee\n"
+                f"{SYNTHETIC_US_ADDRESS.removesuffix(', United States')}\n"
+                "Professional Summary\n"
+                "Risk analyst who built a documented credit-review workflow and maintained source-grounded decisions.\n"
+            )
+
+            preview = service.preview_source("resume", ".txt", resume_text.encode("utf-8"))
+            public_pending = service.bootstrap()["pending_sources"][0]
+            _, encrypted_state = service.ensure_state()
+            encrypted_pending = encrypted_state["pending_sources"][0]
+
+            self.assertNotIn("profile_hints", public_pending)
+            self.assertNotIn("Jordan", json.dumps(preview, ensure_ascii=False))
+            self.assertEqual(encrypted_pending["profile_hints"]["first_name"], "Jordan")
+            self.assertEqual(encrypted_pending["profile_hints"]["last_name"], "Lee")
+            self.assertEqual(service.bootstrap()["answers"]["email"]["status"], "UNKNOWN")
+
+            imported = service.commit_source(preview["source_id"], None)
+            answers = service.bootstrap()["answers"]
+            self.assertGreaterEqual(imported["profile_hints_applied"], 8)
+            self.assertEqual(answers["first_name"]["value"], "Jordan")
+            self.assertEqual(answers["last_name"]["value"], "Lee")
+            self.assertEqual(answers["email"]["value"], "jordan.lee@example.test")
+            self.assertEqual(answers["city"]["value"], "New York")
+            self.assertEqual(answers["state"]["value"], "NY")
+            self.assertEqual(answers["postal_code"]["value"], "10001")
+            self.assertEqual(answers["linkedin_url"]["value"], "https://www.linkedin.com/in/jordan-lee")
+            self.assertTrue(all(
+                answers[field_id]["source"] == "APPLICANT_PROVIDED_UNCONFIRMED"
+                for field_id in ("first_name", "last_name", "email", "phone", "address", "city", "state", "postal_code", "country", "linkedin_url")
+            ))
+            self.assertTrue(store.test(str(encrypted_pending["metadata"]["secure_ref"])))
 
     def test_docx_with_only_filtered_ai_candidates_is_still_securely_retained_as_master(self) -> None:
         class FilterOnlyAI(AIAnalysisEngine):
@@ -1374,7 +1420,17 @@ class OnboardingCenterTests(unittest.TestCase):
                 "resume_facts": [],
             }
             onboarding.import_bytes("candidate_profile", canonical_json(resume_profile), synthetic=True)
-            service.save_answers({"locale": "en", "answers": full_answers()})
+            answers = full_answers()
+            for field_id in (
+                "first_name", "last_name", "email", "phone", "phone_type",
+                "address", "city", "state", "postal_code", "country",
+            ):
+                answers[field_id] = {
+                    "value": None,
+                    "status": "UNKNOWN",
+                    "use_policy": FIELD_BY_ID[field_id]["default_policy"],
+                }
+            service.save_answers({"locale": "en", "answers": answers})
             bootstrap = service.bootstrap()
             service.save_review({
                 "profile_review": "CONFIRMED",
@@ -1678,7 +1734,7 @@ class OnboardingCenterTests(unittest.TestCase):
                         "ui_protocol": UI_PROTOCOL_VERSION,
                     })
                     self.assertEqual(payload["real_external_actions"], 0)
-                    self.assertEqual(len(payload["catalog"]["fields"]), 27)
+                    self.assertEqual(len(payload["catalog"]["fields"]), 39)
                     self.assertEqual(payload["catalog"]["required_field_count"], 25)
                 preflight = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
                 preflight.request(
@@ -2254,7 +2310,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v29-form-diagnostics", html)
+        self.assertIn("jobflow-v29-profile-v2", html)
 
 
 if __name__ == "__main__":

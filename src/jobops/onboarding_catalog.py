@@ -38,6 +38,7 @@ def _field(
 
 
 GROUPS = (
+    {"id": "identity_and_contact", "label": {"zh": "身份与联系方式", "en": "Identity & contact"}},
     {"id": "job_target", "label": {"zh": "求职目标", "en": "Job target"}},
     {"id": "work_authorization_and_visa", "label": {"zh": "工作授权与签证", "en": "Work authorization & visa"}},
     {"id": "location_remote_relocation_travel", "label": {"zh": "地点、远程、搬迁与出差", "en": "Location, remote, relocation & travel"}},
@@ -56,6 +57,16 @@ YES_NO_UNKNOWN = (
 
 
 FIELDS = (
+    _field("first_name", "identity_and_contact", "名字", "First name", help_zh="优先从简历提取；只需确认一次。", help_en="Extracted from the resume when reliable; confirm once.", required_resolution=False),
+    _field("last_name", "identity_and_contact", "姓氏", "Last name", help_zh="优先从简历提取；只需确认一次。", help_en="Extracted from the resume when reliable; confirm once.", required_resolution=False),
+    _field("email", "identity_and_contact", "常用申请邮箱", "Primary application email", help_zh="加密保存，仅在你批准的申请中使用。", help_en="Encrypted locally and used only in applications you approve.", required_resolution=False),
+    _field("phone", "identity_and_contact", "常用申请电话", "Primary application phone", help_zh="加密保存，仅在你批准的申请中使用。", help_en="Encrypted locally and used only in applications you approve.", required_resolution=False),
+    _field("phone_type", "identity_and_contact", "电话类型", "Phone type", input_type="select", options=(("Mobile", "手机", "Mobile"), ("Home", "住宅", "Home"), ("Work", "工作", "Work"), ("Other", "其他", "Other")), required_resolution=False),
+    _field("address", "identity_and_contact", "街道地址（可选）", "Street address (optional)", required_resolution=False),
+    _field("city", "identity_and_contact", "城市（可选）", "City (optional)", required_resolution=False),
+    _field("state", "identity_and_contact", "州、省或地区（可选）", "State, province, or region (optional)", required_resolution=False),
+    _field("postal_code", "identity_and_contact", "邮政编码（可选）", "Postal code (optional)", required_resolution=False),
+    _field("country", "identity_and_contact", "国家或地区（可选）", "Country or region (optional)", required_resolution=False),
     _field("target_roles", "job_target", "目标职位或方向", "Target roles or functions", input_type="tags", help_zh="可填写多个，用逗号分隔。", help_en="Enter multiple values separated by commas."),
     _field("target_industries", "job_target", "目标行业", "Target industries", input_type="tags"),
     _field("target_levels", "job_target", "目标级别", "Target levels", input_type="tags", options=(("intern", "实习", "Intern"), ("entry", "初级", "Entry"), ("mid", "中级", "Mid-level"), ("senior", "高级", "Senior"), ("lead", "负责人", "Lead"))),
@@ -73,6 +84,8 @@ FIELDS = (
     _field("referral_source", "standard_application", "常见申请来源", "Typical application source", input_type="select", options=(("OFFICIAL_CAREERS", "公司官网", "Company careers site"), ("REFERRAL", "推荐", "Referral"), ("RECRUITER", "招聘者", "Recruiter"), ("OTHER", "其他", "Other"))),
     _field("previous_employment", "standard_application", "是否曾在目标公司任职", "Previously employed by target company", input_type="select", options=YES_NO_UNKNOWN),
     _field("github_url", "public_links", "GitHub 公开链接（可选）", "Public GitHub URL (optional)", help_zh="仅在申请表提供对应字段时使用；每份审阅包都会显示绑定状态。", help_en="Used only when the form offers a matching field; each review packet shows its binding status.", required_resolution=False),
+    _field("linkedin_url", "public_links", "LinkedIn 公开链接（可选）", "Public LinkedIn URL (optional)", help_zh="仅在申请表提供对应字段时使用。", help_en="Used only when the form offers a matching field.", required_resolution=False),
+    _field("website_url", "public_links", "个人网站（可选）", "Personal website (optional)", help_zh="仅在申请表提供对应字段时使用。", help_en="Used only when the form offers a matching field.", required_resolution=False),
     _field("portfolio_url", "public_links", "作品集公开链接（可选）", "Public portfolio URL (optional)", help_zh="作品集文件可在资料区选择“作品集文件”安全上传。", help_en="Upload a portfolio file securely from Sources by choosing Portfolio file.", required_resolution=False),
     _field("background_check", "sensitive_or_legal", "是否愿意依法接受背景调查", "Consent to a lawful background check", input_type="select", options=YES_NO_UNKNOWN, sensitive=True, policy="confirm_each_application"),
     _field("non_compete", "sensitive_or_legal", "是否受竞业或其他限制", "Subject to non-compete or other restrictions", input_type="select", options=YES_NO_UNKNOWN, sensitive=True, policy="confirm_each_application"),

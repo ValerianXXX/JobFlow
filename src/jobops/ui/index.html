@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260816-jobflow-v29-form-diagnostics">
+  <link rel="stylesheet" href="styles.css?v=20260816-jobflow-v29-profile-v2">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -308,7 +308,7 @@
 
     <nav class="steps" aria-label="Onboarding steps">
       <button type="button" class="step active" data-target="sources" data-step-label="stepSources" aria-label="1 资料来源" aria-current="step"><b>1</b><span data-i18n="stepSources">资料来源</span></button>
-      <button type="button" class="step" data-target="questionnaire" data-step-label="stepQuestions" aria-label="2 完整问卷"><b>2</b><span data-i18n="stepQuestions">完整问卷</span></button>
+      <button type="button" class="step" data-target="questionnaire" data-step-label="stepQuestions" aria-label="2 补充资料"><b>2</b><span data-i18n="stepQuestions">补充资料</span></button>
       <button type="button" class="step" data-target="review" data-step-label="stepReview" aria-label="3 资料与 Claim 审阅"><b>3</b><span data-i18n="stepReview">资料与 Claim 审阅</span></button>
       <button type="button" class="step" data-target="finish" data-step-label="stepFinish" aria-label="4 确认完成"><b>4</b><span data-i18n="stepFinish">确认完成</span></button>
     </nav>
@@ -377,13 +377,13 @@
         <div class="subheading"><h3 data-i18n="suggestions">待确认的自动预填建议</h3><span id="suggestionCount">0</span></div>
         <div id="suggestionList"></div>
       </div>
-      <div class="panel-footer"><button class="primary jump" data-target="questionnaire" data-i18n="continueQuestions">继续完整问卷</button></div>
+      <div class="panel-footer"><button class="primary jump" data-target="questionnaire" data-i18n="continueQuestions">检查缺失资料</button></div>
     </section>
 
     <section id="questionnaire" class="panel">
       <div class="section-heading">
-        <div><p class="section-no">02</p><h2 data-i18n="questionsTitle">一次性回答全部基础问题</h2></div>
-        <p data-i18n="questionsBody">可以明确回答、不适用或选择不披露。资格硬条件必须明确，法律与签名始终逐次确认。</p>
+        <div><p class="section-no">02</p><h2 data-i18n="questionsTitle">只确认缺失或需要修改的信息</h2></div>
+        <p data-i18n="questionsBody">已从简历识别的资料会折叠保留，不要求重复输入。资格硬条件必须明确；法律与签名仍然逐次确认。</p>
       </div>
       <div id="questionGroups"></div>
       <div class="sticky-actions">
@@ -441,6 +441,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260816-jobflow-v29-form-diagnostics"></script>
+  <script src="app.js?v=20260816-jobflow-v29-profile-v2"></script>
 </body>
 </html>

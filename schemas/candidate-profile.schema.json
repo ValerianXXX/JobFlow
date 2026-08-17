@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "required": ["profile_ref", "profile_version", "candidate_display_name", "target_functions", "target_levels", "locations", "remote_preference", "minimum_salary", "work_authorization", "skills", "years_experience"],
   "properties": {
+    "profile_schema_version": {"const": 2},
     "profile_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
     "profile_version": {"type": "string", "minLength": 1},
     "candidate_display_name": {"type": "string", "minLength": 1},

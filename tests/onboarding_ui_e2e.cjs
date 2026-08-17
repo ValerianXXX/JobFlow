@@ -38,9 +38,45 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260816-jobflow-v29-form-diagnostics/);
-    assert.match(initial.styleVersion, /20260816-jobflow-v29-form-diagnostics/);
+    assert.match(initial.scriptVersion, /20260816-jobflow-v29-profile-v2/);
+    assert.match(initial.styleVersion, /20260816-jobflow-v29-profile-v2/);
     assert.deepEqual(pageErrors, []);
+
+    const adaptiveProfile = await page.evaluate(() => {
+      state.locale = "zh";
+      state.data = {
+        status: "IN_PROGRESS",
+        catalog: {
+          groups: [
+            {id: "identity_and_contact", label: {zh: "身份与联系方式", en: "Identity & contact"}},
+            {id: "public_links", label: {zh: "公开链接与作品集", en: "Public links & portfolio"}},
+          ],
+          fields: [
+            {id: "first_name", group: "identity_and_contact", label: {zh: "名字", en: "First name"}, help: {zh: "", en: ""}, input_type: "text", options: [], sensitive: false, default_policy: "reuse", required_resolution: false},
+            {id: "email", group: "identity_and_contact", label: {zh: "邮箱", en: "Email"}, help: {zh: "", en: ""}, input_type: "text", options: [], sensitive: false, default_policy: "reuse", required_resolution: false},
+            {id: "github_url", group: "public_links", label: {zh: "GitHub", en: "GitHub"}, help: {zh: "", en: ""}, input_type: "text", options: [], sensitive: false, default_policy: "reuse", required_resolution: false},
+          ],
+        },
+        answers: {
+          first_name: {value: "Jordan", status: "CONFIRMED", source: "APPLICANT_PROVIDED_UNCONFIRMED", use_policy: "reuse"},
+          email: {value: null, status: "UNKNOWN", source: "UNKNOWN", use_policy: "reuse"},
+          github_url: {value: null, status: "UNKNOWN", source: "UNKNOWN", use_policy: "reuse"},
+        },
+      };
+      renderQuestions();
+      return {
+        visibleMissingIdentity: document.querySelectorAll('[data-question-group="identity_and_contact"] > .question-row').length,
+        resolvedCount: document.querySelectorAll(".resolved-question-details .question-row").length,
+        optionalCount: document.querySelectorAll(".optional-question-details .question-row").length,
+        resolvedOpen: document.querySelector(".resolved-question-details")?.open,
+        resolvedSummary: document.querySelector(".resolved-question-details summary")?.textContent,
+      };
+    });
+    assert.equal(adaptiveProfile.visibleMissingIdentity, 1);
+    assert.equal(adaptiveProfile.resolvedCount, 1);
+    assert.equal(adaptiveProfile.optionalCount, 1);
+    assert.equal(adaptiveProfile.resolvedOpen, false);
+    assert.match(adaptiveProfile.resolvedSummary, /已从资料填好 1 项/);
 
     const failureZh = await page.evaluate(() => {
       state.locale = "zh";

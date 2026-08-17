@@ -9,6 +9,7 @@ from typing import Any
 from .application_field_resolution import ANSWERABLE_STOP_CLASSES, RESOLUTION_DECISIONS
 from .approvals import ApprovalContext
 from .ats_browser import validate_ats_form_snapshot_integrity, validate_browser_action_plan_integrity
+from .candidate_profile import PROFILE_FIELD_ALIASES, profile_value
 from .errors import JobOpsError
 from .private_onboarding import PrivateOnboarding
 from .runtime_schema import validate_named
@@ -27,23 +28,6 @@ ASSISTED_MATERIAL_KINDS = frozenset({
 ASSISTED_FIELD_TYPES = frozenset({
     "text", "email", "tel", "url", "number", "date", "datetime-local", "select", "textarea",
 })
-PROFILE_FIELD_ALIASES = {
-    "full_name": "candidate_display_name",
-    "first_name": "first_name",
-    "last_name": "last_name",
-    "email": "email",
-    "phone": "phone",
-    "phone_type": "phone_type",
-    "linkedin": "linkedin_url",
-    "github": "github_url",
-    "portfolio": "portfolio_url",
-    "website": "website_url",
-    "address": "address",
-    "city": "city",
-    "state": "state",
-    "postal_code": "postal_code",
-    "country": "country",
-}
 ANSWER_BANK_FIELD_ALIASES = {
     "linkedin": ("linkedin", "linkedin_url"),
     "github": ("github", "github_url"),
@@ -477,8 +461,7 @@ class EphemeralATSPayloadBroker:
             if control_type not in ASSISTED_FIELD_TYPES:
                 continue
             answer_key = str(field.get("answer_key", ""))
-            profile_key = PROFILE_FIELD_ALIASES.get(answer_key, answer_key)
-            raw = profile.get(profile_key)
+            raw = profile_value(profile, answer_key)
             if raw in (None, "", "UNKNOWN", "UNANSWERED"):
                 raw = confirmed_answer(answer_key)
             try:

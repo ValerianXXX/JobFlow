@@ -18,6 +18,7 @@ from .application_field_resolution import (
 from .application_materials import build_material_plan, detect_material_requests
 from .approvals import ApprovalContext, UploadBinding
 from .ats_browser import analyze_local_ats_form, build_browser_action_plan
+from .candidate_profile import profile_value
 from .claim_registry import ClaimRegistry
 from .claims import verify_claim_evidence
 from .collector import JobCollector
@@ -710,9 +711,10 @@ class JobOpsOrchestrator:
         answers["full_name"] = profile_ref
         public_answers = dict(answers)
         public_answers.update({
-            "github": profile.get("github_url") or answers.get("github"),
-            "portfolio": profile.get("portfolio_url") or answers.get("portfolio"),
-            "website": answers.get("website"),
+            "linkedin": profile_value(profile, "linkedin") or answers.get("linkedin") or answers.get("linkedin_url"),
+            "github": profile_value(profile, "github") or answers.get("github") or answers.get("github_url"),
+            "portfolio": profile_value(profile, "portfolio") or answers.get("portfolio") or answers.get("portfolio_url"),
+            "website": profile_value(profile, "website") or answers.get("website") or answers.get("website_url"),
         })
         ats_safe_prefill: dict[str, Any] | None = None
         form_analysis: dict[str, Any] | None = None
@@ -735,12 +737,10 @@ class JobOpsOrchestrator:
             bindings: dict[str, dict[str, str]] = {}
             for item in form_analysis["fields"]:
                 answer_key = str(item["answer_key"])
-                if item["classification"] == "private_fixed" and answer_key == "full_name" and profile.get("candidate_display_name"):
-                    bindings[str(item["control_ref"])] = {"kind": "secure_ref", "value": profile_ref}
-                elif (
+                profile_candidate = profile_value(profile, answer_key)
+                if (
                     item["classification"] == "private_fixed"
-                    and answer_key in profile
-                    and profile[answer_key] not in (None, "", "UNKNOWN", "UNANSWERED")
+                    and profile_candidate not in (None, "", "UNKNOWN", "UNANSWERED")
                 ):
                     # Resume-provided contact values live only inside the encrypted
                     # Candidate Profile.  Binding the profile reference here avoids
@@ -750,8 +750,9 @@ class JobOpsOrchestrator:
                 elif item["classification"] == "private_fixed" and answer_key in answers and answers[answer_key] not in (None, "", "UNKNOWN", "UNANSWERED"):
                     bindings[str(item["control_ref"])] = {"kind": "secure_ref", "value": answer_bank_ref}
                 elif item["classification"] == "ordinary_fixed" and answer_key in public_answers:
-                    candidate = str(public_answers[answer_key])
-                    if candidate not in {"", "UNKNOWN", "UNANSWERED"}:
+                    raw_candidate = public_answers[answer_key]
+                    if raw_candidate not in (None, "", "UNKNOWN", "UNANSWERED"):
+                        candidate = str(raw_candidate)
                         bindings[str(item["control_ref"])] = {"kind": "public_value", "value": candidate}
                         public_values_by_control[str(item["control_ref"])] = candidate
             browser_plan = build_browser_action_plan(form_analysis, bindings)

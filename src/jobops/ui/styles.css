@@ -393,6 +393,11 @@ textarea { min-height: 96px; resize: vertical; }
 
 .question-group { margin-bottom: 32px; }
 .question-group > h3 { margin: 0; padding: 13px 0; border-bottom: 2px solid var(--ink); font: 600 21px Georgia, "Songti SC", serif; }
+.question-details { margin-top: 12px; border: 1px solid var(--line); background: #fff; }
+.question-details > summary { cursor: pointer; padding: 13px 15px; color: var(--green); background: var(--green-soft); font-size: 12px; font-weight: 800; list-style-position: inside; }
+.question-details.optional-question-details > summary { color: var(--muted); background: var(--soft); }
+.question-details .question-row { padding-right: 15px; padding-left: 15px; }
+.question-details .question-row:last-child { border-bottom: 0; }
 .question-row { display: grid; grid-template-columns: minmax(220px, .85fr) minmax(280px, 1.2fr) 180px; gap: 22px; align-items: start; padding: 20px 0; border-bottom: 1px solid var(--line); }
 .question-copy label { display: block; font-weight: 700; font-size: 14px; }
 .question-copy small { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }

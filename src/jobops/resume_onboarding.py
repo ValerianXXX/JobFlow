@@ -261,8 +261,9 @@ def _section_heading(value: str) -> str | None:
 
 
 def parse_resume(text: str, *, candidate_name_hint: str | None = None) -> dict[str, Any]:
-    lines = [_clean_line(line) for line in text.replace("\r", "\n").split("\n")]
-    lines = merge_resume_continuations([line for line in lines if line])
+    raw_lines = [_clean_line(line) for line in text.replace("\r", "\n").split("\n")]
+    raw_lines = [line for line in raw_lines if line]
+    lines = merge_resume_continuations(raw_lines)
     contact_values = {
         "email": EMAIL_PATTERN.findall(text), "phone": PHONE_PATTERN.findall(text),
         "linkedin": LINKEDIN_PATTERN.findall(text), "website": WEBSITE_PATTERN.findall(text),
@@ -271,7 +272,11 @@ def parse_resume(text: str, *, candidate_name_hint: str | None = None) -> dict[s
     contact_fields = sorted(key for key, values in contact_values.items() if values)
     name = _clean_line(candidate_name_hint or "") or None
     if name is None:
-        for line in lines[:8]:
+        # Detect the resume-header name before paragraph continuation repair.
+        # Otherwise a common three-line header (name, contacts, address) may be
+        # merged into one long line and the already-present name becomes
+        # impossible to recover without asking the applicant again.
+        for line in raw_lines[:8]:
             if _section_heading(line):
                 break
             if EMAIL_PATTERN.search(line) or PHONE_PATTERN.search(line) or WEBSITE_PATTERN.search(line):
