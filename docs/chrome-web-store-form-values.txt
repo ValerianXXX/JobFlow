@@ -1,0 +1,151 @@
+JOBFLOW BROWSER COMPANION - CHROME WEB STORE FORM VALUES
+
+PACKAGE
+JobFlow-Browser-Companion-v0.9.0-store.zip
+
+PRODUCT DETAILS
+
+Name
+JobFlow Browser Companion
+
+Category
+Productivity
+
+Language
+English
+
+Description
+JobFlow Browser Companion securely connects the local JobFlow desktop workflow to the company careers or application page you choose.
+
+Before an application exists, it can read the visible text of one selected company job page and a sanitized description of the application form the user opens. After JobFlow prepares an application and the user reviews and approves it, Browser Companion can fill approved fields, attach approved resume or supporting files, and activate one clearly identified non-final Next or Continue control.
+
+Safety boundaries are built into the workflow:
+
+- Final Submit is always clicked by the user.
+- Unknown or changed pages and fields stop safely.
+- Login, account creation, passwords, CAPTCHA, MFA, OTP, signatures, and protected voluntary disclosures are never automated.
+- Unknown submission results are never retried automatically.
+- Page content and applicant data stay on the user's computer and are exchanged only with the local JobFlow service.
+
+JobFlow desktop must be installed on the same Windows account. The installer registers a private native messaging host that authenticates the local connection; no applicant data passes through that host.
+
+Promotional video
+Leave blank.
+
+Official website
+None. Do not add a Search Console property for this submission.
+
+Homepage URL
+https://github.com/ValerianXXX/JobFlow
+
+Support URL
+https://github.com/ValerianXXX/JobFlow/issues
+
+Adult content
+No / Off
+
+IMAGE FILES
+
+Store icon (128 x 128)
+icon-128.png
+
+Screenshots (1280 x 800)
+screenshot-1-local-workflow-1280x800.png
+screenshot-2-approved-prefill-1280x800.png
+
+Small promo tile (440 x 280)
+small-promo-440x280.png
+
+Marquee promo tile (1400 x 560)
+marquee-1400x560.png
+
+PRIVACY PRACTICES
+
+Single purpose
+Connect the user's local JobFlow workflow to a company careers or application page explicitly chosen by the user, then provide bounded job-page reading and user-approved prefill, file attachment, and non-final navigation while keeping final submission exclusively under user control.
+
+Remote code
+No. JobFlow Browser Companion does not use remote code. All executable JavaScript is packaged with the extension. The native messaging host only authenticates the local installation and never provides executable code.
+
+Host permissions justification
+Required to communicate with the local JobFlow service at 127.0.0.1 or localhost and, only after the user explicitly chooses a company or ATS origin, to inspect or assist on that origin. Access is task-scoped; no unrelated sites are read.
+
+activeTab justification
+Required to inspect or assist on only the tab the user deliberately selected. It avoids permanent access to every website.
+
+scripting justification
+Required to run JobFlow's bounded DOM inspector and approved-field helper in the selected tab. The script classifies controls, discards existing values, fills only hash-bound approved values, and never clicks final Submit.
+
+storage justification
+Required for expiring session state such as the current application identifier, permitted origin, page hash, and progress state. Applicant field values and files are not persisted in extension storage.
+
+alarms justification
+Required to observe an explicitly authorized local workflow across multi-page application steps and report progress. Alarms do not authorize hidden retry or unattended submission.
+
+nativeMessaging justification
+Required to authenticate the store-installed extension to the JobFlow installation on the same Windows account. The native host returns only a random installation binding; it does not receive page content, applicant values, or files.
+
+localhost host access justification
+Required to communicate with the user's local JobFlow service on 127.0.0.1 or localhost. No remote JobFlow collection server is used.
+
+optional HTTPS host access justification
+Requested only for the company or ATS origin chosen for the current task. Users can keep site access set to When clicked and grant access per site.
+
+optional search justification
+Used only when the user explicitly starts company-careers discovery. The permission is optional and is not needed for manual URL intake.
+
+User data handled locally - select these categories if shown
+- Personally identifiable information: approved name, address, telephone number, and email address.
+- Web history: only the URL and origin of the active page explicitly chosen for the current JobFlow task; the extension does not read the browser history database.
+- Website content: visible job text and sanitized application-form structure on the chosen page.
+- User-provided content: approved application answers and approved resume or supporting files.
+
+Do not select unless the product changes
+- Health information
+- Financial or payment information
+- Authentication information
+- Personal communications
+- General browsing history unrelated to the chosen task
+
+Data uses
+- App functionality: Yes
+- Security: Yes
+- Analytics: No
+- Advertising or marketing: No
+- Personalization unrelated to the application workflow: No
+- Creditworthiness or lending: No
+
+Data handling certifications
+- Data is not sold to third parties.
+- Data is not used or transferred for purposes unrelated to the extension's single purpose.
+- Data is not used or transferred to determine creditworthiness or for lending purposes.
+- Humans do not read user data except where the user gives specific consent for support or where law or security requires it.
+- The extension complies with the Chrome Web Store User Data Policy, including the Limited Use requirements.
+
+Privacy policy URL
+https://valerianxxx.github.io/JobFlow/privacy.html
+
+DISTRIBUTION
+
+Visibility
+Public
+
+Regions
+All regions
+
+Pricing
+Free
+
+TEST INSTRUCTIONS
+
+No credentials are required.
+
+1. Install JobFlow on a Windows test account using Install JobFlow.cmd from the public source package.
+2. Confirm the installer reports that the Browser Companion native host is registered.
+3. Install the submitted extension package.
+4. Start JobFlow and open its local URL at 127.0.0.1.
+5. Use JobFlow's synthetic demo or a reviewer-controlled test careers page. Do not enter real applicant data.
+6. Start a 30-minute guided read. The extension pairs only with the local JobFlow origin and only after its HMAC installation proof succeeds.
+7. Observe that unsupported, changed, login, CAPTCHA, account, legal, signature, unknown, or final-submit controls stop safely.
+
+No production account, password, API key, or remote JobFlow service is required. If the local native host is absent, the extension shows a repair instruction rather than accessing the page.

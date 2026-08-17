@@ -32,6 +32,10 @@ JobFlow desktop must be installed on the same Windows account. The installer reg
 
 ## Permission justifications
 
+### Remote code
+
+JobFlow Browser Companion does not use remote code. All executable JavaScript is packaged with the extension. The native messaging host only authenticates the local installation and never provides executable code.
+
 ### activeTab
 
 Required to inspect or assist on only the tab the user deliberately selected. It avoids permanent access to every website.

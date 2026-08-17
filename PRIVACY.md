@@ -39,6 +39,8 @@ The extension stores short-lived task state in browser session storage. That sta
 
 JobFlow does not operate a remote collection server for Browser Companion data. The extension does not sell data, use it for advertising, transfer it to data brokers, or use it for credit, lending, insurance, or unrelated profiling.
 
+JobFlow Browser Companion's use of information received from Chrome APIs complies with the Chrome Web Store User Data Policy, including the Limited Use requirements. The extension uses that information only to provide its disclosed, user-facing JobFlow workflow.
+
 ## Permissions
 
 - `activeTab` and optional HTTPS site access: inspect or assist only on the page the user chooses.

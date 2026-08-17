@@ -1,9 +1,10 @@
 {
   "schema_version": 1,
   "native_host_name": "com.jobflow.browser_companion",
-  "chrome_web_store_url": "https://chromewebstore.google.com/detail/hhlliaaafegldkmcgmaoaelabipcaooj",
+  "chrome_web_store_url": "https://chromewebstore.google.com/detail/pgcnlkfakkacphkdojdbphccjnbbefic",
   "edge_addons_url": "",
   "extension_ids": [
-    "hhlliaaafegldkmcgmaoaelabipcaooj"
+    "hhlliaaafegldkmcgmaoaelabipcaooj",
+    "pgcnlkfakkacphkdojdbphccjnbbefic"
   ]
 }

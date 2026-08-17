@@ -38,6 +38,9 @@ class BrowserCompanionStoreTests(unittest.TestCase):
                 self.assertEqual(names.count("manifest.json"), 1)
                 self.assertNotIn("binding.json", {Path(name).name.casefold() for name in names})
                 manifest = json.loads(archive.read("manifest.json"))
+                self.assertNotIn("key", manifest)
+                self.assertGreater(len(manifest["description"]), 0)
+                self.assertLessEqual(len(manifest["description"]), 132)
                 self.assertIn("nativeMessaging", manifest["permissions"])
                 for size in (16, 32, 48, 128):
                     self.assertIn(f"icons/icon-{size}.png", names)
@@ -50,6 +53,8 @@ class BrowserCompanionStoreTests(unittest.TestCase):
         self.assertIn("nativeMessaging", listing)
         self.assertIn("https://valerianxxx.github.io/JobFlow/privacy.html", listing)
         self.assertIn("JobFlow does not operate a remote collection server", policy)
+        self.assertIn("Chrome Web Store User Data Policy, including the Limited Use requirements", policy)
+        self.assertIn("Chrome Web Store User Data Policy, including the Limited Use requirements", privacy_html)
         self.assertIn("Final Submit", privacy_html)
         for path, size in {
             "small-promo-440x280.png": (440, 280),
@@ -74,10 +79,13 @@ class BrowserCompanionStoreTests(unittest.TestCase):
         self.assertIn("ReparsePoint", installer)
         self.assertIn("allowed_origins", installer)
         self.assertNotIn("Write-Host $secret", installer)
-        self.assertEqual(identities["extension_ids"], ["hhlliaaafegldkmcgmaoaelabipcaooj"])
+        self.assertEqual(
+            identities["extension_ids"],
+            ["hhlliaaafegldkmcgmaoaelabipcaooj", "pgcnlkfakkacphkdojdbphccjnbbefic"],
+        )
         self.assertEqual(
             identities["chrome_web_store_url"],
-            "https://chromewebstore.google.com/detail/hhlliaaafegldkmcgmaoaelabipcaooj",
+            "https://chromewebstore.google.com/detail/pgcnlkfakkacphkdojdbphccjnbbefic",
         )
         self.assertEqual(identities["edge_addons_url"], "")
         self.assertIn("COMPANION_NATIVE_HOST_ORIGIN_FORBIDDEN", source)
