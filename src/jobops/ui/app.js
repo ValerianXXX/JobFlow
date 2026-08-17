@@ -297,7 +297,7 @@ Object.assign(STRINGS.en,{
   aiToolStartUserPresentAssist:"Start user-present filling"
 });
 
-const UI_PROTOCOL_VERSION = 31;
+const UI_PROTOCOL_VERSION = 32;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",

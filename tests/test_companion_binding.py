@@ -15,6 +15,7 @@ from jobops.companion_binding import (
     sign_pair_response,
     validate_pair_request,
 )
+from jobops.browser_assist import COMPANION_EXTENSION_VERSION
 from jobops.errors import JobOpsError
 from jobops.onboarding_server import OnboardingRequestHandler
 
@@ -134,7 +135,7 @@ class CompanionBindingTests(unittest.TestCase):
             request = self._install(local_app_data, installation_id="f" * 32, secret=b"h" * 32)
             payload = {
                 "protocol_version": 2,
-                "extension_version": "0.9.0",
+                "extension_version": COMPANION_EXTENSION_VERSION,
                 "companion_binding": request,
             }
             handler = object.__new__(OnboardingRequestHandler)
