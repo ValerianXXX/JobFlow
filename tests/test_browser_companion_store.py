@@ -107,7 +107,8 @@ class BrowserCompanionStoreTests(unittest.TestCase):
         start = installer.index("function Set-CurrentUserOnly")
         end = installer.index("function Read-RegistryDefault", start)
         acl_function = installer[start:end]
-        with tempfile.TemporaryDirectory(prefix="jobflow-native-acl-") as raw_temp:
+        local_app_data = Path(os.environ["LOCALAPPDATA"])
+        with tempfile.TemporaryDirectory(prefix="jobflow-native-acl-", dir=local_app_data) as raw_temp:
             root = Path(raw_temp) / "host"
             root.mkdir()
             marker = root / "manifest.json"
@@ -127,20 +128,30 @@ class BrowserCompanionStoreTests(unittest.TestCase):
                     ($_.FileSystemRights -band [Security.AccessControl.FileSystemRights]::FullControl) -ne 0 -and
                     $_.AccessControlType -eq [Security.AccessControl.AccessControlType]::Allow
                 }}).Count -gt 0
-                [ordered]@{{ content = $content; current_user_full_control = $full }} | ConvertTo-Json -Compress
+                [ordered]@{{
+                    content = $content
+                    current_user_full_control = $full
+                    inheritance_protected = $acl.AreAccessRulesProtected
+                }} | ConvertTo-Json -Compress
                 """
             )
             completed = subprocess.run(
                 ["powershell.exe", "-NoLogo", "-NoProfile", "-Command", script],
-                check=True,
+                check=False,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
                 timeout=30,
             )
+            self.assertEqual(
+                completed.returncode,
+                0,
+                f"stdout={completed.stdout!r}\nstderr={completed.stderr!r}",
+            )
             result = json.loads(completed.stdout.strip().splitlines()[-1])
             self.assertEqual(result["content"], '{"status":"synthetic"}')
             self.assertTrue(result["current_user_full_control"])
+            self.assertTrue(result["inheritance_protected"])
 
     @unittest.skipUnless(os.name == "nt", "The native host is compiled only on Windows.")
     def test_native_host_returns_binding_only_to_an_allowed_extension(self) -> None:
