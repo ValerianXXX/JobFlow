@@ -25,9 +25,28 @@ from .util import canonical_json, iso_utc, parse_iso, project_root, sha256_bytes
 
 
 COMPANION_PROTOCOL_VERSION = 2
-COMPANION_EXTENSION_VERSION = "0.9.0"
-COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj"
-COMPANION_EXTENSION_ORIGIN = f"chrome-extension://{COMPANION_EXTENSION_ID}"
+COMPANION_EXTENSION_VERSION = "0.9.1"
+
+
+def _configured_companion_extension_ids() -> tuple[str, ...]:
+    config_path = project_root() / "config" / "browser-companion-stores.json"
+    try:
+        value = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError("BROWSER_COMPANION_STORE_IDENTITIES_INVALID") from exc
+    extension_ids = value.get("extension_ids") if isinstance(value, dict) else None
+    if not isinstance(extension_ids, list) or not extension_ids:
+        raise RuntimeError("BROWSER_COMPANION_STORE_IDENTITIES_INVALID")
+    normalized = tuple(str(item).casefold() for item in extension_ids)
+    if any(not re.fullmatch(r"[a-p]{32}", item) for item in normalized) or len(set(normalized)) != len(normalized):
+        raise RuntimeError("BROWSER_COMPANION_STORE_IDENTITIES_INVALID")
+    return normalized
+
+
+COMPANION_EXTENSION_IDS = _configured_companion_extension_ids()
+COMPANION_EXTENSION_ID = COMPANION_EXTENSION_IDS[0]
+COMPANION_EXTENSION_ORIGINS = tuple(f"chrome-extension://{item}" for item in COMPANION_EXTENSION_IDS)
+COMPANION_EXTENSION_ORIGIN = COMPANION_EXTENSION_ORIGINS[0]
 ASSIST_TTL_MINUTES = 30
 MAX_LIVE_FORM_HTML_BYTES = 2 * 1024 * 1024
 MAX_ACTIVE_ASSISTS = 1
@@ -306,7 +325,7 @@ class BrowserAssistManager:
 
     @staticmethod
     def extension_origin_allowed(origin: str | None) -> bool:
-        return bool(origin and secrets.compare_digest(origin, COMPANION_EXTENSION_ORIGIN))
+        return bool(origin and any(secrets.compare_digest(origin, allowed) for allowed in COMPANION_EXTENSION_ORIGINS))
 
     def _reconcile_startup(self) -> None:
         now = iso_utc()

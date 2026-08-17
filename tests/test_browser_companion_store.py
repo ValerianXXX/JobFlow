@@ -30,7 +30,7 @@ class BrowserCompanionStoreTests(unittest.TestCase):
             result = module.build(first)
             module.build(second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
-            self.assertEqual(result["version"], "0.9.0")
+            self.assertEqual(result["version"], "0.9.1")
             self.assertEqual(result["private_binding_files"], 0)
             with zipfile.ZipFile(first) as archive:
                 names = archive.namelist()
@@ -81,7 +81,11 @@ class BrowserCompanionStoreTests(unittest.TestCase):
         self.assertNotIn("Write-Host $secret", installer)
         self.assertEqual(
             identities["extension_ids"],
-            ["hhlliaaafegldkmcgmaoaelabipcaooj", "pgcnlkfakkacphkdojdbphccjnbbefic"],
+            [
+                "hhlliaaafegldkmcgmaoaelabipcaooj",
+                "pgcnlkfakkacphkdojdbphccjnbbefic",
+                "cebejbohadiofomfiplljnpdefjeiccp",
+            ],
         )
         self.assertEqual(
             identities["chrome_web_store_url"],
@@ -159,33 +163,38 @@ class BrowserCompanionStoreTests(unittest.TestCase):
             (root / "browser-companion-binding.json").write_text(json.dumps({
                 "schema_version": 1, "installation_id": installation_id, "secret_b64url": secret,
             }), encoding="utf-8")
-            origin = "chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/"
+            allowed_origins = [
+                "chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/",
+                "chrome-extension://pgcnlkfakkacphkdojdbphccjnbbefic/",
+                "chrome-extension://cebejbohadiofomfiplljnpdefjeiccp/",
+            ]
             (host_root / "com.jobflow.browser_companion.json").write_text(json.dumps({
                 "name": "com.jobflow.browser_companion",
                 "description": "Synthetic test host",
                 "path": str(executable),
                 "type": "stdio",
-                "allowed_origins": [origin],
+                "allowed_origins": allowed_origins,
             }), encoding="utf-8")
             request = json.dumps({
                 "schema_version": 1,
                 "type": "JOBFLOW_GET_INSTALLATION_BINDING",
                 "protocol_version": 2,
-                "extension_version": "0.9.0",
+                "extension_version": "0.9.1",
             }, separators=(",", ":")).encode("utf-8")
             framed = struct.pack("=I", len(request)) + request
 
-            allowed = subprocess.run(
-                [str(executable), origin], input=framed, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                check=True, timeout=10,
-            )
-            self.assertEqual(allowed.stderr, b"")
-            length = struct.unpack("=I", allowed.stdout[:4])[0]
-            response = json.loads(allowed.stdout[4:4 + length])
-            self.assertEqual(response, {
-                "status": "READY", "schema_version": 1,
-                "installation_id": installation_id, "secret_b64url": secret,
-            })
+            for origin in allowed_origins:
+                allowed = subprocess.run(
+                    [str(executable), origin], input=framed, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    check=True, timeout=10,
+                )
+                self.assertEqual(allowed.stderr, b"")
+                length = struct.unpack("=I", allowed.stdout[:4])[0]
+                response = json.loads(allowed.stdout[4:4 + length])
+                self.assertEqual(response, {
+                    "status": "READY", "schema_version": 1,
+                    "installation_id": installation_id, "secret_b64url": secret,
+                })
 
             denied = subprocess.run(
                 [str(executable), "chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/"],

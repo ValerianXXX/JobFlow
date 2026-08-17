@@ -1,0 +1,82 @@
+JOBFLOW BROWSER COMPANION - MICROSOFT EDGE ADD-ONS FORM VALUES
+
+PACKAGE
+JobFlow-Browser-Companion-v0.9.1-store.zip
+
+ASSIGNED IDENTITIES
+Store ID: 0RDCKBT9MVK4
+CRX ID: cebejbohadiofomfiplljnpdefjeiccp
+Product ID: b84b3705-deee-40e5-b410-bcddd5b829cb
+
+PROPERTIES
+
+Category
+Productivity
+
+Support contact
+https://github.com/ValerianXXX/JobFlow/issues
+
+Privacy policy
+https://valerianxxx.github.io/JobFlow/privacy.html
+
+Website
+https://github.com/ValerianXXX/JobFlow
+
+Store display name
+JobFlow Browser Companion
+
+Short description
+Connect local JobFlow to a chosen careers page for reviewed job reading, approved prefill, file attachment, and user-only final Submit.
+
+Full description
+JobFlow Browser Companion securely connects the local JobFlow desktop workflow to the company careers or application page you choose.
+
+Before an application exists, it can read the visible text of one selected company job page and a sanitized description of the application form the user opens. After JobFlow prepares an application and the user reviews and approves it, Browser Companion can fill approved fields, attach approved resume or supporting files, and activate one clearly identified non-final Next or Continue control.
+
+Safety boundaries are built into the workflow:
+
+- Final Submit is always clicked by the user.
+- Unknown or changed pages and fields stop safely.
+- Login, account creation, passwords, CAPTCHA, MFA, OTP, signatures, and protected voluntary disclosures are never automated.
+- Unknown submission results are never retried automatically.
+- Page content and applicant data stay on the user's computer and are exchanged only with the local JobFlow service.
+
+JobFlow desktop must be installed on the same Windows account. The installer registers a private native messaging host that authenticates the local connection; no applicant data passes through that host.
+
+SEARCH TERMS
+job application, job search, careers, resume, autofill, local AI, privacy
+
+ASSETS
+Store logo: icon-128.png
+Screenshot 1: screenshot-1-local-workflow-1280x800.png
+Screenshot 2: screenshot-2-approved-prefill-1280x800.png
+Small promotional tile: small-promo-440x280.png
+Large promotional tile: marquee-1400x560.png
+
+PRIVACY AND PERMISSIONS
+
+Remote code
+No. All executable JavaScript is packaged with the extension. The native messaging host authenticates the local installation and never supplies executable code.
+
+Personal data
+The extension processes applicant identity and contact information only when the user approves it for the current application. Processing remains on the user's computer and is not sold, used for advertising, or transferred to data brokers.
+
+Website data
+The extension reads only the selected company or ATS page during an active JobFlow task. It does not read the browser history database or unrelated websites.
+
+Location
+City, state, country, and postal code may be processed only as user-approved application fields. The extension does not use GPS or background location.
+
+REVIEWER NOTES
+
+No credentials are required.
+
+1. Install JobFlow on a Windows test account using Install JobFlow.cmd from the public source package.
+2. Confirm that the installer registers the Browser Companion native host.
+3. Install this submitted extension package.
+4. Start JobFlow and open its local URL at 127.0.0.1.
+5. Use JobFlow's synthetic demo or a reviewer-controlled test careers page; do not enter real applicant data.
+6. Start a guided read. Pairing succeeds only after the local HMAC installation proof is verified.
+7. Confirm that changed, login, CAPTCHA, account, legal, signature, unknown, and final-submit controls stop safely.
+
+Final Submit remains exclusively under user control. No production account, API key, or remote JobFlow service is required.

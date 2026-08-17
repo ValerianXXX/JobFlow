@@ -20,7 +20,7 @@ from unittest import mock
 from _support import PROJECT, project_temp
 from jobops import UI_PROTOCOL_VERSION, __version__
 from jobops.ai_runtime import AI_QUALITY_CONTRACT, AIAnalysisEngine, LocalSubprocessAIEngine
-from jobops.browser_assist import COMPANION_EXTENSION_ORIGIN
+from jobops.browser_assist import COMPANION_EXTENSION_ORIGIN, COMPANION_EXTENSION_ORIGINS
 from jobops.db import JobOpsDB
 from jobops.document_builder import inspect_docx_text_blocks, template_fingerprint
 from jobops.document_qa import extract_pdf_text
@@ -1752,6 +1752,17 @@ class OnboardingCenterTests(unittest.TestCase):
                 self.assertEqual(preflight_response.headers["Access-Control-Allow-Origin"], COMPANION_EXTENSION_ORIGIN)
                 self.assertEqual(preflight_response.headers["Access-Control-Allow-Private-Network"], "true")
                 preflight.close()
+                for store_origin in COMPANION_EXTENSION_ORIGINS[1:]:
+                    store_preflight = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                    store_preflight.request(
+                        "OPTIONS", "/assist/not-a-secret/pair",
+                        headers={"Origin": store_origin, "Access-Control-Request-Method": "POST"},
+                    )
+                    store_response = store_preflight.getresponse()
+                    store_response.read()
+                    self.assertEqual(store_response.status, 204)
+                    self.assertEqual(store_response.headers["Access-Control-Allow-Origin"], store_origin)
+                    store_preflight.close()
                 intake_preflight = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
                 intake_preflight.request(
                     "OPTIONS", "/intake/not-a-secret/pair",
@@ -2312,7 +2323,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v32-store-companion", html)
+        self.assertIn("jobflow-v33-multi-store-companion", html)
 
 
 if __name__ == "__main__":

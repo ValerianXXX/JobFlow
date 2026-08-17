@@ -4,6 +4,11 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+### Fixed
+
+- Browser Companion 0.9.1 recognizes the signed Chrome Web Store and Microsoft Edge Add-ons identities in addition to the deterministic development identity.
+- The local JobFlow service now accepts CORS requests only from those three allowlisted extension origins, and the web UI probes all supported store identities without broadening website access.
+
 ## [0.4.1] - 2026-08-16
 
 ### Added

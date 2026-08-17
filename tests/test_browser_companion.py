@@ -9,8 +9,11 @@ import unittest
 from _support import PROJECT
 from jobops.browser_assist import (
     COMPANION_EXTENSION_ID,
+    COMPANION_EXTENSION_IDS,
     COMPANION_EXTENSION_ORIGIN,
+    COMPANION_EXTENSION_ORIGINS,
     COMPANION_EXTENSION_VERSION,
+    BrowserAssistManager,
     _semantic_field,
 )
 
@@ -43,6 +46,21 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         derived = "".join(chr(ord("a") + int(character, 16)) for character in digest)
         self.assertEqual(derived, COMPANION_EXTENSION_ID)
         self.assertEqual(COMPANION_EXTENSION_ORIGIN, f"chrome-extension://{derived}")
+        self.assertEqual(
+            COMPANION_EXTENSION_IDS,
+            (
+                "hhlliaaafegldkmcgmaoaelabipcaooj",
+                "pgcnlkfakkacphkdojdbphccjnbbefic",
+                "cebejbohadiofomfiplljnpdefjeiccp",
+            ),
+        )
+        self.assertEqual(
+            COMPANION_EXTENSION_ORIGINS,
+            tuple(f"chrome-extension://{item}" for item in COMPANION_EXTENSION_IDS),
+        )
+        for origin in COMPANION_EXTENSION_ORIGINS:
+            self.assertTrue(BrowserAssistManager.extension_origin_allowed(origin))
+        self.assertFalse(BrowserAssistManager.extension_origin_allowed("chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
         self.assertEqual(manifest["manifest_version"], 3)
         self.assertEqual(set(manifest["permissions"]), {"activeTab", "alarms", "nativeMessaging", "scripting", "storage"})
         self.assertEqual(set(manifest["host_permissions"]), {"http://127.0.0.1/*", "http://localhost/*"})
@@ -67,6 +85,9 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         server = (PROJECT / "src" / "jobops" / "onboarding_server.py").read_text(encoding="utf-8")
 
         self.assertIn("chrome.runtime.onMessageExternal.addListener", worker)
+        self.assertIn("pgcnlkfakkacphkdojdbphccjnbbefic", app)
+        self.assertIn("cebejbohadiofomfiplljnpdefjeiccp", app)
+        self.assertIn("for(const extensionId of COMPANION_EXTENSION_IDS)", app)
         self.assertIn('senderOrigin !== pairing.base_url', worker)
         self.assertIn('sender?.tab?.url || sender?.url', worker)
         self.assertIn('!senderOrigin || senderOrigin !== pairing.base_url', worker)
@@ -266,7 +287,7 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
         self.assertIn("const PROTOCOL = 2;", pair)
         self.assertIn("const PROTOCOL = 2;", worker)
-        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.9.0";', popup)
+        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.9.1";', popup)
         self.assertIn("chrome.runtime.reload()", popup)
         self.assertIn("protocol_version:2", app)
         self.assertIn("pairing:{protocol_version:result.protocol_version", app)

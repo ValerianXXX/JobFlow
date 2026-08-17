@@ -59,7 +59,7 @@ function signedPairResult(url, options) {
     assist_path: assistPath,
     base_url: parsed.origin,
     challenge: String(body.companion_binding.challenge),
-    extension_version: "0.9.0",
+    extension_version: "0.9.1",
     installation_id: String(body.companion_binding.installation_id),
     protocol_version: "2"
   };
@@ -84,7 +84,7 @@ function signedPairResult(url, options) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.9.0"}; },
+    getManifest() { return {version: "0.9.1"}; },
     getURL(pathname) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${pathname}`; },
     lastError: null,
     sendNativeMessage(host, message, callback) {
@@ -232,7 +232,7 @@ async function waitUntil(predicate) {
   assert.equal(nativeMessages[0].host, "com.jobflow.browser_companion");
   assert.deepEqual(JSON.parse(JSON.stringify(nativeMessages[0].message)), {
     schema_version: 1, type: "JOBFLOW_GET_INSTALLATION_BINDING",
-    protocol_version: 2, extension_version: "0.9.0"
+    protocol_version: 2, extension_version: "0.9.1"
   });
 
   delayNextPair = true;

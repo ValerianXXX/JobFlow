@@ -299,8 +299,12 @@ Object.assign(STRINGS.en,{
 
 const UI_PROTOCOL_VERSION = 31;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
-const COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj";
-const COMPANION_VERSION = "0.9.0";
+const COMPANION_EXTENSION_IDS = [
+  "hhlliaaafegldkmcgmaoaelabipcaooj",
+  "pgcnlkfakkacphkdojdbphccjnbbefic",
+  "cebejbohadiofomfiplljnpdefjeiccp"
+];
+const COMPANION_VERSION = "0.9.1";
 const COMPANION_PAIRING_STORAGE = "jobflow-companion-pairing-v2";
 const COMPANION_POLL_BASE_MS = 1500;
 const COMPANION_POLL_MAX_MS = 12000;
@@ -449,17 +453,19 @@ function restoreCompanionPairing(){
 function companionExternalMessage(message,timeout=1400){
   return new Promise((resolve,reject)=>{
     if(!globalThis.chrome?.runtime?.sendMessage){reject(makeUiError("BROWSER_COMPANION_UNAVAILABLE"));return;}
-    let settled=false;
+    let settled=false,pending=COMPANION_EXTENSION_IDS.length;
     const timer=setTimeout(()=>{if(!settled){settled=true;reject(makeUiError("BROWSER_COMPANION_TIMEOUT"));}},timeout);
-    try{
-      chrome.runtime.sendMessage(COMPANION_EXTENSION_ID,message,response=>{
-        if(settled)return;settled=true;clearTimeout(timer);
-        const runtimeError=chrome.runtime.lastError;
-        if(runtimeError){reject(makeUiError("BROWSER_COMPANION_UNAVAILABLE"));return;}
-        if(!response||typeof response!=="object"){reject(makeUiError("BROWSER_COMPANION_UNAVAILABLE"));return;}
-        resolve(response);
-      });
-    }catch(_error){if(!settled){settled=true;clearTimeout(timer);reject(makeUiError("BROWSER_COMPANION_UNAVAILABLE"));}}
+    const unavailable=()=>{pending-=1;if(!settled&&pending===0){settled=true;clearTimeout(timer);reject(makeUiError("BROWSER_COMPANION_UNAVAILABLE"));}};
+    for(const extensionId of COMPANION_EXTENSION_IDS){
+      try{
+        chrome.runtime.sendMessage(extensionId,message,response=>{
+          if(settled)return;
+          const runtimeError=chrome.runtime.lastError;
+          if(runtimeError||!response||typeof response!=="object"){unavailable();return;}
+          settled=true;clearTimeout(timer);resolve(response);
+        });
+      }catch(_error){unavailable();}
+    }
   });
 }
 async function probeCompanionAvailability(render=true){

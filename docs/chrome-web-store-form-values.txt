@@ -1,7 +1,7 @@
 JOBFLOW BROWSER COMPANION - CHROME WEB STORE FORM VALUES
 
 PACKAGE
-JobFlow-Browser-Companion-v0.9.0-store.zip
+JobFlow-Browser-Companion-v0.9.1-store.zip
 
 PRODUCT DETAILS
 
