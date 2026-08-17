@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260816-jobflow-v29-companion-auto-connect">
+  <link rel="stylesheet" href="styles.css?v=20260816-jobflow-v30-ai-decision-loop">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -92,6 +92,14 @@
           </section>
         </div>
       </section>
+      <section id="aiOperatorActivity" class="ai-operator-activity hidden" aria-labelledby="aiOperatorActivityTitle" aria-live="polite">
+        <div class="subheading">
+          <div><p class="eyebrow">AI OPERATOR</p><h3 id="aiOperatorActivityTitle" data-i18n="aiOperatorActivityTitle">AI 当前决策与执行记录</h3><small data-i18n="aiOperatorActivityBody">AI 每次只根据最新状态选择一个受限动作；JobFlow 校验并执行后，才会把新状态交给 AI。</small></div>
+          <span id="aiOperatorActivityBadge" class="guard-badge">—</span>
+        </div>
+        <div id="aiOperatorActivityList" class="ai-operator-activity-list"></div>
+        <small class="ai-operator-activity-boundary" data-i18n="aiOperatorBoundary">AI 只选择 JobFlow 的受限工具；浏览器、文件和最终提交权限仍由 JobFlow 控制。</small>
+      </section>
       <section id="guidedIntakePanel" class="guided-intake-board" aria-labelledby="guidedIntakeTitle">
         <div class="subheading">
           <div><p class="eyebrow" data-i18n="guidedIntakeEyebrow">NEXT JOB</p><h3 id="guidedIntakeTitle" data-i18n="guidedIntakeTitle">一句话即可开始</h3><small data-i18n="guidedIntakeBody">输入岗位方向，或粘贴已有官网岗位链接。JobFlow 会自动搜索、核验官网、沿安全 Apply 路径读取申请表并准备材料。</small></div>
@@ -111,7 +119,7 @@
             <p id="guidedIntakeMessage" class="guided-intake-message" aria-live="polite"></p>
             <div id="guidedSearchChoices" class="guided-search-choices hidden" aria-live="polite"></div>
             <div id="guidedAiOperatorPlan" class="ai-operator-plan hidden">
-              <strong data-i18n="aiOperatorTitle">AI 任务规划</strong>
+              <strong data-i18n="aiOperatorTitle">AI 当前决策</strong>
               <p id="guidedAiOperatorSummary"></p>
               <ol id="guidedAiOperatorSteps"></ol>
               <small data-i18n="aiOperatorBoundary">AI 只选择 JobFlow 的受限工具；浏览器、文件和最终提交权限仍由 JobFlow 控制。</small>
@@ -258,7 +266,7 @@
         <div id="browserAssistSelection" class="browser-assist-selection hidden" aria-live="polite">
           <div><strong id="browserAssistJob"></strong><small id="browserAssistApplication"></small></div>
           <div id="aiOperatorPlan" class="ai-operator-plan hidden">
-            <strong data-i18n="aiOperatorTitle">AI 任务规划</strong>
+            <strong data-i18n="aiOperatorTitle">AI 当前决策</strong>
             <p id="aiOperatorSummary"></p>
             <ol id="aiOperatorSteps"></ol>
             <small data-i18n="aiOperatorBoundary">AI 只选择 JobFlow 的受限工具；浏览器、文件和最终提交权限仍由 JobFlow 控制。</small>
@@ -447,6 +455,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260816-jobflow-v29-companion-auto-connect"></script>
+  <script src="app.js?v=20260816-jobflow-v30-ai-decision-loop"></script>
 </body>
 </html>

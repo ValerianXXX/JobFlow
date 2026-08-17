@@ -87,7 +87,13 @@ def build_application_execution_bundle(
     execution_plan: dict[str, Any],
     public_values: dict[str, str],
     material_references: list[dict[str, str]],
+    operator_task_id: str | None = None,
 ) -> dict[str, Any]:
+    if operator_task_id is not None and not re.fullmatch(r"AIT-[A-F0-9]{12}", operator_task_id):
+        raise JobOpsError(
+            "AI_OPERATOR_TASK_ID_INVALID",
+            "The encrypted execution bundle has an invalid AI operator task binding.",
+        )
     normalized_public: list[dict[str, str]] = []
     for control_ref, raw_value in sorted(public_values.items()):
         value = str(raw_value).strip()
@@ -111,6 +117,7 @@ def build_application_execution_bundle(
         "schema_version": 1,
         "status": "LOCAL_EXECUTION_BUNDLE_READY",
         "application_id": application_id,
+        "operator_task_id": operator_task_id,
         "provider": str(execution_plan.get("provider", "")),
         "source_route_hash": str(execution_plan.get("route_hash", "")),
         "form_snapshot_hash": str(form_snapshot.get("form_snapshot_hash", "")),

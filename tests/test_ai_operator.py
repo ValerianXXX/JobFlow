@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import tempfile
 import threading
 import unittest
+from pathlib import Path
 
 from jobops.ai_operator import (
     analyze_application_form_semantics,
@@ -12,9 +14,11 @@ from jobops.ai_operator import (
     plan_application,
     plan_new_job,
     rank_application_claims,
+    record_operator_turn_event,
     resolve_new_job_command,
 )
 from jobops.ai_runtime import AIAnalysisEngine
+from jobops.db import JobOpsDB
 from jobops.errors import JobOpsError
 from jobops.onboarding_center import OnboardingCenterService
 
@@ -73,18 +77,6 @@ def valid_result() -> dict[str, object]:
         "summary": "The reviewed application is ready for a bounded user-present run.",
         "steps": [
             {
-                "tool": "jobflow.inspect_application_form",
-                "reason": "Re-read the current form before filling approved values.",
-                "requires_user_approval": False,
-                "expected_status": "FORM_INSPECTED",
-            },
-            {
-                "tool": "jobflow.prepare_fill_plan",
-                "reason": "Bind only approved answers and materials to current controls.",
-                "requires_user_approval": True,
-                "expected_status": "AWAITING_USER_SUBMIT",
-            },
-            {
                 "tool": "jobflow.start_user_present_assist",
                 "reason": "Start the host-validated user-present browser lease.",
                 "requires_user_approval": True,
@@ -130,6 +122,7 @@ class AIOperatorTests(unittest.TestCase):
     def test_form_semantics_explain_exact_controls_without_answers_or_authority(self) -> None:
         engine = OperatorEngine({
             "schema_version": 1,
+            "selected_tool": "jobflow.inspect_application_form",
             "summary": "This page collects identity and ends at a user-only submit control.",
             "fields": [
                 {"control_ref": "CTL-AAAAAAAAAAAA", "semantic_role": "identity", "reason": "The prompt asks for a first name."},
@@ -138,6 +131,8 @@ class AIOperatorTests(unittest.TestCase):
         })
         result = analyze_application_form_semantics(engine, form_analysis={
             "provider": "company", "step_kind": "MY_INFORMATION",
+            "page_content_hash": "sha256:" + "1" * 64,
+            "form_snapshot_hash": "sha256:" + "2" * 64,
             "fields": [
                 {"control_ref": "CTL-AAAAAAAAAAAA", "control_type": "text", "required": True,
                  "classification": "private_fixed", "answer_key": "first_name", "display_label": "First Name", "display_options": []},
@@ -149,6 +144,8 @@ class AIOperatorTests(unittest.TestCase):
         self.assertEqual(result["answers_accepted"], 0)
         self.assertEqual(result["browser_actions"], 0)
         self.assertEqual(result["task_state_hash"], engine.request["current_task_state_hash"])
+        self.assertEqual(result["operator_turn"]["selected_tool"], "jobflow.inspect_application_form")
+        self.assertEqual(result["operator_turn"]["decision_point"], "CURRENT_FORM_SEMANTIC_REVIEW")
         self.assertFalse(engine.request["current_task_state"]["entered_values_exposed"])
         serialized = json.dumps(engine.request, ensure_ascii=False)
         self.assertNotIn("PRIVATE ANSWER", serialized)
@@ -167,9 +164,13 @@ class AIOperatorTests(unittest.TestCase):
         self.assertNotIn("secure-ref:", serialized)
         self.assertNotIn("https://secret.invalid/path", serialized)
         self.assertEqual(plan["task_state_hash"], engine.request["current_task_state_hash"])
+        self.assertEqual(plan["operator_turn"]["selected_tool"], "jobflow.start_user_present_assist")
+        self.assertEqual(plan["operator_turn"]["decision_point"], "START_OR_RESUME_TASK")
         manifest = engine.request["jobflow_operating_manifest"]
         self.assertEqual(manifest["decision_loop"]["task_state_delivery"], "EVERY_AI_DECISION")
         self.assertEqual(manifest["decision_loop"]["continuation"], "EVENT_DRIVEN_UNTIL_USER_GATE")
+        self.assertTrue(manifest["decision_loop"]["one_immediate_tool_per_decision"])
+        self.assertTrue(manifest["decision_loop"]["future_tools_require_fresh_state"])
         self.assertTrue(all(item["description"] and item["result"] for item in manifest["tools"]))
         self.assertTrue(all(item["execution_mode"] in {"HOST_COMMAND", "PIPELINE_STAGE", "USER_HANDOFF"} for item in manifest["tools"]))
 
@@ -189,25 +190,34 @@ class AIOperatorTests(unittest.TestCase):
             plan_application(OperatorEngine(weakened), displayed_packet())
         self.assertEqual(boundary_error.exception.code, "AI_OPERATOR_BOUNDARY_REJECTED")
 
-    def test_ai_can_select_approved_page_write_only_inside_fresh_user_present_gate(self) -> None:
+    def test_ai_cannot_select_a_future_page_write_during_the_start_turn(self) -> None:
         result = valid_result()
-        result["steps"].insert(2, {
+        result["steps"] = [{
             "tool": "jobflow.apply_approved_page",
             "reason": "Ask the host to apply only the current hash-bound fields and approved materials.",
             "requires_user_approval": True,
             "expected_status": "AWAITING_USER_SUBMIT",
-        })
+        }]
         with self.assertRaises(JobOpsError) as missing_gate:
             plan_application(OperatorEngine(result), displayed_packet())
         self.assertEqual(missing_gate.exception.code, "AI_OPERATOR_EXTERNAL_ACTION_UNAUTHORIZED")
 
-        plan = plan_application(
-            OperatorEngine(result), displayed_packet(), user_present_assist_confirmed=True,
-        )
-        selected = [item["tool"] for item in plan["steps"]]
-        self.assertIn("jobflow.apply_approved_page", selected)
-        self.assertEqual(plan["final_submit"], "USER_ONLY")
-        self.assertEqual(plan["real_external_actions"], 0)
+        with self.assertRaises(JobOpsError) as wrong_stage:
+            plan_application(
+                OperatorEngine(result), displayed_packet(), user_present_assist_confirmed=True,
+            )
+        self.assertEqual(wrong_stage.exception.code, "AI_OPERATOR_REQUIRED_TOOL_MISSING")
+
+        multiple = valid_result()
+        multiple["steps"].append({
+            "tool": "jobflow.inspect_application_form",
+            "reason": "A future step must wait for fresh page state.",
+            "requires_user_approval": False,
+            "expected_status": "FORM_INSPECTED",
+        })
+        with self.assertRaises(JobOpsError) as future_plan:
+            plan_application(OperatorEngine(multiple), displayed_packet())
+        self.assertEqual(future_plan.exception.code, "AI_OPERATOR_RESPONSE_INVALID")
 
     def test_context_has_counts_and_purposes_but_no_answer_values(self) -> None:
         context = application_operator_context(displayed_packet())
@@ -215,10 +225,39 @@ class AIOperatorTests(unittest.TestCase):
         self.assertEqual(context["materials"], ["resume"])
         self.assertEqual(context["private_answer_values_in_context"], 0)
 
+    def test_operator_turn_ledger_is_append_only_redacted_and_restart_readable(self) -> None:
+        plan = plan_application(OperatorEngine(valid_result()), displayed_packet())
+        turn = plan["operator_turn"]
+        with tempfile.TemporaryDirectory() as temporary:
+            database = JobOpsDB(Path(temporary) / "jobops.db")
+            database.initialize()
+            record_operator_turn_event(database, turn, status="AI_SELECTED")
+            record_operator_turn_event(database, turn, status="HOST_EXECUTED")
+            service = object.__new__(OnboardingCenterService)
+            service.database = database
+            activity = service._operator_activity()
+            self.assertEqual(activity["turn_count"], 1)
+            self.assertEqual(activity["completed_turn_count"], 1)
+            self.assertEqual(activity["recent_turns"][0]["status"], "HOST_EXECUTED")
+            self.assertEqual(
+                activity["recent_turns"][0]["selected_tool"],
+                "jobflow.start_user_present_assist",
+            )
+            with database.connect() as connection:
+                payloads = [str(row[0]) for row in connection.execute(
+                    "SELECT payload_json FROM events WHERE event_type='AI_OPERATOR_TURN' ORDER BY event_id"
+                )]
+            serialized = "\n".join(payloads)
+            self.assertNotIn("PRIVATE ANSWER MUST NOT LEAK", serialized)
+            self.assertNotIn("PRIVATE-EMAIL-VALUE-FOR-TEST", serialized)
+            self.assertNotIn("secure-ref:", serialized)
+            self.assertNotIn("https://secret.invalid", serialized)
+
     def test_onboarding_service_exposes_plan_without_external_action(self) -> None:
         service = object.__new__(OnboardingCenterService)
         service._lock = threading.RLock()
         service.ai_engine = OperatorEngine(valid_result())
+        service._record_operator_turn = lambda *_args, **_kwargs: None
         service.review_packet = lambda application_id: displayed_packet()
         result = service.plan_application_with_ai({"application_id": "APP-ABCDEF123456"})
         self.assertEqual(result["status"], "AI_OPERATOR_PLAN_READY")
@@ -325,6 +364,7 @@ class AIOperatorTests(unittest.TestCase):
         service = object.__new__(OnboardingCenterService)
         service._lock = threading.RLock()
         service.ai_engine = OperatorEngine(result)
+        service._record_operator_turn = lambda *_args, **_kwargs: None
         service.bootstrap = lambda: {
             "application_readiness": {
                 "status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION", "blockers": [],
@@ -340,10 +380,10 @@ class AIOperatorTests(unittest.TestCase):
             "user_confirmed": True,
         })
         self.assertEqual(response["status"], "AI_OPERATOR_TASK_STARTED")
-        self.assertEqual(calls, [{
-            "official_url": "https://careers.example.test/jobs/credit-analyst",
-            "user_confirmed": True,
-        }])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["official_url"], "https://careers.example.test/jobs/credit-analyst")
+        self.assertTrue(calls[0]["user_confirmed"])
+        self.assertRegex(str(calls[0]["operator_task_id"]), r"^AIT-[A-F0-9]{12}$")
         self.assertNotIn("https://", json.dumps(service.ai_engine.request, ensure_ascii=False))
 
     def test_service_starts_browser_discovery_when_the_command_has_no_url(self) -> None:
@@ -357,6 +397,7 @@ class AIOperatorTests(unittest.TestCase):
         service = object.__new__(OnboardingCenterService)
         service._lock = threading.RLock()
         service.ai_engine = OperatorEngine(result)
+        service._record_operator_turn = lambda *_args, **_kwargs: None
         service.bootstrap = lambda: {
             "application_readiness": {
                 "status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION", "blockers": [],
@@ -372,10 +413,10 @@ class AIOperatorTests(unittest.TestCase):
             "user_confirmed": True,
         })
         self.assertEqual(response["status"], "AI_OPERATOR_TASK_STARTED")
-        self.assertEqual(calls, [{
-            "search_intent": "Find matching credit risk analyst roles in New York",
-            "user_confirmed": True,
-        }])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["search_intent"], "Find matching credit risk analyst roles in New York")
+        self.assertTrue(calls[0]["user_confirmed"])
+        self.assertRegex(str(calls[0]["operator_task_id"]), r"^AIT-[A-F0-9]{12}$")
         self.assertEqual(
             response["operator_execution"]["host_executed_tools"],
             ["jobflow.search_official_jobs"],
@@ -385,6 +426,7 @@ class AIOperatorTests(unittest.TestCase):
         service = object.__new__(OnboardingCenterService)
         service._lock = threading.RLock()
         service.ai_engine = OperatorEngine(valid_result())
+        service._record_operator_turn = lambda *_args, **_kwargs: None
         service.review_packet = lambda application_id: displayed_packet()
         calls: list[dict[str, object]] = []
         service.start_browser_assist = lambda payload: calls.append(payload) or {
@@ -396,8 +438,9 @@ class AIOperatorTests(unittest.TestCase):
         self.assertEqual(result["status"], "AI_OPERATOR_TASK_STARTED")
         self.assertEqual(result["host_executed_tools"], ["jobflow.start_user_present_assist"])
         self.assertEqual(result["operator_execution"]["host_executed_tools"], ["jobflow.start_user_present_assist"])
-        self.assertIn("jobflow.inspect_application_form", result["operator_execution"]["pending_pipeline_tools"])
-        self.assertFalse(result["operator_execution"]["all_selected_tools_executed"])
+        self.assertEqual(result["operator_execution"]["pending_pipeline_tools"], [])
+        self.assertTrue(result["operator_execution"]["all_selected_tools_executed"])
+        self.assertEqual(result["operator_execution"]["current_turn"]["status"], "HOST_EXECUTED")
         self.assertEqual(calls, [{"application_id": "APP-ABCDEF123456", "user_confirmed": True}])
         self.assertEqual(result["real_external_actions"], 0)
 
@@ -480,16 +523,12 @@ class AIOperatorTests(unittest.TestCase):
         trace = operator_execution_trace(plan, executed_tools=["jobflow.start_user_present_assist"])
         self.assertEqual(trace["ai_selected_tools"], [step["tool"] for step in plan["steps"]])
         self.assertEqual(trace["host_executed_tools"], ["jobflow.start_user_present_assist"])
-        self.assertEqual(
-            trace["pending_pipeline_tools"],
-            ["jobflow.inspect_application_form", "jobflow.prepare_fill_plan"],
-        )
-        self.assertEqual(
-            trace["event_driven_pipeline_tools"],
-            ["jobflow.inspect_application_form", "jobflow.prepare_fill_plan"],
-        )
+        self.assertEqual(trace["pending_pipeline_tools"], [])
+        self.assertEqual(trace["event_driven_pipeline_tools"], [])
         self.assertEqual(trace["continuation_mode"], "EVENT_DRIVEN_UNTIL_USER_GATE")
         self.assertTrue(trace["initial_host_action_completed"])
+        self.assertEqual(trace["current_turn"]["selected_tool"], "jobflow.start_user_present_assist")
+        self.assertEqual(trace["current_turn"]["status"], "HOST_EXECUTED")
         self.assertEqual(trace["final_submit"], "USER_ONLY")
         self.assertFalse(trace["automatic_retry"])
 
@@ -509,6 +548,7 @@ class AIOperatorTests(unittest.TestCase):
         ]
         engine = OperatorEngine({
             "schema_version": 1,
+            "selected_tool": "jobflow.plan_resume_changes",
             "ranked_claim_ids": ["CLM-TWO", "CLM-ONE"],
             "summary": "Financial modeling is the closest match to the role.",
         })
@@ -531,10 +571,13 @@ class AIOperatorTests(unittest.TestCase):
         )
         self.assertEqual(engine.request["current_task_state"]["private_answer_values_in_context"], 0)
         self.assertEqual(decision["wording_changes_accepted"], 0)
+        self.assertEqual(decision["operator_turn"]["selected_tool"], "jobflow.plan_resume_changes")
+        self.assertEqual(decision["operator_turn"]["decision_point"], "JOB_AND_MATERIAL_DECISION")
 
         wrapped_decision = rank_application_claims(
             WrappedOperatorEngine({
                 "schema_version": 1,
+                "selected_tool": "jobflow.plan_resume_changes",
                 "ranked_claim_ids": ["CLM-TWO", "CLM-ONE"],
                 "summary": "Financial modeling is the closest match to the role.",
             }),
@@ -545,6 +588,7 @@ class AIOperatorTests(unittest.TestCase):
 
         engine.result = {
             "schema_version": 1,
+            "selected_tool": "jobflow.plan_resume_changes",
             "ranked_claim_ids": ["CLM-INVENTED"],
             "summary": "Invented selection.",
         }

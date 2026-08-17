@@ -295,6 +295,15 @@ def _seed_demo_review_queue(database: JobOpsDB, onboarding: PrivateOnboarding, *
         "external_actions": ["upload_material", "submit_application"],
         "source_route": route.as_dict(),
         "queue": queue.status(),
+        "ai_operator": {
+            "schema_version": 1,
+            "operator_task_id": None,
+            "turns": [],
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+            "private_values_exposed": 0,
+            "real_external_actions": 0,
+        },
         "execution_bundle_content_hash": execution_bundle_ref["content_sha256"],
     }
     packet["content_hash"] = sha256_bytes(canonical_json(packet))

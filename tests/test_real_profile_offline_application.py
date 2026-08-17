@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import sys
 import tempfile
 import threading
 import time
@@ -17,6 +18,7 @@ from jobops.browser_assist import COMPANION_EXTENSION_ORIGIN
 from jobops.continuous_intake import ContinuousIntakeDescriptorStore, run_continuous_intake_tick
 from jobops.document_builder import inspect_docx_text_blocks, template_fingerprint
 from jobops.errors import JobOpsError
+from jobops.ai_runtime import LocalSubprocessAIEngine
 from jobops.external_claims import build_external_claim_set, claim_review_hash
 from jobops.adapters import audit_real_external_actions
 from jobops.orchestrator import JobOpsOrchestrator
@@ -213,6 +215,91 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             with self.assertRaises(JobOpsError) as rejected:
                 orchestrator.current_real_application_references()
             self.assertEqual(rejected.exception.code, "APPLICATION_MASTER_SOURCE_BINDING_INVALID")
+
+    def test_ai_operator_material_and_form_turns_are_bound_to_one_real_preparation(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            engine = LocalSubprocessAIEngine([
+                sys.executable,
+                str(PROJECT / "tests" / "fixtures" / "fake_jobops_ai.py"),
+            ])
+            service = OnboardingCenterService(
+                PROJECT, database, onboarding, ai_engine=engine,
+            )
+            self.addCleanup(service.close)
+            operator_task_id = "AIT-0123456789AB"
+            fixtures = PROJECT / "tests" / "fixtures"
+            result = service.prepare_offline_application_bundle(
+                metadata={
+                    "official_url": "https://example.com/careers/synthetic-data-analyst",
+                    "application_url": "https://example.com/careers/apply/synthetic-data-analyst",
+                    "guest_available": True,
+                    "research_title": "Synthetic company role page",
+                    "evidence_excerpt": "Synthetic Data Analyst",
+                    "operator_task_id": operator_task_id,
+                },
+                files={
+                    "jd": (".txt", (fixtures / "synthetic-forward-jd.txt").read_bytes()),
+                    "official": (".html", b"<h1>Synthetic Data Analyst</h1><a href='/careers/apply/synthetic-data-analyst'>Apply</a>"),
+                    "form": (".html", (fixtures / "synthetic-material-form.html").read_bytes()),
+                },
+            )
+            application_id = str(result["application_id"])
+            packet = service.review_packet(application_id)["packet"]
+            operator = packet["ai_operator"]
+
+            self.assertEqual(operator["operator_task_id"], operator_task_id)
+            self.assertEqual(len(operator["turns"]), 2)
+            self.assertEqual(
+                [turn["decision_point"] for turn in operator["turns"]],
+                ["JOB_AND_MATERIAL_DECISION", "CURRENT_FORM_SEMANTIC_REVIEW"],
+            )
+            self.assertTrue(all(turn["application_id"] == application_id for turn in operator["turns"]))
+            self.assertTrue(all(turn["task_id"] == operator_task_id for turn in operator["turns"]))
+            self.assertTrue(all(turn["final_submit"] == "USER_ONLY" for turn in operator["turns"]))
+            self.assertTrue(all(turn["automatic_retry"] is False for turn in operator["turns"]))
+            self.assertTrue(all(turn["private_values_exposed"] == 0 for turn in operator["turns"]))
+
+            activity = service.bootstrap()["ai_operator"]["activity"]
+            relevant = [item for item in activity["recent_turns"] if item["application_id"] == application_id]
+            self.assertEqual(len(relevant), 2)
+            self.assertTrue(all(item["status"] == "HOST_PIPELINE_VERIFIED" for item in relevant))
+            serialized = json.dumps({"operator": operator, "activity": relevant})
+            self.assertNotIn("synthetic-candidate@example.test", serialized)
+            self.assertNotIn(SYNTHETIC_PHONE, serialized)
+            self.assertNotIn(SYNTHETIC_STREET_ADDRESS, serialized)
+
+            decision = service.decide_review_packet({
+                "application_id": application_id,
+                "decision": "APPROVE",
+                "expected_packet_hash": packet["content_hash"],
+                "user_confirmed": True,
+            })
+            self.assertEqual(decision["status"], "APPROVED")
+            bundle, _, _ = service.browser_assist._bundle_manager.load_current(application_id)
+            self.assertEqual(bundle["operator_task_id"], operator_task_id)
+            _token, prepared = self.prepared_browser_assist(service, application_id)
+            live_turn = prepared["ai_operator"]
+            self.assertEqual(live_turn["task_id"], operator_task_id)
+            self.assertEqual(live_turn["application_id"], application_id)
+            self.assertEqual(live_turn["selected_tool"], "jobflow.inspect_application_form")
+            self.assertEqual(live_turn["status"], "HOST_PIPELINE_VERIFIED")
+            self.assertEqual(live_turn["final_submit"], "USER_ONLY")
+            self.assertFalse(live_turn["automatic_retry"])
+            self.assertEqual(live_turn["private_values_exposed"], 0)
+            self.assertEqual(live_turn["real_external_actions"], 0)
+            with database.connect() as connection:
+                self.assertEqual(connection.execute(
+                    "SELECT COUNT(*) FROM events WHERE application_id=? AND event_type='AI_OPERATOR_TURN'",
+                    (application_id,),
+                ).fetchone()[0], 3)
+            safe_live = json.dumps(live_turn)
+            self.assertNotIn("synthetic-candidate@example.test", safe_live)
+            self.assertNotIn(SYNTHETIC_PHONE, safe_live)
+            self.assertNotIn(SYNTHETIC_STREET_ADDRESS, safe_live)
+            stopped = service.browser_assist.stop(user_confirmed=True)
+            self.assertEqual(stopped["status"], "BROWSER_ASSIST_STOPPED")
 
     def approved_company_application(
         self, database: JobOpsDB, onboarding: PrivateOnboarding,

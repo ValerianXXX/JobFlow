@@ -15,6 +15,10 @@
     "schema_version": {"const": 1},
     "status": {"const": "LOCAL_EXECUTION_BUNDLE_READY"},
     "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
+    "operator_task_id": {
+      "type": ["string", "null"],
+      "pattern": "^AIT-[A-F0-9]{12}$"
+    },
     "provider": {"enum": ["company", "greenhouse", "lever", "workday"]},
     "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},

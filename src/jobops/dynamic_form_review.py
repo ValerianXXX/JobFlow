@@ -266,6 +266,11 @@ class DynamicFormReviewManager:
             execution_plan=execution_plan,
             public_values=public_values,
             material_references=list(bundle["material_references"]),
+            operator_task_id=(
+                str(bundle["operator_task_id"])
+                if isinstance(bundle.get("operator_task_id"), str)
+                else None
+            ),
         )
 
         created: list[dict[str, Any]] = []

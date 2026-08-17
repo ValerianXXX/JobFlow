@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from datetime import datetime, timezone
 from html.parser import HTMLParser
@@ -8,7 +9,11 @@ from pathlib import Path
 from typing import Any
 
 from .adapters import FakeBrowserPrefillAdapter
-from .ai_operator import analyze_application_form_semantics, rank_application_claims
+from .ai_operator import (
+    analyze_application_form_semantics,
+    rank_application_claims,
+    record_operator_turn_event,
+)
 from .ai_runtime import AIAnalysisEngine
 from .application_execution import build_application_execution_plan
 from .application_field_resolution import (
@@ -455,7 +460,10 @@ class JobOpsOrchestrator:
         source_type: str | None = None,
         synthetic: bool = False,
         crash_after_step: str | None = None,
+        operator_task_id: str | None = None,
     ) -> dict[str, Any]:
+        if operator_task_id is not None and not re.fullmatch(r"AIT-[A-F0-9]{12}", operator_task_id):
+            raise JobOpsError("AI_OPERATOR_TASK_ID_INVALID", "The linked AI operator task identifier is invalid.")
         real_context: dict[str, Any] | None = None
         if synthetic:
             if not profile_ref or not master_resume_ref or not answer_bank_ref:
@@ -504,6 +512,7 @@ class JobOpsOrchestrator:
             research_fixture=research_fixture, official_snapshot_fixture=official_snapshot_fixture,
             real_context=real_context,
             synthetic=synthetic, crash_after_step=crash_after_step,
+            operator_task_id=operator_task_id,
         )
 
     def _run_reserved_to_awaiting(
@@ -526,6 +535,7 @@ class JobOpsOrchestrator:
         real_context: dict[str, Any] | None,
         synthetic: bool,
         crash_after_step: str | None,
+        operator_task_id: str | None,
     ) -> dict[str, Any]:
         created_references: set[str] = set()
         try:
@@ -538,6 +548,7 @@ class JobOpsOrchestrator:
                 research_fixture=research_fixture, official_snapshot_fixture=official_snapshot_fixture,
                 real_context=real_context,
                 synthetic=synthetic, crash_after_step=crash_after_step,
+                operator_task_id=operator_task_id,
                 created_references=created_references,
             )
         except Exception as exc:
@@ -579,6 +590,7 @@ class JobOpsOrchestrator:
         synthetic: bool,
         crash_after_step: str | None,
         created_references: set[str],
+        operator_task_id: str | None,
     ) -> dict[str, Any]:
 
         route_value = load_json(route_fixture)
@@ -609,6 +621,7 @@ class JobOpsOrchestrator:
         self._crash(crash_after_step, "after_snapshot")
         job_id = str(collected["job_id"])
         application_id = stable_id("APP", job_id)
+        ai_operator_turns: list[dict[str, Any]] = []
         jd = analyze_jd(normalized)
         if jd.snapshot_hash != intake_key:
             raise JobOpsError("JD_HASH_DRIFT", "JD analysis did not bind to the stored normalized snapshot.")
@@ -659,8 +672,15 @@ class JobOpsOrchestrator:
                 self.ai_engine,
                 job_summary=analysis,
                 claims=claims,
+                operator_task_id=operator_task_id,
+                application_id=application_id,
             )
             preferred_claim_ids = list(material_decision["ranked_claim_ids"])
+            material_turn = dict(material_decision["operator_turn"])
+            record_operator_turn_event(
+                self.database, material_turn, status="HOST_PIPELINE_VERIFIED",
+            )
+            ai_operator_turns.append(material_turn)
         self._crash(crash_after_step, "after_analysis")
 
         if synthetic:
@@ -728,8 +748,16 @@ class JobOpsOrchestrator:
             ai_form_semantics: dict[str, Any] | None = None
             if not synthetic and self.ai_engine is not None:
                 ai_form_semantics = analyze_application_form_semantics(
-                    self.ai_engine, form_analysis=form_analysis,
+                    self.ai_engine,
+                    form_analysis=form_analysis,
+                    operator_task_id=operator_task_id,
+                    application_id=application_id,
                 )
+                form_turn = dict(ai_form_semantics["operator_turn"])
+                record_operator_turn_event(
+                    self.database, form_turn, status="HOST_PIPELINE_VERIFIED",
+                )
+                ai_operator_turns.append(form_turn)
             semantic_by_ref = {
                 str(item["control_ref"]): item
                 for item in (ai_form_semantics or {}).get("fields", [])
@@ -1053,6 +1081,7 @@ class JobOpsOrchestrator:
                     **item,
                     "secure_ref": upload_reference_by_purpose[str(item["purpose"])],
                 } for item in uploads],
+                operator_task_id=operator_task_id,
             )
             execution_bundle_ref = self.onboarding.import_bytes(
                 "application_execution_bundle", canonical_json(execution_bundle), synthetic=synthetic,
@@ -1077,6 +1106,15 @@ class JobOpsOrchestrator:
             "uploads": uploads, "material_plan": material_plan, "execution_plan": execution_plan,
             "external_actions": ["upload_material", "submit_application"],
             "source_route": route.as_dict(), "queue": self.queue.status(),
+            "ai_operator": {
+                "schema_version": 1,
+                "operator_task_id": operator_task_id,
+                "turns": ai_operator_turns,
+                "final_submit": "USER_ONLY",
+                "automatic_retry": False,
+                "private_values_exposed": 0,
+                "real_external_actions": 0,
+            },
         }
         if execution_bundle_ref is not None:
             packet["execution_bundle_content_hash"] = execution_bundle_ref["content_sha256"]

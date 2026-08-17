@@ -44,10 +44,12 @@ from .ai_runtime import (
 )
 from .ai_connections import AIConnectionManager
 from .ai_operator import (
+    analyze_application_form_semantics,
     operator_execution_trace,
     operator_public_manifest,
     plan_application,
     plan_new_job,
+    record_operator_turn_event,
     resolve_new_job_command,
 )
 from .db import JobOpsDB
@@ -725,13 +727,18 @@ class OnboardingCenterService:
         ).reconcile_interrupted_runs()
         self.onboarding = onboarding
         self.onboarding.assert_outside_project(self.project)
-        self.browser_assist = BrowserAssistManager(self.project, self.database, self.onboarding)
         initial_engine = ai_engine or configured_ai_engine()
         self.ai_connections = ai_connections or AIConnectionManager(
             self.onboarding.store.private_root.parent / "ai-connection.json",
             initial_engine=initial_engine,
         )
         self.ai_engine = self.ai_connections.current_engine
+        self.browser_assist = BrowserAssistManager(
+            self.project,
+            self.database,
+            self.onboarding,
+            semantic_reviewer=self._review_live_application_form,
+        )
         self.schemas = self.project / "schemas"
         self.index_path = self.project / "state" / "onboarding-center-index.json"
         self._lock = threading.RLock()
@@ -752,6 +759,114 @@ class OnboardingCenterService:
                 (kind,),
             ).fetchone()
         return str(row[0]) if row else None
+
+    def _operator_activity(self) -> dict[str, Any]:
+        """Return a compact, value-free ledger of recent AI decisions."""
+
+        with self.database.connect() as connection:
+            rows = connection.execute(
+                """SELECT event_id,application_id,payload_json,created_at
+                   FROM events WHERE event_type='AI_OPERATOR_TURN'
+                   ORDER BY event_id DESC LIMIT 48"""
+            ).fetchall()
+        latest_by_turn: dict[str, dict[str, Any]] = {}
+        ordered_turn_ids: list[str] = []
+        for row in reversed(rows):
+            try:
+                payload = json.loads(str(row["payload_json"]))
+            except (TypeError, json.JSONDecodeError):
+                continue
+            if not isinstance(payload, dict):
+                continue
+            turn_id = str(payload.get("turn_id") or "")
+            if not re.fullmatch(r"AOT-[A-F0-9]{12}", turn_id):
+                continue
+            selected_tool = str(payload.get("selected_tool") or "")
+            decision_point = str(payload.get("decision_point") or "")
+            status = str(payload.get("status") or "")
+            if (
+                not re.fullmatch(r"jobflow\.[a-z_]+", selected_tool)
+                or decision_point not in {
+                    "START_OR_RESUME_TASK", "JOB_AND_MATERIAL_DECISION",
+                    "CURRENT_FORM_SEMANTIC_REVIEW",
+                }
+                or status not in {
+                    "AI_SELECTED", "HOST_EXECUTED", "HOST_PIPELINE_VERIFIED", "HOST_REJECTED",
+                }
+                or payload.get("final_submit") != "USER_ONLY"
+                or payload.get("automatic_retry") is not False
+                or payload.get("private_values_exposed") != 0
+            ):
+                continue
+            if turn_id not in latest_by_turn:
+                ordered_turn_ids.append(turn_id)
+            latest_by_turn[turn_id] = {
+                "turn_id": turn_id,
+                "operator_run_id": str(payload.get("operator_run_id") or ""),
+                "application_id": str(row["application_id"] or "") or None,
+                "decision_point": decision_point,
+                "selected_tool": selected_tool,
+                "status": status,
+                "error_code": str(payload.get("error_code") or "") or None,
+                "created_at": str(row["created_at"]),
+                "final_submit": "USER_ONLY",
+                "automatic_retry": False,
+                "private_values_exposed": 0,
+                "real_external_actions": 0,
+            }
+        recent = [latest_by_turn[turn_id] for turn_id in ordered_turn_ids[-12:]]
+        completed = sum(
+            item["status"] in {"HOST_EXECUTED", "HOST_PIPELINE_VERIFIED"}
+            for item in recent
+        )
+        return {
+            "status": recent[-1]["status"] if recent else "IDLE",
+            "turn_count": len(recent),
+            "completed_turn_count": completed,
+            "recent_turns": recent,
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+            "private_values_exposed": 0,
+            "real_external_actions": 0,
+        }
+
+    def _record_operator_turn(
+        self,
+        turn: dict[str, Any],
+        *,
+        status: str,
+        error_code: str | None = None,
+    ) -> dict[str, Any]:
+        return record_operator_turn_event(
+            self.database, turn, status=status, error_code=error_code,
+        )
+
+    def _review_live_application_form(
+        self,
+        *,
+        form_analysis: dict[str, Any],
+        operator_task_id: str,
+        application_id: str,
+    ) -> dict[str, Any]:
+        """Use the connected AI as a value-free page-understanding layer."""
+
+        engine = self.ai_engine
+        if engine is None or not engine.ready:
+            raise JobOpsError(
+                "AI_OPERATOR_REQUIRED",
+                "Reconnect the verified AI before JobFlow reviews this new application page.",
+            )
+        decision = analyze_application_form_semantics(
+            engine,
+            form_analysis=form_analysis,
+            operator_task_id=operator_task_id,
+            application_id=application_id,
+        )
+        self._record_operator_turn(
+            dict(decision["operator_turn"]),
+            status="HOST_PIPELINE_VERIFIED",
+        )
+        return decision
 
     def _secure_content_hash(self, reference: str) -> str:
         with self.database.connect() as connection:
@@ -1587,6 +1702,7 @@ class OnboardingCenterService:
                 "Approve the exact current review packet before asking AI to plan the assisted application.",
             )
         plan = plan_application(self.ai_engine, displayed)
+        self._record_operator_turn(plan["operator_turn"], status="AI_SELECTED")
         return {
             "status": "AI_OPERATOR_PLAN_READY",
             "operator_plan": plan,
@@ -1597,7 +1713,7 @@ class OnboardingCenterService:
 
     @_synchronized
     def start_application_with_ai(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """Let the connected AI decide the bounded workflow, then execute only the host-owned lease action."""
+        """Execute one fresh AI-selected host action, then wait for the next pipeline decision point."""
         application_id = str(payload.get("application_id", "")).strip()
         displayed = self.review_packet(application_id)
         if displayed["status"] != "APPROVED" or displayed["application_status"] != "APPROVED":
@@ -1610,6 +1726,7 @@ class OnboardingCenterService:
             displayed,
             user_present_assist_confirmed=payload.get("user_confirmed") is True,
         )
+        self._record_operator_turn(plan["operator_turn"], status="AI_SELECTED")
         if plan["status"] != "READY":
             return {
                 "status": "AI_OPERATOR_NEEDS_USER_INPUT",
@@ -1618,10 +1735,19 @@ class OnboardingCenterService:
                 "browser_assist": None,
                 "real_external_actions": 0,
             }
-        assist = self.start_browser_assist({
-            "application_id": application_id,
-            "user_confirmed": payload.get("user_confirmed") is True,
-        })
+        try:
+            assist = self.start_browser_assist({
+                "application_id": application_id,
+                "user_confirmed": payload.get("user_confirmed") is True,
+            })
+        except Exception as exc:
+            self._record_operator_turn(
+                plan["operator_turn"],
+                status="HOST_REJECTED",
+                error_code=exc.code if isinstance(exc, JobOpsError) else "AI_OPERATOR_HOST_ACTION_FAILED",
+            )
+            raise
+        self._record_operator_turn(plan["operator_turn"], status="HOST_EXECUTED")
         trace = operator_execution_trace(plan, executed_tools=["jobflow.start_user_present_assist"])
         return {
             "status": "AI_OPERATOR_TASK_STARTED",
@@ -1654,6 +1780,7 @@ class OnboardingCenterService:
             guided_status=dict((snapshot.get("dashboard") or {}).get("guided_intake") or {}),
             read_only_intake_confirmed=payload.get("user_confirmed") is True,
         )
+        self._record_operator_turn(plan["operator_turn"], status="AI_SELECTED")
         if plan["status"] != "READY":
             return {
                 "status": "AI_OPERATOR_NEEDS_USER_INPUT",
@@ -1670,7 +1797,17 @@ class OnboardingCenterService:
         else:
             guided_payload["search_intent"] = command
             executed_tool = "jobflow.search_official_jobs"
-        guided = self.start_guided_intake(guided_payload)
+        guided_payload["operator_task_id"] = plan["task_id"]
+        try:
+            guided = self.start_guided_intake(guided_payload)
+        except Exception as exc:
+            self._record_operator_turn(
+                plan["operator_turn"],
+                status="HOST_REJECTED",
+                error_code=exc.code if isinstance(exc, JobOpsError) else "AI_OPERATOR_HOST_ACTION_FAILED",
+            )
+            raise
+        self._record_operator_turn(plan["operator_turn"], status="HOST_EXECUTED")
         trace = operator_execution_trace(plan, executed_tools=[executed_tool])
         return {
             "status": "AI_OPERATOR_TASK_STARTED",
@@ -1894,6 +2031,8 @@ class OnboardingCenterService:
             "read_only_page_inspections": inspections,
             "real_external_actions": 0,
         }
+        if active.get("operator_task_id"):
+            public["operator_task_id"] = str(active["operator_task_id"])
         failure = active.get("last_failure")
         if isinstance(failure, dict) and str(active.get("status")) == "FORM_CAPTURE_FAILED":
             public.update(deepcopy(failure))
@@ -1958,6 +2097,12 @@ class OnboardingCenterService:
             official_url = ""
             company_domain = ""
             discovery_mode = "VISIBLE_BROWSER_SEARCH"
+        raw_operator_task_id = str(payload.get("operator_task_id") or "").strip()
+        operator_task_id = (
+            raw_operator_task_id
+            if re.fullmatch(r"AIT-[A-F0-9]{12}", raw_operator_task_id)
+            else None
+        )
         replaced = [
             (old_token, old_lease) for old_token, old_lease in self._guided_intakes.items()
             if str(old_lease.get("status")) in GUIDED_INTAKE_CANCELLABLE_STATUSES
@@ -1983,6 +2128,7 @@ class OnboardingCenterService:
             "started_epoch": started_epoch, "expires_epoch": expires_epoch,
             "expires_at": expires_at, "paired": False,
             "status": "GUIDED_INTAKE_PAIRING", "job_page": None,
+            "operator_task_id": operator_task_id,
         }
         self._guided_intakes[token] = lease
         self._guided_event(
@@ -1998,6 +2144,7 @@ class OnboardingCenterService:
             "intake_token": token, "intake_path": f"/intake/{token}",
             "protocol_version": 2, "official_url": official_url,
             "discovery_mode": discovery_mode,
+            "operator_task_id": operator_task_id,
             "expires_at": expires_at, "real_external_actions": 0,
         }
 
@@ -2366,6 +2513,7 @@ class OnboardingCenterService:
                     "guest_available": guest_available,
                     "research_title": str(job_page["title"]),
                     "evidence_excerpt": excerpt,
+                    "operator_task_id": str(lease.get("operator_task_id") or "") or None,
                 },
                 files={
                     "jd": (".txt", str(job_page["jd_text"]).encode("utf-8")),
@@ -2827,6 +2975,7 @@ class OnboardingCenterService:
             "ai_engine": self.ai_engine.public_status(),
             "ai_operator": {
                 **operator_public_manifest(),
+                "activity": self._operator_activity(),
                 "current_task": {
                     "guided_intake_status": str((dashboard.get("guided_intake") or {}).get("status", "IDLE")),
                     "browser_assist_status": str((dashboard.get("browser_assist") or {}).get("active_status", "IDLE")),
@@ -2941,6 +3090,11 @@ class OnboardingCenterService:
                 route_fixture=route_path, form_fixture=paths["form"],
                 research_fixture=research_path, official_snapshot_fixture=paths["official"],
                 synthetic=False,
+                operator_task_id=(
+                    str(metadata.get("operator_task_id"))
+                    if re.fullmatch(r"AIT-[A-F0-9]{12}", str(metadata.get("operator_task_id") or ""))
+                    else None
+                ),
             )
             if result.get("status") == "DEFERRED":
                 intake_key = str(result.get("intake_key", ""))

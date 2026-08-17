@@ -38,8 +38,8 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260816-jobflow-v29-companion-auto-connect/);
-    assert.match(initial.styleVersion, /20260816-jobflow-v29-companion-auto-connect/);
+    assert.match(initial.scriptVersion, /20260816-jobflow-v30-ai-decision-loop/);
+    assert.match(initial.styleVersion, /20260816-jobflow-v30-ai-decision-loop/);
     assert.deepEqual(pageErrors, []);
 
     const adaptiveProfile = await page.evaluate(() => {
@@ -77,6 +77,27 @@ const {chromium} = require("playwright");
     assert.equal(adaptiveProfile.optionalCount, 1);
     assert.equal(adaptiveProfile.resolvedOpen, false);
     assert.match(adaptiveProfile.resolvedSummary, /已从资料填好 1 项/);
+
+    const operatorActivity = await page.evaluate(() => {
+      state.locale = "en";
+      state.data = {
+        ai_operator: {activity: {recent_turns: [
+          {application_id: "APP-ABCDEF123456", decision_point: "JOB_AND_MATERIAL_DECISION", selected_tool: "jobflow.plan_resume_changes", status: "HOST_PIPELINE_VERIFIED"},
+          {application_id: "APP-ABCDEF123456", decision_point: "CURRENT_FORM_SEMANTIC_REVIEW", selected_tool: "jobflow.inspect_application_form", status: "HOST_PIPELINE_VERIFIED"},
+        ]}},
+      };
+      renderAiOperatorActivity();
+      return {
+        hidden: document.querySelector("#aiOperatorActivity").classList.contains("hidden"),
+        badge: document.querySelector("#aiOperatorActivityBadge").textContent,
+        items: [...document.querySelectorAll(".ai-operator-activity-item")].map(item => item.textContent),
+      };
+    });
+    assert.equal(operatorActivity.hidden, false);
+    assert.equal(operatorActivity.badge, "2 verified decisions");
+    assert.match(operatorActivity.items[0], /Understand the current form/);
+    assert.match(operatorActivity.items[0], /Verified by JobFlow/);
+    assert.match(operatorActivity.items[1], /Select approved resume evidence/);
 
     const linearWorkflow = await page.evaluate(() => {
       state.locale = "zh";

@@ -23,6 +23,7 @@ if request.get("task") == "JOBFLOW_FORM_SEMANTIC_REVIEW_V1":
         })
     json.dump({
         "schema_version": 1,
+        "selected_tool": "jobflow.inspect_application_form",
         "summary": "The current application controls were interpreted without receiving any entered values.",
         "fields": fields,
     }, sys.stdout)
@@ -34,12 +35,13 @@ if request.get("task") == "JOBFLOW_APPLICATION_MATERIAL_DECISION_V1":
     ]
     json.dump({
         "schema_version": 1,
+        "selected_tool": "jobflow.plan_resume_changes",
         "ranked_claim_ids": claim_ids,
         "summary": "The approved claims were ranked against the supplied job requirements.",
     }, sys.stdout)
     raise SystemExit(0)
-if request.get("task") in {"JOBFLOW_APPLICATION_OPERATOR_PLAN_V1", "JOBFLOW_NEW_JOB_OPERATOR_PLAN_V1"}:
-    new_job = request.get("task") == "JOBFLOW_NEW_JOB_OPERATOR_PLAN_V1"
+if request.get("task") in {"JOBFLOW_APPLICATION_OPERATOR_TURN_V2", "JOBFLOW_NEW_JOB_OPERATOR_TURN_V2"}:
+    new_job = request.get("task") == "JOBFLOW_NEW_JOB_OPERATOR_TURN_V2"
     discovery = new_job and request.get("current_task_state", {}).get("stage") == "JOB_DISCOVERY"
     json.dump({
         "schema_version": 1,
@@ -51,24 +53,6 @@ if request.get("task") in {"JOBFLOW_APPLICATION_OPERATOR_PLAN_V1", "JOBFLOW_NEW_
             "requires_user_approval": False if discovery else True,
             "expected_status": "AWAITING_JOB_DISCOVERY" if discovery else "GUIDED_INTAKE_PAIRING",
         }] if new_job else [
-            {
-                "tool": "jobflow.read_current_job",
-                "reason": "Confirm the active reviewed job binding before form work.",
-                "requires_user_approval": False,
-                "expected_status": "JOB_BOUND",
-            },
-            {
-                "tool": "jobflow.inspect_application_form",
-                "reason": "Re-read the current live form structure before each approved fill step.",
-                "requires_user_approval": False,
-                "expected_status": "FORM_INSPECTED",
-            },
-            {
-                "tool": "jobflow.prepare_fill_plan",
-                "reason": "Use only approved answers and approved application materials.",
-                "requires_user_approval": True,
-                "expected_status": "AWAITING_USER_SUBMIT",
-            },
             {
                 "tool": "jobflow.start_user_present_assist",
                 "reason": "Start the host-validated Browser Companion lease.",

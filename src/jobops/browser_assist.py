@@ -6,7 +6,7 @@ import secrets
 import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import unquote, urlparse
 
 from .approvals import ApprovalContext
@@ -206,12 +206,21 @@ class _AssistLease:
     profile_ref: str | None = None
     answer_bank_ref: str | None = None
     private_source_hashes: dict[str, str] = field(default_factory=dict)
+    operator_task_id: str | None = None
+    ai_reviews_by_page: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 class BrowserAssistManager:
     """User-present company/ATS assistance with scoped multi-page navigation and no submit capability."""
 
-    def __init__(self, project, database: JobOpsDB, onboarding: PrivateOnboarding) -> None:
+    def __init__(
+        self,
+        project,
+        database: JobOpsDB,
+        onboarding: PrivateOnboarding,
+        *,
+        semantic_reviewer: Callable[..., dict[str, Any]] | None = None,
+    ) -> None:
         self.project = project
         self.database = database
         self.onboarding = onboarding
@@ -224,7 +233,75 @@ class BrowserAssistManager:
         self._bundle_manager = ApplicationExecutionBundleManager(database, onboarding)
         self._dynamic_reviews = DynamicFormReviewManager(database, onboarding)
         self._payload_broker = EphemeralATSPayloadBroker(onboarding)
+        self._semantic_reviewer = semantic_reviewer
         self._reconcile_startup()
+
+    def _review_live_page_with_ai(
+        self,
+        lease: _AssistLease,
+        live: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        """Run one value-free AI decision for a fresh page, then revalidate it locally."""
+
+        task_id = lease.operator_task_id
+        if task_id is None:
+            # Legacy, demo, and synthetic bundles remain deterministic-only.
+            return None
+        page_hash = str(live.get("page_content_hash") or "")
+        if not re.fullmatch(r"sha256:[a-f0-9]{64}", page_hash):
+            raise JobOpsError("AI_FORM_SEMANTIC_INPUT_INVALID", "The live page is missing its sanitized content binding.")
+        cached = lease.ai_reviews_by_page.get(page_hash)
+        if cached is not None:
+            return dict(cached)
+        if self._semantic_reviewer is None:
+            raise JobOpsError(
+                "AI_OPERATOR_REQUIRED",
+                "Reconnect the verified AI before JobFlow reviews this new application page.",
+            )
+        reviewed = self._semantic_reviewer(
+            form_analysis=live,
+            operator_task_id=task_id,
+            application_id=lease.application_id,
+        )
+        turn = reviewed.get("operator_turn") if isinstance(reviewed, dict) else None
+        if not isinstance(turn, dict) or (
+            turn.get("task_id") != task_id
+            or turn.get("application_id") != lease.application_id
+            or turn.get("decision_point") != "CURRENT_FORM_SEMANTIC_REVIEW"
+            or turn.get("selected_tool") != "jobflow.inspect_application_form"
+            or turn.get("final_submit") != "USER_ONLY"
+            or turn.get("automatic_retry") is not False
+            or turn.get("private_values_exposed") != 0
+            or turn.get("real_external_actions") != 0
+        ):
+            raise JobOpsError(
+                "AI_OPERATOR_TURN_INVALID",
+                "The AI page review is not bound to the current JobFlow task and safety contract.",
+            )
+        descriptor = {
+            "operator_run_id": str(turn.get("operator_run_id") or ""),
+            "turn_id": str(turn.get("turn_id") or ""),
+            "task_id": task_id,
+            "application_id": lease.application_id,
+            "decision_point": "CURRENT_FORM_SEMANTIC_REVIEW",
+            "task_state_hash": str(turn.get("task_state_hash") or ""),
+            "selected_tool": "jobflow.inspect_application_form",
+            "result_hash": str(turn.get("result_hash") or ""),
+            "status": "HOST_PIPELINE_VERIFIED",
+            "final_submit": "USER_ONLY",
+            "automatic_retry": False,
+            "private_values_exposed": 0,
+            "real_external_actions": 0,
+        }
+        if (
+            not re.fullmatch(r"AOR-[A-F0-9]{12}", descriptor["operator_run_id"])
+            or not re.fullmatch(r"AOT-[A-F0-9]{12}", descriptor["turn_id"])
+            or not re.fullmatch(r"sha256:[a-f0-9]{64}", descriptor["task_state_hash"])
+            or not re.fullmatch(r"sha256:[a-f0-9]{64}", descriptor["result_hash"])
+        ):
+            raise JobOpsError("AI_OPERATOR_TURN_INVALID", "The AI page review has an invalid evidence binding.")
+        lease.ai_reviews_by_page[page_hash] = dict(descriptor)
+        return descriptor
 
     @staticmethod
     def extension_origin_allowed(origin: str | None) -> bool:
@@ -657,6 +734,11 @@ class BrowserAssistManager:
                 profile_ref=profile_ref,
                 answer_bank_ref=answer_bank_ref,
                 private_source_hashes=private_hashes,
+                operator_task_id=(
+                    str(bundle["operator_task_id"])
+                    if isinstance(bundle.get("operator_task_id"), str)
+                    else None
+                ),
             )
             with self.database.connect() as connection:
                 connection.execute("BEGIN IMMEDIATE")
@@ -1042,6 +1124,8 @@ class BrowserAssistManager:
             else:
                 initial_control_ref_map = {}
 
+            ai_operator_review = self._review_live_page_with_ai(lease, live)
+
             live_fields = list(live["fields"])
             live_position_by_control = {
                 str(field["control_ref"]): index
@@ -1247,6 +1331,7 @@ class BrowserAssistManager:
                     {key: item[key] for key in ("client_ref", "classification", "required")}
                     for item in manual_fields
                 ],
+                "ai_operator_review": ai_operator_review,
             })
             self._session_manager.record_assisted_use(
                 session_id=lease.session_id,
@@ -1307,6 +1392,7 @@ class BrowserAssistManager:
                 "stop_before_submit": True,
                 "submit_capability": False,
                 "automatic_retry": False,
+                "ai_operator": ai_operator_review,
             }
 
     def take_file(

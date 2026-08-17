@@ -258,7 +258,46 @@ Object.assign(STRINGS.en,{
   preparingGuidedApplication:"Generating role materials and the review packet…", startingGuidedIntake:"Starting the continuous role workflow…", startingBrowserAssist:"Starting the user-present filling session…", resolvingSubmission:"Saving the submission-result decision…"
 });
 
-const UI_PROTOCOL_VERSION = 29;
+Object.assign(STRINGS.zh,{
+  aiOperatorTitle:"AI 当前决策",
+  aiOperatorActivityTitle:"AI 当前决策与执行记录",
+  aiOperatorActivityBody:"AI 每次只根据最新状态选择一个受限动作；JobFlow 校验并执行后，才会把新状态交给 AI。",
+  aiOperatorActivityIdle:"尚无 AI 决策",
+  aiOperatorActivityTurns:"{count} 次已验证决策",
+  aiOperatorReady:"AI 已选择当前受限动作，JobFlow 正在批准边界内执行。",
+  aiOperatorPending:"等待当前状态执行",
+  aiOperatorSelected:"AI 已选择",
+  aiOperatorVerified:"JobFlow 已验证",
+  aiOperatorRejected:"JobFlow 已拒绝",
+  startBrowserAssistNow:"让 AI 决策并开始",
+  startingBrowserAssist:"AI 正在判断当前动作并建立一次性浏览器连接…",
+  aiToolSearchOfficialJobs:"搜索并核验公司官网岗位",
+  aiToolStartGuidedIntake:"建立只读岗位任务",
+  aiToolPlanResumeChanges:"选择获批简历证据",
+  aiToolInspectApplicationForm:"理解当前申请表",
+  aiToolStartUserPresentAssist:"开始用户在场填写"
+});
+Object.assign(STRINGS.en,{
+  aiOperatorTitle:"AI current decision",
+  aiOperatorActivityTitle:"AI decisions and execution",
+  aiOperatorActivityBody:"AI selects one bounded action from fresh state. Only after JobFlow validates and executes it does AI receive the next state.",
+  aiOperatorActivityIdle:"No AI decision yet",
+  aiOperatorActivityTurns:"{count} verified decisions",
+  aiOperatorReady:"AI selected the current bounded action; JobFlow is executing it within the approved boundary.",
+  aiOperatorPending:"Waiting on current state",
+  aiOperatorSelected:"Selected by AI",
+  aiOperatorVerified:"Verified by JobFlow",
+  aiOperatorRejected:"Rejected by JobFlow",
+  startBrowserAssistNow:"Let AI decide and start",
+  startingBrowserAssist:"AI is selecting the current action and creating the one-time browser connection…",
+  aiToolSearchOfficialJobs:"Search and verify official company roles",
+  aiToolStartGuidedIntake:"Create the read-only job task",
+  aiToolPlanResumeChanges:"Select approved resume evidence",
+  aiToolInspectApplicationForm:"Understand the current form",
+  aiToolStartUserPresentAssist:"Start user-present filling"
+});
+
+const UI_PROTOCOL_VERSION = 30;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj";
 const COMPANION_VERSION = "0.7.2";
@@ -300,6 +339,29 @@ function aiOperatorStepsHtml(plan){
     const stage=executed.has(step.tool)?t("aiOperatorExecuted"):userGates.has(step.tool)?t("aiOperatorUserGate"):delegated.has(step.tool)?t("aiOperatorDelegated"):t("aiOperatorPending");
     return `<li><strong>${escapeHtml(step.tool)}</strong><span>${escapeHtml(stage)} · ${escapeHtml(step.reason)}</span></li>`;
   }).join("");
+}
+function aiOperatorToolLabel(tool){
+  const keys={
+    "jobflow.search_official_jobs":"aiToolSearchOfficialJobs",
+    "jobflow.start_guided_intake":"aiToolStartGuidedIntake",
+    "jobflow.plan_resume_changes":"aiToolPlanResumeChanges",
+    "jobflow.inspect_application_form":"aiToolInspectApplicationForm",
+    "jobflow.start_user_present_assist":"aiToolStartUserPresentAssist"
+  };
+  return keys[tool]?t(keys[tool]):String(tool||"—");
+}
+function aiOperatorStatusLabel(status){
+  if(status==="HOST_EXECUTED"||status==="HOST_PIPELINE_VERIFIED")return t("aiOperatorVerified");
+  if(status==="HOST_REJECTED")return t("aiOperatorRejected");
+  return t("aiOperatorSelected");
+}
+function renderAiOperatorActivity(){
+  const activity=state.data?.ai_operator?.activity||{}, turns=Array.isArray(activity.recent_turns)?activity.recent_turns:[];
+  const panel=document.querySelector("#aiOperatorActivity"), list=document.querySelector("#aiOperatorActivityList"), badge=document.querySelector("#aiOperatorActivityBadge");
+  if(!panel||!list||!badge)return;
+  panel.classList.toggle("hidden",!turns.length);
+  badge.textContent=turns.length?t("aiOperatorActivityTurns").replace("{count}",String(turns.length)):t("aiOperatorActivityIdle");
+  list.innerHTML=turns.slice(-4).reverse().map(item=>`<article class="ai-operator-activity-item"><div><strong>${escapeHtml(aiOperatorToolLabel(item.selected_tool))}</strong><small>${escapeHtml(item.application_id||item.decision_point||"")}</small></div><b>${escapeHtml(aiOperatorStatusLabel(item.status))}</b></article>`).join("");
 }
 function isReadonly() { return state.data?.status === "ONBOARDING_COMPLETE"; }
 function disabledAttr(condition=true) { return condition ? " disabled" : ""; }
@@ -1455,6 +1517,7 @@ function renderDashboard(){
   const dashboard=state.data?.dashboard;
   if(!dashboard)return;
   const queue=dashboard.queue||{}, safety=dashboard.safety||{}, pending=dashboard.pending_applications||[], deferred=dashboard.deferred_intake||[], recent=dashboard.recent_applications||[], executions=dashboard.execution_runs||[];
+  renderAiOperatorActivity();
   document.querySelector("#metricOnboarding").textContent=dashboard.onboarding_status==="ONBOARDING_COMPLETE"?t("pipelineReady"):t("pipelineNeedsSetup");
   document.querySelector("#metricAi").textContent=isAiReady(state.data.ai_engine)?t("aiReadyShort"):t("aiMissingShort");
   document.querySelector("#metricAwaiting").textContent=String(queue.awaiting_approval||0);

@@ -2258,7 +2258,9 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('api("start-application-with-ai"', app)
         self.assertIn("state.aiOperatorExecution=operated.operator_execution||null", app)
         self.assertIn('aiOperatorExecuted: "JobFlow 已执行"', app)
-        self.assertIn('aiOperatorPending: "Runs after fresh page state"', app)
+        self.assertIn('aiOperatorPending:"Waiting on current state"', app)
+        self.assertIn('aiOperatorActivityTitle:"AI decisions and execution"', app)
+        self.assertIn("function renderAiOperatorActivity()", app)
         self.assertIn("function aiOperatorStepsHtml(plan)", app)
         self.assertIn("function jobUrlFromOperatorInputs()", app)
         self.assertIn('aiOperatorDelegated: "由 JobFlow 接力执行"', app)
@@ -2310,7 +2312,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v29-companion-auto-connect", html)
+        self.assertIn("jobflow-v30-ai-decision-loop", html)
 
 
 if __name__ == "__main__":
