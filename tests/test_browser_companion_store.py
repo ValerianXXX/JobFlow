@@ -121,7 +121,7 @@ class BrowserCompanionStoreTests(unittest.TestCase):
                 Set-CurrentUserOnly '{escaped_root}'
                 $marker = Join-Path '{escaped_root}' 'manifest.json'
                 $content = [IO.File]::ReadAllText($marker)
-                $acl = Get-Acl -LiteralPath $marker
+                $acl = [IO.File]::GetAccessControl($marker)
                 $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
                 $full = @($acl.Access | Where-Object {{
                     $_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value -eq $sid -and
