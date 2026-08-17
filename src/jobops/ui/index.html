@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260816-jobflow-v29-profile-v2">
+  <link rel="stylesheet" href="styles.css?v=20260816-jobflow-v29-linear-workflow">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -47,6 +47,12 @@
         <div class="progress-copy"><span data-i18n="progressLabel">问卷完成度</span><strong id="progressText">0 / 25</strong></div>
         <div class="progress-track"><span id="progressBar"></span></div>
         <small id="statusText" data-i18n="draftSaved">草稿将直接加密保存</small>
+        <div id="workflowNow" class="workflow-now" role="status" aria-live="polite" data-tone="neutral">
+          <span class="workflow-now-label" data-i18n="workflowNowLabel">当前下一步</span>
+          <strong id="workflowNowTitle" data-i18n="workflowLoadingTitle">正在读取本机状态</strong>
+          <small id="workflowNowDetail" data-i18n="workflowLoadingDetail">完成后会在这里给出唯一的继续入口。</small>
+          <button id="workflowNowAction" class="secondary compact hidden" type="button"></button>
+        </div>
       </div>
     </section>
 
@@ -441,6 +447,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260816-jobflow-v29-profile-v2"></script>
+  <script src="app.js?v=20260816-jobflow-v29-linear-workflow"></script>
 </body>
 </html>

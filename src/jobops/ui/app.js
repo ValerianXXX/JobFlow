@@ -225,6 +225,37 @@ Object.assign(STRINGS.en,{
   decisionApprovedAndStarted:"Review approved. JobFlow is continuing prefill and uploads in the application tab it just inspected. Only you click final Submit."
 });
 
+Object.assign(STRINGS.zh,{
+  workflowNowLabel:"当前下一步", workflowLoadingTitle:"正在读取本机状态", workflowLoadingDetail:"完成后会在这里给出唯一的继续入口。",
+  workflowWorkingDetail:"已持续 {elapsed} 秒。任务仍在运行；此状态不会因浮动提示关闭而消失。", workflowWorkingEstimate:"已持续 {elapsed} 秒，按当前估计约还需 {remaining} 秒。", workflowUploadDetail:"本机安全传送已完成 {percent}%。此状态会一直保留到处理结束。",
+  workflowConnectAiTitle:"先连接并验证 AI", workflowConnectAiDetail:"JobFlow 需要一个已配置好的 Agent 或本地模型来理解资料和岗位。连接成功后会自动继续显示下一步。", workflowConnectAiAction:"连接 AI",
+  workflowSourcesTitle:"先把已有资料交给 JobFlow", workflowSourcesDetail:"上传简历和可选项目资料；AI 会提取已有事实，后面只追问仍然缺失的内容。", workflowSourcesAction:"打开资料来源",
+  workflowQuestionsTitle:"只补充仍然缺失的资料", workflowQuestionsDetail:"已从简历识别出的字段会折叠保存；这里只需要完成仍未解决的必填项。", workflowQuestionsAction:"继续补充资料",
+  workflowReviewTitle:"集中审阅 Profile 与 Claim", workflowReviewDetail:"确认 AI 整理出的个人事实、Claim 和真正冲突；不会自动批准任何对外表述。", workflowReviewAction:"开始集中审阅",
+  workflowFinishTitle:"完成一次性资料确认", workflowFinishDetail:"最后确认当前 Profile 和答案库，之后每个岗位只补充岗位专属问题。", workflowFinishAction:"完成资料设置",
+  workflowReadyTitle:"资料已就绪，可以处理下一份岗位", workflowReadyDetail:"说出岗位目标或粘贴公司官网链接；JobFlow 会连续运行到一次审阅或必须由你处理的安全门。", workflowReadyAction:"开始处理岗位",
+  workflowReadinessTitle:"完成自动投递准备项", workflowReadinessDetail:"主资料已完成，但材料授权或安全改写位置仍未闭环。控制台会列出唯一缺口。", workflowReadinessAction:"查看准备缺口",
+  workflowGuidedAction:"查看岗位处理进度", workflowReviewPacketTitle:"岗位材料已准备，等待一次审阅", workflowReviewPacketDetail:"检查岗位专属答案和材料；一次批准后才会开始预填和上传，最终 Submit 仍由你点击。", workflowReviewPacketAction:"打开一次审阅",
+  workflowBrowserTitle:"正在处理已批准的申请", workflowBrowserDetail:"JobFlow 正在用户在场模式下逐页校验；登录、验证码、未知问题和最终 Submit 会停下来交给你。", workflowBrowserAction:"查看填写状态",
+  workflowFailureAction:"查看原因并重试", workflowContinue:"继续",
+  preparingGuidedApplication:"正在根据岗位生成材料与审阅包…", startingGuidedIntake:"正在建立连续岗位任务…", startingBrowserAssist:"正在建立用户在场填写任务…", resolvingSubmission:"正在保存提交结果判断…"
+});
+Object.assign(STRINGS.en,{
+  workflowNowLabel:"Current next step", workflowLoadingTitle:"Reading local state", workflowLoadingDetail:"The single continuation entry will remain here when loading finishes.",
+  workflowWorkingDetail:"Running for {elapsed}s. This state remains here even if the floating notice closes.", workflowWorkingEstimate:"Running for {elapsed}s · about {remaining}s remaining at the current estimate.", workflowUploadDetail:"{percent}% transferred into local secure processing. This state remains until processing finishes.",
+  workflowConnectAiTitle:"Connect and verify AI first", workflowConnectAiDetail:"JobFlow needs an already configured Agent or local model to understand sources and roles. The next step appears automatically after verification.", workflowConnectAiAction:"Connect AI",
+  workflowSourcesTitle:"Give JobFlow the sources you already have", workflowSourcesDetail:"Upload the resume and optional project sources. AI extracts existing facts so later questions cover only genuine gaps.", workflowSourcesAction:"Open sources",
+  workflowQuestionsTitle:"Fill only the remaining gaps", workflowQuestionsDetail:"Fields recovered from the resume stay collapsed and saved; only unresolved required items remain here.", workflowQuestionsAction:"Continue missing details",
+  workflowReviewTitle:"Review Profile and Claims together", workflowReviewDetail:"Confirm the personal facts, Claims, and genuine conflicts organized by AI. No external wording is auto-approved.", workflowReviewAction:"Start consolidated review",
+  workflowFinishTitle:"Complete the one-time profile confirmation", workflowFinishDetail:"Confirm the current Profile and answer bank once; future roles ask only role-specific questions.", workflowFinishAction:"Finish profile setup",
+  workflowReadyTitle:"Profile ready — process the next role", workflowReadyDetail:"Describe the role or paste an official company URL. JobFlow continues until one review or a safety gate genuinely needs you.", workflowReadyAction:"Process a role",
+  workflowReadinessTitle:"Finish application-readiness items", workflowReadinessDetail:"The core profile is complete, but a material permission or safe tailoring position is still missing. The console lists the exact gap.", workflowReadinessAction:"View readiness gaps",
+  workflowGuidedAction:"View job progress", workflowReviewPacketTitle:"Role materials are ready for one review", workflowReviewPacketDetail:"Review role-specific answers and materials. Only one approval starts prefill and upload; final Submit remains yours.", workflowReviewPacketAction:"Open one review",
+  workflowBrowserTitle:"Processing the approved application", workflowBrowserDetail:"JobFlow is validating each page while you are present. Login, verification, unknown questions, and final Submit stop for you.", workflowBrowserAction:"View filling status",
+  workflowFailureAction:"Review the cause and retry", workflowContinue:"Continue",
+  preparingGuidedApplication:"Generating role materials and the review packet…", startingGuidedIntake:"Starting the continuous role workflow…", startingBrowserAssist:"Starting the user-present filling session…", resolvingSubmission:"Saving the submission-result decision…"
+});
+
 const UI_PROTOCOL_VERSION = 29;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_ID = "hhlliaaafegldkmcgmaoaelabipcaooj";
@@ -593,12 +624,73 @@ function formatBytes(value) {
   return `${amount>=100||index===0?Math.round(amount):amount.toFixed(1)} ${units[index]}`;
 }
 
+const WORKFLOW_PANEL_TARGETS=new Set(["sources","questionnaire","review","finish"]);
+const WORKFLOW_ACTIVITY_TARGETS={
+  importing:"sources",reprocessing:"sources",reprocessingAll:"sources",committingSource:"sources",deletingSource:"sources",discardingSource:"sources",
+  savingAnswers:"questionnaire",savingReview:"review",includingAll:"review",transformingClaims:"review",completingOnboarding:"finish",
+  detectingAgent:"aiConnectionPanel",detectingLocalModel:"aiConnectionPanel",preparingGuidedApplication:"guidedIntakePanel",startingGuidedIntake:"guidedIntakePanel",
+  loadingReviewPacket:"reviewPacketPanel",startingBrowserAssist:"browserAssistPanel",resolvingSubmission:"browserAssistPanel"
+};
+function workflowActivityDetail(activity){
+  const elapsed=Math.max(0,Math.floor((Date.now()-activity.started)/1000));
+  if(activity.phase==="uploading"){
+    const total=Math.max(1,Number(activity.totalBytes)||1),loaded=Math.max(0,Number(activity.loadedBytes)||0);
+    return t("workflowUploadDetail").replace("{percent}",String(Math.max(0,Math.min(100,Math.round(loaded/total*100)))));
+  }
+  const estimate=Math.max(0,Number(activity.estimatedSeconds)||0),remaining=estimate&&elapsed<estimate?Math.max(1,Math.ceil(estimate-elapsed)):null;
+  return t(remaining===null?"workflowWorkingDetail":"workflowWorkingEstimate").replace("{elapsed}",String(elapsed)).replace("{remaining}",String(remaining||0));
+}
+function workflowNowModel(){
+  const activity=state.activities[state.activities.length-1];
+  if(activity)return {tone:"working",title:t(activity.key),detail:workflowActivityDetail(activity),target:WORKFLOW_ACTIVITY_TARGETS[activity.key]||""};
+  const guided=state.guidedIntakeSession||state.data?.guided_intake||{};
+  if(["FORM_CAPTURE_FAILED","FAILED"].includes(guided.status))return {tone:"blocked",title:t("guidedStoppedTitle"),detail:guidedFailureMessage(guided),target:"guidedIntakePanel",action:t("workflowFailureAction")};
+  const browserStatus=state.browserAssistSession?.status||state.data?.browser_assist?.active_status;
+  if(browserStatus&&!new Set(["CONFIRMED","SUBMISSION_UNKNOWN","AWAITING_APPROVAL","SUPPLEMENTAL_REVIEW_REQUIRED","APPLY_RESTART_REQUIRED","REVOKED","FAILED"]).has(browserStatus)){
+    return {tone:"working",title:t("workflowBrowserTitle"),detail:t("workflowBrowserDetail"),target:"browserAssistPanel",action:t("workflowBrowserAction")};
+  }
+  if(browserStatus&&!new Set(["CONFIRMED","REVOKED"]).has(browserStatus)){
+    return {tone:"blocked",title:browserAssistResultMessage(browserStatus),detail:document.querySelector("#browserAssistMessage")?.textContent||t("workflowBrowserDetail"),target:"browserAssistPanel",action:t("workflowFailureAction")};
+  }
+  if(guided?.status&&!["IDLE","REVIEW_PACKET_READY","DEFERRED","FAILED"].includes(guided.status)){
+    return {tone:["FORM_CAPTURE_FAILED"].includes(guided.status)?"blocked":"working",title:guidedIntakeMessage(guided.status),detail:document.querySelector("#guidedIntakeMessage")?.textContent||t("workflowReadyDetail"),target:"guidedIntakePanel",action:t("workflowGuidedAction")};
+  }
+  if(state.reviewPacket){return {tone:"ready",title:t("workflowReviewPacketTitle"),detail:t("workflowReviewPacketDetail"),target:"reviewPacketPanel",action:t("workflowReviewPacketAction")};}
+  const data=state.data;
+  if(!data)return {tone:"working",title:t("workflowLoadingTitle"),detail:t("workflowLoadingDetail"),target:""};
+  if(!isAiReady(data.ai_engine)&&data.demo_mode!==true)return {tone:"blocked",title:t("workflowConnectAiTitle"),detail:t("workflowConnectAiDetail"),target:"aiConnectionPanel",action:t("workflowConnectAiAction")};
+  if(data.status!=="ONBOARDING_COMPLETE"){
+    const sources=Array.isArray(data.sources)?data.sources:[],pending=Array.isArray(data.pending_sources)?data.pending_sources:[];
+    if(!sources.length||pending.length||sources.some(item=>item.analysis_mode!=="AI_CORE_ENTITY_ANALYSIS"))return {tone:"neutral",title:t("workflowSourcesTitle"),detail:t("workflowSourcesDetail"),target:"sources",action:t("workflowSourcesAction")};
+    if(Number(data.completion?.remaining||0)>0)return {tone:"neutral",title:t("workflowQuestionsTitle"),detail:t("workflowQuestionsDetail"),target:"questionnaire",action:t("workflowQuestionsAction")};
+    const claims=Array.isArray(data.claims)?data.claims:[],conflicts=Array.isArray(data.conflicts)?data.conflicts:[];
+    if(data.profile_review!=="CONFIRMED"||claims.some(item=>item.decision==="PENDING")||conflicts.some(item=>!item.resolution))return {tone:"neutral",title:t("workflowReviewTitle"),detail:t("workflowReviewDetail"),target:"review",action:t("workflowReviewAction")};
+    return {tone:"ready",title:t("workflowFinishTitle"),detail:t("workflowFinishDetail"),target:"finish",action:t("workflowFinishAction")};
+  }
+  if(data.application_readiness?.status!=="READY_FOR_OFFLINE_APPLICATION_PREPARATION")return {tone:"blocked",title:t("workflowReadinessTitle"),detail:t("workflowReadinessDetail"),target:"pipelineDashboard",action:t("workflowReadinessAction")};
+  return {tone:"ready",title:t("workflowReadyTitle"),detail:t("workflowReadyDetail"),target:"guidedIntakePanel",action:t("workflowReadyAction")};
+}
+function renderWorkflowNow(){
+  const root=document.querySelector("#workflowNow"),title=document.querySelector("#workflowNowTitle"),detail=document.querySelector("#workflowNowDetail"),action=document.querySelector("#workflowNowAction");
+  if(!root||!title||!detail||!action)return;
+  const model=workflowNowModel();root.dataset.tone=model.tone||"neutral";title.textContent=model.title;detail.textContent=model.detail;
+  action.dataset.target=model.target||"";action.textContent=model.action||t("workflowContinue");action.classList.toggle("hidden",!model.target);
+}
+function focusWorkflowNow(){
+  const target=document.querySelector("#workflowNowAction")?.dataset.target;if(!target)return;
+  if(WORKFLOW_PANEL_TARGETS.has(target)){navigate(target);return;}
+  const element=document.querySelector(`#${CSS.escape(target)}`);if(!element)return;
+  if(target==="aiConnectionPanel"){element.classList.remove("hidden");document.querySelector("#aiConnectButton")?.setAttribute("aria-expanded","true");}
+  element.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 function renderActivity() {
   const indicator=document.querySelector("#activityIndicator"), main=document.querySelector("main");
   const guided=state.guidedIntakeSession||state.data?.guided_intake||{};
   const terminalGuided=["FORM_CAPTURE_FAILED","FAILED"].includes(guided.status)
     ?{terminal:true,key:"guidedStoppedTitle",detail:guidedFailureMessage(guided)}:null;
   const activity=state.activities[state.activities.length-1]||terminalGuided;
+  renderWorkflowNow();
   if(!activity){indicator.classList.add("hidden");document.body.classList.remove("is-busy");main?.removeAttribute("aria-busy");return;}
   const progressBar=document.querySelector("#activityProgress");
   indicator.classList.remove("hidden");
@@ -1017,6 +1109,7 @@ function renderGuidedIntake(){
     item.classList.toggle("done",index<completed);
     item.classList.toggle("active",index===current&&completed<4);
   });
+  renderWorkflowNow();
 }
 
 function browserAssistResultMessage(status){
@@ -1085,7 +1178,7 @@ function renderBrowserAssist(recent){
   const localPairing=state.companionPairing?.kind==="assist"&&state.companionPairing.session?.assist_id===currentAssistId;
   companion.textContent=((localPairing&&state.companionPairing.paired)||(!state.companionPairing&&info.paired))?t("browserCompanionPaired"):t("browserCompanionNotPaired");
   const selection=document.querySelector("#browserAssistSelection");
-  if(!state.browserAssistSelection){selection.classList.add("hidden");return;}
+  if(!state.browserAssistSelection){selection.classList.add("hidden");renderWorkflowNow();return;}
   const item=recent.find(value=>value.application_id===state.browserAssistSelection.application_id)||state.browserAssistSelection;
   document.querySelector("#browserAssistJob").textContent=[item.title,item.company].filter(Boolean).join(" · ");
   const run=(info.recent_runs||[]).find(value=>value.assist_id===(state.browserAssistSession?.assist_id||info.active_assist_id));
@@ -1116,6 +1209,7 @@ function renderBrowserAssist(recent){
     :activeStatus?browserAssistResultMessage(activeStatus):"";
   message.textContent=guidedActive?t("companionSessionActive"):[activeMessage,connectionNotice].filter(Boolean).join(" ");
   selection.classList.remove("hidden");
+  renderWorkflowNow();
 }
 
 async function handleGuidedCompanionStatus(result){
@@ -1517,6 +1611,7 @@ function renderReviewPacket(){
   document.querySelector("#packetDecisionPanel").classList.toggle("hidden",!canDecide);
   if(!canDecide)state.reviewDecision="";
   const panel=document.querySelector("#reviewPacketPanel");panel.classList.remove("hidden");
+  renderWorkflowNow();
 }
 
 function navigate(target) {
@@ -1832,7 +1927,7 @@ async function refresh(cacheBust=false) {
   state.tailoringProposal=null;
   state.answerDraft=JSON.parse(JSON.stringify(state.data.answers));
   state.claimDraft={}; state.claimEditDraft={}; state.conflictDraft={}; state.selectedClaims=new Set();
-  applyLocale(); renderDashboard(); renderSources(); renderQuestions(); renderClaims(); updateProgress(); renderStateMode();
+  applyLocale(); renderDashboard(); renderSources(); renderQuestions(); renderClaims(); updateProgress(); renderStateMode(); renderWorkflowNow();
   document.querySelector("#profileReview").checked=state.data.profile_review==="CONFIRMED";
   clearAttention(); hideBlockingNotice();
 }
@@ -2247,11 +2342,11 @@ document.addEventListener("click", async event => {
       state.reviewDecision="";
       renderReviewPacket();
       document.querySelector("#reviewPacketPanel").scrollIntoView({behavior:"smooth",block:"start"});
-    }catch(error){state.reviewPacket=null;document.querySelector("#reviewPacketPanel").classList.add("hidden");handleUiError(error);}
+    }catch(error){state.reviewPacket=null;document.querySelector("#reviewPacketPanel").classList.add("hidden");renderWorkflowNow();handleUiError(error);}
     return;
   }
   const closePacket=event.target.closest("#closeReviewPacket");
-  if(closePacket){state.reviewPacket=null;state.reviewDecision="";document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#applicationFieldResolutionList").replaceChildren();document.querySelector("#applicationFieldResolutionPanel").classList.add("hidden");document.querySelector("#reviewPacketPanel").classList.add("hidden");return;}
+  if(closePacket){state.reviewPacket=null;state.reviewDecision="";document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#applicationFieldResolutionList").replaceChildren();document.querySelector("#applicationFieldResolutionPanel").classList.add("hidden");document.querySelector("#reviewPacketPanel").classList.add("hidden");renderWorkflowNow();return;}
   const saveApplicationFields=event.target.closest("#saveApplicationFieldResolutions");
   if(saveApplicationFields){
     const packet=state.reviewPacket?.packet,resolutionDraft=collectApplicationFieldResolutions();
@@ -2359,7 +2454,7 @@ document.addEventListener("click", async event => {
     const draft=collectAnswerDraft();
     collectClaimEdits();
     Object.assign(state.data.answers,draft);
-    state.locale=locale.dataset.locale; applyLocale(); renderDashboard(); renderSources(); renderQuestions(); renderClaims(); renderReadiness(); renderStateMode();
+    state.locale=locale.dataset.locale; applyLocale(); renderDashboard(); renderSources(); renderQuestions(); renderClaims(); renderReadiness(); renderStateMode(); renderWorkflowNow();
     if(state.officialDiscovery)renderOfficialDiscovery(state.officialDiscovery);
     if(!isReadonly()){try { await withActivity("savingLanguage",()=>api("save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({locale:state.locale,answers:{}})})); } catch(e) { handleUiError(e); }}
     return;
@@ -2487,6 +2582,8 @@ document.querySelector("#completeOnboarding").addEventListener("click",async()=>
   if(!document.querySelector("#finalConfirm").checked){showToast(t("answerFirst"),true);return;}
   try{await withActivity("completingOnboarding",async()=>{await api("complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_confirmed:true})});await refresh();});document.querySelector("#completionMessage").textContent=t("completeSuccess");renderReadiness();showToast(t("completeSuccess"));}catch(e){handleUiError(e);}
 });
+
+document.querySelector("#workflowNowAction").addEventListener("click",focusWorkflowNow);
 
 withActivity("loadingInitial",async()=>{
   await refresh();

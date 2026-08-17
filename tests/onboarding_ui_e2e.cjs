@@ -38,8 +38,8 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260816-jobflow-v29-profile-v2/);
-    assert.match(initial.styleVersion, /20260816-jobflow-v29-profile-v2/);
+    assert.match(initial.scriptVersion, /20260816-jobflow-v29-linear-workflow/);
+    assert.match(initial.styleVersion, /20260816-jobflow-v29-linear-workflow/);
     assert.deepEqual(pageErrors, []);
 
     const adaptiveProfile = await page.evaluate(() => {
@@ -78,6 +78,60 @@ const {chromium} = require("playwright");
     assert.equal(adaptiveProfile.resolvedOpen, false);
     assert.match(adaptiveProfile.resolvedSummary, /已从资料填好 1 项/);
 
+    const linearWorkflow = await page.evaluate(() => {
+      state.locale = "zh";
+      state.activities = [];
+      state.guidedIntakeSession = null;
+      state.reviewPacket = null;
+      state.browserAssistSession = null;
+      state.data = {
+        status: "IN_PROGRESS",
+        demo_mode: false,
+        ai_engine: {status: "READY", available: true},
+        sources: [{analysis_mode: "AI_CORE_ENTITY_ANALYSIS"}],
+        pending_sources: [],
+        completion: {remaining: 2},
+        claims: [], conflicts: [], profile_review: "PENDING",
+      };
+      renderWorkflowNow();
+      return {
+        title: document.querySelector("#workflowNowTitle").textContent,
+        detail: document.querySelector("#workflowNowDetail").textContent,
+        action: document.querySelector("#workflowNowAction").textContent,
+        target: document.querySelector("#workflowNowAction").dataset.target,
+        hidden: document.querySelector("#workflowNowAction").classList.contains("hidden"),
+      };
+    });
+    assert.equal(linearWorkflow.title, "只补充仍然缺失的资料");
+    assert.match(linearWorkflow.detail, /仍未解决的必填项/);
+    assert.equal(linearWorkflow.action, "继续补充资料");
+    assert.equal(linearWorkflow.target, "questionnaire");
+    assert.equal(linearWorkflow.hidden, false);
+    const workflowNavigation = await page.evaluate(() => {
+      document.querySelector("#workflowNowAction").click();
+      return {
+        questionnaireActive: document.querySelector("#questionnaire").classList.contains("active-panel"),
+        activeStep: document.querySelector('.step[aria-current="step"]')?.dataset.target,
+      };
+    });
+    assert.equal(workflowNavigation.questionnaireActive, true);
+    assert.equal(workflowNavigation.activeStep, "questionnaire");
+
+    const persistentWork = await page.evaluate(() => {
+      state.activities = [{id: 99, key: "preparingGuidedApplication", started: Date.now()-31000, estimatedSeconds: 300}];
+      renderActivity();
+      return {
+        title: document.querySelector("#workflowNowTitle").textContent,
+        detail: document.querySelector("#workflowNowDetail").textContent,
+        tone: document.querySelector("#workflowNow").dataset.tone,
+        target: document.querySelector("#workflowNowAction").dataset.target,
+      };
+    });
+    assert.equal(persistentWork.title, "正在根据岗位生成材料与审阅包…");
+    assert.match(persistentWork.detail, /31 秒/);
+    assert.equal(persistentWork.tone, "working");
+    assert.equal(persistentWork.target, "guidedIntakePanel");
+
     const failureZh = await page.evaluate(() => {
       state.locale = "zh";
       state.activities = [];
@@ -95,6 +149,8 @@ const {chromium} = require("playwright");
         title: document.querySelector("#activityTitle").textContent,
         detail: document.querySelector("#activityStage").textContent,
         busy: document.querySelector("main").hasAttribute("aria-busy"),
+        workflowTitle: document.querySelector("#workflowNowTitle").textContent,
+        workflowTarget: document.querySelector("#workflowNowAction").dataset.target,
       };
     });
     assert.notEqual(failureZh.display, "none");
@@ -102,6 +158,8 @@ const {chromium} = require("playwright");
     assert.equal(failureZh.title, "本次处理已停止");
     assert.match(failureZh.detail, /职位级别/);
     assert.equal(failureZh.busy, false);
+    assert.equal(failureZh.workflowTitle, "本次处理已停止");
+    assert.equal(failureZh.workflowTarget, "guidedIntakePanel");
 
     const failureEn = await page.evaluate(() => {
       state.locale = "en";
@@ -121,6 +179,7 @@ const {chromium} = require("playwright");
       status: "PASS",
       materials_before_application_console: true,
       persistent_failure_indicator: true,
+      persistent_primary_workflow: true,
       supported_locales: ["zh", "en"],
       real_external_actions: 0,
     }));

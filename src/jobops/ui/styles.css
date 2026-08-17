@@ -74,6 +74,17 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .progress-track { height: 5px; margin: 17px 0 13px; background: #e9edee; overflow: hidden; }
 .progress-track span { display: block; width: 0; height: 100%; background: var(--green); transition: width .25s ease; }
 .progress-card small { color: var(--muted); }
+.workflow-now { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.workflow-now-label { display: block; margin-bottom: 5px; color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.workflow-now strong,.workflow-now small { display: block; }
+.workflow-now strong { color: var(--ink); font-size: 15px; line-height: 1.35; }
+.workflow-now small { margin-top: 5px; line-height: 1.5; }
+.workflow-now button { width: 100%; margin-top: 12px; }
+.workflow-now[data-tone="working"] { border-top-color: #8db8a8; }
+.workflow-now[data-tone="working"] .workflow-now-label::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(45,108,88,.11); animation: workflow-pulse 1.5s ease-in-out infinite; }
+.workflow-now[data-tone="blocked"] { border-top-color: #d7a85d; }
+.workflow-now[data-tone="blocked"] .workflow-now-label,.workflow-now[data-tone="blocked"] strong { color: #7b4c12; }
+@keyframes workflow-pulse { 50% { opacity: .42; transform: scale(.78); } }
 .pipeline-dashboard { margin: 42px 0 0; padding: 28px; border: 1px solid #b8d0c7; background: rgba(244,250,247,.96); box-shadow: var(--shadow); scroll-margin-top: 94px; }
 .pipeline-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 28px; }
 .pipeline-heading h2 { margin: 0; font: 600 30px/1.18 Georgia, "Songti SC", serif; }

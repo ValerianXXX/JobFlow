@@ -2310,7 +2310,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v29-profile-v2", html)
+        self.assertIn("jobflow-v29-linear-workflow", html)
 
 
 if __name__ == "__main__":
