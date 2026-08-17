@@ -560,7 +560,8 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.seed_completed_context(onboarding, master_kind="onboarding_source_document")
             service = OnboardingCenterService(PROJECT, database, onboarding)
             self.addCleanup(service.close)
-            official_url = "https://careers.example.com/us/en/job/CR-102/Credit-Risk-Analyst?source=search"
+            search_url = "https://careers.example.com/us/en/job/CR-102/Credit-Risk-Analyst?source=search"
+            official_url = "https://careers.example.com/us/en/job/CR-102/Credit-Risk-Analyst"
             candidate_ref = stable_id("JDC", official_url)
             engine = mock.Mock()
             engine.ready = True
@@ -591,7 +592,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                     "search_origin": "https://www.google.com/search",
                     "results": [
                         {
-                            "url": official_url,
+                            "url": search_url,
                             "title": "Credit Risk Analyst | Example Careers",
                             "snippet": "Join the Example credit risk team in New York.",
                         },
@@ -614,6 +615,105 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                     (paired["intake_id"],),
                 ).fetchall()]
             self.assertEqual(events, ["STARTED", "PAIRED", "SEARCH_RESULTS_INSPECTED"])
+
+    def test_guided_search_skips_a_closed_or_ai_rejected_role_and_verifies_the_next_ranked_page(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding, master_kind="onboarding_source_document")
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            self.addCleanup(service.close)
+            first_url = "https://careers.alpha-example.com/jobs/software-engineer"
+            second_url = "https://careers.beta-example.com/jobs/credit-risk-analyst"
+            first_ref = stable_id("JDC", first_url)
+            second_ref = stable_id("JDC", second_url)
+            engine = mock.Mock()
+            engine.ready = True
+            engine.public_status.return_value = {
+                "status": "READY", "structured_capability_status": "VERIFIED",
+            }
+            engine.execute_structured_task.side_effect = [
+                {
+                    "schema_version": 1, "status": "SELECTED",
+                    "ranked_candidate_refs": [first_ref, second_ref],
+                    "summary": "Two company roles were ranked from the visible results.",
+                },
+                {
+                    "schema_version": 1, "status": "NO_MATCH",
+                    "reason_codes": ["FUNCTION"],
+                    "summary": "The first verified page is a software role, not credit risk.",
+                },
+                {
+                    "schema_version": 1, "status": "MATCH",
+                    "reason_codes": ["TITLE", "LOCATION"],
+                    "summary": "The second verified page matches credit risk in New York.",
+                },
+            ]
+            service.ai_engine = engine
+            with mock.patch.object(service, "bootstrap", return_value={
+                "application_readiness": {"status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION"},
+            }):
+                started = service.start_guided_intake({
+                    "search_intent": "credit risk analyst New York",
+                    "user_confirmed": True,
+                })
+            token = str(started["intake_token"])
+            service.pair_guided_intake(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            selected = service.capture_guided_search_results(
+                token,
+                {
+                    "search_origin": "https://www.google.com/search",
+                    "results": [
+                        {"url": first_url, "title": "Software Engineer", "snippet": "New York company role."},
+                        {"url": second_url, "title": "Credit Risk Analyst", "snippet": "New York company role."},
+                    ],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(selected["candidate_ref"], first_ref)
+            advanced = service.capture_guided_job_page(
+                token,
+                {
+                    "url": first_url,
+                    "document_title": "Software Engineer",
+                    "job_title": "Software Engineer",
+                    "company_name": "Alpha Example",
+                    "job_location": "New York",
+                    "visible_text": "Alpha Example is hiring a Software Engineer in New York for platform infrastructure.",
+                    "availability": {"closed_signal": False, "valid_through": ""},
+                    "blocker_signals": [],
+                    "application_fields_present": False,
+                    "apply_candidates": [],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(advanced["status"], "AWAITING_JOB_PAGE_CAPTURE")
+            self.assertEqual(advanced["official_url"], second_url)
+            self.assertEqual(advanced["prior_candidate_status"], "AI_NO_MATCH")
+            matched = service.capture_guided_job_page(
+                token,
+                {
+                    "url": second_url,
+                    "document_title": "Credit Risk Analyst",
+                    "job_title": "Credit Risk Analyst",
+                    "company_name": "Beta Example",
+                    "job_location": "New York",
+                    "visible_text": "Beta Example is hiring a Credit Risk Analyst in New York to review commercial portfolios.",
+                    "availability": {"closed_signal": False, "valid_through": "2099-12-31"},
+                    "blocker_signals": [],
+                    "application_fields_present": True,
+                    "apply_candidates": [],
+                },
+                extension_origin=COMPANION_EXTENSION_ORIGIN,
+            )
+            self.assertEqual(matched["status"], "AWAITING_APPLICATION_FORM_CAPTURE")
+            self.assertEqual(matched["application_url"], second_url)
+            with database.connect() as connection:
+                events = [row[0] for row in connection.execute(
+                    "SELECT event_type FROM guided_intake_events WHERE intake_id=? ORDER BY event_id",
+                    (started["intake_id"],),
+                ).fetchall()]
+            self.assertGreaterEqual(events.count("SEARCH_RESULTS_INSPECTED"), 2)
+            self.assertGreaterEqual(events.count("JOB_PAGE_INSPECTED"), 3)
 
     def test_guided_browser_discovery_ambiguity_accepts_only_a_displayed_candidate(self) -> None:
         with project_temp() as temp:
@@ -1252,12 +1352,17 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 '<input id="conditional_reason" name="conditional_reason" type="text" required>'
                 '<button id="submit" type="submit">Submit application</button>',
             )
+            dynamic_html = dynamic_html.replace(
+                '        <label for="full_name">Full name</label>\n'
+                '        <input id="full_name" name="full_name" type="text" autocomplete="name" required>\n',
+                "",
+            )
             supplemental = service.browser_assist.discover_dynamic_fields(
                 token,
                 {
                     "url": started["approved_url"],
                     "sanitized_html": dynamic_html,
-                    "client_refs": [f"DOM-{index:012d}" for index in range(1, initial_count + 2)],
+                    "client_refs": [f"DOM-{index:012d}" for index in range(1, initial_count + 1)],
                     "blocker_signals": [],
                     "field_bindings": field_bindings,
                     "material_bindings": material_bindings,
@@ -1268,6 +1373,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             )
             self.assertEqual(supplemental["status"], "SUPPLEMENTAL_REVIEW_REQUIRED")
             self.assertEqual(supplemental["dynamic_field_count"], 1)
+            self.assertEqual(supplemental["removed_applied_control_count"], 1)
             self.assertEqual(supplemental["real_external_actions"], 2)
             current = service.review_packet(application_id)
             self.assertEqual(current["packet_version"], int(original_packet.get("packet_version", 1)) + 1)

@@ -32,7 +32,7 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
 
 _TRANSPORT_OPERATION_SEQUENCE = [
     "read_official_job", "inspect_application_form", "prefill_application_form",
-    "upload_materials", "submit_application", "verify_receipt",
+    "upload_materials", "await_user_submit", "verify_receipt",
 ]
 
 
@@ -41,12 +41,13 @@ def provider_transport_contract(provider: str) -> dict[str, Any]:
         raise JobOpsError("ATS_PROVIDER_UNSUPPORTED", "The ATS provider has no transport contract.", provider=provider)
     material = {
         "provider": provider,
-        "contract_version": 1,
+        "contract_version": 2,
         "operation_sequence": list(_TRANSPORT_OPERATION_SEQUENCE),
         "guest_first": True,
         "account_creation": "STOP_REQUIRES_SEPARATE_USER_DECISION",
-        "final_submit_gate": "FRESH_ONE_TIME_AUTHORIZATION",
-        "receipt_policy": "VERIFIED_RECEIPT_REQUIRED_NO_GUESSING",
+        "final_submit_gate": "USER_ONLY_NO_TOOL_CAPABILITY",
+        "submit_capability": False,
+        "receipt_policy": "OBSERVE_OR_ASK_USER_NO_AUTOMATIC_RETRY",
         "automatic_retry": False,
         "private_values_persisted": False,
         "file_content_in_envelope": False,
@@ -62,6 +63,8 @@ def _contract_hash(value: dict[str, Any]) -> str:
     material = {key: value[key] for key in (
         "provider", "offline_evidence_level", "saved_snapshot_modes", "route_shape", "dynamic_control_strategy",
         "guest_first", "account_creation_blocked", "upload_blocked", "submit_blocked", "live_site_verified",
+        "user_present_prefill", "approved_material_upload", "nonfinal_navigation", "final_submit",
+        "live_compatibility",
         "browser_actions", "network_actions", "real_external_actions",
         "transport_contract_hash", "live_transport_registered", "automatic_retry",
     )}
@@ -78,6 +81,11 @@ def offline_ats_capabilities() -> dict[str, Any]:
             "upload_blocked": True,
             "submit_blocked": True,
             "live_site_verified": False,
+            "user_present_prefill": "SUPPORTED_WITH_RUNTIME_REVALIDATION",
+            "approved_material_upload": "SUPPORTED_WITH_RUNTIME_REVALIDATION",
+            "nonfinal_navigation": "SUPPORTED_EXPLICIT_CONTROLS_ONLY",
+            "final_submit": "USER_ONLY",
+            "live_compatibility": "NOT_UNIVERSALLY_VERIFIED",
             "browser_actions": 0,
             "network_actions": 0,
             "real_external_actions": 0,
@@ -88,7 +96,7 @@ def offline_ats_capabilities() -> dict[str, Any]:
         item["contract_hash"] = _contract_hash(item)
         providers.append(item)
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "OFFLINE_ATS_CAPABILITIES",
         "provider_count": len(providers),
         "providers": providers,

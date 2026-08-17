@@ -555,6 +555,8 @@
     const siteName = compact(document.querySelector('meta[property="og:site_name"]')?.content, 300);
     const company = compact(posting?.hiringOrganization?.name, 300) || siteName;
     const title = compact(posting?.title, 500) || heading || compact(document.title, 500);
+    const validThrough = compact(posting?.validThrough, 100);
+    const closedSignal = /(?:job|position|posting|role|applications?)\s+(?:is\s+|are\s+|has\s+been\s+)?(?:closed|expired|filled|no\s+longer\s+(?:available|accepting))|no\s+longer\s+accepting\s+applications|not\s+accepting\s+applications|职位(?:已)?关闭|招聘(?:已)?结束|停止接受申请|职位已满/i.test(visibleText.slice(0, 120000));
     const applyCandidates = [];
     const seenApplyUrls = new Set();
     for (const anchor of deepQueryAll("a[href]")) {
@@ -578,6 +580,7 @@
         company_name: company,
         job_location: locationText(posting),
         visible_text: visibleText,
+        availability: {closed_signal: closedSignal, valid_through: validThrough},
         blocker_signals: blockerSignals(),
         application_fields_present: Boolean(deepQuery("input:not([type=hidden]),select,textarea")),
         apply_candidates: applyCandidates

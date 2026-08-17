@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "status", "provider_count", "providers", "live_site_accessed", "browser_actions", "network_actions", "real_external_actions"],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "status": {"const": "OFFLINE_ATS_CAPABILITIES"},
     "provider_count": {"type": "integer", "minimum": 1},
     "providers": {
@@ -15,7 +15,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["provider", "offline_evidence_level", "saved_snapshot_modes", "route_shape", "dynamic_control_strategy", "guest_first", "account_creation_blocked", "upload_blocked", "submit_blocked", "live_site_verified", "browser_actions", "network_actions", "real_external_actions", "transport_contract_hash", "live_transport_registered", "automatic_retry", "contract_hash"],
+        "required": ["provider", "offline_evidence_level", "saved_snapshot_modes", "route_shape", "dynamic_control_strategy", "guest_first", "account_creation_blocked", "upload_blocked", "submit_blocked", "live_site_verified", "user_present_prefill", "approved_material_upload", "nonfinal_navigation", "final_submit", "live_compatibility", "browser_actions", "network_actions", "real_external_actions", "transport_contract_hash", "live_transport_registered", "automatic_retry", "contract_hash"],
         "properties": {
           "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
           "offline_evidence_level": {"enum": ["DIRECT_SNAPSHOT_PASS", "SYNTHETIC_VERTICAL_PASS", "SINGLE_SNAPSHOT_PASS", "SAVED_SEQUENCE_PASS"]},
@@ -27,6 +27,11 @@
           "upload_blocked": {"const": true},
           "submit_blocked": {"const": true},
           "live_site_verified": {"const": false},
+          "user_present_prefill": {"const": "SUPPORTED_WITH_RUNTIME_REVALIDATION"},
+          "approved_material_upload": {"const": "SUPPORTED_WITH_RUNTIME_REVALIDATION"},
+          "nonfinal_navigation": {"const": "SUPPORTED_EXPLICIT_CONTROLS_ONLY"},
+          "final_submit": {"const": "USER_ONLY"},
+          "live_compatibility": {"const": "NOT_UNIVERSALLY_VERIFIED"},
           "browser_actions": {"const": 0},
           "network_actions": {"const": 0},
           "real_external_actions": {"const": 0},

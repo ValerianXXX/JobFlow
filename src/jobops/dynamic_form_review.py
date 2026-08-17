@@ -144,6 +144,7 @@ class DynamicFormReviewManager:
         live_snapshot: dict[str, Any],
         assist_id: str,
         session_id: str,
+        allowed_missing_control_refs: set[str] | None = None,
     ) -> dict[str, Any]:
         validate_ats_form_snapshot_integrity(live_snapshot)
         bundle, context, answer_refs = self.bundles.load_current(application_id)
@@ -163,6 +164,14 @@ class DynamicFormReviewManager:
             live_by_logical.setdefault(str(item["logical_field_hash"]), []).append(item)
         old_to_live: dict[str, str] = {}
         removed_separate: set[str] = set()
+        removed_applied: set[str] = set()
+        allowed_missing = set(allowed_missing_control_refs or set())
+        unknown_allowed = allowed_missing - set(old_fields)
+        if unknown_allowed:
+            raise JobOpsError(
+                "DYNAMIC_MISSING_CONTROL_INVALID",
+                "The browser reported an applied control outside the approved form snapshot.",
+            )
         for logical_hash, old_items in old_by_logical.items():
             live_items = list(live_by_logical.get(logical_hash, []))
             if len(live_items) > len(old_items):
@@ -178,6 +187,9 @@ class DynamicFormReviewManager:
             for index, old_item in enumerate(old_items):
                 old_ref = str(old_item["control_ref"])
                 if index >= len(live_items):
+                    if old_ref in allowed_missing:
+                        removed_applied.add(old_ref)
+                        continue
                     if str(old_item.get("classification")) in SEPARATE_ACTION_STOP_CLASSES:
                         removed_separate.add(old_ref)
                         continue
@@ -338,6 +350,8 @@ class DynamicFormReviewManager:
                     old_ref = str(item.get("control_ref", ""))
                     live_ref = old_to_live.get(old_ref)
                     if live_ref is None:
+                        if old_ref in removed_applied:
+                            continue
                         raise JobOpsError(
                             "SITE_CHANGED",
                             "A confirmed job-specific answer no longer has one exact live question.",
@@ -523,6 +537,7 @@ class DynamicFormReviewManager:
                             "packet_version": version,
                             "new_field_count": len(new_refs),
                             "removed_separate_action_count": len(removed_separate),
+                            "removed_applied_control_count": len(removed_applied),
                             "form_snapshot_hash": live_snapshot["form_snapshot_hash"],
                         }, sort_keys=True),
                         now,
@@ -547,6 +562,7 @@ class DynamicFormReviewManager:
                 "packet_hash": updated_packet["content_hash"],
                 "dynamic_field_count": len(new_refs),
                 "removed_separate_action_count": len(removed_separate),
+                "removed_applied_control_count": len(removed_applied),
                 "private_values_emitted": 0,
                 "real_external_actions": 0,
                 "automatic_retry": False,

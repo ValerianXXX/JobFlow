@@ -174,6 +174,7 @@ class _AssistLease:
     execution_channel: str | None = None
     expected_fields: list[dict[str, str]] = field(default_factory=list)
     expected_files: list[dict[str, str]] = field(default_factory=list)
+    control_ref_by_client: dict[str, str] = field(default_factory=dict)
     field_diagnostics: dict[str, dict[str, Any]] = field(default_factory=dict)
     accepted_fields: list[dict[str, str]] = field(default_factory=list)
     accepted_files: list[dict[str, str]] = field(default_factory=list)
@@ -892,6 +893,7 @@ class BrowserAssistManager:
         lease.prepared_hash = None
         lease.expected_fields.clear()
         lease.expected_files.clear()
+        lease.control_ref_by_client.clear()
         lease.file_tokens.clear()
         lease.navigation_ref = None
         lease.navigation_token = None
@@ -1270,6 +1272,10 @@ class BrowserAssistManager:
 
             lease.expected_fields = sorted(expected_field_results, key=lambda item: item["client_ref"])
             lease.expected_files = sorted(expected_file_results, key=lambda item: (item["purpose"], item["client_ref"]))
+            lease.control_ref_by_client = {
+                client_ref: control_ref
+                for control_ref, client_ref in client_by_control.items()
+            }
             lease.field_diagnostics = {
                 client_by_control[str(item["control_ref"])]: {
                     "failure_field_label": _safe_failure_label(item.get("display_label")),
@@ -1737,6 +1743,11 @@ class BrowserAssistManager:
                 )
             bundle, context, _ = self._bundle_manager.load_current(lease.application_id)
             fields, files = self._accept_applied_evidence(lease, payload, context)
+            accepted_control_refs = {
+                lease.control_ref_by_client[item["client_ref"]]
+                for item in [*fields, *files]
+                if item["client_ref"] in lease.control_ref_by_client
+            }
             live, _client_refs = self._live_snapshot(
                 lease=lease,
                 payload=payload,
@@ -1752,24 +1763,26 @@ class BrowserAssistManager:
                     for expected, current in zip(expected_fields, live_fields, strict=True)
                 )
             )
-            if not exact_match and files:
-                # A successful ATS upload commonly replaces the one-use file
-                # input with a filename/status component.  That disappearance
-                # is already proven by the accepted material binding and does
-                # not constitute a new applicant question or require another
-                # review packet.  Every remaining control must still match in
-                # order and semantics; final Submit is never ignored here.
-                expected_without_consumed_uploads = [
-                    item for item in expected_fields
-                    if str(item.get("classification")) != "file_upload_stop"
-                ]
-                exact_match = (
-                    len(expected_without_consumed_uploads) == len(live_fields)
-                    and all(
-                        _semantic_field(expected) == _semantic_field(current)
-                        for expected, current in zip(expected_without_consumed_uploads, live_fields, strict=True)
-                    )
-                )
+            if not exact_match and accepted_control_refs:
+                # ATS pages commonly replace or collapse controls after an
+                # accepted write.  Their disappearance is safe only when the
+                # same page-apply evidence already proved the exact approved
+                # value/material binding.  Unapplied questions, navigation,
+                # and final Submit are never ignored here.
+                live_index = 0
+                exact_match = True
+                for expected in expected_fields:
+                    if (
+                        live_index < len(live_fields)
+                        and _semantic_field(expected) == _semantic_field(live_fields[live_index])
+                    ):
+                        live_index += 1
+                        continue
+                    if str(expected.get("control_ref")) in accepted_control_refs:
+                        continue
+                    exact_match = False
+                    break
+                exact_match = exact_match and live_index == len(live_fields)
             if exact_match:
                 return {
                     "status": "NO_DYNAMIC_FIELDS",
@@ -1784,7 +1797,14 @@ class BrowserAssistManager:
                 live_snapshot=live,
                 assist_id=lease.assist_id,
                 session_id=lease.session_id,
+                allowed_missing_control_refs=accepted_control_refs,
             )
+            if result["status"] == "NO_DYNAMIC_FIELDS":
+                return {
+                    **result,
+                    "automatic_retry": False,
+                    "real_external_actions": int(bool(fields)) + int(bool(files)),
+                }
             if result["status"] != "SUPPLEMENTAL_REVIEW_REQUIRED":
                 raise JobOpsError(
                     "DYNAMIC_REVIEW_STATE_INVALID",

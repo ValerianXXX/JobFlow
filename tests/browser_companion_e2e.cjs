@@ -78,6 +78,8 @@ function valueHash(value) {
     assert.equal(jobCollected.status, "COLLECTED");
     assert.ok(jobCollected.payload.job_title.length > 0);
     assert.ok(jobCollected.payload.visible_text.length > 0);
+    assert.equal(typeof jobCollected.payload.availability.closed_signal, "boolean");
+    assert.equal(typeof jobCollected.payload.availability.valid_through, "string");
     assert.ok(!jobCollected.payload.visible_text.includes("synthetic approved resume"));
 
     const collected = await page.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));

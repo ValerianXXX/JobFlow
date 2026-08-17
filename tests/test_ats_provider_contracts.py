@@ -80,6 +80,10 @@ class ATSProviderContractTests(unittest.TestCase):
         self.assertTrue(all(item["browser_actions"] == 0 and item["real_external_actions"] == 0 for item in report["providers"]))
         self.assertTrue(all(item["live_transport_registered"] is False for item in report["providers"]))
         self.assertTrue(all(item["automatic_retry"] is False for item in report["providers"]))
+        self.assertTrue(all(item["user_present_prefill"] == "SUPPORTED_WITH_RUNTIME_REVALIDATION" for item in report["providers"]))
+        self.assertTrue(all(item["approved_material_upload"] == "SUPPORTED_WITH_RUNTIME_REVALIDATION" for item in report["providers"]))
+        self.assertTrue(all(item["nonfinal_navigation"] == "SUPPORTED_EXPLICIT_CONTROLS_ONLY" for item in report["providers"]))
+        self.assertTrue(all(item["final_submit"] == "USER_ONLY" for item in report["providers"]))
         workday = next(item for item in report["providers"] if item["provider"] == "workday")
         self.assertIn("ordered_html_sequence", workday["saved_snapshot_modes"])
         tampered = copy.deepcopy(report)
@@ -94,14 +98,15 @@ class ATSProviderContractTests(unittest.TestCase):
                 contract = provider_transport_contract(provider)
                 self.assertFalse(contract["live_transport_registered"])
                 self.assertFalse(contract["automatic_retry"])
-                self.assertEqual(contract["final_submit_gate"], "FRESH_ONE_TIME_AUTHORIZATION")
+                self.assertEqual(contract["final_submit_gate"], "USER_ONLY_NO_TOOL_CAPABILITY")
+                self.assertFalse(contract["submit_capability"])
                 envelope = build_ats_transport_envelope(
-                    provider=provider, action="submit_application",
+                    provider=provider, action="prefill_application_form",
                     application_id="APP-ABCDEF123456", run_id="RUN-ABCDEF123456",
                     application_context_hash=H1, source_route_hash=H1,
                     form_snapshot_hash=H1, execution_plan_hash=H1,
                     request_payload_hash=H2,
-                    authorization_kind="FINAL_SUBMISSION_AUTHORIZATION",
+                    authorization_kind="SCOPED_ACTION_SESSION_USE",
                     authorization_hash=H2,
                 )
                 validate_ats_transport_envelope(envelope)
@@ -130,10 +135,12 @@ class ATSProviderContractTests(unittest.TestCase):
             "inspect_application_form": "SCOPED_ACTION_SESSION_USE",
             "prefill_application_form": "SCOPED_ACTION_SESSION_USE",
             "upload_materials": "SCOPED_ACTION_SESSION_USE",
-            "submit_application": "FINAL_SUBMISSION_AUTHORIZATION",
             "verify_receipt": "SUBMISSION_ATTEMPT",
         }
-        self.assertEqual(provider_transport_contract("workday")["operation_sequence"], list(actions))
+        self.assertEqual(
+            provider_transport_contract("workday")["operation_sequence"],
+            [*list(actions)[:-1], "await_user_submit", "verify_receipt"],
+        )
         for action, authorization_kind in actions.items():
             envelope = build_ats_transport_envelope(
                 provider="workday", action=action,

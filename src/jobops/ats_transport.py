@@ -13,6 +13,8 @@ _AUTHORIZATION_BY_ACTION = {
     "inspect_application_form": "SCOPED_ACTION_SESSION_USE",
     "prefill_application_form": "SCOPED_ACTION_SESSION_USE",
     "upload_materials": "SCOPED_ACTION_SESSION_USE",
+    # Historical submission envelopes remain available only as hash-only
+    # ISOLATED_FAKE test artifacts.  No live transport consumes them.
     "submit_application": "FINAL_SUBMISSION_AUTHORIZATION",
     "verify_receipt": "SUBMISSION_ATTEMPT",
 }

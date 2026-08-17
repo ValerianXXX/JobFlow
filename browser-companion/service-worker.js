@@ -491,7 +491,7 @@ function publicResult(result) {
     "dynamic_field_count", "removed_separate_action_count", "packet_version",
     "expires_at", "automatic_retry", "real_external_actions", "submit_capability",
     "final_submit", "field_attempt_count", "file_attempt_count", "poll_count", "retry_after_ms",
-    "preferred_tab_id"
+    "preferred_tab_id", "candidate_rejection_count"
   ]) {
     if (["string", "number", "boolean"].includes(typeof result[key])) safe[key] = result[key];
   }
@@ -928,29 +928,36 @@ async function runGuidedAutopilot() {
       }
     }
     if (state.stage === "AWAITING_JOB_PAGE_CAPTURE") {
-      const officialUrl = state.selected_official_url || state.last_result?.official_url;
-      if (!officialUrl || !/^https:\/\//i.test(officialUrl)) {
-        throw Object.assign(new Error("The selected official job URL is unavailable."), {
-          jobflow: {status: "BLOCKED", code: "COMPANION_OFFICIAL_JOB_URL_MISSING", automatic_retry: false}
-        });
+      let capturedJob = null;
+      for (let candidateAttempt = 0; candidateAttempt < 5; candidateAttempt += 1) {
+        const officialUrl = state.selected_official_url || state.last_result?.official_url;
+        if (!officialUrl || !/^https:\/\//i.test(officialUrl)) {
+          throw Object.assign(new Error("The selected official job URL is unavailable."), {
+            jobflow: {status: "BLOCKED", code: "COMPANION_OFFICIAL_JOB_URL_MISSING", automatic_retry: false}
+          });
+        }
+        if (!tab) {
+          tab = await chrome.tabs.create({url: officialUrl, active: true});
+          tab = await waitForTabPage(tab.id, "");
+        }
+        else {
+          const prior = tab.url || "";
+          tab = await chrome.tabs.update(tab.id, {url: officialUrl, active: true});
+          tab = await waitForTabPage(tab.id, prior === officialUrl ? "" : prior);
+        }
+        state = await assertCurrentSession(state);
+        if (state.automation_tab_id !== tab.id) {
+          state = await saveSessionCAS(state, {...state, automation_tab_id: tab.id});
+        }
+        capturedJob = await captureGuidedCurrentTab(tab.id, tab.url);
+        state = await sessionState();
+        if (!state || state.mode !== "JOB_CAPTURE") throw staleSessionError();
+        if (capturedJob.status === "AWAITING_JOB_PAGE_CAPTURE" && capturedJob.official_url) {
+          continue;
+        }
+        break;
       }
-      if (!tab) {
-        tab = await chrome.tabs.create({url: officialUrl, active: true});
-        tab = await waitForTabPage(tab.id, "");
-      }
-      else {
-        const prior = tab.url || "";
-        tab = await chrome.tabs.update(tab.id, {url: officialUrl, active: true});
-        tab = await waitForTabPage(tab.id, prior === officialUrl ? "" : prior);
-      }
-      state = await assertCurrentSession(state);
-      if (state.automation_tab_id !== tab.id) {
-        state = await saveSessionCAS(state, {...state, automation_tab_id: tab.id});
-      }
-      const capturedJob = await captureGuidedCurrentTab(tab.id, tab.url);
-      state = await sessionState();
-      if (!state || state.mode !== "JOB_CAPTURE") throw staleSessionError();
-      if (!capturedJob.application_url) {
+      if (!capturedJob?.application_url) {
         const stopped = await saveSessionCAS(state, {...state, autopilot_in_progress: false});
         return publicSessionStatus(stopped);
       }
@@ -1037,7 +1044,13 @@ async function captureGuidedCurrentTab(tabId, tabUrl) {
     }
     const result = await postJSON(endpoint(state, "/capture-job"), collected.payload);
     state = await assertCurrentSession(state);
-    const next = await saveSessionCAS(state, {...state, stage: result.status, last_result: result});
+    const next = await saveSessionCAS(state, {
+      ...state,
+      stage: result.status,
+      allowed_company_domain: result.allowed_company_domain || state.allowed_company_domain,
+      selected_official_url: result.official_url || state.selected_official_url,
+      last_result: result
+    });
     await notifyJobFlow(result, "JOBFLOW_INTAKE_STATUS", next);
     return result;
   }

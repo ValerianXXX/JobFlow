@@ -19,6 +19,7 @@ const notifications = [];
 let nextTabId = 40;
 let permissionsGranted = true;
 let searchMode = "selected";
+let captureJobCalls = 0;
 
 function event(name) {
   const values = new Set();
@@ -114,6 +115,7 @@ const chrome = {
           url: tab.url, document_title: "Credit Risk Analyst | Example Careers",
           job_title: "Credit Risk Analyst", company_name: "Example", job_location: "New York, NY",
           visible_text: "Credit Risk Analyst\nExample\nNew York, NY\nReview commercial credit risk.",
+          availability: {closed_signal: false, valid_through: "2099-12-31"},
           apply_candidates: [{label: "Apply", url: "https://apply.example.test/application/credit-risk"}],
           blocker_signals: [], application_fields_present: false
         }
@@ -159,11 +161,20 @@ const sandbox = {
         allowed_company_domain: "example.test", automatic_retry: false, real_external_actions: 0
       });
     }
-    if (value.endsWith("/capture-job")) return response({
-      status: "AWAITING_APPLICATION_FORM_CAPTURE", mode: "JOB_CAPTURE", intake_id: "GIN-GUIDED-AUTOPILOT",
-      application_url: "https://apply.example.test/application/credit-risk",
-      apply_route_status: "SELECTED", automatic_retry: false, real_external_actions: 0
-    });
+    if (value.endsWith("/capture-job")) {
+      captureJobCalls += 1;
+      if (searchMode === "retry" && captureJobCalls === 1) return response({
+        status: "AWAITING_JOB_PAGE_CAPTURE", mode: "JOB_CAPTURE", intake_id: "GIN-GUIDED-AUTOPILOT",
+        official_url: "https://careers.second-example.test/jobs/credit-risk",
+        allowed_company_domain: "second-example.test", prior_candidate_status: "AI_NO_MATCH",
+        automatic_retry: false, real_external_actions: 0
+      });
+      return response({
+        status: "AWAITING_APPLICATION_FORM_CAPTURE", mode: "JOB_CAPTURE", intake_id: "GIN-GUIDED-AUTOPILOT",
+        application_url: "https://apply.example.test/application/credit-risk",
+        apply_route_status: "SELECTED", automatic_retry: false, real_external_actions: 0
+      });
+    }
     if (value.endsWith("/capture-form")) return response({
       status: "PREPARING_APPLICATION", mode: "JOB_CAPTURE", intake_id: "GIN-GUIDED-AUTOPILOT",
       application_id: "APP-GUIDED-AUTOPILOT", retry_after_ms: 3000,
@@ -206,6 +217,21 @@ function send(message, sender = {}) {
   assert.equal(domMessages.some((item) => item.message.type === "JOBFLOW_APPLY_APPROVED"), false);
   assert.equal(domMessages.some((item) => item.message.type === "JOBFLOW_NAVIGATE_APPROVED"), false);
 
+  const openedBeforeRetry = openedUrls.length;
+  const requestsBeforeRetry = requests.length;
+  searchMode = "retry";
+  captureJobCalls = 0;
+  seedState();
+  const retriedCandidate = await send({type: "JOBFLOW_RUN_GUIDED_AUTOPILOT"});
+  assert.equal(retriedCandidate.status, "PREPARING_APPLICATION");
+  assert.deepEqual(openedUrls.slice(openedBeforeRetry), [
+    "about:blank",
+    "https://careers.example.test/jobs/credit-risk",
+    "https://careers.second-example.test/jobs/credit-risk",
+    "https://apply.example.test/application/credit-risk"
+  ]);
+  assert.equal(requests.slice(requestsBeforeRetry).filter((item) => item.url.endsWith("/capture-job")).length, 2);
+
   const openedBeforeAmbiguity = openedUrls.length;
   const requestsBeforeAmbiguity = requests.length;
   searchMode = "ambiguous";
@@ -228,6 +254,7 @@ function send(message, sender = {}) {
 
   process.stdout.write(JSON.stringify({
     status: "PASS", visible_search_started: 1, official_job_pages_opened: 1,
+    rejected_candidate_advanced_to_next: 1,
     verified_apply_routes_followed: 1, application_forms_captured: 1,
     ambiguous_search_navigations: 0, permission_denial_external_actions: 0,
     programmatic_apply_clicks: 0, programmatic_submit_clicks: 0,

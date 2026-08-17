@@ -75,6 +75,7 @@ from .live_official_search import (
     browser_search_query,
     prepare_official_job_candidates,
     select_official_job_candidate,
+    verify_official_job_page_match,
 )
 from .orchestrator import JobOpsOrchestrator, MAX_JD_SOURCE_BYTES, _read_jd
 from .onboarding_catalog import FIELD_BY_ID, FIELD_IDS, REQUIRED_FIELD_IDS, STATUS_OPTIONS, USE_POLICIES, empty_answers, public_catalog
@@ -2031,6 +2032,8 @@ class OnboardingCenterService:
             "read_only_page_inspections": inspections,
             "real_external_actions": 0,
         }
+        if isinstance(active.get("candidate_rejection_count"), int):
+            public["candidate_rejection_count"] = int(active["candidate_rejection_count"])
         if active.get("operator_task_id"):
             public["operator_task_id"] = str(active["operator_task_id"])
         failure = active.get("last_failure")
@@ -2278,8 +2281,11 @@ class OnboardingCenterService:
         lease["official_url"] = official_url
         lease["company_domain"] = company_domain
         lease["selected_candidate_ref"] = str(selected["candidate_ref"])
+        ranked_refs = [str(item) for item in selected.get("ranked_candidate_refs", [])]
+        lease["remaining_candidate_refs"] = [
+            item for item in ranked_refs if item != str(selected["candidate_ref"])
+        ]
         lease["status"] = "AWAITING_JOB_PAGE_CAPTURE"
-        lease.pop("search_candidates", None)
         lease.pop("candidate_options", None)
         return {
             "status": "AWAITING_JOB_PAGE_CAPTURE", "mode": "JOB_CAPTURE",
@@ -2288,6 +2294,85 @@ class OnboardingCenterService:
             "candidate_ref": str(selected["candidate_ref"]), "summary": str(selected["summary"]),
             "next_safe_action": "COMPANION_OPENS_AND_VERIFIES_SELECTED_JOB_PAGE",
             "automatic_retry": False, "real_external_actions": 0,
+        }
+
+    @staticmethod
+    def _next_guided_search_candidate(lease: dict[str, Any]) -> dict[str, str] | None:
+        candidates = lease.get("search_candidates")
+        remaining = lease.get("remaining_candidate_refs")
+        if not isinstance(candidates, list) or not isinstance(remaining, list):
+            return None
+        by_ref = {
+            str(item.get("candidate_ref")): item
+            for item in candidates
+            if isinstance(item, dict) and item.get("candidate_ref")
+        }
+        while remaining:
+            candidate_ref = str(remaining.pop(0))
+            candidate = by_ref.get(candidate_ref)
+            if isinstance(candidate, dict):
+                return {
+                    "candidate_ref": candidate_ref,
+                    "url": str(candidate["url"]),
+                    "company_domain": str(candidate["company_domain"]),
+                    "title": str(candidate.get("title") or "Matched company role"),
+                }
+        return None
+
+    def _advance_or_stop_guided_search(
+        self,
+        lease: dict[str, Any],
+        *,
+        rejection_code: str,
+        rejection_summary: str,
+    ) -> dict[str, Any]:
+        intake_id = str(lease["intake_id"])
+        current_ref = str(lease.get("selected_candidate_ref") or "")
+        lease["candidate_rejection_count"] = int(lease.get("candidate_rejection_count") or 0) + 1
+        self._guided_event(
+            intake_id,
+            "SEARCH_RESULTS_INSPECTED",
+            {
+                "candidate_ref_hash": sha256_bytes(current_ref.encode("utf-8")) if current_ref else None,
+                "selection_status": "CANDIDATE_REJECTED",
+                "reason": rejection_code,
+            },
+        )
+        candidate = self._next_guided_search_candidate(lease)
+        if candidate is None:
+            lease["status"] = "FORM_CAPTURE_FAILED"
+            failure = {
+                "status": "FORM_CAPTURE_FAILED",
+                "code": "OFFICIAL_JOB_NO_LIVE_MATCH",
+                "message": "The visible search did not contain another verified, available role matching the approved target.",
+                "intake_id": intake_id,
+                "mode": "JOB_CAPTURE",
+                "automatic_retry": False,
+                "real_external_actions": 0,
+            }
+            lease["last_failure"] = deepcopy(failure)
+            lease.pop("search_candidates", None)
+            lease.pop("remaining_candidate_refs", None)
+            return failure
+        lease["official_url"] = candidate["url"]
+        lease["company_domain"] = candidate["company_domain"]
+        lease["selected_candidate_ref"] = candidate["candidate_ref"]
+        lease["status"] = "AWAITING_JOB_PAGE_CAPTURE"
+        lease["job_page"] = None
+        return {
+            "status": "AWAITING_JOB_PAGE_CAPTURE",
+            "mode": "JOB_CAPTURE",
+            "intake_id": intake_id,
+            "official_url": candidate["url"],
+            "allowed_company_domain": candidate["company_domain"],
+            "candidate_ref": candidate["candidate_ref"],
+            "candidate_title": candidate["title"],
+            "candidate_rejection_count": int(lease["candidate_rejection_count"]),
+            "prior_candidate_status": rejection_code,
+            "prior_candidate_summary": rejection_summary[:500],
+            "next_safe_action": "COMPANION_OPENS_AND_VERIFIES_NEXT_RANKED_JOB_PAGE",
+            "automatic_retry": False,
+            "real_external_actions": 0,
         }
 
     @_synchronized
@@ -2317,6 +2402,7 @@ class OnboardingCenterService:
         selected["official_url"] = str(candidate["url"])
         selected["company_domain"] = str(candidate["company_domain"])
         selected["selected_candidate_ref"] = candidate_ref
+        selected["user_selected_candidate"] = True
         selected["status"] = "AWAITING_JOB_PAGE_CAPTURE"
         selected.pop("search_candidates", None)
         selected.pop("candidate_options", None)
@@ -2375,6 +2461,89 @@ class OnboardingCenterService:
             raise JobOpsError("GUIDED_INTAKE_JOB_TITLE_MISSING", "JobFlow could not identify a role title on this page.")
         if not company:
             company = str(lease["company_domain"]).split(".", 1)[0].replace("-", " ").title()
+        raw_availability = payload.get("availability")
+        if raw_availability is None:
+            raw_availability = {"closed_signal": False, "valid_through": ""}
+        if (
+            not isinstance(raw_availability, dict)
+            or set(raw_availability) != {"closed_signal", "valid_through"}
+            or not isinstance(raw_availability.get("closed_signal"), bool)
+            or not isinstance(raw_availability.get("valid_through"), str)
+        ):
+            raise JobOpsError("GUIDED_JOB_AVAILABILITY_INVALID", "The company page returned invalid job-availability evidence.")
+        valid_through = re.sub(r"\s+", " ", raw_availability["valid_through"]).strip()
+        if len(valid_through) > 100 or re.search(r"[\x00-\x1f\x7f]", valid_through):
+            raise JobOpsError("GUIDED_JOB_AVAILABILITY_INVALID", "The company page returned invalid job-availability evidence.")
+        expired = False
+        if valid_through:
+            try:
+                expiry = datetime.fromisoformat(valid_through.replace("Z", "+00:00"))
+                if expiry.tzinfo is None:
+                    expiry = expiry.replace(tzinfo=timezone.utc)
+                expired = expiry.astimezone(timezone.utc) < datetime.now(timezone.utc)
+            except ValueError:
+                raise JobOpsError("GUIDED_JOB_AVAILABILITY_INVALID", "The company page returned an unreadable posting expiry.")
+        if raw_availability["closed_signal"] or expired:
+            if lease.get("discovery_mode") == "VISIBLE_BROWSER_SEARCH":
+                return self._advance_or_stop_guided_search(
+                    lease,
+                    rejection_code="POSTING_CLOSED" if raw_availability["closed_signal"] else "POSTING_EXPIRED",
+                    rejection_summary="The verified company page says this posting is no longer available.",
+                )
+            raise JobOpsError(
+                "OFFICIAL_JOB_NOT_AVAILABLE",
+                "The selected company page says this posting is closed or expired. Choose a current role instead.",
+            )
+        if lease.get("discovery_mode") == "VISIBLE_BROWSER_SEARCH" and not lease.get("user_selected_candidate"):
+            candidate_ref = str(lease.get("selected_candidate_ref") or "")
+            match = verify_official_job_page_match(
+                self.ai_engine,
+                intent=str(lease.get("search_intent") or ""),
+                candidate_ref=candidate_ref,
+                title=title,
+                company=company,
+                location=location or "UNKNOWN",
+                visible_excerpt=visible_text[:2_000],
+            )
+            self._guided_event(
+                str(lease["intake_id"]),
+                "JOB_PAGE_INSPECTED",
+                {
+                    "candidate_ref_hash": sha256_bytes(candidate_ref.encode("utf-8")),
+                    "inspection_kind": "AI_MATCH_CHECK",
+                    "match_status": str(match["status"]),
+                    "page_content_hash": str(match["page_content_hash"]),
+                },
+            )
+            if match["status"] == "NO_MATCH":
+                return self._advance_or_stop_guided_search(
+                    lease,
+                    rejection_code="AI_NO_MATCH",
+                    rejection_summary=str(match["summary"]),
+                )
+            if match["status"] == "NEEDS_USER_REVIEW":
+                candidates = lease.get("search_candidates") if isinstance(lease.get("search_candidates"), list) else []
+                visible_refs = [candidate_ref, *list(lease.get("remaining_candidate_refs") or [])]
+                options = [
+                    {
+                        "candidate_ref": str(item["candidate_ref"]),
+                        "title": str(item.get("title") or "Matched company role"),
+                        "company_domain": str(item["company_domain"]),
+                    }
+                    for item in candidates
+                    if isinstance(item, dict) and str(item.get("candidate_ref")) in visible_refs
+                ][:3]
+                lease["status"] = "SEARCH_SELECTION_REQUIRED"
+                lease["candidate_options"] = deepcopy(options)
+                return {
+                    "status": "SEARCH_SELECTION_REQUIRED",
+                    "mode": "JOB_CAPTURE",
+                    "intake_id": str(lease["intake_id"]),
+                    "summary": str(match["summary"]),
+                    "candidate_options": options,
+                    "automatic_retry": False,
+                    "real_external_actions": 0,
+                }
         jd_text = "\n".join((
             f"Company: {company}", f"Title: {title}", f"Location: {location or 'UNKNOWN'}", "", visible_text,
         )).strip()
