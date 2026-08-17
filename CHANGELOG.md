@@ -16,6 +16,10 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 - Store installation is now the normal user path. Unpacked extension loading remains available only for local source development.
 
+### Fixed
+
+- Corrected native-host file ACL propagation so the current Windows user can read and execute the installed host while access remains user-scoped.
+
 ### Safety
 
 - The native host exposes only an installation identifier and local binding secret to explicitly allowed JobFlow extension IDs; applicant values and page contents never pass through it.

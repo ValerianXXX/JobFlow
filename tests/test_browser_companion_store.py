@@ -8,6 +8,7 @@ import os
 import struct
 import subprocess
 import tempfile
+import textwrap
 import unittest
 import zipfile
 from pathlib import Path
@@ -69,6 +70,7 @@ class BrowserCompanionStoreTests(unittest.TestCase):
         self.assertIn("Software\\Microsoft\\Edge\\NativeMessagingHosts", installer)
         self.assertIn("[Microsoft.Win32.Registry]::CurrentUser", installer)
         self.assertIn("Set-CurrentUserOnly", installer)
+        self.assertIn('$fileGrant = "*$($identity.User.Value):(F)"', installer)
         self.assertIn("ReparsePoint", installer)
         self.assertIn("allowed_origins", installer)
         self.assertNotIn("Write-Host $secret", installer)
@@ -82,6 +84,47 @@ class BrowserCompanionStoreTests(unittest.TestCase):
         self.assertIn("ReadExactly(input, 4)", source)
         self.assertIn("ReparsePoint", source)
         self.assertNotIn("Console.WriteLine", source)
+
+    @unittest.skipUnless(os.name == "nt", "ACL behavior is verified only on Windows.")
+    def test_native_host_acl_keeps_installed_files_readable_by_current_user(self) -> None:
+        installer = (PROJECT / "scripts" / "install-jobflow-native-host.ps1").read_text(encoding="utf-8")
+        start = installer.index("function Set-CurrentUserOnly")
+        end = installer.index("function Read-RegistryDefault", start)
+        acl_function = installer[start:end]
+        with tempfile.TemporaryDirectory(prefix="jobflow-native-acl-") as raw_temp:
+            root = Path(raw_temp) / "host"
+            root.mkdir()
+            marker = root / "manifest.json"
+            marker.write_text('{"status":"synthetic"}', encoding="utf-8")
+            escaped_root = str(root).replace("'", "''")
+            script = textwrap.dedent(
+                f"""
+                $ErrorActionPreference = 'Stop'
+                {acl_function}
+                Set-CurrentUserOnly '{escaped_root}'
+                $marker = Join-Path '{escaped_root}' 'manifest.json'
+                $content = [IO.File]::ReadAllText($marker)
+                $acl = Get-Acl -LiteralPath $marker
+                $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+                $full = @($acl.Access | Where-Object {{
+                    $_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value -eq $sid -and
+                    ($_.FileSystemRights -band [Security.AccessControl.FileSystemRights]::FullControl) -ne 0 -and
+                    $_.AccessControlType -eq [Security.AccessControl.AccessControlType]::Allow
+                }}).Count -gt 0
+                [ordered]@{{ content = $content; current_user_full_control = $full }} | ConvertTo-Json -Compress
+                """
+            )
+            completed = subprocess.run(
+                ["powershell.exe", "-NoLogo", "-NoProfile", "-Command", script],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=30,
+            )
+            result = json.loads(completed.stdout.strip().splitlines()[-1])
+            self.assertEqual(result["content"], '{"status":"synthetic"}')
+            self.assertTrue(result["current_user_full_control"])
 
     @unittest.skipUnless(os.name == "nt", "The native host is compiled only on Windows.")
     def test_native_host_returns_binding_only_to_an_allowed_extension(self) -> None:

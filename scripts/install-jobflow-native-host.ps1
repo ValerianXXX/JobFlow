@@ -55,10 +55,29 @@ function Assert-JobFlowLocalPath([string]$Path) {
 
 function Set-CurrentUserOnly([string]$Path) {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $grant = "*$($identity.User.Value):(OI)(CI)(F)"
-    & "$env:SystemRoot\System32\icacls.exe" $Path "/inheritance:r" "/grant:r" $grant "/T" "/C" | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        throw "JOBFLOW_NATIVE_HOST_ACL_FAILED"
+    $directoryGrant = "*$($identity.User.Value):(OI)(CI)(F)"
+    $fileGrant = "*$($identity.User.Value):(F)"
+    $item = Get-Item -LiteralPath $Path -Force
+    $directories = @()
+    $files = @()
+    if ($item.PSIsContainer) {
+        $directories = @($item) + @(Get-ChildItem -LiteralPath $Path -Directory -Recurse -Force)
+        $files = @(Get-ChildItem -LiteralPath $Path -File -Recurse -Force)
+    }
+    else {
+        $files = @($item)
+    }
+    foreach ($directory in $directories) {
+        & "$env:SystemRoot\System32\icacls.exe" $directory.FullName "/inheritance:r" "/grant:r" $directoryGrant "/C" | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "JOBFLOW_NATIVE_HOST_ACL_FAILED"
+        }
+    }
+    foreach ($file in $files) {
+        & "$env:SystemRoot\System32\icacls.exe" $file.FullName "/inheritance:r" "/grant:r" $fileGrant "/C" | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "JOBFLOW_NATIVE_HOST_ACL_FAILED"
+        }
     }
 }
 
@@ -145,6 +164,7 @@ finally {
     foreach ($path in @($stagingRoot, $backupRoot)) {
         if (Test-Path -LiteralPath $path -PathType Container) {
             Assert-JobFlowLocalPath $path
+            Set-CurrentUserOnly $path
             Remove-Item -LiteralPath $path -Recurse -Force
         }
     }
