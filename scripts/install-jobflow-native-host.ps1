@@ -55,8 +55,7 @@ function Assert-JobFlowLocalPath([string]$Path) {
 
 function Set-CurrentUserOnly([string]$Path) {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $directoryGrant = "*$($identity.User.Value):(OI)(CI)(F)"
-    $fileGrant = "*$($identity.User.Value):(F)"
+    $sid = $identity.User
     $item = Get-Item -LiteralPath $Path -Force
     $directories = @()
     $files = @()
@@ -68,16 +67,28 @@ function Set-CurrentUserOnly([string]$Path) {
         $files = @($item)
     }
     foreach ($directory in $directories) {
-        & "$env:SystemRoot\System32\icacls.exe" $directory.FullName "/inheritance:r" "/grant:r" $directoryGrant "/C" | Out-Null
-        if ($LASTEXITCODE -ne 0) {
-            throw "JOBFLOW_NATIVE_HOST_ACL_FAILED"
-        }
+        $acl = New-Object Security.AccessControl.DirectorySecurity
+        $acl.SetAccessRuleProtection($true, $false)
+        $rule = New-Object Security.AccessControl.FileSystemAccessRule(
+            $sid,
+            [Security.AccessControl.FileSystemRights]::FullControl,
+            ([Security.AccessControl.InheritanceFlags]::ContainerInherit -bor [Security.AccessControl.InheritanceFlags]::ObjectInherit),
+            [Security.AccessControl.PropagationFlags]::None,
+            [Security.AccessControl.AccessControlType]::Allow
+        )
+        $acl.SetAccessRule($rule)
+        [IO.Directory]::SetAccessControl($directory.FullName, $acl)
     }
     foreach ($file in $files) {
-        & "$env:SystemRoot\System32\icacls.exe" $file.FullName "/inheritance:r" "/grant:r" $fileGrant "/C" | Out-Null
-        if ($LASTEXITCODE -ne 0) {
-            throw "JOBFLOW_NATIVE_HOST_ACL_FAILED"
-        }
+        $acl = New-Object Security.AccessControl.FileSecurity
+        $acl.SetAccessRuleProtection($true, $false)
+        $rule = New-Object Security.AccessControl.FileSystemAccessRule(
+            $sid,
+            [Security.AccessControl.FileSystemRights]::FullControl,
+            [Security.AccessControl.AccessControlType]::Allow
+        )
+        $acl.SetAccessRule($rule)
+        [IO.File]::SetAccessControl($file.FullName, $acl)
     }
 }
 
