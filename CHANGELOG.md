@@ -4,6 +4,23 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-16
+
+### Added
+
+- Prepared Browser Companion 0.9.0 for Chrome Web Store and Microsoft Edge Add-ons distribution with complete English listing copy, synthetic store images, and a public privacy policy.
+- Added a user-scoped native messaging host so the signed store extension can authenticate the local JobFlow installation without bundling private binding data.
+- Added deterministic store-package generation and release tests for package contents, native-host identity, privacy disclosures, and required assets.
+
+### Changed
+
+- Store installation is now the normal user path. Unpacked extension loading remains available only for local source development.
+
+### Safety
+
+- The native host exposes only an installation identifier and local binding secret to explicitly allowed JobFlow extension IDs; applicant values and page contents never pass through it.
+- Final Submit remains user-only, and unknown external outcomes remain non-retryable.
+
 ## [0.4.0] - 2026-08-16
 
 ### Added

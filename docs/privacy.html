@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JobFlow Browser Companion Privacy Policy</title>
+  <style>
+    :root{--ink:#17212b;--muted:#64748b;--green:#2f6f5f;--soft:#e9f2ef;--line:#cad8d3;--paper:#fbfaf6}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 Arial,sans-serif}
+    header,main{max-width:900px;margin:auto}header{padding:46px 26px 26px;display:flex;gap:18px;align-items:center}
+    .logo{display:grid;place-items:center;width:58px;height:58px;border-radius:8px;background:var(--green);color:#fff;font:700 36px Georgia,serif}
+    h1,h2{font-family:Georgia,serif}h1{margin:0;font-size:34px}header p{margin:2px 0;color:var(--muted)}
+    main{margin-bottom:60px;padding:34px 42px;background:#fff;border:1px solid var(--line);box-shadow:0 16px 40px rgba(23,33,43,.08)}
+    h2{margin-top:34px;color:var(--green)}code{padding:2px 5px;background:var(--soft)}a{color:var(--green)}
+    .summary{padding:18px 20px;border-left:5px solid var(--green);background:var(--soft)}
+  </style>
+</head>
+<body>
+  <header><div class="logo">J</div><div><h1>JobFlow Browser Companion</h1><p>Privacy Policy · Effective August 16, 2026</p></div></header>
+  <main>
+    <p class="summary">JobFlow Browser Companion is local-first. It processes only the job or application page a user chooses, communicates with JobFlow on that same computer, and never clicks Final Submit.</p>
+    <h2>Data the extension processes</h2>
+    <p>For an active JobFlow task, the extension may process the chosen page URL and origin, visible job text, sanitized form structure, user-approved application values and files, and expiring local task identifiers and page hashes.</p>
+    <p>It does not read browser history, cookies, passwords, authentication tokens, one-time codes, CAPTCHA or MFA responses, government identifiers, payment data, or unrelated form values. It does not answer protected voluntary-disclosure questions.</p>
+    <h2>Purpose</h2>
+    <ol><li>Verify the chosen company or application route.</li><li>Describe the current page to the local JobFlow workflow without retaining raw page bodies.</li><li>Fill and attach only application-specific content the user approved.</li><li>Stop when a page, field, authorization, or result is unknown or changed.</li></ol>
+    <h2>Local communication and storage</h2>
+    <p>The extension communicates only with the JobFlow service on <code>127.0.0.1</code> or <code>localhost</code> and with the JobFlow native messaging host installed for the current Windows account. The native host returns only an installation binding; it does not receive page content, applicant answers, or files.</p>
+    <p>Short-lived task state remains in browser session storage and expires or is cleared when the task ends, is cancelled, or becomes invalid. JobFlow does not operate a remote collection server for Browser Companion data.</p>
+    <h2>Data sharing</h2>
+    <p>The extension does not sell data, use it for advertising, transfer it to data brokers, or use it for credit, lending, insurance, or unrelated profiling.</p>
+    <h2>Permissions</h2>
+    <ul><li><strong>activeTab and optional HTTPS access:</strong> inspect or assist only on a page the user chooses.</li><li><strong>scripting:</strong> run the bounded page inspector and approved-field helper.</li><li><strong>storage:</strong> keep expiring task state for the browser session.</li><li><strong>alarms:</strong> observe authorized local progress without hidden retries.</li><li><strong>nativeMessaging:</strong> authenticate the extension to the local JobFlow installation.</li><li><strong>optional search:</strong> open a user-approved company-careers search.</li><li><strong>localhost:</strong> communicate with JobFlow on the same device.</li></ul>
+    <h2>User controls</h2>
+    <p>Users can cancel an active task in JobFlow, revoke site access, disable or uninstall the extension, and remove local JobFlow data through the desktop workflow. An unknown submission result is never retried automatically.</p>
+    <h2>Contact</h2>
+    <p>Use the public <a href="https://github.com/ValerianXXX/JobFlow/issues">JobFlow issue tracker</a> for privacy or security questions. Never include private applicant data in an issue.</p>
+    <h2>Policy changes</h2>
+    <p>Material changes will be published in the JobFlow repository and reflected in the extension-store listing before release.</p>
+  </main>
+</body>
+</html>

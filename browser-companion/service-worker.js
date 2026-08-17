@@ -12,6 +12,7 @@ const MANUAL_NAVIGATION_RESUME_ALARM = "jobflow-manual-navigation-resume";
 const NAVIGATION_SETTLE_MS = 20000;
 const BINDING_SCHEMA_VERSION = 1;
 const BINDING_ALGORITHM = "HMAC-SHA256";
+const NATIVE_HOST_NAME = "com.jobflow.browser_companion";
 const PAIR_RESPONSE_FIELDS = [
   "allowed_company_domain", "allowed_page_origin", "application_id", "assist_id",
   "capture_status", "current_step", "discovery_mode", "expires_at", "intake_id", "max_steps", "mode",
@@ -266,27 +267,84 @@ function encodeBase64Url(bytes) {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-async function installationBinding() {
-  if (!installationBindingPromise) installationBindingPromise = (async () => {
-    let response;
+function normalizedBinding(value, source) {
+  const expected = source === "native"
+    ? ["installation_id", "schema_version", "secret_b64url", "status"]
+    : ["installation_id", "schema_version", "secret_b64url"];
+  if (
+    !value || !exactKeys(value, expected) || value.schema_version !== BINDING_SCHEMA_VERSION ||
+    (source === "native" && value.status !== "READY") ||
+    !/^[a-f0-9]{32}$/.test(String(value.installation_id || ""))
+  ) throw bindingError(
+    "COMPANION_BINDING_INVALID", "Repair the local JobFlow installation before reconnecting the Browser Companion."
+  );
+  return value;
+}
+
+async function nativeInstallationBinding() {
+  if (typeof chrome.runtime.sendNativeMessage !== "function") throw bindingError(
+    "COMPANION_NATIVE_HOST_UNAVAILABLE", "Install or repair JobFlow on this Windows account before pairing."
+  );
+  return await new Promise((resolve, reject) => {
     try {
-      response = await fetch(chrome.runtime.getURL("binding.json"), {
-        cache: "no-store", credentials: "omit", redirect: "error"
+      chrome.runtime.sendNativeMessage(NATIVE_HOST_NAME, {
+        schema_version: BINDING_SCHEMA_VERSION,
+        type: "JOBFLOW_GET_INSTALLATION_BINDING",
+        protocol_version: PROTOCOL,
+        extension_version: EXTENSION_VERSION
+      }, (response) => {
+        if (chrome.runtime.lastError || !response) {
+          reject(bindingError(
+            "COMPANION_NATIVE_HOST_UNAVAILABLE", "Install or repair JobFlow on this Windows account before pairing."
+          ));
+          return;
+        }
+        if (response.status === "BLOCKED") {
+          reject(bindingError(
+            String(response.code || "COMPANION_NATIVE_HOST_FAILED"),
+            String(response.message || "Repair the local JobFlow installation before reconnecting the Browser Companion.")
+          ));
+          return;
+        }
+        try { resolve(normalizedBinding(response, "native")); }
+        catch (error) { reject(error); }
       });
     } catch (_error) {
-      throw bindingError("COMPANION_BINDING_MISSING", "Run the Browser Companion installer before pairing.");
+      reject(bindingError(
+        "COMPANION_NATIVE_HOST_UNAVAILABLE", "Install or repair JobFlow on this Windows account before pairing."
+      ));
     }
-    if (!response.ok) throw bindingError("COMPANION_BINDING_MISSING", "Run the Browser Companion installer before pairing.");
-    const value = await response.json().catch(() => null);
-    if (
-      !value || value.schema_version !== BINDING_SCHEMA_VERSION ||
-      !/^[a-f0-9]{32}$/.test(String(value.installation_id || ""))
-    ) {
-      throw bindingError("COMPANION_BINDING_INVALID", "Reinstall the Browser Companion because its local binding is invalid.");
+  });
+}
+
+async function legacyInstallationBinding() {
+  let response;
+  try {
+    response = await fetch(chrome.runtime.getURL("binding.json"), {
+      cache: "no-store", credentials: "omit", redirect: "error"
+    });
+  } catch (_error) {
+    throw bindingError("COMPANION_BINDING_MISSING", "Install or repair JobFlow on this Windows account before pairing.");
+  }
+  if (!response.ok) throw bindingError(
+    "COMPANION_BINDING_MISSING", "Install or repair JobFlow on this Windows account before pairing."
+  );
+  return normalizedBinding(await response.json().catch(() => null), "legacy");
+}
+
+async function installationBinding() {
+  if (!installationBindingPromise) installationBindingPromise = (async () => {
+    let value;
+    let nativeError = null;
+    try { value = await nativeInstallationBinding(); }
+    catch (error) { nativeError = error; }
+    if (!value) {
+      try { value = await legacyInstallationBinding(); }
+      catch (_legacyError) { throw nativeError || _legacyError; }
     }
     const secret = decodeBase64Url(value.secret_b64url);
     if (secret.length !== 32) throw bindingError(
-      "COMPANION_BINDING_INVALID", "Reinstall the Browser Companion because its local binding is invalid."
+      "COMPANION_BINDING_INVALID", "Repair the local JobFlow installation before reconnecting the Browser Companion."
     );
     const key = await crypto.subtle.importKey("raw", secret, {name: "HMAC", hash: "SHA-256"}, false, ["verify"]);
     secret.fill(0);

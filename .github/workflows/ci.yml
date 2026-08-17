@@ -48,6 +48,9 @@ jobs:
           }
       - name: Run regression suite
         run: python -m unittest discover -s tests -v
+      - name: Build Browser Companion store package
+        if: matrix.python-version == '3.12'
+        run: python scripts/build_browser_companion_store_package.py
       - name: Check public tree boundary
         run: python -m jobops.public_release
       - name: Build wheel without publishing

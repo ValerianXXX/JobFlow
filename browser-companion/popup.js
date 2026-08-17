@@ -4,7 +4,7 @@
 // Edge can keep an older manifest/service worker alive. A one-time popup open
 // therefore provides a safe, user-visible hot-upgrade path without asking the
 // user to operate edge://extensions (which normal webpages cannot control).
-const SOURCE_EXTENSION_VERSION = "0.8.0";
+const SOURCE_EXTENSION_VERSION = "0.9.0";
 if (chrome.runtime.getManifest().version !== SOURCE_EXTENSION_VERSION) {
   chrome.runtime.reload();
   window.close();

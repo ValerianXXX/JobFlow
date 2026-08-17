@@ -47,7 +47,7 @@ const sandbox = {
   },
   chrome: {
     runtime: {
-      getManifest() { return {version: "0.8.0"}; },
+      getManifest() { return {version: "0.9.0"}; },
       async sendMessage(message) {
         runtimeMessages.push(message);
         if (message.type === "JOBFLOW_GET_STATUS") return pairedStatus;

@@ -4,11 +4,11 @@
 
 1. Extract the complete JobFlow source ZIP.
 2. Double-click `Install JobFlow.cmd`.
-3. Wait for installation to finish. The installer opens the browser extension page and the Local AppData Browser Companion folder.
-4. Enable **Developer mode**, choose **Load unpacked**, and select the opened Local AppData runtime folder. Do not select the project source folder.
-5. Confirm the displayed JobFlow Browser Companion version matches the release notes.
+3. Wait for installation to finish. The installer registers JobFlow's private, user-scoped browser channel and opens the Browser Companion store listing.
+4. Choose **Add to Chrome** or **Get** in Microsoft Edge. Confirm that the publisher and version match the release notes.
+5. Pin the JobFlow J icon if you want it visible in the toolbar.
 
-The browser requires this one manual security gesture. JobFlow cannot bypass it.
+The browser requires this one store-install gesture. JobFlow cannot bypass it. Developers testing source changes may use `Install JobFlow Browser Companion.cmd` and the unpacked Local AppData runtime, but ordinary users should install the signed store version.
 
 ## Start JobFlow
 
@@ -58,7 +58,8 @@ The health check is offline and does not print private values or the project pat
 ### Browser Companion does not respond
 
 - Confirm the extension is enabled.
-- Confirm it was loaded from the Local AppData runtime folder.
+- Confirm the JobFlow installer completed after the store extension was installed; this registers the private local channel for the current Windows account.
+- Confirm the extension version matches the current release.
 - Reload the JobFlow page after updating the extension.
 - Use the JobFlow cancel action before selecting a different job URL.
 

@@ -22,7 +22,7 @@ External claims require approved personal evidence. The internal workflow moves 
 
 ### Browser Companion
 
-The fixed-ID extension is installed into a Local AppData runtime directory. Pairing uses an installation-specific local binding secret that is excluded from Git and release archives.
+The fixed-ID extension is distributed through Chrome Web Store and Microsoft Edge Add-ons. A user-scoped native messaging host, registered by the Windows installer, provides the extension with an installation-specific local binding secret. The secret is excluded from Git, store packages, and release archives. An unpacked Local AppData runtime exists only as a development fallback.
 
 For one approved application, the companion can:
 
@@ -49,7 +49,8 @@ It cannot submit, read credentials, bypass verification, create accounts, send m
 |---|---|
 | Repository | Code, schemas, synthetic fixtures, public docs |
 | `%LOCALAPPDATA%\JobOps\private` | DPAPI-encrypted applicant data |
-| `%LOCALAPPDATA%\JobOps\BrowserCompanion` | Installed extension runtime and local binding |
+| `%LOCALAPPDATA%\JobOps\BrowserCompanionHost` | User-scoped native messaging host and manifest |
+| `%LOCALAPPDATA%\JobOps\BrowserCompanion` | Unpacked development fallback only |
 | Project `state`, `reports`, and `dist` | Local runtime or release artifacts excluded from Git |
 
 ## Recovery

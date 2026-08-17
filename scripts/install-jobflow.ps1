@@ -69,5 +69,5 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "JobFlow 安装完成（Python $($python.Version)）。 / JobFlow installation is ready."
-Write-Host "浏览器只要求一次安全操作：在已经打开的扩展页选择 Load unpacked，并选择已打开的 BrowserCompanion 文件夹。 / The browser requires one security action: choose Load unpacked and select the BrowserCompanion folder that is already open."
+Write-Host "浏览器只要求一次安全操作：从打开的官方商店页面安装 JobFlow Browser Companion。 / The browser requires one security action: install JobFlow Browser Companion from the official store page that opens."
 Write-Host "JobFlow 现在会自动打开；以后双击 Start JobFlow.cmd 即可。 / JobFlow will open now; later, double-click Start JobFlow.cmd."

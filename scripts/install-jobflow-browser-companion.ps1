@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [switch]$NoLaunch
+    [switch]$NoLaunch,
+    [switch]$Development
 )
 
 $ErrorActionPreference = "Stop"
@@ -8,6 +9,7 @@ $projectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
 $sourceExtensionRoot = Join-Path $projectRoot "browser-companion"
 $sourceManifestPath = Join-Path $sourceExtensionRoot "manifest.json"
 $expectedId = "hhlliaaafegldkmcgmaoaelabipcaooj"
+$storeConfigPath = Join-Path $projectRoot "config\browser-companion-stores.json"
 
 if (-not (Test-Path -LiteralPath (Join-Path $projectRoot ".jobops-root") -PathType Leaf)) {
     throw "JOBFLOW_PROJECT_ROOT_NOT_FOUND"
@@ -17,6 +19,15 @@ if (-not (Test-Path -LiteralPath $sourceManifestPath -PathType Leaf)) {
 }
 if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
     throw "JOBFLOW_LOCAL_APP_DATA_NOT_FOUND"
+}
+if (-not (Test-Path -LiteralPath $storeConfigPath -PathType Leaf)) {
+    throw "JOBFLOW_BROWSER_COMPANION_STORE_CONFIG_NOT_FOUND"
+}
+$storeConfig = Get-Content -LiteralPath $storeConfigPath -Raw | ConvertFrom-Json
+$chromeStoreUrl = [string]$storeConfig.chrome_web_store_url
+$edgeStoreUrl = [string]$storeConfig.edge_addons_url
+if ([string]::IsNullOrWhiteSpace($chromeStoreUrl) -or -not $chromeStoreUrl.StartsWith("https://chromewebstore.google.com/", [StringComparison]::OrdinalIgnoreCase)) {
+    throw "JOBFLOW_BROWSER_COMPANION_STORE_CONFIG_INVALID"
 }
 
 $localRoot = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA "JobOps"))
@@ -154,19 +165,31 @@ finally {
 }
 
 $runtimeManifestPath = Join-Path $runtimeExtensionRoot "manifest.json"
+$nativeHostInstaller = Join-Path $PSScriptRoot "install-jobflow-native-host.ps1"
+if (-not (Test-Path -LiteralPath $nativeHostInstaller -PathType Leaf)) {
+    throw "JOBFLOW_NATIVE_HOST_INSTALLER_NOT_FOUND"
+}
+& powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $nativeHostInstaller
+if ($LASTEXITCODE -ne 0) {
+    throw "JOBFLOW_NATIVE_HOST_INSTALL_FAILED"
+}
+
 $browserPath = $null
-$extensionsUrl = $null
+$browserUrl = $null
+$extensionManagementUrl = $null
 if (-not $NoLaunch) {
     $edge = Get-Command "msedge.exe" -ErrorAction SilentlyContinue
     if ($edge) {
         $browserPath = $edge.Source
-        $extensionsUrl = "edge://extensions/"
+        $browserUrl = if ([string]::IsNullOrWhiteSpace($edgeStoreUrl)) { $chromeStoreUrl } else { $edgeStoreUrl }
+        $extensionManagementUrl = "edge://extensions/"
     }
     if (-not $browserPath) {
         $edgeCandidate = Join-Path ${env:ProgramFiles(x86)} "Microsoft\Edge\Application\msedge.exe"
         if (Test-Path -LiteralPath $edgeCandidate -PathType Leaf) {
             $browserPath = $edgeCandidate
-            $extensionsUrl = "edge://extensions/"
+            $browserUrl = if ([string]::IsNullOrWhiteSpace($edgeStoreUrl)) { $chromeStoreUrl } else { $edgeStoreUrl }
+            $extensionManagementUrl = "edge://extensions/"
         }
     }
     if (-not $browserPath) {
@@ -176,7 +199,10 @@ if (-not $NoLaunch) {
             (Join-Path $env:LOCALAPPDATA "Google\Chrome\Application\chrome.exe")
         )
         $browserPath = $chromeCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
-        if ($browserPath) { $extensionsUrl = "chrome://extensions/" }
+        if ($browserPath) {
+            $browserUrl = $chromeStoreUrl
+            $extensionManagementUrl = "chrome://extensions/"
+        }
     }
     if (-not $browserPath) {
         throw "EDGE_OR_CHROME_REQUIRED"
@@ -185,15 +211,23 @@ if (-not $NoLaunch) {
 
 Write-Host ""
 Write-Host "JobFlow Browser Companion"
-Write-Host "1. In the browser page, turn on Developer mode."
-Write-Host "2. Remove an older JobFlow Browser Companion, or click Reload if it already points to the installed folder."
-Write-Host "3. Choose Load unpacked and select the BrowserCompanion folder that is opening now."
-Write-Host "4. Confirm version $($manifest.version) and extension ID: $expectedId"
-Write-Host "5. Keep site access on When clicked if you prefer. Pairing uses this Windows installation binding."
-Write-Host "6. Refresh the JobFlow page once, then choose Connect browser."
+if ($Development) {
+    Write-Host "Development mode: load the unpacked Local AppData BrowserCompanion folder."
+    Write-Host "Confirm version $($manifest.version) and extension ID: $expectedId"
+}
+else {
+    Write-Host "Install the signed extension from the official store page that is opening."
+    Write-Host "The Windows-only secure channel is registered for this user. No extension folder selection is required."
+}
+Write-Host "Keep site access on When clicked if you prefer. Refresh JobFlow after installing or updating the extension."
 Write-Host ""
 if (-not $NoLaunch) {
-    Start-Process -FilePath "explorer.exe" -ArgumentList @("/select,`"$runtimeManifestPath`"")
-    Start-Process -FilePath $browserPath -ArgumentList @("--new-window", $extensionsUrl)
+    if ($Development) {
+        Start-Process -FilePath "explorer.exe" -ArgumentList @("/select,`"$runtimeManifestPath`"")
+        Start-Process -FilePath $browserPath -ArgumentList @("--new-window", $extensionManagementUrl)
+    }
+    else {
+        Start-Process -FilePath $browserPath -ArgumentList @("--new-window", $browserUrl)
+    }
 }
 exit 0

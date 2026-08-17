@@ -105,7 +105,7 @@ function evidencePayload(manual, overrides = {}) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.8.0"}; },
+    getManifest() { return {version: "0.9.0"}; },
     getURL(value) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${value}`; },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },

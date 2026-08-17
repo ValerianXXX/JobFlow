@@ -13,6 +13,7 @@ const session = {};
 const fetches = [];
 const notifications = [];
 const alarmCreates = [];
+const nativeMessages = [];
 let tabQueryResults = [];
 let failResultCollection = false;
 let delayNextPair = false;
@@ -58,7 +59,7 @@ function signedPairResult(url, options) {
     assist_path: assistPath,
     base_url: parsed.origin,
     challenge: String(body.companion_binding.challenge),
-    extension_version: "0.8.0",
+    extension_version: "0.9.0",
     installation_id: String(body.companion_binding.installation_id),
     protocol_version: "2"
   };
@@ -83,8 +84,16 @@ function signedPairResult(url, options) {
 
 const chrome = {
   runtime: {
-    getManifest() { return {version: "0.8.0"}; },
+    getManifest() { return {version: "0.9.0"}; },
     getURL(pathname) { return `chrome-extension://hhlliaaafegldkmcgmaoaelabipcaooj/${pathname}`; },
+    lastError: null,
+    sendNativeMessage(host, message, callback) {
+      nativeMessages.push({host, message});
+      callback({
+        status: "READY", schema_version: 1, installation_id: installationId,
+        secret_b64url: base64url(installationSecret)
+      });
+    },
     onMessage: event("internal"), onMessageExternal: event("external"), onConnect: event("connect")
   },
   storage: {session: {
@@ -219,6 +228,12 @@ async function waitUntil(predicate) {
   const externalPaired = await send(listeners.external, {type: "JOBFLOW_PAIR", pairing}, sender);
   assert.equal(externalPaired.status, "GUIDED_INTAKE_PAIRED", JSON.stringify(externalPaired));
   assert.equal(session.jobflowAssist.paired, true);
+  assert.equal(nativeMessages.length, 1, "the installation binding should come from the registered native host");
+  assert.equal(nativeMessages[0].host, "com.jobflow.browser_companion");
+  assert.deepEqual(JSON.parse(JSON.stringify(nativeMessages[0].message)), {
+    schema_version: 1, type: "JOBFLOW_GET_INSTALLATION_BINDING",
+    protocol_version: 2, extension_version: "0.9.0"
+  });
 
   delayNextPair = true;
   const cancelledPendingPair = send(listeners.internal, {type: "JOBFLOW_PAIR", pairing}, tabSender);
@@ -356,7 +371,7 @@ async function waitUntil(predicate) {
 
   process.stdout.write(JSON.stringify({
     status: "PASS", signed_external_pairing: true, popup_pair_fallback: true,
-    installation_hmac_required: true, fake_loopback_rejected: true, unsigned_routing_change_rejected: true,
+    installation_hmac_required: true, native_host_binding: true, fake_loopback_rejected: true, unsigned_routing_change_rejected: true,
     different_mode_blocked: true, stale_async_completion_blocked: true,
     final_review_immutable: true, unrelated_tab_update_ignored: true,
     same_bound_tab_result_observed: true, binding_scoped_status: true, scoped_cancel_releases_session: true,

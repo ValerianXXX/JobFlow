@@ -20,7 +20,7 @@ JobFlow is a local-first, AI-centered job application workflow for Windows. It t
 
 1. Download and extract the latest source ZIP.
 2. Double-click `Install JobFlow.cmd` once.
-3. Follow the opened browser instructions to load the Browser Companion from the Local AppData runtime folder.
+3. Install **JobFlow Browser Companion** from Chrome Web Store or Microsoft Edge Add-ons when the installer opens its listing.
 4. Double-click `Start JobFlow.cmd` for normal use.
 5. If startup fails, run `Check JobFlow.cmd` and follow the first failed check.
 
@@ -74,6 +74,7 @@ The project is intentionally Windows-first because secure applicant storage uses
 ## Documentation
 
 - [Quick start](docs/quickstart.md)
+- [Browser Companion privacy](PRIVACY.md)
 - [Architecture](docs/architecture.md)
 - [Roadmap](docs/roadmap.md)
 - [Release checklist](docs/release-checklist.md)
