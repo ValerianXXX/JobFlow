@@ -401,7 +401,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn(f"jobflow-v{UI_PROTOCOL_VERSION}", html)
+        self.assertIn("jobflow-v33-multi-store-companion", html)
         self.assertIn('value="chatgpt_export_large"', html)
         self.assertIn("雷霆大文件", script)
         self.assertIn("ZIPzilla Express", script)
