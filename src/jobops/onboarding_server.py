@@ -637,6 +637,10 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.set_queue_limit(self._json_body())
             elif route == "external-action-kill-switch":
                 result = self.server.service.disable_external_actions(self._json_body())
+            elif route == "intake-control":
+                result = self.server.service.set_intake_control(self._json_body())
+            elif route == "run-local-wake":
+                result = self.server.service.run_local_wake(self._json_body())
             elif route == "start-browser-assist":
                 result = self.server.service.start_browser_assist(self._json_body())
             elif route == "plan-application-with-ai":

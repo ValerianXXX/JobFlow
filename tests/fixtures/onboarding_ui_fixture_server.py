@@ -79,6 +79,7 @@ def main() -> None:
         for name in (
             "candidate-profile", "onboarding-answer-bank", "onboarding-completion",
             "external-claim-set", "application-readiness", "resume-tailoring-manifest",
+            "user-present-intake-control",
         ):
             shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
         database = JobOpsDB(project / "state" / "jobops.db")

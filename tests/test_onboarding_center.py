@@ -172,6 +172,9 @@ class OnboardingCenterTests(unittest.TestCase):
             )
             self.assertEqual(dashboard["execution_status_counts"], {"AWAITING_FINAL_AUTHORIZATION": 1})
             self.assertEqual(dashboard["startup_execution_reconciliation"]["automatic_retries"], 0)
+            self.assertEqual(dashboard["intake_control"]["status"], "NOT_CONFIGURED")
+            self.assertFalse(dashboard["intake_control"]["background_service_started"])
+            self.assertEqual(dashboard["intake_control"]["system_tasks_registered"], 0)
             serialized = json.dumps(dashboard, ensure_ascii=False)
             for forbidden in ("secure_profile_ref", "answers_hash", "resume_hash", "relative_path", "context_json", "private/source/path.txt", "private-source-locator-key"):
                 self.assertNotIn(forbidden, serialized)
@@ -192,10 +195,64 @@ class OnboardingCenterTests(unittest.TestCase):
             stopped = service.disable_external_actions({"user_confirmed": True})
             self.assertEqual(stopped["status"], "EXTERNAL_ACTIONS_DISABLED")
             self.assertEqual(stopped["real_external_actions"], 0)
+            self.assertEqual(stopped["intake_control"]["status"], "PAUSED")
+            self.assertEqual(stopped["intake_control"]["pause_reason"], "USER_KILL_SWITCH")
             for operation in (service.prepare_synthetic_execution, service.complete_synthetic_execution):
                 with self.assertRaises(JobOpsError) as synthetic_only:
                     operation({"application_id": "APP-DASH", "user_confirmed": True})
                 self.assertEqual(synthetic_only.exception.code, "SYNTHETIC_DEMO_ONLY")
+
+    def test_user_present_intake_control_requires_each_local_run_and_never_starts_a_scheduler(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            with self.assertRaises(JobOpsError) as unconfirmed:
+                service.set_intake_control({
+                    "action": "CONFIGURE", "interval_minutes": 30,
+                    "authorization_hours": 24, "user_confirmed": False,
+                })
+            self.assertEqual(unconfirmed.exception.code, "EXPLICIT_CONFIRMATION_REQUIRED")
+            with self.assertRaises(JobOpsError) as fractional:
+                service.set_intake_control({
+                    "action": "CONFIGURE", "interval_minutes": 30.5,
+                    "authorization_hours": 24, "user_confirmed": True,
+                })
+            self.assertEqual(fractional.exception.code, "INTAKE_CONTROL_INPUT_INVALID")
+
+            configured = service.set_intake_control({
+                "action": "CONFIGURE", "interval_minutes": 30,
+                "authorization_hours": 24, "user_confirmed": True,
+            })
+            self.assertEqual(configured["intake_control"]["status"], "READY")
+            self.assertFalse(configured["background_service_started"])
+            self.assertEqual(configured["system_tasks_registered"], 0)
+
+            local_result = {
+                "status": "NO_RECORDED_LOCAL_CONTINUATION",
+                "initial_promotion": {"intake_key": "", "status": "EMPTY", "reservation_id": None, "next_safe_action": "NONE"},
+                "processed_count": 0, "prepared_count": 0, "failed_count": 0,
+                "descriptor_cleanup_failure_count": 0, "results": [], "queue": {},
+                "background_service_started": False, "system_tasks_registered": 0,
+                "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
+            }
+            with mock.patch("jobops.onboarding_center.continue_recorded_intake", return_value=local_result) as continuation:
+                with self.assertRaises(JobOpsError) as run_unconfirmed:
+                    service.run_local_wake({"user_confirmed": False})
+                self.assertEqual(run_unconfirmed.exception.code, "EXPLICIT_CONFIRMATION_REQUIRED")
+                completed = service.run_local_wake({"user_confirmed": True})
+            continuation.assert_called_once()
+            self.assertEqual(completed["status"], "USER_PRESENT_LOCAL_WAKE_COMPLETE")
+            self.assertEqual(completed["system_tasks_registered"], 0)
+            self.assertEqual(completed["browser_actions"], 0)
+            self.assertEqual(completed["network_actions"], 0)
+            self.assertEqual(completed["real_external_actions"], 0)
+
+            paused = service.set_intake_control({"action": "PAUSE", "user_confirmed": True})
+            self.assertEqual(paused["intake_control"]["status"], "PAUSED")
+            with self.assertRaises(JobOpsError) as blocked:
+                service.start_guided_intake({"user_confirmed": True, "search_intent": "synthetic role"})
+            self.assertEqual(blocked.exception.code, "NEW_INTAKE_PAUSED")
+            resumed = service.set_intake_control({"action": "RESUME", "user_confirmed": True})
+            self.assertIn(resumed["intake_control"]["status"], {"READY", "DUE"})
 
     def test_bootstrap_discloses_only_truthful_offline_ats_capabilities(self) -> None:
         with project_temp() as root:
@@ -231,6 +288,7 @@ class OnboardingCenterTests(unittest.TestCase):
         for name in (
             "candidate-profile", "onboarding-answer-bank", "onboarding-completion", "official-discovery",
             "external-claim-set", "application-readiness", "resume-tailoring-manifest",
+            "user-present-intake-control",
         ):
             shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
         (project / "config").mkdir()
@@ -401,7 +459,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v34-controls-diagnostics", html)
+        self.assertIn("jobflow-v35-user-present-wake", html)
         self.assertIn('value="chatgpt_export_large"', html)
         self.assertIn("雷霆大文件", script)
         self.assertIn("ZIPzilla Express", script)
@@ -2234,6 +2292,11 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="recentDashboardList"', html)
         self.assertIn('id="executionRunsList"', html)
         self.assertIn('id="saveQueueLimit"', html)
+        self.assertIn('id="intakeControlTitle"', html)
+        self.assertIn('id="configureIntakeControl"', html)
+        self.assertIn('id="runLocalWake"', html)
+        self.assertIn('id="pauseIntakeControl"', html)
+        self.assertIn('id="resumeIntakeControl"', html)
         self.assertIn('id="emergencyStop"', html)
         self.assertIn('id="reviewPacketPanel"', html)
         self.assertIn('id="applicationFieldResolutionPanel"', html)
@@ -2256,6 +2319,8 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("function renderApplicationReadiness()", app)
         self.assertIn("function renderTailoringProposal(", app)
         self.assertIn("function renderOfficialDiscovery", app)
+        self.assertIn('api("intake-control"', app)
+        self.assertIn('api("run-local-wake"', app)
         self.assertIn("function clearOfficialDiscovery", app)
         self.assertIn('event.target.matches("#officialCompanyDomain,#officialCareersUrl,#officialSnapshotFile")', app)
         self.assertIn('discover-official-jobs?official_url=', app)
@@ -2323,7 +2388,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v34-controls-diagnostics", html)
+        self.assertIn("jobflow-v35-user-present-wake", html)
 
 
 if __name__ == "__main__":

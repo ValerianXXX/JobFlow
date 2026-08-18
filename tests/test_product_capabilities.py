@@ -23,6 +23,15 @@ class ProductCapabilityReportTests(unittest.TestCase):
         self.assertEqual(by_id["canonical_profile_reuse"]["availability"], "AVAILABLE")
         self.assertEqual(by_id["workday_browser_assist"]["live_acceptance"], "REQUIRED_PER_SITE")
         self.assertEqual(by_id["authorized_continuous_scheduler"]["availability"], "NOT_AVAILABLE")
+        self.assertEqual(by_id["user_present_local_wake_planner"]["availability"], "AVAILABLE")
+        self.assertEqual(
+            by_id["user_present_local_wake_planner"]["safety_boundary"],
+            "NO_BACKGROUND_SERVICE_OR_SYSTEM_TASK",
+        )
+        self.assertIn(
+            "USER_PRESENT_LOCAL_WAKE_ONLY",
+            by_id["authorized_continuous_scheduler"]["known_limit_codes"],
+        )
         self.assertEqual(by_id["desktop_manual_upgrade_rollback"]["availability"], "AVAILABLE")
         self.assertEqual(
             by_id["desktop_manual_upgrade_rollback"]["safety_boundary"],

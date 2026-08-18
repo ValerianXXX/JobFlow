@@ -16,6 +16,7 @@ The current machine-readable status is available through `jobflow product-capabi
 - [x] Bound company, Greenhouse, Lever, and Workday browser contracts with per-page revalidation.
 - [x] Approved field fill, approved material attachment, and one-use non-final navigation authorization.
 - [x] Persistent progress, safe URL cancellation, emergency stop, and non-retryable unknown-state recovery.
+- [x] User-present local processing cadence with explicit run-now, pause, and resume controls and no operating-system scheduler.
 - [x] Synthetic Greenhouse, Lever, Workday, browser, security, migration, and release evidence.
 - [x] Current-tree and full-history privacy scanning plus deterministic source archives.
 
@@ -24,6 +25,6 @@ The current machine-readable status is available through `jobflow product-capabi
 - [ ] Broader live compatibility evidence for provider-specific Greenhouse, Lever, Workday, and custom company forms.
 - [ ] More resilient modern-component field binding and actionable per-field failure diagnostics.
 - [ ] Reduced duplicate applicant confirmation through stronger canonical Candidate Profile mapping.
-- [ ] User-controlled scheduling only after a separate authorization model and kill switch are complete.
+- [ ] Unattended scheduling remains disabled; any future background design requires separate authorization, operating-system lifecycle controls, and a verified kill switch.
 
 Final submission, unattended operation, credential handling, verification bypass, email, account creation, recruiter contact, and automatic retry remain outside the current product boundary.

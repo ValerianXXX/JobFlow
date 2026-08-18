@@ -58,6 +58,7 @@ from .continuous_intake import (
     build_deferred_evidence_bundle,
     continue_recorded_intake,
 )
+from .intake_control import UserPresentIntakeControl
 from .document_builder import discover_template_slots, inspect_docx_text_blocks, template_fingerprint
 from .document_qa import extract_pdf_text
 from .errors import JobOpsError
@@ -735,13 +736,14 @@ class OnboardingCenterService:
             initial_engine=initial_engine,
         )
         self.ai_engine = self.ai_connections.current_engine
+        self.schemas = self.project / "schemas"
+        self.intake_control = UserPresentIntakeControl(self.database, self.schemas)
         self.browser_assist = BrowserAssistManager(
             self.project,
             self.database,
             self.onboarding,
             semantic_reviewer=self._review_live_application_form,
         )
-        self.schemas = self.project / "schemas"
         self.index_path = runtime_path(
             self.project,
             "state",
@@ -1601,6 +1603,7 @@ class OnboardingCenterService:
             },
             "generated_at": iso_utc(),
             "guided_intake": guided_intake,
+            "intake_control": self.intake_control.state(),
         }
 
     @_synchronized
@@ -1608,6 +1611,10 @@ class OnboardingCenterService:
         if payload.get("user_confirmed") is not True:
             raise JobOpsError("EXPLICIT_CONFIRMATION_REQUIRED", "The emergency stop requires an explicit user confirmation.")
         stopped = self.browser_assist.stop(user_confirmed=True)
+        intake_control = self.intake_control.pause(
+            user_confirmed=True,
+            reason="USER_KILL_SWITCH",
+        )
         actions = audit_real_external_actions(self.database)
         return {
             "status": "EXTERNAL_ACTIONS_DISABLED",
@@ -1615,7 +1622,85 @@ class OnboardingCenterService:
             "revoked_assists": int(stopped["revoked_assists"]),
             "submission_unknown_assists": int(stopped["submission_unknown_assists"]),
             "real_external_actions": int(actions["real_external_actions"]),
+            "intake_control": intake_control,
             "automatic_retry": False,
+        }
+
+    @_synchronized
+    def set_intake_control(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Configure or pause the user-present local wake plan.
+
+        This endpoint never creates a background service or OS task.  Every
+        processing run still requires a fresh click in the local JobFlow UI.
+        """
+
+        action = str(payload.get("action") or "").strip().upper()
+        if action == "CONFIGURE":
+            def whole_number(key: str) -> int:
+                raw = payload.get(key)
+                if type(raw) is int:
+                    return raw
+                if isinstance(raw, str) and raw.strip().isdigit():
+                    return int(raw.strip())
+                raise JobOpsError(
+                    "INTAKE_CONTROL_INPUT_INVALID",
+                    "The local wake interval and authorization window must be whole numbers.",
+                )
+
+            interval_minutes = whole_number("interval_minutes")
+            authorization_hours = whole_number("authorization_hours")
+            control = self.intake_control.configure(
+                interval_minutes=interval_minutes,
+                authorization_hours=authorization_hours,
+                user_confirmed=payload.get("user_confirmed") is True,
+            )
+        elif action == "PAUSE":
+            control = self.intake_control.pause(
+                user_confirmed=payload.get("user_confirmed") is True,
+                reason="USER_PAUSED",
+            )
+        elif action == "RESUME":
+            control = self.intake_control.resume(
+                user_confirmed=payload.get("user_confirmed") is True,
+            )
+        else:
+            raise JobOpsError(
+                "INTAKE_CONTROL_ACTION_INVALID",
+                "Choose CONFIGURE, PAUSE, or RESUME for the local intake control.",
+            )
+        return {
+            "status": "INTAKE_CONTROL_UPDATED",
+            "intake_control": control,
+            "background_service_started": False,
+            "system_tasks_registered": 0,
+            "real_external_actions": 0,
+        }
+
+    @_synchronized
+    def run_local_wake(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Process one bounded local deferred-intake tick after a user click."""
+
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError(
+                "EXPLICIT_CONFIRMATION_REQUIRED",
+                "Running the local intake queue requires an explicit user confirmation.",
+            )
+        self.intake_control.assert_manual_run_allowed()
+        continuation = continue_recorded_intake(
+            project=self.project,
+            database=self.database,
+            onboarding=self.onboarding,
+        )
+        control = self.intake_control.record_manual_run(continuation)
+        return {
+            "status": "USER_PRESENT_LOCAL_WAKE_COMPLETE",
+            "result": continuation,
+            "intake_control": control,
+            "background_service_started": False,
+            "system_tasks_registered": 0,
+            "browser_actions": 0,
+            "network_actions": 0,
+            "real_external_actions": 0,
         }
 
     def _renew_expired_review_approval(
@@ -2058,6 +2143,7 @@ class OnboardingCenterService:
                 "EXPLICIT_CONFIRMATION_REQUIRED",
                 "Guided import needs your permission to read the two pages you explicitly choose in the browser.",
             )
+        self.intake_control.assert_new_intake_allowed()
         browser_status = self.browser_assist.public_status()
         if browser_status.get("active_assist_id"):
             raise JobOpsError(

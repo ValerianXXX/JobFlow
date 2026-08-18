@@ -15,6 +15,7 @@ JobFlow is a local-first, AI-centered job application workflow for Windows. It t
 5. Starts from an official company career page, verifies the job and approved ATS route, and builds one application review packet.
 6. After one application-specific approval, fills approved values, attaches approved materials, and advances only through verified non-final controls while the user is present.
 7. Stops at final review so the user can inspect the page and personally click Submit.
+8. Lets the user save a local processing cadence, pause new intake, and explicitly process deferred local work without creating a background service or Windows scheduled task.
 
 ## Quick start on Windows
 
@@ -59,6 +60,7 @@ An AI connection is accepted only after a structured capability test. Agent requ
 | Visible official-company job discovery and verified Apply routing | Available with user authorization |
 | User-present company, Greenhouse, Lever, and Workday assistance | Bound routes only; live compatibility varies |
 | Approved field fill and material attachment | Available per approved application |
+| User-present local queue cadence, pause, and manual run | Available; every run requires a user click |
 | Final submission or unattended operation | Not implemented |
 
 Synthetic and saved-page tests are engineering evidence, not proof that every live ATS page is compatible.

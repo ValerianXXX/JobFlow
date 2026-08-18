@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/user-present-intake-control.schema.json",
+  "title": "User-present local intake control",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "mode", "generation", "configured", "new_intake_allowed", "manual_run_allowed", "paused", "pause_reason", "interval_minutes", "authorized_until", "next_user_run_at", "last_user_run_at", "updated_at", "requires_explicit_invocation", "background_service_started", "system_tasks_registered", "browser_actions", "network_actions", "real_external_actions", "control_hash"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["NOT_CONFIGURED", "READY", "DUE", "PAUSED", "AUTHORIZATION_EXPIRED"]},
+    "mode": {"const": "USER_PRESENT_MANUAL_WAKE_ONLY"},
+    "generation": {"type": "integer", "minimum": 0},
+    "configured": {"type": "boolean"},
+    "new_intake_allowed": {"type": "boolean"},
+    "manual_run_allowed": {"type": "boolean"},
+    "paused": {"type": "boolean"},
+    "pause_reason": {"type": ["string", "null"], "enum": [null, "USER_PAUSED", "USER_KILL_SWITCH"]},
+    "interval_minutes": {"type": ["integer", "null"], "minimum": 5, "maximum": 1440},
+    "authorized_until": {"type": ["string", "null"], "format": "date-time"},
+    "next_user_run_at": {"type": ["string", "null"], "format": "date-time"},
+    "last_user_run_at": {"type": ["string", "null"], "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "requires_explicit_invocation": {"const": true},
+    "background_service_started": {"const": false},
+    "system_tasks_registered": {"const": 0},
+    "browser_actions": {"const": 0},
+    "network_actions": {"const": 0},
+    "real_external_actions": {"const": 0},
+    "control_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}

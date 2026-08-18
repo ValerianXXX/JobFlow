@@ -47,6 +47,16 @@ Private values are stored with DPAPI and are never written into the public proje
 
 A local approval is not a submission. Final Submit is always user-only.
 
+## Process saved local work
+
+The dashboard can save a suggested processing interval and a time-limited local authorization window. This is a user-present convenience, not an unattended scheduler:
+
+1. Choose the interval and authorization window, then select **Save processing cadence**.
+2. Select **Process local queue now** whenever you want JobFlow to process already saved local work.
+3. Use **Pause new job intake** as a kill switch, and **Resume new job intake** when ready.
+
+JobFlow does not register a Windows scheduled task or background service. A due time never opens a website, starts the browser companion, uploads a file, or submits an application. Every local run requires the user's explicit click.
+
 ## Expected handoffs
 
 JobFlow pauses for login, existing-account verification, CAPTCHA, MFA, legal declarations, signatures, sensitive questions, unsupported controls, and unknown answers. Complete the required step yourself and resume only when the UI says it is safe.

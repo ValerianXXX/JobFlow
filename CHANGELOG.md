@@ -8,6 +8,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 - Added a fixed, versioned per-user Windows installation with stable Start menu launch, health-check, rollback, and uninstall entries.
 - Added a marked persistent runtime data root for state, queues, reports, and application workspaces outside immutable application versions.
+- Added a user-present local processing cadence with explicit pause, resume, and run-now controls for already saved work.
 
 ### Changed
 
@@ -18,6 +19,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 - Runtime data paths reject path escape and reparse points, and installer ACLs are applied recursively for the current Windows user.
 - Uninstall preserves user data by default; permanent data removal requires two explicit confirmation flags.
+- The cadence never registers a Windows task, starts a background service, opens a website, or performs a browser, network, upload, or submission action.
 
 ## [0.4.1] - 2026-08-17
 

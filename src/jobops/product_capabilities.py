@@ -138,6 +138,13 @@ def product_capability_report() -> dict[str, Any]:
             ["tests/test_continuous_intake.py", "tests/test_batch_c_queue_orchestrator_cli.py"], [],
         ),
         _item(
+            "user_present_local_wake_planner", "scheduling", "AVAILABLE", _AUTOMATED,
+            "NOT_APPLICABLE", "USER_ACTION_REQUIRED",
+            "NO_BACKGROUND_SERVICE_OR_SYSTEM_TASK",
+            ["tests/test_intake_control.py", "tests/test_onboarding_center.py"],
+            ["NO_BACKGROUND_WEB_ACCESS", "NO_SYSTEM_TASK_REGISTERED"],
+        ),
+        _item(
             "submission_result_observation", "recovery", "CONDITIONAL", _AUTOMATED,
             "REQUIRED_PER_SITE", "USER_PRESENT", "UNKNOWN_RESULT_NEVER_AUTOMATICALLY_RETRIED",
             ["tests/test_application_execution.py", "tests/test_real_profile_offline_application.py"],
@@ -145,9 +152,9 @@ def product_capability_report() -> dict[str, Any]:
         ),
         _item(
             "authorized_continuous_scheduler", "scheduling", "NOT_AVAILABLE", _NOT_IMPLEMENTED,
-            "NOT_STARTED", "NOT_APPLICABLE", "SEPARATE_AUTHORIZATION_AND_KILL_SWITCH_REQUIRED",
+            "NOT_STARTED", "NOT_APPLICABLE", "BACKGROUND_OPERATION_REMAINS_DISABLED",
             ["tests/test_batch_e_offline_adapters_scheduler.py"],
-            ["FAKE_CLOCK_ONLY", "NO_SYSTEM_TASK_REGISTERED"],
+            ["USER_PRESENT_LOCAL_WAKE_ONLY", "NO_SYSTEM_TASK_REGISTERED"],
         ),
         _item(
             "desktop_self_update_rollback", "distribution", "NOT_AVAILABLE", _NOT_IMPLEMENTED,

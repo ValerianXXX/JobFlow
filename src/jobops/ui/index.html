@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260818-jobflow-v34-controls-diagnostics">
+  <link rel="stylesheet" href="styles.css?v=20260818-jobflow-v35-user-present-wake">
 </head>
 <body>
   <div class="envelope-backdrop" aria-hidden="true">
@@ -137,6 +137,23 @@
         <div><strong data-i18n="queuePreferences">待审批数量上限</strong><small data-i18n="queuePreferencesBody">JobFlow 达到这个数量后暂停接收新岗位；你处理一项后会继续。</small></div>
         <label><span data-i18n="pendingLimitLabel">最多等待</span><input id="pendingLimitInput" type="number" min="1" max="1000" step="1" inputmode="numeric"><button id="saveQueueLimit" class="secondary compact" type="button" data-i18n="saveLimit">保存上限</button></label>
       </div>
+      <section class="intake-control-board" aria-labelledby="intakeControlTitle">
+        <div class="intake-control-copy">
+          <div class="subheading"><div><h3 id="intakeControlTitle" data-i18n="intakeControlTitle">用户在场的连续处理</h3><small data-i18n="intakeControlBody">保存本机处理节奏；到时间后仍需你点击“立即处理”。JobFlow 不注册 Windows 计划任务，也不会在后台访问网站。</small></div><span id="intakeControlStatus" class="guard-badge">—</span></div>
+          <p id="intakeControlMeta" class="intake-control-meta" aria-live="polite"></p>
+          <small class="intake-control-boundary" data-i18n="intakeControlBoundary">授权窗口只允许处理已经安全保存的本机待办，不授权浏览器、网络、上传或最终提交。</small>
+        </div>
+        <div class="intake-control-settings">
+          <label><span data-i18n="intakeIntervalLabel">提醒间隔（分钟）</span><input id="intakeIntervalMinutes" type="number" min="5" max="1440" step="5" value="60" inputmode="numeric"></label>
+          <label><span data-i18n="intakeAuthorizationLabel">本次授权有效（小时）</span><input id="intakeAuthorizationHours" type="number" min="1" max="168" step="1" value="24" inputmode="numeric"></label>
+          <div class="intake-control-actions">
+            <button id="configureIntakeControl" class="primary compact" type="button" data-i18n="configureIntakeControl">保存处理节奏</button>
+            <button id="runLocalWake" class="secondary compact" type="button" data-i18n="runLocalWake" disabled>立即处理本机待办</button>
+            <button id="pauseIntakeControl" class="secondary compact" type="button" data-i18n="pauseIntakeControl">暂停接收新岗位</button>
+            <button id="resumeIntakeControl" class="secondary compact hidden" type="button" data-i18n="resumeIntakeControl">恢复接收新岗位</button>
+          </div>
+        </div>
+      </section>
       <div class="pipeline-columns">
         <section class="pending-board">
           <div class="subheading"><div><h3 data-i18n="pendingReviewTitle">待审批申请</h3><small data-i18n="pendingReviewBody">只显示安全岗位摘要；私人答案和材料正文不会出现在此处。</small></div><span id="pendingDashboardCount">0</span></div>
@@ -455,6 +472,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260818-jobflow-v34-controls-diagnostics"></script>
+  <script src="app.js?v=20260818-jobflow-v35-user-present-wake"></script>
 </body>
 </html>
