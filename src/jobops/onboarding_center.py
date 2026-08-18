@@ -88,6 +88,7 @@ from .resume_tailoring import (
 )
 from .resume_onboarding import parse_resume
 from .runtime_schema import validate_named
+from .runtime_paths import runtime_path
 from .security import assert_no_plaintext_secret
 from .source_quality import document_quality_rank, document_text_preflight, safe_ai_failure_category
 from .sourcing import (
@@ -741,7 +742,12 @@ class OnboardingCenterService:
             semantic_reviewer=self._review_live_application_form,
         )
         self.schemas = self.project / "schemas"
-        self.index_path = self.project / "state" / "onboarding-center-index.json"
+        self.index_path = runtime_path(
+            self.project,
+            "state",
+            "onboarding-center-index.json",
+            operation="write",
+        )
         self._lock = threading.RLock()
         self._guided_intakes: dict[str, dict[str, Any]] = {}
         # Form analysis can include local AI and document rendering.  Keep its

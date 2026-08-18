@@ -7,6 +7,35 @@ param(
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $projectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
+$dataRoot = $projectRoot
+$dataRootReady = $true
+if (-not [string]::IsNullOrWhiteSpace($env:JOBFLOW_DATA_ROOT)) {
+    try {
+        $dataRoot = [IO.Path]::GetFullPath($env:JOBFLOW_DATA_ROOT)
+        $markerPath = Join-Path $dataRoot ".jobflow-data-root"
+        $marker = Get-Content -LiteralPath $markerPath -Raw | ConvertFrom-Json
+        $dataRootReady = (
+            (Test-Path -LiteralPath $dataRoot -PathType Container) -and
+            $marker.schema_version -eq 1 -and
+            $marker.kind -eq "JOBFLOW_RUNTIME_DATA"
+        )
+        $cursor = $dataRoot
+        while ($dataRootReady -and $cursor) {
+            if (Test-Path -LiteralPath $cursor) {
+                $item = Get-Item -LiteralPath $cursor -Force
+                if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                    $dataRootReady = $false
+                }
+            }
+            $parent = [IO.Path]::GetDirectoryName($cursor)
+            if ([string]::IsNullOrWhiteSpace($parent) -or $parent -eq $cursor) { break }
+            $cursor = $parent
+        }
+    }
+    catch {
+        $dataRootReady = $false
+    }
+}
 $venvPython = if ([string]::IsNullOrWhiteSpace($PythonPath)) {
     Join-Path $projectRoot ".venv\Scripts\python.exe"
 }
@@ -36,6 +65,8 @@ function Add-JobFlowCheck {
 
 $rootReady = Test-Path -LiteralPath (Join-Path $projectRoot ".jobops-root") -PathType Leaf
 Add-JobFlowCheck "PROJECT_ROOT" $rootReady "项目文件完整" "Project files present" "重新解压完整源码包" "Extract the complete source package again"
+
+Add-JobFlowCheck "RUNTIME_DATA_ROOT" $dataRootReady "运行数据目录可信" "Runtime data root is trusted" "重新运行安装程序以修复固定数据目录" "Run the installer again to repair the fixed data directory"
 
 $pythonReady = Test-Path -LiteralPath $venvPython -PathType Leaf
 Add-JobFlowCheck "PYTHON_RUNTIME" $pythonReady "本地运行环境已安装" "Local runtime installed" "双击 Install JobFlow.cmd" "Run Install JobFlow.cmd"
@@ -81,7 +112,7 @@ $secureStoreReady = Test-Path -LiteralPath (Join-Path $projectRoot ".agents\skil
 Add-JobFlowCheck "SECURE_STORE" $secureStoreReady "DPAPI 安全存储组件齐全" "DPAPI secure-store helper present" "重新解压完整源码包" "Extract the complete source package again"
 
 $privateStoreHealthy = $false
-$databasePath = Join-Path $projectRoot "state\jobops.db"
+$databasePath = Join-Path $dataRoot "state\jobops.db"
 if (-not (Test-Path -LiteralPath $databasePath -PathType Leaf)) {
     $privateStoreHealthy = $true
 }

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -39,6 +40,7 @@ from .queue_manager import QueueManager
 from .recovery import RecoveryManager
 from .resume_onboarding import ResumeOnboardingManager
 from .runtime_schema import validate_named
+from .runtime_paths import RUNTIME_AREAS, runtime_data_root, runtime_path
 from .secure_store import WindowsDPAPIStore
 from .security import assert_project_io_path
 from .sourcing import verify_source_route
@@ -50,7 +52,11 @@ def _display_path(path: Path, project: Path) -> str:
     try:
         return "$PROJECT_ROOT/" + absolute.relative_to(project).as_posix()
     except ValueError:
-        return "$EXTERNAL_PATH/" + absolute.name
+        data_root = runtime_data_root(project)
+        try:
+            return "$RUNTIME_DATA_ROOT/" + absolute.relative_to(data_root).as_posix()
+        except ValueError:
+            return "$EXTERNAL_PATH/" + absolute.name
 
 
 def _read_bounded_local_bytes(path: Path, maximum_bytes: int, error_code: str) -> bytes:
@@ -74,6 +80,10 @@ def _sanitize(value: Any, project: Path) -> Any:
         if value.casefold().startswith(project_text.casefold()):
             suffix = value[len(project_text):].lstrip("\\/").replace("\\", "/")
             return "$PROJECT_ROOT" + ("/" + suffix if suffix else "")
+        data_text = str(runtime_data_root(project).absolute())
+        if value.casefold().startswith(data_text.casefold()):
+            suffix = value[len(data_text):].lstrip("\\/").replace("\\", "/")
+            return "$RUNTIME_DATA_ROOT" + ("/" + suffix if suffix else "")
         if re.match(r"^[A-Za-z]:[\\/]", value):
             return "$EXTERNAL_PATH/" + Path(value).name
     return value
@@ -90,7 +100,9 @@ def resolve(project: Path, start: Path | None = None):
 
 
 def _db_path(project: Path, raw: Path | None, *, operation: str) -> Path:
-    candidate = raw or Path("state/jobops.db")
+    if raw is None:
+        return runtime_path(project, "state", "jobops.db", operation=operation)
+    candidate = raw
     candidate = candidate if candidate.is_absolute() else project / candidate
     return assert_project_io_path(candidate, project, operation=operation)
 
@@ -214,14 +226,38 @@ def _onboarding(project: Path, database: JobOpsDB) -> PrivateOnboarding:
 
 
 def _database(project: Path) -> JobOpsDB:
-    database = JobOpsDB(project / "state" / "jobops.db")
+    database = JobOpsDB(runtime_path(project, "state", "jobops.db", operation="write"))
     database.initialize()
     return database
 
 
 def _project_input(project: Path, value: Path, *, operation: str = "read") -> Path:
+    """Resolve bounded source or installed-runtime I/O without mixing roots."""
+
+    project = project.resolve(strict=True)
+    data_root = runtime_data_root(project)
     path = value if value.is_absolute() else project / value
-    return assert_project_io_path(path, project, operation=operation)
+    absolute = Path(os.path.abspath(path))
+
+    runtime_relative: Path | None = None
+    if value.is_absolute() and data_root != project:
+        try:
+            runtime_relative = absolute.relative_to(data_root)
+        except ValueError:
+            runtime_relative = None
+    elif not value.is_absolute() and value.parts and value.parts[0] in RUNTIME_AREAS:
+        runtime_relative = value
+
+    if runtime_relative is not None and runtime_relative.parts:
+        area = runtime_relative.parts[0]
+        if area in RUNTIME_AREAS:
+            return runtime_path(
+                project,
+                area,
+                *runtime_relative.parts[1:],
+                operation=operation,
+            )
+    return assert_project_io_path(absolute, project, operation=operation)
 
 
 def _latest_ref(database: JobOpsDB, kind: str) -> str:
@@ -251,14 +287,14 @@ def main(argv: list[str] | None = None) -> int:
             result = _sanitize(audit_environment(), project)
             database = _database(project)
             result["external_action_audit"] = audit_real_external_actions(database)
-            output = project / "state" / "environment-audit.json"
+            output = runtime_path(project, "state", "environment-audit.json", operation="write")
             write_json(output, result)
             emit({**result, "state_path": _display_path(output, project), "next_safe_action": "locate"}, project)
         elif args.command == "locate":
             location = resolve(project, args.start)
             result = {**location.as_dict(), "resolved_at": iso_utc(), "knowledge_write_operations": 0, "next_safe_action": "init-db"}
             if args.write_state:
-                output = project / "state" / "knowledge-resolution.json"
+                output = runtime_path(project, "state", "knowledge-resolution.json", operation="write")
                 write_json(output, _sanitize(result, project))
                 result["state_path"] = _display_path(output, project)
             emit(result, project)
@@ -273,8 +309,7 @@ def main(argv: list[str] | None = None) -> int:
             database.sync_knowledge_sources(location.sources, fingerprints)
             emit({"status": "INITIALIZED", "database": _display_path(path, project), "schema_version": database.schema_version(), "table_counts": database.table_counts(), "real_external_actions": 0, "next_safe_action": "secure-onboard"}, project)
         elif args.command == "snapshot":
-            output = args.output if args.output.is_absolute() else project / args.output
-            output = assert_project_io_path(output, project, operation="write")
+            output = _project_input(project, args.output, operation="write")
             result = KnowledgeGateway(resolve(project)).snapshot_collections()
             result["captured_at"] = iso_utc()
             write_json(output, _sanitize(result, project))
@@ -286,21 +321,22 @@ def main(argv: list[str] | None = None) -> int:
             current = gateway.snapshot_collections()
             comparison = gateway.compare_snapshots(load_json(baseline_path), current)
             result = {**comparison, "verified_at": iso_utc(), "baseline": _display_path(baseline_path, project), "knowledge_write_operations": 0, "current": current, "next_safe_action": "NONE" if comparison["status"] == "UNCHANGED" else "STOP_AND_REVIEW_KNOWLEDGE_CHANGES"}
-            write_json(project / "state" / "knowledge-readonly-verification.json", _sanitize(result, project))
+            write_json(
+                runtime_path(project, "state", "knowledge-readonly-verification.json", operation="write"),
+                _sanitize(result, project),
+            )
             emit(result, project)
             return 0 if comparison["status"] == "UNCHANGED" else 2
         elif args.command == "search":
             records = KnowledgeGateway(resolve(project)).search(args.query, source_ids=args.sources, limit=args.limit)
             emit({"status": "SEARCHED", "query": args.query, "count": len(records), "records": [record.as_dict() for record in records], "next_safe_action": "propose-claims"}, project)
         elif args.command == "build-mock-sites":
-            output = args.output if args.output.is_absolute() else project / args.output
-            output = assert_project_io_path(output, project, operation="write")
+            output = _project_input(project, args.output, operation="write")
             fields = [{"id": "portfolio_url", "label": "Portfolio URL"}, {"id": "work_authorization", "label": "Work authorization"}, {"id": "electronic_signature", "label": "Electronic signature"}, {"id": "disability", "label": "Disability"}]
             manifests = [build_mock_ats_site(output, provider, fields) for provider in ("greenhouse", "lever", "workday")]
             emit({"status": "MOCK_SITES_BUILT", "sites": manifests, "real_external_actions": 0, "next_safe_action": "run-to-awaiting-approval"}, project)
         elif args.command == "queue":
-            database = JobOpsDB(project / "state" / "jobops.db")
-            database.initialize()
+            database = _database(project)
             if args.set_limit is not None:
                 database.set_pending_limit(args.set_limit)
             emit({"status": "QUEUE_READY", **database.pending_queue_decision().as_dict(), "next_safe_action": "run-queue"}, project)
@@ -519,7 +555,17 @@ def main(argv: list[str] | None = None) -> int:
             if queue_result.status == "DEFERRED":
                 emit({**queue_result.as_dict(), "job_created": False, "real_external_actions": 0}, project)
             else:
-                collected = JobCollector(database, project / "workspace" / "jobs", project).collect_text(content, source_type=source_format, source_locator=path.name, official_url=source_url)
+                data_root = runtime_data_root(project)
+                collected = JobCollector(
+                    database,
+                    runtime_path(project, "workspace", "jobs", operation="write"),
+                    data_root,
+                ).collect_text(
+                    content,
+                    source_type=source_format,
+                    source_locator=path.name,
+                    official_url=source_url,
+                )
                 emit({**collected, "reservation_id": queue_result.reservation_id, "source_format": source_format, "next_safe_action": "analyze-job"}, project)
         elif args.command == "analyze-job":
             if not args.job_id or not args.profile_ref:
@@ -529,7 +575,13 @@ def main(argv: list[str] | None = None) -> int:
                 row = connection.execute("SELECT snapshot_path FROM jd_snapshots WHERE job_id=?", (args.job_id,)).fetchone()
             if row is None:
                 raise JobOpsError("JOB_NOT_FOUND", "No JD snapshot exists for this job.")
-            snapshot = _project_input(project, Path(str(row[0])))
+            stored_snapshot = Path(str(row[0]).replace("\\", "/"))
+            if not stored_snapshot.parts or stored_snapshot.parts[0] != "workspace":
+                raise JobOpsError(
+                    "JOB_SNAPSHOT_PATH_INVALID",
+                    "The stored job snapshot path is outside the JobFlow runtime workspace.",
+                )
+            snapshot = runtime_path(project, "workspace", *stored_snapshot.parts[1:], operation="read")
             jd = analyze_jd(snapshot.read_text(encoding="utf-8-sig"))
             profile = json.loads(_onboarding(project, database).read_bytes(args.profile_ref).decode("utf-8")); profile["profile_ref"] = args.profile_ref
             from .eligibility import check_eligibility

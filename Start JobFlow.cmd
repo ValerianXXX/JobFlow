@@ -1,4 +1,8 @@
 @echo off
+if not exist "%LOCALAPPDATA%\JobOps\Start JobFlow.cmd" goto source_start
+call "%LOCALAPPDATA%\JobOps\Start JobFlow.cmd"
+exit /b
+:source_start
 cd /d "%~dp0"
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\start-jobflow.ps1"
 if errorlevel 1 (

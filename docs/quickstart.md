@@ -10,11 +10,20 @@
 
 The browser requires this one store-install gesture. JobFlow cannot bypass it. Developers testing source changes may use `Install JobFlow Browser Companion.cmd` and the unpacked Local AppData runtime, but ordinary users should install the signed store version.
 
+The installer creates a fixed, versioned application under the current Windows account and a separate persistent data directory. After installation, you may remove the extracted source folder and start JobFlow from the Windows Start menu.
+
 ## Start JobFlow
 
 Double-click `Start JobFlow.cmd`. Keep the PowerShell window open while JobFlow is running. Closing it stops the local server and the browser page will show a connection-refused message.
 
 For a fictional, auto-cleaned tour, run `Start JobFlow Demo.cmd` instead.
+
+## Update, roll back, or uninstall
+
+- **Update:** download and extract the newer release, then run its `Install JobFlow.cmd`. The new version is health-checked before it becomes current. Candidate data, queues, reports, and encrypted private files are preserved.
+- **Roll back:** choose **Roll Back JobFlow** from the Windows Start menu. JobFlow switches only to the previously health-checked version and keeps the same data.
+- **Uninstall the application:** choose **Uninstall JobFlow** from the Start menu. By default this removes application code and browser-channel registration but preserves local user data for a later reinstall.
+- **Remove all local user data:** open PowerShell and run the installed uninstall script with both explicit flags: `& "$env:LOCALAPPDATA\JobOps\bin\uninstall-installed-jobflow.ps1" -RemoveUserData -UserConfirmed`. This is irreversible. The browser extension must still be removed separately in Chrome or Edge.
 
 ## First setup
 

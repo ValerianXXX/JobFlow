@@ -1,4 +1,8 @@
 @echo off
+if not exist "%LOCALAPPDATA%\JobOps\Check JobFlow.cmd" goto source_check
+call "%LOCALAPPDATA%\JobOps\Check JobFlow.cmd"
+exit /b
+:source_check
 cd /d "%~dp0"
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\check-jobflow.ps1"
 set "JOBFLOW_CHECK_EXIT=%ERRORLEVEL%"

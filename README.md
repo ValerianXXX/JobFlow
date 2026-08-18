@@ -24,6 +24,8 @@ JobFlow is a local-first, AI-centered job application workflow for Windows. It t
 4. Double-click `Start JobFlow.cmd` for normal use.
 5. If startup fails, run `Check JobFlow.cmd` and follow the first failed check.
 
+The installer copies the application into a fixed, versioned directory under the current Windows account. Candidate data, queues, reports, and encrypted private material remain in a separate data directory, so the extracted download can be removed after installation. Running a newer installer upgrades the application without replacing that data; the Start menu also provides health check, rollback, and uninstall shortcuts.
+
 To explore without private data, run `Start JobFlow Demo.cmd`. The demo uses fictional content, disables real AI and file intake, and removes its temporary state when closed.
 
 See the [full quick start](docs/quickstart.md) for Browser Companion setup and recovery guidance.

@@ -4,6 +4,21 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+### Added
+
+- Added a fixed, versioned per-user Windows installation with stable Start menu launch, health-check, rollback, and uninstall entries.
+- Added a marked persistent runtime data root for state, queues, reports, and application workspaces outside immutable application versions.
+
+### Changed
+
+- Reinstalling from a newer source package now stages and health-checks the new version before an atomic current-version switch.
+- Rollback preserves the Candidate Profile, encrypted private material, queue state, and local reports.
+
+### Safety
+
+- Runtime data paths reject path escape and reparse points, and installer ACLs are applied recursively for the current Windows user.
+- Uninstall preserves user data by default; permanent data removal requires two explicit confirmation flags.
+
 ## [0.4.1] - 2026-08-17
 
 ### Added

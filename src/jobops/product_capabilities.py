@@ -70,7 +70,13 @@ def product_capability_report() -> dict[str, Any]:
         _item(
             "windows_one_click_install", "distribution", "AVAILABLE", _AUTOMATED, "NOT_APPLICABLE",
             "USER_INITIATED", "LOCAL_USER_SCOPE_ONLY",
-            ["tests/test_windows_launchers.py", "tests/test_companion_binding.py"], [],
+            ["tests/test_runtime_paths.py", "tests/test_windows_launchers.py", "tests/test_companion_binding.py"], [],
+        ),
+        _item(
+            "desktop_manual_upgrade_rollback", "distribution", "AVAILABLE", _AUTOMATED, "NOT_APPLICABLE",
+            "USER_INITIATED", "HEALTH_CHECKED_VERSION_SWITCH_WITH_PERSISTENT_DATA",
+            ["tests/test_runtime_paths.py", "tests/test_windows_launchers.py"],
+            ["NO_AUTOMATIC_UPDATE_DOWNLOAD"],
         ),
         _item(
             "secure_candidate_onboarding", "onboarding", "AVAILABLE", _AUTOMATED, "NOT_APPLICABLE",
@@ -146,7 +152,7 @@ def product_capability_report() -> dict[str, Any]:
         _item(
             "desktop_self_update_rollback", "distribution", "NOT_AVAILABLE", _NOT_IMPLEMENTED,
             "NOT_STARTED", "USER_INITIATED", "SIGNED_UPDATE_AND_ROLLBACK_REQUIRED",
-            [], ["NO_SIGNED_DESKTOP_UPDATE_CHANNEL"],
+            [], ["MANUAL_UPGRADE_AND_ROLLBACK_ONLY", "NO_SIGNED_DESKTOP_UPDATE_CHANNEL"],
         ),
         _item(
             "crash_feedback_and_support", "support", "NOT_AVAILABLE", _NOT_IMPLEMENTED,
@@ -213,4 +219,3 @@ def validate_product_capability_integrity(value: dict[str, Any]) -> None:
         raise JobOpsError("PRODUCT_CAPABILITY_POLICY_DRIFT", "Unattended submission must remain disabled.")
     if value["universal_live_compatibility_claimed"] is not False:
         raise JobOpsError("PRODUCT_CAPABILITY_OVERCLAIM", "The local evidence cannot claim universal live compatibility.")
-

@@ -25,6 +25,7 @@ from .locator import locate_knowledge_root
 from .private_onboarding import PrivateOnboarding
 from .release import security_scan
 from .runtime_schema import validate_named
+from .runtime_paths import runtime_data_root, runtime_path
 from .util import canonical_json, iso_utc, load_json, sha256_bytes, sha256_file, stable_id, write_json
 
 
@@ -679,7 +680,13 @@ def _scan_private_tokens(project: Path, tokens: list[str]) -> int:
     if not needles:
         return 0
     hits = 0
-    roots = [project / "src", project / "config", project / "schemas", project / ".agents", project / "state", project / "reports", project / "workspace", project / "tests"]
+    data_root = runtime_data_root(project)
+    roots = [
+        project / "src", project / "config", project / "schemas", project / ".agents",
+        project / "state", project / "reports", project / "workspace", project / "tests",
+    ]
+    if data_root != project:
+        roots.extend(data_root / area for area in ("state", "reports", "workspace"))
     for root in roots:
         if not root.exists():
             continue
@@ -970,10 +977,16 @@ class ResumeOnboardingManager:
                 "answer_bank_ref": value["answer_bank_ref"], "claim_candidates_ref": value["claims_ref"],
                 "created_at": packet["created_at"], "next_safe_action": packet["next_safe_action"],
             }
-            write_json(self.project / "state" / "onboarding-review-index.json", index)
+            index_path = runtime_path(
+                self.project,
+                "state",
+                "onboarding-review-index.json",
+                operation="write",
+            )
+            write_json(index_path, index)
             leakage_after_index = _scan_private_tokens(self.project, list(analysis.get("privacy_tokens", [])))
             if leakage_after_index:
-                (self.project / "state" / "onboarding-review-index.json").unlink(missing_ok=True)
+                index_path.unlink(missing_ok=True)
                 self.onboarding.delete(str(packet_record["secure_ref"]), user_confirmed=True)
                 raise JobOpsError("PRIVATE_VALUE_LEAK_DETECTED", "Private resume values were found after writing the redacted index.", finding_count=leakage_after_index)
             return {

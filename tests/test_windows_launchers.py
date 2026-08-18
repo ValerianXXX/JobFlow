@@ -14,10 +14,13 @@ from jobops import __version__
 
 
 ISOLATED_ENVIRONMENT = os.environ.copy()
+ISOLATED_ENVIRONMENT["PYTHONPATH"] = str(PROJECT / "src")
 _WINDOWS_POWERSHELL = shutil.which("powershell.exe", path=ISOLATED_ENVIRONMENT.get("PATH"))
 if not _WINDOWS_POWERSHELL:
     raise RuntimeError("Windows PowerShell is required for launcher tests.")
 WINDOWS_POWERSHELL = Path(_WINDOWS_POWERSHELL).resolve(strict=True)
+_PROJECT_VENV_PYTHON = PROJECT / ".venv" / "Scripts" / "python.exe"
+HEALTH_PYTHON = _PROJECT_VENV_PYTHON if _PROJECT_VENV_PYTHON.is_file() else Path(sys.executable)
 
 
 def run_process(command: list[str], *, timeout: int) -> CompletedProcess[str]:
@@ -69,7 +72,7 @@ class WindowsLauncherTests(unittest.TestCase):
         wrapper = (PROJECT / "Install JobFlow.cmd").read_text(encoding="utf-8")
         self.assertIn('set "JOBFLOW_INSTALL_EXIT=%ERRORLEVEL%"', wrapper)
         self.assertIn("JobFlow installation is ready.", wrapper)
-        self.assertIn('start "JobFlow" "%~dp0Start JobFlow.cmd"', wrapper)
+        self.assertIn('start "JobFlow" "%LOCALAPPDATA%\\JobOps\\Start JobFlow.cmd"', wrapper)
         self.assertIn("pause", wrapper)
         self.assertIn("exit /b %JOBFLOW_INSTALL_EXIT%", wrapper)
 
@@ -80,6 +83,9 @@ class WindowsLauncherTests(unittest.TestCase):
             "install-jobflow.ps1",
             "start-jobflow-demo.ps1",
             "start-jobflow.ps1",
+            "windows-runtime/start-installed-jobflow.ps1",
+            "windows-runtime/rollback-installed-jobflow.ps1",
+            "windows-runtime/uninstall-installed-jobflow.ps1",
         )
         for name in localized_scripts:
             with self.subTest(script=name):
@@ -96,17 +102,130 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertNotIn('Prefix = @("-3.11")', script)
         self.assertIn("-ge 11", script)
 
-    def test_installer_uses_relative_editable_target_and_checks_dependencies(self) -> None:
+    def test_installer_uses_versioned_fixed_target_and_checks_dependencies(self) -> None:
         script = (PROJECT / "scripts" / "install-jobflow.ps1").read_text(encoding="utf-8-sig")
-        self.assertIn('Push-Location $projectRoot', script)
-        self.assertIn('--editable ".[build]"', script)
-        self.assertNotIn('--editable $projectRoot', script)
+        self.assertIn('Push-Location $stagingRoot', script)
+        self.assertNotIn("--editable", script)
+        self.assertIn('".[build]"', script)
+        self.assertIn('Join-Path $localRoot "Application"', script)
+        self.assertIn('Join-Path $applicationRoot "versions"', script)
+        self.assertIn('Join-Path $localRoot "Data"', script)
+        self.assertIn('Join-Path $localRoot "current.json"', script)
+        self.assertIn('Join-Path $localRoot "previous.json"', script)
+        self.assertIn('"src", "tests"', script)
+        self.assertIn('"Install JobFlow Browser Companion.cmd"', script)
+        self.assertIn('|\\.tmp|\\.git)', script)
+        self.assertIn('"v$version-$($sourceHash.Substring(0, 12))"', script)
+        self.assertIn("Test-VersionHealth", script)
+        self.assertIn("Write-JsonAtomic", script)
         self.assertGreaterEqual(script.count("--quiet"), 2)
         self.assertIn("-m pip check", script)
         self.assertIn("setuptools>=77,<81", script)
         self.assertIn("wheel>=0.43,<1", script)
         self.assertIn('install-jobflow-browser-companion.ps1', script)
-        self.assertIn('powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $companionInstaller', script)
+        self.assertIn('-File $companionInstaller -NoLaunch', script)
+        self.assertIn('JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY', script)
+        self.assertIn('jobflow-fixed-install-qa-*', script)
+        self.assertIn('JOBFLOW_INSTALL_ACCEPTANCE_BYPASS_FORBIDDEN', script)
+        self.assertIn('Substring(0, 12)', script)
+        self.assertIn('(".i-" + $installId)', script)
+        self.assertIn('(".r-" + $installId)', script)
+        self.assertIn("Install-StableLaunchers", script)
+        self.assertIn('"/inheritance:r" "/grant:r" $grant', script)
+        self.assertIn('(Join-Path $Path "*") "/reset" "/T" "/C"', script)
+        self.assertIn("JOBFLOW_INSTALL_CHILD_ACL_FAILED", script)
+
+    def test_source_launchers_delegate_to_the_fixed_install(self) -> None:
+        start = (PROJECT / "Start JobFlow.cmd").read_text(encoding="utf-8")
+        check = (PROJECT / "Check JobFlow.cmd").read_text(encoding="utf-8")
+        rollback = (PROJECT / "Rollback JobFlow.cmd").read_text(encoding="utf-8")
+        uninstall = (PROJECT / "Uninstall JobFlow.cmd").read_text(encoding="utf-8")
+        self.assertIn(r"%LOCALAPPDATA%\JobOps\Start JobFlow.cmd", start)
+        self.assertIn(r"%LOCALAPPDATA%\JobOps\Check JobFlow.cmd", check)
+        self.assertIn(r"%LOCALAPPDATA%\JobOps\Rollback JobFlow.cmd", rollback)
+        self.assertIn(r"%LOCALAPPDATA%\JobOps\Uninstall JobFlow.cmd", uninstall)
+
+    def test_installed_runtime_has_rollback_and_data_preserving_uninstall(self) -> None:
+        rollback = (PROJECT / "scripts" / "windows-runtime" / "rollback-installed-jobflow.ps1").read_text(encoding="utf-8-sig")
+        uninstall = (PROJECT / "scripts" / "windows-runtime" / "uninstall-installed-jobflow.ps1").read_text(encoding="utf-8-sig")
+        self.assertIn("Test-Version", rollback)
+        self.assertIn("Write-Pointer $previousPath $current.Value", rollback)
+        self.assertIn("Write-Pointer $currentPath $previous.Value", rollback)
+        self.assertIn("-RemoveUserData -UserConfirmed", uninstall)
+        self.assertIn('if ($RemoveUserData) { $targets += @("Data", "private") }', uninstall)
+        self.assertNotIn('"Data", "private"\n)', uninstall)
+        self.assertIn("JOBFLOW_UNINSTALL_ROOT_FORBIDDEN", uninstall)
+        self.assertIn("JOBFLOW_UNINSTALL_REPARSE_FORBIDDEN", uninstall)
+        self.assertIn("JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY", uninstall)
+        self.assertIn("JOBFLOW_UNINSTALL_ACCEPTANCE_BYPASS_FORBIDDEN", uninstall)
+        self.assertIn("if (-not $skipBrowserIntegrationForAcceptance)", uninstall)
+        self.assertIn("function Remove-SafeTarget", uninstall)
+        self.assertIn('"\\\\?\\" + $absolute', uninstall)
+        self.assertIn("[IO.Directory]::Delete($extended, $true)", uninstall)
+        self.assertIn("[IO.File]::SetAttributes($file, [IO.FileAttributes]::Normal)", uninstall)
+
+    def test_installed_rollback_swaps_only_validated_version_pointers(self) -> None:
+        temporary_root = PROJECT / "tests" / ".tmp"
+        temporary_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="rollback-layout-", dir=temporary_root) as raw:
+            local_app_data = Path(raw) / "LocalAppData"
+            install_root = local_app_data / "JobOps"
+            bin_root = install_root / "bin"
+            data_root = install_root / "Data"
+            versions_root = install_root / "Application" / "versions"
+            bin_root.mkdir(parents=True)
+            data_root.mkdir(parents=True)
+            (data_root / ".jobflow-data-root").write_text(
+                '{"schema_version":1,"kind":"JOBFLOW_RUNTIME_DATA"}', encoding="utf-8"
+            )
+            for directory, version, digest in (
+                ("v0.4.1-aaaaaaaaaaaa", "0.4.1", "a" * 64),
+                ("v0.4.0-bbbbbbbbbbbb", "0.4.0", "b" * 64),
+            ):
+                version_root = versions_root / directory
+                (version_root / ".venv" / "Scripts").mkdir(parents=True)
+                (version_root / ".venv" / "Scripts" / "python.exe").write_bytes(b"placeholder")
+                (version_root / "scripts").mkdir()
+                (version_root / "scripts" / "check-jobflow.ps1").write_text(
+                    "param([switch]$Json,[string]$PythonPath='')\n"
+                    "if ($Json) { '{\"status\":\"JOBFLOW_READY\"}' }\n"
+                    "exit 0\n",
+                    encoding="utf-8-sig",
+                )
+                pointer = {
+                    "schema_version": 1,
+                    "version_directory": directory,
+                    "version": version,
+                    "source_sha256": digest,
+                }
+                name = "current.json" if version == "0.4.1" else "previous.json"
+                (install_root / name).write_text(json.dumps(pointer), encoding="utf-8")
+            shutil.copy2(
+                PROJECT / "scripts" / "windows-runtime" / "rollback-installed-jobflow.ps1",
+                bin_root / "rollback-installed-jobflow.ps1",
+            )
+            environment = ISOLATED_ENVIRONMENT.copy()
+            environment["LOCALAPPDATA"] = str(local_app_data)
+            completed = __import__("subprocess").run(
+                [
+                    str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                    "-File", str(bin_root / "rollback-installed-jobflow.ps1"),
+                ],
+                cwd=PROJECT,
+                env=environment,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            current = json.loads((install_root / "current.json").read_text(encoding="utf-8"))
+            previous = json.loads((install_root / "previous.json").read_text(encoding="utf-8"))
+            self.assertEqual(current["version"], "0.4.0")
+            self.assertEqual(previous["version"], "0.4.1")
+            self.assertTrue((data_root / ".jobflow-data-root").is_file())
 
     def test_launcher_messages_are_bilingual_and_external_actions_are_absent(self) -> None:
         install = (PROJECT / "scripts" / "install-jobflow.ps1").read_text(encoding="utf-8-sig")
@@ -126,7 +245,7 @@ class WindowsLauncherTests(unittest.TestCase):
             [
                 str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
                 "-File", str(PROJECT / "scripts" / "check-jobflow.ps1"), "-Json",
-                "-PythonPath", sys.executable,
+                "-PythonPath", str(HEALTH_PYTHON),
             ],
             timeout=60,
         )
@@ -147,7 +266,7 @@ class WindowsLauncherTests(unittest.TestCase):
 
     def test_public_cli_reports_a_safe_version(self) -> None:
         completed = run_process(
-            [sys.executable, "-m", "jobops.cli", "--version"],
+            [str(HEALTH_PYTHON), "-m", "jobops.cli", "--version"],
             timeout=30,
         )
         self.assertEqual(completed.returncode, 0)
@@ -159,7 +278,7 @@ class WindowsLauncherTests(unittest.TestCase):
             [
                 str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
                 "-File", str(PROJECT / "scripts" / "check-release-readiness.ps1"), "-Json",
-                "-PythonPath", sys.executable,
+                "-PythonPath", str(HEALTH_PYTHON),
             ],
             timeout=120,
         )

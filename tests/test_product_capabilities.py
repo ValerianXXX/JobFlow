@@ -23,6 +23,11 @@ class ProductCapabilityReportTests(unittest.TestCase):
         self.assertEqual(by_id["canonical_profile_reuse"]["availability"], "AVAILABLE")
         self.assertEqual(by_id["workday_browser_assist"]["live_acceptance"], "REQUIRED_PER_SITE")
         self.assertEqual(by_id["authorized_continuous_scheduler"]["availability"], "NOT_AVAILABLE")
+        self.assertEqual(by_id["desktop_manual_upgrade_rollback"]["availability"], "AVAILABLE")
+        self.assertEqual(
+            by_id["desktop_manual_upgrade_rollback"]["safety_boundary"],
+            "HEALTH_CHECKED_VERSION_SWITCH_WITH_PERSISTENT_DATA",
+        )
         self.assertEqual(by_id["desktop_self_update_rollback"]["evidence_status"], "NOT_IMPLEMENTED")
         self.assertEqual(by_id["final_application_submit"]["availability"], "USER_ONLY")
 

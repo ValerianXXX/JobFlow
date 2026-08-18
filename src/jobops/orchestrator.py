@@ -52,6 +52,7 @@ from .resume_tailoring import (
     validate_resume_tailoring_manifest_integrity,
 )
 from .runtime_schema import validate_named
+from .runtime_paths import runtime_data_root, runtime_path
 from .security import assert_safe_path
 from .sourcing import assess_job_freshness, verify_source_route
 from .util import canonical_json, iso_utc, load_json, sha256_bytes, sha256_file, stable_id
@@ -613,7 +614,11 @@ class JobOpsOrchestrator:
             official_page_hash=official_hash, jd_snapshot_hash=intake_key,
         )
         validate_named("source-route", route.as_dict(), self.schemas)
-        collector = JobCollector(self.database, self.project / "workspace" / "jobs", self.project)
+        collector = JobCollector(
+            self.database,
+            runtime_path(self.project, "workspace", "jobs", operation="write"),
+            runtime_data_root(self.project),
+        )
         collected = collector.collect_text(
             normalized, source_type=source_format, source_locator=locator,
             company="Synthetic", title="Synthetic", official_url=route.official_entry_url if not snapshot_url else snapshot_url,
