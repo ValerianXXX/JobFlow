@@ -164,6 +164,8 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn("failure_field_label", app)
         self.assertIn("failure_page_position", app)
         self.assertIn("COMPANION_CHOICE_OPTION_NOT_FOUND", app)
+        self.assertIn("COMPANION_ARIA_COMBOBOX_OPTION_NOT_FOUND", app)
+        self.assertIn("COMPANION_ARIA_COMBOBOX_OPTION_NOT_FOUND", popup)
         self.assertIn('endpoint(state, "/abort-page-apply")', worker)
         self.assertIn('elif route_parts == ["abort-page-apply"]:', server)
         self.assertIn("attempted_field_bindings", worker)

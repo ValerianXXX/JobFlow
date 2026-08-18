@@ -401,7 +401,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v33-multi-store-companion", html)
+        self.assertIn("jobflow-v34-controls-diagnostics", html)
         self.assertIn('value="chatgpt_export_large"', html)
         self.assertIn("雷霆大文件", script)
         self.assertIn("ZIPzilla Express", script)
@@ -2323,7 +2323,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v33-multi-store-companion", html)
+        self.assertIn("jobflow-v34-controls-diagnostics", html)
 
 
 if __name__ == "__main__":

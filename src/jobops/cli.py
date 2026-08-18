@@ -34,6 +34,7 @@ from .onboarding_center import OnboardingCenterService
 from .onboarding_server import run_server
 from .official_discovery import MAX_SNAPSHOT_BYTES, discover_official_jobs
 from .private_onboarding import PrivateOnboarding
+from .product_capabilities import product_capability_report
 from .queue_manager import QueueManager
 from .recovery import RecoveryManager
 from .resume_onboarding import ResumeOnboardingManager
@@ -134,6 +135,7 @@ def parser() -> argparse.ArgumentParser:
     form_sequence.add_argument("--manifest", type=Path, required=True)
     form_sequence.add_argument("--route", type=Path, required=True)
     sub.add_parser("ats-capabilities")
+    sub.add_parser("product-capabilities")
 
     onboard = sub.add_parser("secure-onboard")
     onboard.add_argument("--input-file", type=Path)
@@ -383,6 +385,8 @@ def main(argv: list[str] | None = None) -> int:
             emit({**result, "next_safe_action": "review-sequence-no-navigation-performed"}, project)
         elif args.command == "ats-capabilities":
             emit({**offline_ats_capabilities(), "next_safe_action": "analyze-project-local-snapshots-only"}, project)
+        elif args.command == "product-capabilities":
+            emit({**product_capability_report(), "next_safe_action": "close-not-available-and-live-acceptance-gaps"}, project)
         elif args.command == "secure-onboard":
             database = _database(project); onboarding = _onboarding(project, database)
             if args.synthetic:

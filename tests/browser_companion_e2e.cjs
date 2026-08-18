@@ -200,6 +200,80 @@ function valueHash(value) {
     assert.match(await tekPage.locator("#phone-type").evaluate((host) => host.shadowRoot.querySelector("button").innerText), /^Mobile\s+Show menu$/);
     await tekPage.close();
 
+    const ariaComboboxPage = await browser.newPage();
+    const ariaComboboxFixture = `<!doctype html><html><body><form>
+      <label for="country">Country *</label>
+      <input id="country" name="country" role="combobox" aria-controls="country-options"
+        aria-expanded="false" aria-required="true" required>
+      <div id="country-options" role="listbox" hidden>
+        <button type="button" role="option" data-value="United States">United States</button>
+        <button type="button" role="option" data-value="Canada">Canada</button>
+      </div>
+      <button id="aria-submit" type="submit">Submit</button>
+    </form></body></html>`;
+    await ariaComboboxPage.route("https://aria.example.test/**", (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8", body: ariaComboboxFixture
+    }));
+    await ariaComboboxPage.goto("https://aria.example.test/apply", {waitUntil: "domcontentloaded"});
+    await ariaComboboxPage.evaluate(() => {
+      globalThis.__jobflowListener = null;
+      globalThis.chrome = {
+        runtime: {
+          lastError: null,
+          onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+          sendMessage() { return Promise.resolve({status: "RECORDED"}); },
+          connect() { throw new Error("NO_FILE_STREAM_EXPECTED"); }
+        }
+      };
+      const input = document.querySelector("#country");
+      const popup = document.querySelector("#country-options");
+      const open = () => { popup.hidden = false; input.setAttribute("aria-expanded", "true"); };
+      input.addEventListener("click", open);
+      input.addEventListener("input", open);
+      input.addEventListener("keydown", (event) => { if (event.key === "ArrowDown") open(); });
+      for (const option of popup.querySelectorAll("[role=option]")) {
+        option.addEventListener("click", () => {
+          input.value = option.dataset.value;
+          input.setAttribute("aria-valuetext", option.dataset.value);
+          input.setAttribute("aria-expanded", "false");
+          popup.hidden = true;
+          input.dispatchEvent(new Event("change", {bubbles: true}));
+        });
+      }
+      document.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+    });
+    await ariaComboboxPage.addScriptTag({path: companion});
+    await ariaComboboxPage.evaluate(() => {
+      globalThis.__jobflowCall = (message) => new Promise((resolve) => globalThis.__jobflowListener(message, {}, resolve));
+    });
+    const ariaCollected = await ariaComboboxPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+    assert.equal(ariaCollected.status, "COLLECTED");
+    assert.equal(ariaCollected.payload.client_refs.length, 2);
+    assert.match(ariaCollected.payload.sanitized_html, /data-jobflow-aria-combobox="true"/);
+    const ariaApplied = await ariaComboboxPage.evaluate(
+      ({clientRefs, value, hash}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED",
+        fields: [{client_ref: clientRefs[0], value, value_sha256: hash}],
+        files: [], navigation: null, final_submit_client_refs: [clientRefs[1]]
+      }),
+      {clientRefs: ariaCollected.payload.client_refs, value: "United States", hash: valueHash("United States")}
+    );
+    assert.equal(ariaApplied.status, "APPLIED", JSON.stringify(ariaApplied));
+    assert.equal(await ariaComboboxPage.locator("#country").inputValue(), "United States");
+    assert.equal(ariaApplied.final_submit_armed, true);
+    const ariaMissing = await ariaComboboxPage.evaluate(
+      ({clientRef, value, hash}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED",
+        fields: [{client_ref: clientRef, value, value_sha256: hash}],
+        files: [], navigation: null, final_submit_client_refs: []
+      }),
+      {clientRef: ariaCollected.payload.client_refs[0], value: "Mexico", hash: valueHash("Mexico")}
+    );
+    assert.equal(ariaMissing.status, "BLOCKED", JSON.stringify(ariaMissing));
+    assert.equal(ariaMissing.code, "COMPANION_ARIA_COMBOBOX_OPTION_NOT_FOUND");
+    assert.equal(await ariaComboboxPage.locator("#country").inputValue(), "United States");
+    await ariaComboboxPage.close();
+
     const delayedPage = await browser.newPage();
     await delayedPage.setContent("<!doctype html><html><body><main id='application-root'></main></body></html>");
     await delayedPage.evaluate(() => {

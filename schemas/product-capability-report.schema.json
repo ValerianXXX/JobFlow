@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/product-capability-report.schema.json",
+  "title": "JobFlow Product Capability Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "capability_count", "capabilities", "universal_live_compatibility_claimed", "final_submit", "automatic_submission_retry", "unattended_operation", "scheduler_mode", "report_hash"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "PRODUCT_CAPABILITY_REPORT"},
+    "capability_count": {"type": "integer", "minimum": 1},
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["capability_id", "area", "availability", "evidence_status", "live_acceptance", "user_presence", "safety_boundary", "evidence_refs", "known_limit_codes", "capability_hash"],
+        "properties": {
+          "capability_id": {"type": "string", "pattern": "^[a-z][a-z0-9_]{2,63}$"},
+          "area": {"enum": ["ai", "browser_assist", "discovery", "distribution", "onboarding", "queue", "recovery", "scheduling", "submission", "support"]},
+          "availability": {"enum": ["AVAILABLE", "CONDITIONAL", "NOT_AVAILABLE", "USER_ONLY"]},
+          "evidence_status": {"enum": ["AUTOMATED_REPRODUCIBLE", "DIRECT_SNAPSHOT_PASS", "SYNTHETIC_VERTICAL_PASS", "SINGLE_SNAPSHOT_PASS", "SAVED_SEQUENCE_PASS", "LIVE_ACCEPTANCE_REQUIRED", "NOT_IMPLEMENTED", "PERMANENT_USER_BOUNDARY"]},
+          "live_acceptance": {"enum": ["NOT_APPLICABLE", "USER_ENVIRONMENT_REQUIRED", "STORE_STATUS_EXTERNAL", "REQUIRED_PER_COMPANY_OR_ROUTE", "REQUIRED_PER_SITE", "NOT_STARTED"]},
+          "user_presence": {"enum": ["NOT_APPLICABLE", "USER_INITIATED", "USER_REVIEW_REQUIRED", "ONE_CONFIRMATION_PER_APPLICATION", "USER_CONNECTS_PREPARED_RUNTIME", "USER_INSTALL_GESTURE_REQUIRED", "USER_PRESENT", "USER_APPROVAL_REQUIRED", "USER_ACTION_REQUIRED", "USER_OPT_IN_REQUIRED"]},
+          "safety_boundary": {"type": "string", "pattern": "^[A-Z0-9_]{3,96}$"},
+          "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(browser-companion|docs|tests)/[A-Za-z0-9_.\/-]+$"}},
+          "known_limit_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z0-9_]{3,96}$"}},
+          "capability_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "universal_live_compatibility_claimed": {"const": false},
+    "final_submit": {"const": "USER_ONLY"},
+    "automatic_submission_retry": {"const": false},
+    "unattended_operation": {"const": false},
+    "scheduler_mode": {"const": "fake_clock_only"},
+    "report_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}

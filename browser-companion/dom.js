@@ -16,6 +16,7 @@
   let pendingManualClick = null;
   let submitSignalSent = false;
   let applicationScopeHint = null;
+  let domOperationStage = "IDLE";
 
   function compact(value, limit = MAX_TEXT) {
     return String(value || "").replace(/\s+/g, " ").trim().slice(0, limit);
@@ -173,6 +174,7 @@
   function meaningfulApplicantControl(element) {
     const type = controlType(element);
     if (element instanceof HTMLInputElement && ["file", "radio", "checkbox"].includes(type)) return true;
+    if (element instanceof HTMLInputElement && element.getAttribute("role")?.toLowerCase() === "combobox") return true;
     if (element instanceof HTMLButtonElement && element.getAttribute("aria-haspopup")?.toLowerCase() === "true") return true;
     if (labelFor(element)) return true;
     if (element instanceof HTMLSelectElement && Array.from(element.options).some((option) => compact(option.textContent))) return true;
@@ -272,6 +274,22 @@
       name: compact(owner?.getAttribute?.("data-id") || element.getAttribute("name")),
       required: /\*/.test(compact(label?.textContent || question)) || element.getAttribute("aria-required") === "true"
     };
+  }
+
+  function ariaComboboxDescriptor(element) {
+    return {
+      jobflowAriaCombobox: true,
+      element,
+      question: labelFor(element).replace(/\s*\*\s*$/, ""),
+      name: compact(element.getAttribute("name")),
+      popupId: compact(element.getAttribute("aria-controls") || element.getAttribute("aria-owns")),
+      required: element.required || element.getAttribute("aria-required") === "true"
+    };
+  }
+
+  function ariaComboboxCurrentLabel(binding) {
+    const element = binding?.element;
+    return compact(element?.getAttribute?.("aria-valuetext") || element?.value);
   }
 
   function sectionFor(element) {
@@ -378,6 +396,12 @@
       ) {
         consumed.add(element);
         controls.push(customSelectDescriptor(element));
+      } else if (
+        element instanceof HTMLInputElement &&
+        element.getAttribute("role")?.toLowerCase() === "combobox"
+      ) {
+        consumed.add(element);
+        controls.push(ariaComboboxDescriptor(element));
       } else if (element instanceof HTMLInputElement && ["radio", "checkbox"].includes(element.type.toLowerCase())) {
         const name = compact(element.getAttribute("name"));
         const container = choiceContainer(element);
@@ -421,6 +445,14 @@
         parts.push(`<label for="${syntheticId}">${escapeHTML(question)}</label>`);
         const required = binding.required ? " required" : "";
         parts.push(`<select${safeAttribute("id", syntheticId)}${safeAttribute("name", binding.name)}${safeAttribute("aria-label", question)}${required} data-jobflow-custom-select="true"></select>`);
+        return;
+      }
+      if (binding?.jobflowAriaCombobox) {
+        const question = binding.question || binding.name || "Choice";
+        parts.push(`<h3>${escapeHTML(sectionFor(binding.element))}</h3>`);
+        parts.push(`<label for="${syntheticId}">${escapeHTML(question)}</label>`);
+        const required = binding.required ? " required" : "";
+        parts.push(`<select${safeAttribute("id", syntheticId)}${safeAttribute("name", binding.name)}${safeAttribute("aria-label", question)}${required} data-jobflow-aria-combobox="true"></select>`);
         return;
       }
       const element = binding;
@@ -687,6 +719,7 @@
       "CHOICE_OPTION_NOT_FOUND", "CHOICE_VALUE_NOT_APPLIED",
       "CUSTOM_SELECT_CHANGED", "CUSTOM_SELECT_OPTION_NOT_FOUND",
       "CUSTOM_SELECT_VERIFY_FAILED", "CUSTOM_SELECT_CLOSE_FAILED",
+      "ARIA_COMBOBOX_CHANGED", "ARIA_COMBOBOX_OPTION_NOT_FOUND", "ARIA_COMBOBOX_VERIFY_FAILED",
       "SELECT_OPTION_NOT_FOUND", "VALUE_SETTER_UNAVAILABLE", "UNSUPPORTED_CONTROL"
     ]);
     if (!supported.has(code)) return "COMPANION_FIELD_APPLY_FAILED";
@@ -697,11 +730,19 @@
       CUSTOM_SELECT_OPTION_NOT_FOUND: "COMPANION_CUSTOM_SELECT_OPTION_NOT_FOUND",
       CUSTOM_SELECT_VERIFY_FAILED: "COMPANION_CUSTOM_SELECT_VERIFY_FAILED",
       CUSTOM_SELECT_CLOSE_FAILED: "COMPANION_CUSTOM_SELECT_CLOSE_FAILED",
+      ARIA_COMBOBOX_CHANGED: "COMPANION_ARIA_COMBOBOX_CHANGED",
+      ARIA_COMBOBOX_OPTION_NOT_FOUND: "COMPANION_ARIA_COMBOBOX_OPTION_NOT_FOUND",
+      ARIA_COMBOBOX_VERIFY_FAILED: "COMPANION_ARIA_COMBOBOX_VERIFY_FAILED",
       SELECT_OPTION_NOT_FOUND: "COMPANION_SELECT_OPTION_NOT_FOUND",
       VALUE_SETTER_UNAVAILABLE: "COMPANION_VALUE_SETTER_UNAVAILABLE",
       UNSUPPORTED_CONTROL: "COMPANION_CONTROL_TYPE_UNSUPPORTED"
     };
     return aliases[code];
+  }
+
+  function safeDomDiagnosticCode(error) {
+    const code = String(error?.message || "");
+    return /^[A-Z][A-Z0-9_]{2,63}$/.test(code) ? code : "UNEXPECTED_DOM_EXCEPTION";
   }
 
   function customOptionValue(element) {
@@ -759,6 +800,69 @@
     }
   }
 
+  function ariaComboboxOptions(binding) {
+    const popup = binding?.popupId ? rootElementById(binding.element, binding.popupId) : null;
+    const candidates = popup?.querySelectorAll
+      ? Array.from(popup.querySelectorAll("[role='option'],option,[data-value]"))
+      : deepQueryAll("[role='option'],[data-value]");
+    return candidates.filter((candidate) => visible(candidate));
+  }
+
+  function waitForExactAriaComboboxOption(binding, value, maximumMilliseconds = 7000) {
+    const desired = normalizedChoice(value);
+    const started = Date.now();
+    return new Promise((resolve, reject) => {
+      const inspect = () => {
+        const option = ariaComboboxOptions(binding)
+          .find((candidate) => normalizedChoice(customOptionValue(candidate)) === desired);
+        if (option) return resolve(option);
+        if (Date.now() - started >= maximumMilliseconds) return reject(new Error("ARIA_COMBOBOX_OPTION_NOT_FOUND"));
+        setTimeout(inspect, 80);
+      };
+      inspect();
+    });
+  }
+
+  async function applyAriaComboboxValue(binding, value) {
+    const element = binding?.element;
+    if (
+      !(element instanceof HTMLInputElement) || !element.isConnected || element.disabled ||
+      element.readOnly || element.getAttribute("role")?.toLowerCase() !== "combobox"
+    ) {
+      throw new Error("ARIA_COMBOBOX_CHANGED");
+    }
+    if (normalizedChoice(ariaComboboxCurrentLabel(binding)) === normalizedChoice(value)) return;
+    const originalValue = String(element.value || "");
+    const originalAriaValue = element.getAttribute("aria-valuetext");
+    element.focus();
+    HTMLElement.prototype.click.call(element);
+    setTextValue(element, String(value));
+    element.dispatchEvent(new KeyboardEvent("keydown", {
+      key: "ArrowDown", code: "ArrowDown", bubbles: true, cancelable: true
+    }));
+    let option;
+    try {
+      option = await waitForExactAriaComboboxOption(binding, value);
+    } catch (error) {
+      // Searching a custom combobox may temporarily replace its text. Restore
+      // the last verified display value before failing so an unavailable
+      // approved option does not leave a misleading partial answer behind.
+      setTextValue(element, originalValue);
+      if (originalAriaValue === null) element.removeAttribute("aria-valuetext");
+      else element.setAttribute("aria-valuetext", originalAriaValue);
+      element.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "Escape", code: "Escape", bubbles: true, cancelable: true
+      }));
+      element.blur();
+      throw error;
+    }
+    HTMLElement.prototype.click.call(option);
+    await waitForDomQuiet({quietMilliseconds: 250, maximumMilliseconds: 5000});
+    if (normalizedChoice(ariaComboboxCurrentLabel(binding)) !== normalizedChoice(value)) {
+      throw new Error("ARIA_COMBOBOX_VERIFY_FAILED");
+    }
+  }
+
   function waitForDomQuiet({quietMilliseconds = 900, maximumMilliseconds = 30000} = {}) {
     return new Promise((resolve) => {
       let quietTimer = null;
@@ -813,6 +917,12 @@
     if (binding?.jobflowCustomSelect) {
       return JSON.stringify([
         "custom-select", compact(binding.name), compact(binding.question),
+        compact(binding.element?.getAttribute("aria-label"))
+      ]);
+    }
+    if (binding?.jobflowAriaCombobox) {
+      return JSON.stringify([
+        "aria-combobox", compact(binding.name), compact(binding.question), compact(binding.popupId),
         compact(binding.element?.getAttribute("aria-label"))
       ]);
     }
@@ -874,6 +984,7 @@
   }
 
   async function applyApproved(message) {
+    domOperationStage = "APPLY_INIT";
     const fieldBindings = [];
     const materialBindings = [];
     const attemptedFieldBindings = [];
@@ -901,6 +1012,7 @@
       ...finalSubmitRefs, ...(navigationRef ? [navigationRef] : [])
     ])];
     const rebindSignatures = new Map();
+    domOperationStage = "REBIND_SIGNATURES";
     for (const clientRef of rebindRefs) {
       const binding = controlMap.get(clientRef);
       if (!binding) return blockedApply("COMPANION_CONTROL_CHANGED", clientRef);
@@ -938,6 +1050,7 @@
       if (rebound.status !== "REBOUND") return blockedApply(rebound.code, rebound.client_ref);
     }
     for (const clientRef of finalSubmitRefs) {
+      domOperationStage = "FINAL_CONTROLS";
       const element = controlMap.get(clientRef);
       if (!element || !element.isConnected) {
         return blockedApply("COMPANION_FINAL_CONTROL_CHANGED", clientRef);
@@ -951,29 +1064,39 @@
       }
     }
     for (const item of message.fields || []) {
+      domOperationStage = "FIELD_BINDING";
       const binding = controlMap.get(item.client_ref);
-      const element = binding?.jobflowChoiceGroup ? binding.elements[0] : binding?.jobflowCustomSelect ? binding.element : binding;
+      const element = binding?.jobflowChoiceGroup
+        ? binding.elements[0]
+        : (binding?.jobflowCustomSelect || binding?.jobflowAriaCombobox) ? binding.element : binding;
+      domOperationStage = "FIELD_ELEMENT_SELECTED";
       if (!element || !element.isConnected || element.disabled || (!binding?.jobflowChoiceGroup && !visible(element))) {
         return blockedApply("COMPANION_CONTROL_CHANGED", item.client_ref);
       }
+      domOperationStage = "FIELD_ELEMENT_VALIDATED";
+      domOperationStage = "FIELD_HASHING";
       if (await sha256(String(item.value)) !== item.value_sha256) {
         return blockedApply("COMPANION_VALUE_HASH_MISMATCH", item.client_ref);
       }
+      domOperationStage = "FIELD_HASH_VALIDATED";
       attemptedFieldBindings.push({client_ref: item.client_ref, value_sha256: item.value_sha256});
+      domOperationStage = "FIELD_APPLY";
       try {
         if (binding?.jobflowChoiceGroup) await applyChoiceValue(binding, String(item.value));
         else if (binding?.jobflowCustomSelect) await applyCustomSelectValue(binding, String(item.value));
+        else if (binding?.jobflowAriaCombobox) await applyAriaComboboxValue(binding, String(item.value));
         else setTextValue(element, String(item.value));
       }
       catch (error) { return blockedApply(fieldApplyFailureCode(error), item.client_ref); }
       if (
-        !binding?.jobflowChoiceGroup && !binding?.jobflowCustomSelect &&
+        !binding?.jobflowChoiceGroup && !binding?.jobflowCustomSelect && !binding?.jobflowAriaCombobox &&
         String(element.value) !== String(item.value) && !(element instanceof HTMLSelectElement)
       ) {
         return blockedApply("COMPANION_FIELD_VERIFY_FAILED", item.client_ref);
       }
       fieldBindings.push({client_ref: item.client_ref, value_sha256: item.value_sha256});
     }
+    domOperationStage = "POST_APPLY_VALIDATION";
     if ([...finalSubmitElements].some((element) => !element.isConnected)) {
       return blockedApply("COMPANION_FINAL_CONTROL_CHANGED");
     }
@@ -1288,7 +1411,10 @@
         return {status: "RESULT_COLLECTED"};
       }
       return {status: "IGNORED"};
-    })().then(sendResponse).catch(() => sendResponse({status: "BLOCKED", code: "COMPANION_DOM_ERROR"}));
+    })().then(sendResponse).catch((error) => sendResponse({
+      status: "BLOCKED", code: "COMPANION_DOM_ERROR", diagnostic_code: safeDomDiagnosticCode(error),
+      diagnostic_stage: domOperationStage
+    }));
     return true;
   });
 })();

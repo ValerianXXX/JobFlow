@@ -2,6 +2,8 @@
 
 Checked items describe implemented engineering scope, not a claim of live compatibility with every recruiting site.
 
+The current machine-readable status is available through `jobflow product-capabilities`; see [support-matrix.md](support-matrix.md).
+
 ## Available in the alpha
 
 - [x] Windows one-click install, health check, and bilingual local UI.

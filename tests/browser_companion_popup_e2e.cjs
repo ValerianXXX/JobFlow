@@ -171,6 +171,17 @@ vm.runInContext(source, sandbox, {filename: "popup.js"});
   assert.match(elements.message.textContent, /item 9/);
   assert.match(elements.message.textContent, /no longer offers the approved choice/);
 
+  pairedStatus.last_result.failure_code = "COMPANION_ARIA_COMBOBOX_OPTION_NOT_FOUND";
+  pairedStatus.last_result.failure_control_type = "select";
+  pairedStatus.last_result.failure_page_position = 4;
+  pairedStatus.last_result.failure_field_label = "Country";
+  await elements.zh.listeners.click[0]();
+  await vm.runInContext("refresh()", sandbox);
+  assert.match(elements.message.textContent, /第 4 项/);
+  assert.match(elements.message.textContent, /原值已恢复/);
+  await elements.en.listeners.click[0]();
+  assert.match(elements.message.textContent, /prior value was restored/);
+
   process.stdout.write(JSON.stringify({
     status: "PASS",
     user_gesture_permission_required: true,
@@ -181,6 +192,7 @@ vm.runInContext(source, sandbox, {filename: "popup.js"});
     restart_required_bilingual: true,
     restart_required_disabled: true,
     apply_failure_diagnostic_bilingual: true,
+    aria_combobox_failure_bilingual: true,
     real_external_actions: 0
   }));
 })().catch((error) => {

@@ -115,6 +115,25 @@ class ATSBrowserSafetyTests(unittest.TestCase):
         self.assertEqual(report["provider"], "workday")
         self.assertEqual(report["canonical_url"], "https://myworkday.com/example/careers/job/123")
 
+    def test_sanitized_aria_combobox_remains_a_private_profile_binding(self) -> None:
+        snapshot = b"""<!doctype html><html><body><form>
+        <label for='jobflow-control-1'>Country</label>
+        <select id='jobflow-control-1' name='country' aria-label='Country' required
+          data-jobflow-aria-combobox='true'></select>
+        <button id='jobflow-control-2' type='submit'>Submit application</button>
+        </form></body></html>"""
+        report = analyze_local_ats_form(snapshot, route=verified_route(), blocked_categories=[])
+        country = next(item for item in report["fields"] if item["answer_key"] == "country")
+        self.assertEqual(country["control_type"], "select")
+        self.assertEqual(country["classification"], "private_fixed")
+        self.assertEqual(country["option_count"], 0)
+        plan = build_browser_action_plan(report, {
+            country["control_ref"]: {"kind": "secure_ref", "value": "secure-ref:SYNTHETIC_COUNTRY_01"},
+        })
+        self.assertEqual(plan["fillable_count"], 1)
+        self.assertEqual(plan["stopped_count"], 1)
+        self.assertTrue(plan["submit_blocked"])
+
     def test_action_plan_keeps_plaintext_out_and_never_plans_protected_actions(self) -> None:
         report = analyze_local_ats_form(self.snapshot, route=verified_route(), blocked_categories=[])
         private_control = next(item for item in report["fields"] if item["classification"] == "private_fixed")

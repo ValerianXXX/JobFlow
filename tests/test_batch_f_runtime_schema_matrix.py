@@ -9,6 +9,7 @@ from jobops.application_execution import build_application_execution_plan
 from jobops.application_readiness import build_application_readiness
 from jobops.errors import JobOpsError
 from jobops.external_claims import build_external_claim_set, claim_review_hash
+from jobops.product_capabilities import product_capability_report
 from jobops.resume_tailoring import build_resume_tailoring_manifest
 from jobops.runtime_schema import validate_named
 from jobops.sourcing import source_route_hash
@@ -103,6 +104,7 @@ def valid_fixtures() -> dict[str, dict]:
         expected_proposal_hash=H, user_confirmed=True,
     )
     return {
+        "product-capability-report": product_capability_report(),
         "application": {"application_id": APP, "job_id": JOB, "status": "AWAITING_APPROVAL", "site": "example.com", "resume_hash": H, "answers_hash": H, "dry_run": True, "secure_profile_ref": "secure-ref:SYNTHETIC01", "sensitive_fields": [], "unknown_fields": []},
         "approval": {
             "approval_id": "APR-ABCDEF123456", "application_id": APP, "job_id": JOB, "jd_snapshot_hash": H, "jd_freshness_hash": H,
