@@ -30,11 +30,31 @@ SIGNED_UPDATE_TEST_ROOT = PROJECT / "tests" / ".tmp"
 SIGNED_UPDATE_TEST_ROOT.mkdir(parents=True, exist_ok=True)
 
 
+def _windows_extended_path(path: Path) -> str:
+    absolute = str(path.resolve(strict=False))
+    if absolute.startswith("\\\\?\\"):
+        return absolute
+    if absolute.startswith("\\\\"):
+        return "\\\\?\\UNC\\" + absolute[2:]
+    return "\\\\?\\" + absolute
+
+
+def _read_bytes(path: Path) -> bytes:
+    return Path(_windows_extended_path(path)).read_bytes()
+
+
+def _is_file(path: Path) -> bool:
+    return Path(_windows_extended_path(path)).is_file()
+
+
 class SignedUpdateTests(unittest.TestCase):
     def test_release_signer_cannot_silently_rotate_an_existing_key(self) -> None:
         signer = (PROJECT / "scripts" / "release-signing.ps1").read_text(encoding="utf-8-sig")
         self.assertNotIn("[switch]$Force", signer)
-        self.assertIn("if (Test-Path -LiteralPath $keyPath -PathType Leaf)", signer)
+        self.assertIn(
+            "if ([IO.File]::Exists((ConvertTo-ExtendedFileSystemPath $keyPath)))",
+            signer,
+        )
 
     def test_signed_release_bundle_builder_requires_exact_clean_candidate(self) -> None:
         builder = (PROJECT / "scripts" / "build-signed-update-bundle.ps1").read_text(encoding="utf-8-sig")
@@ -76,7 +96,7 @@ class SignedUpdateTests(unittest.TestCase):
         self.assertEqual(result["status"], "RELEASE_SIGNING_KEY_READY")
         self.assertNotIn(str(local_app_data), completed.stdout)
         key_path = local_app_data / "JobOps" / "ReleaseSigning" / "release-signing-key.dpapi"
-        protected = key_path.read_bytes()
+        protected = _read_bytes(key_path)
         self.assertGreater(len(protected), 512)
         self.assertNotIn(b'"Modulus"', protected)
         return result["channel"], environment
@@ -141,21 +161,24 @@ class SignedUpdateTests(unittest.TestCase):
             root = Path(raw)
             first, _ = self._initialize_signer(root)
             key_path = root / "LocalAppData" / "JobOps" / "ReleaseSigning" / "release-signing-key.dpapi"
-            protected_before = key_path.read_bytes()
+            protected_before = _read_bytes(key_path)
             second, _ = self._initialize_signer(root)
             self.assertEqual(first["signature"]["key_id"], second["signature"]["key_id"])
-            self.assertEqual(protected_before, key_path.read_bytes())
+            self.assertEqual(protected_before, _read_bytes(key_path))
 
     def test_release_signer_supports_deep_source_archive_paths(self) -> None:
         prefix = "jobflow-signing-long-path-" + ("x" * 80)
-        with tempfile.TemporaryDirectory(prefix=prefix, dir=SIGNED_UPDATE_TEST_ROOT) as raw:
+        raw = tempfile.mkdtemp(prefix=prefix, dir=SIGNED_UPDATE_TEST_ROOT)
+        try:
             root = Path(raw)
             channel, _ = self._initialize_signer(root)
             key_path = root / "LocalAppData" / "JobOps" / "ReleaseSigning" / "release-signing-key.dpapi"
             atomic_temporary_length = len(str(key_path)) + 1 + 32 + len(".tmp")
             self.assertGreater(atomic_temporary_length, 260)
-            self.assertTrue(key_path.is_file())
+            self.assertTrue(_is_file(key_path))
             self.assertTrue(str(channel["signature"]["key_id"]).startswith("sha256:"))
+        finally:
+            shutil.rmtree(_windows_extended_path(Path(raw)))
 
     def test_signed_manifest_and_archive_verify_and_current_version_is_not_reinstalled(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-signed-update-", dir=SIGNED_UPDATE_TEST_ROOT) as raw:

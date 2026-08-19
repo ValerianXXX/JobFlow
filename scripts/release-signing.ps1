@@ -26,6 +26,15 @@ $markerPath = Join-Path $keyRoot ".jobflow-release-signing-root"
 $keyPath = Join-Path $keyRoot "release-signing-key.dpapi"
 $algorithm = "RSA-PKCS1-v1_5-SHA256"
 
+function ConvertTo-ExtendedFileSystemPath([string]$Path) {
+    $absolute = [IO.Path]::GetFullPath($Path)
+    if ($absolute.StartsWith("\\?\", [StringComparison]::Ordinal)) { return $absolute }
+    if ($absolute.StartsWith("\\", [StringComparison]::Ordinal)) {
+        return "\\?\UNC\" + $absolute.Substring(2)
+    }
+    return "\\?\" + $absolute
+}
+
 function Assert-NoReparse([string]$Path, [string]$Boundary, [string]$Code) {
     $absolute = [IO.Path]::GetFullPath($Path)
     $limit = [IO.Path]::GetFullPath($Boundary)
@@ -35,9 +44,10 @@ function Assert-NoReparse([string]$Path, [string]$Boundary, [string]$Code) {
     }
     $cursor = $absolute
     while ($cursor -and ($cursor -eq $limit -or $cursor.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase))) {
-        if (Test-Path -LiteralPath $cursor) {
-            $item = Get-Item -LiteralPath $cursor -Force
-            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw $Code }
+        $ioCursor = ConvertTo-ExtendedFileSystemPath $cursor
+        if ([IO.Directory]::Exists($ioCursor) -or [IO.File]::Exists($ioCursor)) {
+            $attributes = [IO.File]::GetAttributes($ioCursor)
+            if (($attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw $Code }
         }
         if ($cursor -eq $limit) { break }
         $cursor = [IO.Path]::GetDirectoryName($cursor)
@@ -112,12 +122,14 @@ function Protect-Key([Security.Cryptography.RSAParameters]$Parameters) {
 
 function Read-Key {
     Assert-KeyPath $keyPath
-    if (-not (Test-Path -LiteralPath $markerPath -PathType Leaf) -or
-        (Get-Content -LiteralPath $markerPath -Raw).Trim() -ne "JOBFLOW_RELEASE_SIGNING_ROOT_V1" -or
-        -not (Test-Path -LiteralPath $keyPath -PathType Leaf)) {
+    $ioMarkerPath = ConvertTo-ExtendedFileSystemPath $markerPath
+    $ioKeyPath = ConvertTo-ExtendedFileSystemPath $keyPath
+    if (-not [IO.File]::Exists($ioMarkerPath) -or
+        [IO.File]::ReadAllText($ioMarkerPath).Trim() -ne "JOBFLOW_RELEASE_SIGNING_ROOT_V1" -or
+        -not [IO.File]::Exists($ioKeyPath)) {
         throw "JOBFLOW_RELEASE_KEY_NOT_INITIALIZED"
     }
-    $protected = [IO.File]::ReadAllBytes($keyPath)
+    $protected = [IO.File]::ReadAllBytes($ioKeyPath)
     try {
         $plain = [Security.Cryptography.ProtectedData]::Unprotect(
             $protected,
@@ -146,15 +158,6 @@ function Get-PublicDescriptor([Security.Cryptography.RSAParameters]$Parameters) 
     }
 }
 
-function ConvertTo-ExtendedFileSystemPath([string]$Path) {
-    $absolute = [IO.Path]::GetFullPath($Path)
-    if ($absolute.StartsWith("\\?\", [StringComparison]::Ordinal)) { return $absolute }
-    if ($absolute.StartsWith("\\", [StringComparison]::Ordinal)) {
-        return "\\?\UNC\" + $absolute.Substring(2)
-    }
-    return "\\?\" + $absolute
-}
-
 function Write-BytesAtomic([string]$Path, [byte[]]$Bytes) {
     $absolute = [IO.Path]::GetFullPath($Path)
     $parent = [IO.Path]::GetDirectoryName($absolute)
@@ -180,14 +183,14 @@ function Write-BytesAtomic([string]$Path, [byte[]]$Bytes) {
 
 if ($Action -eq "Initialize") {
     Assert-KeyPath $keyRoot
-    if (Test-Path -LiteralPath $keyPath -PathType Leaf) {
+    if ([IO.File]::Exists((ConvertTo-ExtendedFileSystemPath $keyPath))) {
         $parameters = Read-Key
         $created = $false
     }
     else {
-        if (Test-Path -LiteralPath $keyRoot -PathType Container) { Assert-KeyPath $keyRoot }
-        else { New-Item -ItemType Directory -Path $keyRoot -Force | Out-Null }
-        [IO.File]::WriteAllText($markerPath, "JOBFLOW_RELEASE_SIGNING_ROOT_V1", (New-Object Text.UTF8Encoding($false)))
+        if ([IO.Directory]::Exists((ConvertTo-ExtendedFileSystemPath $keyRoot))) { Assert-KeyPath $keyRoot }
+        else { [IO.Directory]::CreateDirectory((ConvertTo-ExtendedFileSystemPath $keyRoot)) | Out-Null }
+        Write-BytesAtomic $markerPath ([Text.Encoding]::UTF8.GetBytes("JOBFLOW_RELEASE_SIGNING_ROOT_V1"))
         $rsa = New-Object Security.Cryptography.RSACng 3072
         try {
             $parameters = $rsa.ExportParameters($true)
@@ -221,7 +224,10 @@ if ($Action -eq "Initialize") {
 if ([string]::IsNullOrWhiteSpace($ManifestPath) -or [string]::IsNullOrWhiteSpace($SignatureOutput)) {
     throw "JOBFLOW_RELEASE_SIGNING_ARGUMENT_REQUIRED"
 }
-$manifest = (Resolve-Path -LiteralPath $ManifestPath).Path
+$manifest = [IO.Path]::GetFullPath($ManifestPath)
+if (-not [IO.File]::Exists((ConvertTo-ExtendedFileSystemPath $manifest))) {
+    throw "JOBFLOW_RELEASE_MANIFEST_NOT_FOUND"
+}
 Assert-NoReparse $manifest $projectRoot "JOBFLOW_RELEASE_MANIFEST_PATH_UNTRUSTED"
 $output = [IO.Path]::GetFullPath($SignatureOutput)
 $outputParent = [IO.Path]::GetDirectoryName($output)
@@ -229,14 +235,14 @@ $projectPrefix = $projectRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.P
 if (-not $output.StartsWith($projectPrefix, [StringComparison]::OrdinalIgnoreCase)) {
     throw "JOBFLOW_RELEASE_SIGNATURE_OUTPUT_FORBIDDEN"
 }
-if (-not (Test-Path -LiteralPath $outputParent -PathType Container)) {
-    New-Item -ItemType Directory -Path $outputParent -Force | Out-Null
+if (-not [IO.Directory]::Exists((ConvertTo-ExtendedFileSystemPath $outputParent))) {
+    [IO.Directory]::CreateDirectory((ConvertTo-ExtendedFileSystemPath $outputParent)) | Out-Null
 }
 Assert-NoReparse $outputParent $projectRoot "JOBFLOW_RELEASE_SIGNATURE_OUTPUT_UNTRUSTED"
 $parameters = Read-Key
 $public = Get-PublicDescriptor $parameters
 $rsa = New-Object Security.Cryptography.RSACng
-$manifestBytes = [IO.File]::ReadAllBytes($manifest)
+$manifestBytes = [IO.File]::ReadAllBytes((ConvertTo-ExtendedFileSystemPath $manifest))
 try {
     $rsa.ImportParameters($parameters)
     $signature = $rsa.SignData(
