@@ -1,4 +1,4 @@
 """JobFlow: a local, evidence-gated job application operator."""
 
-__version__ = "0.4.1"
-UI_PROTOCOL_VERSION = 35
+__version__ = "0.5.0"
+UI_PROTOCOL_VERSION = 36

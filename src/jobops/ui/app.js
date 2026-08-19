@@ -382,7 +382,7 @@ Object.assign(STRINGS.en,{
   desktopUpdateFailed:"The signed update window could not be opened; the current version was not changed."
 });
 
-const UI_PROTOCOL_VERSION = 35;
+const UI_PROTOCOL_VERSION = 36;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",

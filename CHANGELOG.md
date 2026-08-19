@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-19
+
 ### Added
 
 - Added an explicit, user-initiated stable update path for fixed Windows installations, with a pinned RSA release key, canonical signed manifests, archive hash and content-boundary verification, post-switch health checks, and automatic rollback on failure.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jobflow-local"
-version = "0.4.1"
+version = "0.5.0"
 description = "Local-first, evidence-gated job application workflow"
 readme = "README.md"
 requires-python = ">=3.11"
