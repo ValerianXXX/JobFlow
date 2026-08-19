@@ -274,6 +274,140 @@ function valueHash(value) {
     assert.equal(await ariaComboboxPage.locator("#country").inputValue(), "United States");
     await ariaComboboxPage.close();
 
+    const buttonComboboxPage = await browser.newPage();
+    const buttonComboboxFixture = `<!doctype html><html><body><form>
+      <label id="work-setting-label">Work setting *</label>
+      <button id="work-setting" name="work_setting" type="button" role="combobox"
+        aria-labelledby="work-setting-label" aria-controls="work-setting-options"
+        aria-expanded="false" aria-required="true">Choose a setting</button>
+      <div id="work-setting-options" role="listbox" hidden>
+        <button type="button" role="option" data-value="Hybrid">Hybrid</button>
+        <button type="button" role="option" data-value="Remote">Remote</button>
+      </div>
+      <button id="button-combobox-submit" type="submit">Submit</button>
+    </form></body></html>`;
+    await buttonComboboxPage.route("https://button-combobox.example.test/**", (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8", body: buttonComboboxFixture
+    }));
+    await buttonComboboxPage.goto("https://button-combobox.example.test/apply", {waitUntil: "domcontentloaded"});
+    await buttonComboboxPage.evaluate(() => {
+      globalThis.__jobflowListener = null;
+      globalThis.chrome = {
+        runtime: {
+          lastError: null,
+          onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+          sendMessage() { return Promise.resolve({status: "RECORDED"}); },
+          connect() { throw new Error("NO_FILE_STREAM_EXPECTED"); }
+        }
+      };
+      const control = document.querySelector("#work-setting");
+      const popup = document.querySelector("#work-setting-options");
+      control.addEventListener("click", () => {
+        popup.hidden = false;
+        control.setAttribute("aria-expanded", "true");
+      });
+      for (const option of popup.querySelectorAll("[role=option]")) {
+        option.addEventListener("click", () => {
+          control.textContent = `${option.dataset.value} Show menu`;
+          control.setAttribute("data-selected-value", option.dataset.value);
+          control.setAttribute("aria-valuetext", option.dataset.value);
+          control.setAttribute("aria-expanded", "false");
+          popup.hidden = true;
+          control.dispatchEvent(new Event("change", {bubbles: true}));
+        });
+      }
+      document.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+    });
+    await buttonComboboxPage.addScriptTag({path: companion});
+    await buttonComboboxPage.evaluate(() => {
+      globalThis.__jobflowCall = (message) => new Promise((resolve) => globalThis.__jobflowListener(message, {}, resolve));
+    });
+    const buttonComboboxCollected = await buttonComboboxPage.evaluate(
+      () => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"})
+    );
+    assert.equal(buttonComboboxCollected.status, "COLLECTED");
+    assert.equal(buttonComboboxCollected.payload.client_refs.length, 2);
+    assert.match(buttonComboboxCollected.payload.sanitized_html, /data-jobflow-aria-combobox="true"/);
+    const buttonComboboxApplied = await buttonComboboxPage.evaluate(
+      ({refs, value, hash}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED",
+        fields: [{client_ref: refs[0], value, value_sha256: hash}],
+        files: [], navigation: null, final_submit_client_refs: [refs[1]]
+      }),
+      {refs: buttonComboboxCollected.payload.client_refs, value: "Hybrid", hash: valueHash("Hybrid")}
+    );
+    assert.equal(buttonComboboxApplied.status, "APPLIED", JSON.stringify(buttonComboboxApplied));
+    assert.equal(await buttonComboboxPage.locator("#work-setting").getAttribute("aria-valuetext"), "Hybrid");
+    assert.equal(buttonComboboxApplied.final_submit_armed, true);
+    await buttonComboboxPage.close();
+
+    const repaintPage = await browser.newPage();
+    await repaintPage.route("https://repaint.example.test/**", (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8",
+      body: "<!doctype html><html><body><div id='component-host'></div></body></html>"
+    }));
+    await repaintPage.goto("https://repaint.example.test/apply", {waitUntil: "domcontentloaded"});
+    await repaintPage.evaluate(() => {
+      globalThis.__jobflowListener = null;
+      globalThis.__componentRedraws = 0;
+      globalThis.chrome = {
+        dom: {openOrClosedShadowRoot(element) { return element.shadowRoot || null; }},
+        runtime: {
+          lastError: null,
+          onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+          sendMessage() { return Promise.resolve({status: "RECORDED"}); },
+          connect() { throw new Error("NO_FILE_STREAM_EXPECTED"); }
+        }
+      };
+      const root = document.querySelector("#component-host").attachShadow({mode: "open"});
+      const render = (firstValue = "") => {
+        root.innerHTML = `<form id="component-form">
+          <label for="component-first">First Name</label>
+          <input id="component-first" name="first_name" autocomplete="given-name" value="${firstValue}">
+          <label for="component-last">Last Name</label>
+          <input id="component-last" name="last_name" autocomplete="family-name">
+          <button id="component-submit" type="submit">Submit</button>
+        </form>`;
+        root.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+      };
+      render();
+      root.querySelector("#component-first").addEventListener("change", (event) => {
+        const retained = event.target.value;
+        setTimeout(() => {
+          globalThis.__componentRedraws += 1;
+          render(retained);
+        }, 60);
+      }, {once: true});
+    });
+    await repaintPage.addScriptTag({path: companion});
+    await repaintPage.evaluate(() => {
+      globalThis.__jobflowCall = (message) => new Promise((resolve) => globalThis.__jobflowListener(message, {}, resolve));
+    });
+    const repaintCollected = await repaintPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+    assert.equal(repaintCollected.status, "COLLECTED");
+    assert.equal(repaintCollected.payload.client_refs.length, 3);
+    const repaintApplied = await repaintPage.evaluate(
+      ({refs, first, last, firstHash, lastHash}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED",
+        fields: [
+          {client_ref: refs[0], value: first, value_sha256: firstHash},
+          {client_ref: refs[1], value: last, value_sha256: lastHash}
+        ],
+        files: [], navigation: null, final_submit_client_refs: [refs[2]]
+      }),
+      {
+        refs: repaintCollected.payload.client_refs,
+        first: "Synthetic", last: "Applicant",
+        firstHash: valueHash("Synthetic"), lastHash: valueHash("Applicant")
+      }
+    );
+    assert.equal(repaintApplied.status, "APPLIED", JSON.stringify(repaintApplied));
+    assert.equal(await repaintPage.evaluate(() => globalThis.__componentRedraws), 1);
+    assert.equal(await repaintPage.evaluate(() => document.querySelector("#component-host").shadowRoot.querySelector("#component-first").value), "Synthetic");
+    assert.equal(await repaintPage.evaluate(() => document.querySelector("#component-host").shadowRoot.querySelector("#component-last").value), "Applicant");
+    assert.equal(repaintApplied.final_submit_armed, true);
+    await repaintPage.close();
+
     const delayedPage = await browser.newPage();
     await delayedPage.setContent("<!doctype html><html><body><main id='application-root'></main></body></html>");
     await delayedPage.evaluate(() => {
@@ -798,6 +932,9 @@ function valueHash(value) {
       trusted_manual_next_observed_before_unload: true,
       scoped_explicit_button_navigation: true,
       lwc_choice_controls: true,
+      non_input_aria_combobox: true,
+      component_rerender_rebinding: true,
+      shadow_root_mutation_settling: true,
       async_upload_replacement: true,
       partial_apply_evidence: true,
       programmatic_final_submit_events: 0

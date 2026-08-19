@@ -9,6 +9,8 @@ This bundled Chrome/Edge Manifest V3 extension performs the user-present part of
 - A different JobFlow session or mode cannot replace an active browser task, and old asynchronous work cannot restore a stale binding after a reconnect.
 - It reads form structure but never sends current field values, cookies, page bodies, passwords, or session tokens to JobFlow.
 - It fills only bindings from the current approved packet and attaches only the approved encrypted materials, one page at a time.
+- It supports native controls, grouped choices, validated LWC/custom selects, and input- or button-based ARIA comboboxes in browser-visible component roots. After a verified component redraw, it continues only when every remaining field and final-submit boundary can be uniquely rebound to the original structural signature.
+- If a reviewed control disappears, changes kind, or becomes ambiguous, it stops with a redacted field-level diagnostic and never guesses, repeats, or broadens the approved write.
 - It may activate one unambiguous `type=button` forward Next/Continue control only after page validation and a fresh, one-use local authorization. Submit-like forward controls always require the user's trusted click; after that click, JobFlow resumes automatically when the next page is stably loaded.
 - Login, account creation, CAPTCHA, MFA, legal/signature answers, and unknown fields always stop for the user.
 - It has no final-submit implementation. The only programmatic click is scoped to an authorized non-final forward control.

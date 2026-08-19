@@ -174,7 +174,7 @@
   function meaningfulApplicantControl(element) {
     const type = controlType(element);
     if (element instanceof HTMLInputElement && ["file", "radio", "checkbox"].includes(type)) return true;
-    if (element instanceof HTMLInputElement && element.getAttribute("role")?.toLowerCase() === "combobox") return true;
+    if (element.getAttribute?.("role")?.toLowerCase() === "combobox") return true;
     if (element instanceof HTMLButtonElement && element.getAttribute("aria-haspopup")?.toLowerCase() === "true") return true;
     if (labelFor(element)) return true;
     if (element instanceof HTMLSelectElement && Array.from(element.options).some((option) => compact(option.textContent))) return true;
@@ -289,7 +289,13 @@
 
   function ariaComboboxCurrentLabel(binding) {
     const element = binding?.element;
-    return compact(element?.getAttribute?.("aria-valuetext") || element?.value);
+    const raw = compact(
+      element?.getAttribute?.("aria-valuetext") || element?.getAttribute?.("data-selected-value") ||
+      element?.value || directText(element) || element?.innerText || element?.textContent
+    );
+    return compact(raw
+      .replace(/\s+(?:show|hide|open|close)\s+(?:the\s+)?(?:menu|options?)\s*$/i, "")
+      .replace(/\s*(?:显示|隐藏|展开|收起)(?:菜单|选项)\s*$/, ""));
   }
 
   function sectionFor(element) {
@@ -340,7 +346,7 @@
   }
 
   function serializedFormSnapshot() {
-    const allControls = deepQueryAll("input,select,textarea,button")
+    const allControls = deepQueryAll("input,select,textarea,button,[role='combobox']")
       .filter((element) => !(element instanceof HTMLInputElement && element.type.toLowerCase() === "hidden"))
       .filter((element) => visible(element))
       .filter(meaningfulApplicantControl);
@@ -396,10 +402,7 @@
       ) {
         consumed.add(element);
         controls.push(customSelectDescriptor(element));
-      } else if (
-        element instanceof HTMLInputElement &&
-        element.getAttribute("role")?.toLowerCase() === "combobox"
-      ) {
+      } else if (element.getAttribute?.("role")?.toLowerCase() === "combobox") {
         consumed.add(element);
         controls.push(ariaComboboxDescriptor(element));
       } else if (element instanceof HTMLInputElement && ["radio", "checkbox"].includes(element.type.toLowerCase())) {
@@ -802,10 +805,11 @@
 
   function ariaComboboxOptions(binding) {
     const popup = binding?.popupId ? rootElementById(binding.element, binding.popupId) : null;
-    const candidates = popup?.querySelectorAll
-      ? Array.from(popup.querySelectorAll("[role='option'],option,[data-value]"))
-      : deepQueryAll("[role='option'],[data-value]");
-    return candidates.filter((candidate) => visible(candidate));
+    if (!popup) return [];
+    const candidates = deepQueryAll("[role='option'],option,[data-value]");
+    return candidates.filter((candidate) => (
+      visible(candidate) && (candidate === popup || composedAncestors(candidate).includes(popup))
+    ));
   }
 
   function waitForExactAriaComboboxOption(binding, value, maximumMilliseconds = 7000) {
@@ -826,20 +830,23 @@
   async function applyAriaComboboxValue(binding, value) {
     const element = binding?.element;
     if (
-      !(element instanceof HTMLInputElement) || !element.isConnected || element.disabled ||
-      element.readOnly || element.getAttribute("role")?.toLowerCase() !== "combobox"
+      !(element instanceof HTMLElement) || !element.isConnected || element.disabled ||
+      element.getAttribute("aria-disabled") === "true" ||
+      element.getAttribute("role")?.toLowerCase() !== "combobox"
     ) {
       throw new Error("ARIA_COMBOBOX_CHANGED");
     }
     if (normalizedChoice(ariaComboboxCurrentLabel(binding)) === normalizedChoice(value)) return;
-    const originalValue = String(element.value || "");
+    const originalValue = element instanceof HTMLInputElement ? String(element.value || "") : "";
     const originalAriaValue = element.getAttribute("aria-valuetext");
     element.focus();
     HTMLElement.prototype.click.call(element);
-    setTextValue(element, String(value));
-    element.dispatchEvent(new KeyboardEvent("keydown", {
-      key: "ArrowDown", code: "ArrowDown", bubbles: true, cancelable: true
-    }));
+    if (element instanceof HTMLInputElement && !element.readOnly) {
+      setTextValue(element, String(value));
+      element.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "ArrowDown", code: "ArrowDown", bubbles: true, cancelable: true
+      }));
+    }
     let option;
     try {
       option = await waitForExactAriaComboboxOption(binding, value);
@@ -847,7 +854,7 @@
       // Searching a custom combobox may temporarily replace its text. Restore
       // the last verified display value before failing so an unavailable
       // approved option does not leave a misleading partial answer behind.
-      setTextValue(element, originalValue);
+      if (element instanceof HTMLInputElement && !element.readOnly) setTextValue(element, originalValue);
       if (originalAriaValue === null) element.removeAttribute("aria-valuetext");
       else element.setAttribute("aria-valuetext", originalAriaValue);
       element.dispatchEvent(new KeyboardEvent("keydown", {
@@ -867,8 +874,9 @@
     return new Promise((resolve) => {
       let quietTimer = null;
       let maximumTimer = null;
+      const observers = [];
       const finish = () => {
-        observer.disconnect();
+        for (const observer of observers) observer.disconnect();
         if (quietTimer) clearTimeout(quietTimer);
         if (maximumTimer) clearTimeout(maximumTimer);
         resolve();
@@ -877,8 +885,13 @@
         if (quietTimer) clearTimeout(quietTimer);
         quietTimer = setTimeout(finish, quietMilliseconds);
       };
-      const observer = new MutationObserver(armQuiet);
-      observer.observe(document.documentElement, {subtree: true, childList: true, attributes: true, characterData: true});
+      for (const root of openRoots()) {
+        const target = root === document ? document.documentElement : root;
+        if (!target) continue;
+        const observer = new MutationObserver(armQuiet);
+        observer.observe(target, {subtree: true, childList: true, attributes: true, characterData: true});
+        observers.push(observer);
+      }
       maximumTimer = setTimeout(finish, maximumMilliseconds);
       armQuiet();
     });
@@ -940,7 +953,47 @@
     ]);
   }
 
-  function rebindControlsAfterUpload(requiredRefs, signatures) {
+  function primaryBindingElement(binding) {
+    if (binding?.jobflowChoiceGroup) return binding.elements[0] || null;
+    if (binding?.jobflowCustomSelect || binding?.jobflowAriaCombobox) return binding.element || null;
+    return binding || null;
+  }
+
+  function bindingIsConnected(binding) {
+    if (binding?.jobflowChoiceGroup) {
+      return binding.elements.length > 0 && binding.elements.every((element) => element.isConnected);
+    }
+    return Boolean(primaryBindingElement(binding)?.isConnected);
+  }
+
+  function bindingRetainsValue(binding, value) {
+    const desired = normalizedChoice(value);
+    if (binding?.jobflowChoiceGroup) {
+      const selected = binding.elements.find((element) => {
+        const label = normalizedChoice(labelFor(element));
+        const raw = normalizedChoice(element.getAttribute("value"));
+        return desired === label || (raw && desired === raw);
+      });
+      return Boolean(selected && choiceApplied(selected));
+    }
+    if (binding?.jobflowCustomSelect) {
+      return normalizedChoice(customSelectCurrentLabel(binding)) === desired;
+    }
+    if (binding?.jobflowAriaCombobox) {
+      return normalizedChoice(ariaComboboxCurrentLabel(binding)) === desired;
+    }
+    const element = binding;
+    if (element instanceof HTMLSelectElement) {
+      const selected = element.options[element.selectedIndex] || null;
+      return Boolean(selected && (
+        String(selected.value) === String(value) || normalizedChoice(selected.textContent) === desired
+      ));
+    }
+    return (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) &&
+      String(element.value) === String(value);
+  }
+
+  function rebindControlsAfterDomChange(requiredRefs, signatures) {
     const snapshot = serializedFormSnapshot();
     const current = snapshot.controls.map((binding, index) => ({
       binding, clientRef: snapshot.clientRefs[index], signature: bindingRebindSignature(binding)
@@ -1046,31 +1099,63 @@
       materialBindings.push({client_ref: item.client_ref, purpose: item.purpose, sha256: item.sha256});
     }
     if (materialBindings.length) {
-      const rebound = rebindControlsAfterUpload(rebindRefs, rebindSignatures);
+      const rebound = rebindControlsAfterDomChange(rebindRefs, rebindSignatures);
       if (rebound.status !== "REBOUND") return blockedApply(rebound.code, rebound.client_ref);
     }
-    for (const clientRef of finalSubmitRefs) {
-      domOperationStage = "FINAL_CONTROLS";
-      const element = controlMap.get(clientRef);
-      if (!element || !element.isConnected) {
-        return blockedApply("COMPANION_FINAL_CONTROL_CHANGED", clientRef);
+    const remainingBindingRefs = (fieldIndex) => [...new Set([
+      ...(message.fields || []).slice(fieldIndex).map((item) => String(item.client_ref)),
+      ...finalSubmitRefs, ...(navigationRef ? [navigationRef] : [])
+    ])];
+    const ensureBindings = (refs) => {
+      if (refs.every((clientRef) => bindingIsConnected(controlMap.get(clientRef)))) {
+        return {status: "CURRENT"};
       }
-      finalSubmitElements.add(element);
-    }
-    if (navigationRef) {
-      navigationElement = controlMap.get(navigationRef) || null;
-      if (!navigationElement || !navigationElement.isConnected || finalSubmitElements.has(navigationElement)) {
-        return blockedApply("COMPANION_NAVIGATION_CONTROL_CHANGED");
+      return rebindControlsAfterDomChange(refs, rebindSignatures);
+    };
+    const refreshProtectedControls = () => {
+      finalSubmitElements.clear();
+      for (const clientRef of finalSubmitRefs) {
+        domOperationStage = "FINAL_CONTROLS";
+        const binding = controlMap.get(clientRef);
+        const element = primaryBindingElement(binding);
+        if (!bindingIsConnected(binding) || !element) {
+          return {status: "BLOCKED", code: "COMPANION_FINAL_CONTROL_CHANGED", client_ref: clientRef};
+        }
+        finalSubmitElements.add(element);
       }
+      navigationElement = null;
+      if (navigationRef) {
+        const binding = controlMap.get(navigationRef);
+        navigationElement = primaryBindingElement(binding);
+        if (!bindingIsConnected(binding) || !navigationElement || finalSubmitElements.has(navigationElement)) {
+          return {status: "BLOCKED", code: "COMPANION_NAVIGATION_CONTROL_CHANGED", client_ref: navigationRef};
+        }
+      }
+      return {status: "CURRENT"};
+    };
+    const initialProtectedControls = refreshProtectedControls();
+    if (initialProtectedControls.status !== "CURRENT") {
+      return blockedApply(initialProtectedControls.code, initialProtectedControls.client_ref);
     }
-    for (const item of message.fields || []) {
+    const fields = message.fields || [];
+    for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex += 1) {
+      const item = fields[fieldIndex];
+      const requiredRefs = remainingBindingRefs(fieldIndex);
+      const current = ensureBindings(requiredRefs);
+      if (!["CURRENT", "REBOUND"].includes(current.status)) {
+        return blockedApply(current.code, current.client_ref);
+      }
+      if (current.status === "REBOUND") {
+        const protectedControls = refreshProtectedControls();
+        if (protectedControls.status !== "CURRENT") {
+          return blockedApply(protectedControls.code, protectedControls.client_ref);
+        }
+      }
       domOperationStage = "FIELD_BINDING";
       const binding = controlMap.get(item.client_ref);
-      const element = binding?.jobflowChoiceGroup
-        ? binding.elements[0]
-        : (binding?.jobflowCustomSelect || binding?.jobflowAriaCombobox) ? binding.element : binding;
+      const element = primaryBindingElement(binding);
       domOperationStage = "FIELD_ELEMENT_SELECTED";
-      if (!element || !element.isConnected || element.disabled || (!binding?.jobflowChoiceGroup && !visible(element))) {
+      if (!element || !bindingIsConnected(binding) || element.disabled || (!binding?.jobflowChoiceGroup && !visible(element))) {
         return blockedApply("COMPANION_CONTROL_CHANGED", item.client_ref);
       }
       domOperationStage = "FIELD_ELEMENT_VALIDATED";
@@ -1088,10 +1173,18 @@
         else setTextValue(element, String(item.value));
       }
       catch (error) { return blockedApply(fieldApplyFailureCode(error), item.client_ref); }
-      if (
-        !binding?.jobflowChoiceGroup && !binding?.jobflowCustomSelect && !binding?.jobflowAriaCombobox &&
-        String(element.value) !== String(item.value) && !(element instanceof HTMLSelectElement)
-      ) {
+      await waitForDomQuiet({quietMilliseconds: 300, maximumMilliseconds: 1800});
+      const afterApply = ensureBindings(requiredRefs);
+      if (!["CURRENT", "REBOUND"].includes(afterApply.status)) {
+        return blockedApply(afterApply.code, afterApply.client_ref);
+      }
+      if (afterApply.status === "REBOUND") {
+        const protectedControls = refreshProtectedControls();
+        if (protectedControls.status !== "CURRENT") {
+          return blockedApply(protectedControls.code, protectedControls.client_ref);
+        }
+      }
+      if (!bindingRetainsValue(controlMap.get(item.client_ref), String(item.value))) {
         return blockedApply("COMPANION_FIELD_VERIFY_FAILED", item.client_ref);
       }
       fieldBindings.push({client_ref: item.client_ref, value_sha256: item.value_sha256});

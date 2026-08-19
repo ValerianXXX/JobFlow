@@ -23,7 +23,7 @@ The current machine-readable status is available through `jobflow product-capabi
 ## Next priorities and separately authorized work
 
 - [ ] Broader live compatibility evidence for provider-specific Greenhouse, Lever, Workday, Ashby, SmartRecruiters, and custom company forms.
-- [ ] More resilient modern-component field binding and actionable per-field failure diagnostics.
+- [x] Modern-component binding for native controls, choice groups, LWC/custom selects, input or button ARIA comboboxes, open/closed Shadow DOM, and exact-signature rebinding after verified page redraws, with redacted per-field failure diagnostics.
 - [x] User-downloaded, schema-validated support diagnostics with no private values or automatic transmission.
 - [x] Reduced duplicate applicant confirmation through canonical Candidate Profile mapping from resume import through encrypted application reuse.
 - [ ] Unattended scheduling remains disabled; any future background design requires separate authorization, operating-system lifecycle controls, and a verified kill switch.

@@ -27,12 +27,14 @@ The fixed-ID extension is distributed through Chrome Web Store and Microsoft Edg
 For one approved application, the companion can:
 
 - inspect sanitized structure on a bound company or supported ATS origin;
-- fill approved fields;
+- fill approved native fields, choice groups, validated custom selects, and ARIA comboboxes across browser-visible component roots;
+- recover from a component redraw only when every remaining field and protected control can be uniquely rebound to its original structural signature;
 - attach approved materials;
 - activate one verified, explicitly non-final navigation control;
 - observe the result after a trusted user Submit click.
 
 It cannot submit, read credentials, bypass verification, create accounts, send messages, or retry unknown external state.
+If a field, component, or protected control disappears or becomes ambiguous, the companion stops and reports a redacted field type and page position; it does not guess or replay the write.
 
 ## Trust boundaries
 
