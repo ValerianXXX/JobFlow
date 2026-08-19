@@ -165,12 +165,17 @@ function Write-BytesAtomic([string]$Path, [byte[]]$Bytes) {
         [IO.Directory]::CreateDirectory((ConvertTo-ExtendedFileSystemPath $parent)) | Out-Null
     }
     $temporary = Join-Path $parent (([IO.Path]::GetFileName($absolute)) + "." + [Guid]::NewGuid().ToString("N") + ".tmp")
+    $backup = Join-Path $parent (([IO.Path]::GetFileName($absolute)) + "." + [Guid]::NewGuid().ToString("N") + ".bak")
     $ioTemporary = ConvertTo-ExtendedFileSystemPath $temporary
     $ioAbsolute = ConvertTo-ExtendedFileSystemPath $absolute
+    $ioBackup = ConvertTo-ExtendedFileSystemPath $backup
     try {
         [IO.File]::WriteAllBytes($ioTemporary, $Bytes)
         if ([IO.File]::Exists($ioAbsolute)) {
-            [IO.File]::Replace($ioTemporary, $ioAbsolute, $null)
+            # Windows PowerShell binds a null backup path as an empty string on
+            # some .NET runtimes.  A same-directory backup keeps replacement
+            # atomic and also works with extended-length paths.
+            [IO.File]::Replace($ioTemporary, $ioAbsolute, $ioBackup, $true)
         }
         else {
             [IO.File]::Move($ioTemporary, $ioAbsolute)
@@ -178,6 +183,7 @@ function Write-BytesAtomic([string]$Path, [byte[]]$Bytes) {
     }
     finally {
         if ([IO.File]::Exists($ioTemporary)) { [IO.File]::Delete($ioTemporary) }
+        if ([IO.File]::Exists($ioBackup)) { [IO.File]::Delete($ioBackup) }
     }
 }
 

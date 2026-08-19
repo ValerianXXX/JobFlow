@@ -127,6 +127,9 @@ class SignedUpdateTests(unittest.TestCase):
         manifest_path = root / "JobFlow-update-manifest.json"
         signature_path = root / "JobFlow-update-manifest.sig.json"
         manifest_path.write_bytes(canonical_json(manifest))
+        # Release builds overwrite the stable signature asset from the prior
+        # version.  Exercise that path instead of only signing a new file.
+        signature_path.write_text('{"stale":true}', encoding="utf-8")
         completed = subprocess.run(
             [
                 str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
