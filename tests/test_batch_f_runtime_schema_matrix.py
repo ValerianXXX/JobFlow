@@ -106,14 +106,14 @@ def valid_fixtures() -> dict[str, dict]:
     return {
         "product-capability-report": product_capability_report(),
         "support-diagnostics": {
-            "schema_version": 1,
+            "schema_version": 2,
             "status": "JOBFLOW_SUPPORT_DIAGNOSTICS_READY",
             "generated_at": T,
             "support_url": "https://valerianxxx.github.io/JobFlow/support.html",
             "build": {
                 "product": "JobFlow",
                 "version": "0.4.1",
-                "ui_protocol": 34,
+                "ui_protocol": 35,
                 "database_schema": 13,
                 "companion_protocol": 2,
                 "expected_companion_version": "0.9.1",
@@ -148,6 +148,25 @@ def valid_fixtures() -> dict[str, dict]:
                 "private_values_emitted": 0,
             },
             "current_error_code": None,
+            "incidents": {
+                "status": "SUPPORT_INCIDENT_CAPTURE_DISABLED",
+                "enabled": False,
+                "record_count": 0,
+                "recent": [],
+                "automatic_transmission": False,
+                "private_values_read": 0,
+                "private_values_emitted": 0,
+            },
+        },
+        "support-incident-state": {
+            "schema_version": 1,
+            "status": "SUPPORT_INCIDENT_CAPTURE_DISABLED",
+            "enabled": False,
+            "updated_at": T,
+            "records": [],
+            "automatic_transmission": False,
+            "private_values_read": 0,
+            "private_values_emitted": 0,
         },
         "user-present-intake-control": {
             "schema_version": 1,

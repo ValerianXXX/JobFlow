@@ -27,10 +27,11 @@
       <li>Confirm that JobFlow is running and its local health check passes.</li>
       <li>Confirm that Browser Companion is enabled and updated to the version requested by JobFlow.</li>
       <li>Retry only from JobFlow. Do not retry a submission whose result is unknown.</li>
-      <li>In the local JobFlow UI, open <strong>Advanced diagnostics</strong> and download the redacted diagnostic JSON.</li>
+      <li>In the local JobFlow UI, find <strong>Privacy-safe incident history and support</strong> and download the redacted diagnostic JSON.</li>
       <li>Review the file, then attach it with the browser name, expected behavior, actual behavior, and the step that stopped.</li>
     </ol>
-    <p>The diagnostic file contains only versions, safe runtime states, aggregate counts, safety boundaries, and an optional redacted error code. JobFlow does not read private applicant values to build it and never sends it automatically.</p>
+    <p>The diagnostic file contains only versions, safe runtime states, aggregate counts, safety boundaries, and validated fixed error codes. JobFlow does not read private applicant values to build it and never sends it automatically.</p>
+    <p>Optional local incident history is off by default. If the user turns it on, JobFlow keeps at most 32 fixed error codes with version and time metadata. It never stores error messages, stack traces, URLs, local paths, applicant data, documents, credentials, or tokens. The history can be viewed in a downloaded diagnostic file or cleared at any time.</p>
     <h2>Safety boundaries</h2>
     <p>Browser Companion does not automate login, account creation, passwords, CAPTCHA, MFA, OTP, signatures, protected voluntary disclosures, or Final Submit. Unknown or changed pages stop safely.</p>
     <h2>Documentation</h2>

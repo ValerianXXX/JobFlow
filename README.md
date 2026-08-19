@@ -63,7 +63,7 @@ An AI connection is accepted only after a structured capability test. Agent requ
 | User-present company, Greenhouse, Lever, Workday, Ashby, and SmartRecruiters assistance | Bound routes only; live compatibility varies |
 | Approved field fill and material attachment | Available per approved application |
 | User-present local queue cadence, pause, and manual run | Available; every run requires a user click |
-| Redacted local support diagnostics | Available; manual download only |
+| Redacted diagnostics and optional local fixed-code incident history | Available; manual download only, no automatic transmission |
 | Final submission or unattended operation | Not implemented |
 
 Synthetic and saved-page tests are engineering evidence, not proof that every live ATS page is compatible.
@@ -90,7 +90,7 @@ The project is intentionally Windows-first because secure applicant storage uses
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 
-When reporting a problem, use **Advanced diagnostics → Download diagnostics** in the local UI. The JSON contains only versions, states, counts, safety boundaries, and a redacted error code. It does not include resume text, answers, Claim text, local paths, credentials, tokens, or secure references, and JobFlow never transmits it automatically.
+When reporting a problem, use **Privacy-safe incident history and support → Download diagnostics** in the local UI. The JSON contains only versions, states, counts, safety boundaries, and validated fixed error codes. Optional incident capture is off by default and keeps at most 32 local records when explicitly enabled. It does not include resume text, answers, Claim text, error messages, stack traces, URLs, local paths, credentials, tokens, or secure references, and JobFlow never transmits it automatically.
 
 ## License
 

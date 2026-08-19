@@ -225,6 +225,8 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .support-diagnostics { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px 24px; align-items: center; margin: 16px; padding: 18px; border: 1px solid #b9d0c8; background: #fff; }
 .support-diagnostics h3,.support-diagnostics p { margin: 0; }
 .support-diagnostics p { margin-top: 5px; color: var(--muted); font-size: 12px; }
+.support-opt-in { display: flex; align-items: flex-start; gap: 9px; margin-top: 12px; color: var(--ink); font-size: 11px; font-weight: 700; }
+.support-opt-in input { flex: 0 0 auto; margin-top: 1px; }
 .support-diagnostics-actions { display: flex; flex-wrap: wrap; gap: 9px; }
 .support-diagnostics > small { grid-column: 1 / -1; color: var(--green); }
 .desktop-update { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px 24px; align-items: center; margin: 16px; padding: 18px; border: 1px solid #b9d0c8; background: #fff; }

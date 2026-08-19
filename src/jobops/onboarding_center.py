@@ -98,6 +98,7 @@ from .runtime_schema import validate_named
 from .runtime_paths import runtime_path
 from .security import assert_no_plaintext_secret
 from .source_quality import document_quality_rank, document_text_preflight, safe_ai_failure_category
+from .support_incidents import SupportIncidentStore
 from .sourcing import (
     _canonical_url,
     _host,
@@ -746,6 +747,16 @@ class OnboardingCenterService:
         )
         self.ai_engine = self.ai_connections.current_engine
         self.schemas = self.project / "schemas"
+        self.support_incidents = SupportIncidentStore(
+            runtime_path(
+                self.project,
+                "state",
+                "support-incidents.json",
+                operation="write",
+            ),
+            self.schemas,
+            ui_protocol=UI_PROTOCOL_VERSION,
+        )
         self.intake_control = UserPresentIntakeControl(self.database, self.schemas)
         self.browser_assist = BrowserAssistManager(
             self.project,
@@ -1689,7 +1700,7 @@ class OnboardingCenterService:
         claims = index.get("claims") if isinstance(index.get("claims"), dict) else {}
         conflicts = index.get("conflicts") if isinstance(index.get("conflicts"), dict) else {}
         report = {
-            "schema_version": 1,
+            "schema_version": 2,
             "status": "JOBFLOW_SUPPORT_DIAGNOSTICS_READY",
             "generated_at": iso_utc(),
             "support_url": SUPPORT_URL,
@@ -1734,9 +1745,22 @@ class OnboardingCenterService:
                 "private_values_emitted": 0,
             },
             "current_error_code": error_code,
+            "incidents": self.support_incidents.diagnostic_summary(),
         }
         validate_named("support-diagnostics", report, self.schemas)
         return report
+
+    @_synchronized
+    def configure_support_incidents(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return self.support_incidents.configure(payload)
+
+    @_synchronized
+    def record_support_incident(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return self.support_incidents.record(payload)
+
+    @_synchronized
+    def clear_support_incidents(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return self.support_incidents.clear(payload)
 
     @_synchronized
     def disable_external_actions(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -3317,6 +3341,7 @@ class OnboardingCenterService:
                 "ui_protocol": UI_PROTOCOL_VERSION,
             },
             "desktop_update": update_availability(self.project),
+            "support_incidents": self.support_incidents.public_state(),
             "dashboard": dashboard,
             "browser_assist": self.browser_assist.public_status(),
             "guided_intake": self._guided_public_status(),

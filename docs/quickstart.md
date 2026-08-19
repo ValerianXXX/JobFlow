@@ -84,7 +84,7 @@ The health check is offline and does not print private values or the project pat
 
 ### Create a safe support report
 
-Open **Advanced diagnostics** in JobFlow and select **Download diagnostics**. Review the downloaded JSON before attaching it to a support request. It contains versions, safe runtime states, aggregate counts, safety boundaries, and an optional redacted error code. It does not read or include resume text, applicant answers, Claim text, local file paths, credentials, tokens, or secure references. JobFlow does not upload the file for you.
+Open **Privacy-safe incident history and support** in JobFlow and select **Download diagnostics**. Review the downloaded JSON before attaching it to a support request. It contains versions, safe runtime states, aggregate counts, safety boundaries, and validated fixed error codes. It does not read or include resume text, applicant answers, Claim text, error messages, stack traces, URLs, local file paths, credentials, tokens, or secure references. Optional local incident capture is off by default, retains at most 32 fixed-code records when explicitly enabled, and can be cleared at any time. JobFlow never uploads the file or incident history for you.
 
 ### Windows and WSL
 

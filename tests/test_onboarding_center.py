@@ -319,7 +319,7 @@ class OnboardingCenterTests(unittest.TestCase):
         for name in (
             "candidate-profile", "onboarding-answer-bank", "onboarding-completion", "official-discovery",
             "external-claim-set", "application-readiness", "resume-tailoring-manifest",
-            "user-present-intake-control", "support-diagnostics",
+            "user-present-intake-control", "support-diagnostics", "support-incident-state",
         ):
             shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
         (project / "config").mkdir()
@@ -490,15 +490,26 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v38-signed-update", html)
+        self.assertIn("jobflow-v39-support-loop", html)
         self.assertIn('class="skip-link"', html)
         self.assertIn('id="mainContent" tabindex="-1"', html)
         self.assertIn('id="downloadSupportDiagnostics"', html)
         self.assertIn('id="supportDiagnosticsStatus"', html)
+        self.assertIn('id="supportIncidentOptIn"', html)
+        self.assertIn('id="clearSupportIncidents"', html)
+        self.assertLess(html.index('id="supportDiagnosticsTitle"'), html.index('id="advancedTools"'))
         self.assertIn('id="aiConnectionTitle" tabindex="-1"', html)
         self.assertIn('setAttribute("role",error?"alert":"status")', script)
         self.assertIn('setAttribute("aria-live",error?"assertive":"polite")', script)
         self.assertIn('api("support-diagnostics"', script)
+        self.assertIn('api("support-incident-settings"', script)
+        self.assertIn('api("support-incident-clear"', script)
+        self.assertIn('base+"api/support-incident"', script)
+        self.assertIn('Object.prototype.hasOwnProperty.call(LOCAL_ERROR_KEYS,candidateCode)', script)
+        self.assertIn('window.addEventListener("error",()=>{recordFixedSupportIncident("UI_RUNTIME_EXCEPTION","WINDOW_ERROR");});', script)
+        self.assertIn('window.addEventListener("unhandledrejection",()=>{recordFixedSupportIncident("UI_UNHANDLED_REJECTION","UNHANDLED_REJECTION");});', script)
+        self.assertNotIn("event.message", script)
+        self.assertNotIn("event.reason", script)
         self.assertIn('id="launchDesktopUpdate"', html)
         self.assertIn('id="desktopUpdateStatus"', html)
         self.assertLess(html.index('id="launchDesktopUpdate"'), html.index('id="advancedTools"'))
@@ -2025,6 +2036,42 @@ class OnboardingCenterTests(unittest.TestCase):
                 self.assertEqual(diagnostic_payload["current_error_code"], "BROWSER_FORM_CHANGED")
                 self.assertEqual(diagnostic_payload["safety"]["private_values_read"], 0)
                 self.assertEqual(diagnostic_payload["safety"]["private_values_emitted"], 0)
+                settings_body = json.dumps({"enabled": True, "user_confirmed": True}).encode("utf-8")
+                connection.request(
+                    "POST", session_path + "api/support-incident-settings",
+                    body=settings_body,
+                    headers={**headers, "Content-Length": str(len(settings_body))},
+                )
+                settings_response = connection.getresponse()
+                settings_payload = json.loads(settings_response.read())
+                self.assertEqual(settings_response.status, 200)
+                self.assertTrue(settings_payload["enabled"])
+                incident_body = json.dumps({
+                    "code": "BROWSER_FORM_CHANGED",
+                    "source": "UI_API_ERROR",
+                    "ui_protocol": UI_PROTOCOL_VERSION,
+                    "observed_companion_version": "0.9.1",
+                }).encode("utf-8")
+                connection.request(
+                    "POST", session_path + "api/support-incident",
+                    body=incident_body,
+                    headers={**headers, "Content-Length": str(len(incident_body))},
+                )
+                incident_response = connection.getresponse()
+                incident_payload = json.loads(incident_response.read())
+                self.assertEqual(incident_response.status, 200)
+                self.assertTrue(incident_payload["recorded"])
+                clear_body = json.dumps({"user_confirmed": True}).encode("utf-8")
+                connection.request(
+                    "POST", session_path + "api/support-incident-clear",
+                    body=clear_body,
+                    headers={**headers, "Content-Length": str(len(clear_body))},
+                )
+                clear_response = connection.getresponse()
+                clear_payload = json.loads(clear_response.read())
+                self.assertEqual(clear_response.status, 200)
+                self.assertEqual(clear_payload["record_count"], 0)
+                self.assertTrue(clear_payload["enabled"])
                 connection.close()
             finally:
                 server.shutdown()
@@ -2487,7 +2534,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v38-signed-update", html)
+        self.assertIn("jobflow-v39-support-loop", html)
 
     def test_support_diagnostics_never_reads_or_emits_private_values(self) -> None:
         with project_temp() as root:
@@ -2515,6 +2562,10 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(report["safety"]["private_values_read"], 0)
             self.assertEqual(report["safety"]["private_values_emitted"], 0)
             self.assertEqual(report["build"]["observed_companion_version"], "0.9.1")
+            self.assertEqual(report["schema_version"], 2)
+            self.assertFalse(report["incidents"]["enabled"])
+            self.assertEqual(report["incidents"]["record_count"], 0)
+            self.assertFalse(report["incidents"]["automatic_transmission"])
             for marker in private_markers:
                 self.assertNotIn(marker, serialized)
 

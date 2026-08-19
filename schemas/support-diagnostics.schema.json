@@ -4,9 +4,9 @@
   "title": "Redacted JobFlow Support Diagnostics",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "status", "generated_at", "support_url", "build", "runtime", "counts", "safety", "current_error_code"],
+  "required": ["schema_version", "status", "generated_at", "support_url", "build", "runtime", "counts", "safety", "current_error_code", "incidents"],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "status": {"const": "JOBFLOW_SUPPORT_DIAGNOSTICS_READY"},
     "generated_at": {"type": "string", "format": "date-time"},
     "support_url": {"const": "https://valerianxxx.github.io/JobFlow/support.html"},
@@ -67,6 +67,37 @@
         "private_values_emitted": {"const": 0}
       }
     },
-    "current_error_code": {"type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9_]{0,79}$"}
+    "current_error_code": {"type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9_]{0,79}$"},
+    "incidents": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "enabled", "record_count", "recent", "automatic_transmission", "private_values_read", "private_values_emitted"],
+      "properties": {
+        "status": {"enum": ["SUPPORT_INCIDENT_CAPTURE_DISABLED", "SUPPORT_INCIDENT_CAPTURE_ENABLED", "SUPPORT_INCIDENT_STATE_REPAIR_REQUIRED"]},
+        "enabled": {"type": "boolean"},
+        "record_count": {"type": "integer", "minimum": 0, "maximum": 32},
+        "recent": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["sequence", "code", "source", "occurred_at", "ui_protocol", "observed_companion_version", "occurrences"],
+            "properties": {
+              "sequence": {"type": "integer", "minimum": 1},
+              "code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,79}$"},
+              "source": {"enum": ["UI_API_ERROR", "WINDOW_ERROR", "UNHANDLED_REJECTION", "COMPANION_EVENT"]},
+              "occurred_at": {"type": "string", "format": "date-time"},
+              "ui_protocol": {"type": "integer", "minimum": 1},
+              "observed_companion_version": {"type": ["string", "null"], "pattern": "^\\d{1,4}(?:\\.\\d{1,4}){1,3}$"},
+              "occurrences": {"type": "integer", "minimum": 1, "maximum": 9999}
+            }
+          }
+        },
+        "automatic_transmission": {"const": false},
+        "private_values_read": {"const": 0},
+        "private_values_emitted": {"const": 0}
+      }
+    }
   }
 }

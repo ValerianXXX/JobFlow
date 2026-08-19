@@ -312,8 +312,17 @@ Object.assign(STRINGS.en,{
 
 Object.assign(STRINGS.zh,{
   skipToMain:"跳到主要内容",
-  supportDiagnosticsTitle:"下载脱敏诊断文件",
-  supportDiagnosticsBody:"仅包含版本、状态、计数和安全边界；不包含简历、答案、Claim 正文、文件路径、凭据、令牌或 secure-ref。",
+  supportDiagnosticsTitle:"隐私安全的错误记录与支持",
+  supportDiagnosticsBody:"默认关闭。开启后只在本机保留固定错误代码、版本和时间；不记录错误正文、堆栈、网址、路径或任何求职资料，也绝不会自动上传。",
+  supportIncidentOptIn:"允许在本机保存最多 32 条脱敏错误代码",
+  supportIncidentDisabled:"本机错误记录已关闭，不会新增或发送记录；此前的 {count} 条记录会保留到你主动清除。",
+  supportIncidentEnabled:"本机错误记录已开启，当前保存 {count} 条；自动上传始终关闭。",
+  supportIncidentRepair:"本机错误记录文件无效，记录已安全关闭；切换开关可创建新的空记录。",
+  supportIncidentSettingSaved:"本机错误记录设置已保存。",
+  supportIncidentSettingFailed:"无法保存错误记录设置；当前设置未被扩大。",
+  clearSupportIncidents:"清除本机记录",
+  clearSupportIncidentsConfirm:"清除全部本机脱敏错误记录吗？此操作不会删除简历、Profile、Answer Bank 或申请资料。",
+  supportIncidentsCleared:"本机脱敏错误记录已清除。",
   downloadSupportDiagnostics:"下载诊断文件",
   openSupportPage:"打开支持页面",
   buildingSupportDiagnostics:"正在生成脱敏诊断文件…",
@@ -322,8 +331,17 @@ Object.assign(STRINGS.zh,{
 });
 Object.assign(STRINGS.en,{
   skipToMain:"Skip to main content",
-  supportDiagnosticsTitle:"Download redacted diagnostics",
-  supportDiagnosticsBody:"Includes only versions, states, counts, and safety boundaries. It excludes resumes, answers, claim text, file paths, credentials, tokens, and secure refs.",
+  supportDiagnosticsTitle:"Privacy-safe incident history and support",
+  supportDiagnosticsBody:"Off by default. When enabled, JobFlow keeps only fixed error codes, versions, and times on this device. It never records messages, stacks, URLs, paths, or job data, and never uploads automatically.",
+  supportIncidentOptIn:"Keep up to 32 redacted error codes on this device",
+  supportIncidentDisabled:"Local incident capture is off, so no new record is saved or sent. {count} prior record(s) remain until you clear them.",
+  supportIncidentEnabled:"Local incident history is on with {count} saved record(s); automatic upload is always off.",
+  supportIncidentRepair:"The local incident file is invalid, so capture is safely off. Toggle the setting to create a new empty history.",
+  supportIncidentSettingSaved:"The local incident setting was saved.",
+  supportIncidentSettingFailed:"The incident setting could not be saved; its scope was not expanded.",
+  clearSupportIncidents:"Clear local history",
+  clearSupportIncidentsConfirm:"Clear all local redacted incident records? This does not delete resumes, Profile, Answer Bank, or application materials.",
+  supportIncidentsCleared:"The local redacted incident history was cleared.",
   downloadSupportDiagnostics:"Download diagnostics",
   openSupportPage:"Open support page",
   buildingSupportDiagnostics:"Building redacted diagnostics…",
@@ -360,7 +378,7 @@ Object.assign(STRINGS.en,{
   desktopUpdateFailed:"The signed update window could not be opened; the current version was not changed."
 });
 
-const UI_PROTOCOL_VERSION = 34;
+const UI_PROTOCOL_VERSION = 35;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",
@@ -786,8 +804,37 @@ function handleUiError(error) {
   const message=localizedErrorMessage(error);
   showToast(message,true,9000);
   if(BLOCKING_CODES.has(error?.code)){state.lastBlockingError=error;showBlockingNotice(message);focusBlockingError(error);}
+  recordFixedSupportIncident(error?.code,"UI_API_ERROR");
   return message;
 }
+
+async function recordFixedSupportIncident(rawCode,source) {
+  try{
+    if(!state.serviceCompatible||state.data?.support_incidents?.enabled!==true)return;
+    const candidateCode=String(rawCode||"");
+    const localRuntimeCodes=new Set(["UI_RUNTIME_EXCEPTION","UI_UNHANDLED_REJECTION","UI_UNCLASSIFIED_ERROR"]);
+    const code=(Object.prototype.hasOwnProperty.call(LOCAL_ERROR_KEYS,candidateCode)||localRuntimeCodes.has(candidateCode))?candidateCode:"UI_UNCLASSIFIED_ERROR";
+    const allowedSources=new Set(["UI_API_ERROR","WINDOW_ERROR","UNHANDLED_REJECTION","COMPANION_EVENT"]);
+    if(!allowedSources.has(source))return;
+    const candidate=state.companionAvailability?.extension_version;
+    const observed=/^\d{1,4}(?:\.\d{1,4}){1,3}$/.test(String(candidate||""))?String(candidate):null;
+    const response=await fetch(base+"api/support-incident",{
+      method:"POST",cache:"no-store",credentials:"same-origin",
+      headers:{"X-JobOps-Session":sessionToken,"Content-Type":"application/json"},
+      body:JSON.stringify({code,source,ui_protocol:UI_PROTOCOL_VERSION,observed_companion_version:observed})
+    });
+    if(!response.ok)return;
+    const result=await response.json();
+    if(result?.recorded===true&&state.data?.support_incidents){
+      state.data.support_incidents.record_count=Number(result.record_count||0);
+      state.data.support_incidents.last_error_code=code;
+      renderSupportIncidents();
+    }
+  }catch(_ignored){/* Incident capture must never create another incident or interrupt the user. */}
+}
+
+window.addEventListener("error",()=>{recordFixedSupportIncident("UI_RUNTIME_EXCEPTION","WINDOW_ERROR");});
+window.addEventListener("unhandledrejection",()=>{recordFixedSupportIncident("UI_UNHANDLED_REJECTION","UNHANDLED_REJECTION");});
 
 function formatBytes(value) {
   const bytes=Math.max(0,Number(value)||0), units=["B","KB","MB","GB"];
@@ -2119,6 +2166,16 @@ function renderDesktopUpdate(){
   status.textContent=t(taskActive?"desktopUpdateTaskActive":available?"desktopUpdateReady":"desktopUpdateInstallRequiredBody");
 }
 
+function renderSupportIncidents(){
+  const checkbox=document.querySelector("#supportIncidentOptIn"), clear=document.querySelector("#clearSupportIncidents"), status=document.querySelector("#supportDiagnosticsStatus");
+  if(!checkbox||!clear||!status)return;
+  const support=state.data?.support_incidents||{}, repair=support.status==="SUPPORT_INCIDENT_STATE_REPAIR_REQUIRED";
+  checkbox.checked=support.enabled===true;
+  clear.disabled=Number(support.record_count||0)===0&&!repair;
+  const count=String(Number(support.record_count||0));
+  status.textContent=repair?t("supportIncidentRepair"):(support.enabled===true?t("supportIncidentEnabled").replace("{count}",count):t("supportIncidentDisabled").replace("{count}",count));
+}
+
 function renderStateMode(){
   const readonly=isReadonly(), banner=document.querySelector("#stateBanner");
   const aiReady=isAiReady(state.data?.ai_engine);
@@ -2152,6 +2209,7 @@ function renderStateMode(){
   document.querySelector("#mergeClaims").disabled=readonly;
   document.querySelector("#statusText").textContent=readonly?`${t("readonly")} · v${state.data.revision_number}`:`v${state.data.revision_number} · ${t("draftSaved")}`;
   renderDesktopUpdate();
+  renderSupportIncidents();
   renderApplicationReadiness();
 }
 
@@ -2430,6 +2488,15 @@ document.addEventListener("click", async event => {
   }
   const dashboardRefresh=event.target.closest("#refreshDashboard");
   if(dashboardRefresh){try{await withActivity("refreshingDashboard",()=>refreshLatest());showToast(t("dashboardRefreshed"));}catch(error){handleUiError(error);}return;}
+  const clearSupport=event.target.closest("#clearSupportIncidents");
+  if(clearSupport){
+    if(!window.confirm(t("clearSupportIncidentsConfirm")))return;
+    try{
+      const result=await api("support-incident-clear",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_confirmed:true})});
+      state.data.support_incidents=result;renderSupportIncidents();showToast(t("supportIncidentsCleared"));
+    }catch(error){handleUiError(error);}
+    return;
+  }
   const supportDiagnostics=event.target.closest("#downloadSupportDiagnostics");
   if(supportDiagnostics){
     const status=document.querySelector("#supportDiagnosticsStatus");
@@ -2840,6 +2907,13 @@ function syncAiFileType(){document.querySelector("#aiFile").accept=document.quer
 document.querySelector("#aiType").addEventListener("change",syncAiFileType);
 syncAiFileType();
 document.addEventListener("change",event=>{
+  if(event.target.matches("#supportIncidentOptIn")){
+    const enabled=event.target.checked;
+    api("support-incident-settings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({enabled,user_confirmed:true})})
+      .then(result=>{state.data.support_incidents=result;renderSupportIncidents();showToast(t("supportIncidentSettingSaved"));})
+      .catch(error=>{event.target.checked=!enabled;showToast(t("supportIncidentSettingFailed"),true);handleUiError(error);});
+    return;
+  }
   if(event.target.matches("#guidedOfficialUrl,#aiOperatorCommand")){renderGuidedIntake();return;}
   if(event.target.matches("#officialCompanyDomain,#officialCareersUrl,#officialSnapshotFile")){
     clearOfficialDiscovery();

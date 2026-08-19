@@ -169,9 +169,10 @@ def product_capability_report() -> dict[str, Any]:
             ["NO_AUTOMATIC_TRANSMISSION", "USER_REVIEWS_AND_ATTACHES_FILE"],
         ),
         _item(
-            "opt_in_crash_reporter", "support", "NOT_AVAILABLE", _NOT_IMPLEMENTED,
-            "NOT_STARTED", "USER_OPT_IN_REQUIRED", "REDACT_BEFORE_EXPORT_OR_TRANSMISSION",
-            ["docs/support.html"], ["MANUAL_DIAGNOSTIC_EXPORT_ONLY", "NO_OPT_IN_CRASH_REPORTER"],
+            "opt_in_crash_reporter", "support", "AVAILABLE", _AUTOMATED,
+            "NOT_APPLICABLE", "USER_OPT_IN_REQUIRED", "LOCAL_CODE_ONLY_CAPTURE_EXPLICIT_EXPORT",
+            ["tests/test_support_incidents.py", "tests/test_onboarding_center.py", "docs/support.html"],
+            ["NO_AUTOMATIC_TRANSMISSION", "NO_MESSAGE_STACK_URL_OR_PATH_CAPTURE"],
         ),
         _item(
             "final_application_submit", "submission", "USER_ONLY", _PERMANENT_BOUNDARY,

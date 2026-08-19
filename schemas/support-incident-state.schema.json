@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/support-incident-state.schema.json",
+  "title": "Local Redacted Support Incident State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "enabled", "updated_at", "records", "automatic_transmission", "private_values_read", "private_values_emitted"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["SUPPORT_INCIDENT_CAPTURE_DISABLED", "SUPPORT_INCIDENT_CAPTURE_ENABLED"]},
+    "enabled": {"type": "boolean"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "records": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sequence", "code", "source", "occurred_at", "ui_protocol", "observed_companion_version", "occurrences"],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 1},
+          "code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,79}$"},
+          "source": {"enum": ["UI_API_ERROR", "WINDOW_ERROR", "UNHANDLED_REJECTION", "COMPANION_EVENT"]},
+          "occurred_at": {"type": "string", "format": "date-time"},
+          "ui_protocol": {"type": "integer", "minimum": 1},
+          "observed_companion_version": {"type": ["string", "null"], "pattern": "^\\d{1,4}(?:\\.\\d{1,4}){1,3}$"},
+          "occurrences": {"type": "integer", "minimum": 1, "maximum": 9999}
+        }
+      }
+    },
+    "automatic_transmission": {"const": false},
+    "private_values_read": {"const": 0},
+    "private_values_emitted": {"const": 0}
+  }
+}

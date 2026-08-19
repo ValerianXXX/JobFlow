@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260819-jobflow-v38-signed-update">
+  <link rel="stylesheet" href="styles.css?v=20260819-jobflow-v39-support-loop">
 </head>
 <body>
   <a class="skip-link" href="#mainContent" data-i18n="skipToMain">跳到主要内容</a>
@@ -208,19 +208,21 @@
         </div>
         <small id="desktopUpdateStatus" role="status" aria-live="polite"></small>
       </section>
-      <details id="advancedTools" class="advanced-tools">
-        <summary><span><strong data-i18n="advancedToolsTitle">高级诊断与离线 QA</strong><small data-i18n="advancedToolsBody">普通使用不需要这里。仅在开发测试或浏览器导入不可用时，才手动提供本地快照。</small></span><b data-i18n="advancedToolsOpen">展开</b></summary>
       <section class="support-diagnostics" aria-labelledby="supportDiagnosticsTitle">
         <div>
-          <h3 id="supportDiagnosticsTitle" data-i18n="supportDiagnosticsTitle">下载脱敏诊断文件</h3>
-          <p data-i18n="supportDiagnosticsBody">仅包含版本、状态、计数和安全边界；不包含简历、答案、Claim 正文、文件路径、凭据、令牌或 secure-ref。</p>
+          <h3 id="supportDiagnosticsTitle" data-i18n="supportDiagnosticsTitle">隐私安全的错误记录与支持</h3>
+          <p data-i18n="supportDiagnosticsBody">默认关闭。开启后只在本机保留固定错误代码、版本和时间；不记录错误正文、堆栈、网址、路径或任何求职资料，也绝不会自动上传。</p>
+          <label class="support-opt-in"><input id="supportIncidentOptIn" type="checkbox"><span data-i18n="supportIncidentOptIn">允许在本机保存最多 32 条脱敏错误代码</span></label>
         </div>
         <div class="support-diagnostics-actions">
           <button id="downloadSupportDiagnostics" class="secondary" type="button" data-i18n="downloadSupportDiagnostics">下载诊断文件</button>
+          <button id="clearSupportIncidents" class="secondary" type="button" data-i18n="clearSupportIncidents">清除本机记录</button>
           <a class="button-link compact" href="https://valerianxxx.github.io/JobFlow/support.html" target="_blank" rel="noopener noreferrer" data-i18n="openSupportPage">打开支持页面</a>
         </div>
         <small id="supportDiagnosticsStatus" role="status" aria-live="polite"></small>
       </section>
+      <details id="advancedTools" class="advanced-tools">
+        <summary><span><strong data-i18n="advancedToolsTitle">高级诊断与离线 QA</strong><small data-i18n="advancedToolsBody">普通使用不需要这里。仅在开发测试或浏览器导入不可用时，才手动提供本地快照。</small></span><b data-i18n="advancedToolsOpen">展开</b></summary>
       <section class="offline-application-prep" aria-labelledby="offlineApplicationTitle">
         <div class="subheading">
           <div><h3 id="offlineApplicationTitle" data-i18n="offlineApplicationTitle">准备一个离线申请</h3><small data-i18n="offlineApplicationBody">选择你已经保存到电脑的岗位说明、公司官网岗位页和申请表。JobFlow 只在本机生成岗位材料与审阅包，不打开网站。</small></div>
@@ -494,6 +496,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260819-jobflow-v38-signed-update"></script>
+  <script src="app.js?v=20260819-jobflow-v39-support-loop"></script>
 </body>
 </html>

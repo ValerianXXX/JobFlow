@@ -38,7 +38,7 @@ DEMO_SCHEMAS = (
     "application-readiness",
     "resume-tailoring-manifest",
     "user-present-intake-control",
-    "support-diagnostics",
+    "support-diagnostics", "support-incident-state",
 )
 DEMO_APPLICATION_ID = "APP-DEFACED00001"
 DEMO_FORM_HTML = b"""<!doctype html>

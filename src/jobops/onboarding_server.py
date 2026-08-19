@@ -631,6 +631,12 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.connect_ai(self._json_body())
             elif route == "support-diagnostics":
                 result = self.server.service.support_diagnostics(self._json_body())
+            elif route == "support-incident-settings":
+                result = self.server.service.configure_support_incidents(self._json_body())
+            elif route == "support-incident":
+                result = self.server.service.record_support_incident(self._json_body())
+            elif route == "support-incident-clear":
+                result = self.server.service.clear_support_incidents(self._json_body())
             elif route == "launch-update":
                 result = self.server.service.launch_desktop_update(self._json_body())
             elif route == "accept-suggestion":

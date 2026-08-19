@@ -49,7 +49,15 @@ class ProductCapabilityReportTests(unittest.TestCase):
             by_id["redacted_support_diagnostics"]["safety_boundary"],
             "LOCAL_VALUE_FREE_EXPORT_ONLY",
         )
-        self.assertEqual(by_id["opt_in_crash_reporter"]["availability"], "NOT_AVAILABLE")
+        self.assertEqual(by_id["opt_in_crash_reporter"]["availability"], "AVAILABLE")
+        self.assertEqual(
+            by_id["opt_in_crash_reporter"]["safety_boundary"],
+            "LOCAL_CODE_ONLY_CAPTURE_EXPLICIT_EXPORT",
+        )
+        self.assertIn(
+            "NO_AUTOMATIC_TRANSMISSION",
+            by_id["opt_in_crash_reporter"]["known_limit_codes"],
+        )
         self.assertEqual(by_id["final_application_submit"]["availability"], "USER_ONLY")
 
     def test_report_hashes_and_project_local_evidence_fail_closed(self) -> None:
