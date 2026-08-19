@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "product": "JobFlow",
+  "channel": "stable",
+  "repository": "ValerianXXX/JobFlow",
+  "latest_release_api_url": "https://api.github.com/repos/ValerianXXX/JobFlow/releases/latest",
+  "manifest_asset_name": "JobFlow-update-manifest.json",
+  "signature_asset_name": "JobFlow-update-manifest.sig.json",
+  "allowed_download_hosts": [
+    "github.com",
+    "objects.githubusercontent.com",
+    "release-assets.githubusercontent.com"
+  ],
+  "signature": {
+    "algorithm": "RSA-PKCS1-v1_5-SHA256",
+    "key_id": "sha256:1037057f8578a60ac5b3dc030cb2d70ad945ec3b5fb51fa3944fcafa77146339",
+    "modulus_b64url": "4_GvTbc3dTuLSvzARhbG2Msy6mTvLnN5nINaBcSjAiEI986j44U1YxtmkAQ7ZQooPaA5s_xzJvFn5ZlYuExeaZy5L2om2LMfMljz7IOfFeEcz5wOcO8Rokd-zVK8fKFh4xAi4DkGoYxle1vpCiNdr09QeYH4o123GNCAKOfYjNW1WlHKh-9aRnlvrvt2JrsJni--JPLVmoThCeKUdH1ic1rojRR761L6U5AXRfYC46rp952HMr8xt7U_w_M0XukoJLuUtHa1UbGYZZIaU0lRstcpQiwIWtgub0K8Pnnf_l52kc02S2TlrFhGQko32pSOQPifMHiNy6Fg5n8I4F9IGl0MiHFh1fdiKCDzM_m5_bqhFUIIgMULF3BJTPYT41gqXZ_BRELH1g08Q41DAAIzpdDO2iOXvVVizPjvlqThNabz9enDt_uVoEPaTW1VfDV3rswbzfLaO0dTsbtlHxhLLe66u1XhOmnb0ELha6f9iOyijlgSNPwptc7YIpzN8G-d",
+    "exponent_b64url": "AQAB"
+  }
+}

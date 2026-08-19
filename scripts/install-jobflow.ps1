@@ -175,10 +175,12 @@ function Install-StableLaunchers {
     $required = @(
         "start-installed-jobflow.ps1",
         "check-installed-jobflow.ps1",
+        "update-installed-jobflow.ps1",
         "rollback-installed-jobflow.ps1",
         "uninstall-installed-jobflow.ps1",
         "Start JobFlow.cmd",
         "Check JobFlow.cmd",
+        "Update JobFlow.cmd",
         "Rollback JobFlow.cmd",
         "Uninstall JobFlow.cmd"
     )
@@ -207,6 +209,7 @@ function Install-StableLaunchers {
         foreach ($entry in @(
             @{ Name = "JobFlow.lnk"; Target = "Start JobFlow.cmd" },
             @{ Name = "Check JobFlow.lnk"; Target = "Check JobFlow.cmd" },
+            @{ Name = "Update JobFlow.lnk"; Target = "Update JobFlow.cmd" },
             @{ Name = "Roll Back JobFlow.lnk"; Target = "Rollback JobFlow.cmd" },
             @{ Name = "Uninstall JobFlow.lnk"; Target = "Uninstall JobFlow.cmd" }
         )) {
@@ -234,7 +237,7 @@ try {
 
     $rootFiles = @(
         ".jobops-root", "AGENTS.md", "CHANGELOG.md", "CONTRIBUTING.md", "LICENSE",
-        "Install JobFlow Browser Companion.cmd", "MANIFEST.in", "README.md", "SECURITY.md", "pyproject.toml"
+        "Install JobFlow Browser Companion.cmd", "MANIFEST.in", "README.md", "SECURITY.md", "Update JobFlow.cmd", "pyproject.toml"
     )
     $sourceDirectories = @(".agents", "browser-companion", "config", "docs", "schemas", "scripts", "src", "tests")
     $installFiles = [System.Collections.Generic.List[object]]::new()
@@ -407,7 +410,7 @@ try {
 
     Write-Host "JobFlow $version 已安装到当前用户的固定目录（Python $($python.Version)）。 / JobFlow $version is installed in the current user's fixed app directory (Python $($python.Version))."
     Write-Host "个人资料、队列和报告保存在独立数据目录；更新或回滚不会覆盖它们。 / Profile data, queues, and reports are stored separately and survive updates or rollback."
-    Write-Host "可从 Windows 开始菜单打开 JobFlow、运行自检、回滚或卸载。 / Open, check, roll back, or uninstall JobFlow from the Windows Start menu."
+    Write-Host "可从 Windows 开始菜单打开 JobFlow、检查签名更新、运行自检、回滚或卸载。 / Open, check signed updates, run diagnostics, roll back, or uninstall JobFlow from the Windows Start menu."
 
     if (-not $NoLaunch) {
         $storeConfig = Get-Content -LiteralPath (Join-Path $targetVersionRoot "config\browser-companion-stores.json") -Raw | ConvertFrom-Json

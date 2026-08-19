@@ -103,7 +103,7 @@ if (-not [string]::IsNullOrWhiteSpace($env:APPDATA)) {
 
 $targets = @(
     "Application", "BrowserCompanion", "BrowserCompanionHost", "bin",
-    "Start JobFlow.cmd", "Check JobFlow.cmd", "Rollback JobFlow.cmd", "Uninstall JobFlow.cmd",
+    "Start JobFlow.cmd", "Check JobFlow.cmd", "Update JobFlow.cmd", "Rollback JobFlow.cmd", "Uninstall JobFlow.cmd",
     "current.json", "previous.json", "browser-companion-binding.json"
 )
 if ($RemoveUserData) { $targets += @("Data", "private") }

@@ -25,7 +25,9 @@ JobFlow is a local-first, AI-centered job application workflow for Windows. It t
 4. Double-click `Start JobFlow.cmd` for normal use.
 5. If startup fails, run `Check JobFlow.cmd` and follow the first failed check.
 
-The installer copies the application into a fixed, versioned directory under the current Windows account. Candidate data, queues, reports, and encrypted private material remain in a separate data directory, so the extracted download can be removed after installation. Running a newer installer upgrades the application without replacing that data; the Start menu also provides health check, rollback, and uninstall shortcuts.
+The installer copies the application into a fixed, versioned directory under the current Windows account. Candidate data, queues, reports, and encrypted private material remain in a separate data directory, so the extracted download can be removed after installation. Running a newer installer upgrades the application without replacing that data; the Start menu also provides signed update, health check, rollback, and uninstall shortcuts.
+
+Installed builds can check the fixed stable GitHub release channel only after the user clicks **Check for updates**. JobFlow accepts an update only when its canonical manifest is signed by the pinned release key and its source archive passes the signed hash, size, layout, and public-content boundary. A failed post-update health check restores the previous version. Source checkouts do not self-update and never replace their working tree.
 
 To explore without private data, run `Start JobFlow Demo.cmd`. The demo uses fictional content, disables real AI and file intake, and removes its temporary state when closed.
 
@@ -54,7 +56,7 @@ An AI connection is accepted only after a structured capability test. Agent requ
 
 | Capability | Alpha status |
 |---|---|
-| Windows install, health check, and bilingual local UI | Available |
+| Windows install, signed update with rollback, health check, and bilingual local UI | Available |
 | Encrypted onboarding, Candidate Profile, Answer Bank, and Claim review | Available |
 | Existing Agent or loopback-model connection | Available with capability gate |
 | Visible official-company job discovery and verified Apply routing | Available with user authorization |

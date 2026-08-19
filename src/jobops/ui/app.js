@@ -331,7 +331,36 @@ Object.assign(STRINGS.en,{
   supportDiagnosticsFailed:"The diagnostic file could not be created; no private data was read or exported."
 });
 
-const UI_PROTOCOL_VERSION = 33;
+Object.assign(STRINGS.zh,{
+  desktopUpdateTitle:"检查签名更新",
+  desktopUpdateBody:"仅在你明确点击后检查固定 GitHub 发布通道；下载包必须通过签名、哈希和版本校验，切换后健康检查失败会自动回滚。",
+  checkDesktopUpdate:"检查更新",
+  desktopUpdateInstallRequired:"请先安装固定版本",
+  desktopUpdateInstallRequiredBody:"当前从源码目录运行。安装到本机固定目录后，才可使用一键签名更新。",
+  desktopUpdateReady:"固定安装已就绪。JobFlow 不会在后台检查或静默安装更新。",
+  desktopUpdateTaskActive:"请先完成或取消当前浏览器任务，再检查更新。",
+  desktopUpdateRepairRequired:"固定安装状态不可信或不完整；当前版本未被更改，请重新运行安装程序修复。",
+  desktopUpdateConfirm:"现在打开签名更新窗口吗？更新仅在该可见窗口中继续，检查失败不会更改当前版本。",
+  launchingDesktopUpdate:"正在打开签名更新窗口…",
+  desktopUpdateWindowOpened:"签名更新窗口已打开。请在该窗口查看结果；更新后重新打开 JobFlow。",
+  desktopUpdateFailed:"无法打开签名更新窗口；当前版本没有被更改。"
+});
+Object.assign(STRINGS.en,{
+  desktopUpdateTitle:"Check signed updates",
+  desktopUpdateBody:"Checks the fixed GitHub release channel only after an explicit click. Downloads must pass signature, hash, and version checks; a failed post-switch health check rolls back automatically.",
+  checkDesktopUpdate:"Check for updates",
+  desktopUpdateInstallRequired:"Install the fixed version first",
+  desktopUpdateInstallRequiredBody:"JobFlow is running from a source folder. Install it in the fixed per-user location to enable one-click signed updates.",
+  desktopUpdateReady:"The fixed installation is ready. JobFlow never checks for or installs updates silently in the background.",
+  desktopUpdateTaskActive:"Finish or cancel the current browser task before checking for updates.",
+  desktopUpdateRepairRequired:"The fixed installation is incomplete or untrusted. The current version was not changed; run the installer again to repair it.",
+  desktopUpdateConfirm:"Open the signed update window now? The update continues only in that visible window, and a failed check will not change the current version.",
+  launchingDesktopUpdate:"Opening the signed update window…",
+  desktopUpdateWindowOpened:"The signed update window is open. Review its result there, then reopen JobFlow after an update.",
+  desktopUpdateFailed:"The signed update window could not be opened; the current version was not changed."
+});
+
+const UI_PROTOCOL_VERSION = 34;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",
@@ -357,7 +386,7 @@ const ACTIVITY_ESTIMATES = {
   reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5, savingQueueDecision: 7, savingApplicationFields: 8,
   discoveringJobs: 8, approvingExternalClaims: 7, loadingTailoringManifest: 8, approvingTailoringManifest: 7,
   preparingOfflineApplication: 150, startingGuidedIntake: 10, cancellingGuidedIntake: 5, preparingGuidedApplication: 300, startingBrowserAssist: 10, resolvingSubmission: 5,
-  buildingSupportDiagnostics: 4
+  buildingSupportDiagnostics: 4, launchingDesktopUpdate: 4
 };
 const STANDARD_CHATGPT_EXPORT_BYTES = 200 * 1024 * 1024;
 const MAX_RETAINED_SOURCE_BYTES = 64 * 1024 * 1024;
@@ -625,6 +654,10 @@ const LOCAL_ERROR_KEYS = {
   COMPANION_BINDING_MISSING:"guidedBindingMissing", COMPANION_BINDING_INVALID:"guidedBindingMissing", COMPANION_BINDING_PROOF_INVALID:"guidedBindingMissing",
   BROWSER_COMPANION_BINDING_MISSING:"guidedBindingMissing", BROWSER_COMPANION_BINDING_INVALID:"guidedBindingMissing", BROWSER_COMPANION_BINDING_MISMATCH:"guidedBindingMissing", BROWSER_COMPANION_BINDING_REQUEST_INVALID:"guidedBindingMissing",
   BROWSER_COMPANION_SESSION_ACTIVE:"companionSessionActive",
+  JOBFLOW_UPDATE_INPUT_INVALID:"desktopUpdateFailed", JOBFLOW_UPDATE_INSTALL_REQUIRED:"desktopUpdateInstallRequiredBody",
+  JOBFLOW_UPDATE_INSTALL_UNTRUSTED:"desktopUpdateRepairRequired", JOBFLOW_UPDATE_POINTER_INVALID:"desktopUpdateRepairRequired",
+  JOBFLOW_UPDATE_INSTALL_INCOMPLETE:"desktopUpdateRepairRequired", JOBFLOW_UPDATE_TASK_ACTIVE:"desktopUpdateTaskActive",
+  JOBFLOW_UPDATE_PLATFORM_UNSUPPORTED:"desktopUpdateFailed", JOBFLOW_UPDATE_LAUNCH_FAILED:"desktopUpdateFailed",
   AI_OPERATOR_REQUIRED:"aiOperatorRequired", AI_OPERATOR_RESPONSE_INVALID:"localRequestFailed", AI_OPERATOR_REQUIRED_TOOL_MISSING:"localRequestFailed", AI_OPERATOR_JOB_URL_INVALID:"guidedUrlRequired",
   AI_OPERATOR_BOUNDARY_REJECTED:"localRequestFailed", AI_OPERATOR_TOOL_FORBIDDEN:"localRequestFailed",
   BROWSER_ASSIST_RESTART_REQUIRED:"browserAssistRestartRequired", COMPANION_MANUAL_NAVIGATION_RESTART_REQUIRED:"browserAssistManualRestart", COMPANION_APPLY_RESTART_REQUIRED:"browserAssistApplyRestart", BROWSER_ASSIST_SUBMISSION_UNKNOWN:"browserAssistReloadUnknown",
@@ -2076,6 +2109,16 @@ function renderReadiness() {
   document.querySelector("#readiness").innerHTML=cards.map(([l,v])=>`<div><span>${escapeHtml(l)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
 }
 
+function renderDesktopUpdate(){
+  const button=document.querySelector("#launchDesktopUpdate"), status=document.querySelector("#desktopUpdateStatus");
+  if(!button||!status)return;
+  const update=state.data?.desktop_update||{}, available=update.available===true;
+  const taskActive=Boolean(state.data?.browser_assist?.active_assist_id)||state.data?.guided_intake?.active===true;
+  button.disabled=!available||state.data?.demo_mode===true||taskActive;
+  button.textContent=t(available?"checkDesktopUpdate":"desktopUpdateInstallRequired");
+  status.textContent=t(taskActive?"desktopUpdateTaskActive":available?"desktopUpdateReady":"desktopUpdateInstallRequiredBody");
+}
+
 function renderStateMode(){
   const readonly=isReadonly(), banner=document.querySelector("#stateBanner");
   const aiReady=isAiReady(state.data?.ai_engine);
@@ -2108,6 +2151,7 @@ function renderStateMode(){
   document.querySelector("#completeOnboarding").disabled=readonly;
   document.querySelector("#mergeClaims").disabled=readonly;
   document.querySelector("#statusText").textContent=readonly?`${t("readonly")} · v${state.data.revision_number}`:`v${state.data.revision_number} · ${t("draftSaved")}`;
+  renderDesktopUpdate();
   renderApplicationReadiness();
 }
 
@@ -2401,6 +2445,19 @@ document.addEventListener("click", async event => {
       downloadJson(`JobFlow-support-diagnostics-${stamp}.json`,report);
       status.textContent=t("supportDiagnosticsReady");showToast(t("supportDiagnosticsReady"));
     }catch(error){status.textContent=t("supportDiagnosticsFailed");handleUiError(error);}
+    return;
+  }
+  const desktopUpdate=event.target.closest("#launchDesktopUpdate");
+  if(desktopUpdate){
+    const status=document.querySelector("#desktopUpdateStatus");
+    if(!window.confirm(t("desktopUpdateConfirm")))return;
+    try{
+      await withActivity("launchingDesktopUpdate",()=>api("launch-update",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({user_confirmed:true})
+      }));
+      status.textContent=t("desktopUpdateWindowOpened");showToast(t("desktopUpdateWindowOpened"),false,12000);
+    }catch(error){status.textContent=localizedErrorMessage(error);handleUiError(error);}
     return;
   }
   const configureIntake=event.target.closest("#configureIntakeControl");

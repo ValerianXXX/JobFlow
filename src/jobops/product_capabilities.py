@@ -157,9 +157,10 @@ def product_capability_report() -> dict[str, Any]:
             ["USER_PRESENT_LOCAL_WAKE_ONLY", "NO_SYSTEM_TASK_REGISTERED"],
         ),
         _item(
-            "desktop_self_update_rollback", "distribution", "NOT_AVAILABLE", _NOT_IMPLEMENTED,
-            "NOT_STARTED", "USER_INITIATED", "SIGNED_UPDATE_AND_ROLLBACK_REQUIRED",
-            [], ["MANUAL_UPGRADE_AND_ROLLBACK_ONLY", "NO_SIGNED_DESKTOP_UPDATE_CHANNEL"],
+            "desktop_self_update_rollback", "distribution", "AVAILABLE", _AUTOMATED,
+            "NOT_APPLICABLE", "USER_INITIATED", "SIGNED_UPDATE_WITH_POST_SWITCH_HEALTH_ROLLBACK",
+            ["tests/test_signed_updates.py", "tests/test_desktop_update.py", "tests/test_windows_launchers.py"],
+            ["NO_BACKGROUND_UPDATE_CHECK", "FIXED_INSTALL_REQUIRED"],
         ),
         _item(
             "redacted_support_diagnostics", "support", "AVAILABLE", _AUTOMATED,

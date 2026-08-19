@@ -84,6 +84,7 @@ class WindowsLauncherTests(unittest.TestCase):
             "start-jobflow-demo.ps1",
             "start-jobflow.ps1",
             "windows-runtime/start-installed-jobflow.ps1",
+            "windows-runtime/update-installed-jobflow.ps1",
             "windows-runtime/rollback-installed-jobflow.ps1",
             "windows-runtime/uninstall-installed-jobflow.ps1",
         )
@@ -131,6 +132,9 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn('(".i-" + $installId)', script)
         self.assertIn('(".r-" + $installId)', script)
         self.assertIn("Install-StableLaunchers", script)
+        self.assertIn('"update-installed-jobflow.ps1"', script)
+        self.assertIn('"Update JobFlow.cmd"', script)
+        self.assertIn('@{ Name = "Update JobFlow.lnk"; Target = "Update JobFlow.cmd" }', script)
         self.assertIn('"/inheritance:r" "/grant:r" $grant', script)
         self.assertIn('(Join-Path $Path "*") "/reset" "/T" "/C"', script)
         self.assertIn("JOBFLOW_INSTALL_CHILD_ACL_FAILED", script)
@@ -139,10 +143,12 @@ class WindowsLauncherTests(unittest.TestCase):
         start = (PROJECT / "Start JobFlow.cmd").read_text(encoding="utf-8")
         check = (PROJECT / "Check JobFlow.cmd").read_text(encoding="utf-8")
         rollback = (PROJECT / "Rollback JobFlow.cmd").read_text(encoding="utf-8")
+        update = (PROJECT / "Update JobFlow.cmd").read_text(encoding="utf-8")
         uninstall = (PROJECT / "Uninstall JobFlow.cmd").read_text(encoding="utf-8")
         self.assertIn(r"%LOCALAPPDATA%\JobOps\Start JobFlow.cmd", start)
         self.assertIn(r"%LOCALAPPDATA%\JobOps\Check JobFlow.cmd", check)
         self.assertIn(r"%LOCALAPPDATA%\JobOps\Rollback JobFlow.cmd", rollback)
+        self.assertIn(r"%LOCALAPPDATA%\JobOps\Update JobFlow.cmd", update)
         self.assertIn(r"%LOCALAPPDATA%\JobOps\Uninstall JobFlow.cmd", uninstall)
 
     def test_installed_runtime_has_rollback_and_data_preserving_uninstall(self) -> None:
@@ -163,6 +169,29 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn('"\\\\?\\" + $absolute', uninstall)
         self.assertIn("[IO.Directory]::Delete($extended, $true)", uninstall)
         self.assertIn("[IO.File]::SetAttributes($file, [IO.FileAttributes]::Normal)", uninstall)
+        self.assertIn('"Update JobFlow.cmd"', uninstall)
+
+    def test_signed_update_launcher_is_user_initiated_pinned_and_fail_closed(self) -> None:
+        script = (PROJECT / "scripts" / "windows-runtime" / "update-installed-jobflow.ps1").read_text(
+            encoding="utf-8-sig"
+        )
+        wrapper = (PROJECT / "scripts" / "windows-runtime" / "Update JobFlow.cmd").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("https://api.github.com/repos/ValerianXXX/JobFlow/releases/latest", script)
+        self.assertIn("sha256:1037057f8578a60ac5b3dc030cb2d70ad945ec3b5fb51fa3944fcafa77146339", script)
+        self.assertIn("jobops.update_manifest inspect", script)
+        self.assertIn("jobops.update_manifest verify", script)
+        self.assertIn("JOBFLOW_UPDATE_POST_SWITCH_HEALTH_FAILED_ROLLED_BACK", script)
+        self.assertIn("rollback-installed-jobflow.ps1", script)
+        self.assertIn("AllowAutoRedirect = $false", script)
+        self.assertIn("Assert-AllowedHttpsUri", script)
+        self.assertIn("Expand-Archive", script)
+        self.assertIn("-NoLaunch", script)
+        self.assertNotIn("Register-ScheduledTask", script)
+        self.assertNotIn("schtasks", script.casefold())
+        self.assertNotIn("Start-BitsTransfer", script)
+        self.assertIn("pause", wrapper.casefold())
 
     def test_installed_rollback_swaps_only_validated_version_pointers(self) -> None:
         temporary_root = PROJECT / "tests" / ".tmp"

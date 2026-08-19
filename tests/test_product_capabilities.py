@@ -37,7 +37,13 @@ class ProductCapabilityReportTests(unittest.TestCase):
             by_id["desktop_manual_upgrade_rollback"]["safety_boundary"],
             "HEALTH_CHECKED_VERSION_SWITCH_WITH_PERSISTENT_DATA",
         )
-        self.assertEqual(by_id["desktop_self_update_rollback"]["evidence_status"], "NOT_IMPLEMENTED")
+        self.assertEqual(by_id["desktop_self_update_rollback"]["availability"], "AVAILABLE")
+        self.assertEqual(by_id["desktop_self_update_rollback"]["evidence_status"], "AUTOMATED_REPRODUCIBLE")
+        self.assertEqual(
+            by_id["desktop_self_update_rollback"]["safety_boundary"],
+            "SIGNED_UPDATE_WITH_POST_SWITCH_HEALTH_ROLLBACK",
+        )
+        self.assertIn("NO_BACKGROUND_UPDATE_CHECK", by_id["desktop_self_update_rollback"]["known_limit_codes"])
         self.assertEqual(by_id["redacted_support_diagnostics"]["availability"], "AVAILABLE")
         self.assertEqual(
             by_id["redacted_support_diagnostics"]["safety_boundary"],

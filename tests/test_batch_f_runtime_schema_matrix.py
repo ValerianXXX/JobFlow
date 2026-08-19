@@ -113,7 +113,7 @@ def valid_fixtures() -> dict[str, dict]:
             "build": {
                 "product": "JobFlow",
                 "version": "0.4.1",
-                "ui_protocol": 33,
+                "ui_protocol": 34,
                 "database_schema": 13,
                 "companion_protocol": 2,
                 "expected_companion_version": "0.9.1",

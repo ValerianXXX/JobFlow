@@ -6,6 +6,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ### Added
 
+- Added an explicit, user-initiated stable update path for fixed Windows installations, with a pinned RSA release key, canonical signed manifests, archive hash and content-boundary verification, post-switch health checks, and automatic rollback on failure.
+- Added a local release-signing and signed-update-bundle workflow whose private key remains DPAPI-protected outside the repository and release artifacts.
 - Added a fixed, versioned per-user Windows installation with stable Start menu launch, health-check, rollback, and uninstall entries.
 - Added a marked persistent runtime data root for state, queues, reports, and application workspaces outside immutable application versions.
 - Added a user-present local processing cadence with explicit pause, resume, and run-now controls for already saved work.
@@ -20,6 +22,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ### Safety
 
+- Update checks never run in the background; each check begins with an explicit user action, follows only the fixed GitHub release channel, rejects unsigned or malformed assets, and preserves the current version until the new version passes validation.
+- The release-signing tool reuses an existing key and provides no silent key-rotation switch.
 - Runtime data paths reject path escape and reparse points, and installer ACLs are applied recursively for the current Windows user.
 - Uninstall preserves user data by default; permanent data removal requires two explicit confirmation flags.
 - The cadence never registers a Windows task, starts a background service, opens a website, or performs a browser, network, upload, or submission action.

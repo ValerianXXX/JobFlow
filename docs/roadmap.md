@@ -19,6 +19,7 @@ The current machine-readable status is available through `jobflow product-capabi
 - [x] User-present local processing cadence with explicit run-now, pause, and resume controls and no operating-system scheduler.
 - [x] Synthetic Greenhouse, Lever, Workday, Ashby, SmartRecruiters, browser, security, migration, and release evidence.
 - [x] Current-tree and full-history privacy scanning plus deterministic source archives.
+- [x] User-initiated signed stable updates for fixed Windows installations, with pinned-key verification, health checking, and rollback; no background updater.
 
 ## Next priorities and separately authorized work
 

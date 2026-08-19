@@ -35,6 +35,8 @@ const {chromium} = require("playwright");
         mainTabIndex: document.querySelector("#mainContent")?.getAttribute("tabindex"),
         supportButtonType: document.querySelector("#downloadSupportDiagnostics")?.getAttribute("type"),
         supportLiveRegion: document.querySelector("#supportDiagnosticsStatus")?.getAttribute("aria-live"),
+        updateButtonType: document.querySelector("#launchDesktopUpdate")?.getAttribute("type"),
+        updateLiveRegion: document.querySelector("#desktopUpdateStatus")?.getAttribute("aria-live"),
         aiHeadingTabIndex: document.querySelector("#aiConnectionTitle")?.getAttribute("tabindex"),
       };
     });
@@ -43,12 +45,14 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260819-jobflow-v37-support-accessibility/);
-    assert.match(initial.styleVersion, /20260819-jobflow-v37-support-accessibility/);
+    assert.match(initial.scriptVersion, /20260819-jobflow-v38-signed-update/);
+    assert.match(initial.styleVersion, /20260819-jobflow-v38-signed-update/);
     assert.equal(initial.skipHref, "#mainContent");
     assert.equal(initial.mainTabIndex, "-1");
     assert.equal(initial.supportButtonType, "button");
     assert.equal(initial.supportLiveRegion, "polite");
+    assert.equal(initial.updateButtonType, "button");
+    assert.equal(initial.updateLiveRegion, "polite");
     assert.equal(initial.aiHeadingTabIndex, "-1");
     await page.keyboard.press("Tab");
     assert.equal(await page.evaluate(() => document.activeElement?.classList.contains("skip-link")), true);
@@ -59,6 +63,39 @@ const {chromium} = require("playwright");
     });
     assert.deepEqual(toastSemantics, {role: "alert", live: "assertive"});
     assert.deepEqual(pageErrors, []);
+
+    const updateStates = await page.evaluate(() => {
+      state.locale = "en";
+      state.data = {desktop_update: {available: false}, demo_mode: false, browser_assist: {}, guided_intake: {active: false}};
+      renderDesktopUpdate();
+      const unavailable = {
+        disabled: document.querySelector("#launchDesktopUpdate")?.disabled,
+        text: document.querySelector("#launchDesktopUpdate")?.textContent,
+        status: document.querySelector("#desktopUpdateStatus")?.textContent,
+      };
+      state.data.desktop_update.available = true;
+      renderDesktopUpdate();
+      const available = {
+        disabled: document.querySelector("#launchDesktopUpdate")?.disabled,
+        text: document.querySelector("#launchDesktopUpdate")?.textContent,
+        status: document.querySelector("#desktopUpdateStatus")?.textContent,
+      };
+      state.data.browser_assist.active_assist_id = "AST-SYNTHETIC";
+      renderDesktopUpdate();
+      const active = {
+        disabled: document.querySelector("#launchDesktopUpdate")?.disabled,
+        status: document.querySelector("#desktopUpdateStatus")?.textContent,
+      };
+      return {unavailable, available, active};
+    });
+    assert.equal(updateStates.unavailable.disabled, true);
+    assert.match(updateStates.unavailable.text, /Install the fixed version first/);
+    assert.match(updateStates.unavailable.status, /source folder/);
+    assert.equal(updateStates.available.disabled, false);
+    assert.match(updateStates.available.text, /Check for updates/);
+    assert.match(updateStates.available.status, /never checks for or installs updates silently/);
+    assert.equal(updateStates.active.disabled, true);
+    assert.match(updateStates.active.status, /Finish or cancel/);
 
     const adaptiveProfile = await page.evaluate(() => {
       state.locale = "zh";

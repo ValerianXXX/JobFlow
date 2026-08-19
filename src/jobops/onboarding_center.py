@@ -66,6 +66,7 @@ from .continuous_intake import (
 from .intake_control import UserPresentIntakeControl
 from .document_builder import discover_template_slots, inspect_docx_text_blocks, template_fingerprint
 from .document_qa import extract_pdf_text
+from .desktop_update import launch_installed_update, update_availability
 from .errors import JobOpsError
 from .external_claims import (
     ALLOWED_EXTERNAL_USES,
@@ -3315,6 +3316,7 @@ class OnboardingCenterService:
                 "product": "JobFlow", "version": __version__,
                 "ui_protocol": UI_PROTOCOL_VERSION,
             },
+            "desktop_update": update_availability(self.project),
             "dashboard": dashboard,
             "browser_assist": self.browser_assist.public_status(),
             "guided_intake": self._guided_public_status(),
@@ -3398,6 +3400,26 @@ class OnboardingCenterService:
             "credentials_stored": 0,
             "real_external_actions": 0,
         }
+
+    @_synchronized
+    def launch_desktop_update(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(payload, dict) or set(payload) != {"user_confirmed"}:
+            raise JobOpsError(
+                "JOBFLOW_UPDATE_INPUT_INVALID",
+                "The desktop update request must contain only explicit confirmation.",
+            )
+        browser = self.browser_assist.public_status()
+        guided = self._guided_public_status()
+        if browser.get("active_assist_id") or guided.get("active") is True:
+            raise JobOpsError(
+                "JOBFLOW_UPDATE_TASK_ACTIVE",
+                "Finish or cancel the current browser task before updating JobFlow.",
+                automatic_retry=False,
+            )
+        return launch_installed_update(
+            self.project,
+            user_confirmed=payload.get("user_confirmed") is True,
+        )
 
     @_synchronized
     def prepare_offline_application_bundle(

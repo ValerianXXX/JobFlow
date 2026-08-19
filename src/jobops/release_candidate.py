@@ -31,6 +31,7 @@ WINDOWS_POWERSHELL_UTF8_BOM_FILES = {
     "scripts/install-jobflow.ps1",
     "scripts/start-jobflow-demo.ps1",
     "scripts/start-jobflow.ps1",
+    "scripts/windows-runtime/update-installed-jobflow.ps1",
 }
 
 
@@ -112,7 +113,9 @@ def verify_candidate_archive(project: Path, archive_path: Path, *, prefix: str) 
         findings.append({"kind": "invalid_candidate_zip", "path": archive_path.name})
     findings.extend(validate_public_paths(relative_files))
     present = set(relative_files)
-    for required in sorted(REQUIRED_PUBLIC_FILES | {"Install JobFlow.cmd", "Start JobFlow.cmd", ".jobops-root"}):
+    for required in sorted(REQUIRED_PUBLIC_FILES | {
+        "Install JobFlow.cmd", "Start JobFlow.cmd", "Update JobFlow.cmd", ".jobops-root"
+    }):
         if required not in present:
             findings.append({"kind": "candidate_required_file_missing", "path": required})
     unique = sorted({(item["kind"], item["path"]) for item in findings})

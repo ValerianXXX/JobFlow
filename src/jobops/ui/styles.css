@@ -227,6 +227,11 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .support-diagnostics p { margin-top: 5px; color: var(--muted); font-size: 12px; }
 .support-diagnostics-actions { display: flex; flex-wrap: wrap; gap: 9px; }
 .support-diagnostics > small { grid-column: 1 / -1; color: var(--green); }
+.desktop-update { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px 24px; align-items: center; margin: 16px; padding: 18px; border: 1px solid #b9d0c8; background: #fff; }
+.desktop-update h3,.desktop-update p { margin: 0; }
+.desktop-update p { margin-top: 5px; color: var(--muted); font-size: 12px; }
+.desktop-update-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.desktop-update > small { grid-column: 1 / -1; color: var(--green); }
 .offline-discovery h4,.official-discovery-results h4 { margin: 0; font-size: 14px; }
 .offline-discovery > div > p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
 .offline-discovery-controls { display: grid; grid-template-columns: .8fr 1.2fr 1fr auto; gap: 10px; align-items: end; margin-top: 14px; }
@@ -576,7 +581,7 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
 
 @media (forced-colors: active) {
   :where(button,a[href],input,select,textarea):focus-visible { outline: 3px solid Highlight; }
-  .support-diagnostics,.blocking-notice,.activity-indicator,#toast { border: 1px solid CanvasText; }
+  .support-diagnostics,.desktop-update,.blocking-notice,.activity-indicator,#toast { border: 1px solid CanvasText; }
   .brand-mark,.button-link,.primary { forced-color-adjust: auto; }
 }
 
@@ -614,6 +619,8 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .offline-application-grid { grid-template-columns: 1fr 1fr; }
   .support-diagnostics { grid-template-columns: 1fr; }
   .support-diagnostics > small { grid-column: auto; }
+  .desktop-update { grid-template-columns: 1fr; }
+  .desktop-update > small { grid-column: auto; }
   .packet-section.wide { grid-column: auto; }
   .ai-choice { min-height: 160px; }
   .source-grid { grid-template-columns: 1fr; }

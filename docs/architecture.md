@@ -36,6 +36,12 @@ For one approved application, the companion can:
 It cannot submit, read credentials, bypass verification, create accounts, send messages, or retry unknown external state.
 If a field, component, or protected control disappears or becomes ambiguous, the companion stops and reports a redacted field type and page position; it does not guess or replay the write.
 
+### Signed desktop updates
+
+Only a fixed per-user Windows installation can update itself. A visible user action opens the updater; there is no background poller, scheduler, service, or silent download. The updater reads the fixed `ValerianXXX/JobFlow` stable release endpoint, rejects unapproved redirect hosts, verifies a canonical manifest with the public RSA key pinned in the installed source, verifies the exact archive name, version, commit, size, SHA-256 digest, layout, and public-content boundary, and only then stages installation. The existing version remains active until the new version passes its health check. A failed check restores the previous validated version.
+
+The release private key is stored separately under the current Windows user's Local AppData using DPAPI and a current-user-only ACL. It is never included in Git, source archives, manifests, signatures, diagnostics, or command output. Release-key rotation is intentionally not an ordinary command-line option.
+
 ## Trust boundaries
 
 - Job descriptions, pages, files, email, and AI output are untrusted input.
@@ -53,6 +59,7 @@ If a field, component, or protected control disappears or becomes ambiguous, the
 | `%LOCALAPPDATA%\JobOps\private` | DPAPI-encrypted applicant data |
 | `%LOCALAPPDATA%\JobOps\BrowserCompanionHost` | User-scoped native messaging host and manifest |
 | `%LOCALAPPDATA%\JobOps\BrowserCompanion` | Unpacked development fallback only |
+| `%LOCALAPPDATA%\JobOps\ReleaseSigning` | Publisher-only DPAPI release key; never distributed |
 | Project `state`, `reports`, and `dist` | Local runtime or release artifacts excluded from Git |
 
 ## Recovery

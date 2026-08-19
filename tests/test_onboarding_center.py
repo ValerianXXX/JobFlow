@@ -271,6 +271,37 @@ class OnboardingCenterTests(unittest.TestCase):
                 self.assertTrue(provider["upload_blocked"])
                 self.assertTrue(provider["submit_blocked"])
 
+    def test_bootstrap_and_service_expose_only_user_initiated_desktop_update(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            update = service.bootstrap()["desktop_update"]
+            self.assertEqual(update["status"], "INSTALL_REQUIRED")
+            self.assertFalse(update["available"])
+            self.assertFalse(update["automatic_check"])
+            self.assertFalse(update["automatic_install"])
+
+            with self.assertRaises(JobOpsError) as invalid:
+                service.launch_desktop_update({"user_confirmed": True, "extra": True})
+            self.assertEqual(invalid.exception.code, "JOBFLOW_UPDATE_INPUT_INVALID")
+
+            opened = {
+                "status": "JOBFLOW_UPDATE_WINDOW_OPENED", "user_initiated": True,
+                "automatic_update": False, "real_recruitment_actions": 0,
+            }
+            with mock.patch("jobops.onboarding_center.launch_installed_update", return_value=opened) as launcher:
+                result = service.launch_desktop_update({"user_confirmed": True})
+            self.assertEqual(result, opened)
+            launcher.assert_called_once_with(service.project, user_confirmed=True)
+
+            with mock.patch.object(
+                service.browser_assist,
+                "public_status",
+                return_value={"active_assist_id": "AST-SYNTHETIC"},
+            ):
+                with self.assertRaises(JobOpsError) as active:
+                    service.launch_desktop_update({"user_confirmed": True})
+            self.assertEqual(active.exception.code, "JOBFLOW_UPDATE_TASK_ACTIVE")
+
     def test_local_interactive_service_has_a_single_instance_lock(self) -> None:
         with project_temp() as root:
             with local_instance_lock(root / "locks"):
@@ -459,7 +490,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v37-support-accessibility", html)
+        self.assertIn("jobflow-v38-signed-update", html)
         self.assertIn('class="skip-link"', html)
         self.assertIn('id="mainContent" tabindex="-1"', html)
         self.assertIn('id="downloadSupportDiagnostics"', html)
@@ -468,6 +499,12 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('setAttribute("role",error?"alert":"status")', script)
         self.assertIn('setAttribute("aria-live",error?"assertive":"polite")', script)
         self.assertIn('api("support-diagnostics"', script)
+        self.assertIn('id="launchDesktopUpdate"', html)
+        self.assertIn('id="desktopUpdateStatus"', html)
+        self.assertLess(html.index('id="launchDesktopUpdate"'), html.index('id="advancedTools"'))
+        self.assertIn('api("launch-update"', script)
+        self.assertIn("function renderDesktopUpdate()", script)
+        self.assertIn("desktop-update", styles)
         self.assertIn("@media (forced-colors: active)", styles)
         self.assertIn("prefers-reduced-motion: reduce", styles)
         self.assertIn('value="chatgpt_export_large"', html)
@@ -2450,7 +2487,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v37-support-accessibility", html)
+        self.assertIn("jobflow-v38-signed-update", html)
 
     def test_support_diagnostics_never_reads_or_emits_private_values(self) -> None:
         with project_temp() as root:
