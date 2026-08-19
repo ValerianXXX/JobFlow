@@ -859,6 +859,42 @@ class OnboardingCenterTests(unittest.TestCase):
             ))
             self.assertTrue(store.test(str(encrypted_pending["metadata"]["secure_ref"])))
 
+            submitted = full_answers()
+            for field_id in (
+                "first_name", "last_name", "email", "phone", "address",
+                "city", "state", "postal_code", "country", "linkedin_url",
+            ):
+                submitted[field_id] = {
+                    "value": answers[field_id]["value"],
+                    "status": "CONFIRMED",
+                    "use_policy": "reuse",
+                }
+            service.save_answers({"locale": "en", "answers": submitted})
+            bootstrap = service.bootstrap()
+            service.save_review({
+                "profile_review": "CONFIRMED",
+                "claim_decisions": {
+                    item["claim_id"]: "CONFIRMED" for item in bootstrap["claims"]
+                },
+                "conflict_resolutions": {
+                    item["conflict_id"]: {"resolution": "USE_RESUME", "manual_value": None}
+                    for item in bootstrap["conflicts"]
+                },
+            })
+            completed = service.complete(user_confirmed=True)
+            profile = json.loads(service.onboarding.read_bytes(completed["profile_ref"]))
+            self.assertEqual(profile["candidate_display_name"], "Jordan Lee")
+            self.assertEqual(profile["first_name"], "Jordan")
+            self.assertEqual(profile["last_name"], "Lee")
+            self.assertEqual(profile["email"], "jordan.lee@example.test")
+            self.assertEqual(profile["phone"], SYNTHETIC_PHONE)
+            self.assertEqual(profile["address"], SYNTHETIC_STREET_ADDRESS)
+            self.assertEqual(profile["city"], "New York")
+            self.assertEqual(profile["state"], "NY")
+            self.assertEqual(profile["postal_code"], "10001")
+            self.assertEqual(profile["country"], "United States")
+            self.assertEqual(profile["linkedin_url"], "https://www.linkedin.com/in/jordan-lee")
+
     def test_docx_with_only_filtered_ai_candidates_is_still_securely_retained_as_master(self) -> None:
         class FilterOnlyAI(AIAnalysisEngine):
             ready = True
