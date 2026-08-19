@@ -31,6 +31,11 @@ const {chromium} = require("playwright");
         dashboardImmediatelyAfterFinish: finish.nextElementSibling === dashboard,
         scriptVersion: document.querySelector('script[src*="app.js"]')?.getAttribute("src"),
         styleVersion: document.querySelector('link[href*="styles.css"]')?.getAttribute("href"),
+        skipHref: document.querySelector(".skip-link")?.getAttribute("href"),
+        mainTabIndex: document.querySelector("#mainContent")?.getAttribute("tabindex"),
+        supportButtonType: document.querySelector("#downloadSupportDiagnostics")?.getAttribute("type"),
+        supportLiveRegion: document.querySelector("#supportDiagnosticsStatus")?.getAttribute("aria-live"),
+        aiHeadingTabIndex: document.querySelector("#aiConnectionTitle")?.getAttribute("tabindex"),
       };
     });
     if (!initial.sourcesBeforeDashboard || !initial.dashboardImmediatelyAfterFinish) {
@@ -38,8 +43,21 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260819-jobflow-v36-ats-contracts/);
-    assert.match(initial.styleVersion, /20260819-jobflow-v36-ats-contracts/);
+    assert.match(initial.scriptVersion, /20260819-jobflow-v37-support-accessibility/);
+    assert.match(initial.styleVersion, /20260819-jobflow-v37-support-accessibility/);
+    assert.equal(initial.skipHref, "#mainContent");
+    assert.equal(initial.mainTabIndex, "-1");
+    assert.equal(initial.supportButtonType, "button");
+    assert.equal(initial.supportLiveRegion, "polite");
+    assert.equal(initial.aiHeadingTabIndex, "-1");
+    await page.keyboard.press("Tab");
+    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains("skip-link")), true);
+    const toastSemantics = await page.evaluate(() => {
+      showToast("Synthetic error", true, 20);
+      const toast = document.querySelector("#toast");
+      return {role: toast?.getAttribute("role"), live: toast?.getAttribute("aria-live")};
+    });
+    assert.deepEqual(toastSemantics, {role: "alert", live: "assertive"});
     assert.deepEqual(pageErrors, []);
 
     const adaptiveProfile = await page.evaluate(() => {

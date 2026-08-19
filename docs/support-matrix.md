@@ -17,4 +17,6 @@ The report distinguishes:
 
 Every row is hash-bound to its status, evidence references, known limits, user-presence rule, and safety boundary. The report fails closed if evidence disappears or the product policy drifts. Provider-specific rows remain explicitly subject to live acceptance; saved fixtures and synthetic verticals are not presented as universal live compatibility.
 
+Redacted support diagnostics are `AVAILABLE` as a user-initiated local download from Advanced tools. The file contains build versions, public workflow states, aggregate counts, safety counters, and a validated error code; it does not read or include Candidate Profile values, answer text, resume content, credentials, tokens, or local paths. An automatic opt-in crash reporter remains `NOT_AVAILABLE`: diagnostic files are never transmitted automatically and the user chooses whether to attach one to a support request.
+
 The checked-in provider set is company-hosted forms, Greenhouse, Lever, Workday, Ashby, and SmartRecruiters. Ashby and SmartRecruiters currently have saved provider-JSON discovery evidence plus single-form synthetic browser evidence. Workday has the representative multi-page sequence. Every provider remains `live_site_verified=false` until separately authorized live acceptance is completed.

@@ -20,7 +20,12 @@ from . import UI_PROTOCOL_VERSION, __version__
 from .adapters import audit_real_external_actions
 from .approvals import ApprovalContext, issue_approval, validate_approval
 from .ats_capabilities import offline_ats_capabilities
-from .browser_assist import BrowserAssistManager, COMPANION_EXTENSION_ORIGIN
+from .browser_assist import (
+    BrowserAssistManager,
+    COMPANION_EXTENSION_ORIGIN,
+    COMPANION_EXTENSION_VERSION,
+    COMPANION_PROTOCOL_VERSION,
+)
 from .candidate_profile import (
     PROFILE_SCHEMA_VERSION,
     parse_mailing_address,
@@ -152,6 +157,9 @@ EXPLICIT_HARD_FIELDS = {
 AMBIGUOUS_HARD_VALUES = {"UNKNOWN", "UNSURE", ""}
 ALWAYS_CONFIRM_FIELDS = {"background_check", "non_compete", "truthfulness_attestation", "electronic_signature"}
 VOLUNTARY_FIELDS = {"race_ethnicity", "gender", "disability", "veteran_status", "religion"}
+SUPPORT_URL = "https://valerianxxx.github.io/JobFlow/support.html"
+SUPPORT_ERROR_CODE_RE = re.compile(r"^[A-Z][A-Z0-9_]{0,79}$")
+SUPPORT_VERSION_RE = re.compile(r"^\d{1,4}(?:\.\d{1,4}){1,3}$")
 
 
 def _ai_analysis_is_complete(summary: Any) -> bool:
@@ -1605,6 +1613,129 @@ class OnboardingCenterService:
             "guided_intake": guided_intake,
             "intake_control": self.intake_control.state(),
         }
+
+    @_synchronized
+    def support_diagnostics(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Return a schema-bound, value-free report for user-directed support.
+
+        This deliberately reads only the redacted onboarding index and aggregate
+        runtime counters.  It never opens a private secure reference or exports
+        applicant answers, claims, documents, paths, credentials, or tokens.
+        """
+        if not isinstance(payload, dict):
+            raise JobOpsError(
+                "SUPPORT_DIAGNOSTIC_INPUT_INVALID",
+                "The support diagnostic request must be a JSON object.",
+            )
+        if set(payload) - {"last_error_code", "observed_companion_version"}:
+            raise JobOpsError(
+                "SUPPORT_DIAGNOSTIC_INPUT_INVALID",
+                "The support diagnostic request contains an unsupported field.",
+            )
+        error_code = payload.get("last_error_code")
+        if error_code in (None, ""):
+            error_code = None
+        elif not isinstance(error_code, str) or SUPPORT_ERROR_CODE_RE.fullmatch(error_code) is None:
+            raise JobOpsError(
+                "SUPPORT_DIAGNOSTIC_INPUT_INVALID",
+                "The support diagnostic error code is invalid.",
+            )
+        observed_version = payload.get("observed_companion_version")
+        if observed_version in (None, ""):
+            observed_version = None
+        elif not isinstance(observed_version, str) or SUPPORT_VERSION_RE.fullmatch(observed_version) is None:
+            raise JobOpsError(
+                "SUPPORT_DIAGNOSTIC_INPUT_INVALID",
+                "The observed Browser Companion version is invalid.",
+            )
+
+        index: dict[str, Any] = {}
+        if self.index_path.exists():
+            try:
+                loaded = load_json(self.index_path)
+                if isinstance(loaded, dict):
+                    index = loaded
+            except (OSError, ValueError, TypeError, json.JSONDecodeError):
+                index = {}
+
+        def safe_status(value: Any, fallback: str) -> str:
+            text = str(value or "")
+            return text if SUPPORT_ERROR_CODE_RE.fullmatch(text) is not None else fallback
+
+        def safe_count(value: Any) -> int:
+            return max(0, int(value)) if type(value) is int else 0
+
+        browser = self.browser_assist.public_status()
+        guided = self._guided_public_status()
+        intake_control = self.intake_control.state()
+        ai = self.ai_connections.public_state()
+        selected = ai.get("selected") if isinstance(ai.get("selected"), dict) else {}
+        connection_kind = selected.get("connection_kind")
+        if connection_kind not in {"EXISTING_AGENT", "LOCAL_MODEL"}:
+            connection_kind = None
+        actions = audit_real_external_actions(self.database)
+        with self.database.connect() as connection:
+            pending_applications = int(connection.execute(
+                "SELECT COUNT(*) FROM applications WHERE status='AWAITING_APPROVAL'"
+            ).fetchone()[0])
+            deferred_jobs = int(connection.execute(
+                "SELECT COUNT(*) FROM intake_queue WHERE status='DEFERRED'"
+            ).fetchone()[0])
+            execution_runs = int(connection.execute(
+                "SELECT COUNT(*) FROM application_execution_runs"
+            ).fetchone()[0])
+
+        claims = index.get("claims") if isinstance(index.get("claims"), dict) else {}
+        conflicts = index.get("conflicts") if isinstance(index.get("conflicts"), dict) else {}
+        report = {
+            "schema_version": 1,
+            "status": "JOBFLOW_SUPPORT_DIAGNOSTICS_READY",
+            "generated_at": iso_utc(),
+            "support_url": SUPPORT_URL,
+            "build": {
+                "product": "JobFlow",
+                "version": __version__,
+                "ui_protocol": UI_PROTOCOL_VERSION,
+                "database_schema": self.database.schema_version(),
+                "companion_protocol": COMPANION_PROTOCOL_VERSION,
+                "expected_companion_version": COMPANION_EXTENSION_VERSION,
+                "observed_companion_version": observed_version,
+            },
+            "runtime": {
+                "onboarding_status": safe_status(index.get("status"), "NOT_INITIALIZED"),
+                "ai_status": safe_status(ai.get("status"), "NOT_CONFIGURED"),
+                "ai_connection_kind": connection_kind,
+                "guided_intake_status": safe_status(guided.get("status"), "IDLE"),
+                "browser_assist_status": safe_status(browser.get("status"), "UNAVAILABLE"),
+                "browser_assist_paired": bool(browser.get("paired")),
+                "intake_control_status": safe_status(intake_control.get("status"), "NOT_CONFIGURED"),
+            },
+            "counts": {
+                "sources": safe_count(index.get("sources")),
+                "active_claims": safe_count(claims.get("total")),
+                "conflicts": safe_count(conflicts.get("total")),
+                "pending_applications": max(0, pending_applications),
+                "deferred_jobs": max(0, deferred_jobs),
+                "execution_runs": max(0, execution_runs),
+            },
+            "safety": {
+                "final_submit": "USER_ONLY",
+                "automatic_retry": False,
+                "network_mode": "LOCAL_OFFLINE_PLUS_USER_PRESENT_BROWSER_ASSIST",
+                "real_website_accesses": (
+                    safe_count(browser.get("real_website_inspections"))
+                    + safe_count(guided.get("read_only_page_inspections"))
+                ),
+                "external_action_attempts": safe_count(actions.get("attempt_count")),
+                "real_external_actions": safe_count(actions.get("real_external_actions")),
+                "knowledge_write_operations": 0,
+                "private_values_read": 0,
+                "private_values_emitted": 0,
+            },
+            "current_error_code": error_code,
+        }
+        validate_named("support-diagnostics", report, self.schemas)
+        return report
 
     @_synchronized
     def disable_external_actions(self, payload: dict[str, Any]) -> dict[str, Any]:

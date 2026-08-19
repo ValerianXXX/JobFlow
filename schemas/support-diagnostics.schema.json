@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/support-diagnostics.schema.json",
+  "title": "Redacted JobFlow Support Diagnostics",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "generated_at", "support_url", "build", "runtime", "counts", "safety", "current_error_code"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "JOBFLOW_SUPPORT_DIAGNOSTICS_READY"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "support_url": {"const": "https://valerianxxx.github.io/JobFlow/support.html"},
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["product", "version", "ui_protocol", "database_schema", "companion_protocol", "expected_companion_version", "observed_companion_version"],
+      "properties": {
+        "product": {"const": "JobFlow"},
+        "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "ui_protocol": {"type": "integer", "minimum": 1},
+        "database_schema": {"type": "integer", "minimum": 1},
+        "companion_protocol": {"type": "integer", "minimum": 1},
+        "expected_companion_version": {"type": "string", "pattern": "^\\d{1,4}(?:\\.\\d{1,4}){1,3}$"},
+        "observed_companion_version": {"type": ["string", "null"], "pattern": "^\\d{1,4}(?:\\.\\d{1,4}){1,3}$"}
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["onboarding_status", "ai_status", "ai_connection_kind", "guided_intake_status", "browser_assist_status", "browser_assist_paired", "intake_control_status"],
+      "properties": {
+        "onboarding_status": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,79}$"},
+        "ai_status": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,79}$"},
+        "ai_connection_kind": {"type": ["string", "null"], "enum": [null, "EXISTING_AGENT", "LOCAL_MODEL"]},
+        "guided_intake_status": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,79}$"},
+        "browser_assist_status": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,79}$"},
+        "browser_assist_paired": {"type": "boolean"},
+        "intake_control_status": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,79}$"}
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sources", "active_claims", "conflicts", "pending_applications", "deferred_jobs", "execution_runs"],
+      "properties": {
+        "sources": {"type": "integer", "minimum": 0},
+        "active_claims": {"type": "integer", "minimum": 0},
+        "conflicts": {"type": "integer", "minimum": 0},
+        "pending_applications": {"type": "integer", "minimum": 0},
+        "deferred_jobs": {"type": "integer", "minimum": 0},
+        "execution_runs": {"type": "integer", "minimum": 0}
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["final_submit", "automatic_retry", "network_mode", "real_website_accesses", "external_action_attempts", "real_external_actions", "knowledge_write_operations", "private_values_read", "private_values_emitted"],
+      "properties": {
+        "final_submit": {"const": "USER_ONLY"},
+        "automatic_retry": {"const": false},
+        "network_mode": {"const": "LOCAL_OFFLINE_PLUS_USER_PRESENT_BROWSER_ASSIST"},
+        "real_website_accesses": {"type": "integer", "minimum": 0},
+        "external_action_attempts": {"type": "integer", "minimum": 0},
+        "real_external_actions": {"type": "integer", "minimum": 0},
+        "knowledge_write_operations": {"const": 0},
+        "private_values_read": {"const": 0},
+        "private_values_emitted": {"const": 0}
+      }
+    },
+    "current_error_code": {"type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9_]{0,79}$"}
+  }
+}

@@ -38,6 +38,12 @@ class ProductCapabilityReportTests(unittest.TestCase):
             "HEALTH_CHECKED_VERSION_SWITCH_WITH_PERSISTENT_DATA",
         )
         self.assertEqual(by_id["desktop_self_update_rollback"]["evidence_status"], "NOT_IMPLEMENTED")
+        self.assertEqual(by_id["redacted_support_diagnostics"]["availability"], "AVAILABLE")
+        self.assertEqual(
+            by_id["redacted_support_diagnostics"]["safety_boundary"],
+            "LOCAL_VALUE_FREE_EXPORT_ONLY",
+        )
+        self.assertEqual(by_id["opt_in_crash_reporter"]["availability"], "NOT_AVAILABLE")
         self.assertEqual(by_id["final_application_submit"]["availability"], "USER_ONLY")
 
     def test_report_hashes_and_project_local_evidence_fail_closed(self) -> None:

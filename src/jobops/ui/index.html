@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260819-jobflow-v36-ats-contracts">
+  <link rel="stylesheet" href="styles.css?v=20260819-jobflow-v37-support-accessibility">
 </head>
 <body>
+  <a class="skip-link" href="#mainContent" data-i18n="skipToMain">跳到主要内容</a>
   <div class="envelope-backdrop" aria-hidden="true">
     <svg viewBox="0 0 1600 1000" preserveAspectRatio="none" focusable="false">
       <path d="M 10,18 C 115,105 150,286 326,493 C 404,585 468,672 548,820"></path>
@@ -14,7 +15,7 @@
     </svg>
   </div>
   <header class="topbar">
-    <a class="brand" href="#top" aria-label="JobFlow home">
+    <a class="brand" href="#mainContent" aria-label="JobFlow home">
       <span class="brand-mark">J</span>
       <span><strong>JobFlow</strong><small data-i18n="brandSubtitle">找工流水线</small></span>
     </a>
@@ -28,7 +29,7 @@
     </div>
   </header>
 
-  <main id="top">
+  <main id="mainContent" tabindex="-1">
     <section id="demoBanner" class="demo-banner hidden" role="status" aria-live="polite">
       <strong data-i18n="demoTitle">合成演示 · 不使用真实资料</strong>
       <p data-i18n="demoBody">这是自动清理的临时体验环境。所有示例均为虚构内容；文件上传和真实 AI 连接已关闭，请勿在这里输入个人信息。</p>
@@ -199,6 +200,17 @@
       </section>
       <details id="advancedTools" class="advanced-tools">
         <summary><span><strong data-i18n="advancedToolsTitle">高级诊断与离线 QA</strong><small data-i18n="advancedToolsBody">普通使用不需要这里。仅在开发测试或浏览器导入不可用时，才手动提供本地快照。</small></span><b data-i18n="advancedToolsOpen">展开</b></summary>
+      <section class="support-diagnostics" aria-labelledby="supportDiagnosticsTitle">
+        <div>
+          <h3 id="supportDiagnosticsTitle" data-i18n="supportDiagnosticsTitle">下载脱敏诊断文件</h3>
+          <p data-i18n="supportDiagnosticsBody">仅包含版本、状态、计数和安全边界；不包含简历、答案、Claim 正文、文件路径、凭据、令牌或 secure-ref。</p>
+        </div>
+        <div class="support-diagnostics-actions">
+          <button id="downloadSupportDiagnostics" class="secondary" type="button" data-i18n="downloadSupportDiagnostics">下载诊断文件</button>
+          <a class="button-link compact" href="https://valerianxxx.github.io/JobFlow/support.html" target="_blank" rel="noopener noreferrer" data-i18n="openSupportPage">打开支持页面</a>
+        </div>
+        <small id="supportDiagnosticsStatus" role="status" aria-live="polite"></small>
+      </section>
       <section class="offline-application-prep" aria-labelledby="offlineApplicationTitle">
         <div class="subheading">
           <div><h3 id="offlineApplicationTitle" data-i18n="offlineApplicationTitle">准备一个离线申请</h3><small data-i18n="offlineApplicationBody">选择你已经保存到电脑的岗位说明、公司官网岗位页和申请表。JobFlow 只在本机生成岗位材料与审阅包，不打开网站。</small></div>
@@ -303,9 +315,9 @@
       <div><strong id="blockingNoticeTitle"></strong><p id="blockingNoticeBody"></p></div>
     </section>
 
-    <section id="aiConnectionPanel" class="ai-connection-panel hidden" aria-live="polite">
+    <section id="aiConnectionPanel" class="ai-connection-panel hidden" aria-labelledby="aiConnectionTitle" aria-live="polite">
       <div class="ai-connection-heading">
-        <div><p class="eyebrow" data-i18n="aiConnectionEyebrow">AI CONNECTION</p><h2 data-i18n="aiConnectionTitle">连接已经准备好的 AI</h2><p data-i18n="aiConnectionBody">JobFlow 不要求再次填写模型密钥。它会自动检查 Windows 与 WSL，并通过仅限本机的通道建立连接。</p></div>
+        <div><p class="eyebrow" data-i18n="aiConnectionEyebrow">AI CONNECTION</p><h2 id="aiConnectionTitle" tabindex="-1" data-i18n="aiConnectionTitle">连接已经准备好的 AI</h2><p data-i18n="aiConnectionBody">JobFlow 不要求再次填写模型密钥。它会自动检查 Windows 与 WSL，并通过仅限本机的通道建立连接。</p></div>
         <button id="closeAiConnection" class="text-action" type="button" data-i18n="close">关闭</button>
       </div>
       <div class="ai-choice-grid">
@@ -472,6 +484,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260819-jobflow-v36-ats-contracts"></script>
+  <script src="app.js?v=20260819-jobflow-v37-support-accessibility"></script>
 </body>
 </html>

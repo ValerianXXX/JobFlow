@@ -162,9 +162,15 @@ def product_capability_report() -> dict[str, Any]:
             [], ["MANUAL_UPGRADE_AND_ROLLBACK_ONLY", "NO_SIGNED_DESKTOP_UPDATE_CHANNEL"],
         ),
         _item(
-            "crash_feedback_and_support", "support", "NOT_AVAILABLE", _NOT_IMPLEMENTED,
+            "redacted_support_diagnostics", "support", "AVAILABLE", _AUTOMATED,
+            "NOT_APPLICABLE", "USER_INITIATED", "LOCAL_VALUE_FREE_EXPORT_ONLY",
+            ["tests/test_onboarding_center.py", "docs/support.html"],
+            ["NO_AUTOMATIC_TRANSMISSION", "USER_REVIEWS_AND_ATTACHES_FILE"],
+        ),
+        _item(
+            "opt_in_crash_reporter", "support", "NOT_AVAILABLE", _NOT_IMPLEMENTED,
             "NOT_STARTED", "USER_OPT_IN_REQUIRED", "REDACT_BEFORE_EXPORT_OR_TRANSMISSION",
-            ["docs/support.html"], ["SUPPORT_PAGE_ONLY", "NO_OPT_IN_CRASH_REPORTER"],
+            ["docs/support.html"], ["MANUAL_DIAGNOSTIC_EXPORT_ONLY", "NO_OPT_IN_CRASH_REPORTER"],
         ),
         _item(
             "final_application_submit", "submission", "USER_ONLY", _PERMANENT_BOUNDARY,

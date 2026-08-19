@@ -629,6 +629,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.save_answers(self._json_body())
             elif route == "connect-ai":
                 result = self.server.service.connect_ai(self._json_body())
+            elif route == "support-diagnostics":
+                result = self.server.service.support_diagnostics(self._json_body())
             elif route == "accept-suggestion":
                 result = self.server.service.accept_suggestion(str(self._json_body().get("suggestion_id", "")))
             elif route == "review":

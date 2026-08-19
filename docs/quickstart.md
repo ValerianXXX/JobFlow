@@ -82,12 +82,16 @@ The health check is offline and does not print private values or the project pat
 - Reload the JobFlow page after updating the extension.
 - Use the JobFlow cancel action before selecting a different job URL.
 
+### Create a safe support report
+
+Open **Advanced diagnostics** in JobFlow and select **Download diagnostics**. Review the downloaded JSON before attaching it to a support request. It contains versions, safe runtime states, aggregate counts, safety boundaries, and an optional redacted error code. It does not read or include resume text, applicant answers, Claim text, local file paths, credentials, tokens, or secure references. JobFlow does not upload the file for you.
+
 ### Windows and WSL
 
 Run JobFlow itself from Windows with the `.cmd` files. WSL is used only when JobFlow detects an already configured WSL Agent or local model.
 
 ## Reporting a problem
 
-Use synthetic or fully redacted data. Include the JobFlow version, the first health-check failure ID, expected behavior, and actual behavior. Never attach a real resume, database, DPAPI file, token, absolute user path, or private screenshot to a public issue.
+Use synthetic or fully redacted data. Attach the locally generated diagnostic JSON when useful, and include expected behavior and actual behavior. Never attach a real resume, database, DPAPI file, token, absolute user path, or private screenshot to a public issue.
 
 See the [security policy](../SECURITY.md) for private vulnerability reports.

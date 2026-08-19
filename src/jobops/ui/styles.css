@@ -26,6 +26,8 @@ button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; opacity: .58; }
 :where(button, a[href], input, select, textarea):focus-visible { outline: 3px solid rgba(47,102,87,.62); outline-offset: 3px; }
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 100; padding: 10px 14px; color: #fff; background: var(--ink); transform: translateY(-160%); transition: transform .15s ease; }
+.skip-link:focus { transform: translateY(0); }
 
 .topbar {
   height: 76px;
@@ -220,6 +222,11 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .advanced-tools > summary b { color: var(--green); font-size: 11px; }
 .advanced-tools[open] > summary { border-bottom: 1px solid var(--line); }
 .advanced-tools .offline-application-prep,.advanced-tools .ats-capability-board { margin: 16px; }
+.support-diagnostics { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px 24px; align-items: center; margin: 16px; padding: 18px; border: 1px solid #b9d0c8; background: #fff; }
+.support-diagnostics h3,.support-diagnostics p { margin: 0; }
+.support-diagnostics p { margin-top: 5px; color: var(--muted); font-size: 12px; }
+.support-diagnostics-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.support-diagnostics > small { grid-column: 1 / -1; color: var(--green); }
 .offline-discovery h4,.official-discovery-results h4 { margin: 0; font-size: 14px; }
 .offline-discovery > div > p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
 .offline-discovery-controls { display: grid; grid-template-columns: .8fr 1.2fr 1fr auto; gap: 10px; align-items: end; margin-top: 14px; }
@@ -564,9 +571,13 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
 @keyframes activity-progress-scan { 0% { transform: translateX(-120%); } 50% { transform: translateX(85%); } 100% { transform: translateX(270%); } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .needs-attention { animation: none; }
-  .activity-spinner { animation-duration: 1.8s; }
-  .activity-progress i.indeterminate { animation-duration: 4s; }
+  *,*::before,*::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+@media (forced-colors: active) {
+  :where(button,a[href],input,select,textarea):focus-visible { outline: 3px solid Highlight; }
+  .support-diagnostics,.blocking-notice,.activity-indicator,#toast { border: 1px solid CanvasText; }
+  .brand-mark,.button-link,.primary { forced-color-adjust: auto; }
 }
 
 @media (max-width: 1350px) {
@@ -601,6 +612,8 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .ats-capability-list { grid-template-columns: 1fr 1fr; }
   .offline-discovery-controls { grid-template-columns: 1fr 1fr; }
   .offline-application-grid { grid-template-columns: 1fr 1fr; }
+  .support-diagnostics { grid-template-columns: 1fr; }
+  .support-diagnostics > small { grid-column: auto; }
   .packet-section.wide { grid-column: auto; }
   .ai-choice { min-height: 160px; }
   .source-grid { grid-template-columns: 1fr; }

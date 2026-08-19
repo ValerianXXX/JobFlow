@@ -310,7 +310,28 @@ Object.assign(STRINGS.en,{
   browserAssistRouteUnsupported:"This page is outside the approved company, Greenhouse, Lever, Workday, Ashby, or SmartRecruiters route, so JobFlow stopped safely."
 });
 
-const UI_PROTOCOL_VERSION = 32;
+Object.assign(STRINGS.zh,{
+  skipToMain:"跳到主要内容",
+  supportDiagnosticsTitle:"下载脱敏诊断文件",
+  supportDiagnosticsBody:"仅包含版本、状态、计数和安全边界；不包含简历、答案、Claim 正文、文件路径、凭据、令牌或 secure-ref。",
+  downloadSupportDiagnostics:"下载诊断文件",
+  openSupportPage:"打开支持页面",
+  buildingSupportDiagnostics:"正在生成脱敏诊断文件…",
+  supportDiagnosticsReady:"脱敏诊断文件已下载，可以按需附加到支持请求。",
+  supportDiagnosticsFailed:"无法生成诊断文件；私人资料未被读取或导出。"
+});
+Object.assign(STRINGS.en,{
+  skipToMain:"Skip to main content",
+  supportDiagnosticsTitle:"Download redacted diagnostics",
+  supportDiagnosticsBody:"Includes only versions, states, counts, and safety boundaries. It excludes resumes, answers, claim text, file paths, credentials, tokens, and secure refs.",
+  downloadSupportDiagnostics:"Download diagnostics",
+  openSupportPage:"Open support page",
+  buildingSupportDiagnostics:"Building redacted diagnostics…",
+  supportDiagnosticsReady:"The redacted diagnostic file was downloaded and can be attached to a support request.",
+  supportDiagnosticsFailed:"The diagnostic file could not be created; no private data was read or exported."
+});
+
+const UI_PROTOCOL_VERSION = 33;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",
@@ -335,7 +356,8 @@ const ACTIVITY_ESTIMATES = {
   deletingSource: 7, transformingClaims: 8, reprocessing: 45,
   reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5, savingQueueDecision: 7, savingApplicationFields: 8,
   discoveringJobs: 8, approvingExternalClaims: 7, loadingTailoringManifest: 8, approvingTailoringManifest: 7,
-  preparingOfflineApplication: 150, startingGuidedIntake: 10, cancellingGuidedIntake: 5, preparingGuidedApplication: 300, startingBrowserAssist: 10, resolvingSubmission: 5
+  preparingOfflineApplication: 150, startingGuidedIntake: 10, cancellingGuidedIntake: 5, preparingGuidedApplication: 300, startingBrowserAssist: 10, resolvingSubmission: 5,
+  buildingSupportDiagnostics: 4
 };
 const STANDARD_CHATGPT_EXPORT_BYTES = 200 * 1024 * 1024;
 const MAX_RETAINED_SOURCE_BYTES = 64 * 1024 * 1024;
@@ -411,8 +433,15 @@ function analysisCoverageLabel(value) {
 }
 function showToast(message, error=false, duration=4200) {
   const el=document.querySelector("#toast");
-  clearTimeout(toastTimer); el.textContent=message; el.className=error?"show error":"show";
+  clearTimeout(toastTimer);el.setAttribute("role",error?"alert":"status");el.setAttribute("aria-live",error?"assertive":"polite");el.textContent=message;el.className=error?"show error":"show";
   toastTimer=setTimeout(()=>el.className="",duration);
+}
+
+function downloadJson(filename,value){
+  const blob=new Blob([JSON.stringify(value,null,2)+"\n"],{type:"application/json"});
+  const url=URL.createObjectURL(blob),link=document.createElement("a");
+  link.href=url;link.download=filename;link.hidden=true;document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 function companionVersionCurrent(result){return result?.protocol_version===2&&result?.extension_version===COMPANION_VERSION;}
@@ -740,7 +769,7 @@ const WORKFLOW_ACTIVITY_TARGETS={
   importing:"sources",reprocessing:"sources",reprocessingAll:"sources",committingSource:"sources",deletingSource:"sources",discardingSource:"sources",
   savingAnswers:"questionnaire",savingReview:"review",includingAll:"review",transformingClaims:"review",completingOnboarding:"finish",
   detectingAgent:"aiConnectionPanel",detectingLocalModel:"aiConnectionPanel",preparingGuidedApplication:"guidedIntakePanel",startingGuidedIntake:"guidedIntakePanel",
-  loadingReviewPacket:"reviewPacketPanel",startingBrowserAssist:"browserAssistPanel",resolvingSubmission:"browserAssistPanel"
+  loadingReviewPacket:"reviewPacketPanel",startingBrowserAssist:"browserAssistPanel",resolvingSubmission:"browserAssistPanel",buildingSupportDiagnostics:"advancedTools"
 };
 function workflowActivityDetail(activity){
   const elapsed=Math.max(0,Math.floor((Date.now()-activity.started)/1000));
@@ -794,7 +823,7 @@ function focusWorkflowNow(){
   const target=document.querySelector("#workflowNowAction")?.dataset.target;if(!target)return;
   if(WORKFLOW_PANEL_TARGETS.has(target)){navigate(target);return;}
   const element=document.querySelector(`#${CSS.escape(target)}`);if(!element)return;
-  if(target==="aiConnectionPanel"){element.classList.remove("hidden");document.querySelector("#aiConnectButton")?.setAttribute("aria-expanded","true");}
+  if(target==="aiConnectionPanel"){element.classList.remove("hidden");document.querySelector("#aiConnectButton")?.setAttribute("aria-expanded","true");setTimeout(()=>document.querySelector("#aiConnectionTitle")?.focus({preventScroll:true}),0);}
   element.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
@@ -2357,6 +2386,23 @@ document.addEventListener("click", async event => {
   }
   const dashboardRefresh=event.target.closest("#refreshDashboard");
   if(dashboardRefresh){try{await withActivity("refreshingDashboard",()=>refreshLatest());showToast(t("dashboardRefreshed"));}catch(error){handleUiError(error);}return;}
+  const supportDiagnostics=event.target.closest("#downloadSupportDiagnostics");
+  if(supportDiagnostics){
+    const status=document.querySelector("#supportDiagnosticsStatus");
+    try{
+      const report=await withActivity("buildingSupportDiagnostics",()=>api("support-diagnostics",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          last_error_code:state.lastBlockingError?.code||null,
+          observed_companion_version:state.companionAvailability?.extension_version||null
+        })
+      }));
+      const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z");
+      downloadJson(`JobFlow-support-diagnostics-${stamp}.json`,report);
+      status.textContent=t("supportDiagnosticsReady");showToast(t("supportDiagnosticsReady"));
+    }catch(error){status.textContent=t("supportDiagnosticsFailed");handleUiError(error);}
+    return;
+  }
   const configureIntake=event.target.closest("#configureIntakeControl");
   if(configureIntake){
     const interval=Number(document.querySelector("#intakeIntervalMinutes").value), hours=Number(document.querySelector("#intakeAuthorizationHours").value);
@@ -2616,11 +2662,11 @@ document.addEventListener("click", async event => {
   if(aiToggle){
     const panel=document.querySelector("#aiConnectionPanel"), opening=panel.classList.contains("hidden");
     panel.classList.toggle("hidden",!opening);aiToggle.setAttribute("aria-expanded",String(opening));
-    if(opening)panel.scrollIntoView({behavior:"smooth",block:"start"});
+    if(opening){panel.scrollIntoView({behavior:"smooth",block:"start"});setTimeout(()=>document.querySelector("#aiConnectionTitle")?.focus({preventScroll:true}),0);}
     return;
   }
   const aiClose=event.target.closest("#closeAiConnection");
-  if(aiClose){document.querySelector("#aiConnectionPanel").classList.add("hidden");document.querySelector("#aiConnectButton").setAttribute("aria-expanded","false");return;}
+  if(aiClose){document.querySelector("#aiConnectionPanel").classList.add("hidden");const toggle=document.querySelector("#aiConnectButton");toggle.setAttribute("aria-expanded","false");toggle.focus();return;}
   const aiChoice=event.target.closest("[data-ai-mode]");
   if(aiChoice){
     const mode=aiChoice.dataset.aiMode, activity=mode==="agent"?"detectingAgent":"detectingLocalModel";

@@ -288,7 +288,7 @@ class OnboardingCenterTests(unittest.TestCase):
         for name in (
             "candidate-profile", "onboarding-answer-bank", "onboarding-completion", "official-discovery",
             "external-claim-set", "application-readiness", "resume-tailoring-manifest",
-            "user-present-intake-control",
+            "user-present-intake-control", "support-diagnostics",
         ):
             shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
         (project / "config").mkdir()
@@ -459,7 +459,17 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v36-ats-contracts", html)
+        self.assertIn("jobflow-v37-support-accessibility", html)
+        self.assertIn('class="skip-link"', html)
+        self.assertIn('id="mainContent" tabindex="-1"', html)
+        self.assertIn('id="downloadSupportDiagnostics"', html)
+        self.assertIn('id="supportDiagnosticsStatus"', html)
+        self.assertIn('id="aiConnectionTitle" tabindex="-1"', html)
+        self.assertIn('setAttribute("role",error?"alert":"status")', script)
+        self.assertIn('setAttribute("aria-live",error?"assertive":"polite")', script)
+        self.assertIn('api("support-diagnostics"', script)
+        self.assertIn("@media (forced-colors: active)", styles)
+        self.assertIn("prefers-reduced-motion: reduce", styles)
         self.assertIn('value="chatgpt_export_large"', html)
         self.assertIn("雷霆大文件", script)
         self.assertIn("ZIPzilla Express", script)
@@ -1926,6 +1936,22 @@ class OnboardingCenterTests(unittest.TestCase):
                 with service.database.connect() as database_connection:
                     self.assertEqual(database_connection.execute("SELECT COUNT(*) FROM jobs").fetchone()[0], 0)
                     self.assertEqual(database_connection.execute("SELECT COUNT(*) FROM intake_queue").fetchone()[0], 0)
+                diagnostic_body = json.dumps({
+                    "last_error_code": "BROWSER_FORM_CHANGED",
+                    "observed_companion_version": "0.9.1",
+                }).encode("utf-8")
+                connection.request(
+                    "POST", session_path + "api/support-diagnostics",
+                    body=diagnostic_body,
+                    headers={**headers, "Content-Length": str(len(diagnostic_body))},
+                )
+                diagnostic_response = connection.getresponse()
+                diagnostic_payload = json.loads(diagnostic_response.read())
+                self.assertEqual(diagnostic_response.status, 200)
+                self.assertEqual(diagnostic_payload["status"], "JOBFLOW_SUPPORT_DIAGNOSTICS_READY")
+                self.assertEqual(diagnostic_payload["current_error_code"], "BROWSER_FORM_CHANGED")
+                self.assertEqual(diagnostic_payload["safety"]["private_values_read"], 0)
+                self.assertEqual(diagnostic_payload["safety"]["private_values_emitted"], 0)
                 connection.close()
             finally:
                 server.shutdown()
@@ -2388,7 +2414,46 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v36-ats-contracts", html)
+        self.assertIn("jobflow-v37-support-accessibility", html)
+
+    def test_support_diagnostics_never_reads_or_emits_private_values(self) -> None:
+        with project_temp() as root:
+            service, onboarding, store, _, _ = self.make_service(root)
+            service.bootstrap()
+            private_markers = (
+                "Synthetic Candidate",
+                "secure-ref:",
+                SYNTHETIC_PHONE,
+                SYNTHETIC_US_ADDRESS,
+                str(root),
+            )
+            with (
+                mock.patch.object(onboarding, "read_bytes", side_effect=AssertionError("private read")),
+                mock.patch.object(store, "get_bytes", side_effect=AssertionError("ciphertext read")),
+            ):
+                report = service.support_diagnostics({
+                    "last_error_code": "BROWSER_FORM_CHANGED",
+                    "observed_companion_version": "0.9.1",
+                })
+            serialized = json.dumps(report, sort_keys=True)
+            self.assertEqual(report["status"], "JOBFLOW_SUPPORT_DIAGNOSTICS_READY")
+            self.assertEqual(report["safety"]["final_submit"], "USER_ONLY")
+            self.assertFalse(report["safety"]["automatic_retry"])
+            self.assertEqual(report["safety"]["private_values_read"], 0)
+            self.assertEqual(report["safety"]["private_values_emitted"], 0)
+            self.assertEqual(report["build"]["observed_companion_version"], "0.9.1")
+            for marker in private_markers:
+                self.assertNotIn(marker, serialized)
+
+            for unsafe in (
+                {"last_error_code": "private/path"},
+                {"observed_companion_version": "C:/private/model"},
+                {"observed_companion_version": "0.9.1\nsecret"},
+                {"last_error_code": "BROWSER_FORM_CHANGED", "private_note": "do not accept"},
+            ):
+                with self.assertRaises(JobOpsError) as invalid:
+                    service.support_diagnostics(unsafe)
+                self.assertEqual(invalid.exception.code, "SUPPORT_DIAGNOSTIC_INPUT_INVALID")
 
 
 if __name__ == "__main__":

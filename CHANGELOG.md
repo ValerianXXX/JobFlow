@@ -10,6 +10,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 - Added a marked persistent runtime data root for state, queues, reports, and application workspaces outside immutable application versions.
 - Added a user-present local processing cadence with explicit pause, resume, and run-now controls for already saved work.
 - Added saved-job JSON discovery and single-form synthetic browser contracts for Ashby and SmartRecruiters.
+- Added a schema-validated, user-downloaded support diagnostic file containing only versions, safe runtime states, aggregate counts, safety boundaries, and a redacted error code.
+- Added a keyboard skip link, stronger live-region semantics, high-contrast support, and reduced-motion behavior to the bilingual local UI.
 
 ### Changed
 
@@ -22,6 +24,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 - Uninstall preserves user data by default; permanent data removal requires two explicit confirmation flags.
 - The cadence never registers a Windows task, starts a background service, opens a website, or performs a browser, network, upload, or submission action.
 - Ashby and SmartRecruiters fixtures are local engineering evidence only; both remain `live_site_verified=false` and require current page validation in real use.
+- Support diagnostics never decrypt or export applicant values, resumes, answers, Claims, local paths, credentials, tokens, or secure references, and are never transmitted automatically.
 
 ## [0.4.1] - 2026-08-17
 
