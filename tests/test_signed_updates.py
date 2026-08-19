@@ -146,6 +146,17 @@ class SignedUpdateTests(unittest.TestCase):
             self.assertEqual(first["signature"]["key_id"], second["signature"]["key_id"])
             self.assertEqual(protected_before, key_path.read_bytes())
 
+    def test_release_signer_supports_deep_source_archive_paths(self) -> None:
+        prefix = "jobflow-signing-long-path-" + ("x" * 80)
+        with tempfile.TemporaryDirectory(prefix=prefix, dir=SIGNED_UPDATE_TEST_ROOT) as raw:
+            root = Path(raw)
+            channel, _ = self._initialize_signer(root)
+            key_path = root / "LocalAppData" / "JobOps" / "ReleaseSigning" / "release-signing-key.dpapi"
+            atomic_temporary_length = len(str(key_path)) + 1 + 32 + len(".tmp")
+            self.assertGreater(atomic_temporary_length, 260)
+            self.assertTrue(key_path.is_file())
+            self.assertTrue(str(channel["signature"]["key_id"]).startswith("sha256:"))
+
     def test_signed_manifest_and_archive_verify_and_current_version_is_not_reinstalled(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-signed-update-", dir=SIGNED_UPDATE_TEST_ROOT) as raw:
             root = Path(raw)

@@ -146,19 +146,35 @@ function Get-PublicDescriptor([Security.Cryptography.RSAParameters]$Parameters) 
     }
 }
 
+function ConvertTo-ExtendedFileSystemPath([string]$Path) {
+    $absolute = [IO.Path]::GetFullPath($Path)
+    if ($absolute.StartsWith("\\?\", [StringComparison]::Ordinal)) { return $absolute }
+    if ($absolute.StartsWith("\\", [StringComparison]::Ordinal)) {
+        return "\\?\UNC\" + $absolute.Substring(2)
+    }
+    return "\\?\" + $absolute
+}
+
 function Write-BytesAtomic([string]$Path, [byte[]]$Bytes) {
     $absolute = [IO.Path]::GetFullPath($Path)
     $parent = [IO.Path]::GetDirectoryName($absolute)
     if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
-        New-Item -ItemType Directory -Path $parent -Force | Out-Null
+        [IO.Directory]::CreateDirectory((ConvertTo-ExtendedFileSystemPath $parent)) | Out-Null
     }
     $temporary = Join-Path $parent (([IO.Path]::GetFileName($absolute)) + "." + [Guid]::NewGuid().ToString("N") + ".tmp")
+    $ioTemporary = ConvertTo-ExtendedFileSystemPath $temporary
+    $ioAbsolute = ConvertTo-ExtendedFileSystemPath $absolute
     try {
-        [IO.File]::WriteAllBytes($temporary, $Bytes)
-        Move-Item -LiteralPath $temporary -Destination $absolute -Force
+        [IO.File]::WriteAllBytes($ioTemporary, $Bytes)
+        if ([IO.File]::Exists($ioAbsolute)) {
+            [IO.File]::Replace($ioTemporary, $ioAbsolute, $null)
+        }
+        else {
+            [IO.File]::Move($ioTemporary, $ioAbsolute)
+        }
     }
     finally {
-        if (Test-Path -LiteralPath $temporary -PathType Leaf) { Remove-Item -LiteralPath $temporary -Force }
+        if ([IO.File]::Exists($ioTemporary)) { [IO.File]::Delete($ioTemporary) }
     }
 }
 
