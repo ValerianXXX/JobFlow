@@ -41,10 +41,67 @@ jobs:
         if: matrix.python-version == '3.12'
         shell: powershell
         run: |
-          ./scripts/install-jobflow.ps1
-          $health = ./scripts/check-jobflow.ps1 -Json | ConvertFrom-Json
-          if ($LASTEXITCODE -ne 0 -or $health.status -ne "JOBFLOW_READY") {
-            throw "The first-time Windows installer did not produce a healthy JobFlow runtime."
+          $runnerTemp = [IO.Path]::GetFullPath($env:RUNNER_TEMP)
+          # Keep the isolated root short enough for stock Windows runners without LongPathsEnabled.
+          $acceptanceId = [Guid]::NewGuid().ToString("N").Substring(0, 8)
+          $acceptanceRoot = [IO.Path]::GetFullPath((Join-Path $runnerTemp ("jobflow-fixed-install-qa-" + $acceptanceId)))
+          $runnerPrefix = $runnerTemp.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+          if (
+            -not $acceptanceRoot.StartsWith($runnerPrefix, [StringComparison]::OrdinalIgnoreCase) -or
+            ([IO.Path]::GetFileName($acceptanceRoot)) -notlike "jobflow-fixed-install-qa-*"
+          ) {
+            throw "JOBFLOW_CI_ACCEPTANCE_ROOT_FORBIDDEN"
+          }
+          $savedLocalAppData = $env:LOCALAPPDATA
+          $savedAppData = $env:APPDATA
+          $savedTemp = $env:TEMP
+          $savedTmp = $env:TMP
+          $savedAcceptance = $env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY
+          try {
+            $isolatedLocalAppData = Join-Path $acceptanceRoot "LocalAppData"
+            $isolatedAppData = Join-Path $acceptanceRoot "RoamingAppData"
+            New-Item -ItemType Directory -Path $isolatedLocalAppData, $isolatedAppData -Force | Out-Null
+            $env:LOCALAPPDATA = $isolatedLocalAppData
+            $env:APPDATA = $isolatedAppData
+            $env:TEMP = $runnerTemp
+            $env:TMP = $runnerTemp
+            $env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY = "1"
+            ./scripts/install-jobflow.ps1 -NoLaunch
+            if ($LASTEXITCODE -ne 0) {
+              throw "The first-time Windows installer failed."
+            }
+            $installedRoot = Join-Path $isolatedLocalAppData "JobOps"
+            $pointer = Get-Content -LiteralPath (Join-Path $installedRoot "current.json") -Raw | ConvertFrom-Json
+            $healthScript = Join-Path $installedRoot "bin\check-installed-jobflow.ps1"
+            $healthOutput = & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $healthScript -Json
+            $healthExitCode = $LASTEXITCODE
+            $health = $healthOutput | ConvertFrom-Json
+            if (
+              $healthExitCode -ne 0 -or
+              $health.status -ne "JOBFLOW_READY" -or
+              $health.version -ne $pointer.version
+            ) {
+              throw "The first-time Windows installer did not produce a healthy installed JobFlow runtime."
+            }
+          }
+          finally {
+            $env:LOCALAPPDATA = $savedLocalAppData
+            $env:APPDATA = $savedAppData
+            $env:TEMP = $savedTemp
+            $env:TMP = $savedTmp
+            if ($null -eq $savedAcceptance) {
+              Remove-Item Env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY -ErrorAction SilentlyContinue
+            }
+            else {
+              $env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY = $savedAcceptance
+            }
+            if (
+              (Test-Path -LiteralPath $acceptanceRoot -PathType Container) -and
+              $acceptanceRoot.StartsWith($runnerPrefix, [StringComparison]::OrdinalIgnoreCase) -and
+              ([IO.Path]::GetFileName($acceptanceRoot)) -like "jobflow-fixed-install-qa-*"
+            ) {
+              [IO.Directory]::Delete("\\?\" + $acceptanceRoot, $true)
+            }
           }
       - name: Run regression suite
         run: python -m unittest discover -s tests -v

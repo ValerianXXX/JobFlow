@@ -33,6 +33,21 @@ class ReleasePackagingTests(unittest.TestCase):
         self.assertNotIn("git push", workflow)
         self.assertNotIn("upload-release-asset", workflow)
 
+    def test_ci_exercises_the_isolated_fixed_install_instead_of_the_source_tree(self) -> None:
+        workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        installer_step = workflow.split("- name: Exercise first-time Windows installer", 1)[1].split(
+            "- name: Run regression suite", 1
+        )[0]
+        self.assertIn("jobflow-fixed-install-qa-", installer_step)
+        self.assertIn('.Substring(0, 8)', installer_step)
+        self.assertIn('$env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY = "1"', installer_step)
+        self.assertIn("./scripts/install-jobflow.ps1 -NoLaunch", installer_step)
+        self.assertIn('Join-Path $installedRoot "current.json"', installer_step)
+        self.assertIn('Join-Path $installedRoot "bin\\check-installed-jobflow.ps1"', installer_step)
+        self.assertIn('$health.version -ne $pointer.version', installer_step)
+        self.assertIn('[IO.Directory]::Delete("\\\\?\\" + $acceptanceRoot, $true)', installer_step)
+        self.assertNotIn("./scripts/check-jobflow.ps1 -Json", installer_step)
+
 
 if __name__ == "__main__":
     unittest.main()

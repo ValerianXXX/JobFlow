@@ -4,6 +4,18 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-08-19
+
+### Fixed
+
+- Corrected the GitHub Actions first-install acceptance check so it validates the newly installed fixed runtime instead of looking for a source-tree virtual environment.
+- Shortened the isolated acceptance path so the same check also passes on standard Windows runners without long-path support enabled.
+
+### Safety
+
+- The installer acceptance run now uses a validated, disposable per-run `LOCALAPPDATA` and `APPDATA`, suppresses browser registration and launch, checks the installed version pointer and installed health launcher, and removes only its exact temporary root.
+- The acceptance evidence remains local and reports zero private-value reads, private-value emissions, network actions, and real external actions.
+
 ## [0.5.0] - 2026-08-19
 
 ### Added
