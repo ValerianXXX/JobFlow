@@ -167,7 +167,26 @@ class SignedUpdateTests(unittest.TestCase):
             self.assertEqual(protected_before, _read_bytes(key_path))
 
     def test_release_signer_supports_deep_source_archive_paths(self) -> None:
-        prefix = "jobflow-signing-long-path-" + ("x" * 80)
+        prefix_base = "jobflow-signing-long-path-"
+        key_relative = Path("LocalAppData") / "JobOps" / "ReleaseSigning" / "release-signing-key.dpapi"
+        # tempfile adds eight random characters.  Size the final component
+        # from the actual checkout location so this test always crosses the
+        # legacy 260-character boundary, including on short GitHub runner
+        # paths, without creating an overlong individual path component.
+        fixed_length = (
+            len(str(SIGNED_UPDATE_TEST_ROOT))
+            + 1
+            + len(prefix_base)
+            + 8
+            + 1
+            + len(str(key_relative))
+            + 1
+            + 32
+            + len(".tmp")
+        )
+        filler_length = max(80, 300 - fixed_length)
+        self.assertLessEqual(len(prefix_base) + filler_length + 8, 240)
+        prefix = prefix_base + ("x" * filler_length)
         raw = tempfile.mkdtemp(prefix=prefix, dir=SIGNED_UPDATE_TEST_ROOT)
         try:
             root = Path(raw)

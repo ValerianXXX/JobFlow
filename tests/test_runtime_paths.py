@@ -31,7 +31,12 @@ def _marked_data_root(parent: Path) -> Path:
         json.dumps(RUNTIME_DATA_MARKER_VALUE),
         encoding="utf-8",
     )
-    return root
+    # Windows runners may expose TEMP through an 8.3 alias such as
+    # RUNNER~1 while Path.resolve() returns the canonical long name.  Runtime
+    # paths intentionally use that canonical identity, so fixtures must bind
+    # their expectations to the same directory identity rather than its
+    # spelling.
+    return root.resolve(strict=True)
 
 
 class RuntimePathTests(unittest.TestCase):
