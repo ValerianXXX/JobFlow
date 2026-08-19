@@ -54,7 +54,7 @@ from .resume_tailoring import (
 from .runtime_schema import validate_named
 from .runtime_paths import runtime_data_root, runtime_path
 from .security import assert_safe_path
-from .sourcing import assess_job_freshness, verify_source_route
+from .sourcing import SUPPORTED_ROUTE_PROVIDERS, assess_job_freshness, verify_source_route
 from .util import canonical_json, iso_utc, load_json, sha256_bytes, sha256_file, stable_id
 
 
@@ -865,7 +865,7 @@ class JobOpsOrchestrator:
         anticipate_later_materials = bool(
             form_analysis is not None
             and (
-                route.provider in {"greenhouse", "lever", "workday"}
+                route.provider in (SUPPORTED_ROUTE_PROVIDERS - {"company"})
                 or "NAVIGATION_ACTION_STOP" in form_analysis.get("blockers", [])
             )
         )

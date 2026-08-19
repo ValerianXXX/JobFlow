@@ -20,7 +20,14 @@ from .external_action_sessions import ExternalActionSessionManager, ExternalActi
 from .forms import MANUAL_NAVIGATION_MODE, PROGRAMMATIC_NAVIGATION_MODE, navigation_control_mode
 from .private_onboarding import PrivateOnboarding
 from .runtime_schema import validate_named
-from .sourcing import _canonical_url, _host, host_matches_registered, source_route_hash, url_has_sensitive_query
+from .sourcing import (
+    SUPPORTED_ROUTE_PROVIDERS,
+    _canonical_url,
+    _host,
+    host_matches_registered,
+    source_route_hash,
+    url_has_sensitive_query,
+)
 from .util import canonical_json, iso_utc, parse_iso, project_root, sha256_bytes, stable_id
 
 
@@ -548,6 +555,8 @@ class BrowserAssistManager:
             "workday": value in {"myworkdayjobs.com", "myworkday.com", "workday.com"} or value.endswith((".myworkdayjobs.com", ".myworkday.com", ".workday.com")),
             "greenhouse": value.endswith(".greenhouse.io"),
             "lever": value == "jobs.lever.co" or value.endswith(".lever.co"),
+            "ashby": value == "jobs.ashbyhq.com" or value.endswith(".jobs.ashbyhq.com"),
+            "smartrecruiters": value == "smartrecruiters.com" or value.endswith(".smartrecruiters.com"),
         }.get(provider, False)
 
     @staticmethod
@@ -605,7 +614,7 @@ class BrowserAssistManager:
             route.get("status") != "ROUTE_APPROVED"
             or route.get("account_action") != "NONE"
             or route.get("guest_mode") != "GUEST_SELECTED"
-            or provider not in {"company", "greenhouse", "lever", "workday"}
+            or provider not in SUPPORTED_ROUTE_PROVIDERS
             or bundle.get("provider") != provider
             or (
                 (provider == "company" and route_kind != "OFFICIAL_DIRECT")
@@ -2626,7 +2635,7 @@ class BrowserAssistManager:
                 "active_handoff_kind": active.handoff_kind if active else None,
                 "real_website_inspections": inspection_count,
                 "assisted_page_navigations": navigation_count,
-                "supported_providers": ["company", "greenhouse", "lever", "workday"],
+                "supported_providers": sorted(SUPPORTED_ROUTE_PROVIDERS),
                 "multi_page": True,
                 "login_handoff": True,
                 "captcha_mfa_handoff": True,

@@ -12,11 +12,13 @@ from jobops.official_discovery import discover_official_jobs
 from jobops.runtime_schema import validate_named
 
 
-APPROVED_ATS = ["myworkdayjobs.com", "greenhouse.io", "lever.co"]
+APPROVED_ATS = [
+    "myworkdayjobs.com", "greenhouse.io", "lever.co", "ashbyhq.com", "smartrecruiters.com",
+]
 
 
 class OfflineOfficialDiscoveryTests(unittest.TestCase):
-    def test_saved_greenhouse_and_lever_json_are_auto_detected_without_transport(self) -> None:
+    def test_saved_provider_json_is_auto_detected_without_transport(self) -> None:
         fixtures = PROJECT / "tests" / "fixtures"
         for filename, expected_format, expected_provider, expected_titles in (
             (
@@ -26,6 +28,14 @@ class OfflineOfficialDiscoveryTests(unittest.TestCase):
             (
                 "synthetic-lever-postings.json", "lever_json", "lever",
                 {"Synthetic Strategy Analyst", "Synthetic Product Analyst"},
+            ),
+            (
+                "synthetic-ashby-jobs.json", "ashby_json", "ashby",
+                {"Synthetic Treasury Analyst", "Synthetic Risk Operations Analyst"},
+            ),
+            (
+                "synthetic-smartrecruiters-postings.json", "smartrecruiters_json", "smartrecruiters",
+                {"Synthetic Credit Analyst", "Synthetic Portfolio Analyst"},
             ),
         ):
             with self.subTest(filename=filename), patch(

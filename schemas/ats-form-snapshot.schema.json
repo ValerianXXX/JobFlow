@@ -9,7 +9,7 @@
     "schema_version": {"const": 1},
     "status": {"const": "FORM_SNAPSHOT_ANALYZED"},
     "source_mode": {"const": "LOCAL_SNAPSHOT_ONLY"},
-    "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
+    "provider": {"enum": ["company", "workday", "greenhouse", "lever", "ashby", "smartrecruiters"]},
     "step_kind": {"enum": ["MY_INFORMATION", "EXPERIENCE_EDUCATION", "APPLICATION_QUESTIONS", "VOLUNTARY_DISCLOSURE", "REVIEW", "ACCOUNT_OR_LOGIN", "UNKNOWN"]},
     "canonical_url": {"type": "string", "format": "uri", "pattern": "^https://"},
     "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},

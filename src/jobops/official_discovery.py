@@ -198,6 +198,54 @@ def _provider_json_evidence(value: object, source_format: str) -> tuple[list[_Li
             evidence.append(
                 _LinkEvidence(href, "", _compact(title), _compact(categories.get("location")), "provider_json")
             )
+    elif source_format == "ashby_json":
+        if not isinstance(value, dict) or value.get("apiVersion") != "1" or not isinstance(value.get("jobs"), list):
+            raise JobOpsError(
+                "OFFICIAL_PROVIDER_JSON_INVALID",
+                "The saved Ashby payload must use apiVersion 1 and contain a jobs array.",
+            )
+        jobs = value["jobs"]
+        if len(jobs) > MAX_JOB_CANDIDATES:
+            raise JobOpsError("OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT", "The saved provider payload contains too many jobs.")
+        for item in jobs:
+            if not isinstance(item, dict) or item.get("isListed") is False:
+                ignored += 1
+                continue
+            href = item.get("jobUrl")
+            title = item.get("title")
+            location = item.get("location")
+            if not isinstance(href, str) or not isinstance(title, str):
+                ignored += 1
+                continue
+            evidence.append(_LinkEvidence(href, "", _compact(title), _compact(location), "provider_json"))
+    elif source_format == "smartrecruiters_json":
+        if not isinstance(value, dict) or not isinstance(value.get("content"), list):
+            raise JobOpsError(
+                "OFFICIAL_PROVIDER_JSON_INVALID",
+                "The saved SmartRecruiters payload must contain a content array.",
+            )
+        postings = value["content"]
+        if len(postings) > MAX_JOB_CANDIDATES:
+            raise JobOpsError("OFFICIAL_SNAPSHOT_COMPLEXITY_LIMIT", "The saved provider payload contains too many jobs.")
+        for item in postings:
+            if not isinstance(item, dict) or item.get("active") is False:
+                ignored += 1
+                continue
+            href = item.get("postingUrl") or item.get("jobAdUrl")
+            title = item.get("name")
+            location_value = item.get("location")
+            if isinstance(location_value, dict):
+                location = ", ".join(
+                    _compact(location_value.get(key))
+                    for key in ("city", "region", "country")
+                    if _compact(location_value.get(key))
+                )
+            else:
+                location = location_value
+            if not isinstance(href, str) or not isinstance(title, str):
+                ignored += 1
+                continue
+            evidence.append(_LinkEvidence(href, "", _compact(title), _compact(location), "provider_json"))
     else:
         raise JobOpsError("OFFICIAL_SNAPSHOT_FORMAT_UNSUPPORTED", "The saved provider payload type is unsupported.")
     return evidence, ignored
@@ -290,10 +338,13 @@ def discover_official_jobs(
             "The local official-careers snapshot must be non-empty and no larger than the offline parser limit.",
             maximum_bytes=MAX_SNAPSHOT_BYTES,
         )
-    if source_format not in {"html", "page_snapshot", "greenhouse_json", "lever_json", "auto"}:
+    if source_format not in {
+        "html", "page_snapshot", "greenhouse_json", "lever_json",
+        "ashby_json", "smartrecruiters_json", "auto",
+    }:
         raise JobOpsError(
             "OFFICIAL_SNAPSHOT_FORMAT_UNSUPPORTED",
-            "Only local HTML, saved-page JSON, Greenhouse JSON, and Lever JSON snapshots are supported.",
+            "Only local HTML, saved-page JSON, and supported saved ATS JSON snapshots are accepted.",
         )
     try:
         decoded = snapshot.decode("utf-8")
@@ -323,6 +374,14 @@ def discover_official_jobs(
     if source_format == "auto":
         if isinstance(parsed_json, dict) and isinstance(parsed_json.get("source_url"), str) and isinstance(parsed_json.get("html"), str):
             resolved_format = "page_snapshot"
+        elif (
+            isinstance(parsed_json, dict)
+            and parsed_json.get("apiVersion") == "1"
+            and isinstance(parsed_json.get("jobs"), list)
+        ):
+            resolved_format = "ashby_json"
+        elif isinstance(parsed_json, dict) and isinstance(parsed_json.get("content"), list):
+            resolved_format = "smartrecruiters_json"
         elif isinstance(parsed_json, dict) and isinstance(parsed_json.get("jobs"), list):
             resolved_format = "greenhouse_json"
         elif isinstance(parsed_json, list):
@@ -330,7 +389,7 @@ def discover_official_jobs(
         else:
             raise JobOpsError(
                 "OFFICIAL_PROVIDER_JSON_UNRECOGNIZED",
-                "The JSON is not a saved page, Greenhouse job payload, or Lever posting payload.",
+                "The JSON is not a saved page or a recognized supported ATS posting payload.",
             )
 
     html: str | None = decoded if resolved_format == "html" else None
@@ -345,7 +404,7 @@ def discover_official_jobs(
         html = envelope.get("html")
         if not isinstance(html, str) or not html.strip():
             raise JobOpsError("OFFICIAL_PAGE_SNAPSHOT_INVALID", "The saved-page snapshot must contain non-empty HTML.")
-    elif resolved_format in {"greenhouse_json", "lever_json"}:
+    elif resolved_format in {"greenhouse_json", "lever_json", "ashby_json", "smartrecruiters_json"}:
         provider_evidence, provider_ignored = _provider_json_evidence(parsed_json, resolved_format)
 
     snapshot_hash = sha256_bytes(snapshot)

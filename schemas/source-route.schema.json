@@ -5,7 +5,7 @@
   "properties": {
     "status": {"enum": ["ROUTE_APPROVED", "NEEDS_ACCOUNT_APPROVAL", "NEEDS_USER_INPUT"]}, "company_domain": {"type": "string"},
     "official_entry_url": {"type": "string", "format": "uri", "pattern": "^https://"}, "current_url": {"type": "string", "format": "uri", "pattern": "^https://"},
-    "route_kind": {"enum": ["OFFICIAL_DIRECT", "OFFICIAL_TO_APPROVED_ATS"]}, "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
+    "route_kind": {"enum": ["OFFICIAL_DIRECT", "OFFICIAL_TO_APPROVED_ATS"]}, "provider": {"enum": ["company", "workday", "greenhouse", "lever", "ashby", "smartrecruiters"]},
     "ats_tenant": {"type": "string"}, "ats_board": {"type": "string"}, "ats_job_identity": {"type": "string"},
     "guest_mode": {"enum": ["GUEST_SELECTED", "GUEST_UNAVAILABLE", "UNKNOWN"]}, "account_action": {"enum": ["NONE", "NEEDS_ACCOUNT_APPROVAL", "NEEDS_USER_INPUT"]},
     "official_page_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "jd_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},

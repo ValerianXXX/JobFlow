@@ -10,6 +10,9 @@ from .util import canonical_json, parse_iso, sha256_bytes
 
 
 CAREER_HINTS = ("career", "careers", "jobs", "job", "join-us", "joinus", "work-with-us", "招聘", "职位")
+SUPPORTED_ROUTE_PROVIDERS = frozenset({
+    "company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters",
+})
 COMMON_CC_SLD = {"ac", "co", "com", "edu", "gov", "go", "net", "ne", "org", "or", "mil", "nom"}
 SENSITIVE_QUERY_KEYS = {
     "api_key", "apikey", "auth", "authorization", "code", "credential", "email", "id_token",
@@ -85,6 +88,18 @@ def _provider_and_tenant(host: str, url: str) -> tuple[str, str, str, str]:
         tenant = path_parts[0] if path_parts else labels[0]
         job_identity = path_parts[-1] if path_parts else "UNKNOWN"
         return "lever", tenant.casefold(), "default", job_identity
+    if _host(host) == "jobs.ashbyhq.com" or _host(host).endswith(".jobs.ashbyhq.com"):
+        tenant = path_parts[0] if path_parts else labels[0]
+        # Ashby job and application URLs retain the board name followed by the
+        # stable posting identity; child application paths must not replace it.
+        job_identity = path_parts[1] if len(path_parts) >= 2 else "UNKNOWN"
+        return "ashby", tenant.casefold(), "default", job_identity
+    if _host(host) == "smartrecruiters.com" or _host(host).endswith(".smartrecruiters.com"):
+        # Public SmartRecruiters posting URLs use /{company}/{posting}; the
+        # browser route may add child paths but must keep that posting segment.
+        tenant = path_parts[0] if path_parts else "UNKNOWN"
+        job_identity = path_parts[1] if len(path_parts) >= 2 else "UNKNOWN"
+        return "smartrecruiters", tenant.casefold(), "default", job_identity
     raise JobOpsError("ATS_PROVIDER_UNKNOWN", "The ATS host is not recognized by an offline provider parser.", host=_host(host))
 
 

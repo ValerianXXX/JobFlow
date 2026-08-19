@@ -333,7 +333,10 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "build-mock-sites":
             output = _project_input(project, args.output, operation="write")
             fields = [{"id": "portfolio_url", "label": "Portfolio URL"}, {"id": "work_authorization", "label": "Work authorization"}, {"id": "electronic_signature", "label": "Electronic signature"}, {"id": "disability", "label": "Disability"}]
-            manifests = [build_mock_ats_site(output, provider, fields) for provider in ("greenhouse", "lever", "workday")]
+            manifests = [
+                build_mock_ats_site(output, provider, fields)
+                for provider in ("greenhouse", "lever", "workday", "ashby", "smartrecruiters")
+            ]
             emit({"status": "MOCK_SITES_BUILT", "sites": manifests, "real_external_actions": 0, "next_safe_action": "run-to-awaiting-approval"}, project)
         elif args.command == "queue":
             database = _database(project)

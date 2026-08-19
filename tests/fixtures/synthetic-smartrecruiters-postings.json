@@ -1,0 +1,32 @@
+{
+  "content": [
+    {
+      "id": "12345",
+      "uuid": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "name": "Synthetic Credit Analyst",
+      "active": true,
+      "postingUrl": "https://jobs.smartrecruiters.com/example/12345-synthetic-credit-analyst",
+      "applyUrl": "https://jobs.smartrecruiters.com/example/12345-synthetic-credit-analyst/apply",
+      "location": {"city": "Chicago", "region": "Illinois", "country": "US"}
+    },
+    {
+      "id": "67890",
+      "uuid": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      "name": "Synthetic Portfolio Analyst",
+      "active": true,
+      "postingUrl": "https://jobs.smartrecruiters.com/example/67890-synthetic-portfolio-analyst",
+      "applyUrl": "https://jobs.smartrecruiters.com/example/67890-synthetic-portfolio-analyst/apply",
+      "location": {"city": "Boston", "region": "Massachusetts", "country": "US"}
+    },
+    {
+      "id": "99999",
+      "uuid": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      "name": "Synthetic Inactive Role",
+      "active": false,
+      "postingUrl": "https://jobs.smartrecruiters.com/example/99999-synthetic-inactive-role",
+      "applyUrl": "https://jobs.smartrecruiters.com/example/99999-synthetic-inactive-role/apply",
+      "location": {"city": "Nowhere", "country": "US"}
+    }
+  ],
+  "totalFound": 3
+}

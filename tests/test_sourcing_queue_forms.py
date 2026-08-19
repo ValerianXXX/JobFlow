@@ -14,7 +14,7 @@ from jobops.tracker import schedule_reminder, upsert_application
 from jobops.util import iso_utc
 
 
-ATS = ["myworkdayjobs.com", "greenhouse.io", "lever.co"]
+ATS = ["myworkdayjobs.com", "greenhouse.io", "lever.co", "ashbyhq.com", "smartrecruiters.com"]
 HASH_A = "sha256:" + "a" * 64
 HASH_B = "sha256:" + "b" * 64
 
@@ -136,9 +136,9 @@ class SourcingQueueFormTests(unittest.TestCase):
         self.assertEqual(len(mapped["sensitive_fields"]), 3)
         self.assertEqual([item["action"] for item in mapped["fields"]], ["PREFILL", "STOP", "STOP", "STOP"])
 
-    def test_three_local_provider_sites_are_created_without_network(self) -> None:
+    def test_local_provider_sites_are_created_without_network(self) -> None:
         with project_temp() as temp:
-            for provider in ("greenhouse", "lever", "workday"):
+            for provider in ("greenhouse", "lever", "workday", "ashby", "smartrecruiters"):
                 manifest = build_mock_ats_site(temp, provider, [{"id": "name", "label": "Display name"}])
                 self.assertEqual(manifest["network_actions"], 0)
                 self.assertTrue(manifest["submit_blocked"])

@@ -4,10 +4,11 @@ from typing import Any, Iterable
 
 from .errors import JobOpsError
 from .runtime_schema import validate_named
+from .sourcing import SUPPORTED_ROUTE_PROVIDERS
 from .util import canonical_json, project_root, sha256_bytes
 
 
-ALLOWED_PROVIDERS = {"company", "greenhouse", "lever", "workday"}
+ALLOWED_PROVIDERS = SUPPORTED_ROUTE_PROVIDERS
 HASH_FIELDS = ("route_hash", "form_snapshot_hash", "browser_plan_hash")
 
 

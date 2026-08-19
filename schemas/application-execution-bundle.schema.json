@@ -19,7 +19,7 @@
       "type": ["string", "null"],
       "pattern": "^AIT-[A-F0-9]{12}$"
     },
-    "provider": {"enum": ["company", "greenhouse", "lever", "workday"]},
+    "provider": {"enum": ["company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters"]},
     "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "browser_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},

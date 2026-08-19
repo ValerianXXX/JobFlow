@@ -16,7 +16,7 @@
     "status": {"enum": ["READY_FOR_REVIEW", "NEEDS_USER_INPUT", "NEEDS_ACCOUNT_APPROVAL"]},
     "mode": {"const": "PREPARE_AND_QUEUE"},
     "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
-    "provider": {"enum": ["company", "greenhouse", "lever", "workday"]},
+    "provider": {"enum": ["company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters"]},
     "route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "browser_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},

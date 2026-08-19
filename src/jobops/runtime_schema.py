@@ -196,7 +196,12 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         if any(item.get("snapshot_hash") != value.get("snapshot_hash") for item in candidates):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Every discovered candidate must retain the same local snapshot hash.")
         provider_format = str(value.get("source_format", ""))
-        expected_provider = {"greenhouse_json": "greenhouse", "lever_json": "lever"}.get(provider_format)
+        expected_provider = {
+            "greenhouse_json": "greenhouse",
+            "lever_json": "lever",
+            "ashby_json": "ashby",
+            "smartrecruiters_json": "smartrecruiters",
+        }.get(provider_format)
         if expected_provider and any(
             item.get("provider") != expected_provider or item.get("evidence_kind") != "provider_json"
             for item in candidates

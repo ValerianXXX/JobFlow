@@ -305,6 +305,8 @@ def _provider_host_matches(provider: str, host: str, company_domain: str) -> boo
         or value.endswith((".myworkdayjobs.com", ".myworkday.com", ".workday.com")),
         "greenhouse": value == "boards.greenhouse.io" or value == "job-boards.greenhouse.io" or value.endswith(".greenhouse.io"),
         "lever": value == "jobs.lever.co" or value.endswith(".lever.co"),
+        "ashby": value == "jobs.ashbyhq.com" or value.endswith(".jobs.ashbyhq.com"),
+        "smartrecruiters": value == "smartrecruiters.com" or value.endswith(".smartrecruiters.com"),
     }.get(provider, False)
 
 

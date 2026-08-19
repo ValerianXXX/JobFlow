@@ -28,6 +28,16 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
         "saved_snapshot_modes": ["single_html", "ordered_html_sequence"], "route_shape": "OFFICIAL_TO_APPROVED_ATS",
         "dynamic_control_strategy": "logical_field_hash",
     },
+    {
+        "provider": "ashby", "offline_evidence_level": "SINGLE_SNAPSHOT_PASS",
+        "saved_snapshot_modes": ["single_html", "provider_json"], "route_shape": "OFFICIAL_TO_APPROVED_ATS",
+        "dynamic_control_strategy": "opaque_control_ref",
+    },
+    {
+        "provider": "smartrecruiters", "offline_evidence_level": "SINGLE_SNAPSHOT_PASS",
+        "saved_snapshot_modes": ["single_html", "provider_json"], "route_shape": "OFFICIAL_TO_APPROVED_ATS",
+        "dynamic_control_strategy": "opaque_control_ref",
+    },
 )
 
 _TRANSPORT_OPERATION_SEQUENCE = [

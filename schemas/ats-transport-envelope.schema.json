@@ -15,7 +15,7 @@
   "properties": {
     "schema_version": {"const": 1},
     "envelope_id": {"type": "string", "pattern": "^ATE-[A-F0-9]{12}$"},
-    "provider": {"enum": ["company", "greenhouse", "lever", "workday"]},
+    "provider": {"enum": ["company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters"]},
     "action": {"enum": ["read_official_job", "inspect_application_form", "prefill_application_form", "upload_materials", "submit_application", "verify_receipt"]},
     "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
     "run_id": {"type": "string", "pattern": "^RUN-[A-F0-9]{12}$"},

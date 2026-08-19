@@ -258,10 +258,10 @@ class OnboardingCenterTests(unittest.TestCase):
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
             report = service.bootstrap()["ats_capabilities"]
-            self.assertEqual(report["provider_count"], 4)
+            self.assertEqual(report["provider_count"], 6)
             self.assertEqual(
                 {item["provider"] for item in report["providers"]},
-                {"company", "greenhouse", "lever", "workday"},
+                {"company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters"},
             )
             self.assertFalse(report["live_site_accessed"])
             self.assertEqual(report["network_actions"], 0)
@@ -459,7 +459,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v35-user-present-wake", html)
+        self.assertIn("jobflow-v36-ats-contracts", html)
         self.assertIn('value="chatgpt_export_large"', html)
         self.assertIn("雷霆大文件", script)
         self.assertIn("ZIPzilla Express", script)
@@ -2388,7 +2388,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v35-user-present-wake", html)
+        self.assertIn("jobflow-v36-ats-contracts", html)
 
 
 if __name__ == "__main__":

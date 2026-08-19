@@ -58,7 +58,7 @@ An AI connection is accepted only after a structured capability test. Agent requ
 | Encrypted onboarding, Candidate Profile, Answer Bank, and Claim review | Available |
 | Existing Agent or loopback-model connection | Available with capability gate |
 | Visible official-company job discovery and verified Apply routing | Available with user authorization |
-| User-present company, Greenhouse, Lever, and Workday assistance | Bound routes only; live compatibility varies |
+| User-present company, Greenhouse, Lever, Workday, Ashby, and SmartRecruiters assistance | Bound routes only; live compatibility varies |
 | Approved field fill and material attachment | Available per approved application |
 | User-present local queue cadence, pause, and manual run | Available; every run requires a user click |
 | Final submission or unattended operation | Not implemented |

@@ -1,0 +1,26 @@
+{
+  "apiVersion": "1",
+  "jobs": [
+    {
+      "title": "Synthetic Treasury Analyst",
+      "location": "New York, NY",
+      "isListed": true,
+      "jobUrl": "https://jobs.ashbyhq.com/example/11111111-1111-4111-8111-111111111111",
+      "applyUrl": "https://jobs.ashbyhq.com/example/11111111-1111-4111-8111-111111111111/application"
+    },
+    {
+      "title": "Synthetic Risk Operations Analyst",
+      "location": "Remote",
+      "isListed": true,
+      "jobUrl": "https://jobs.ashbyhq.com/example/22222222-2222-4222-8222-222222222222",
+      "applyUrl": "https://jobs.ashbyhq.com/example/22222222-2222-4222-8222-222222222222/application"
+    },
+    {
+      "title": "Synthetic Unlisted Role",
+      "location": "Unknown",
+      "isListed": false,
+      "jobUrl": "https://jobs.ashbyhq.com/example/33333333-3333-4333-8333-333333333333",
+      "applyUrl": "https://jobs.ashbyhq.com/example/33333333-3333-4333-8333-333333333333/application"
+    }
+  ]
+}

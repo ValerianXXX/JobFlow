@@ -8,7 +8,7 @@
   "properties": {
     "schema_version": {"const": 1},
     "status": {"const": "LOCAL_ATS_PLAN_VALIDATED"},
-    "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
+    "provider": {"enum": ["company", "workday", "greenhouse", "lever", "ashby", "smartrecruiters"]},
     "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "form_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "browser_plan_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},

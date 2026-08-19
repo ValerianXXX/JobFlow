@@ -10,7 +10,7 @@ from .util import sha256_bytes, write_json
 from .application_materials import field_answer_key
 
 
-PROVIDERS = ("greenhouse", "lever", "workday")
+PROVIDERS = ("greenhouse", "lever", "workday", "ashby", "smartrecruiters")
 
 
 CLASSIFICATION_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (

@@ -299,6 +299,17 @@ Object.assign(STRINGS.en,{
   aiToolStartUserPresentAssist:"Start user-present filling"
 });
 
+Object.assign(STRINGS.zh,{
+  offlineDiscoveryBody:"只读取你选择的本地 HTML、保存页面 JSON，或 Greenhouse、Lever、Ashby、SmartRecruiters 岗位 JSON；不执行页面代码、不保存快照、不联网。",
+  browserAssistCompanyOnly:"支持已审批的公司官网、Greenhouse、Lever、Workday、Ashby 与 SmartRecruiters 路线；每一页仍会按当前结构重新校验，离线测试不等于实时兼容证明。",
+  browserAssistRouteUnsupported:"该页面不属于已批准的公司官网、Greenhouse、Lever、Workday、Ashby 或 SmartRecruiters 路线，JobFlow 已安全停止。"
+});
+Object.assign(STRINGS.en,{
+  offlineDiscoveryBody:"Reads only local HTML, a saved-page JSON envelope, or Greenhouse, Lever, Ashby, and SmartRecruiters job JSON; page code is not executed, the snapshot is not retained, and no network is used.",
+  browserAssistCompanyOnly:"Approved company, Greenhouse, Lever, Workday, Ashby, and SmartRecruiters routes are supported, but every current page is revalidated; offline evidence is never treated as proof of live compatibility.",
+  browserAssistRouteUnsupported:"This page is outside the approved company, Greenhouse, Lever, Workday, Ashby, or SmartRecruiters route, so JobFlow stopped safely."
+});
+
 const UI_PROTOCOL_VERSION = 32;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [

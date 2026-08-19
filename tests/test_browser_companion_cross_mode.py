@@ -16,6 +16,7 @@ class BrowserCompanionCrossModeTests(unittest.TestCase):
         service._lock = threading.RLock()
         service._guided_intakes = {}
         service.browser_assist = mock.Mock()
+        service.intake_control = mock.Mock(spec=["assert_new_intake_allowed"])
         return service
 
     def test_guided_intake_cannot_start_while_application_assist_is_active(self) -> None:

@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from _support import PROJECT, project_temp
 from jobops.approvals import ApprovalContext, UploadBinding, issue_approval, validate_approval
 from jobops.application_execution import build_application_execution_plan
+from jobops import db as db_module
 from jobops.db import JobOpsDB, MIGRATION_001_SQL, MIGRATION_003_SQL
 from jobops.errors import JobOpsError
 from jobops.external_actions import ExternalActionGateway, ExternalActionPolicy
@@ -189,13 +190,85 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
         with project_temp() as temp:
             database = JobOpsDB(temp / "fresh.db")
             database.initialize()
-            self.assertEqual(database.schema_version(), 12)
+            self.assertEqual(database.schema_version(), 13)
             with database.connect() as connection:
                 definition = str(connection.execute(
                     "SELECT sql FROM sqlite_master WHERE type='table' AND name='browser_assist_runs'"
                 ).fetchone()[0])
             self.assertIn("'MANUAL_NAVIGATION_REQUIRED'", definition)
             self.assertNotIn("'PROGRAMMATIC_SUBMIT_NAVIGATION'", definition)
+
+    def test_v12_to_v13_preserves_assist_audit_and_adds_new_provider_constraints(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "provider-v12.db")
+            now = iso_utc()
+            with database.connect() as connection:
+                connection.executescript(MIGRATION_001_SQL)
+                connection.execute("INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','1')")
+                database._migrate_1_to_2(connection)
+                for version in range(3, 13):
+                    connection.executescript(getattr(db_module, f"MIGRATION_{version:03d}_SQL"))
+                connection.execute(
+                    "INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("JOB-M13", "synthetic", "fixture", None, "Example", "Analyst", None, "APPROVED", now, now),
+                )
+                connection.execute(
+                    "INSERT INTO applications VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("APP-M13", "JOB-M13", "example.test", "APPROVED", HASH_A, HASH_B, 1, None, "APPROVED", now),
+                )
+                connection.execute(
+                    """INSERT INTO external_action_sessions(
+                    session_id,application_id,application_context_hash,source_route_hash,form_snapshot_hash,
+                    uploads_hash,site_policy_version,allowed_actions_json,control_generation,mode,bound_hash,
+                    issued_at,expires_at,nonce,session_version,status,revoked_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        "EAS-M13", "APP-M13", HASH_A, HASH_A, HASH_A, HASH_A, "v1", "[]", 1,
+                        "ASSISTED_USER_PRESENT", HASH_B, now, "2099-01-01T00:00:00Z", "nonce", 1,
+                        "AUTHORIZED", None,
+                    ),
+                )
+                connection.execute(
+                    """INSERT INTO browser_assist_runs(
+                    assist_id,application_id,session_id,allowed_origin,provider,route_kind,current_step,max_steps,
+                    handoff_kind,last_page_hash,status,prepared_hash,created_at,expires_at,updated_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        "BA-M13-OLD", "APP-M13", "EAS-M13", "https://jobs.lever.co", "lever",
+                        "OFFICIAL_TO_APPROVED_ATS", 2, 20, None, HASH_A, "PAGE_REVIEW_REQUIRED",
+                        HASH_B, now, "2099-01-01T00:00:00Z", now,
+                    ),
+                )
+                connection.execute(
+                    "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
+                    ("BA-M13-OLD", "APP-M13", "PAGE_REVIEW_REQUIRED", HASH_A, now),
+                )
+            self.assertEqual(database.schema_version(), 12)
+            self.assertEqual(database.migrate(), [13])
+            with database.connect() as connection:
+                self.assertEqual(tuple(connection.execute(
+                    "SELECT provider,status FROM browser_assist_runs WHERE assist_id='BA-M13-OLD'"
+                ).fetchone()), ("lever", "PAGE_REVIEW_REQUIRED"))
+                self.assertEqual(tuple(connection.execute(
+                    "SELECT event_type,evidence_hash FROM browser_assist_events WHERE assist_id='BA-M13-OLD'"
+                ).fetchone()), ("PAGE_REVIEW_REQUIRED", HASH_A))
+                self.assertEqual(connection.execute("PRAGMA foreign_key_check").fetchall(), [])
+                for provider in ("ashby", "smartrecruiters"):
+                    connection.execute(
+                        """INSERT INTO browser_assist_runs(
+                        assist_id,application_id,session_id,allowed_origin,provider,route_kind,current_step,max_steps,
+                        handoff_kind,last_page_hash,status,prepared_hash,created_at,expires_at,updated_at
+                        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        (
+                            f"BA-M13-{provider}", "APP-M13", "EAS-M13", f"https://jobs.{provider}.example",
+                            provider, "OFFICIAL_TO_APPROVED_ATS", 1, 20, None, None, "PAIRING", None,
+                            now, "2099-01-01T00:00:00Z", now,
+                        ),
+                    )
+                with self.assertRaises(sqlite3.IntegrityError):
+                    connection.execute(
+                        "UPDATE browser_assist_events SET event_type='MUTATED' WHERE assist_id='BA-M13-OLD'"
+                    )
 
     def test_approval_schema_rejects_extra_fields_and_bad_time_order(self) -> None:
         now = datetime.now(timezone.utc)
@@ -269,7 +342,7 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                     ("RPK-PACKET-1", "APP-PACKET", HASH_A, "secure-ref:SYNTHETIC_PACKET_1", "AWAITING_APPROVAL", now),
                 )
 
-            self.assertEqual(database.migrate(), [4, 5, 6, 7, 8, 9, 10, 11, 12])
+            self.assertEqual(database.migrate(), [4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
             with database.connect() as connection:
                 row = connection.execute(
                     "SELECT packet_id,packet_version,supersedes_packet_id,status FROM review_packets"

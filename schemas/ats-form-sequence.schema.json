@@ -9,7 +9,7 @@
     "schema_version": {"const": 1},
     "status": {"const": "LOCAL_FORM_SEQUENCE_ANALYZED"},
     "source_mode": {"const": "LOCAL_SNAPSHOT_SEQUENCE_ONLY"},
-    "provider": {"enum": ["company", "workday", "greenhouse", "lever"]},
+    "provider": {"enum": ["company", "workday", "greenhouse", "lever", "ashby", "smartrecruiters"]},
     "canonical_url": {"type": "string", "format": "uri", "pattern": "^https://"},
     "source_route_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "step_count": {"type": "integer", "minimum": 1, "maximum": 20},

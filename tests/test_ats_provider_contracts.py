@@ -20,7 +20,10 @@ from jobops.sourcing import source_route_hash, verify_source_route
 
 H1 = "sha256:" + "a" * 64
 H2 = "sha256:" + "b" * 64
-ATS = ["myworkdayjobs.com", "workday.com", "greenhouse.io", "lever.co"]
+ATS = [
+    "myworkdayjobs.com", "workday.com", "greenhouse.io", "lever.co",
+    "ashbyhq.com", "smartrecruiters.com",
+]
 
 
 def lever_route() -> dict:
@@ -33,6 +36,34 @@ def lever_route() -> dict:
         company_domain="example.com", official_entry_url="https://example.com/careers/lever-analyst",
         current_url="https://jobs.lever.co/example/abc-123",
         navigation_history=["https://example.com/careers/lever-analyst", "https://jobs.lever.co/example/abc-123"],
+        approved_ats_hosts=ATS, guest_available=True, tenant_binding=binding,
+        official_page_hash=H1, jd_snapshot_hash=H2,
+    ).as_dict()
+
+
+def provider_route(provider: str) -> dict:
+    values = {
+        "ashby": (
+            "jobs.ashbyhq.com",
+            "https://jobs.ashbyhq.com/example/11111111-1111-4111-8111-111111111111/application",
+            "11111111-1111-4111-8111-111111111111",
+        ),
+        "smartrecruiters": (
+            "jobs.smartrecruiters.com",
+            "https://jobs.smartrecruiters.com/example/12345-synthetic-credit-analyst/apply",
+            "12345-synthetic-credit-analyst",
+        ),
+    }
+    host, current_url, identity = values[provider]
+    binding = {
+        "provider": provider, "company_registrable_domain": "example.com", "ats_host": host,
+        "tenant": "example", "board": "default", "job_identity": identity,
+        "official_page_hash": H1, "jd_snapshot_hash": H2,
+    }
+    official_url = f"https://example.com/careers/{provider}-analyst"
+    return verify_source_route(
+        company_domain="example.com", official_entry_url=official_url,
+        current_url=current_url, navigation_history=[official_url, current_url],
         approved_ats_hosts=ATS, guest_available=True, tenant_binding=binding,
         official_page_hash=H1, jd_snapshot_hash=H2,
     ).as_dict()
@@ -72,10 +103,29 @@ class ATSProviderContractTests(unittest.TestCase):
         self.assertEqual(validated["network_actions"], 0)
         self.assertEqual(validated["real_side_effects"], 0)
 
+    def test_ashby_and_smartrecruiters_snapshots_stop_upload_and_submit_without_transport(self) -> None:
+        for provider in ("ashby", "smartrecruiters"):
+            with self.subTest(provider=provider), patch(
+                "socket.socket", side_effect=AssertionError("network forbidden")
+            ), patch("urllib.request.urlopen", side_effect=AssertionError("network forbidden")):
+                form = analyze_local_ats_form(
+                    (PROJECT / "tests" / "fixtures" / f"synthetic-{provider}-form.html").read_bytes(),
+                    route=provider_route(provider), blocked_categories=[],
+                )
+            self.assertEqual(form["provider"], provider)
+            self.assertIn("FILE_UPLOAD_STOP", form["blockers"])
+            self.assertIn("FINAL_SUBMIT_STOP", form["blockers"])
+            self.assertEqual(form["browser_actions"], 0)
+            self.assertEqual(form["network_actions"], 0)
+            self.assertEqual(form["real_external_actions"], 0)
+
     def test_capability_report_is_hash_bound_and_never_claims_live_compatibility(self) -> None:
         report = offline_ats_capabilities()
-        self.assertEqual(report["provider_count"], 4)
-        self.assertEqual({item["provider"] for item in report["providers"]}, {"company", "greenhouse", "lever", "workday"})
+        self.assertEqual(report["provider_count"], 6)
+        self.assertEqual(
+            {item["provider"] for item in report["providers"]},
+            {"company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters"},
+        )
         self.assertTrue(all(item["live_site_verified"] is False for item in report["providers"]))
         self.assertTrue(all(item["browser_actions"] == 0 and item["real_external_actions"] == 0 for item in report["providers"]))
         self.assertTrue(all(item["live_transport_registered"] is False for item in report["providers"]))
@@ -93,7 +143,7 @@ class ATSProviderContractTests(unittest.TestCase):
         self.assertEqual(integrity.exception.code, "ATS_CAPABILITY_INTEGRITY_FAILED")
 
     def test_every_provider_uses_one_hash_only_transport_contract(self) -> None:
-        for provider in ("company", "greenhouse", "lever", "workday"):
+        for provider in ("company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters"):
             with self.subTest(provider=provider):
                 contract = provider_transport_contract(provider)
                 self.assertFalse(contract["live_transport_registered"])
@@ -171,7 +221,7 @@ class ATSProviderContractTests(unittest.TestCase):
         completed = subprocess.run(command, capture_output=True, text=True, timeout=30, check=False)
         self.assertEqual(completed.returncode, 0, completed.stderr)
         report = json.loads(completed.stdout)
-        self.assertEqual(report["provider_count"], 4)
+        self.assertEqual(report["provider_count"], 6)
         self.assertFalse(report["live_site_accessed"])
         self.assertEqual(report["network_actions"], 0)
         self.assertEqual(report["real_external_actions"], 0)
