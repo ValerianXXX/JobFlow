@@ -21,7 +21,9 @@ const STRINGS = {
     browserAssistNavigationStalled: "页面在 20 秒内没有可靠前进；JobFlow 已停止且不会重试。请结束本次辅助后重新开始。",
     heroTitle: "一次填写，连续投递", heroBody: "从简历与项目材料、AI 资料和你的直接回答建立完整资料。所有私人内容只在本机解密，不写入普通项目文件。",
     demoTitle: "合成演示 · 不使用真实资料", demoBody: "这是自动清理的临时体验环境。所有示例均为虚构内容；文件上传和真实 AI 连接已关闭，请勿在这里输入个人信息。", demoReview: "查看 AI 与冲突审阅", demoQueue: "查看待审批申请",
-    atsCapabilityTitle: "官网与 ATS 能力边界", atsCapabilityBody: "本地证据证明结构分析能力；实时页面会逐页重新验证，不能据此承诺兼容任意网站。", atsLiveUnverified: "实时兼容：逐页验证", atsUserPresentAssist: "在场预填与材料上传：支持", atsNavigationScoped: "非最终前进：仅明确控件", atsActionsBlocked: "最终 Submit：仅由你点击", atsEvidenceDirect: "公司官网单页快照", atsEvidenceVertical: "完整合成纵向链", atsEvidenceSingle: "保存的单页表单", atsEvidenceSequence: "保存的多步骤序列",
+    atsCapabilityTitle: "官网与 ATS 能力边界", atsCapabilityBody: "每个平台只显示实际纳入自动测试的环节；共享浏览器能力不能冒充该平台已实站验收。", atsLiveUnverified: "实时兼容：逐页验证", atsUserPresentAssist: "通用在场执行：仍需当前页面复验", atsNavigationScoped: "非最终前进：仅明确控件", atsActionsBlocked: "最终 Submit：仅由你点击", atsEvidenceDirect: "公司官网与合成浏览器链", atsEvidenceVertical: "合成纵向链", atsEvidenceSingle: "岗位发现与单页表单", atsEvidenceSequence: "保存的多步骤序列",
+    atsVerifiedStages: "本地已验证：{stages}", atsUnverifiedStages: "该平台尚未验证：{stages}", atsNoUnverifiedStages: "所有列出的离线环节均有证据", atsRuntimeEvidence: "共享浏览器运行时：预填、附件、明确非最终前进、现代组件重绑定均通过合成浏览器测试；不等于任一实站已兼容。",
+    atsStageDiscovery: "岗位发现", atsStageRoute: "路线绑定", atsStageForm: "表单分析", atsStagePlan: "脱敏计划", atsStageReview: "审阅包", atsStagePrefill: "页面预填", atsStageUpload: "材料附加", atsStageNavigation: "非最终前进", atsStageResume: "多页恢复", atsStageResult: "结果识别", atsStageRebinding: "组件重绑定",
     offlineDiscoveryTitle: "解析已保存的公司招聘页", offlineDiscoveryBody: "只读取你选择的本地 HTML、保存页面 JSON，或 Greenhouse / Lever 岗位 JSON；不执行页面代码、不保存快照、不联网。", companyDomainLabel: "公司官网域名", careersUrlLabel: "保存页面原始 URL", officialSnapshotLabel: "招聘页快照", analyzeOfficialSnapshot: "只读解析岗位", officialInputsRequired: "请填写官网域名与招聘页 URL，并选择本地快照。", officialSnapshotInvalid: "快照、官网域名或招聘页 URL 无法安全对应，请检查后重试。", officialDiscoveryComplete: "本地快照解析完成；候选仍需实时复验。", officialCandidatesTitle: "离线岗位候选", officialCandidateCount: "找到 {count} 个", officialNoCandidates: "没有找到符合官网/允许 ATS 边界的岗位链接。", officialLiveCheckRequired: "仍需另行授权后实时复验", officialNotQueued: "未加入申请队列",
     offlineApplicationTitle: "准备一个离线申请", offlineApplicationBody: "选择已保存的岗位说明、公司官网岗位页和申请表；JobFlow 只在本机生成岗位材料与审阅包。", offlineApplicationGuard: "只到待审批", applicationOfficialUrl: "公司官网岗位 URL", applicationFormUrl: "申请表原始 URL", applicationGuestMode: "是否可访客申请", guestUnknown: "不确定", guestYes: "可以", guestNo: "不可以", applicationJdFile: "岗位说明（JD）", applicationOfficialFile: "已保存的官网岗位页", applicationFormFile: "已保存的申请表", applicationEvidenceExcerpt: "官网页中的一段公司原文", applicationEvidencePlaceholder: "粘贴官网岗位页中一段至少 12 个字符的原文，用于有依据地生成求职信。", applicationEvidenceHelp: "必须能在所选官网页中逐字找到；不会被当作你的个人经历。", offlineApplicationReadyHint: "资料准备度全部通过后即可生成。", offlineApplicationReady: "准备度已通过，可以选择本地岗位资料。", offlineApplicationNeedsReadiness: "先完成上方自动投递准备度中的所有项目。", offlineApplicationInputsRequired: "请填写两个 HTTPS URL、选择三个本地文件，并粘贴一段官网原文。", prepareOfflineApplication: "生成材料并加入待审批", preparingOfflineApplication: "正在分析岗位并生成本机材料…", offlineApplicationPrepared: "岗位材料已生成并加入待审批。", offlineApplicationDeferred: "待审批队列已满；该岗位的三份本地证据已加密排队，释放名额后会自动继续。", applicationBundleInvalid: "所选岗位文件或页面信息无法安全对应，请检查后重试。", deferredBundleTooLarge: "队列已满，且这组本地证据过大，无法安全暂存。请先处理一项待审批申请，再重新选择这组文件。",
     progressLabel: "基础资料完成度", draftSaved: "草稿保存时直接加密", stepSources: "资料来源", stepQuestions: "补充资料", stepReview: "资料与 Claim 审阅", stepFinish: "确认完成",
@@ -82,7 +84,9 @@ const STRINGS = {
     browserAssistNavigationStalled: "The page did not reliably advance within 20 seconds. JobFlow stopped and will not retry; end this assist and start again.",
     heroTitle: "Set it up once. Apply continuously.", heroBody: "Build a complete profile from resumes and project materials, AI sources, and your direct answers. Private content is decrypted only on this computer and never written to ordinary project files.",
     demoTitle: "Synthetic demo · no real data", demoBody: "This is a temporary, auto-cleaned tour using fictional content only. File intake and real AI connections are disabled; do not enter personal information here.", demoReview: "View AI and conflict review", demoQueue: "View pending application",
-    atsCapabilityTitle: "Official-site and ATS capability boundary", atsCapabilityBody: "Local evidence proves structural analysis; every live page is revalidated and no blanket site compatibility is claimed.", atsLiveUnverified: "Live compatibility: page-by-page", atsUserPresentAssist: "User-present prefill and upload: supported", atsNavigationScoped: "Non-final navigation: explicit controls only", atsActionsBlocked: "Final Submit: you only", atsEvidenceDirect: "Company-site single snapshot", atsEvidenceVertical: "Complete synthetic vertical", atsEvidenceSingle: "Saved single-page form", atsEvidenceSequence: "Saved multi-step sequence",
+    atsCapabilityTitle: "Official-site and ATS capability boundary", atsCapabilityBody: "Each provider shows only the stages covered by its checked-in evidence. Shared browser capability is not presented as live provider acceptance.", atsLiveUnverified: "Live compatibility: page-by-page", atsUserPresentAssist: "Shared user-present runtime: current page still revalidated", atsNavigationScoped: "Non-final navigation: explicit controls only", atsActionsBlocked: "Final Submit: you only", atsEvidenceDirect: "Direct site plus synthetic browser chain", atsEvidenceVertical: "Synthetic vertical", atsEvidenceSingle: "Discovery and single form", atsEvidenceSequence: "Saved multi-step sequence",
+    atsVerifiedStages: "Locally verified: {stages}", atsUnverifiedStages: "Not provider-verified: {stages}", atsNoUnverifiedStages: "Every listed offline stage has evidence", atsRuntimeEvidence: "Shared browser runtime passed synthetic tests for prefill, attachment, explicit non-final navigation, and modern-component rebinding. This is not live-site acceptance.",
+    atsStageDiscovery: "job discovery", atsStageRoute: "route binding", atsStageForm: "form analysis", atsStagePlan: "value-free plan", atsStageReview: "review packet", atsStagePrefill: "DOM prefill", atsStageUpload: "file attachment", atsStageNavigation: "non-final navigation", atsStageResume: "multi-page resume", atsStageResult: "result observation", atsStageRebinding: "component rebinding",
     offlineDiscoveryTitle: "Parse a saved company careers page", offlineDiscoveryBody: "Reads only local HTML, a saved-page JSON envelope, or Greenhouse / Lever job JSON; page code is not executed, the snapshot is not retained, and no network is used.", companyDomainLabel: "Official company domain", careersUrlLabel: "Original URL of saved page", officialSnapshotLabel: "Careers-page snapshot", analyzeOfficialSnapshot: "Parse jobs read-only", officialInputsRequired: "Enter the official domain and careers-page URL, then choose a local snapshot.", officialSnapshotInvalid: "The snapshot, official domain, and careers-page URL could not be safely matched. Check them and retry.", officialDiscoveryComplete: "Local snapshot parsed; every candidate still needs a live freshness check.", officialCandidatesTitle: "Offline job candidates", officialCandidateCount: "{count} found", officialNoCandidates: "No job link matched the company/approved-ATS boundary.", officialLiveCheckRequired: "Separate authorization required for live verification", officialNotQueued: "Not added to application queue",
     offlineApplicationTitle: "Prepare one offline application", offlineApplicationBody: "Choose a saved JD, official-company job page, and application form. JobFlow only creates local materials and a review packet.", offlineApplicationGuard: "Stops at review", applicationOfficialUrl: "Official company job URL", applicationFormUrl: "Original application-form URL", applicationGuestMode: "Guest application available", guestUnknown: "Unknown", guestYes: "Yes", guestNo: "No", applicationJdFile: "Job description (JD)", applicationOfficialFile: "Saved official job page", applicationFormFile: "Saved application form", applicationEvidenceExcerpt: "One exact company excerpt from the official page", applicationEvidencePlaceholder: "Paste an exact excerpt of at least 12 characters from the official page for grounded Cover Letter generation.", applicationEvidenceHelp: "It must occur in the selected official page and is never treated as personal experience.", offlineApplicationReadyHint: "Finish every readiness item above to enable generation.", offlineApplicationReady: "Readiness passed; choose the saved job files to continue.", offlineApplicationNeedsReadiness: "Complete every item in Application readiness first.", offlineApplicationInputsRequired: "Enter both HTTPS URLs, choose all three local files, and paste an exact official-page excerpt.", prepareOfflineApplication: "Generate materials and add to review", preparingOfflineApplication: "Analyzing the job and generating local materials…", offlineApplicationPrepared: "Job materials generated and added to pending review.", offlineApplicationDeferred: "The review queue is full. All three local evidence files are encrypted in order and will continue automatically when a slot opens.", applicationBundleInvalid: "The selected job files or page metadata could not be safely matched. Check them and retry.", deferredBundleTooLarge: "The queue is full and this local evidence set is too large for safe retention. Review one pending application, then select these files again.",
     progressLabel: "Core profile progress", draftSaved: "Drafts are encrypted when saved", stepSources: "Sources", stepQuestions: "Missing details", stepReview: "Profile & Claim review", stepFinish: "Finish",
@@ -1146,6 +1150,27 @@ function atsEvidenceLabel(level){
   return keys[level]?t(keys[level]):String(level||"—");
 }
 
+function atsStageLabel(stage){
+  const keys={
+    OFFICIAL_DISCOVERY:"atsStageDiscovery",
+    ROUTE_BINDING:"atsStageRoute",
+    FORM_ANALYSIS:"atsStageForm",
+    PRIVATE_VALUE_FREE_PLAN:"atsStagePlan",
+    REVIEW_PACKET:"atsStageReview",
+    APPROVED_DOM_PREFILL:"atsStagePrefill",
+    APPROVED_FILE_ATTACHMENT:"atsStageUpload",
+    EXPLICIT_NONFINAL_NAVIGATION:"atsStageNavigation",
+    MULTI_PAGE_RESUME:"atsStageResume",
+    RESULT_OBSERVATION:"atsStageResult",
+    MODERN_COMPONENT_REBINDING:"atsStageRebinding"
+  };
+  return keys[stage]?t(keys[stage]):String(stage||"—");
+}
+
+function atsStageSummary(stages){
+  return (Array.isArray(stages)?stages:[]).map(atsStageLabel).join(" · ");
+}
+
 function safeJobLocator(value){
   try{
     const parsed=new URL(String(value));
@@ -1727,9 +1752,17 @@ function renderDashboard(){
   }).join(""):`<p>${escapeHtml(t("executionRunsEmpty"))}</p>`;
   renderDemoExecution(dashboard,executions,pending,recent);
   renderBrowserAssist(recent);
-  const capabilities=state.data?.ats_capabilities?.providers||[];
+  const atsReport=state.data?.ats_capabilities||{};
+  const capabilities=atsReport.providers||[];
   document.querySelector("#atsCapabilityCount").textContent=String(capabilities.length);
-  document.querySelector("#atsCapabilityList").innerHTML=capabilities.map(item=>`<article class="ats-capability-item"><strong>${escapeHtml(item.provider)}</strong><small>${escapeHtml(atsEvidenceLabel(item.offline_evidence_level))}</small><b>${escapeHtml(t("atsUserPresentAssist"))}</b><small>${escapeHtml(t("atsNavigationScoped"))}</small><small>${escapeHtml(t("atsLiveUnverified"))}</small><small>${escapeHtml(t("atsActionsBlocked"))}</small></article>`).join("");
+  const runtimeNotice=document.querySelector("#atsRuntimeEvidence");
+  runtimeNotice.classList.toggle("hidden",atsReport.browser_runtime_evidence?.status!=="SYNTHETIC_BROWSER_RUNTIME_PASS");
+  runtimeNotice.textContent=t("atsRuntimeEvidence");
+  document.querySelector("#atsCapabilityList").innerHTML=capabilities.map(item=>{
+    const verified=atsStageSummary(item.verified_stages);
+    const unverified=atsStageSummary(item.unverified_stages);
+    return `<article class="ats-capability-item"><strong>${escapeHtml(item.provider)}</strong><small>${escapeHtml(atsEvidenceLabel(item.offline_evidence_level))}</small><b>${escapeHtml(t("atsVerifiedStages").replace("{stages}",verified||"—"))}</b><small>${escapeHtml(unverified?t("atsUnverifiedStages").replace("{stages}",unverified):t("atsNoUnverifiedStages"))}</small><small>${escapeHtml(t("atsUserPresentAssist"))}</small><small>${escapeHtml(t("atsLiveUnverified"))}</small><small>${escapeHtml(t("atsActionsBlocked"))}</small></article>`;
+  }).join("");
   renderApplicationReadiness();
 }
 

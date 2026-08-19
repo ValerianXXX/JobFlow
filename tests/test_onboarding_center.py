@@ -266,10 +266,14 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertFalse(report["live_site_accessed"])
             self.assertEqual(report["network_actions"], 0)
             self.assertEqual(report["real_external_actions"], 0)
+            self.assertEqual(report["browser_runtime_evidence"]["status"], "SYNTHETIC_BROWSER_RUNTIME_PASS")
+            self.assertFalse(report["browser_runtime_evidence"]["live_site_verified"])
             for provider in report["providers"]:
                 self.assertFalse(provider["live_site_verified"])
                 self.assertTrue(provider["upload_blocked"])
                 self.assertTrue(provider["submit_blocked"])
+                self.assertTrue(provider["verified_stages"])
+                self.assertTrue(provider["evidence_refs"])
 
     def test_bootstrap_and_service_expose_only_user_initiated_desktop_update(self) -> None:
         with project_temp() as root:
@@ -490,7 +494,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v39-support-loop", html)
+        self.assertIn("jobflow-v40-ats-evidence", html)
         self.assertIn('class="skip-link"', html)
         self.assertIn('id="mainContent" tabindex="-1"', html)
         self.assertIn('id="downloadSupportDiagnostics"', html)
@@ -2534,7 +2538,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v39-support-loop", html)
+        self.assertIn("jobflow-v40-ats-evidence", html)
 
     def test_support_diagnostics_never_reads_or_emits_private_values(self) -> None:
         with project_temp() as root:

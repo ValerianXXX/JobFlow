@@ -381,20 +381,43 @@ def valid_fixtures() -> dict[str, dict]:
             "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
         },
         "ats-capability-report": {
-            "schema_version": 2, "status": "OFFLINE_ATS_CAPABILITIES", "provider_count": 1,
+            "schema_version": 3, "status": "OFFLINE_ATS_CAPABILITIES", "provider_count": 1,
             "providers": [{
                 "provider": "lever", "offline_evidence_level": "SINGLE_SNAPSHOT_PASS",
+                "evidence_scope": "DISCOVERY_AND_FORM_ANALYSIS_ONLY",
                 "saved_snapshot_modes": ["single_html"], "route_shape": "OFFICIAL_TO_APPROVED_ATS",
-                "dynamic_control_strategy": "opaque_control_ref", "guest_first": True,
+                "dynamic_control_strategy": "opaque_control_ref",
+                "verified_stages": ["OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS"],
+                "unverified_stages": [
+                    "PRIVATE_VALUE_FREE_PLAN", "REVIEW_PACKET", "APPROVED_DOM_PREFILL",
+                    "APPROVED_FILE_ATTACHMENT", "EXPLICIT_NONFINAL_NAVIGATION", "MULTI_PAGE_RESUME",
+                    "RESULT_OBSERVATION", "MODERN_COMPONENT_REBINDING"
+                ],
+                "evidence_refs": ["tests/test_ats_provider_contracts.py"],
+                "evidence_bundle_hash": H,
+                "known_limit_codes": ["LIVE_SITE_ACCEPTANCE_REQUIRED"],
+                "guest_first": True,
                 "account_creation_blocked": True, "upload_blocked": True, "submit_blocked": True,
                 "live_site_verified": False, "browser_actions": 0, "network_actions": 0,
-                "user_present_prefill": "SUPPORTED_WITH_RUNTIME_REVALIDATION",
-                "approved_material_upload": "SUPPORTED_WITH_RUNTIME_REVALIDATION",
-                "nonfinal_navigation": "SUPPORTED_EXPLICIT_CONTROLS_ONLY",
+                "user_present_prefill": "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED",
+                "approved_material_upload": "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED",
+                "nonfinal_navigation": "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED",
                 "final_submit": "USER_ONLY", "live_compatibility": "NOT_UNIVERSALLY_VERIFIED",
                 "real_external_actions": 0, "transport_contract_hash": H,
                 "live_transport_registered": False, "automatic_retry": False, "contract_hash": H,
             }],
+            "browser_runtime_evidence": {
+                "status": "SYNTHETIC_BROWSER_RUNTIME_PASS",
+                "verified_stages": [
+                    "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT",
+                    "EXPLICIT_NONFINAL_NAVIGATION", "MODERN_COMPONENT_REBINDING"
+                ],
+                "evidence_refs": ["tests/browser_companion_e2e.cjs"],
+                "evidence_bundle_hash": H, "live_site_verified": False,
+                "final_submit": "USER_ONLY", "automatic_retry": False,
+                "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
+                "runtime_evidence_hash": H
+            },
             "live_site_accessed": False, "browser_actions": 0, "network_actions": 0, "real_external_actions": 0,
         },
         "ats-transport-envelope": {

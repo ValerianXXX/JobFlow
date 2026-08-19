@@ -15,11 +15,14 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 - Added a schema-validated, user-downloaded support diagnostic file containing only versions, safe runtime states, aggregate counts, safety boundaries, and a redacted error code.
 - Added an optional local incident history that is off by default and stores only bounded fixed error codes, version metadata, and timestamps for explicit user-reviewed support export.
 - Added a keyboard skip link, stronger live-region semantics, high-contrast support, and reduced-motion behavior to the bilingual local UI.
+- Added an evidence-scoped ATS support report that partitions eleven workflow stages into provider-specific verified and unverified sets.
+- Added content hashes for every declared ATS fixture, test, and Browser Companion source file, plus a separately disclosed shared browser-runtime evidence bundle.
 
 ### Changed
 
 - Reinstalling from a newer source package now stages and health-checks the new version before an atomic current-version switch.
 - Rollback preserves the Candidate Profile, encrypted private material, queue state, and local reports.
+- Provider cards and the machine-readable capability report now distinguish provider-specific evidence from generic Browser Companion runtime behavior instead of implying universal execution support.
 
 ### Safety
 
@@ -31,6 +34,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 - Ashby and SmartRecruiters fixtures are local engineering evidence only; both remain `live_site_verified=false` and require current page validation in real use.
 - Support diagnostics never decrypt or export applicant values, resumes, answers, Claims, local paths, credentials, tokens, or secure references, and are never transmitted automatically.
 - Local incident capture accepts no error messages, stack traces, URLs, paths, documents, or applicant values, retains at most 32 records, and can be cleared without affecting onboarding data.
+- Greenhouse, Lever, Workday, Ashby, and SmartRecruiters disclose their exact unverified stages; no saved fixture or generic runtime test is treated as live-site acceptance.
 
 ## [0.4.1] - 2026-08-17
 

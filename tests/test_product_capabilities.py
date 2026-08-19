@@ -22,6 +22,17 @@ class ProductCapabilityReportTests(unittest.TestCase):
         self.assertFalse(report["unattended_operation"])
         self.assertEqual(by_id["canonical_profile_reuse"]["availability"], "AVAILABLE")
         self.assertEqual(by_id["workday_browser_assist"]["live_acceptance"], "REQUIRED_PER_SITE")
+        self.assertEqual(by_id["browser_companion_runtime"]["evidence_status"], "SYNTHETIC_VERTICAL_PASS")
+        self.assertIn(
+            "PROVIDER_SPECIFIC_ACCEPTANCE_REQUIRED",
+            by_id["browser_companion_runtime"]["known_limit_codes"],
+        )
+        self.assertEqual(by_id["ashby_browser_assist"]["evidence_status"], "SINGLE_SNAPSHOT_PASS")
+        self.assertEqual(by_id["smartrecruiters_browser_assist"]["evidence_status"], "SINGLE_SNAPSHOT_PASS")
+        self.assertIn(
+            "REVIEW_TO_BROWSER_EXECUTION_NOT_PROVEN",
+            by_id["ashby_browser_assist"]["known_limit_codes"],
+        )
         self.assertEqual(by_id["authorized_continuous_scheduler"]["availability"], "NOT_AVAILABLE")
         self.assertEqual(by_id["user_present_local_wake_planner"]["availability"], "AVAILABLE")
         self.assertEqual(

@@ -45,8 +45,8 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260819-jobflow-v39-support-loop/);
-    assert.match(initial.styleVersion, /20260819-jobflow-v39-support-loop/);
+    assert.match(initial.scriptVersion, /20260819-jobflow-v40-ats-evidence/);
+    assert.match(initial.styleVersion, /20260819-jobflow-v40-ats-evidence/);
     assert.equal(initial.skipHref, "#mainContent");
     assert.equal(initial.mainTabIndex, "-1");
     assert.equal(initial.supportButtonType, "button");

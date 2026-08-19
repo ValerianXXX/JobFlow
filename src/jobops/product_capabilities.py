@@ -62,9 +62,17 @@ def product_capability_report() -> dict[str, Any]:
     project = project_root()
     policy = load_json(project / "config" / "policy.json")
     ats = offline_ats_capabilities()
-    provider_evidence = {
-        item["provider"]: item["offline_evidence_level"]
+    provider_reports = {
+        item["provider"]: item
         for item in ats["providers"]
+    }
+    provider_capability_ids = {
+        "company": "company_direct_browser_assist",
+        "greenhouse": "greenhouse_browser_assist",
+        "lever": "lever_browser_assist",
+        "workday": "workday_browser_assist",
+        "ashby": "ashby_browser_assist",
+        "smartrecruiters": "smartrecruiters_browser_assist",
     }
     capabilities = [
         _item(
@@ -109,29 +117,25 @@ def product_capability_report() -> dict[str, Any]:
             ["STORE_PUBLICATION_STATUS_NOT_PROBED_BY_LOCAL_REPORT"],
         ),
         _item(
-            "company_direct_browser_assist", "browser_assist", "CONDITIONAL", provider_evidence["company"],
+            "browser_companion_runtime", "browser_assist", "CONDITIONAL", "SYNTHETIC_VERTICAL_PASS",
             "REQUIRED_PER_SITE", "USER_PRESENT", "FINAL_SUBMIT_USER_ONLY",
-            ["tests/browser_companion_e2e.cjs", "tests/test_ats_browser_safety.py"],
-            ["LIVE_COMPATIBILITY_NOT_UNIVERSALLY_VERIFIED"],
+            list(ats["browser_runtime_evidence"]["evidence_refs"]),
+            ["PROVIDER_SPECIFIC_ACCEPTANCE_REQUIRED", "LIVE_COMPATIBILITY_NOT_UNIVERSALLY_VERIFIED"],
         ),
-        _item(
-            "greenhouse_browser_assist", "browser_assist", "CONDITIONAL", provider_evidence["greenhouse"],
-            "REQUIRED_PER_SITE", "USER_PRESENT", "FINAL_SUBMIT_USER_ONLY",
-            ["tests/test_greenhouse_vertical.py", "tests/browser_companion_e2e.cjs"],
-            ["LIVE_COMPATIBILITY_NOT_UNIVERSALLY_VERIFIED"],
-        ),
-        _item(
-            "lever_browser_assist", "browser_assist", "CONDITIONAL", provider_evidence["lever"],
-            "REQUIRED_PER_SITE", "USER_PRESENT", "FINAL_SUBMIT_USER_ONLY",
-            ["tests/test_lever_vertical.py", "tests/browser_companion_e2e.cjs"],
-            ["LIVE_COMPATIBILITY_NOT_UNIVERSALLY_VERIFIED"],
-        ),
-        _item(
-            "workday_browser_assist", "browser_assist", "CONDITIONAL", provider_evidence["workday"],
-            "REQUIRED_PER_SITE", "USER_PRESENT", "FINAL_SUBMIT_USER_ONLY",
-            ["tests/test_workday_vertical.py", "tests/test_workday_sequence.py"],
-            ["LIVE_COMPATIBILITY_NOT_UNIVERSALLY_VERIFIED"],
-        ),
+        *[
+            _item(
+                provider_capability_ids[provider],
+                "browser_assist",
+                "CONDITIONAL",
+                report["offline_evidence_level"],
+                "REQUIRED_PER_SITE",
+                "USER_PRESENT",
+                "FINAL_SUBMIT_USER_ONLY",
+                list(report["evidence_refs"]),
+                list(report["known_limit_codes"]) + ["SHARED_BROWSER_RUNTIME_SEPARATE_FROM_PROVIDER_EVIDENCE"],
+            )
+            for provider, report in provider_reports.items()
+        ],
         _item(
             "bounded_review_queue", "queue", "AVAILABLE", _AUTOMATED, "NOT_APPLICABLE",
             "USER_APPROVAL_REQUIRED", "USER_SELECTED_PENDING_LIMIT",

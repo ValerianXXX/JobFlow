@@ -121,6 +121,7 @@ class ATSProviderContractTests(unittest.TestCase):
 
     def test_capability_report_is_hash_bound_and_never_claims_live_compatibility(self) -> None:
         report = offline_ats_capabilities()
+        self.assertEqual(report["schema_version"], 3)
         self.assertEqual(report["provider_count"], 6)
         self.assertEqual(
             {item["provider"] for item in report["providers"]},
@@ -130,17 +131,82 @@ class ATSProviderContractTests(unittest.TestCase):
         self.assertTrue(all(item["browser_actions"] == 0 and item["real_external_actions"] == 0 for item in report["providers"]))
         self.assertTrue(all(item["live_transport_registered"] is False for item in report["providers"]))
         self.assertTrue(all(item["automatic_retry"] is False for item in report["providers"]))
-        self.assertTrue(all(item["user_present_prefill"] == "SUPPORTED_WITH_RUNTIME_REVALIDATION" for item in report["providers"]))
-        self.assertTrue(all(item["approved_material_upload"] == "SUPPORTED_WITH_RUNTIME_REVALIDATION" for item in report["providers"]))
-        self.assertTrue(all(item["nonfinal_navigation"] == "SUPPORTED_EXPLICIT_CONTROLS_ONLY" for item in report["providers"]))
         self.assertTrue(all(item["final_submit"] == "USER_ONLY" for item in report["providers"]))
+        self.assertTrue(all(item["evidence_refs"] for item in report["providers"]))
+        self.assertTrue(all(str(item["evidence_bundle_hash"]).startswith("sha256:") for item in report["providers"]))
+        for item in report["providers"]:
+            self.assertFalse(set(item["verified_stages"]) & set(item["unverified_stages"]))
+            self.assertEqual(len(set(item["verified_stages"]) | set(item["unverified_stages"])), 11)
         workday = next(item for item in report["providers"] if item["provider"] == "workday")
         self.assertIn("ordered_html_sequence", workday["saved_snapshot_modes"])
+        self.assertIn("MULTI_PAGE_RESUME", workday["verified_stages"])
+        ashby = next(item for item in report["providers"] if item["provider"] == "ashby")
+        self.assertEqual(ashby["evidence_scope"], "DISCOVERY_AND_FORM_ANALYSIS_ONLY")
+        self.assertNotIn("APPROVED_DOM_PREFILL", ashby["verified_stages"])
+        self.assertEqual(
+            ashby["user_present_prefill"],
+            "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED",
+        )
+        company = next(item for item in report["providers"] if item["provider"] == "company")
+        self.assertEqual(
+            company["user_present_prefill"],
+            "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
+        )
+        runtime = report["browser_runtime_evidence"]
+        self.assertEqual(runtime["status"], "SYNTHETIC_BROWSER_RUNTIME_PASS")
+        self.assertEqual(
+            set(runtime["verified_stages"]),
+            {
+                "APPROVED_DOM_PREFILL",
+                "APPROVED_FILE_ATTACHMENT",
+                "EXPLICIT_NONFINAL_NAVIGATION",
+                "MODERN_COMPONENT_REBINDING",
+            },
+        )
+        self.assertFalse(runtime["live_site_verified"])
+        self.assertEqual(runtime["final_submit"], "USER_ONLY")
         tampered = copy.deepcopy(report)
         tampered["providers"][0]["offline_evidence_level"] = "SINGLE_SNAPSHOT_PASS"
         with self.assertRaises(JobOpsError) as integrity:
             validate_ats_capability_integrity(tampered)
-        self.assertEqual(integrity.exception.code, "ATS_CAPABILITY_INTEGRITY_FAILED")
+        self.assertEqual(integrity.exception.code, "ATS_CAPABILITY_SCOPE_DRIFT")
+
+        evidence_tampered = copy.deepcopy(report)
+        evidence_tampered["providers"][0]["evidence_bundle_hash"] = H1
+        with self.assertRaises(JobOpsError) as evidence:
+            validate_ats_capability_integrity(evidence_tampered)
+        self.assertEqual(evidence.exception.code, "ATS_CAPABILITY_EVIDENCE_INTEGRITY_FAILED")
+
+        scope_tampered = copy.deepcopy(report)
+        scope_tampered["providers"][0]["verified_stages"].append("MULTI_PAGE_RESUME")
+        scope_tampered["providers"][0]["unverified_stages"].remove("MULTI_PAGE_RESUME")
+        with self.assertRaises(JobOpsError) as scope:
+            validate_ats_capability_integrity(scope_tampered)
+        self.assertEqual(scope.exception.code, "ATS_CAPABILITY_SCOPE_DRIFT")
+
+    def test_capability_scope_does_not_promote_generic_runtime_evidence_to_provider_acceptance(self) -> None:
+        report = offline_ats_capabilities()
+        by_provider = {item["provider"]: item for item in report["providers"]}
+        self.assertEqual(
+            by_provider["greenhouse"]["evidence_scope"],
+            "DISCOVERY_TO_REVIEW_PACKET",
+        )
+        self.assertEqual(
+            by_provider["lever"]["evidence_scope"],
+            "DISCOVERY_TO_SYNTHETIC_RESULT",
+        )
+        self.assertEqual(
+            by_provider["workday"]["evidence_scope"],
+            "MULTI_PAGE_SEQUENCE_AND_SYNTHETIC_RESULT",
+        )
+        for provider in ("ashby", "smartrecruiters"):
+            self.assertEqual(
+                by_provider[provider]["verified_stages"],
+                ["OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS"],
+            )
+            self.assertIn("REVIEW_PACKET", by_provider[provider]["unverified_stages"])
+            self.assertIn("APPROVED_FILE_ATTACHMENT", by_provider[provider]["unverified_stages"])
+        self.assertTrue(all(item["live_site_verified"] is False for item in by_provider.values()))
 
     def test_every_provider_uses_one_hash_only_transport_contract(self) -> None:
         for provider in ("company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters"):

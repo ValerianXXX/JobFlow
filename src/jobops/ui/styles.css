@@ -198,6 +198,7 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .safety-board #emergencyStop { width: 100%; margin-top: 14px; border-color: #9b3e34; color: #9b3e34; background: #fff; }
 .safety-board #emergencyStop:disabled { border-color: var(--line); color: var(--muted); background: #f2f4f3; }
 .ats-capability-board { margin-top: 12px; padding: 18px; border: 1px solid var(--line); background: #fff; }
+.ats-runtime-evidence { margin: 14px 0 0; padding: 11px 13px; border: 1px solid #b8d0c7; background: var(--green-soft); color: var(--green-dark); font-size: 11px; }
 .ats-capability-list { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin-top: 14px; }
 .ats-capability-item { min-width: 0; padding: 14px; border: 1px solid var(--line); background: var(--paper); }
 .ats-capability-item strong,.ats-capability-item small,.ats-capability-item b { display: block; overflow-wrap: anywhere; }

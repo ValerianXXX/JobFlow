@@ -4,9 +4,45 @@
   "title": "Offline ATS Capability Report",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "status", "provider_count", "providers", "live_site_accessed", "browser_actions", "network_actions", "real_external_actions"],
+  "$defs": {
+    "stage": {
+      "enum": [
+        "OFFICIAL_DISCOVERY",
+        "ROUTE_BINDING",
+        "FORM_ANALYSIS",
+        "PRIVATE_VALUE_FREE_PLAN",
+        "REVIEW_PACKET",
+        "APPROVED_DOM_PREFILL",
+        "APPROVED_FILE_ATTACHMENT",
+        "EXPLICIT_NONFINAL_NAVIGATION",
+        "MULTI_PAGE_RESUME",
+        "RESULT_OBSERVATION",
+        "MODERN_COMPONENT_REBINDING"
+      ]
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^(browser-companion|tests)/[A-Za-z0-9_.\/-]+$"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "status",
+    "provider_count",
+    "providers",
+    "browser_runtime_evidence",
+    "live_site_accessed",
+    "browser_actions",
+    "network_actions",
+    "real_external_actions"
+  ],
   "properties": {
-    "schema_version": {"const": 2},
+    "schema_version": {"const": 3},
     "status": {"const": "OFFLINE_ATS_CAPABILITIES"},
     "provider_count": {"type": "integer", "minimum": 1},
     "providers": {
@@ -15,21 +51,98 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["provider", "offline_evidence_level", "saved_snapshot_modes", "route_shape", "dynamic_control_strategy", "guest_first", "account_creation_blocked", "upload_blocked", "submit_blocked", "live_site_verified", "user_present_prefill", "approved_material_upload", "nonfinal_navigation", "final_submit", "live_compatibility", "browser_actions", "network_actions", "real_external_actions", "transport_contract_hash", "live_transport_registered", "automatic_retry", "contract_hash"],
+        "required": [
+          "provider",
+          "offline_evidence_level",
+          "evidence_scope",
+          "saved_snapshot_modes",
+          "route_shape",
+          "dynamic_control_strategy",
+          "verified_stages",
+          "unverified_stages",
+          "evidence_refs",
+          "evidence_bundle_hash",
+          "known_limit_codes",
+          "guest_first",
+          "account_creation_blocked",
+          "upload_blocked",
+          "submit_blocked",
+          "live_site_verified",
+          "user_present_prefill",
+          "approved_material_upload",
+          "nonfinal_navigation",
+          "final_submit",
+          "live_compatibility",
+          "browser_actions",
+          "network_actions",
+          "real_external_actions",
+          "transport_contract_hash",
+          "live_transport_registered",
+          "automatic_retry",
+          "contract_hash"
+        ],
         "properties": {
           "provider": {"enum": ["company", "workday", "greenhouse", "lever", "ashby", "smartrecruiters"]},
           "offline_evidence_level": {"enum": ["DIRECT_SNAPSHOT_PASS", "SYNTHETIC_VERTICAL_PASS", "SINGLE_SNAPSHOT_PASS", "SAVED_SEQUENCE_PASS"]},
-          "saved_snapshot_modes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["single_html", "provider_json", "ordered_html_sequence"]}},
+          "evidence_scope": {
+            "enum": [
+              "DIRECT_SITE_AND_BROWSER_RUNTIME",
+              "DISCOVERY_TO_REVIEW_PACKET",
+              "DISCOVERY_TO_SYNTHETIC_RESULT",
+              "MULTI_PAGE_SEQUENCE_AND_SYNTHETIC_RESULT",
+              "DISCOVERY_AND_FORM_ANALYSIS_ONLY"
+            ]
+          },
+          "saved_snapshot_modes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"enum": ["single_html", "provider_json", "ordered_html_sequence"]}
+          },
           "route_shape": {"enum": ["OFFICIAL_DIRECT", "OFFICIAL_TO_APPROVED_ATS"]},
           "dynamic_control_strategy": {"enum": ["opaque_control_ref", "logical_field_hash"]},
+          "verified_stages": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"$ref": "#/$defs/stage"}
+          },
+          "unverified_stages": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"$ref": "#/$defs/stage"}
+          },
+          "evidence_refs": {"$ref": "#/$defs/evidenceRefs"},
+          "evidence_bundle_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "known_limit_codes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^[A-Z0-9_]{3,96}$"}
+          },
           "guest_first": {"const": true},
           "account_creation_blocked": {"const": true},
           "upload_blocked": {"const": true},
           "submit_blocked": {"const": true},
           "live_site_verified": {"const": false},
-          "user_present_prefill": {"const": "SUPPORTED_WITH_RUNTIME_REVALIDATION"},
-          "approved_material_upload": {"const": "SUPPORTED_WITH_RUNTIME_REVALIDATION"},
-          "nonfinal_navigation": {"const": "SUPPORTED_EXPLICIT_CONTROLS_ONLY"},
+          "user_present_prefill": {
+            "enum": [
+              "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
+              "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED"
+            ]
+          },
+          "approved_material_upload": {
+            "enum": [
+              "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
+              "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED"
+            ]
+          },
+          "nonfinal_navigation": {
+            "enum": [
+              "PROVIDER_EVIDENCE_VERIFIED_EXPLICIT_CONTROLS_ONLY",
+              "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED"
+            ]
+          },
           "final_submit": {"const": "USER_ONLY"},
           "live_compatibility": {"const": "NOT_UNIVERSALLY_VERIFIED"},
           "browser_actions": {"const": 0},
@@ -40,6 +153,41 @@
           "automatic_retry": {"const": false},
           "contract_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
         }
+      }
+    },
+    "browser_runtime_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "verified_stages",
+        "evidence_refs",
+        "evidence_bundle_hash",
+        "live_site_verified",
+        "final_submit",
+        "automatic_retry",
+        "browser_actions",
+        "network_actions",
+        "real_external_actions",
+        "runtime_evidence_hash"
+      ],
+      "properties": {
+        "status": {"const": "SYNTHETIC_BROWSER_RUNTIME_PASS"},
+        "verified_stages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/stage"}
+        },
+        "evidence_refs": {"$ref": "#/$defs/evidenceRefs"},
+        "evidence_bundle_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "live_site_verified": {"const": false},
+        "final_submit": {"const": "USER_ONLY"},
+        "automatic_retry": {"const": false},
+        "browser_actions": {"const": 0},
+        "network_actions": {"const": 0},
+        "real_external_actions": {"const": 0},
+        "runtime_evidence_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
       }
     },
     "live_site_accessed": {"const": false},

@@ -375,7 +375,7 @@ def write_release_reports(project: Path, result: dict[str, Any]) -> None:
         "- A fixed-ID, loopback-only Browser Companion for separately authorized user-present inspection, approved prefill/material attachment and one-use non-final Next/Continue navigation; final Submit and automatic retry are absent.",
         "- Fully content-bound synthetic Greenhouse, Lever, Ashby, SmartRecruiters and representative three-page Workday verticals through encrypted answers, per-page session rotation, human login/CAPTCHA handoff, later-page material attachment and trusted-user receipt observation, with zero public-site access.",
         "- Ordered Workday page analysis with dynamic-control logical deduplication, repeated-page detection, cross-origin rejection and bounded navigation.",
-        "- Hash-bound ATS capability disclosure plus Lever, Ashby and SmartRecruiters single-snapshot contract tests; every provider explicitly remains unverified against live sites.",
+        "- File-byte-bound ATS capability disclosure with complete provider-specific verified/unverified stage partitions and separately scoped shared browser-runtime evidence; every provider explicitly remains unverified against live sites.",
         "- Manual-tick-only continuous intake with strict local manifests, FIFO deferred promotion, same-process automatic capacity refill and one-use DPAPI retention for UI-deferred evidence; zero background or external actions are registered.",
         "- Existing Skill, references, deterministic scripts, fixtures, quick start and release verification were updated in place.", "",
         "## Public CLI", "",
