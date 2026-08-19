@@ -293,6 +293,11 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertNotIn(str(PROJECT), serialized)
         self.assertNotIn("secure-ref:", serialized)
 
+    def test_source_health_check_ignores_unrelated_python_distributions(self) -> None:
+        script = (PROJECT / "scripts" / "check-jobflow.ps1").read_text(encoding="utf-8-sig")
+        self.assertIn("import docx, lxml.etree, pdfplumber, pypdf; from PIL import Image", script)
+        self.assertNotIn("$venvPython -m pip check", script)
+
     def test_public_cli_reports_a_safe_version(self) -> None:
         completed = run_process(
             [str(HEALTH_PYTHON), "-m", "jobops.cli", "--version"],

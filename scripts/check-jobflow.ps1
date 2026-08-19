@@ -82,7 +82,13 @@ if ($pythonReady) {
         $versionText = & $venvPython -c "import jobops; print(jobops.__version__)" 2>$null
         $packageReady = $LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$versionText)
         if ($packageReady) { $detectedVersion = ([string]$versionText).Trim() }
-        $dependencyText = & $venvPython -m pip check 2>$null
+        # The health check may be run from a source checkout with an explicitly
+        # supplied Python interpreter.  `pip check` inspects every distribution
+        # in that interpreter and can therefore fail because an unrelated tool
+        # has a broken optional dependency.  Probe only JobFlow's declared
+        # runtime dependencies here; the installer still runs the stricter
+        # environment-wide `pip check` inside JobFlow's dedicated venv.
+        $dependencyText = & $venvPython -c "import docx, lxml.etree, pdfplumber, pypdf; from PIL import Image" 2>$null
         $dependenciesReady = $LASTEXITCODE -eq 0
         $helpText = & $venvPython -m jobops.cli --help 2>$null
         $cliReady = $LASTEXITCODE -eq 0 -and $helpText -match "onboarding-center" -and $helpText -match "demo"
