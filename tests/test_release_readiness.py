@@ -2,15 +2,34 @@ from __future__ import annotations
 
 import json
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from _support import PROJECT, project_temp
 from jobops.errors import JobOpsError
-from jobops.release import _independent_qa_matches_release
+from jobops.release import _independent_qa_matches_release, _source_commit
 from jobops.release_readiness import _local_verification_evidence, github_release_gates, release_readiness
 
 
 class ReleaseReadinessContractTests(unittest.TestCase):
+    def test_source_commit_is_exactly_bound_to_git_head(self) -> None:
+        completed = Mock(returncode=0, stdout="A" * 40 + "\n")
+        with patch("jobops.release.subprocess.run", return_value=completed) as run:
+            self.assertEqual(_source_commit(PROJECT), "a" * 40)
+        run.assert_called_once_with(
+            ["git", "rev-parse", "HEAD"],
+            cwd=PROJECT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def test_source_commit_fails_closed_when_git_identity_is_unavailable(self) -> None:
+        completed = Mock(returncode=1, stdout="")
+        with patch("jobops.release.subprocess.run", return_value=completed):
+            with self.assertRaises(JobOpsError) as raised:
+                _source_commit(PROJECT)
+        self.assertEqual(raised.exception.code, "RELEASE_GIT_FAILED")
+
     def test_version_metadata_and_changelog_are_consistent(self) -> None:
         import tomllib
         from jobops import __version__

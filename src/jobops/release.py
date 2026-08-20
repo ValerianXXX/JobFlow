@@ -4,6 +4,7 @@ import json
 import os
 import re
 import sqlite3
+import subprocess
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -33,6 +34,23 @@ SECRET_PATTERNS = {
 }
 TEXT_EXTENSIONS = {".py", ".js", ".css", ".json", ".md", ".yaml", ".yml", ".txt", ".ps1", ".html", ".xml", ".rels", ".csv"}
 RELEASE_INPUT_EXTENSIONS = TEXT_EXTENSIONS | {".js", ".css"}
+
+
+def _source_commit(project: Path) -> str:
+    completed = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=project,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    commit = completed.stdout.strip().casefold()
+    if completed.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+        raise JobOpsError(
+            "RELEASE_GIT_FAILED",
+            "The exact source commit required for the release checkpoint is unavailable.",
+        )
+    return commit
 
 
 def _latest_release_input_mtime(project: Path) -> float:
@@ -293,6 +311,7 @@ def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
 
 
 def verify_release(project: Path, database: JobOpsDB, *, require_independent: bool = False) -> dict[str, Any]:
+    source_commit = _source_commit(project)
     test_report_path = project / "reports" / "release-test-results.json"
     if not test_report_path.is_file():
         raise JobOpsError("RELEASE_TEST_REPORT_MISSING", "Run the checked-in release verification script before verify-release.")
@@ -375,6 +394,7 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         public_release_blockers.append("INDEPENDENT_QA_STALE_OR_MISSING")
     result = {
         "schema_version": 1, "status": status,
+        "source_commit": source_commit,
         "verification_scope": "PUBLIC_RELEASE" if require_independent else "LOCAL_DEVELOPMENT",
         "public_release_ready": core_pass and independent_fresh and bool(public_repository["public_release_ready"]),
         "public_release_blockers": public_release_blockers,
