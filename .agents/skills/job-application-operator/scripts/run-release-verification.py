@@ -57,6 +57,15 @@ def main() -> int:
     database = JobOpsDB(PROJECT / "state" / "jobops.db")
     database.initialize()
     result = verify_release(PROJECT, database, require_independent=args.require_independent)
+    git = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=PROJECT, capture_output=True, text=True,
+        timeout=30, check=False,
+    )
+    source_commit = git.stdout.strip()
+    if git.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", source_commit) is None:
+        print(json.dumps({"status": "FAIL", "code": "RELEASE_SOURCE_COMMIT_UNAVAILABLE"}, ensure_ascii=False, indent=2))
+        return 2
+    result["source_commit"] = source_commit
     write_release_reports(PROJECT, result)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] == "PASS" else 2

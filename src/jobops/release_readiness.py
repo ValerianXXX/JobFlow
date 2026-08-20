@@ -11,7 +11,7 @@ from . import __version__
 from .db import JobOpsDB
 from .errors import JobOpsError
 from .public_release import verify_public_repository
-from .release import verify_release
+from .release import _latest_release_input_mtime
 from .runtime_schema import validate_named
 from .util import load_json
 
@@ -66,6 +66,57 @@ def github_release_gates(project: Path) -> dict[str, str]:
     }
 
 
+def _local_verification_evidence(project: Path, head_commit: str) -> tuple[str, bool]:
+    """Read the release proof produced against an isolated candidate state.
+
+    Release readiness must not re-run the release verifier against the user's
+    operational database.  That database intentionally retains audited,
+    user-authorized website activity and is not evidence about the release
+    candidate.  The checked proof is instead bound to the current source
+    commit and must be newer than every release input.
+    """
+
+    checkpoint_path = project / "reports" / "checkpoint-final.json"
+    test_report_path = project / "reports" / "release-test-results.json"
+    if not checkpoint_path.is_file() or not test_report_path.is_file():
+        return "MISSING_OR_STALE", False
+    try:
+        checkpoint = load_json(checkpoint_path)
+        test_report = load_json(test_report_path)
+        checks = checkpoint.get("checks", {})
+        checkpoint_tests = checkpoint.get("tests", {})
+        required_core_checks = (
+            "tests",
+            "skill",
+            "knowledge",
+            "security",
+            "external_actions",
+            "database",
+            "synthetic_private_purged",
+            "private_store_consistent",
+            "public_repository",
+        )
+        fresh = (
+            checkpoint_path.stat().st_mtime >= _latest_release_input_mtime(project)
+            and checkpoint.get("source_commit") == head_commit
+            and checkpoint.get("verification_scope") in {"LOCAL_DEVELOPMENT", "PUBLIC_RELEASE"}
+            and test_report.get("status") == "PASS"
+            and int(test_report.get("failed", 1)) == 0
+            and checkpoint_tests.get("output_sha256") == test_report.get("output_sha256")
+        )
+        if not fresh:
+            return "MISSING_OR_STALE", False
+        core_pass = (
+            checkpoint.get("status") == "PASS"
+            and int(checkpoint.get("real_external_actions", 1)) == 0
+            and isinstance(checks, dict)
+            and all(checks.get(name) is True for name in required_core_checks)
+        )
+        return ("PASS" if core_pass else "FAIL"), bool(checks.get("independent_qa"))
+    except (OSError, ValueError, TypeError, AttributeError):
+        return "MISSING_OR_STALE", False
+
+
 def release_readiness(project: Path, database: JobOpsDB) -> dict[str, Any]:
     metadata = tomllib.loads((project / "pyproject.toml").read_text(encoding="utf-8"))
     version = str(metadata.get("project", {}).get("version", ""))
@@ -81,13 +132,7 @@ def release_readiness(project: Path, database: JobOpsDB) -> dict[str, Any]:
     if git_available:
         worktree_clean = not bool(_git(project, "status", "--porcelain", "--untracked-files=all"))
         repository = verify_public_repository(project)
-        try:
-            local = verify_release(project, database, require_independent=False)
-            local_status = "PASS" if local["status"] == "PASS" else "FAIL"
-            independent_fresh = bool(local.get("checks", {}).get("independent_qa"))
-        except (JobOpsError, RuntimeError):
-            local_status = "MISSING_OR_STALE"
-            independent_fresh = False
+        local_status, independent_fresh = _local_verification_evidence(project, head_commit)
 
         candidate_path = project / "reports" / "release-candidate.json"
         if not candidate_path.is_file():

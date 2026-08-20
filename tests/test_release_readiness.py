@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from _support import PROJECT, project_temp
 from jobops.errors import JobOpsError
-from jobops.release_readiness import github_release_gates, release_readiness
+from jobops.release_readiness import _local_verification_evidence, github_release_gates, release_readiness
 
 
 class ReleaseReadinessContractTests(unittest.TestCase):
@@ -105,6 +105,51 @@ class ReleaseReadinessContractTests(unittest.TestCase):
         self.assertFalse(result["upload_performed"])
         self.assertEqual(result["network_actions"], 0)
         self.assertEqual(result["real_external_actions"], 0)
+
+    def test_local_release_evidence_is_commit_bound_and_ignores_operational_history(self) -> None:
+        with project_temp() as root:
+            (root / "src").mkdir()
+            (root / "src" / "release-input.py").write_text("VALUE = 1\n", encoding="utf-8")
+            reports = root / "reports"
+            reports.mkdir()
+            output_sha256 = "sha256:" + "a" * 64
+            test_report = {
+                "status": "PASS",
+                "passed": 517,
+                "failed": 0,
+                "schema_count": 52,
+                "output_sha256": output_sha256,
+            }
+            (reports / "release-test-results.json").write_text(json.dumps(test_report), encoding="utf-8")
+            checks = {
+                "tests": True,
+                "skill": True,
+                "knowledge": True,
+                "security": True,
+                "external_actions": True,
+                "database": True,
+                "synthetic_private_purged": True,
+                "private_store_consistent": True,
+                "public_repository": True,
+                "independent_qa": False,
+            }
+            commit = "b" * 40
+            checkpoint = {
+                "status": "PASS",
+                "verification_scope": "LOCAL_DEVELOPMENT",
+                "source_commit": commit,
+                "real_external_actions": 0,
+                "checks": checks,
+                "tests": test_report,
+            }
+            (reports / "checkpoint-final.json").write_text(json.dumps(checkpoint), encoding="utf-8")
+
+            self.assertEqual(_local_verification_evidence(root, commit), ("PASS", False))
+            self.assertEqual(_local_verification_evidence(root, "c" * 40), ("MISSING_OR_STALE", False))
+
+            checkpoint["real_external_actions"] = 1
+            (reports / "checkpoint-final.json").write_text(json.dumps(checkpoint), encoding="utf-8")
+            self.assertEqual(_local_verification_evidence(root, commit), ("FAIL", False))
 
 
 if __name__ == "__main__":
