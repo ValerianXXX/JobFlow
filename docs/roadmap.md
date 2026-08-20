@@ -19,7 +19,7 @@ The current machine-readable status is available through `jobflow product-capabi
 - [x] User-present local processing cadence with explicit run-now, pause, and resume controls and no operating-system scheduler.
 - [x] Explicit, expiring read-only discovery for exact approved HTTPS sources, with a current-user Windows task, candidate inbox, pause, emergency stop, and fail-closed recovery.
 - [x] Synthetic Greenhouse, Lever, Workday, Ashby, SmartRecruiters, browser, security, migration, and release evidence.
-- [x] Hash-bound multi-step saved-page evidence for Greenhouse, Workday, Ashby, and SmartRecruiters, with duplicate-field reconciliation and final-submit lock checks.
+- [x] Hash-bound multi-step saved-page evidence for company-hosted forms, Greenhouse, Workday, Ashby, and SmartRecruiters, with duplicate-field reconciliation and final-submit lock checks.
 - [x] Provider-host Lever evidence for approved prefill, resume attachment, explicit non-final Continue, and a user-only final Submit boundary.
 - [x] Redacted, hash-only, 30-day page/route acceptance evidence that never promotes a single run into universal provider support.
 - [x] Current-tree and full-history privacy scanning plus deterministic source archives.

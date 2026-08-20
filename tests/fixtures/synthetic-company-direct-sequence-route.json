@@ -1,0 +1,12 @@
+{
+  "company_domain": "example.com",
+  "official_entry_url": "https://example.com/careers/entry-data-analyst",
+  "current_url": "https://example.com/careers/entry-data-analyst/apply",
+  "navigation_history": [
+    "https://example.com/careers/entry-data-analyst",
+    "https://example.com/careers/entry-data-analyst/apply"
+  ],
+  "guest_available": true,
+  "official_page_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "jd_snapshot_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+}

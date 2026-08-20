@@ -58,6 +58,10 @@ class ProductCapabilityReportTests(unittest.TestCase):
             "PROVIDER_SPECIFIC_NONFINAL_NAVIGATION_NOT_PROVEN",
             by_id["lever_browser_assist"]["known_limit_codes"],
         )
+        self.assertNotIn(
+            "NO_PROVIDER_SPECIFIC_MULTI_PAGE_SEQUENCE",
+            by_id["company_direct_browser_assist"]["known_limit_codes"],
+        )
         self.assertTrue(all(
             "SHARED_BROWSER_RUNTIME_SEPARATE_FROM_PROVIDER_EVIDENCE" not in
             by_id[f"{provider}_browser_assist"]["known_limit_codes"]

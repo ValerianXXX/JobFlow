@@ -1,0 +1,8 @@
+{
+  "provider": "company",
+  "pages": [
+    "tests/fixtures/synthetic-company-direct-step-1.html",
+    "tests/fixtures/synthetic-company-direct-step-2.html",
+    "tests/fixtures/synthetic-company-direct-step-3.html"
+  ]
+}

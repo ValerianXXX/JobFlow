@@ -25,7 +25,7 @@ Every row is hash-bound to its status, evidence references, known limits, user-p
 
 The ATS report partitions eleven stages into `verified_stages` and `unverified_stages` for each provider. Those sets must be complete and non-overlapping. Generic Browser Companion evidence is published separately and is never promoted into provider-specific acceptance.
 
-Greenhouse, Workday, Ashby, and SmartRecruiters have checked-in, hash-bound multi-step snapshot sequences in addition to the shared browser runtime. These sequences are reproducible local compatibility evidence, not a universal claim about every current live tenant; each live route is still revalidated page by page.
+Company-hosted forms, Greenhouse, Workday, Ashby, and SmartRecruiters have checked-in, hash-bound multi-step snapshot sequences in addition to the shared browser runtime. These sequences are reproducible local compatibility evidence, not a universal claim about every current live tenant; each live route is still revalidated page by page.
 
 The live-acceptance report is a separate local disclosure. It records only SHA-256-bound evidence from an explicitly user-present public HTTPS page and expires it after 30 days. It never stores or reports an origin, URL, page text, applicant value, credential, or material path. Counts remain page/route-specific: one successful page does not establish provider-wide compatibility, and failed or blocked runs remain visible rather than being converted into passes. Reserved example domains, local hosts, synthetic fixtures, and isolated test modes never create live-acceptance evidence.
 
@@ -35,7 +35,7 @@ Expiring read-only background discovery is `AVAILABLE` for exact user-approved H
 
 The checked-in provider set and current evidence boundary are:
 
-- Company-hosted forms: discovery, route binding, form analysis, value-free planning, local review packet approval, approved DOM prefill, approved file attachment, explicit non-final navigation, a user-only final Submit boundary, synthetic result observation, and modern-component rebinding. Provider-specific multi-page resume and live-site acceptance remain unverified.
+- Company-hosted forms: discovery, route binding, form analysis, value-free planning, local review packet approval, approved DOM prefill, approved file attachment, explicit non-final navigation, a hash-bound three-step saved sequence, a user-only final Submit boundary, synthetic result observation, and modern-component rebinding. Live-site acceptance remains required per current route.
 - Greenhouse: discovery through the local review packet plus synthetic provider-host DOM prefill, approved file attachment, explicit non-final Continue, a hash-bound three-step saved sequence, a user-only final Submit boundary, and synthetic result observation. Live-site acceptance remains required per current route.
 - Lever: discovery through the local review packet plus synthetic provider-host approved DOM prefill, approved resume attachment, one hash-bound explicit non-final Continue action, a user-only final Submit boundary, and synthetic result observation. Live-site acceptance remains required per current route.
 - Workday: discovery, review, synthetic provider-host approved DOM prefill and resume attachment, explicit non-final navigation, representative multi-page resume, a user-only final Submit boundary, and synthetic result observation. Live-site acceptance remains unverified.

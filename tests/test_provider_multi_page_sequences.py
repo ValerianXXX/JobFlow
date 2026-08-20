@@ -23,6 +23,13 @@ ATS = [
 ]
 
 PROVIDERS = {
+    "company": {
+        "host": "example.com",
+        "url": "https://example.com/careers/entry-data-analyst/apply",
+        "identity": "apply",
+        "fixture_prefix": "company-direct",
+        "kinds": ["MY_INFORMATION", "APPLICATION_QUESTIONS", "REVIEW"],
+    },
     "greenhouse": {
         "host": "boards.greenhouse.io",
         "url": "https://boards.greenhouse.io/example/jobs/987654",
@@ -46,6 +53,18 @@ PROVIDERS = {
 
 def provider_route(provider: str) -> dict:
     definition = PROVIDERS[provider]
+    if provider == "company":
+        official_url = "https://example.com/careers/entry-data-analyst"
+        return verify_source_route(
+            company_domain="example.com",
+            official_entry_url=official_url,
+            current_url=definition["url"],
+            navigation_history=[official_url, definition["url"]],
+            approved_ats_hosts=ATS,
+            guest_available=True,
+            official_page_hash=H1,
+            jd_snapshot_hash=H2,
+        ).as_dict()
     official_url = f"https://example.com/careers/{provider}-analyst"
     binding = {
         "provider": provider,
@@ -71,9 +90,13 @@ def provider_route(provider: str) -> dict:
 
 
 class ProviderMultiPageSequenceTests(unittest.TestCase):
+    def fixture_prefix(self, provider: str) -> str:
+        return str(PROVIDERS[provider].get("fixture_prefix", provider))
+
     def pages(self, provider: str) -> list[bytes]:
+        prefix = self.fixture_prefix(provider)
         manifest = json.loads(
-            (PROJECT / "tests" / "fixtures" / f"synthetic-{provider}-sequence.json").read_text(encoding="utf-8")
+            (PROJECT / "tests" / "fixtures" / f"synthetic-{prefix}-sequence.json").read_text(encoding="utf-8")
         )
         return [(PROJECT / relative).read_bytes() for relative in manifest["pages"]]
 
@@ -119,14 +142,15 @@ class ProviderMultiPageSequenceTests(unittest.TestCase):
 
     def test_public_cli_sequence_reports_are_value_and_path_free(self) -> None:
         for provider in PROVIDERS:
+            prefix = self.fixture_prefix(provider)
             command = [
                 sys.executable,
                 str(PROJECT / ".agents" / "skills" / "job-application-operator" / "scripts" / "jobops.py"),
                 "analyze-ats-sequence",
                 "--manifest",
-                f"tests/fixtures/synthetic-{provider}-sequence.json",
+                f"tests/fixtures/synthetic-{prefix}-sequence.json",
                 "--route",
-                f"tests/fixtures/synthetic-{provider}-sequence-route.json",
+                f"tests/fixtures/synthetic-{prefix}-sequence-route.json",
             ]
             completed = subprocess.run(command, capture_output=True, text=True, timeout=30, check=False)
             self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -134,8 +158,8 @@ class ProviderMultiPageSequenceTests(unittest.TestCase):
             self.assertEqual(report["provider"], provider)
             self.assertEqual(report["step_count"], 3)
             self.assertNotIn(str(PROJECT), completed.stdout)
-            self.assertNotIn(f"synthetic-{provider}-step", completed.stdout)
-            self.assertNotIn(f"synthetic-{provider}-sequence.json", completed.stdout)
+            self.assertNotIn(f"synthetic-{prefix}-step", completed.stdout)
+            self.assertNotIn(f"synthetic-{prefix}-sequence.json", completed.stdout)
             self.assertEqual(report["browser_actions"], 0)
             self.assertEqual(report["network_actions"], 0)
             self.assertEqual(report["real_external_actions"], 0)

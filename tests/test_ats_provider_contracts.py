@@ -153,9 +153,15 @@ class ATSProviderContractTests(unittest.TestCase):
             "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
         )
         company = next(item for item in report["providers"] if item["provider"] == "company")
-        self.assertEqual(company["evidence_scope"], "DIRECT_SITE_BROWSER_AND_SYNTHETIC_RESULT")
+        self.assertEqual(
+            company["evidence_scope"],
+            "DIRECT_SITE_MULTI_PAGE_SEQUENCE_BROWSER_AND_SYNTHETIC_RESULT",
+        )
+        self.assertIn("ordered_html_sequence", company["saved_snapshot_modes"])
         self.assertIn("REVIEW_PACKET", company["verified_stages"])
+        self.assertIn("MULTI_PAGE_RESUME", company["verified_stages"])
         self.assertIn("RESULT_OBSERVATION", company["verified_stages"])
+        self.assertEqual(company["known_limit_codes"], ["LIVE_SITE_ACCEPTANCE_REQUIRED"])
         self.assertEqual(
             company["user_present_prefill"],
             "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
@@ -268,8 +274,11 @@ class ATSProviderContractTests(unittest.TestCase):
         self.assertEqual(evidence.exception.code, "ATS_CAPABILITY_EVIDENCE_INTEGRITY_FAILED")
 
         scope_tampered = copy.deepcopy(report)
-        scope_tampered["providers"][0]["verified_stages"].append("MULTI_PAGE_RESUME")
-        scope_tampered["providers"][0]["unverified_stages"].remove("MULTI_PAGE_RESUME")
+        lever_tampered = next(
+            item for item in scope_tampered["providers"] if item["provider"] == "lever"
+        )
+        lever_tampered["verified_stages"].append("MULTI_PAGE_RESUME")
+        lever_tampered["unverified_stages"].remove("MULTI_PAGE_RESUME")
         with self.assertRaises(JobOpsError) as scope:
             validate_ats_capability_integrity(scope_tampered)
         self.assertEqual(scope.exception.code, "ATS_CAPABILITY_SCOPE_DRIFT")
@@ -279,7 +288,7 @@ class ATSProviderContractTests(unittest.TestCase):
         by_provider = {item["provider"]: item for item in report["providers"]}
         self.assertEqual(
             by_provider["company"]["evidence_scope"],
-            "DIRECT_SITE_BROWSER_AND_SYNTHETIC_RESULT",
+            "DIRECT_SITE_MULTI_PAGE_SEQUENCE_BROWSER_AND_SYNTHETIC_RESULT",
         )
         self.assertEqual(
             by_provider["greenhouse"]["evidence_scope"],
