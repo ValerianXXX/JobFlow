@@ -73,7 +73,10 @@ class SignedUpdateTests(unittest.TestCase):
     def _initialize_signer(self, root: Path) -> tuple[dict[str, object], dict[str, str]]:
         root.mkdir(parents=True, exist_ok=True)
         local_app_data = root / "LocalAppData"
-        local_app_data.mkdir(parents=True, exist_ok=True)
+        # The deep-path test deliberately crosses the legacy Windows MAX_PATH
+        # boundary.  Create its next directory through the extended path too,
+        # so the fixture reaches the signer instead of failing in pathlib.
+        Path(_windows_extended_path(local_app_data)).mkdir(parents=True, exist_ok=True)
         environment = os.environ.copy()
         environment["LOCALAPPDATA"] = str(local_app_data)
         completed = subprocess.run(
