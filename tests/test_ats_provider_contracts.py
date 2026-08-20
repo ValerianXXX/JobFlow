@@ -141,11 +141,11 @@ class ATSProviderContractTests(unittest.TestCase):
         self.assertIn("ordered_html_sequence", workday["saved_snapshot_modes"])
         self.assertIn("MULTI_PAGE_RESUME", workday["verified_stages"])
         ashby = next(item for item in report["providers"] if item["provider"] == "ashby")
-        self.assertEqual(ashby["evidence_scope"], "DISCOVERY_AND_FORM_ANALYSIS_ONLY")
-        self.assertNotIn("APPROVED_DOM_PREFILL", ashby["verified_stages"])
+        self.assertEqual(ashby["evidence_scope"], "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME")
+        self.assertIn("APPROVED_DOM_PREFILL", ashby["verified_stages"])
         self.assertEqual(
             ashby["user_present_prefill"],
-            "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED",
+            "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
         )
         company = next(item for item in report["providers"] if item["provider"] == "company")
         self.assertEqual(
@@ -269,12 +269,26 @@ class ATSProviderContractTests(unittest.TestCase):
             "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
         for provider in ("ashby", "smartrecruiters"):
+            self.assertEqual(by_provider[provider]["evidence_scope"], "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME")
             self.assertEqual(
-                by_provider[provider]["verified_stages"],
-                ["OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS"],
+                {
+                    "APPROVED_DOM_PREFILL",
+                    "APPROVED_FILE_ATTACHMENT",
+                    "EXPLICIT_NONFINAL_NAVIGATION",
+                } - set(by_provider[provider]["verified_stages"]),
+                set(),
             )
             self.assertIn("REVIEW_PACKET", by_provider[provider]["unverified_stages"])
-            self.assertIn("APPROVED_FILE_ATTACHMENT", by_provider[provider]["unverified_stages"])
+            self.assertIn("MULTI_PAGE_RESUME", by_provider[provider]["unverified_stages"])
+            self.assertIn("RESULT_OBSERVATION", by_provider[provider]["unverified_stages"])
+            self.assertEqual(
+                by_provider[provider]["approved_material_upload"],
+                "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
+            )
+            self.assertEqual(
+                by_provider[provider]["nonfinal_navigation"],
+                "PROVIDER_EVIDENCE_VERIFIED_EXPLICIT_CONTROLS_ONLY",
+            )
         self.assertTrue(all(item["live_site_verified"] is False for item in by_provider.values()))
 
     def test_every_provider_uses_one_hash_only_transport_contract(self) -> None:

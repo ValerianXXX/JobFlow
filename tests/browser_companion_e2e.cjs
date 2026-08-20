@@ -17,6 +17,12 @@ const leverFixture = fs.readFileSync(
 const workdayReviewFixture = fs.readFileSync(
   path.join(project, "tests", "fixtures", "synthetic-workday-safe-form.html"), "utf8"
 );
+const ashbyFixture = fs.readFileSync(
+  path.join(project, "tests", "fixtures", "synthetic-ashby-form.html"), "utf8"
+);
+const smartRecruitersFixture = fs.readFileSync(
+  path.join(project, "tests", "fixtures", "synthetic-smartrecruiters-form.html"), "utf8"
+);
 const tekFixture = fs.readFileSync(path.join(project, "tests", "fixtures", "synthetic-teksystems-lwc-form.html"), "utf8");
 const companion = path.join(project, "browser-companion", "dom.js");
 const browserPath = process.env.JOBFLOW_TEST_BROWSER || "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
@@ -25,6 +31,129 @@ const fileHash = `sha256:${crypto.createHash("sha256").update(fileBytes).digest(
 
 function valueHash(value) {
   return `sha256:${crypto.createHash("sha256").update(value, "utf8").digest("hex")}`;
+}
+
+async function verifyProviderApplicationRuntime(browser, {
+  url, fixtureHtml, fieldValues, fieldSelector, fileIndex, fileSelector,
+  navigationIndex, navigationSelector, navigationLabel, finalIndex, finalSelector
+}) {
+  const providerPage = await browser.newPage();
+  await providerPage.route(url, (route) => route.fulfill({
+    status: 200, contentType: "text/html; charset=utf-8", body: fixtureHtml
+  }));
+  await providerPage.goto(url, {waitUntil: "domcontentloaded"});
+  await providerPage.evaluate(({encodedFile, navigationSelector}) => {
+    globalThis.__jobflowMessages = [];
+    globalThis.__jobflowListener = null;
+    globalThis.__providerNavigationClicks = 0;
+    const decode = () => Uint8Array.from(atob(encodedFile), (character) => character.charCodeAt(0));
+    globalThis.chrome = {
+      runtime: {
+        lastError: null,
+        onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+        async sendMessage(message) { globalThis.__jobflowMessages.push(message); return {status: "RECORDED"}; },
+        connect() {
+          const messageListeners = [];
+          const disconnectListeners = [];
+          return {
+            onMessage: {addListener(listener) { messageListeners.push(listener); }},
+            onDisconnect: {addListener(listener) { disconnectListeners.push(listener); }},
+            postMessage() {
+              const bytes = decode();
+              let binary = "";
+              for (const value of bytes) binary += String.fromCharCode(value);
+              queueMicrotask(() => {
+                for (const listener of messageListeners) listener({type: "chunk", data: btoa(binary)});
+                for (const listener of messageListeners) listener({type: "end"});
+              });
+            },
+            disconnect() { for (const listener of disconnectListeners) listener(); }
+          };
+        }
+      }
+    };
+    document.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+    document.querySelector(navigationSelector).addEventListener("click", () => {
+      globalThis.__providerNavigationClicks += 1;
+    });
+  }, {encodedFile: fileBytes.toString("base64"), navigationSelector});
+  await providerPage.addScriptTag({path: companion});
+  await providerPage.evaluate(() => {
+    globalThis.__jobflowCall = (message) => new Promise((resolve) => {
+      globalThis.__jobflowListener(message, {}, resolve);
+    });
+  });
+  const collected = await providerPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+  assert.equal(collected.status, "COLLECTED");
+  assert.equal(collected.payload.client_refs.length, finalIndex + 1);
+  const pageHash = valueHash(collected.payload.sanitized_html);
+  const semanticsHash = valueHash(JSON.stringify([
+    pageHash, collected.payload.client_refs[navigationIndex], "button", navigationLabel
+  ]));
+  const fields = fieldValues.map((value, index) => ({
+    client_ref: collected.payload.client_refs[index], value, value_sha256: valueHash(value)
+  }));
+  const applied = await providerPage.evaluate(
+    ({refs, fields, fileIndex, finalIndex, navigationIndex, pageHash, semanticsHash, navigationLabel, fileHash}) =>
+      globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED",
+        fields,
+        files: [{
+          client_ref: refs[fileIndex], purpose: "resume", filename: "resume.pdf",
+          sha256: fileHash, download_url: "http://127.0.0.1/assist/synthetic/file/provider-resume"
+        }],
+        navigation: {
+          client_ref: refs[navigationIndex], mode: "PROGRAMMATIC_EXPLICIT_BUTTON", control_type: "button",
+          page_content_hash: pageHash, control_semantics_hash: semanticsHash, display_label: navigationLabel
+        },
+        final_submit_client_refs: [refs[finalIndex]]
+      }),
+    {
+      refs: collected.payload.client_refs, fields, fileIndex, finalIndex, navigationIndex,
+      pageHash, semanticsHash, navigationLabel, fileHash
+    }
+  );
+  assert.equal(applied.status, "APPLIED", JSON.stringify(applied));
+  assert.equal(applied.field_bindings.length, fieldValues.length);
+  assert.equal(applied.material_bindings.length, 1);
+  assert.equal(applied.navigation_ready, true);
+  assert.equal(applied.final_submit_armed, true);
+  assert.deepEqual(await providerPage.locator(fieldSelector).evaluateAll(
+    (controls) => controls.map((control) => control.value)
+  ), fieldValues);
+  assert.equal(await providerPage.locator(fileSelector).evaluate((control) => control.files[0]?.name), "resume.pdf");
+  assert.equal((await providerPage.evaluate(() => globalThis.__jobflowMessages)).filter(
+    (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+  ).length, 0);
+  const checked = await providerPage.evaluate(
+    (clientRef) => globalThis.__jobflowCall({type: "JOBFLOW_CHECK_NAVIGATION", client_ref: clientRef}),
+    collected.payload.client_refs[navigationIndex]
+  );
+  assert.equal(checked.status, "NAVIGATION_VALID", JSON.stringify(checked));
+  const started = await providerPage.evaluate(
+    ({clientRef, pageHash, semanticsHash}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_NAVIGATE_APPROVED", client_ref: clientRef,
+      page_content_hash: pageHash, control_semantics_hash: semanticsHash
+    }),
+    {
+      clientRef: collected.payload.client_refs[navigationIndex],
+      pageHash: checked.page_content_hash,
+      semanticsHash: checked.control_semantics_hash
+    }
+  );
+  assert.equal(started.status, "NAVIGATION_STARTED", JSON.stringify(started));
+  assert.equal(await providerPage.evaluate(() => globalThis.__providerNavigationClicks), 1);
+  await providerPage.locator(finalSelector).click();
+  await providerPage.waitForFunction(() => globalThis.__jobflowMessages.some(
+    (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+  ));
+  const submitSignals = (await providerPage.evaluate(() => globalThis.__jobflowMessages)).filter(
+    (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+  );
+  assert.equal(submitSignals.length, 1);
+  assert.equal(submitSignals[0].payload.trusted_user_event, true);
+  await providerPage.close();
+  return {fields: applied.field_bindings.length, files: applied.material_bindings.length};
 }
 
 (async () => {
@@ -346,6 +475,33 @@ function valueHash(value) {
     assert.equal(workdaySubmitSignals.length, 1);
     assert.equal(workdaySubmitSignals[0].payload.trusted_user_event, true);
     await workdayPage.close();
+
+    const ashbyRuntime = await verifyProviderApplicationRuntime(browser, {
+      url: "https://jobs.ashbyhq.com/example/11111111-1111-4111-8111-111111111111/application",
+      fixtureHtml: ashbyFixture,
+      fieldValues: ["Synthetic Applicant", "synthetic@example.test"],
+      fieldSelector: "#full-name, #email",
+      fileIndex: 2,
+      fileSelector: "#resume",
+      navigationIndex: 3,
+      navigationSelector: "button[type=button]",
+      navigationLabel: "Continue",
+      finalIndex: 4,
+      finalSelector: "button[type=submit]"
+    });
+    const smartRecruitersRuntime = await verifyProviderApplicationRuntime(browser, {
+      url: "https://jobs.smartrecruiters.com/example/12345-synthetic-credit-analyst/apply",
+      fixtureHtml: smartRecruitersFixture,
+      fieldValues: ["Synthetic", "Applicant", "synthetic@example.test"],
+      fieldSelector: "#first-name, #last-name, #email",
+      fileIndex: 3,
+      fileSelector: "#resume",
+      navigationIndex: 4,
+      navigationSelector: "button[type=button]",
+      navigationLabel: "Next",
+      finalIndex: 5,
+      finalSelector: "button[type=submit]"
+    });
 
     const tekPage = await browser.newPage();
     await tekPage.route("https://apply.teksystems.test/**", (route) => route.fulfill({
@@ -1127,6 +1283,14 @@ function valueHash(value) {
       workday_fields: workdayApplied.field_bindings.length,
       workday_files: workdayApplied.material_bindings.length,
       workday_programmatic_final_submit_events: 0,
+      ashby_provider_runtime: true,
+      ashby_fields: ashbyRuntime.fields,
+      ashby_files: ashbyRuntime.files,
+      ashby_programmatic_final_submit_events: 0,
+      smartrecruiters_provider_runtime: true,
+      smartrecruiters_fields: smartRecruitersRuntime.fields,
+      smartrecruiters_files: smartRecruitersRuntime.files,
+      smartrecruiters_programmatic_final_submit_events: 0,
       submit_like_next_programmatic_clicks: 0,
       trusted_manual_next_observed_before_unload: true,
       scoped_explicit_button_navigation: true,

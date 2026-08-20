@@ -37,8 +37,8 @@ The checked-in provider set and current evidence boundary are:
 - Greenhouse: discovery through the local review packet plus synthetic provider-host DOM prefill, approved file attachment, explicit non-final Continue, and a user-only final Submit boundary. Multi-page resume, result observation, and live-site acceptance remain unverified.
 - Lever: discovery through the local review packet plus synthetic provider-host approved DOM prefill, approved resume attachment, a user-only final Submit boundary, and synthetic result observation. Provider-specific non-final navigation and live-site acceptance remain unverified.
 - Workday: discovery, review, synthetic provider-host approved DOM prefill and resume attachment, explicit non-final navigation, representative multi-page resume, a user-only final Submit boundary, and synthetic result observation. Live-site acceptance remains unverified.
-- Ashby: discovery, route binding, and form analysis only.
-- SmartRecruiters: discovery, route binding, and form analysis only.
+- Ashby: discovery, route binding, form analysis, synthetic provider-host approved DOM prefill, approved resume attachment, explicit non-final Continue, and a user-only final Submit boundary. Provider-specific review, multi-page resume, result observation, and live-site acceptance remain unverified.
+- SmartRecruiters: discovery, route binding, form analysis, synthetic provider-host approved DOM prefill, approved resume attachment, explicit non-final Next, and a user-only final Submit boundary. Provider-specific review, multi-page resume, result observation, and live-site acceptance remain unverified.
 - Shared Browser Companion runtime: synthetic tests cover approved DOM prefill, approved file attachment, explicit non-final navigation, and modern-component rebinding independently of any provider claim.
 
 The static provider matrix remains `live_site_verified=false`; current local page/route evidence is disclosed only in the separate expiring report. Final Submit remains `USER_ONLY`, and an unknown submission outcome is never retried automatically.

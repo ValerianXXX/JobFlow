@@ -127,34 +127,52 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
     {
         "provider": "ashby",
         "offline_evidence_level": "SINGLE_SNAPSHOT_PASS",
-        "evidence_scope": "DISCOVERY_AND_FORM_ANALYSIS_ONLY",
+        "evidence_scope": "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME",
         "saved_snapshot_modes": ["single_html", "provider_json"],
         "route_shape": "OFFICIAL_TO_APPROVED_ATS",
         "dynamic_control_strategy": "opaque_control_ref",
-        "verified_stages": ["OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS"],
+        "verified_stages": [
+            "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS",
+            "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT", "EXPLICIT_NONFINAL_NAVIGATION",
+        ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
             "tests/test_ats_provider_contracts.py",
+            "tests/browser_companion_e2e.cjs",
             "tests/fixtures/synthetic-ashby-jobs.json",
             "tests/fixtures/synthetic-ashby-form.html",
         ],
-        "known_limit_codes": ["REVIEW_TO_BROWSER_EXECUTION_NOT_PROVEN", "LIVE_SITE_ACCEPTANCE_REQUIRED"],
+        "known_limit_codes": [
+            "PROVIDER_SPECIFIC_REVIEW_PACKET_NOT_PROVEN",
+            "PROVIDER_SPECIFIC_MULTI_PAGE_RESUME_NOT_PROVEN",
+            "PROVIDER_SPECIFIC_RESULT_OBSERVATION_NOT_PROVEN",
+            "LIVE_SITE_ACCEPTANCE_REQUIRED",
+        ],
     },
     {
         "provider": "smartrecruiters",
         "offline_evidence_level": "SINGLE_SNAPSHOT_PASS",
-        "evidence_scope": "DISCOVERY_AND_FORM_ANALYSIS_ONLY",
+        "evidence_scope": "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME",
         "saved_snapshot_modes": ["single_html", "provider_json"],
         "route_shape": "OFFICIAL_TO_APPROVED_ATS",
         "dynamic_control_strategy": "opaque_control_ref",
-        "verified_stages": ["OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS"],
+        "verified_stages": [
+            "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS",
+            "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT", "EXPLICIT_NONFINAL_NAVIGATION",
+        ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
             "tests/test_ats_provider_contracts.py",
+            "tests/browser_companion_e2e.cjs",
             "tests/fixtures/synthetic-smartrecruiters-postings.json",
             "tests/fixtures/synthetic-smartrecruiters-form.html",
         ],
-        "known_limit_codes": ["REVIEW_TO_BROWSER_EXECUTION_NOT_PROVEN", "LIVE_SITE_ACCEPTANCE_REQUIRED"],
+        "known_limit_codes": [
+            "PROVIDER_SPECIFIC_REVIEW_PACKET_NOT_PROVEN",
+            "PROVIDER_SPECIFIC_MULTI_PAGE_RESUME_NOT_PROVEN",
+            "PROVIDER_SPECIFIC_RESULT_OBSERVATION_NOT_PROVEN",
+            "LIVE_SITE_ACCEPTANCE_REQUIRED",
+        ],
     },
 )
 

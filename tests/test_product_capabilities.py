@@ -41,7 +41,7 @@ class ProductCapabilityReportTests(unittest.TestCase):
         self.assertEqual(by_id["ashby_browser_assist"]["evidence_status"], "SINGLE_SNAPSHOT_PASS")
         self.assertEqual(by_id["smartrecruiters_browser_assist"]["evidence_status"], "SINGLE_SNAPSHOT_PASS")
         self.assertIn(
-            "REVIEW_TO_BROWSER_EXECUTION_NOT_PROVEN",
+            "PROVIDER_SPECIFIC_REVIEW_PACKET_NOT_PROVEN",
             by_id["ashby_browser_assist"]["known_limit_codes"],
         )
         self.assertEqual(by_id["authorized_continuous_scheduler"]["availability"], "NOT_AVAILABLE")
