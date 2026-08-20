@@ -14,6 +14,9 @@ const greenhouseContinueFixture = fs.readFileSync(
 const leverFixture = fs.readFileSync(
   path.join(project, "tests", "fixtures", "synthetic-lever-form.html"), "utf8"
 );
+const workdayReviewFixture = fs.readFileSync(
+  path.join(project, "tests", "fixtures", "synthetic-workday-safe-form.html"), "utf8"
+);
 const tekFixture = fs.readFileSync(path.join(project, "tests", "fixtures", "synthetic-teksystems-lwc-form.html"), "utf8");
 const companion = path.join(project, "browser-companion", "dom.js");
 const browserPath = process.env.JOBFLOW_TEST_BROWSER || "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
@@ -252,6 +255,97 @@ function valueHash(value) {
     assert.equal(leverSubmitSignals.length, 1);
     assert.equal(leverSubmitSignals[0].payload.trusted_user_event, true);
     await leverPage.close();
+
+    const workdayPage = await browser.newPage();
+    await workdayPage.route("https://example.wd5.myworkdayjobs.com/**", (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8", body: workdayReviewFixture
+    }));
+    await workdayPage.goto(
+      "https://example.wd5.myworkdayjobs.com/en-US/Careers/job/123/apply/review",
+      {waitUntil: "domcontentloaded"}
+    );
+    await workdayPage.evaluate(({encodedFile}) => {
+      globalThis.__jobflowMessages = [];
+      globalThis.__jobflowListener = null;
+      const decode = () => Uint8Array.from(atob(encodedFile), (character) => character.charCodeAt(0));
+      globalThis.chrome = {
+        runtime: {
+          lastError: null,
+          onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+          async sendMessage(message) { globalThis.__jobflowMessages.push(message); return {status: "RECORDED"}; },
+          connect() {
+            const messageListeners = [];
+            const disconnectListeners = [];
+            return {
+              onMessage: {addListener(listener) { messageListeners.push(listener); }},
+              onDisconnect: {addListener(listener) { disconnectListeners.push(listener); }},
+              postMessage() {
+                const bytes = decode();
+                let binary = "";
+                for (const value of bytes) binary += String.fromCharCode(value);
+                queueMicrotask(() => {
+                  for (const listener of messageListeners) listener({type: "chunk", data: btoa(binary)});
+                  for (const listener of messageListeners) listener({type: "end"});
+                });
+              },
+              disconnect() { for (const listener of disconnectListeners) listener(); }
+            };
+          }
+        }
+      };
+      document.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+    }, {encodedFile: fileBytes.toString("base64")});
+    await workdayPage.addScriptTag({path: companion});
+    await workdayPage.evaluate(() => {
+      globalThis.__jobflowCall = (message) => new Promise((resolve) => {
+        globalThis.__jobflowListener(message, {}, resolve);
+      });
+    });
+    const workdayCollected = await workdayPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+    assert.equal(workdayCollected.status, "COLLECTED");
+    assert.equal(new URL(workdayPage.url()).hostname, "example.wd5.myworkdayjobs.com");
+    assert.equal(workdayCollected.payload.client_refs.length, 8);
+    assert.equal(await workdayPage.locator("main").getAttribute("data-provider"), "workday");
+    const workdayValues = [
+      "Synthetic Applicant", "synthetic@example.test", "https://example.com/portfolio", "Yes", "75000"
+    ];
+    const workdayFields = workdayValues.map((value, index) => ({
+      client_ref: workdayCollected.payload.client_refs[index], value, value_sha256: valueHash(value)
+    }));
+    const workdayFiles = [{
+      client_ref: workdayCollected.payload.client_refs[6],
+      purpose: "resume", filename: "resume.pdf", sha256: fileHash,
+      download_url: "http://127.0.0.1/assist/synthetic/file/workday-resume"
+    }];
+    const workdayApplied = await workdayPage.evaluate(
+      ({refs, fields, files}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED",
+        fields, files, navigation: null, final_submit_client_refs: [refs[7]]
+      }),
+      {refs: workdayCollected.payload.client_refs, fields: workdayFields, files: workdayFiles}
+    );
+    assert.equal(workdayApplied.status, "APPLIED", JSON.stringify(workdayApplied));
+    assert.equal(workdayApplied.field_bindings.length, 5);
+    assert.equal(workdayApplied.material_bindings.length, 1);
+    assert.equal(workdayApplied.final_submit_armed, true);
+    assert.deepEqual(await workdayPage.locator("#wd-name, #wd-email, #wd-portfolio, #wd-auth, #wd-salary").evaluateAll(
+      (controls) => controls.map((control) => control.value)
+    ), workdayValues);
+    assert.equal(await workdayPage.locator("#wd-gender").inputValue(), "Decline to answer");
+    assert.equal(await workdayPage.locator("#wd-resume").evaluate((control) => control.files[0]?.name), "resume.pdf");
+    assert.equal((await workdayPage.evaluate(() => globalThis.__jobflowMessages)).filter(
+      (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+    ).length, 0);
+    await workdayPage.locator("button[type=submit]").click();
+    await workdayPage.waitForFunction(() => globalThis.__jobflowMessages.some(
+      (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+    ));
+    const workdaySubmitSignals = (await workdayPage.evaluate(() => globalThis.__jobflowMessages)).filter(
+      (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+    );
+    assert.equal(workdaySubmitSignals.length, 1);
+    assert.equal(workdaySubmitSignals[0].payload.trusted_user_event, true);
+    await workdayPage.close();
 
     const tekPage = await browser.newPage();
     await tekPage.route("https://apply.teksystems.test/**", (route) => route.fulfill({
@@ -1029,6 +1123,10 @@ function valueHash(value) {
       lever_fields: leverApplied.field_bindings.length,
       lever_files: leverApplied.material_bindings.length,
       lever_programmatic_final_submit_events: 0,
+      workday_provider_file_runtime: true,
+      workday_fields: workdayApplied.field_bindings.length,
+      workday_files: workdayApplied.material_bindings.length,
+      workday_programmatic_final_submit_events: 0,
       submit_like_next_programmatic_clicks: 0,
       trusted_manual_next_observed_before_unload: true,
       scoped_explicit_button_navigation: true,

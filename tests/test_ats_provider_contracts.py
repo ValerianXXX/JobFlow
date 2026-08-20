@@ -198,6 +198,29 @@ class ATSProviderContractTests(unittest.TestCase):
             "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED",
         )
         self.assertFalse(lever["live_site_verified"])
+        self.assertEqual(
+            workday["evidence_scope"],
+            "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
+        )
+        self.assertEqual(
+            {
+                "APPROVED_DOM_PREFILL",
+                "APPROVED_FILE_ATTACHMENT",
+                "EXPLICIT_NONFINAL_NAVIGATION",
+                "MULTI_PAGE_RESUME",
+                "RESULT_OBSERVATION",
+            } - set(workday["verified_stages"]),
+            set(),
+        )
+        self.assertEqual(
+            workday["user_present_prefill"],
+            "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
+        )
+        self.assertEqual(
+            workday["approved_material_upload"],
+            "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
+        )
+        self.assertFalse(workday["live_site_verified"])
         runtime = report["browser_runtime_evidence"]
         self.assertEqual(runtime["status"], "SYNTHETIC_BROWSER_RUNTIME_PASS")
         self.assertEqual(
@@ -243,7 +266,7 @@ class ATSProviderContractTests(unittest.TestCase):
         )
         self.assertEqual(
             by_provider["workday"]["evidence_scope"],
-            "MULTI_PAGE_SEQUENCE_AND_SYNTHETIC_RESULT",
+            "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
         for provider in ("ashby", "smartrecruiters"):
             self.assertEqual(

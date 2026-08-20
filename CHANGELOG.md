@@ -8,11 +8,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 - Added provider-host synthetic Greenhouse browser evidence for approved field prefill, approved material attachment, and explicit non-final Continue navigation.
 - Added provider-host synthetic Lever browser evidence for approved field prefill, approved resume attachment, and a user-only final Submit boundary.
+- Added provider-host synthetic Workday browser evidence for approved field prefill, approved resume attachment, and a user-only final Submit boundary.
 
 ### Safety
 
 - Greenhouse final Submit remains user-only, and the capability report continues to mark live-site acceptance, multi-page resume, and result observation as unverified.
 - Lever final Submit remains user-only, and provider-specific non-final navigation and live-site acceptance remain unverified.
+- Workday final Submit remains user-only, and live-site acceptance remains unverified.
 
 ## [0.6.0] - 2026-08-19
 

@@ -104,23 +104,25 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
     {
         "provider": "workday",
         "offline_evidence_level": "SAVED_SEQUENCE_PASS",
-        "evidence_scope": "MULTI_PAGE_SEQUENCE_AND_SYNTHETIC_RESULT",
+        "evidence_scope": "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         "saved_snapshot_modes": ["single_html", "ordered_html_sequence"],
         "route_shape": "OFFICIAL_TO_APPROVED_ATS",
         "dynamic_control_strategy": "logical_field_hash",
         "verified_stages": [
             "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN",
-            "REVIEW_PACKET", "EXPLICIT_NONFINAL_NAVIGATION", "MULTI_PAGE_RESUME", "RESULT_OBSERVATION",
+            "REVIEW_PACKET", "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT",
+            "EXPLICIT_NONFINAL_NAVIGATION", "MULTI_PAGE_RESUME", "RESULT_OBSERVATION",
         ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
             "tests/test_workday_vertical.py",
             "tests/test_workday_sequence.py",
             "tests/test_real_profile_offline_application.py",
+            "tests/browser_companion_e2e.cjs",
             "tests/fixtures/synthetic-workday-sequence.json",
             "tests/fixtures/synthetic-workday-safe-form.html",
         ],
-        "known_limit_codes": ["PROVIDER_SPECIFIC_FILE_ATTACHMENT_NOT_PROVEN", "LIVE_SITE_ACCEPTANCE_REQUIRED"],
+        "known_limit_codes": ["LIVE_SITE_ACCEPTANCE_REQUIRED"],
     },
     {
         "provider": "ashby",
