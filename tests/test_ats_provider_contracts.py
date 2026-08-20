@@ -196,7 +196,12 @@ class ATSProviderContractTests(unittest.TestCase):
             "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
         self.assertEqual(
-            {"APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT", "RESULT_OBSERVATION"}
+            {
+                "APPROVED_DOM_PREFILL",
+                "APPROVED_FILE_ATTACHMENT",
+                "EXPLICIT_NONFINAL_NAVIGATION",
+                "RESULT_OBSERVATION",
+            }
             - set(lever["verified_stages"]),
             set(),
         )
@@ -210,8 +215,9 @@ class ATSProviderContractTests(unittest.TestCase):
         )
         self.assertEqual(
             lever["nonfinal_navigation"],
-            "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED",
+            "PROVIDER_EVIDENCE_VERIFIED_EXPLICIT_CONTROLS_ONLY",
         )
+        self.assertEqual(lever["known_limit_codes"], ["LIVE_SITE_ACCEPTANCE_REQUIRED"])
         self.assertFalse(lever["live_site_verified"])
         self.assertEqual(
             workday["evidence_scope"],

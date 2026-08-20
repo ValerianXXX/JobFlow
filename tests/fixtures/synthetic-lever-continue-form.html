@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Synthetic Lever staged application</title></head>
+<body>
+<main data-provider="lever">
+  <h1>Synthetic staged application</h1>
+  <form action="/example/abc-123/apply">
+    <label for="name">Full name</label>
+    <input id="name" name="full_name" type="text" autocomplete="name" required>
+    <label for="portfolio">Portfolio URL</label>
+    <input id="portfolio" name="portfolio" type="url">
+    <label for="linkedin">LinkedIn profile</label>
+    <input id="linkedin" name="linkedin" type="url">
+    <label for="resume">Resume</label>
+    <input id="resume" name="resume" type="file">
+    <button id="continue" type="button">Continue</button>
+    <button id="submit" type="submit">Submit application</button>
+  </form>
+</main>
+</body>
+</html>

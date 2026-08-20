@@ -14,6 +14,9 @@ const greenhouseContinueFixture = fs.readFileSync(
 const leverFixture = fs.readFileSync(
   path.join(project, "tests", "fixtures", "synthetic-lever-form.html"), "utf8"
 );
+const leverContinueFixture = fs.readFileSync(
+  path.join(project, "tests", "fixtures", "synthetic-lever-continue-form.html"), "utf8"
+);
 const workdayReviewFixture = fs.readFileSync(
   path.join(project, "tests", "fixtures", "synthetic-workday-safe-form.html"), "utf8"
 );
@@ -384,6 +387,20 @@ async function verifyProviderApplicationRuntime(browser, {
     assert.equal(leverSubmitSignals.length, 1);
     assert.equal(leverSubmitSignals[0].payload.trusted_user_event, true);
     await leverPage.close();
+
+    const leverNavigationRuntime = await verifyProviderApplicationRuntime(browser, {
+      url: "https://jobs.lever.co/example/abc-123/apply/staged",
+      fixtureHtml: leverContinueFixture,
+      fieldValues: ["Synthetic Applicant", "https://example.com/portfolio", "https://linkedin.com/in/example"],
+      fieldSelector: "#name, #portfolio, #linkedin",
+      fileIndex: 3,
+      fileSelector: "#resume",
+      navigationIndex: 4,
+      navigationSelector: "#continue",
+      navigationLabel: "Continue",
+      finalIndex: 5,
+      finalSelector: "#submit"
+    });
 
     const workdayPage = await browser.newPage();
     await workdayPage.route("https://example.wd5.myworkdayjobs.com/**", (route) => route.fulfill({
@@ -1037,30 +1054,35 @@ async function verifyProviderApplicationRuntime(browser, {
     const explicitCollected = await explicitPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
     assert.equal(new URL(explicitPage.url()).hostname, "boards.greenhouse.io");
     assert.equal(await explicitPage.locator("main").getAttribute("data-provider"), "greenhouse");
-    assert.equal(explicitCollected.payload.client_refs.length, 2);
+    assert.equal(explicitCollected.payload.client_refs.length, 3);
     const explicitPageHash = valueHash(explicitCollected.payload.sanitized_html);
     const explicitSemanticsHash = valueHash(JSON.stringify([
-      explicitPageHash, explicitCollected.payload.client_refs[1], "button", "Continue"
+      explicitPageHash, explicitCollected.payload.client_refs[2], "button", "Continue"
     ]));
+    const explicitValues = [navValue, "synthetic@example.test"];
     const explicitApplied = await explicitPage.evaluate(
-      ({clientRefs, pageHash, semanticsHash, value, hash}) => globalThis.__jobflowCall({
+      ({clientRefs, pageHash, semanticsHash, values, hashes}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
-        fields: [{client_ref: clientRefs[0], value, value_sha256: hash}],
+        fields: [
+          {client_ref: clientRefs[0], value: values[0], value_sha256: hashes[0]},
+          {client_ref: clientRefs[1], value: values[1], value_sha256: hashes[1]}
+        ],
         files: [], final_submit_client_refs: [],
         navigation: {
-          client_ref: clientRefs[1], mode: "PROGRAMMATIC_EXPLICIT_BUTTON", control_type: "button",
+          client_ref: clientRefs[2], mode: "PROGRAMMATIC_EXPLICIT_BUTTON", control_type: "button",
           page_content_hash: pageHash, control_semantics_hash: semanticsHash, display_label: "Continue"
         }
       }),
       {
         clientRefs: explicitCollected.payload.client_refs, pageHash: explicitPageHash,
-        semanticsHash: explicitSemanticsHash, value: navValue, hash: valueHash(navValue)
+        semanticsHash: explicitSemanticsHash, values: explicitValues,
+        hashes: explicitValues.map((value) => valueHash(value))
       }
     );
     assert.equal(explicitApplied.navigation_ready, true);
     const explicitChecked = await explicitPage.evaluate(
       (clientRef) => globalThis.__jobflowCall({type: "JOBFLOW_CHECK_NAVIGATION", client_ref: clientRef}),
-      explicitCollected.payload.client_refs[1]
+      explicitCollected.payload.client_refs[2]
     );
     assert.equal(explicitChecked.status, "NAVIGATION_VALID", JSON.stringify(explicitChecked));
     const staleAuthorization = await explicitPage.evaluate(
@@ -1068,7 +1090,7 @@ async function verifyProviderApplicationRuntime(browser, {
         type: "JOBFLOW_NAVIGATE_APPROVED", client_ref: clientRef,
         page_content_hash: `sha256:${"0".repeat(64)}`, control_semantics_hash: semanticsHash
       }),
-      {clientRef: explicitCollected.payload.client_refs[1], semanticsHash: explicitSemanticsHash}
+      {clientRef: explicitCollected.payload.client_refs[2], semanticsHash: explicitSemanticsHash}
     );
     assert.equal(staleAuthorization.code, "COMPANION_NAVIGATION_AUTHORIZATION_STALE");
     assert.equal(await explicitPage.evaluate(() => globalThis.__explicitClicks), 0);
@@ -1078,7 +1100,7 @@ async function verifyProviderApplicationRuntime(browser, {
         page_content_hash: pageHash, control_semantics_hash: semanticsHash
       }),
       {
-        clientRef: explicitCollected.payload.client_refs[1], pageHash: explicitChecked.page_content_hash,
+        clientRef: explicitCollected.payload.client_refs[2], pageHash: explicitChecked.page_content_hash,
         semanticsHash: explicitChecked.control_semantics_hash
       }
     );
@@ -1278,6 +1300,9 @@ async function verifyProviderApplicationRuntime(browser, {
       lever_provider_runtime: true,
       lever_fields: leverApplied.field_bindings.length,
       lever_files: leverApplied.material_bindings.length,
+      lever_explicit_nonfinal_navigation: true,
+      lever_navigation_fields: leverNavigationRuntime.fields,
+      lever_navigation_files: leverNavigationRuntime.files,
       lever_programmatic_final_submit_events: 0,
       workday_provider_file_runtime: true,
       workday_fields: workdayApplied.field_bindings.length,
