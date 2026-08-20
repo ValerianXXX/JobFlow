@@ -137,6 +137,7 @@ class ATSProviderContractTests(unittest.TestCase):
         for item in report["providers"]:
             self.assertFalse(set(item["verified_stages"]) & set(item["unverified_stages"]))
             self.assertEqual(len(set(item["verified_stages"]) | set(item["unverified_stages"])), 11)
+            self.assertIn("MODERN_COMPONENT_REBINDING", item["verified_stages"])
         workday = next(item for item in report["providers"] if item["provider"] == "workday")
         self.assertIn("ordered_html_sequence", workday["saved_snapshot_modes"])
         self.assertIn("MULTI_PAGE_RESUME", workday["verified_stages"])

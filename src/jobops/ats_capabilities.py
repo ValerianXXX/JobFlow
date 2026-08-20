@@ -71,7 +71,7 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
         "verified_stages": [
             "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN", "REVIEW_PACKET",
             "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT", "EXPLICIT_NONFINAL_NAVIGATION",
-            "MULTI_PAGE_RESUME", "RESULT_OBSERVATION",
+            "MULTI_PAGE_RESUME", "RESULT_OBSERVATION", "MODERN_COMPONENT_REBINDING",
         ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
@@ -100,7 +100,7 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
         "verified_stages": [
             "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN",
             "REVIEW_PACKET", "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT",
-            "EXPLICIT_NONFINAL_NAVIGATION", "RESULT_OBSERVATION",
+            "EXPLICIT_NONFINAL_NAVIGATION", "RESULT_OBSERVATION", "MODERN_COMPONENT_REBINDING",
         ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
@@ -124,6 +124,7 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
             "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN",
             "REVIEW_PACKET", "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT",
             "EXPLICIT_NONFINAL_NAVIGATION", "MULTI_PAGE_RESUME", "RESULT_OBSERVATION",
+            "MODERN_COMPONENT_REBINDING",
         ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
@@ -147,6 +148,7 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
             "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN",
             "REVIEW_PACKET", "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT",
             "EXPLICIT_NONFINAL_NAVIGATION", "MULTI_PAGE_RESUME", "RESULT_OBSERVATION",
+            "MODERN_COMPONENT_REBINDING",
         ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
@@ -177,6 +179,7 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
             "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN",
             "REVIEW_PACKET", "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT",
             "EXPLICIT_NONFINAL_NAVIGATION", "MULTI_PAGE_RESUME", "RESULT_OBSERVATION",
+            "MODERN_COMPONENT_REBINDING",
         ],
         "evidence_refs": [
             "tests/test_official_discovery.py",

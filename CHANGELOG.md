@@ -15,6 +15,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 - Added full local Ashby and SmartRecruiters review verticals from an official-company route through private-value-free planning, packet approval, and a verified synthetic result, with network and real external actions held at zero.
 - Added hash-bound three-step saved application sequences for Greenhouse, Ashby, and SmartRecruiters, including duplicate-field reconciliation and fail-closed upload, navigation, and final-submit evidence.
 - Added Lever provider-host browser evidence for one hash-bound, explicit non-final Continue action while preserving the user-only final Submit boundary.
+- Added provider-host browser evidence that Greenhouse, Lever, Workday, Ashby, and SmartRecruiters fields can be rebound after an exact-signature framework redraw; ambiguous redraws still stop safely.
 - Added a hash-bound three-step company-direct application sequence with duplicate-field reconciliation and fail-closed upload, navigation, and final-submit checks.
 
 ### Safety

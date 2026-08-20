@@ -11,6 +11,9 @@ const fixture = fs.readFileSync(path.join(project, "tests", "fixtures", "synthet
 const greenhouseContinueFixture = fs.readFileSync(
   path.join(project, "tests", "fixtures", "synthetic-greenhouse-continue-form.html"), "utf8"
 );
+const greenhouseFixture = fs.readFileSync(
+  path.join(project, "tests", "fixtures", "synthetic-greenhouse-form.html"), "utf8"
+);
 const leverFixture = fs.readFileSync(
   path.join(project, "tests", "fixtures", "synthetic-lever-form.html"), "utf8"
 );
@@ -157,6 +160,76 @@ async function verifyProviderApplicationRuntime(browser, {
   assert.equal(submitSignals[0].payload.trusted_user_event, true);
   await providerPage.close();
   return {fields: applied.field_bindings.length, files: applied.material_bindings.length};
+}
+
+async function verifyProviderRebindingRuntime(browser, {
+  url, fixtureHtml, targetSelector, targetIndex, value, finalIndex, finalSelector
+}) {
+  const providerPage = await browser.newPage();
+  await providerPage.route(url, (route) => route.fulfill({
+    status: 200, contentType: "text/html; charset=utf-8", body: fixtureHtml
+  }));
+  await providerPage.goto(url, {waitUntil: "domcontentloaded"});
+  await providerPage.evaluate(() => {
+    globalThis.__jobflowMessages = [];
+    globalThis.__jobflowListener = null;
+    globalThis.chrome = {
+      runtime: {
+        lastError: null,
+        onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+        async sendMessage(message) { globalThis.__jobflowMessages.push(message); return {status: "RECORDED"}; },
+        connect() { throw new Error("NO_FILE_STREAM_EXPECTED"); }
+      }
+    };
+    document.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+  });
+  await providerPage.addScriptTag({path: companion});
+  await providerPage.evaluate(() => {
+    globalThis.__jobflowCall = (message) => new Promise((resolve) => {
+      globalThis.__jobflowListener(message, {}, resolve);
+    });
+  });
+  const collected = await providerPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+  assert.equal(collected.status, "COLLECTED");
+  assert.ok(collected.payload.client_refs[targetIndex]);
+  assert.ok(collected.payload.client_refs[finalIndex]);
+  await providerPage.evaluate((selector) => {
+    const original = document.querySelector(selector);
+    const replacement = original.cloneNode(true);
+    replacement.value = "";
+    replacement.dataset.frameworkRender = "replacement";
+    original.replaceWith(replacement);
+  }, targetSelector);
+  const applied = await providerPage.evaluate(
+    ({clientRefs, targetIndex, finalIndex, value, hash}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED",
+      fields: [{client_ref: clientRefs[targetIndex], value, value_sha256: hash}],
+      files: [], navigation: null, final_submit_client_refs: [clientRefs[finalIndex]]
+    }),
+    {
+      clientRefs: collected.payload.client_refs, targetIndex, finalIndex,
+      value, hash: valueHash(value)
+    }
+  );
+  assert.equal(applied.status, "APPLIED", JSON.stringify(applied));
+  assert.equal(applied.field_bindings.length, 1);
+  assert.equal(applied.final_submit_armed, true);
+  assert.equal(await providerPage.locator(targetSelector).getAttribute("data-framework-render"), "replacement");
+  assert.equal(await providerPage.locator(targetSelector).inputValue(), value);
+  assert.equal((await providerPage.evaluate(() => globalThis.__jobflowMessages)).filter(
+    (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+  ).length, 0);
+  await providerPage.locator(finalSelector).click();
+  await providerPage.waitForFunction(() => globalThis.__jobflowMessages.some(
+    (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+  ));
+  const submitSignals = (await providerPage.evaluate(() => globalThis.__jobflowMessages)).filter(
+    (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+  );
+  assert.equal(submitSignals.length, 1);
+  assert.equal(submitSignals[0].payload.trusted_user_event, true);
+  await providerPage.close();
+  return true;
 }
 
 (async () => {
@@ -518,6 +591,36 @@ async function verifyProviderApplicationRuntime(browser, {
       navigationLabel: "Next",
       finalIndex: 5,
       finalSelector: "button[type=submit]"
+    });
+    const greenhouseRebinding = await verifyProviderRebindingRuntime(browser, {
+      url: "https://boards.greenhouse.io/example/jobs/987654/rebinding",
+      fixtureHtml: greenhouseFixture,
+      targetSelector: "#portfolio", targetIndex: 1,
+      value: "https://example.com/greenhouse-portfolio", finalIndex: 4, finalSelector: "#submit"
+    });
+    const leverRebinding = await verifyProviderRebindingRuntime(browser, {
+      url: "https://jobs.lever.co/example/abc-123/apply/rebinding",
+      fixtureHtml: leverFixture,
+      targetSelector: "#linkedin", targetIndex: 2,
+      value: "https://linkedin.com/in/rebound-example", finalIndex: 4, finalSelector: "button[type=submit]"
+    });
+    const workdayRebinding = await verifyProviderRebindingRuntime(browser, {
+      url: "https://example.wd5.myworkdayjobs.com/en-US/Careers/job/123/apply/rebinding",
+      fixtureHtml: workdayReviewFixture,
+      targetSelector: "#wd-email", targetIndex: 1,
+      value: "rebound@example.test", finalIndex: 7, finalSelector: "button[type=submit]"
+    });
+    const ashbyRebinding = await verifyProviderRebindingRuntime(browser, {
+      url: "https://jobs.ashbyhq.com/example/11111111-1111-4111-8111-111111111111/application/rebinding",
+      fixtureHtml: ashbyFixture,
+      targetSelector: "#email", targetIndex: 1,
+      value: "rebound@example.test", finalIndex: 4, finalSelector: "button[type=submit]"
+    });
+    const smartRecruitersRebinding = await verifyProviderRebindingRuntime(browser, {
+      url: "https://jobs.smartrecruiters.com/example/12345-synthetic-credit-analyst/apply/rebinding",
+      fixtureHtml: smartRecruitersFixture,
+      targetSelector: "#last-name", targetIndex: 1,
+      value: "Rebound", finalIndex: 5, finalSelector: "button[type=submit]"
     });
 
     const tekPage = await browser.newPage();
@@ -1316,6 +1419,11 @@ async function verifyProviderApplicationRuntime(browser, {
       smartrecruiters_fields: smartRecruitersRuntime.fields,
       smartrecruiters_files: smartRecruitersRuntime.files,
       smartrecruiters_programmatic_final_submit_events: 0,
+      greenhouse_component_rerender_rebinding: greenhouseRebinding,
+      lever_component_rerender_rebinding: leverRebinding,
+      workday_component_rerender_rebinding: workdayRebinding,
+      ashby_component_rerender_rebinding: ashbyRebinding,
+      smartrecruiters_component_rerender_rebinding: smartRecruitersRebinding,
       submit_like_next_programmatic_clicks: 0,
       trusted_manual_next_observed_before_unload: true,
       scoped_explicit_button_navigation: true,
