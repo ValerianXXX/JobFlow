@@ -109,19 +109,56 @@ def _provider_and_tenant(host: str, url: str) -> tuple[str, str, str, str]:
     parsed = urlparse(url)
     labels = _host(host).split(".")
     path_parts = [part for part in parsed.path.split("/") if part]
+    folded_parts = [part.casefold() for part in path_parts]
     workday_host = _host(host)
     if workday_host in {"myworkdayjobs.com", "myworkday.com"} or workday_host.endswith((".myworkdayjobs.com", ".myworkday.com")):
         tenant = path_parts[0] if (workday_host == "myworkday.com" or workday_host.endswith(".myworkday.com")) and path_parts else labels[0]
-        job_identity = path_parts[-1] if path_parts else "UNKNOWN"
+        # Workday posting URLs may append /apply, /application, /review, or
+        # other wizard segments after the immutable posting slug.  Keep the
+        # final posting segment before a known child-page marker instead of
+        # binding the application to the currently visible wizard step.
+        job_marker = next(
+            (index for index, part in enumerate(folded_parts) if part in {"job", "jobs"}),
+            None,
+        )
+        child_markers = {
+            "apply", "application", "applications", "review", "questions",
+            "questionnaire", "my-information", "experience", "education",
+        }
+        if job_marker is None or job_marker + 1 >= len(path_parts):
+            job_identity = "UNKNOWN"
+        else:
+            child_index = next(
+                (
+                    index
+                    for index in range(job_marker + 1, len(path_parts))
+                    if folded_parts[index] in child_markers
+                    or folded_parts[index].startswith("step-")
+                ),
+                len(path_parts),
+            )
+            posting_parts = path_parts[job_marker + 1:child_index]
+            job_identity = posting_parts[-1] if posting_parts else "UNKNOWN"
         board = next((part for part in path_parts if part.casefold() in {"careers", "jobs"}), "careers")
         return "workday", tenant, board.casefold(), job_identity
     if _host(host) in {"boards.greenhouse.io", "job-boards.greenhouse.io"} or _host(host).endswith(".greenhouse.io"):
         tenant = path_parts[0] if path_parts else labels[0]
-        job_identity = path_parts[-1] if path_parts else "UNKNOWN"
+        jobs_marker = next((index for index, part in enumerate(folded_parts) if part == "jobs"), None)
+        if jobs_marker is not None and jobs_marker + 1 < len(path_parts):
+            job_identity = path_parts[jobs_marker + 1]
+        else:
+            # Retain compatibility with the older /{tenant}/{posting} form,
+            # but never promote an application-step word into a job identity.
+            candidate = path_parts[1] if len(path_parts) >= 2 else ""
+            job_identity = candidate if candidate.casefold() not in {
+                "apply", "application", "review", "questions",
+            } else "UNKNOWN"
         return "greenhouse", tenant.casefold(), "default", job_identity
     if _host(host) in {"jobs.lever.co", "lever.co"} or _host(host).endswith(".lever.co"):
         tenant = path_parts[0] if path_parts else labels[0]
-        job_identity = path_parts[-1] if path_parts else "UNKNOWN"
+        # Lever uses /{tenant}/{posting}; /apply and any later segments belong
+        # to that posting and are not new job identities.
+        job_identity = path_parts[1] if len(path_parts) >= 2 else "UNKNOWN"
         return "lever", tenant.casefold(), "default", job_identity
     if _host(host) == "jobs.ashbyhq.com" or _host(host).endswith(".jobs.ashbyhq.com"):
         tenant = path_parts[0] if path_parts else labels[0]

@@ -24,6 +24,85 @@ def binding() -> dict[str, str]:
 
 
 class SourcingQueueFormTests(unittest.TestCase):
+    def test_ats_child_pages_preserve_stable_job_identity(self) -> None:
+        cases = (
+            (
+                "lever",
+                "https://jobs.lever.co/example/abc-123/apply/review",
+                "jobs.lever.co",
+                "example",
+                "default",
+                "abc-123",
+            ),
+            (
+                "greenhouse",
+                "https://boards.greenhouse.io/example/jobs/987654/application/step-2",
+                "boards.greenhouse.io",
+                "example",
+                "default",
+                "987654",
+            ),
+            (
+                "workday",
+                "https://example.wd5.myworkdayjobs.com/en-US/Careers/job/New-York/credit-analyst_R-123/apply/review",
+                "example.wd5.myworkdayjobs.com",
+                "example",
+                "careers",
+                "credit-analyst_R-123",
+            ),
+        )
+        for provider, current, host, tenant, board, identity in cases:
+            with self.subTest(provider=provider):
+                official = f"https://example.com/careers/{provider}-analyst"
+                route = verify_source_route(
+                    company_domain="example.com",
+                    official_entry_url=official,
+                    current_url=current,
+                    navigation_history=[official, current],
+                    approved_ats_hosts=ATS,
+                    guest_available=True,
+                    tenant_binding={
+                        "provider": provider,
+                        "company_registrable_domain": "example.com",
+                        "ats_host": host,
+                        "tenant": tenant,
+                        "board": board,
+                        "job_identity": identity,
+                        "official_page_hash": HASH_A,
+                        "jd_snapshot_hash": HASH_B,
+                    },
+                    official_page_hash=HASH_A,
+                    jd_snapshot_hash=HASH_B,
+                )
+                self.assertEqual(route.provider, provider)
+                self.assertEqual(route.ats_job_identity, identity)
+
+    def test_ats_child_page_cannot_replace_the_bound_job_identity(self) -> None:
+        official = "https://example.com/careers/lever-analyst"
+        current = "https://jobs.lever.co/example/different-job/apply"
+        with self.assertRaises(JobOpsError) as changed:
+            verify_source_route(
+                company_domain="example.com",
+                official_entry_url=official,
+                current_url=current,
+                navigation_history=[official, current],
+                approved_ats_hosts=ATS,
+                guest_available=True,
+                tenant_binding={
+                    "provider": "lever",
+                    "company_registrable_domain": "example.com",
+                    "ats_host": "jobs.lever.co",
+                    "tenant": "example",
+                    "board": "default",
+                    "job_identity": "abc-123",
+                    "official_page_hash": HASH_A,
+                    "jd_snapshot_hash": HASH_B,
+                },
+                official_page_hash=HASH_A,
+                jd_snapshot_hash=HASH_B,
+            )
+        self.assertEqual(changed.exception.code, "ATS_TENANT_BINDING_MISMATCH")
+
     def test_official_to_ats_guest_route_is_allowed(self) -> None:
         route = verify_source_route(
             company_domain="example.com",
