@@ -11,6 +11,9 @@ const fixture = fs.readFileSync(path.join(project, "tests", "fixtures", "synthet
 const greenhouseContinueFixture = fs.readFileSync(
   path.join(project, "tests", "fixtures", "synthetic-greenhouse-continue-form.html"), "utf8"
 );
+const leverFixture = fs.readFileSync(
+  path.join(project, "tests", "fixtures", "synthetic-lever-form.html"), "utf8"
+);
 const tekFixture = fs.readFileSync(path.join(project, "tests", "fixtures", "synthetic-teksystems-lwc-form.html"), "utf8");
 const companion = path.join(project, "browser-companion", "dom.js");
 const browserPath = process.env.JOBFLOW_TEST_BROWSER || "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
@@ -163,6 +166,92 @@ function valueHash(value) {
     const userSignals = afterClick.filter((item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED");
     assert.equal(userSignals.length, 1);
     assert.equal(userSignals[0].payload.trusted_user_event, true);
+
+    const leverPage = await browser.newPage();
+    await leverPage.route("https://jobs.lever.co/**", (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8", body: leverFixture
+    }));
+    await leverPage.goto("https://jobs.lever.co/example/abc-123/apply", {waitUntil: "domcontentloaded"});
+    await leverPage.evaluate(({encodedFile}) => {
+      globalThis.__jobflowMessages = [];
+      globalThis.__jobflowListener = null;
+      const decode = () => Uint8Array.from(atob(encodedFile), (character) => character.charCodeAt(0));
+      globalThis.chrome = {
+        runtime: {
+          lastError: null,
+          onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+          async sendMessage(message) { globalThis.__jobflowMessages.push(message); return {status: "RECORDED"}; },
+          connect() {
+            const messageListeners = [];
+            const disconnectListeners = [];
+            return {
+              onMessage: {addListener(listener) { messageListeners.push(listener); }},
+              onDisconnect: {addListener(listener) { disconnectListeners.push(listener); }},
+              postMessage() {
+                const bytes = decode();
+                let binary = "";
+                for (const value of bytes) binary += String.fromCharCode(value);
+                queueMicrotask(() => {
+                  for (const listener of messageListeners) listener({type: "chunk", data: btoa(binary)});
+                  for (const listener of messageListeners) listener({type: "end"});
+                });
+              },
+              disconnect() { for (const listener of disconnectListeners) listener(); }
+            };
+          }
+        }
+      };
+      document.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+    }, {encodedFile: fileBytes.toString("base64")});
+    await leverPage.addScriptTag({path: companion});
+    await leverPage.evaluate(() => {
+      globalThis.__jobflowCall = (message) => new Promise((resolve) => {
+        globalThis.__jobflowListener(message, {}, resolve);
+      });
+    });
+    const leverCollected = await leverPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+    assert.equal(leverCollected.status, "COLLECTED");
+    assert.equal(new URL(leverPage.url()).hostname, "jobs.lever.co");
+    assert.equal(leverCollected.payload.client_refs.length, 5);
+    assert.deepEqual(leverCollected.payload.blocker_signals, []);
+    const leverValues = ["Synthetic Applicant", "https://example.com/portfolio", "https://linkedin.com/in/example"];
+    const leverFields = leverValues.map((value, index) => ({
+      client_ref: leverCollected.payload.client_refs[index], value, value_sha256: valueHash(value)
+    }));
+    const leverApplied = await leverPage.evaluate(
+      ({refs, fields, fileHash}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED",
+        fields,
+        files: [{
+          client_ref: refs[3], purpose: "resume", filename: "resume.pdf",
+          sha256: fileHash, download_url: "http://127.0.0.1/assist/synthetic/file/lever-resume"
+        }],
+        navigation: null,
+        final_submit_client_refs: [refs[4]]
+      }),
+      {refs: leverCollected.payload.client_refs, fields: leverFields, fileHash}
+    );
+    assert.equal(leverApplied.status, "APPLIED", JSON.stringify(leverApplied));
+    assert.equal(leverApplied.field_bindings.length, 3);
+    assert.equal(leverApplied.material_bindings.length, 1);
+    assert.equal(leverApplied.final_submit_armed, true);
+    assert.deepEqual(await leverPage.locator("#name, #portfolio, #linkedin").evaluateAll(
+      (controls) => controls.map((control) => control.value)
+    ), leverValues);
+    assert.equal(await leverPage.locator("#resume").evaluate((control) => control.files[0]?.name), "resume.pdf");
+    assert.equal((await leverPage.evaluate(() => globalThis.__jobflowMessages)).filter(
+      (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+    ).length, 0);
+    await leverPage.locator("button[type=submit]").click();
+    await leverPage.waitForFunction(() => globalThis.__jobflowMessages.some(
+      (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+    ));
+    const leverSubmitSignals = (await leverPage.evaluate(() => globalThis.__jobflowMessages)).filter(
+      (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+    );
+    assert.equal(leverSubmitSignals.length, 1);
+    assert.equal(leverSubmitSignals[0].payload.trusted_user_event, true);
+    await leverPage.close();
 
     const tekPage = await browser.newPage();
     await tekPage.route("https://apply.teksystems.test/**", (route) => route.fulfill({
@@ -936,6 +1025,10 @@ function valueHash(value) {
       files: fileApplied.material_bindings.length,
       programmatic_submit_events_before_user_click: 0,
       trusted_user_submit_observed: true,
+      lever_provider_runtime: true,
+      lever_fields: leverApplied.field_bindings.length,
+      lever_files: leverApplied.material_bindings.length,
+      lever_programmatic_final_submit_events: 0,
       submit_like_next_programmatic_clicks: 0,
       trusted_manual_next_observed_before_unload: true,
       scoped_explicit_button_navigation: true,

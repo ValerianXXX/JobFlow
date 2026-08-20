@@ -175,6 +175,29 @@ class ATSProviderContractTests(unittest.TestCase):
             "PROVIDER_EVIDENCE_VERIFIED_EXPLICIT_CONTROLS_ONLY",
         )
         self.assertFalse(greenhouse["live_site_verified"])
+        lever = next(item for item in report["providers"] if item["provider"] == "lever")
+        self.assertEqual(
+            lever["evidence_scope"],
+            "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
+        )
+        self.assertEqual(
+            {"APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT", "RESULT_OBSERVATION"}
+            - set(lever["verified_stages"]),
+            set(),
+        )
+        self.assertEqual(
+            lever["user_present_prefill"],
+            "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
+        )
+        self.assertEqual(
+            lever["approved_material_upload"],
+            "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
+        )
+        self.assertEqual(
+            lever["nonfinal_navigation"],
+            "SHARED_RUNTIME_ONLY_PROVIDER_ACCEPTANCE_REQUIRED",
+        )
+        self.assertFalse(lever["live_site_verified"])
         runtime = report["browser_runtime_evidence"]
         self.assertEqual(runtime["status"], "SYNTHETIC_BROWSER_RUNTIME_PASS")
         self.assertEqual(
@@ -216,7 +239,7 @@ class ATSProviderContractTests(unittest.TestCase):
         )
         self.assertEqual(
             by_provider["lever"]["evidence_scope"],
-            "DISCOVERY_TO_SYNTHETIC_RESULT",
+            "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
         self.assertEqual(
             by_provider["workday"]["evidence_scope"],

@@ -80,22 +80,26 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
     {
         "provider": "lever",
         "offline_evidence_level": "SYNTHETIC_VERTICAL_PASS",
-        "evidence_scope": "DISCOVERY_TO_SYNTHETIC_RESULT",
+        "evidence_scope": "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         "saved_snapshot_modes": ["single_html", "provider_json"],
         "route_shape": "OFFICIAL_TO_APPROVED_ATS",
         "dynamic_control_strategy": "opaque_control_ref",
         "verified_stages": [
             "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN",
-            "REVIEW_PACKET", "RESULT_OBSERVATION",
+            "REVIEW_PACKET", "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT", "RESULT_OBSERVATION",
         ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
             "tests/test_lever_vertical.py",
+            "tests/browser_companion_e2e.cjs",
             "tests/fixtures/synthetic-lever-postings.json",
             "tests/fixtures/synthetic-lever-route.json",
             "tests/fixtures/synthetic-lever-form.html",
         ],
-        "known_limit_codes": ["PROVIDER_SPECIFIC_DOM_EXECUTION_NOT_PROVEN", "LIVE_SITE_ACCEPTANCE_REQUIRED"],
+        "known_limit_codes": [
+            "PROVIDER_SPECIFIC_NONFINAL_NAVIGATION_NOT_PROVEN",
+            "LIVE_SITE_ACCEPTANCE_REQUIRED",
+        ],
     },
     {
         "provider": "workday",
