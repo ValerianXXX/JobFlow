@@ -19,12 +19,13 @@ The current machine-readable status is available through `jobflow product-capabi
 - [x] User-present local processing cadence with explicit run-now, pause, and resume controls and no operating-system scheduler.
 - [x] Explicit, expiring read-only discovery for exact approved HTTPS sources, with a current-user Windows task, candidate inbox, pause, emergency stop, and fail-closed recovery.
 - [x] Synthetic Greenhouse, Lever, Workday, Ashby, SmartRecruiters, browser, security, migration, and release evidence.
+- [x] Redacted, hash-only, 30-day page/route acceptance evidence that never promotes a single run into universal provider support.
 - [x] Current-tree and full-history privacy scanning plus deterministic source archives.
 - [x] User-initiated signed stable updates for fixed Windows installations, with pinned-key verification, health checking, and rollback; no background updater.
 
 ## Next priorities and separately authorized work
 
-- [ ] Broader live compatibility evidence for provider-specific Greenhouse, Lever, Workday, Ashby, SmartRecruiters, and custom company forms.
+- [ ] Broader live compatibility evidence for provider-specific Greenhouse, Lever, Workday, Ashby, SmartRecruiters, and custom company forms; the existing expiring page/route report is not a universal compatibility claim.
 - [x] Modern-component binding for native controls, choice groups, LWC/custom selects, input or button ARIA comboboxes, open/closed Shadow DOM, and exact-signature rebinding after verified page redraws, with redacted per-field failure diagnostics.
 - [x] User-downloaded, schema-validated support diagnostics with no private values or automatic transmission.
 - [x] Optional local fixed-code incident history with explicit opt-in, bounded retention, user clearing, and no automatic transmission.

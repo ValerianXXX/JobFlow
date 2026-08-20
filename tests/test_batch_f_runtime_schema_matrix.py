@@ -13,6 +13,7 @@ from jobops.product_capabilities import product_capability_report
 from jobops.resume_tailoring import build_resume_tailoring_manifest
 from jobops.runtime_schema import validate_named
 from jobops.sourcing import source_route_hash
+from jobops.util import canonical_json, sha256_bytes
 
 
 H = "sha256:" + "a" * 64
@@ -103,7 +104,40 @@ def valid_fixtures() -> dict[str, dict]:
         selections=[{"block_ref": "RBL-ABCDEF123456", "category": "project"}],
         expected_proposal_hash=H, user_confirmed=True,
     )
+    live_acceptance = {
+        "schema_version": 1,
+        "status": "LIVE_ACCEPTANCE_EVIDENCE",
+        "generated_at": T,
+        "freshness_days": 30,
+        "provider_count": 6,
+        "providers": [
+            {
+                "provider": provider,
+                "evidence_scope": "PAGE_ROUTE_SPECIFIC_NOT_UNIVERSAL",
+                "current_page_route_runs": 0,
+                "expired_page_route_runs": 0,
+                "distinct_site_fingerprints": 0,
+                "pre_submit_verified_runs": 0,
+                "result_observed_runs": 0,
+                "blocked_or_failed_runs": 0,
+                "passed_stages": [],
+                "latest_observed_at": None,
+                "universal_live_compatibility": False,
+            }
+            for provider in ("company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters")
+        ],
+        "current_page_route_evidence_count": 0,
+        "live_site_accessed": False,
+        "universal_live_compatibility": False,
+        "final_submit": "USER_ONLY",
+        "final_submit_actions": 0,
+        "automatic_retries": 0,
+        "private_values_persisted": 0,
+        "page_text_persisted": 0,
+    }
+    live_acceptance["report_hash"] = sha256_bytes(canonical_json(live_acceptance))
     return {
+        "live-acceptance-report": live_acceptance,
         "product-capability-report": product_capability_report(),
         "support-diagnostics": {
             "schema_version": 2,
@@ -114,7 +148,7 @@ def valid_fixtures() -> dict[str, dict]:
                 "product": "JobFlow",
                 "version": "0.4.1",
                 "ui_protocol": 35,
-                "database_schema": 14,
+                "database_schema": 15,
                 "companion_protocol": 2,
                 "expected_companion_version": "0.9.1",
                 "observed_companion_version": "0.9.1",

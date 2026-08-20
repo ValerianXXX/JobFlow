@@ -332,6 +332,27 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         self.assertEqual(decision["status"], "APPROVED")
         return service, application_id, packet
 
+    def test_reserved_example_route_never_creates_live_acceptance_evidence(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service, application_id, _ = self.approved_company_application(database, onboarding)
+            started = service.start_browser_assist({
+                "application_id": application_id,
+                "user_confirmed": True,
+            })
+            with database.connect() as connection:
+                self.assertEqual(
+                    connection.execute(
+                        "SELECT COUNT(*) FROM live_acceptance_runs WHERE application_id=?",
+                        (application_id,),
+                    ).fetchone()[0],
+                    0,
+                )
+            stopped = service.browser_assist.stop(user_confirmed=True)
+            self.assertEqual(stopped["status"], "BROWSER_ASSIST_STOPPED")
+            self.assertEqual(started["real_external_actions"], 0)
+
     def test_resume_contact_fields_are_ready_without_reasking_in_single_review(self) -> None:
         with project_temp() as temp:
             database, onboarding, _ = self.build(temp)
@@ -401,13 +422,13 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
         self.addCleanup(service.close)
         official = (
             "<html><body><h1>Synthetic Data Analyst</h1>"
-            "<a href='https://example.wd5.myworkdayjobs.com/en-US/Careers/job/123'>Apply on Workday</a>"
+            "<a href='https://jobflow-acceptance-fixture.wd5.myworkdayjobs.com/en-US/Careers/job/123'>Apply on Workday</a>"
             "</body></html>"
         ).encode("utf-8")
         result = service.prepare_offline_application_bundle(
             metadata={
                 "official_url": "https://example.com/careers/synthetic-data-analyst",
-                "application_url": "https://example.wd5.myworkdayjobs.com/en-US/Careers/job/123",
+                "application_url": "https://jobflow-acceptance-fixture.wd5.myworkdayjobs.com/en-US/Careers/job/123",
                 "guest_available": True,
                 "research_title": "Synthetic company role page",
                 "evidence_excerpt": "Synthetic Data Analyst",
@@ -2040,7 +2061,46 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 serialized = " ".join(str(row[0]) for row in connection.execute(
                     "SELECT payload_json FROM events WHERE application_id=?", (application_id,),
                 ))
+                acceptance_run = dict(connection.execute(
+                    "SELECT * FROM live_acceptance_runs WHERE application_id=?",
+                    (application_id,),
+                ).fetchone())
+                acceptance_events = [dict(row) for row in connection.execute(
+                    "SELECT * FROM live_acceptance_events WHERE acceptance_id=? ORDER BY event_id",
+                    (acceptance_run["acceptance_id"],),
+                ).fetchall()]
             self.assertNotIn("Additional information", serialized)
+            self.assertEqual(acceptance_run["status"], "RESULT_OBSERVED")
+            self.assertEqual(acceptance_run["provider"], "workday")
+            self.assertEqual(acceptance_run["final_submit_actions"], 0)
+            self.assertEqual(acceptance_run["automatic_retries"], 0)
+            self.assertEqual(acceptance_run["private_values_persisted"], 0)
+            self.assertEqual(acceptance_run["page_text_persisted"], 0)
+            self.assertTrue({
+                "ROUTE_BINDING",
+                "REVIEW_PACKET",
+                "FORM_ANALYSIS",
+                "PRIVATE_VALUE_FREE_PLAN",
+                "APPROVED_DOM_PREFILL",
+                "APPROVED_FILE_ATTACHMENT",
+                "EXPLICIT_NONFINAL_NAVIGATION",
+                "MULTI_PAGE_RESUME",
+                "RESULT_OBSERVATION",
+            }.issubset({str(item["stage"]) for item in acceptance_events}))
+            acceptance_serialized = json.dumps(
+                {"run": acceptance_run, "events": acceptance_events}, sort_keys=True,
+            )
+            self.assertNotIn("myworkdayjobs", acceptance_serialized)
+            self.assertNotIn("synthetic-candidate", acceptance_serialized)
+            self.assertNotIn("Additional information", acceptance_serialized)
+            acceptance_report = service.browser_assist._live_acceptance.report()
+            workday_report = next(
+                item for item in acceptance_report["providers"] if item["provider"] == "workday"
+            )
+            self.assertEqual(workday_report["current_page_route_runs"], 1)
+            self.assertEqual(workday_report["result_observed_runs"], 1)
+            self.assertFalse(workday_report["universal_live_compatibility"])
+            self.assertEqual(acceptance_report["final_submit"], "USER_ONLY")
             self.assertEqual(list((onboarding.store.private_root / "staging").iterdir()), [])
 
     def test_v2_handoffs_cross_origin_and_repeated_page_fail_closed(self) -> None:

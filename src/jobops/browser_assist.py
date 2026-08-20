@@ -18,6 +18,7 @@ from .errors import JobOpsError
 from .execution_bundle import ApplicationExecutionBundleManager
 from .external_action_sessions import ExternalActionSessionManager, ExternalActionSessionPolicy
 from .forms import MANUAL_NAVIGATION_MODE, PROGRAMMATIC_NAVIGATION_MODE, navigation_control_mode
+from .live_acceptance import LiveAcceptanceManager
 from .private_onboarding import PrivateOnboarding
 from .runtime_schema import validate_named
 from .sourcing import (
@@ -238,6 +239,7 @@ class _AssistLease:
     private_source_hashes: dict[str, str] = field(default_factory=dict)
     operator_task_id: str | None = None
     ai_reviews_by_page: dict[str, dict[str, Any]] = field(default_factory=dict)
+    acceptance_id: str | None = None
 
 
 class BrowserAssistManager:
@@ -263,6 +265,7 @@ class BrowserAssistManager:
         self._bundle_manager = ApplicationExecutionBundleManager(database, onboarding)
         self._dynamic_reviews = DynamicFormReviewManager(database, onboarding)
         self._payload_broker = EphemeralATSPayloadBroker(onboarding)
+        self._live_acceptance = LiveAcceptanceManager(database)
         self._semantic_reviewer = semantic_reviewer
         self._reconcile_startup()
 
@@ -337,6 +340,64 @@ class BrowserAssistManager:
     def extension_origin_allowed(origin: str | None) -> bool:
         return bool(origin and any(secrets.compare_digest(origin, allowed) for allowed in COMPANION_EXTENSION_ORIGINS))
 
+    def _start_live_acceptance(self, lease: _AssistLease, *, evidence_hash: str) -> None:
+        """Start optional redacted acceptance evidence without weakening the assist.
+
+        Reserved, local, and synthetic hosts intentionally return no acceptance
+        row.  If an acceptance-only validation fails, the live workflow remains
+        usable but cannot claim evidence from that run.
+        """
+
+        try:
+            row = self._live_acceptance.start_for_assist(lease.assist_id)
+            if row is None:
+                return
+            lease.acceptance_id = str(row["acceptance_id"])
+            self._live_acceptance.record_stage(
+                lease.acceptance_id,
+                stage="REVIEW_PACKET",
+                result="PASS",
+                evidence_hash=evidence_hash,
+            )
+        except JobOpsError as exc:
+            if not exc.code.startswith("LIVE_ACCEPTANCE_"):
+                raise
+            lease.acceptance_id = None
+
+    def _record_live_acceptance(
+        self,
+        lease: _AssistLease,
+        *,
+        stage: str,
+        result: str,
+        evidence_hash: str,
+        page_fingerprint: str | None = None,
+    ) -> None:
+        if lease.acceptance_id is None:
+            return
+        try:
+            self._live_acceptance.record_stage(
+                lease.acceptance_id,
+                stage=stage,
+                result=result,
+                evidence_hash=evidence_hash,
+                page_fingerprint=page_fingerprint,
+            )
+        except JobOpsError as exc:
+            if not exc.code.startswith("LIVE_ACCEPTANCE_"):
+                raise
+            lease.acceptance_id = None
+
+    def _finish_live_acceptance(self, lease: _AssistLease, *, status: str) -> None:
+        if lease.acceptance_id is None:
+            return
+        try:
+            self._live_acceptance.finish(lease.acceptance_id, status=status)
+        except JobOpsError as exc:
+            if not exc.code.startswith("LIVE_ACCEPTANCE_"):
+                raise
+            lease.acceptance_id = None
+
     def _reconcile_startup(self) -> None:
         now = iso_utc()
         with self.database.connect() as connection:
@@ -364,6 +425,12 @@ class BrowserAssistManager:
                     connection.execute(
                         "UPDATE browser_assist_runs SET status='REVOKED',updated_at=? WHERE assist_id=?",
                         (now, str(row["assist_id"])),
+                    )
+                    self._live_acceptance.finish_for_assist_in_connection(
+                        connection,
+                        assist_id=str(row["assist_id"]),
+                        status="REVOKED",
+                        now=now,
                     )
             control = connection.execute(
                 "SELECT enabled,mode,generation FROM external_action_control WHERE singleton_id=1"
@@ -420,13 +487,19 @@ class BrowserAssistManager:
                             "UPDATE browser_assist_runs SET status='EXPIRED',updated_at=? WHERE assist_id=?",
                             (now, lease.assist_id),
                         )
+                        self._live_acceptance.finish_for_assist_in_connection(
+                            connection,
+                            assist_id=lease.assist_id,
+                            status="EXPIRED",
+                            now=now,
+                        )
                     connection.execute(
                         "UPDATE external_action_sessions SET status='EXPIRED',revoked_at=? WHERE session_id=? AND status='AUTHORIZED'",
                         (now, lease.session_id),
                     )
 
-    @staticmethod
     def _mark_unknown_in_connection(
+        self,
         connection,
         *,
         assist_id: str,
@@ -465,6 +538,12 @@ class BrowserAssistManager:
         connection.execute(
             "UPDATE browser_assist_runs SET status='SUBMISSION_UNKNOWN',updated_at=? WHERE assist_id=?",
             (now, assist_id),
+        )
+        self._live_acceptance.finish_for_assist_in_connection(
+            connection,
+            assist_id=assist_id,
+            status="BLOCKED",
+            now=now,
         )
         connection.execute(
             "INSERT INTO events(application_id,event_type,from_state,to_state,payload_json,created_at) VALUES(?,?,?,?,?,?)",
@@ -517,6 +596,12 @@ class BrowserAssistManager:
             connection.execute(
                 "UPDATE browser_assist_runs SET status='REVOKED',updated_at=? WHERE assist_id=?",
                 (now, lease.assist_id),
+            )
+            self._live_acceptance.finish_for_assist_in_connection(
+                connection,
+                assist_id=lease.assist_id,
+                status="REVOKED",
+                now=now,
             )
             connection.execute(
                 "UPDATE external_action_sessions SET status='REVOKED',revoked_at=? WHERE session_id=? AND status='AUTHORIZED'",
@@ -772,6 +857,11 @@ class BrowserAssistManager:
                     else None
                 ),
             )
+            start_evidence_hash = _safe_hash({
+                "session_id": session.session_id,
+                "context_hash": context.context_hash,
+                "origin": lease.allowed_page_origin,
+            })
             with self.database.connect() as connection:
                 connection.execute("BEGIN IMMEDIATE")
                 connection.execute(
@@ -788,12 +878,9 @@ class BrowserAssistManager:
                 connection.execute(
                     """INSERT INTO browser_assist_events(
                     assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)""",
-                    (assist_id, application_id, "ASSIST_STARTED", _safe_hash({
-                        "session_id": session.session_id,
-                        "context_hash": context.context_hash,
-                        "origin": lease.allowed_page_origin,
-                    }), lease.created_at),
+                    (assist_id, application_id, "ASSIST_STARTED", start_evidence_hash, lease.created_at),
                 )
+            self._start_live_acceptance(lease, evidence_hash=start_evidence_hash)
             self._leases[token] = lease
             return {
                 "status": "BROWSER_COMPANION_PAIRING",
@@ -1147,6 +1234,7 @@ class BrowserAssistManager:
                     )
                     if result["status"] == "SUPPLEMENTAL_REVIEW_REQUIRED":
                         lease.status = "REVOKED"
+                        self._finish_live_acceptance(lease, status="REVOKED")
                         self._leases.pop(token, None)
                         self._session_manager.disable(reason="DYNAMIC_REVIEW_REQUIRED")
                     return result
@@ -1396,6 +1484,28 @@ class BrowserAssistManager:
                     "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
                     (lease.assist_id, lease.application_id, "LIVE_PAGE_PREPARED", lease.prepared_hash, now),
                 )
+            self._record_live_acceptance(
+                lease,
+                stage="FORM_ANALYSIS",
+                result="PASS",
+                evidence_hash=lease.prepared_hash,
+                page_fingerprint=lease.current_page_hash,
+            )
+            self._record_live_acceptance(
+                lease,
+                stage="PRIVATE_VALUE_FREE_PLAN",
+                result="PASS",
+                evidence_hash=lease.prepared_hash,
+                page_fingerprint=lease.current_page_hash,
+            )
+            if lease.current_step > 1:
+                self._record_live_acceptance(
+                    lease,
+                    stage="MULTI_PAGE_RESUME",
+                    result="PASS",
+                    evidence_hash=lease.prepared_hash,
+                    page_fingerprint=lease.current_page_hash,
+                )
             return {
                 "status": "LIVE_PAGE_APPROVED_FOR_ASSIST",
                 "assist_id": lease.assist_id,
@@ -1594,6 +1704,28 @@ class BrowserAssistManager:
         lease.accepted_fields = fields
         lease.accepted_files = files
         lease.applied_evidence_accepted = True
+        if fields:
+            self._record_live_acceptance(
+                lease,
+                stage="APPROVED_DOM_PREFILL",
+                result="PASS",
+                evidence_hash=_safe_hash({
+                    "prepared_hash": lease.prepared_hash,
+                    "field_bindings": fields,
+                }),
+                page_fingerprint=lease.current_page_hash,
+            )
+        if files:
+            self._record_live_acceptance(
+                lease,
+                stage="APPROVED_FILE_ATTACHMENT",
+                result="PASS",
+                evidence_hash=_safe_hash({
+                    "prepared_hash": lease.prepared_hash,
+                    "material_bindings": files,
+                }),
+                page_fingerprint=lease.current_page_hash,
+            )
         return fields, files
 
     def abort_page_apply(
@@ -1724,6 +1856,7 @@ class BrowserAssistManager:
                     (lease.assist_id, lease.application_id, "PAGE_APPLY_ABORTED", evidence_hash, now),
                 )
             lease.status = "FAILED"
+            self._finish_live_acceptance(lease, status="FAILED")
             lease.navigation_token = None
             lease.navigation_ref = None
             lease.file_tokens.clear()
@@ -1842,6 +1975,7 @@ class BrowserAssistManager:
                     "The changed live form did not create the required supplemental review.",
                 )
             lease.status = "REVOKED"
+            self._finish_live_acceptance(lease, status="REVOKED")
             self._leases.pop(token, None)
             self._session_manager.disable(reason="DYNAMIC_REVIEW_REQUIRED")
             return {
@@ -1903,6 +2037,8 @@ class BrowserAssistManager:
                     "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
                     (lease.assist_id, lease.application_id, event_type, evidence_hash, now),
                 )
+            if target_status == "AWAITING_USER_SUBMIT":
+                self._finish_live_acceptance(lease, status="PRE_SUBMIT_VERIFIED")
             result = {
                 "status": target_status,
                 "assist_id": lease.assist_id,
@@ -2173,6 +2309,13 @@ class BrowserAssistManager:
                     "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
                     (lease.assist_id, lease.application_id, "MANUAL_NEXT_PAGE_OBSERVED", evidence_hash, now),
                 )
+            self._record_live_acceptance(
+                lease,
+                stage="EXPLICIT_NONFINAL_NAVIGATION",
+                result="PASS",
+                evidence_hash=evidence_hash,
+                page_fingerprint=new_page_hash,
+            )
             return {
                 "status": "NEXT_PAGE_READY",
                 "assist_id": lease.assist_id,
@@ -2232,6 +2375,12 @@ class BrowserAssistManager:
                     "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
                     (lease.assist_id, lease.application_id, "NEXT_PAGE_OBSERVED", evidence_hash, now),
                 )
+            self._record_live_acceptance(
+                lease,
+                stage="EXPLICIT_NONFINAL_NAVIGATION",
+                result="PASS",
+                evidence_hash=evidence_hash,
+            )
             return {
                 "status": "NEXT_PAGE_READY",
                 "assist_id": lease.assist_id,
@@ -2328,7 +2477,15 @@ class BrowserAssistManager:
         if control["enabled"] and control["mode"] == "ASSISTED_USER_PRESENT":
             self._session_manager.disable(reason="ASSISTED_SESSION_FINISHED")
 
-    def _record_receipt(self, lease: _AssistLease, *, source: str, confirmation_type: str, evidence_hash: str) -> str:
+    def _record_receipt(
+        self,
+        lease: _AssistLease,
+        *,
+        source: str,
+        confirmation_type: str,
+        evidence_hash: str,
+        page_fingerprint: str | None = None,
+    ) -> str:
         now = iso_utc()
         receipt = {
             "receipt_id": stable_id("RCP", lease.application_id, source, evidence_hash, now),
@@ -2377,6 +2534,14 @@ class BrowserAssistManager:
                 (lease.assist_id, lease.application_id, "RESULT_CONFIRMED", evidence_hash, now),
             )
         lease.status = "CONFIRMED"
+        self._record_live_acceptance(
+            lease,
+            stage="RESULT_OBSERVATION",
+            result="PASS",
+            evidence_hash=evidence_hash,
+            page_fingerprint=page_fingerprint,
+        )
+        self._finish_live_acceptance(lease, status="RESULT_OBSERVED")
         return str(receipt["receipt_id"])
 
     def observe_result(self, token: str, payload: dict[str, Any], *, extension_origin: str | None) -> dict[str, Any]:
@@ -2406,6 +2571,7 @@ class BrowserAssistManager:
                     source="browser-companion",
                     confirmation_type="confirmation_page",
                     evidence_hash=evidence_hash,
+                    page_fingerprint=str(signals["page_fingerprint"]),
                 )
                 self._disable_after_observation()
                 return {
@@ -2456,6 +2622,13 @@ class BrowserAssistManager:
                     ),
                 )
             lease.status = target
+            self._record_live_acceptance(
+                lease,
+                stage="RESULT_OBSERVATION",
+                result="FAIL" if explicit_failure else "BLOCKED",
+                evidence_hash=evidence_hash,
+                page_fingerprint=str(signals["page_fingerprint"]),
+            )
             self._disable_after_observation()
             return {
                 "status": application_target,
@@ -2594,6 +2767,12 @@ class BrowserAssistManager:
                             "UPDATE browser_assist_runs SET status='REVOKED',updated_at=? WHERE assist_id=?",
                             (now, lease.assist_id),
                         )
+                        self._live_acceptance.finish_for_assist_in_connection(
+                            connection,
+                            assist_id=lease.assist_id,
+                            status="REVOKED",
+                            now=now,
+                        )
                         lease.status = "REVOKED"
             self._leases.clear()
             control = self._session_manager.control_state()
@@ -2643,6 +2822,12 @@ class BrowserAssistManager:
                 "automatic_retry": False,
                 "recent_runs": [dict(row) for row in rows],
             }
+
+    def live_acceptance_report(self) -> dict[str, Any]:
+        """Return only the redacted, expiring page/route evidence summary."""
+
+        with self._lock:
+            return self._live_acceptance.report()
 
     def close(self) -> None:
         with self._lock:

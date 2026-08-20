@@ -305,6 +305,7 @@ class PublicCLIContractTests(unittest.TestCase):
             "analyze-ats-sequence",
             "ats-capabilities",
             "product-capabilities",
+            "live-acceptance",
             "plan-continuous-intake",
         ):
             self.assertIn(command, completed.stdout)

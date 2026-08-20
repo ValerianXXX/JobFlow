@@ -29,6 +29,15 @@ class ProductCapabilityReportTests(unittest.TestCase):
             "PROVIDER_SPECIFIC_ACCEPTANCE_REQUIRED",
             by_id["browser_companion_runtime"]["known_limit_codes"],
         )
+        self.assertEqual(by_id["redacted_live_acceptance_evidence"]["availability"], "AVAILABLE")
+        self.assertEqual(
+            by_id["redacted_live_acceptance_evidence"]["live_acceptance"],
+            "PAGE_ROUTE_SPECIFIC_ONLY",
+        )
+        self.assertIn(
+            "PAGE_ROUTE_SPECIFIC_NOT_UNIVERSAL",
+            by_id["redacted_live_acceptance_evidence"]["known_limit_codes"],
+        )
         self.assertEqual(by_id["ashby_browser_assist"]["evidence_status"], "SINGLE_SNAPSHOT_PASS")
         self.assertEqual(by_id["smartrecruiters_browser_assist"]["evidence_status"], "SINGLE_SNAPSHOT_PASS")
         self.assertIn(

@@ -12,7 +12,7 @@ from .state_machine import BLOCKING_STATES, assert_transition
 from .util import iso_utc
 
 
-LATEST_SCHEMA_VERSION = 14
+LATEST_SCHEMA_VERSION = 15
 
 
 MIGRATION_001_SQL = """
@@ -738,6 +738,94 @@ COMMIT;
 """
 
 
+MIGRATION_015_SQL = """
+BEGIN IMMEDIATE;
+
+CREATE TABLE live_acceptance_runs (
+    acceptance_id TEXT PRIMARY KEY,
+    assist_id TEXT NOT NULL UNIQUE REFERENCES browser_assist_runs(assist_id),
+    application_id TEXT NOT NULL REFERENCES applications(application_id),
+    provider TEXT NOT NULL CHECK(provider IN (
+        'company','greenhouse','lever','workday','ashby','smartrecruiters'
+    )),
+    route_kind TEXT NOT NULL CHECK(route_kind IN ('OFFICIAL_DIRECT','OFFICIAL_TO_APPROVED_ATS')),
+    site_fingerprint TEXT NOT NULL CHECK(
+        length(site_fingerprint) = 71
+        AND substr(site_fingerprint,1,7) = 'sha256:'
+        AND substr(site_fingerprint,8) NOT GLOB '*[^0-9a-f]*'
+    ),
+    route_identity_hash TEXT NOT NULL CHECK(
+        length(route_identity_hash) = 71
+        AND substr(route_identity_hash,1,7) = 'sha256:'
+        AND substr(route_identity_hash,8) NOT GLOB '*[^0-9a-f]*'
+    ),
+    status TEXT NOT NULL CHECK(status IN (
+        'ACTIVE','PRE_SUBMIT_VERIFIED','RESULT_OBSERVED','FAILED','BLOCKED','EXPIRED','REVOKED'
+    )),
+    final_submit_actions INTEGER NOT NULL DEFAULT 0 CHECK(final_submit_actions = 0),
+    automatic_retries INTEGER NOT NULL DEFAULT 0 CHECK(automatic_retries = 0),
+    private_values_persisted INTEGER NOT NULL DEFAULT 0 CHECK(private_values_persisted = 0),
+    page_text_persisted INTEGER NOT NULL DEFAULT 0 CHECK(page_text_persisted = 0),
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX idx_live_acceptance_provider_status
+ON live_acceptance_runs(provider,status,expires_at DESC);
+CREATE TRIGGER live_acceptance_runs_identity_immutable
+BEFORE UPDATE ON live_acceptance_runs
+WHEN NEW.assist_id != OLD.assist_id
+  OR NEW.application_id != OLD.application_id
+  OR NEW.provider != OLD.provider
+  OR NEW.route_kind != OLD.route_kind
+  OR NEW.site_fingerprint != OLD.site_fingerprint
+  OR NEW.route_identity_hash != OLD.route_identity_hash
+  OR NEW.created_at != OLD.created_at
+  OR NEW.expires_at != OLD.expires_at
+BEGIN SELECT RAISE(ABORT, 'live acceptance identity is immutable'); END;
+
+CREATE TABLE live_acceptance_events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    acceptance_id TEXT NOT NULL REFERENCES live_acceptance_runs(acceptance_id),
+    stage TEXT NOT NULL CHECK(stage IN (
+        'OFFICIAL_DISCOVERY','ROUTE_BINDING','FORM_ANALYSIS','PRIVATE_VALUE_FREE_PLAN','REVIEW_PACKET',
+        'APPROVED_DOM_PREFILL','APPROVED_FILE_ATTACHMENT','EXPLICIT_NONFINAL_NAVIGATION',
+        'MULTI_PAGE_RESUME','RESULT_OBSERVATION','MODERN_COMPONENT_REBINDING'
+    )),
+    result TEXT NOT NULL CHECK(result IN ('PASS','FAIL','BLOCKED')),
+    evidence_hash TEXT NOT NULL CHECK(
+        length(evidence_hash) = 71
+        AND substr(evidence_hash,1,7) = 'sha256:'
+        AND substr(evidence_hash,8) NOT GLOB '*[^0-9a-f]*'
+    ),
+    page_fingerprint TEXT CHECK(
+        page_fingerprint IS NULL OR (
+            length(page_fingerprint) = 71
+            AND substr(page_fingerprint,1,7) = 'sha256:'
+            AND substr(page_fingerprint,8) NOT GLOB '*[^0-9a-f]*'
+        )
+    ),
+    final_submit_actions INTEGER NOT NULL DEFAULT 0 CHECK(final_submit_actions = 0),
+    automatic_retries INTEGER NOT NULL DEFAULT 0 CHECK(automatic_retries = 0),
+    private_values_persisted INTEGER NOT NULL DEFAULT 0 CHECK(private_values_persisted = 0),
+    page_text_persisted INTEGER NOT NULL DEFAULT 0 CHECK(page_text_persisted = 0),
+    created_at TEXT NOT NULL,
+    UNIQUE(acceptance_id,stage,evidence_hash)
+);
+CREATE INDEX idx_live_acceptance_events_run
+ON live_acceptance_events(acceptance_id,event_id);
+CREATE TRIGGER live_acceptance_events_append_only_update
+BEFORE UPDATE ON live_acceptance_events
+BEGIN SELECT RAISE(ABORT, 'live acceptance events are append-only'); END;
+CREATE TRIGGER live_acceptance_events_append_only_delete
+BEFORE DELETE ON live_acceptance_events
+BEGIN SELECT RAISE(ABORT, 'live acceptance events are append-only'); END;
+
+INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','15');
+COMMIT;
+"""
+
+
 def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
@@ -854,6 +942,10 @@ class JobOpsDB:
             if version == 13:
                 connection.executescript(MIGRATION_014_SQL)
                 applied.append(14)
+                version = 14
+            if version == 14:
+                connection.executescript(MIGRATION_015_SQL)
+                applied.append(15)
         return applied
 
     def initialize(self) -> None:

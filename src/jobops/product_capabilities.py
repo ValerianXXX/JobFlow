@@ -130,6 +130,15 @@ def product_capability_report() -> dict[str, Any]:
             list(ats["browser_runtime_evidence"]["evidence_refs"]),
             ["PROVIDER_SPECIFIC_ACCEPTANCE_REQUIRED", "LIVE_COMPATIBILITY_NOT_UNIVERSALLY_VERIFIED"],
         ),
+        _item(
+            "redacted_live_acceptance_evidence", "browser_assist", "AVAILABLE", _AUTOMATED,
+            "PAGE_ROUTE_SPECIFIC_ONLY", "USER_PRESENT", "HASH_ONLY_THIRTY_DAY_LOCAL_EVIDENCE",
+            [
+                "tests/test_live_acceptance.py",
+                "tests/test_real_profile_offline_application.py",
+            ],
+            ["PAGE_ROUTE_SPECIFIC_NOT_UNIVERSAL", "THIRTY_DAY_FRESHNESS"],
+        ),
         *[
             _item(
                 provider_capability_ids[provider],

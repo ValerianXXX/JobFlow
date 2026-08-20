@@ -33,6 +33,7 @@ from .forms import build_mock_ats_site
 from .jd_analyzer import analyze_jd
 from .knowledge import KnowledgeGateway
 from .locator import locate_knowledge_root
+from .live_acceptance import LiveAcceptanceManager
 from .orchestrator import JobOpsOrchestrator, _read_jd
 from .onboarding_center import OnboardingCenterService
 from .onboarding_server import run_server
@@ -178,6 +179,7 @@ def parser() -> argparse.ArgumentParser:
     form_sequence.add_argument("--route", type=Path, required=True)
     sub.add_parser("ats-capabilities")
     sub.add_parser("product-capabilities")
+    _add_path_argument(sub.add_parser("live-acceptance"))
 
     onboard = sub.add_parser("secure-onboard")
     onboard.add_argument("--input-file", type=Path)
@@ -461,6 +463,17 @@ def main(argv: list[str] | None = None) -> int:
             emit({**offline_ats_capabilities(), "next_safe_action": "analyze-project-local-snapshots-only"}, project)
         elif args.command == "product-capabilities":
             emit({**product_capability_report(), "next_safe_action": "close-not-available-and-live-acceptance-gaps"}, project)
+        elif args.command == "live-acceptance":
+            path = _db_path(project, args.path, operation="write")
+            database = JobOpsDB(path)
+            database.initialize()
+            emit(
+                {
+                    **LiveAcceptanceManager(database).report(),
+                    "next_safe_action": "run-separately-authorized-user-present-page-acceptance",
+                },
+                project,
+            )
         elif args.command == "secure-onboard":
             database = _database(project); onboarding = _onboarding(project, database)
             if args.synthetic:

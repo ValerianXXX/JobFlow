@@ -3380,6 +3380,7 @@ class OnboardingCenterService:
                 "real_external_actions": 0,
             },
             "ats_capabilities": offline_ats_capabilities(),
+            "live_acceptance": self.browser_assist.live_acceptance_report(),
             "status": state.get("status", IN_PROGRESS), "locale": state.get("locale", "zh"),
             "revision_number": int(state.get("revision_number", 1)),
             "can_start_revision": state.get("status") == COMPLETE,

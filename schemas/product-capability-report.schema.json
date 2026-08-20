@@ -21,7 +21,7 @@
           "area": {"enum": ["ai", "browser_assist", "discovery", "distribution", "onboarding", "queue", "recovery", "scheduling", "submission", "support"]},
           "availability": {"enum": ["AVAILABLE", "CONDITIONAL", "NOT_AVAILABLE", "USER_ONLY"]},
           "evidence_status": {"enum": ["AUTOMATED_REPRODUCIBLE", "DIRECT_SNAPSHOT_PASS", "SYNTHETIC_VERTICAL_PASS", "SINGLE_SNAPSHOT_PASS", "SAVED_SEQUENCE_PASS", "LIVE_ACCEPTANCE_REQUIRED", "NOT_IMPLEMENTED", "PERMANENT_USER_BOUNDARY"]},
-          "live_acceptance": {"enum": ["NOT_APPLICABLE", "USER_ENVIRONMENT_REQUIRED", "STORE_STATUS_EXTERNAL", "REQUIRED_PER_COMPANY_OR_ROUTE", "REQUIRED_PER_SITE", "NOT_STARTED"]},
+          "live_acceptance": {"enum": ["NOT_APPLICABLE", "USER_ENVIRONMENT_REQUIRED", "STORE_STATUS_EXTERNAL", "REQUIRED_PER_COMPANY_OR_ROUTE", "REQUIRED_PER_SITE", "PAGE_ROUTE_SPECIFIC_ONLY", "NOT_STARTED"]},
           "user_presence": {"enum": ["NOT_APPLICABLE", "USER_INITIATED", "USER_REVIEW_REQUIRED", "ONE_CONFIRMATION_PER_APPLICATION", "USER_CONNECTS_PREPARED_RUNTIME", "USER_INSTALL_GESTURE_REQUIRED", "USER_PRESENT", "USER_APPROVAL_REQUIRED", "USER_ACTION_REQUIRED", "USER_OPT_IN_REQUIRED"]},
           "safety_boundary": {"type": "string", "pattern": "^[A-Z0-9_]{3,96}$"},
           "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(browser-companion|docs|tests)/[A-Za-z0-9_.\/-]+$"}},

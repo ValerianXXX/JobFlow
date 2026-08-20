@@ -306,12 +306,16 @@ Object.assign(STRINGS.en,{
 Object.assign(STRINGS.zh,{
   offlineDiscoveryBody:"只读取你选择的本地 HTML、保存页面 JSON，或 Greenhouse、Lever、Ashby、SmartRecruiters 岗位 JSON；不执行页面代码、不保存快照、不联网。",
   browserAssistCompanyOnly:"支持已审批的公司官网、Greenhouse、Lever、Workday、Ashby 与 SmartRecruiters 路线；每一页仍会按当前结构重新校验，离线测试不等于实时兼容证明。",
-  browserAssistRouteUnsupported:"该页面不属于已批准的公司官网、Greenhouse、Lever、Workday、Ashby 或 SmartRecruiters 路线，JobFlow 已安全停止。"
+  browserAssistRouteUnsupported:"该页面不属于已批准的公司官网、Greenhouse、Lever、Workday、Ashby 或 SmartRecruiters 路线，JobFlow 已安全停止。",
+  atsLiveEvidenceNone:"近 30 天没有本机真实页面验收证据；当前仅显示离线工程证据。",
+  atsLiveEvidenceCurrent:"近 {days} 天本机脱敏验收：路线 {runs}，停在提交前 {pre}，已观察结果 {results}，阻断或失败 {blocked}。仅代表这些页面，不代表通用兼容。"
 });
 Object.assign(STRINGS.en,{
   offlineDiscoveryBody:"Reads only local HTML, a saved-page JSON envelope, or Greenhouse, Lever, Ashby, and SmartRecruiters job JSON; page code is not executed, the snapshot is not retained, and no network is used.",
   browserAssistCompanyOnly:"Approved company, Greenhouse, Lever, Workday, Ashby, and SmartRecruiters routes are supported, but every current page is revalidated; offline evidence is never treated as proof of live compatibility.",
-  browserAssistRouteUnsupported:"This page is outside the approved company, Greenhouse, Lever, Workday, Ashby, or SmartRecruiters route, so JobFlow stopped safely."
+  browserAssistRouteUnsupported:"This page is outside the approved company, Greenhouse, Lever, Workday, Ashby, or SmartRecruiters route, so JobFlow stopped safely.",
+  atsLiveEvidenceNone:"No current local live-page acceptance evidence exists within 30 days; only offline engineering evidence is shown.",
+  atsLiveEvidenceCurrent:"Redacted local acceptance within {days} days: {runs} page routes, {pre} stopped before Submit, {results} results observed, {blocked} blocked or failed. This applies only to those pages and is not universal compatibility."
 });
 
 Object.assign(STRINGS.zh,{
@@ -1990,6 +1994,8 @@ function renderDashboard(){
   renderDemoExecution(dashboard,executions,pending,recent);
   renderBrowserAssist(recent);
   const atsReport=state.data?.ats_capabilities||{};
+  const liveReport=state.data?.live_acceptance||{};
+  const liveByProvider=new Map((liveReport.providers||[]).map(item=>[item.provider,item]));
   const capabilities=atsReport.providers||[];
   document.querySelector("#atsCapabilityCount").textContent=String(capabilities.length);
   const runtimeNotice=document.querySelector("#atsRuntimeEvidence");
@@ -1998,7 +2004,16 @@ function renderDashboard(){
   document.querySelector("#atsCapabilityList").innerHTML=capabilities.map(item=>{
     const verified=atsStageSummary(item.verified_stages);
     const unverified=atsStageSummary(item.unverified_stages);
-    return `<article class="ats-capability-item"><strong>${escapeHtml(item.provider)}</strong><small>${escapeHtml(atsEvidenceLabel(item.offline_evidence_level))}</small><b>${escapeHtml(t("atsVerifiedStages").replace("{stages}",verified||"—"))}</b><small>${escapeHtml(unverified?t("atsUnverifiedStages").replace("{stages}",unverified):t("atsNoUnverifiedStages"))}</small><small>${escapeHtml(t("atsUserPresentAssist"))}</small><small>${escapeHtml(t("atsLiveUnverified"))}</small><small>${escapeHtml(t("atsActionsBlocked"))}</small></article>`;
+    const live=liveByProvider.get(item.provider);
+    const liveEvidence=live&&Number(live.current_page_route_runs)>0
+      ?t("atsLiveEvidenceCurrent")
+        .replace("{days}",String(liveReport.freshness_days||30))
+        .replace("{runs}",String(live.current_page_route_runs||0))
+        .replace("{pre}",String(live.pre_submit_verified_runs||0))
+        .replace("{results}",String(live.result_observed_runs||0))
+        .replace("{blocked}",String(live.blocked_or_failed_runs||0))
+      :t("atsLiveEvidenceNone");
+    return `<article class="ats-capability-item"><strong>${escapeHtml(item.provider)}</strong><small>${escapeHtml(atsEvidenceLabel(item.offline_evidence_level))}</small><b>${escapeHtml(t("atsVerifiedStages").replace("{stages}",verified||"—"))}</b><small>${escapeHtml(unverified?t("atsUnverifiedStages").replace("{stages}",unverified):t("atsNoUnverifiedStages"))}</small><small>${escapeHtml(t("atsUserPresentAssist"))}</small><small>${escapeHtml(liveEvidence)}</small><small>${escapeHtml(t("atsActionsBlocked"))}</small></article>`;
   }).join("");
   renderApplicationReadiness();
 }

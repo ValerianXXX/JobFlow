@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobops.local/schemas/live-acceptance-report.schema.json",
+  "title": "Live Page and Route Acceptance Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "stage": {
+      "enum": [
+        "OFFICIAL_DISCOVERY",
+        "ROUTE_BINDING",
+        "FORM_ANALYSIS",
+        "PRIVATE_VALUE_FREE_PLAN",
+        "REVIEW_PACKET",
+        "APPROVED_DOM_PREFILL",
+        "APPROVED_FILE_ATTACHMENT",
+        "EXPLICIT_NONFINAL_NAVIGATION",
+        "MULTI_PAGE_RESUME",
+        "RESULT_OBSERVATION",
+        "MODERN_COMPONENT_REBINDING"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "status",
+    "generated_at",
+    "freshness_days",
+    "provider_count",
+    "providers",
+    "current_page_route_evidence_count",
+    "live_site_accessed",
+    "universal_live_compatibility",
+    "final_submit",
+    "final_submit_actions",
+    "automatic_retries",
+    "private_values_persisted",
+    "page_text_persisted",
+    "report_hash"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"const": "LIVE_ACCEPTANCE_EVIDENCE"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "freshness_days": {"type": "integer", "minimum": 1, "maximum": 90},
+    "provider_count": {"const": 6},
+    "providers": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "provider",
+          "evidence_scope",
+          "current_page_route_runs",
+          "expired_page_route_runs",
+          "distinct_site_fingerprints",
+          "pre_submit_verified_runs",
+          "result_observed_runs",
+          "blocked_or_failed_runs",
+          "passed_stages",
+          "latest_observed_at",
+          "universal_live_compatibility"
+        ],
+        "properties": {
+          "provider": {"enum": ["company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters"]},
+          "evidence_scope": {"const": "PAGE_ROUTE_SPECIFIC_NOT_UNIVERSAL"},
+          "current_page_route_runs": {"type": "integer", "minimum": 0},
+          "expired_page_route_runs": {"type": "integer", "minimum": 0},
+          "distinct_site_fingerprints": {"type": "integer", "minimum": 0},
+          "pre_submit_verified_runs": {"type": "integer", "minimum": 0},
+          "result_observed_runs": {"type": "integer", "minimum": 0},
+          "blocked_or_failed_runs": {"type": "integer", "minimum": 0},
+          "passed_stages": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"$ref": "#/$defs/stage"}
+          },
+          "latest_observed_at": {
+            "anyOf": [
+              {"type": "string", "format": "date-time"},
+              {"type": "null"}
+            ]
+          },
+          "universal_live_compatibility": {"const": false}
+        }
+      }
+    },
+    "current_page_route_evidence_count": {"type": "integer", "minimum": 0},
+    "live_site_accessed": {"type": "boolean"},
+    "universal_live_compatibility": {"const": false},
+    "final_submit": {"const": "USER_ONLY"},
+    "final_submit_actions": {"const": 0},
+    "automatic_retries": {"const": 0},
+    "private_values_persisted": {"const": 0},
+    "page_text_persisted": {"const": 0},
+    "report_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}

@@ -186,6 +186,36 @@ class GatewayAndApprovalTests(unittest.TestCase):
 
 
 class RuntimeSchemaAndMigrationTests(unittest.TestCase):
+    def test_v14_to_v15_adds_redacted_expiring_live_acceptance_evidence(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "live-acceptance-v14.db")
+            with database.connect() as connection:
+                connection.executescript(MIGRATION_001_SQL)
+                connection.execute("INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','1')")
+                database._migrate_1_to_2(connection)
+                for version in range(3, 15):
+                    connection.executescript(getattr(db_module, f"MIGRATION_{version:03d}_SQL"))
+            self.assertEqual(database.schema_version(), 14)
+            self.assertEqual(database.migrate(), [15])
+            self.assertEqual(database.schema_version(), 15)
+            with database.connect() as connection:
+                tables = {
+                    row[0] for row in connection.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table'"
+                    ).fetchall()
+                }
+                triggers = {
+                    row[0] for row in connection.execute(
+                        "SELECT name FROM sqlite_master WHERE type='trigger'"
+                    ).fetchall()
+                }
+                self.assertIn("live_acceptance_runs", tables)
+                self.assertIn("live_acceptance_events", tables)
+                self.assertIn("live_acceptance_runs_identity_immutable", triggers)
+                self.assertIn("live_acceptance_events_append_only_update", triggers)
+                self.assertIn("live_acceptance_events_append_only_delete", triggers)
+                self.assertEqual(connection.execute("PRAGMA foreign_key_check").fetchall(), [])
+
     def test_v13_to_v14_adds_bounded_discovery_inbox_without_application_rows(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "discovery-v13.db")
@@ -196,7 +226,7 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                 for version in range(3, 14):
                     connection.executescript(getattr(db_module, f"MIGRATION_{version:03d}_SQL"))
             self.assertEqual(database.schema_version(), 13)
-            self.assertEqual(database.migrate(), [14])
+            self.assertEqual(database.migrate(), [14, 15])
             now = iso_utc()
             with database.connect() as connection:
                 connection.execute(
@@ -223,7 +253,7 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
         with project_temp() as temp:
             database = JobOpsDB(temp / "fresh.db")
             database.initialize()
-            self.assertEqual(database.schema_version(), 14)
+            self.assertEqual(database.schema_version(), 15)
             with database.connect() as connection:
                 definition = str(connection.execute(
                     "SELECT sql FROM sqlite_master WHERE type='table' AND name='browser_assist_runs'"
@@ -277,7 +307,7 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                     ("BA-M13-OLD", "APP-M13", "PAGE_REVIEW_REQUIRED", HASH_A, now),
                 )
             self.assertEqual(database.schema_version(), 12)
-            self.assertEqual(database.migrate(), [13, 14])
+            self.assertEqual(database.migrate(), [13, 14, 15])
             with database.connect() as connection:
                 self.assertEqual(tuple(connection.execute(
                     "SELECT provider,status FROM browser_assist_runs WHERE assist_id='BA-M13-OLD'"
@@ -375,7 +405,7 @@ class RuntimeSchemaAndMigrationTests(unittest.TestCase):
                     ("RPK-PACKET-1", "APP-PACKET", HASH_A, "secure-ref:SYNTHETIC_PACKET_1", "AWAITING_APPROVAL", now),
                 )
 
-            self.assertEqual(database.migrate(), [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+            self.assertEqual(database.migrate(), [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
             with database.connect() as connection:
                 row = connection.execute(
                     "SELECT packet_id,packet_version,supersedes_packet_id,status FROM review_packets"

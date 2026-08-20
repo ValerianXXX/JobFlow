@@ -431,6 +431,30 @@ class OnboardingCenterTests(unittest.TestCase):
                 self.assertTrue(provider["verified_stages"])
                 self.assertTrue(provider["evidence_refs"])
 
+    def test_bootstrap_exposes_only_redacted_expiring_live_acceptance_counts(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            report = service.bootstrap()["live_acceptance"]
+            self.assertEqual(report["status"], "LIVE_ACCEPTANCE_EVIDENCE")
+            self.assertEqual(report["freshness_days"], 30)
+            self.assertEqual(report["provider_count"], 6)
+            self.assertEqual(report["current_page_route_evidence_count"], 0)
+            self.assertFalse(report["live_site_accessed"])
+            self.assertFalse(report["universal_live_compatibility"])
+            self.assertEqual(report["final_submit"], "USER_ONLY")
+            self.assertEqual(report["final_submit_actions"], 0)
+            self.assertEqual(report["automatic_retries"], 0)
+            self.assertEqual(report["private_values_persisted"], 0)
+            self.assertEqual(report["page_text_persisted"], 0)
+            self.assertEqual(
+                [item["provider"] for item in report["providers"]],
+                ["company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters"],
+            )
+            serialized = json.dumps(report, sort_keys=True)
+            self.assertNotIn("https://", serialized)
+            self.assertNotIn("allowed_origin", serialized)
+            self.assertNotIn('"page_text":', serialized)
+
     def test_bootstrap_and_service_expose_only_user_initiated_desktop_update(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
@@ -628,6 +652,9 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("dataset.i18nPlaceholder", script)
         self.assertIn("ats_capabilities", script)
         self.assertIn("atsLiveUnverified", script)
+        self.assertIn("live_acceptance", script)
+        self.assertIn("atsLiveEvidenceNone", script)
+        self.assertIn("atsLiveEvidenceCurrent", script)
         self.assertIn("ats-capability-list", styles)
         self.assertIn("demo_mode", script)
         self.assertIn("elapsedWithEstimate", script)
