@@ -2,6 +2,8 @@
   "profile_ref": "secure-ref:SYNTHETIC_PLACEHOLDER",
   "profile_version": "1",
   "candidate_display_name": "Synthetic Candidate",
+  "first_name": "Synthetic",
+  "last_name": "Candidate",
   "target_functions": ["analysis", "data analyst"],
   "target_industries": ["analytics"],
   "target_levels": ["entry"],

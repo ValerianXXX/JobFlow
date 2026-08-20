@@ -141,8 +141,10 @@ class ATSProviderContractTests(unittest.TestCase):
         self.assertIn("ordered_html_sequence", workday["saved_snapshot_modes"])
         self.assertIn("MULTI_PAGE_RESUME", workday["verified_stages"])
         ashby = next(item for item in report["providers"] if item["provider"] == "ashby")
-        self.assertEqual(ashby["evidence_scope"], "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME")
+        self.assertEqual(ashby["evidence_scope"], "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT")
         self.assertIn("APPROVED_DOM_PREFILL", ashby["verified_stages"])
+        self.assertIn("REVIEW_PACKET", ashby["verified_stages"])
+        self.assertIn("RESULT_OBSERVATION", ashby["verified_stages"])
         self.assertEqual(
             ashby["user_present_prefill"],
             "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
@@ -269,18 +271,22 @@ class ATSProviderContractTests(unittest.TestCase):
             "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
         for provider in ("ashby", "smartrecruiters"):
-            self.assertEqual(by_provider[provider]["evidence_scope"], "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME")
+            self.assertEqual(
+                by_provider[provider]["evidence_scope"],
+                "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
+            )
             self.assertEqual(
                 {
+                    "PRIVATE_VALUE_FREE_PLAN",
+                    "REVIEW_PACKET",
                     "APPROVED_DOM_PREFILL",
                     "APPROVED_FILE_ATTACHMENT",
                     "EXPLICIT_NONFINAL_NAVIGATION",
+                    "RESULT_OBSERVATION",
                 } - set(by_provider[provider]["verified_stages"]),
                 set(),
             )
-            self.assertIn("REVIEW_PACKET", by_provider[provider]["unverified_stages"])
             self.assertIn("MULTI_PAGE_RESUME", by_provider[provider]["unverified_stages"])
-            self.assertIn("RESULT_OBSERVATION", by_provider[provider]["unverified_stages"])
             self.assertEqual(
                 by_provider[provider]["approved_material_upload"],
                 "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",

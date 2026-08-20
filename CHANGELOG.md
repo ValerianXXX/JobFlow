@@ -10,13 +10,14 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 - Added provider-host synthetic Lever browser evidence for approved field prefill, approved resume attachment, and a user-only final Submit boundary.
 - Added provider-host synthetic Workday browser evidence for approved field prefill, approved resume attachment, and a user-only final Submit boundary.
 - Added provider-host synthetic Ashby and SmartRecruiters browser evidence for approved field prefill, approved resume attachment, explicit non-final navigation, and a user-only final Submit boundary.
+- Added full local Ashby and SmartRecruiters review verticals from an official-company route through private-value-free planning, packet approval, and a verified synthetic result, with network and real external actions held at zero.
 
 ### Safety
 
 - Greenhouse final Submit remains user-only, and the capability report continues to mark live-site acceptance, multi-page resume, and result observation as unverified.
 - Lever final Submit remains user-only, and provider-specific non-final navigation and live-site acceptance remain unverified.
 - Workday final Submit remains user-only, and live-site acceptance remains unverified.
-- Ashby and SmartRecruiters final Submit remain user-only; provider-specific review, multi-page resume, result observation, and live-site acceptance remain unverified.
+- Ashby and SmartRecruiters final Submit remain user-only; provider-specific multi-page resume and live-site acceptance remain unverified.
 
 ## [0.6.0] - 2026-08-19
 

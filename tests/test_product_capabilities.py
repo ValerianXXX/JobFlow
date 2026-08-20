@@ -38,11 +38,15 @@ class ProductCapabilityReportTests(unittest.TestCase):
             "PAGE_ROUTE_SPECIFIC_NOT_UNIVERSAL",
             by_id["redacted_live_acceptance_evidence"]["known_limit_codes"],
         )
-        self.assertEqual(by_id["ashby_browser_assist"]["evidence_status"], "SINGLE_SNAPSHOT_PASS")
-        self.assertEqual(by_id["smartrecruiters_browser_assist"]["evidence_status"], "SINGLE_SNAPSHOT_PASS")
-        self.assertIn(
+        self.assertEqual(by_id["ashby_browser_assist"]["evidence_status"], "SYNTHETIC_VERTICAL_PASS")
+        self.assertEqual(by_id["smartrecruiters_browser_assist"]["evidence_status"], "SYNTHETIC_VERTICAL_PASS")
+        self.assertNotIn(
             "PROVIDER_SPECIFIC_REVIEW_PACKET_NOT_PROVEN",
             by_id["ashby_browser_assist"]["known_limit_codes"],
+        )
+        self.assertNotIn(
+            "PROVIDER_SPECIFIC_RESULT_OBSERVATION_NOT_PROVEN",
+            by_id["smartrecruiters_browser_assist"]["known_limit_codes"],
         )
         self.assertTrue(all(
             "SHARED_BROWSER_RUNTIME_SEPARATE_FROM_PROVIDER_EVIDENCE" not in
