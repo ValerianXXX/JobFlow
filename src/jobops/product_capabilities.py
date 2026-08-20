@@ -27,7 +27,8 @@ def _report_hash(value: dict[str, Any]) -> str:
     material = {key: value[key] for key in (
         "schema_version", "status", "capability_count", "capabilities",
         "universal_live_compatibility_claimed", "final_submit", "automatic_submission_retry",
-        "unattended_operation", "scheduler_mode",
+        "unattended_operation", "unattended_operation_scope", "unattended_application_operation",
+        "scheduler_mode",
     )}
     return sha256_bytes(canonical_json(material))
 
@@ -111,6 +112,13 @@ def product_capability_report() -> dict[str, Any]:
             ["NO_BACKGROUND_WEB_CRAWLING", "CURRENT_PAGE_REVALIDATION_REQUIRED"],
         ),
         _item(
+            "authorized_read_only_discovery_scheduler", "scheduling", "AVAILABLE", _AUTOMATED,
+            "REQUIRED_PER_COMPANY_OR_ROUTE", "USER_OPT_IN_REQUIRED",
+            "READ_ONLY_CANDIDATE_INBOX_ONLY",
+            ["tests/test_authorized_discovery.py", "tests/test_authorized_discovery_tasks.py"],
+            ["MAXIMUM_SEVEN_DAY_AUTHORIZATION", "NO_APPLICATION_OR_BROWSER_ACTIONS"],
+        ),
+        _item(
             "browser_companion_distribution", "distribution", "AVAILABLE", _AUTOMATED, "STORE_STATUS_EXTERNAL",
             "USER_INSTALL_GESTURE_REQUIRED", "SIGNED_IDENTITY_OR_DETERMINISTIC_DEVELOPMENT_IDENTITY",
             ["browser-companion/manifest.json", "tests/test_browser_companion_store.py"],
@@ -156,9 +164,9 @@ def product_capability_report() -> dict[str, Any]:
         ),
         _item(
             "authorized_continuous_scheduler", "scheduling", "NOT_AVAILABLE", _NOT_IMPLEMENTED,
-            "NOT_STARTED", "NOT_APPLICABLE", "BACKGROUND_OPERATION_REMAINS_DISABLED",
+            "NOT_STARTED", "NOT_APPLICABLE", "BACKGROUND_APPLICATION_OPERATION_REMAINS_DISABLED",
             ["tests/test_batch_e_offline_adapters_scheduler.py"],
-            ["USER_PRESENT_LOCAL_WAKE_ONLY", "NO_SYSTEM_TASK_REGISTERED"],
+            ["READ_ONLY_DISCOVERY_ONLY", "NO_BACKGROUND_APPLICATION_TASK"],
         ),
         _item(
             "desktop_self_update_rollback", "distribution", "AVAILABLE", _AUTOMATED,
@@ -187,14 +195,16 @@ def product_capability_report() -> dict[str, Any]:
     ]
     capabilities.sort(key=lambda item: item["capability_id"])
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "PRODUCT_CAPABILITY_REPORT",
         "capability_count": len(capabilities),
         "capabilities": capabilities,
         "universal_live_compatibility_claimed": False,
         "final_submit": "USER_ONLY",
         "automatic_submission_retry": False,
-        "unattended_operation": False,
+        "unattended_operation": True,
+        "unattended_operation_scope": "READ_ONLY_DISCOVERY_ONLY",
+        "unattended_application_operation": False,
         "scheduler_mode": str(policy["scheduler_mode"]),
     }
     report["report_hash"] = _report_hash(report)
@@ -234,7 +244,13 @@ def validate_product_capability_integrity(value: dict[str, Any]) -> None:
         raise JobOpsError("PRODUCT_CAPABILITY_POLICY_DRIFT", "Final Submit must remain a user-only action.")
     if value["automatic_submission_retry"] is not False or policy["submission_unknown_auto_retry"] is not False:
         raise JobOpsError("PRODUCT_CAPABILITY_POLICY_DRIFT", "Unknown submission outcomes must never retry automatically.")
-    if value["unattended_operation"] is not False or policy["unattended_submission_enabled"] is not False:
-        raise JobOpsError("PRODUCT_CAPABILITY_POLICY_DRIFT", "Unattended submission must remain disabled.")
+    if (
+        value["unattended_operation"] is not True
+        or value["unattended_operation_scope"] != "READ_ONLY_DISCOVERY_ONLY"
+        or policy.get("unattended_read_only_discovery_enabled") is not True
+    ):
+        raise JobOpsError("PRODUCT_CAPABILITY_POLICY_DRIFT", "Only authorized read-only discovery may run unattended.")
+    if value["unattended_application_operation"] is not False or policy["unattended_submission_enabled"] is not False:
+        raise JobOpsError("PRODUCT_CAPABILITY_POLICY_DRIFT", "Unattended application operation must remain disabled.")
     if value["universal_live_compatibility_claimed"] is not False:
         raise JobOpsError("PRODUCT_CAPABILITY_OVERCLAIM", "The local evidence cannot claim universal live compatibility.")

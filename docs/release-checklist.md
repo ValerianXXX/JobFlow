@@ -10,6 +10,7 @@ Run these checks only on the final clean commit. This checklist does not authori
 - [ ] `scripts/build-signed-update-bundle.ps1` produces and locally verifies the source ZIP, `JobFlow-update-manifest.json`, and `JobFlow-update-manifest.sig.json` against the pinned stable key.
 - [ ] `Start JobFlow Demo.cmd` remains synthetic-only.
 - [ ] `python -m jobops.release_readiness` reports no blockers.
+- [ ] Authorized discovery lifecycle tests prove registration, renewal, pause, expiry, repeated-failure pause, emergency stop, rollback serialization and continuity, and uninstall cleanup without any browser or application action.
 
 ## Human gates
 

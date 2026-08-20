@@ -10,6 +10,14 @@ from .util import canonical_json, parse_iso, sha256_bytes
 
 
 CAREER_HINTS = ("career", "careers", "jobs", "job", "join-us", "joinus", "work-with-us", "招聘", "职位")
+_CAREER_HOST_LABELS = {"career", "careers", "job", "jobs", "recruiting", "recruitment"}
+_PUBLIC_CAREER_BOARD_HOSTS = {
+    "boards.greenhouse.io",
+    "job-boards.greenhouse.io",
+    "jobs.lever.co",
+    "jobs.ashbyhq.com",
+    "jobs.smartrecruiters.com",
+}
 SUPPORTED_ROUTE_PROVIDERS = frozenset({
     "company", "greenhouse", "lever", "workday", "ashby", "smartrecruiters",
 })
@@ -68,6 +76,33 @@ def _canonical_url(value: str) -> str:
     port = f":{parsed.port}" if parsed.port and parsed.port != 443 else ""
     path = parsed.path or "/"
     return urlunparse(("https", host + port, path, "", parsed.query, ""))
+
+
+def is_proven_careers_entry_url(value: str) -> bool:
+    """Return whether an HTTPS URL visibly identifies a public careers entry.
+
+    A company careers subdomain is sufficient even when its root path is ``/``.
+    Known public ATS board hosts are also sufficient.  This is intentionally not
+    a general-purpose URL classifier and does not authorize any application
+    route, browser action, or credential-bearing page.
+    """
+    try:
+        canonical = _canonical_url(value)
+    except (JobOpsError, ValueError):
+        return False
+    parsed = urlparse(canonical)
+    host = _host(parsed.hostname or "")
+    labels = set(host.split("."))
+    if labels & _CAREER_HOST_LABELS:
+        return True
+    if host in _PUBLIC_CAREER_BOARD_HOSTS:
+        return True
+    if host in {"myworkdayjobs.com", "myworkday.com"} or host.endswith(
+        (".myworkdayjobs.com", ".myworkday.com")
+    ):
+        return True
+    signal = (parsed.path + " " + parsed.query).casefold()
+    return any(hint in signal for hint in CAREER_HINTS)
 
 
 def _provider_and_tenant(host: str, url: str) -> tuple[str, str, str, str]:
@@ -175,7 +210,7 @@ def verify_source_route(
         declared = registrable_domain(company_domain)
         if declared != derived_company:
             raise JobOpsError("COMPANY_DOMAIN_MISMATCH", "Caller-declared company domain does not match the official entry host.")
-    if not any(hint in (entry.path + " " + entry.query).casefold() for hint in CAREER_HINTS):
+    if not is_proven_careers_entry_url(entry_url):
         raise JobOpsError("OFFICIAL_CAREERS_PATH_NOT_PROVEN", "The official entry is not identifiable as a careers/jobs page.")
     if not navigation_history or _canonical_url(navigation_history[0]) != entry_url:
         raise JobOpsError("ROUTE_PROVENANCE_MISSING", "Navigation history must begin at the verified official careers URL.")

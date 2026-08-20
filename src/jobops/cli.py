@@ -14,6 +14,9 @@ from .adapters import audit_real_external_actions
 from .ats_browser import MAX_FORM_SEQUENCE_BYTES, MAX_FORM_SNAPSHOT_BYTES, analyze_local_ats_form, analyze_local_ats_form_sequence
 from .ats_capabilities import offline_ats_capabilities
 from .approvals import ApprovalContext, issue_approval
+from .authorized_discovery import AuthorizedDiscoveryControl
+from .authorized_discovery_runner import run_authorized_discovery
+from .authorized_discovery_tasks import AuthorizedDiscoveryScheduler, WindowsAuthorizedDiscoveryTask
 from .claim_registry import ClaimRegistry
 from .collector import JobCollector
 from .continuous_intake import (
@@ -93,6 +96,33 @@ def emit(value: object, project: Path) -> None:
     if isinstance(value, dict) and "next_safe_action" not in value:
         value = {**value, "next_safe_action": "NONE"}
     print(json.dumps(_sanitize(value, project), ensure_ascii=False, indent=2))
+
+
+def _reconcile_discovery_auto_pause(
+    control: AuthorizedDiscoveryControl,
+    scheduler: AuthorizedDiscoveryScheduler,
+) -> None:
+    """Best-effort capability reduction after a failed scheduled run.
+
+    The runner records a fatal attempt before it re-raises. If that attempt is
+    the third consecutive failure, the database has already revoked the run
+    generation and marked the fixed Windows wake-up task for removal. Cleanup
+    must also run for unexpected implementation errors, while never replacing
+    the original failure with a secondary task-manager error.
+    """
+
+    try:
+        failed_state = control.state()
+        if (
+            failed_state.get("status") == "PAUSED"
+            and failed_state.get("pause_reason") == "REPEATED_FAILURES"
+        ):
+            scheduler.reconcile_terminal_state(reason="DISCOVERY_REPEATED_FAILURES")
+    except Exception:
+        # Authorization is already revoked in the database. A failed
+        # best-effort task removal remains visible as REMOVAL_REQUIRED on the
+        # next local status refresh and must not hide the original exception.
+        return
 
 
 def resolve(project: Path, start: Path | None = None):
@@ -177,6 +207,11 @@ def parser() -> argparse.ArgumentParser:
     demo.add_argument("--port", type=int, default=0)
     demo.add_argument("--no-browser", action="store_true")
     sub.add_parser("onboarding-status")
+    sub.add_parser("authorized-discovery-run")
+    sub.add_parser("authorized-discovery-status")
+    discovery_inbox = sub.add_parser("authorized-discovery-inbox")
+    discovery_inbox.add_argument("--status", choices=("NEW", "QUEUED", "IGNORED"))
+    discovery_inbox.add_argument("--limit", type=int, default=100)
 
     propose = sub.add_parser("propose-claims")
     propose.add_argument("--input", type=Path)
@@ -522,6 +557,63 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "onboarding-status":
             database = _database(project); onboarding = _onboarding(project, database)
             emit(OnboardingCenterService(project, database, onboarding).redacted_status(), project)
+        elif args.command == "authorized-discovery-status":
+            database = _database(project); onboarding = _onboarding(project, database)
+            emit(AuthorizedDiscoveryControl(database, onboarding).state(), project)
+        elif args.command == "authorized-discovery-inbox":
+            database = _database(project); onboarding = _onboarding(project, database)
+            emit(
+                AuthorizedDiscoveryControl(database, onboarding).list_candidates(
+                    status=args.status, limit=args.limit,
+                ),
+                project,
+            )
+        elif args.command == "authorized-discovery-run":
+            database = _database(project); onboarding = _onboarding(project, database)
+            control = AuthorizedDiscoveryControl(database, onboarding)
+            scheduler = AuthorizedDiscoveryScheduler(control, WindowsAuthorizedDiscoveryTask(project))
+            policy = load_json(project / "config" / "policy.json")
+            try:
+                result = run_authorized_discovery(
+                    control,
+                    approved_ats_hosts=list(policy["approved_ats_hosts"]),
+                )
+            except JobOpsError as exc:
+                # The runner records fatal attempts before re-raising.  The
+                # third consecutive failed attempt may therefore have already
+                # auto-paused the authorization; remove the harmless wake-up
+                # task even when the original failure is not itself a terminal
+                # control-state code.
+                _reconcile_discovery_auto_pause(control, scheduler)
+                if exc.code in {
+                    "DISCOVERY_NOT_CONFIGURED", "DISCOVERY_TASK_NOT_REGISTERED", "DISCOVERY_PAUSED",
+                    "DISCOVERY_AUTHORIZATION_EXPIRED", "DISCOVERY_NOT_DUE", "DISCOVERY_RUN_ALREADY_ACTIVE",
+                }:
+                    cleanup = None
+                    if exc.code in {
+                        "DISCOVERY_NOT_CONFIGURED", "DISCOVERY_PAUSED", "DISCOVERY_AUTHORIZATION_EXPIRED",
+                    }:
+                        cleanup = scheduler.reconcile_terminal_state(reason=exc.code)
+                    emit({
+                        "status": "AUTHORIZED_DISCOVERY_RUN_SKIPPED",
+                        "reason": exc.code,
+                        "task_cleanup": None if cleanup is None else cleanup["status"],
+                        "network_requests": 0,
+                        "application_actions": 0,
+                        "browser_actions": 0,
+                        "material_uploads": 0,
+                        "final_submits": 0,
+                        "automatic_retry": False,
+                    }, project)
+                    return 0
+                raise
+            except Exception:
+                _reconcile_discovery_auto_pause(control, scheduler)
+                raise
+            state = control.state()
+            if state.get("status") == "PAUSED" and state.get("pause_reason") == "REPEATED_FAILURES":
+                scheduler.reconcile_terminal_state(reason="DISCOVERY_REPEATED_FAILURES")
+            emit(result, project)
         elif args.command == "propose-claims":
             if not args.input:
                 raise JobOpsError("CLAIM_INPUT_REQUIRED", "Claim proposal requires a project-bounded JSON input.")

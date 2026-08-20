@@ -36,6 +36,12 @@ For one approved application, the companion can:
 It cannot submit, read credentials, bypass verification, create accounts, send messages, or retry unknown external state.
 If a field, component, or protected control disappears or becomes ambiguous, the companion stops and reports a redacted field type and page position; it does not guess or replay the write.
 
+### Authorized read-only discovery
+
+An optional current-user Windows task may wake a local runner only after explicit authorization that expires within seven days. The encrypted configuration binds exact HTTPS public company or supported ATS sources and local match terms. Each run uses DNS and TLS validation, rejects redirects and private or mixed-address destinations, enforces response limits, and writes only public candidate metadata after revalidating the authorization generation.
+
+This task has no Browser Companion or application authority. It cannot open Apply, inspect or modify an application form, fill fields, upload files, navigate, create an application, send messages, or submit. Pause, authorization expiry, three consecutive runs containing source errors, uninstall, and the emergency stop remove the Windows task. Rollback instead serializes with the task and preserves its authorization so the next wake resolves the restored application version. Application processing remains user-present.
+
 ### Signed desktop updates
 
 Only a fixed per-user Windows installation can update itself. A visible user action opens the updater; there is no background poller, scheduler, service, or silent download. The updater reads the fixed `ValerianXXX/JobFlow` stable release endpoint, rejects unapproved redirect hosts, verifies a canonical manifest with the public RSA key pinned in the installed source, verifies the exact archive name, version, commit, size, SHA-256 digest, layout, and public-content boundary, and only then stages installation. The existing version remains active until the new version passes its health check. A failed check restores the previous validated version.
@@ -49,7 +55,7 @@ The release private key is stored separately under the current Windows user's Lo
 - Applicant values never enter ordinary logs, reports, command arguments, or public files.
 - Browser permissions are granted by the user and scoped to the active application.
 - Login, CAPTCHA, MFA, legal, signature, sensitive, and unknown fields are user handoffs.
-- Final Submit is not implemented.
+- Final Submit is not implemented. Read-only discovery is the only unattended scope; unattended application operation is not implemented.
 
 ## Public and private paths
 

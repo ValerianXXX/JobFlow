@@ -141,6 +141,30 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .guided-intake-steps li.active { border-color: var(--green); background: #fff; }
 .guided-intake-steps li.active > b,.guided-intake-steps li.done > b { color: #fff; background: var(--green); border-color: var(--green); }
 .guided-intake-steps li.done { opacity: .72; }
+.authorized-discovery-board { margin: 18px 0; padding: 20px; border: 1px solid #b8d0c7; background: #fff; }
+.authorized-discovery-heading { margin-bottom: 8px; }
+.authorized-discovery-meta { min-height: 20px; margin: 7px 0 3px; color: var(--green-dark); font-size: 11px; font-weight: 700; }
+.authorized-discovery-boundary { display: block; padding: 10px 12px; border-left: 3px solid var(--green); color: var(--muted); background: var(--green-soft); font-size: 10px; line-height: 1.55; }
+.authorized-discovery-layout { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(330px,.9fr); gap: 16px; margin-top: 16px; }
+.authorized-discovery-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; align-content: start; padding: 16px; border: 1px solid var(--line); background: var(--soft); }
+.authorized-discovery-settings label > span { display: block; margin-bottom: 5px; color: var(--muted); font-size: 10px; font-weight: 700; }
+.authorized-discovery-settings input:not([type="checkbox"]),.authorized-discovery-settings textarea { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); background: #fff; }
+.authorized-discovery-settings textarea { resize: vertical; }
+.authorized-discovery-settings label > small { display: block; margin-top: 5px; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.authorized-discovery-wide { grid-column: 1 / -1; }
+.authorized-discovery-confirm { display: flex; align-items: flex-start; gap: 9px; padding: 11px; color: var(--ink); background: var(--green-soft); font-size: 10px; line-height: 1.5; }
+.authorized-discovery-confirm input { flex: 0 0 auto; margin-top: 2px; accent-color: var(--green); }
+.authorized-discovery-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.authorized-discovery-actions button { flex: 1 1 160px; }
+.discovery-inbox { min-width: 0; padding: 16px; border: 1px solid var(--line); background: #fff; }
+.discovery-inbox .subheading { margin-bottom: 8px; }
+.discovery-inbox-list { display: grid; gap: 9px; }
+.discovery-inbox-list.empty { min-height: 92px; place-items: center; color: var(--muted); font-size: 11px; }
+.discovery-candidate { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px 14px; align-items: start; padding: 12px; border: 1px solid var(--line); background: var(--paper); }
+.discovery-candidate strong,.discovery-candidate small { display: block; overflow-wrap: anywhere; }
+.discovery-candidate small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+.discovery-candidate-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.discovery-candidate[data-status="QUEUED"],.discovery-candidate[data-status="IGNORED"] { opacity: .72; }
 .external-claim-approval { border-color: #b8d0c7; background: var(--green-soft); }
 .external-claim-approval > strong,.external-claim-approval > small { display: block; }
 .external-claim-approval p { margin: 6px 0 12px; color: var(--muted); font-size: 11px; }
@@ -606,6 +630,7 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .pipeline-metrics { grid-template-columns: 1fr 1fr; }
   .application-readiness-board { grid-template-columns: 1fr; }
   .guided-intake-layout { grid-template-columns: 1fr; }
+  .authorized-discovery-layout { grid-template-columns: 1fr; }
   .tailoring-candidate { grid-template-columns: 1fr; }
   .pipeline-columns { grid-template-columns: 1fr; }
   .queue-preferences,.review-packet-panel > header { align-items: stretch; flex-direction: column; }
@@ -653,6 +678,11 @@ body.is-busy button, body.is-busy .upload-button { opacity: .65; }
   .ats-capability-list { grid-template-columns: 1fr; }
   .offline-discovery-controls,.offline-application-grid,.official-candidate-item { grid-template-columns: 1fr; }
   .guided-intake-board { padding: 15px; }
+  .authorized-discovery-board { padding: 15px; }
+  .authorized-discovery-settings { grid-template-columns: 1fr; }
+  .authorized-discovery-wide { grid-column: auto; }
+  .discovery-candidate { grid-template-columns: 1fr; }
+  .discovery-candidate-actions { justify-content: flex-start; }
   .offline-application-excerpt { grid-column: auto; }
   .offline-application-actions { align-items: stretch; flex-direction: column; }
   .official-candidate-item aside { text-align: left; }

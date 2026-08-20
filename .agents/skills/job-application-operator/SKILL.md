@@ -1,6 +1,6 @@
 ---
 name: job-application-operator
-description: Process job descriptions through evidence verification, tailored materials, document QA, safe form mapping, queueing, a human review packet, and separately authorized user-present browser assistance. Use for job analysis, truthful application preparation, local job tracking, or recruiting-form assistance. Knowledge is read-only, private data must come from secure-ref, the autonomous stopping point is AWAITING_APPROVAL, and every browser action requires a scoped per-application authorization.
+description: Process job descriptions through evidence verification, tailored materials, document QA, safe form mapping, queueing, a human review packet, optional expiring read-only discovery, and separately authorized user-present browser assistance. Use for job analysis, truthful application preparation, local job tracking, or recruiting-form assistance. Knowledge is read-only, private data must come from secure-ref, the autonomous application stopping point is AWAITING_APPROVAL, and every browser action requires a scoped per-application authorization.
 ---
 
 # Job Application Operator
@@ -21,7 +21,7 @@ Use the public CLI and persist every successful transition:
 
 `DISCOVERED → SNAPSHOTTED → PARSED → ELIGIBILITY_CHECKED → SCORED → SHORTLISTED → RESEARCHED → MATERIALS_DRAFTED → MATERIALS_VALIDATED → FORM_PREFILLED → FORM_VALIDATED → AWAITING_APPROVAL`
 
-1. Import a local TXT, HTML, PDF or saved page snapshot; never fetch a URL in this build.
+1. Import a local TXT, HTML, PDF or saved page snapshot. Separately, an explicit authorization that expires within seven days may poll only exact approved HTTPS public company-careers pages or tenant-bound public Greenhouse, Lever, Ashby, and SmartRecruiters sources and place public matches in the candidate inbox; a board root maps deterministically, an individual job URL is never widened, and the authorization grants no application or browser authority.
 2. Parse compound requirements and run hard eligibility before Fit. Unknown or failed hard gates cannot be overridden by an aggregate score.
 3. Map requirements only to revalidated approved personal Claims. AI/business knowledge is context, never proof of personal experience.
 4. Tailor a copy of the secure master resume, preserving its layout. Render DOCX/PDF and require structured, hash-bound visual evidence. Read [document QA](references/document-qa.md).
@@ -32,12 +32,15 @@ Use the public CLI and persist every successful transition:
 
 Use only the blocking states in [state and recovery](references/state-and-recovery.md). Never bypass login, CAPTCHA, MFA, OTP, rate limits or site restrictions. Never auto-retry `SUBMISSION_UNKNOWN`. Changed route, JD, claims, materials, answers, uploads, actions or packet invalidates approval.
 
-Phase 5 has one deliberately narrow real adapter: the fixed-ID Browser Companion. Before an application exists, an explicit 30-minute user-present intake authorization may read only the visible text of the company role page and a sanitized structure of the application form the user opens; that intake cannot fill, upload, click page controls, read existing values, or retain raw page bodies. Only after the resulting application is separately reviewed and approved may a new explicit authorization inspect the bound company/Greenhouse/Lever/Workday/Ashby/SmartRecruiters origin, fill approved values, stream approved materials, and activate one clearly identified non-final Next/Continue control with a fresh one-use authorization. Each new page is reclassified and rebound. Login, account creation, credential collection, CAPTCHA/MFA/OTP bypass, legal/signature or unknown answers, cross-origin forms, final Submit, automatic retry, email, recruiter contact and real scheduling remain unavailable. Live-site compatibility is not inferred from synthetic tests.
+Phase 5 has one deliberately narrow real adapter: the fixed-ID Browser Companion. Before an application exists, an explicit 30-minute user-present intake authorization may read only the visible text of the company role page and a sanitized structure of the application form the user opens; that intake cannot fill, upload, click page controls, read existing values, or retain raw page bodies. Only after the resulting application is separately reviewed and approved may a new explicit authorization inspect the bound company/Greenhouse/Lever/Workday/Ashby/SmartRecruiters origin, fill approved values, stream approved materials, and activate one clearly identified non-final Next/Continue control with a fresh one-use authorization. Each new page is reclassified and rebound. Login, account creation, credential collection, CAPTCHA/MFA/OTP bypass, legal/signature or unknown answers, cross-origin forms, final Submit, automatic retry, email, recruiter contact and unattended application scheduling remain unavailable. Live-site compatibility is not inferred from synthetic tests.
+
+The sole unattended scope is authorized read-only discovery. Its current-user Windows task may wake only the local discovery runner, uses exact approved HTTPS sources and an encrypted local filter, expires within seven days, and writes only public candidate metadata after generation revalidation. Pause, expiry, three consecutive runs containing source errors, uninstall, or emergency stop removes the task. Rollback serializes with the task, preserves the bounded authorization, and makes the next wake resolve the restored application version. It cannot open Apply, inspect a form, invoke the Browser Companion, create an application, fill, upload, navigate, message, or submit. Continuous application intake remains manual and user-present.
 
 ## Completion gates
 
 - Public CLI forward test reaches `AWAITING_APPROVAL` with synthetic fixtures.
 - Runtime Schema, migrations, concurrency, crash recovery, attacks, leak scan and all document renders pass.
+- Authorized discovery lifecycle tests prove registration, renewal, pause, expiry, repeated-failure pause, rollback serialization and continuity, and uninstall cleanup, with zero browser and application actions.
 - Knowledge comparison is `UNCHANGED` with zero writes.
 - Offline release QA and synthetic probes show `REAL_EXTERNAL_ACTIONS=0`; any separately user-authorized Browser Companion trial must instead reconcile every nonzero inspected/filled/uploaded/navigated action in the append-only audit.
 - Purge synthetic private values and report active private references separately from deleted metadata.

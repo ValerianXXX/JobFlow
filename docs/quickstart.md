@@ -55,7 +55,19 @@ The dashboard can save a suggested processing interval and a time-limited local 
 2. Select **Process local queue now** whenever you want JobFlow to process already saved local work.
 3. Use **Pause new job intake** as a kill switch, and **Resume new job intake** when ready.
 
-JobFlow does not register a Windows scheduled task or background service. A due time never opens a website, starts the browser companion, uploads a file, or submits an application. Every local run requires the user's explicit click.
+This saved-work cadence does not register a Windows task or background service. Its due time never opens a website, starts the Browser Companion, uploads a file, or submits an application. Every application-processing run requires the user's explicit click.
+
+## Optional read-only background discovery
+
+This is separate from processing saved applications. When you explicitly enable it, JobFlow may register one current-user Windows task that wakes the local discovery runner every 15 minutes. The authorization lasts no longer than seven days and is limited to the exact HTTPS company-careers pages or supported public ATS sources you approve. Greenhouse, Lever, Ashby, and SmartRecruiters board-root URLs are mapped to their exact tenant-bound public jobs endpoint; individual job URLs are never widened to a whole board.
+
+1. Add the exact public sources, job terms, and locations you want JobFlow to match.
+2. Choose an authorization duration and confirm **Enable read-only discovery**.
+3. Review new matches in the local candidate inbox.
+4. Choose **Process this candidate** only when you want to begin the ordinary user-present workflow.
+5. Use **Pause** or **Emergency stop** at any time. Three consecutive runs containing any source error also pause discovery automatically.
+
+The task may read public job listings and add candidate metadata to the local inbox. It cannot open Apply, inspect an application form, fill or upload anything, navigate an ATS, create an application, send a message, or submit. Uninstall removes the task without deleting its encrypted configuration or candidate history. Rollback preserves the task and authorization under the maintenance lock; its next wake resolves the restored version before doing any work.
 
 ## Expected handoffs
 

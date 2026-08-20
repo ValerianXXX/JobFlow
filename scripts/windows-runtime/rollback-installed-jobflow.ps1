@@ -8,6 +8,8 @@ $versionsRoot = Join-Path $localRoot "Application\versions"
 $dataRoot = Join-Path $localRoot "Data"
 $currentPath = Join-Path $localRoot "current.json"
 $previousPath = Join-Path $localRoot "previous.json"
+$runtimeLockStream = $null
+$discoveryLockStream = $null
 
 function Assert-JobFlowLocalPath([string]$Path) {
     $absolute = [IO.Path]::GetFullPath($Path)
@@ -83,25 +85,43 @@ function Test-Version([string]$VersionRoot) {
 
 Assert-JobFlowLocalPath $versionsRoot
 Assert-JobFlowLocalPath $dataRoot
-$current = Read-Pointer $currentPath
-$previous = Read-Pointer $previousPath
-if ([string]$current.Value.version_directory -eq [string]$previous.Value.version_directory) {
-    throw "JOBFLOW_ROLLBACK_VERSION_NOT_DIFFERENT"
-}
-if (-not (Test-Version $previous.Root)) {
-    throw "要恢复的版本未通过本机健康检查；当前版本保持不变。 / The rollback target failed its local health check; the current version was not changed."
-}
-
-Write-Pointer $previousPath $current.Value
+$lockHelpers = Join-Path $PSScriptRoot "jobflow-runtime-locks.ps1"
+Assert-JobFlowLocalPath $lockHelpers
+if (-not (Test-Path -LiteralPath $lockHelpers -PathType Leaf)) { throw "JOBFLOW_RUNTIME_LOCK_HELPERS_MISSING" }
+. $lockHelpers
 try {
-    Write-Pointer $currentPath $previous.Value
-    if (-not (Test-Version $previous.Root)) { throw "JOBFLOW_ROLLBACK_POST_SWITCH_CHECK_FAILED" }
-}
-catch {
-    Write-Pointer $currentPath $current.Value
-    Write-Pointer $previousPath $previous.Value
-    throw
-}
+    $runtimeLockPath = Join-Path $dataRoot "state\.jobflow-runtime-maintenance.lock"
+    $discoveryLockPath = Join-Path $dataRoot "state\.authorized-discovery-task.lock"
+    Assert-JobFlowLocalPath $runtimeLockPath
+    Assert-JobFlowLocalPath $discoveryLockPath
+    $runtimeLockStream = Enter-JobFlowFileLock $runtimeLockPath "JOBFLOW_ROLLBACK_RUNNING_INSTANCE_ACTIVE"
+    $discoveryLockStream = Enter-JobFlowFileLock $discoveryLockPath "JOBFLOW_ROLLBACK_DISCOVERY_RUN_ACTIVE"
 
-Write-Host "JobFlow 已恢复到版本 $($previous.Value.version)。请关闭正在运行的 JobFlow 后重新打开。 / JobFlow rolled back to $($previous.Value.version). Close any running JobFlow window and start it again."
+    $current = Read-Pointer $currentPath
+    $previous = Read-Pointer $previousPath
+    if ([string]$current.Value.version_directory -eq [string]$previous.Value.version_directory) {
+        throw "JOBFLOW_ROLLBACK_VERSION_NOT_DIFFERENT"
+    }
+    if (-not (Test-Version $previous.Root)) {
+        throw "要恢复的版本未通过本机健康检查；当前版本保持不变。 / The rollback target failed its local health check; the current version was not changed."
+    }
+
+    Write-Pointer $previousPath $current.Value
+    try {
+        Write-Pointer $currentPath $previous.Value
+        if (-not (Test-Version $previous.Root)) { throw "JOBFLOW_ROLLBACK_POST_SWITCH_CHECK_FAILED" }
+    }
+    catch {
+        Write-Pointer $currentPath $current.Value
+        Write-Pointer $previousPath $previous.Value
+        throw
+    }
+
+    Write-Host "后台只读找岗任务保持原授权状态，并将在下次唤醒时读取回滚后的版本。 / The read-only discovery task keeps its authorization state and will resolve the rolled-back version at its next wake-up."
+    Write-Host "JobFlow 已恢复到版本 $($previous.Value.version)。请重新打开 JobFlow。 / JobFlow rolled back to $($previous.Value.version). Start JobFlow again."
+}
+finally {
+    Exit-JobFlowFileLock $discoveryLockStream
+    Exit-JobFlowFileLock $runtimeLockStream
+}
 exit 0

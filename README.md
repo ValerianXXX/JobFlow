@@ -15,7 +15,8 @@ JobFlow is a local-first, AI-centered job application workflow for Windows. It t
 5. Starts from an official company career page, verifies the job and approved ATS route, and builds one application review packet.
 6. After one application-specific approval, fills approved values, attaches approved materials, and advances only through verified non-final controls while the user is present.
 7. Stops at final review so the user can inspect the page and personally click Submit.
-8. Lets the user save a local processing cadence, pause new intake, and explicitly process deferred local work without creating a background service or Windows scheduled task.
+8. Optionally polls only the exact public company or supported ATS job sources the user approves, for at most seven days, and places matched roles in a local candidate inbox.
+9. Keeps application preparation manual and user-present: a discovered candidate does not open Apply, create an application, fill a field, upload a file, or advance a form until the user chooses it and completes the normal review gates.
 
 ## Quick start on Windows
 
@@ -48,7 +49,7 @@ An AI connection is accepted only after a structured capability test. Agent requ
 - Private applicant values remain behind `secure-ref:*` references and DPAPI encryption.
 - Claims require source evidence and applicant approval before external use.
 - Login, CAPTCHA, MFA, account creation, credentials, legal declarations, signatures, and unknown answers stop for the user.
-- Final Submit, automatic retry, email, recruiter contact, and unattended scheduling are not implemented.
+- The only unattended feature is explicit, expiring, read-only job discovery. Background application opening, Apply, form filling, uploads, navigation, final Submit, email, and recruiter contact are not implemented.
 - `SUBMISSION_UNKNOWN` never triggers an automatic retry.
 - Knowledge sources are read-only.
 
@@ -60,11 +61,12 @@ An AI connection is accepted only after a structured capability test. Agent requ
 | Encrypted onboarding, Candidate Profile, Answer Bank, and Claim review | Available |
 | Existing Agent or loopback-model connection | Available with capability gate |
 | Visible official-company job discovery and verified Apply routing | Available with user authorization |
+| Expiring read-only background discovery to a local candidate inbox | Available for exact approved HTTPS sources; maximum seven-day authorization |
 | User-present company, Greenhouse, Lever, Workday, Ashby, and SmartRecruiters assistance | Bound routes only; live compatibility varies |
 | Approved field fill and material attachment | Available per approved application |
 | User-present local queue cadence, pause, and manual run | Available; every run requires a user click |
 | Redacted diagnostics and optional local fixed-code incident history | Available; manual download only, no automatic transmission |
-| Final submission or unattended operation | Not implemented |
+| Unattended application processing or final submission | Not implemented; final Submit is permanently user-only |
 
 Synthetic and saved-page tests are engineering evidence, not proof that every live ATS page is compatible.
 

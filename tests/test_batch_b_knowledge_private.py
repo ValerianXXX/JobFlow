@@ -151,6 +151,14 @@ class PathAndPrivateOnboardingTests(unittest.TestCase):
             allowed = project / "workspace" / "jd.txt"
             allowed.write_text("fixture", encoding="utf-8")
             self.assertEqual(assert_project_io_path(allowed, project, operation="read"), allowed.resolve())
+            reports = project / "reports"
+            reports.mkdir()
+            knowledge_baseline = reports / "knowledge-baseline.json"
+            knowledge_baseline.write_text('{"collections":{}}', encoding="utf-8")
+            self.assertEqual(
+                assert_project_io_path(knowledge_baseline, project, operation="read"),
+                knowledge_baseline.resolve(),
+            )
             outside = temp / "outside.txt"
             outside.write_text("fixture", encoding="utf-8")
             with self.assertRaises(SecurityBoundaryError):

@@ -59,6 +59,25 @@ class OfflineOfficialDiscoveryTests(unittest.TestCase):
             self.assertEqual(report["real_external_actions"], 0)
             validate_named("official-discovery", report, PROJECT / "schemas")
 
+    def test_careers_subdomain_and_public_ats_board_roots_are_proven_entries(self) -> None:
+        company_report = discover_official_jobs(
+            b"<a href='/roles/analyst' data-title='Synthetic Analyst'>View role</a>",
+            official_entry_url="https://careers.example.com/",
+            company_domain="example.com",
+            approved_ats_hosts=APPROVED_ATS,
+        )
+        self.assertEqual(company_report["candidate_count"], 1)
+
+        greenhouse = discover_official_jobs(
+            (PROJECT / "tests" / "fixtures" / "synthetic-greenhouse-jobs.json").read_bytes(),
+            official_entry_url="https://job-boards.greenhouse.io/example",
+            company_domain="greenhouse.io",
+            approved_ats_hosts=APPROVED_ATS,
+            source_format="greenhouse_json",
+        )
+        self.assertEqual(greenhouse["candidate_count"], 2)
+        self.assertEqual({item["ats_tenant"] for item in greenhouse["candidates"]}, {"example"})
+
     def test_unrecognized_or_mislabeled_provider_json_fails_closed(self) -> None:
         with self.assertRaises(JobOpsError) as unrecognized:
             discover_official_jobs(

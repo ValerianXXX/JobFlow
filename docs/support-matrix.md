@@ -21,6 +21,8 @@ The ATS report partitions eleven stages into `verified_stages` and `unverified_s
 
 Redacted support diagnostics are `AVAILABLE` as a user-initiated local download from the visible support panel. Optional incident history is also `AVAILABLE`, but remains off by default and stores at most 32 fixed error codes with version and time metadata on the local device. It cannot accept messages, stack traces, URLs, paths, applicant values, documents, credentials, or tokens. Nothing is transmitted automatically; the user reviews and explicitly attaches a diagnostic file to a support request.
 
+Expiring read-only background discovery is `AVAILABLE` for exact user-approved HTTPS company-careers pages and tenant-bound public Greenhouse, Lever, Ashby, and SmartRecruiters job-list endpoints. A recognized board root is mapped deterministically; an individual job URL is never widened. It may add public job metadata to a local candidate inbox for no more than seven days per authorization. This does not promote any candidate into an application and grants no browser, Apply, fill, upload, navigation, messaging, or submission authority. Unattended application operation remains `NOT_AVAILABLE`.
+
 The checked-in provider set and current evidence boundary are:
 
 - Company-hosted forms: discovery, route binding, form analysis, value-free planning, approved DOM prefill, approved file attachment, explicit non-final navigation, and modern-component rebinding.

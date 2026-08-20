@@ -168,17 +168,18 @@ if (Test-Path -LiteralPath $policyPath -PathType Leaf) {
             $policy.external_actions_enabled -eq $false -and
             $policy.user_present_browser_assist_enabled -eq $true -and
             $policy.final_submit_implementation_present -eq $false -and
+            $policy.unattended_read_only_discovery_enabled -eq $true -and
             $policy.unattended_submission_enabled -eq $false -and
             $policy.phase_5_6_authorization -eq "PER_APPLICATION_USER_PRESENT_PREFILL_UPLOAD_AND_SCOPED_FORWARD_NAVIGATION_ONLY" -and
             [int]$policy.real_transport_adapters_registered -eq 1 -and
-            $policy.scheduler_mode -eq "fake_clock_only"
+            $policy.scheduler_mode -eq "authorized_read_only_discovery_only"
         )
     }
     catch {
         $policyReady = $false
     }
 }
-Add-JobFlowCheck "SAFETY_POLICY" $policyReady "仅允许逐申请在场预填、上传与受限前进；最终提交和无人值守动作锁定" "Only per-application user-present fill, upload, and scoped forward navigation are enabled; final submit and unattended actions are locked" "不要启动；恢复原始 config/policy.json 后重试" "Do not start; restore config/policy.json and retry"
+Add-JobFlowCheck "SAFETY_POLICY" $policyReady "仅限时只读找岗可在后台运行；申请预填、上传、前进和最终提交仍受用户在场边界保护" "Only time-limited read-only discovery may run in the background; application fill, upload, navigation, and final submission remain user-present boundaries" "不要启动；恢复原始 config/policy.json 后重试" "Do not start; restore config/policy.json and retry"
 
 $failed = @($checks | Where-Object { $_.status -ne "PASS" })
 $result = [ordered]@{

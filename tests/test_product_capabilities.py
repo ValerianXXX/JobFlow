@@ -19,7 +19,9 @@ class ProductCapabilityReportTests(unittest.TestCase):
         self.assertFalse(report["universal_live_compatibility_claimed"])
         self.assertEqual(report["final_submit"], "USER_ONLY")
         self.assertFalse(report["automatic_submission_retry"])
-        self.assertFalse(report["unattended_operation"])
+        self.assertTrue(report["unattended_operation"])
+        self.assertEqual(report["unattended_operation_scope"], "READ_ONLY_DISCOVERY_ONLY")
+        self.assertFalse(report["unattended_application_operation"])
         self.assertEqual(by_id["canonical_profile_reuse"]["availability"], "AVAILABLE")
         self.assertEqual(by_id["workday_browser_assist"]["live_acceptance"], "REQUIRED_PER_SITE")
         self.assertEqual(by_id["browser_companion_runtime"]["evidence_status"], "SYNTHETIC_VERTICAL_PASS")
@@ -34,13 +36,18 @@ class ProductCapabilityReportTests(unittest.TestCase):
             by_id["ashby_browser_assist"]["known_limit_codes"],
         )
         self.assertEqual(by_id["authorized_continuous_scheduler"]["availability"], "NOT_AVAILABLE")
+        self.assertEqual(by_id["authorized_read_only_discovery_scheduler"]["availability"], "AVAILABLE")
+        self.assertEqual(
+            by_id["authorized_read_only_discovery_scheduler"]["safety_boundary"],
+            "READ_ONLY_CANDIDATE_INBOX_ONLY",
+        )
         self.assertEqual(by_id["user_present_local_wake_planner"]["availability"], "AVAILABLE")
         self.assertEqual(
             by_id["user_present_local_wake_planner"]["safety_boundary"],
             "NO_BACKGROUND_SERVICE_OR_SYSTEM_TASK",
         )
         self.assertIn(
-            "USER_PRESENT_LOCAL_WAKE_ONLY",
+            "READ_ONLY_DISCOVERY_ONLY",
             by_id["authorized_continuous_scheduler"]["known_limit_codes"],
         )
         self.assertEqual(by_id["desktop_manual_upgrade_rollback"]["availability"], "AVAILABLE")

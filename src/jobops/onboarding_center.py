@@ -19,6 +19,8 @@ from xml.etree import ElementTree as ET
 from . import UI_PROTOCOL_VERSION, __version__
 from .adapters import audit_real_external_actions
 from .approvals import ApprovalContext, issue_approval, validate_approval
+from .authorized_discovery import AuthorizedDiscoveryControl, authorized_discovery_source_from_url
+from .authorized_discovery_tasks import AuthorizedDiscoveryScheduler, WindowsAuthorizedDiscoveryTask
 from .ats_capabilities import offline_ats_capabilities
 from .browser_assist import (
     BrowserAssistManager,
@@ -731,6 +733,7 @@ class OnboardingCenterService:
         onboarding: PrivateOnboarding,
         ai_engine: AIAnalysisEngine | None = None,
         ai_connections: AIConnectionManager | None = None,
+        authorized_discovery_task: Any | None = None,
     ) -> None:
         self.project = project.resolve(strict=True)
         self.database = database
@@ -758,6 +761,13 @@ class OnboardingCenterService:
             ui_protocol=UI_PROTOCOL_VERSION,
         )
         self.intake_control = UserPresentIntakeControl(self.database, self.schemas)
+        self.authorized_discovery = AuthorizedDiscoveryControl(
+            self.database, self.onboarding, self.schemas,
+        )
+        self.authorized_discovery_scheduler = AuthorizedDiscoveryScheduler(
+            self.authorized_discovery,
+            authorized_discovery_task or WindowsAuthorizedDiscoveryTask(self.project),
+        )
         self.browser_assist = BrowserAssistManager(
             self.project,
             self.database,
@@ -3345,6 +3355,10 @@ class OnboardingCenterService:
             "dashboard": dashboard,
             "browser_assist": self.browser_assist.public_status(),
             "guided_intake": self._guided_public_status(),
+            "authorized_discovery": {
+                "control": self.authorized_discovery.state(),
+                "inbox": self.authorized_discovery.list_candidates(limit=100),
+            },
             "application_readiness": readiness,
             "external_claim_approval": {
                 "available": bool(
@@ -3411,6 +3425,183 @@ class OnboardingCenterService:
             "real_external_actions": int(dashboard["safety"]["real_external_actions"]),
             "knowledge_write_operations": 0,
         }
+
+    @staticmethod
+    def _authorized_company_sources(career_urls: Any) -> list[dict[str, str]]:
+        if not isinstance(career_urls, list) or not 1 <= len(career_urls) <= 50:
+            raise JobOpsError(
+                "DISCOVERY_SOURCE_COUNT_INVALID",
+                "Choose between 1 and 50 company careers pages.",
+            )
+        sources: list[dict[str, str]] = []
+        seen: set[str] = set()
+        for raw in career_urls:
+            source = authorized_discovery_source_from_url(raw)
+            binding = "|".join(source[key] for key in (
+                "provider", "company_domain", "official_entry_url", "feed_url",
+            ))
+            if binding in seen:
+                continue
+            seen.add(binding)
+            sources.append(source)
+        if not sources:
+            raise JobOpsError(
+                "DISCOVERY_SOURCE_COUNT_INVALID",
+                "At least one distinct public company careers page is required.",
+            )
+        return sources
+
+    @_synchronized
+    def configure_authorized_discovery(self, payload: dict[str, Any]) -> dict[str, Any]:
+        expected = {
+            "career_urls", "include_terms", "exclude_terms", "location_terms",
+            "interval_minutes", "authorization_hours", "max_new_per_run",
+            "inbox_limit", "user_confirmed",
+        }
+        if not isinstance(payload, dict) or set(payload) != expected:
+            raise JobOpsError(
+                "DISCOVERY_CONFIG_INPUT_INVALID",
+                "The authorized discovery request has an invalid structure.",
+            )
+        control = self.authorized_discovery.configure(
+            {
+                "sources": self._authorized_company_sources(payload["career_urls"]),
+                "include_terms": payload["include_terms"],
+                "exclude_terms": payload["exclude_terms"],
+                "location_terms": payload["location_terms"],
+            },
+            interval_minutes=payload["interval_minutes"],
+            authorization_hours=payload["authorization_hours"],
+            max_new_per_run=payload["max_new_per_run"],
+            inbox_limit=payload["inbox_limit"],
+            user_confirmed=payload["user_confirmed"] is True,
+        )
+        return self.authorized_discovery_scheduler.register(
+            generation=int(control["generation"]),
+            user_confirmed=payload["user_confirmed"] is True,
+        )
+
+    @_synchronized
+    def update_authorized_discovery(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(payload, dict):
+            raise JobOpsError(
+                "DISCOVERY_CONTROL_INPUT_INVALID",
+                "The authorized discovery control request has an invalid structure.",
+            )
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError(
+                "EXPLICIT_CONFIRMATION_REQUIRED",
+                "Changing read-only discovery requires explicit confirmation.",
+            )
+        action = str(payload.get("action") or "").strip().upper()
+        expected = (
+            {"action", "authorization_hours", "user_confirmed"}
+            if action == "RESUME"
+            else {"action", "user_confirmed"}
+        )
+        if set(payload) != expected:
+            raise JobOpsError(
+                "DISCOVERY_CONTROL_INPUT_INVALID",
+                "The authorized discovery control request has an invalid structure.",
+            )
+        state = self.authorized_discovery.state()
+        if action == "PAUSE":
+            return self.authorized_discovery_scheduler.pause_and_remove(
+                user_confirmed=True,
+            )
+        if action == "KILL":
+            return self.authorized_discovery_scheduler.pause_and_remove(
+                user_confirmed=True, kill=True,
+            )
+        if action == "RETRY_REGISTRATION":
+            return self.authorized_discovery_scheduler.register(
+                generation=int(state["generation"]), user_confirmed=True,
+            )
+        if action == "RESUME":
+            hours = payload.get("authorization_hours")
+            resumed = self.authorized_discovery.resume(
+                authorization_hours=hours,
+                user_confirmed=True,
+            )
+            return self.authorized_discovery_scheduler.register(
+                generation=int(resumed["generation"]), user_confirmed=True,
+            )
+        raise JobOpsError(
+            "DISCOVERY_CONTROL_ACTION_INVALID",
+            "Choose PAUSE, KILL, RESUME, or RETRY_REGISTRATION.",
+        )
+
+    @_synchronized
+    def update_discovery_candidate(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(payload, dict) or set(payload) != {"candidate_id", "action", "user_confirmed"}:
+            raise JobOpsError(
+                "DISCOVERY_CANDIDATE_INPUT_INVALID",
+                "The discovery candidate request has an invalid structure.",
+            )
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError(
+                "EXPLICIT_CONFIRMATION_REQUIRED",
+                "Changing a discovery candidate requires explicit confirmation.",
+            )
+        candidate_id = str(payload.get("candidate_id") or "").strip()
+        action = str(payload.get("action") or "").strip().upper()
+        inbox = self.authorized_discovery.list_candidates(limit=500)
+        candidate = next(
+            (item for item in inbox["candidates"] if item["candidate_id"] == candidate_id),
+            None,
+        )
+        if candidate is None:
+            raise JobOpsError("DISCOVERY_CANDIDATE_NOT_FOUND", "The discovery candidate was not found.")
+        if action == "IGNORE":
+            return self.authorized_discovery.set_candidate_status(
+                candidate_id=candidate_id, status="IGNORED", user_confirmed=True,
+            )
+        if action == "RESTORE":
+            return self.authorized_discovery.set_candidate_status(
+                candidate_id=candidate_id, status="NEW", user_confirmed=True,
+            )
+        if action == "START_GUIDED_INTAKE":
+            if str(candidate.get("status")) != "NEW":
+                raise JobOpsError(
+                    "DISCOVERY_CANDIDATE_ALREADY_HANDLED",
+                    "Only a new discovery candidate can start a job import.",
+                    candidate_status=str(candidate.get("status")),
+                    automatic_retry=False,
+                )
+            guided = self.start_guided_intake({
+                "official_url": str(candidate["official_url"]),
+                "search_intent": "",
+                "user_confirmed": True,
+            })
+            try:
+                status = self.authorized_discovery.set_candidate_status(
+                    candidate_id=candidate_id, status="QUEUED", user_confirmed=True,
+                )
+            except Exception:
+                try:
+                    self.cancel_guided_intake({
+                        "intake_id": str(guided["intake_id"]),
+                        "user_confirmed": True,
+                    })
+                except Exception as rollback_error:
+                    raise JobOpsError(
+                        "DISCOVERY_CANDIDATE_START_ROLLBACK_FAILED",
+                        "The candidate could not be queued and its temporary job import could not be fully audited as cancelled.",
+                        intake_id=str(guided["intake_id"]),
+                        automatic_retry=False,
+                    ) from rollback_error
+                raise
+            return {
+                "status": "DISCOVERY_CANDIDATE_GUIDED_INTAKE_STARTED",
+                "candidate": status,
+                "guided_intake": guided,
+                "final_submit": "USER_ONLY",
+                "automatic_retry": False,
+            }
+        raise JobOpsError(
+            "DISCOVERY_CANDIDATE_ACTION_INVALID",
+            "Choose START_GUIDED_INTAKE, IGNORE, or RESTORE.",
+        )
 
     @_synchronized
     def connect_ai(self, payload: dict[str, Any]) -> dict[str, Any]:

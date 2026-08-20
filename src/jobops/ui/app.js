@@ -382,7 +382,142 @@ Object.assign(STRINGS.en,{
   desktopUpdateFailed:"The signed update window could not be opened; the current version was not changed."
 });
 
-const UI_PROTOCOL_VERSION = 36;
+Object.assign(STRINGS.zh,{
+  authorizedDiscoveryTitle:"自动寻找公司官网岗位",
+  authorizedDiscoveryBody:"只在你明确授权的时间内，定期读取你列出的公开公司招聘页，并把匹配岗位放入候选收件箱。",
+  authorizedDiscoveryBoundary:"这里只授权只读网络请求。不会打开申请表、创建申请、填写、上传或提交；每个候选岗位都必须由你选择后才进入现有流程。",
+  discoveryCareerUrls:"公司招聘页或公开 ATS 职位板（每行一个）",
+  discoveryCareerUrlsHelp:"支持公开 HTTPS 公司招聘页，以及 Greenhouse、Lever、Ashby、SmartRecruiters 的职位板根网址；JobFlow 会自动选择对应的只读公开职位源。不要粘贴登录、搜索会话、个人申请表或带令牌的网址。",
+  discoveryRoleTerms:"岗位关键词",
+  discoveryLocationTerms:"地点关键词（可选）",
+  discoveryExcludeTerms:"排除关键词（可选）",
+  discoveryInterval:"读取间隔（分钟）",
+  discoveryAuthorization:"本次授权有效（小时）",
+  discoveryMaxNew:"每次最多新增",
+  discoveryInboxLimit:"候选收件箱上限",
+  authorizedDiscoveryConsent:"我确认在上述限时窗口内，只授权 JobFlow 读取这些公开招聘页；若网址是受支持的 ATS 职位板根网址，可改用其对应的公开只读职位接口。只保存公开岗位摘要，不授权任何申请、浏览器填写、材料上传或提交动作。",
+  configureAuthorizedDiscovery:"授权并开始只读找岗",
+  pauseAuthorizedDiscovery:"暂停只读找岗",
+  resumeAuthorizedDiscovery:"续期并恢复",
+  retryDiscoveryRegistration:"修复后台任务",
+  killAuthorizedDiscovery:"撤销授权",
+  discoveryInboxTitle:"候选岗位收件箱",
+  discoveryInboxBody:"这里只显示公开岗位摘要。选择“处理这个岗位”后，才会进入现有的一次审阅流程。",
+  discoveryInboxEmpty:"还没有匹配岗位。",
+  discoveryProcess:"处理这个岗位",
+  discoveryIgnore:"忽略",
+  discoveryRestore:"恢复",
+  discoveryQueued:"已进入处理流程",
+  discoveryStatusNotConfigured:"尚未授权",
+  discoveryStatusReady:"后台找岗已开启",
+  discoveryStatusDue:"等待后台读取",
+  discoveryStatusRunning:"正在只读检查",
+  discoveryStatusPaused:"已暂停",
+  discoveryStatusExpired:"授权已到期",
+  discoveryMetaEmpty:"填写招聘页与关键词后，由你一次授权；授权可随时暂停或撤销。",
+  discoveryMetaReady:"已授权 {sources} 个招聘页 · 下次读取 {next} · 授权至 {until}",
+  discoveryMetaPaused:"后台找岗已暂停；不会发出新的网络请求。",
+  discoveryMetaExpired:"授权已到期；续期前不会读取招聘页。",
+  discoveryMetaRunning:"正在只读检查已授权招聘页；不会打开申请表。",
+  discoveryMetaRepair:"只读授权已保存，但 Windows 后台任务需要修复。",
+  discoveryConfigInvalid:"请填写至少一个公开 HTTPS 公司招聘页和一个岗位关键词，并检查所有数值范围。",
+  discoveryConsentRequired:"请先确认这次限时只读找岗授权。",
+  discoveryKillConfirm:"撤销这次只读找岗授权并停止 Windows 后台任务吗？已找到的公开岗位摘要会保留，任何申请都不会被创建。",
+  discoveryConfigured:"限时只读找岗已开启。",
+  discoveryPaused:"只读找岗已暂停。",
+  discoveryResumed:"只读找岗已续期并恢复。",
+  discoveryKilled:"授权已撤销；后台任务已停止。",
+  discoveryTaskRepaired:"Windows 后台任务已恢复。",
+  discoveryTaskRepairError:"Windows 后台任务未能建立或移除；只读授权不会扩大，请使用“修复后台任务”重试。",
+  discoveryCandidateIgnored:"候选岗位已忽略。",
+  discoveryCandidateRestored:"候选岗位已恢复。",
+  discoveryCandidateStarted:"已打开该岗位的现有处理流程，请继续使用浏览器伴侣。",
+  discoveryCandidateChanged:"这个候选岗位的状态已经变化。请刷新页面后再操作；JobFlow 不会重复创建处理任务。",
+  discoveryConcurrentChange:"只读找岗设置已在另一个窗口或后台更新。请刷新页面后重试。",
+  discoveryNetworkFailed:"JobFlow 未能安全读取某个招聘页。不会放宽网络边界；请检查网址和网络后稍后重试。",
+  discoveryNetworkRejected:"招聘页的地址或响应不符合只读安全规则，因此没有被读取。请换用该公司的公开 HTTPS 招聘页。",
+  discoveryRepeatedFailures:"连续读取失败后，后台找岗已自动暂停。请检查招聘页并重新授权或修复后再继续。",
+  discoveryRunActive:"另一次只读招聘页检查正在进行；JobFlow 不会重复启动。",
+  discoveryRunStale:"本次检查期间授权或配置发生变化，读取结果没有保存。请刷新页面后重试。",
+  discoveryNotDue:"还没到下一次读取时间；后台任务不会提前访问招聘页。",
+  discoveryResultInvalid:"后台读取结果未通过校验，因此没有写入候选收件箱。请检查来源后重试。",
+  configuringAuthorizedDiscovery:"正在保存限时只读授权…",
+  pausingAuthorizedDiscovery:"正在暂停只读找岗…",
+  resumingAuthorizedDiscovery:"正在续期并恢复…",
+  killingAuthorizedDiscovery:"正在撤销只读授权…",
+  repairingAuthorizedDiscovery:"正在修复 Windows 后台任务…",
+  startingDiscoveryCandidate:"正在打开候选岗位…",
+  updatingDiscoveryCandidate:"正在更新候选岗位…"
+});
+Object.assign(STRINGS.en,{
+  authorizedDiscoveryTitle:"Find roles on company careers pages",
+  authorizedDiscoveryBody:"For a time window you explicitly authorize, periodically read the public company careers pages you list and place matching roles in a candidate inbox.",
+  authorizedDiscoveryBoundary:"This grants read-only network requests only. It never opens an application form, creates an application, fills fields, uploads files, or submits; a role enters the existing workflow only after you choose it.",
+  discoveryCareerUrls:"Company careers pages or public ATS boards (one per line)",
+  discoveryCareerUrlsHelp:"Supports public HTTPS company careers pages and Greenhouse, Lever, Ashby, or SmartRecruiters board-root URLs. JobFlow selects the corresponding read-only public jobs source. Do not paste login pages, search sessions, individual application forms, or token-bearing URLs.",
+  discoveryRoleTerms:"Role keywords",
+  discoveryLocationTerms:"Location keywords (optional)",
+  discoveryExcludeTerms:"Exclude keywords (optional)",
+  discoveryInterval:"Read interval (minutes)",
+  discoveryAuthorization:"Authorization window (hours)",
+  discoveryMaxNew:"Maximum new per run",
+  discoveryInboxLimit:"Candidate inbox limit",
+  authorizedDiscoveryConsent:"For this time window, I authorize JobFlow to read these public careers pages. A supported ATS board-root URL may use its corresponding read-only public jobs endpoint. Only public job summaries are saved; applications, browser filling, file uploads, and submission are not authorized.",
+  configureAuthorizedDiscovery:"Authorize read-only discovery",
+  pauseAuthorizedDiscovery:"Pause read-only discovery",
+  resumeAuthorizedDiscovery:"Renew and resume",
+  retryDiscoveryRegistration:"Repair background task",
+  killAuthorizedDiscovery:"Revoke authorization",
+  discoveryInboxTitle:"Candidate role inbox",
+  discoveryInboxBody:"Only public job summaries appear here. Choosing Handle this role starts the existing one-review workflow.",
+  discoveryInboxEmpty:"No matching roles yet.",
+  discoveryProcess:"Handle this role",
+  discoveryIgnore:"Ignore",
+  discoveryRestore:"Restore",
+  discoveryQueued:"Entered the processing workflow",
+  discoveryStatusNotConfigured:"Not authorized",
+  discoveryStatusReady:"Background discovery enabled",
+  discoveryStatusDue:"Waiting for background read",
+  discoveryStatusRunning:"Read-only check in progress",
+  discoveryStatusPaused:"Paused",
+  discoveryStatusExpired:"Authorization expired",
+  discoveryMetaEmpty:"Enter careers pages and keywords, then authorize once. You can pause or revoke at any time.",
+  discoveryMetaReady:"Authorized for {sources} careers page(s) · next read {next} · authorized until {until}",
+  discoveryMetaPaused:"Background discovery is paused; no new network request will be made.",
+  discoveryMetaExpired:"Authorization expired; no careers page will be read until you renew it.",
+  discoveryMetaRunning:"Reading only the authorized careers pages; application forms are not opened.",
+  discoveryMetaRepair:"The read-only authorization is saved, but the Windows background task needs repair.",
+  discoveryConfigInvalid:"Enter at least one public HTTPS company careers page and one role keyword, and check every numeric range.",
+  discoveryConsentRequired:"Confirm this time-limited read-only discovery authorization first.",
+  discoveryKillConfirm:"Revoke this read-only discovery authorization and stop the Windows background task? Existing public job summaries remain, and no application will be created.",
+  discoveryConfigured:"Time-limited read-only discovery is enabled.",
+  discoveryPaused:"Read-only discovery is paused.",
+  discoveryResumed:"Read-only discovery was renewed and resumed.",
+  discoveryKilled:"Authorization was revoked and the background task was stopped.",
+  discoveryTaskRepaired:"The Windows background task was restored.",
+  discoveryTaskRepairError:"The Windows background task could not be created or removed. Authorization was not expanded; use Repair background task to retry.",
+  discoveryCandidateIgnored:"The candidate role was ignored.",
+  discoveryCandidateRestored:"The candidate role was restored.",
+  discoveryCandidateStarted:"The existing workflow for this role is open; continue with the Browser Companion.",
+  discoveryCandidateChanged:"This candidate role changed state. Refresh before trying again; JobFlow will not create a duplicate workflow.",
+  discoveryConcurrentChange:"The read-only discovery settings changed in another window or background run. Refresh before trying again.",
+  discoveryNetworkFailed:"JobFlow could not safely read a careers page. Network safeguards were not relaxed; check the URL and connection, then retry later.",
+  discoveryNetworkRejected:"The careers-page address or response did not meet the read-only network rules, so it was not read. Use the company's public HTTPS careers page.",
+  discoveryRepeatedFailures:"Background discovery paused after repeated read failures. Check the careers pages, then renew or repair the authorization before continuing.",
+  discoveryRunActive:"Another read-only careers-page check is already running; JobFlow will not start a duplicate.",
+  discoveryRunStale:"The authorization or configuration changed during this check, so its results were not saved. Refresh before retrying.",
+  discoveryNotDue:"The next read is not due yet; the background task will not visit a careers page early.",
+  discoveryResultInvalid:"The background result failed validation and was not added to the candidate inbox. Check the source before retrying.",
+  configuringAuthorizedDiscovery:"Saving the time-limited read-only authorization…",
+  pausingAuthorizedDiscovery:"Pausing read-only discovery…",
+  resumingAuthorizedDiscovery:"Renewing and resuming…",
+  killingAuthorizedDiscovery:"Revoking the read-only authorization…",
+  repairingAuthorizedDiscovery:"Repairing the Windows background task…",
+  startingDiscoveryCandidate:"Opening the candidate role…",
+  updatingDiscoveryCandidate:"Updating the candidate role…"
+});
+
+const UI_PROTOCOL_VERSION = 37;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",
@@ -408,6 +543,8 @@ const ACTIVITY_ESTIMATES = {
   reprocessingAll: 45, refreshingDashboard: 5, loadingReviewPacket: 5, savingQueueDecision: 7, savingApplicationFields: 8,
   discoveringJobs: 8, approvingExternalClaims: 7, loadingTailoringManifest: 8, approvingTailoringManifest: 7,
   preparingOfflineApplication: 150, startingGuidedIntake: 10, cancellingGuidedIntake: 5, preparingGuidedApplication: 300, startingBrowserAssist: 10, resolvingSubmission: 5,
+  configuringAuthorizedDiscovery: 12, pausingAuthorizedDiscovery: 8, resumingAuthorizedDiscovery: 10, killingAuthorizedDiscovery: 8,
+  repairingAuthorizedDiscovery: 10, startingDiscoveryCandidate: 12, updatingDiscoveryCandidate: 5,
   buildingSupportDiagnostics: 4, launchingDesktopUpdate: 4
 };
 const STANDARD_CHATGPT_EXPORT_BYTES = 200 * 1024 * 1024;
@@ -687,6 +824,25 @@ const LOCAL_ERROR_KEYS = {
   INTAKE_CONTROL_INPUT_INVALID:"intakeControlInvalid", INTAKE_INTERVAL_INVALID:"intakeControlInvalid", INTAKE_AUTHORIZATION_WINDOW_INVALID:"intakeControlInvalid", INTAKE_CONTROL_ACTION_INVALID:"intakeControlInvalid",
   INTAKE_WAKE_NOT_CONFIGURED:"intakeControlNotConfigured", INTAKE_WAKE_AUTHORIZATION_EXPIRED:"intakeControlExpired", INTAKE_WAKE_NOT_AUTHORIZED:"intakeControlExpired", NEW_INTAKE_PAUSED:"intakePausedError",
   INTAKE_CONTROL_STATE_INVALID:"localRequestFailed", INTAKE_CONTROL_STATE_CHANGED:"localRequestFailed", INTAKE_WAKE_RESULT_INVALID:"localRequestFailed",
+  DISCOVERY_CONFIG_INPUT_INVALID:"discoveryConfigInvalid", DISCOVERY_CONFIG_INVALID:"discoveryConfigInvalid", DISCOVERY_SOURCE_INVALID:"discoveryConfigInvalid",
+  DISCOVERY_SOURCE_COUNT_INVALID:"discoveryConfigInvalid", DISCOVERY_SOURCE_PROVIDER_INVALID:"discoveryConfigInvalid", DISCOVERY_SOURCE_SENSITIVE_URL:"discoveryConfigInvalid",
+  DISCOVERY_SOURCE_HTTPS_REQUIRED:"discoveryConfigInvalid", DISCOVERY_SOURCE_COMPANY_MISMATCH:"discoveryConfigInvalid", DISCOVERY_SOURCE_URL_INVALID:"discoveryConfigInvalid",
+  DISCOVERY_SOURCE_QUERY_INVALID:"discoveryConfigInvalid", DISCOVERY_SOURCE_COMPANY_FEED_MISMATCH:"discoveryConfigInvalid", DISCOVERY_SOURCE_FEED_HOST_INVALID:"discoveryConfigInvalid", DISCOVERY_SOURCE_FEED_PATH_INVALID:"discoveryConfigInvalid", DISCOVERY_FILTER_INVALID:"discoveryConfigInvalid",
+  DISCOVERY_INTERVAL_INVALID:"discoveryConfigInvalid", DISCOVERY_AUTHORIZATION_WINDOW_INVALID:"discoveryConfigInvalid", DISCOVERY_RUN_LIMIT_INVALID:"discoveryConfigInvalid",
+  DISCOVERY_INBOX_LIMIT_INVALID:"discoveryConfigInvalid", DISCOVERY_CONTROL_INPUT_INVALID:"discoveryConfigInvalid", DISCOVERY_CONTROL_ACTION_INVALID:"discoveryConfigInvalid",
+  DISCOVERY_NOT_CONFIGURED:"discoveryStatusNotConfigured", DISCOVERY_PAUSED:"discoveryStatusPaused", DISCOVERY_AUTHORIZATION_EXPIRED:"discoveryStatusExpired",
+  DISCOVERY_TASK_PLATFORM_UNSUPPORTED:"discoveryTaskRepairError", DISCOVERY_TASK_PLATFORM_UNAVAILABLE:"discoveryTaskRepairError", DISCOVERY_TASK_REGISTRATION_FAILED:"discoveryTaskRepairError", DISCOVERY_TASK_REMOVAL_FAILED:"discoveryTaskRepairError",
+  DISCOVERY_TASK_REGISTRATION_NOT_ALLOWED:"discoveryTaskRepairError", DISCOVERY_TASK_NOT_REGISTERED:"discoveryTaskRepairError", DISCOVERY_TASK_OPERATION_FAILED:"discoveryTaskRepairError", DISCOVERY_TASK_ACTION_INVALID:"discoveryTaskRepairError",
+  DISCOVERY_TASK_RESPONSE_INVALID:"discoveryTaskRepairError", DISCOVERY_TASK_REGISTRATION_ROLLBACK_FAILED:"discoveryTaskRepairError", DISCOVERY_PAUSED_REMOVAL_REQUIRED:"discoveryTaskRepairError",
+  DISCOVERY_CANDIDATE_INPUT_INVALID:"localRequestFailed", DISCOVERY_CANDIDATE_NOT_FOUND:"localRequestFailed", DISCOVERY_CANDIDATE_ACTION_INVALID:"localRequestFailed",
+  DISCOVERY_CANDIDATE_STATUS_INVALID:"localRequestFailed", DISCOVERY_CANDIDATE_LIMIT_INVALID:"localRequestFailed", DISCOVERY_CANDIDATE_INVALID:"localRequestFailed", DISCOVERY_CANDIDATE_URL_INVALID:"localRequestFailed",
+  DISCOVERY_CANDIDATE_TRANSITION_INVALID:"discoveryCandidateChanged", DISCOVERY_CANDIDATE_INBOX_READY:"discoveryCandidateStarted",
+  DISCOVERY_CONFIG_BOUNDARY_CHANGED:"discoveryConcurrentChange", DISCOVERY_CONFIG_HASH_MISMATCH:"discoveryConcurrentChange", DISCOVERY_CONFIG_SOURCE_COUNT_MISMATCH:"discoveryConcurrentChange", DISCOVERY_CONFIG_ROLLBACK_FAILED:"privateWriteRepair", DISCOVERY_CONFIG_SOURCE_CHANGED:"discoveryConcurrentChange",
+  DISCOVERY_CONTROL_STALE_GENERATION:"discoveryConcurrentChange", DISCOVERY_CONTROL_STATE_CHANGED:"discoveryConcurrentChange", DISCOVERY_CONTROL_CONCURRENT_CHANGE:"discoveryConcurrentChange", DISCOVERY_CONTROL_STATE_INVALID:"localRequestFailed", DISCOVERY_PAUSE_REASON_INVALID:"localRequestFailed",
+  DISCOVERY_NETWORK_DNS_FAILED:"discoveryNetworkFailed", DISCOVERY_NETWORK_REQUEST_FAILED:"discoveryNetworkFailed",
+  DISCOVERY_NETWORK_HOST_BLOCKED:"discoveryNetworkRejected", DISCOVERY_NETWORK_REDIRECT_BLOCKED:"discoveryNetworkRejected", DISCOVERY_NETWORK_CONTENT_ENCODING_INVALID:"discoveryNetworkRejected", DISCOVERY_NETWORK_CONTENT_TYPE_INVALID:"discoveryNetworkRejected", DISCOVERY_NETWORK_SIZE_INVALID:"discoveryNetworkRejected", DISCOVERY_NETWORK_URL_INVALID:"discoveryNetworkRejected",
+  DISCOVERY_NETWORK_RESPONSE_INVALID:"discoveryResultInvalid", DISCOVERY_RUN_RESULT_INVALID:"discoveryResultInvalid",
+  DISCOVERY_REPEATED_FAILURES:"discoveryRepeatedFailures", DISCOVERY_RUN_ALREADY_ACTIVE:"discoveryRunActive", DISCOVERY_RUN_STALE:"discoveryRunStale", DISCOVERY_NOT_DUE:"discoveryNotDue", DISCOVERY_TASK_RECONCILE_REASON_INVALID:"discoveryTaskRepairError",
   REVIEW_PACKET_NOT_FOUND:"reviewPacketUnavailable", REVIEW_PACKET_SIZE_INVALID:"reviewPacketUnavailable",
   REVIEW_PACKET_INVALID:"reviewPacketUnavailable", REVIEW_PACKET_BINDING_INVALID:"reviewPacketUnavailable",
   REVIEW_PACKET_HASH_INVALID:"reviewPacketUnavailable", SECURE_REFERENCE_MISSING:"reviewPacketUnavailable",
@@ -850,6 +1006,8 @@ function formatBytes(value) {
 const WORKFLOW_PANEL_TARGETS=new Set(["sources","questionnaire","review","finish"]);
 const WORKFLOW_ACTIVITY_TARGETS={
   configuringIntakeControl:"intakeControlTitle",pausingIntakeControl:"intakeControlTitle",resumingIntakeControl:"intakeControlTitle",runningLocalWake:"intakeControlTitle",
+  configuringAuthorizedDiscovery:"authorizedDiscoveryTitle",pausingAuthorizedDiscovery:"authorizedDiscoveryTitle",resumingAuthorizedDiscovery:"authorizedDiscoveryTitle",killingAuthorizedDiscovery:"authorizedDiscoveryTitle",
+  repairingAuthorizedDiscovery:"authorizedDiscoveryTitle",startingDiscoveryCandidate:"discoveryInboxTitle",updatingDiscoveryCandidate:"discoveryInboxTitle",
   importing:"sources",reprocessing:"sources",reprocessingAll:"sources",committingSource:"sources",deletingSource:"sources",discardingSource:"sources",
   savingAnswers:"questionnaire",savingReview:"review",includingAll:"review",transformingClaims:"review",completingOnboarding:"finish",
   detectingAgent:"aiConnectionPanel",detectingLocalModel:"aiConnectionPanel",preparingGuidedApplication:"guidedIntakePanel",startingGuidedIntake:"guidedIntakePanel",
@@ -1712,6 +1870,84 @@ function renderIntakeControl(control){
   document.querySelector("#resumeIntakeControl").classList.toggle("hidden",value.paused!==true);
 }
 
+function splitDiscoveryValues(value){
+  return String(value||"").split(/[\r\n,;，；]+/).map(item=>item.trim()).filter(Boolean);
+}
+
+function discoveryStatusLabel(status){
+  const key={
+    NOT_CONFIGURED:"discoveryStatusNotConfigured",READY:"discoveryStatusReady",DUE:"discoveryStatusDue",
+    RUNNING:"discoveryStatusRunning",PAUSED:"discoveryStatusPaused",AUTHORIZATION_EXPIRED:"discoveryStatusExpired"
+  }[status]||"discoveryStatusNotConfigured";
+  return t(key);
+}
+
+function discoveryCandidateActions(item,blocked){
+  if(item.status==="IGNORED")return `<button class="secondary compact discovery-candidate-restore" type="button" data-candidate-id="${escapeHtml(item.candidate_id)}">${escapeHtml(t("discoveryRestore"))}</button>`;
+  if(item.status==="QUEUED")return `<b>${escapeHtml(t("discoveryQueued"))}</b>`;
+  return `<button class="primary compact discovery-candidate-start" type="button" data-candidate-id="${escapeHtml(item.candidate_id)}"${blocked?` disabled title="${escapeHtml(t("companionSessionActive"))}"`:""}>${escapeHtml(t("discoveryProcess"))}</button><button class="secondary compact discovery-candidate-ignore" type="button" data-candidate-id="${escapeHtml(item.candidate_id)}">${escapeHtml(t("discoveryIgnore"))}</button>`;
+}
+
+function renderAuthorizedDiscovery(){
+  const bundle=state.data?.authorized_discovery||{}, control=bundle.control||{status:"NOT_CONFIGURED",configured:false}, inbox=bundle.inbox||{counts:{},candidates:[]};
+  const panel=document.querySelector("#authorizedDiscoveryPanel"), status=document.querySelector("#authorizedDiscoveryStatus"), meta=document.querySelector("#authorizedDiscoveryMeta");
+  if(!panel||!status||!meta)return;
+  panel.classList.toggle("hidden",state.data?.demo_mode===true);
+  if(state.data?.demo_mode===true)return;
+  status.textContent=discoveryStatusLabel(control.status);
+  status.classList.toggle("unsafe",["PAUSED","AUTHORIZATION_EXPIRED"].includes(control.status)||["REGISTRATION_REQUIRED","REMOVAL_REQUIRED","UNKNOWN"].includes(control.task_registration_state));
+  const taskNeedsRepair=["REGISTRATION_REQUIRED","UNKNOWN"].includes(control.task_registration_state)&&control.enabled===true&&control.paused!==true;
+  meta.textContent=taskNeedsRepair?t("discoveryMetaRepair"):
+    control.status==="PAUSED"?t("discoveryMetaPaused"):
+    control.status==="AUTHORIZATION_EXPIRED"?t("discoveryMetaExpired"):
+    control.status==="RUNNING"?t("discoveryMetaRunning"):
+    control.configured?t("discoveryMetaReady").replace("{sources}",String(control.source_count||0)).replace("{next}",intakeControlTime(control.next_run_at)).replace("{until}",intakeControlTime(control.authorized_until)):
+    t("discoveryMetaEmpty");
+  const numericValues={
+    discoveryIntervalMinutes:control.interval_minutes,discoveryMaxNewPerRun:control.max_new_per_run,discoveryInboxLimit:control.inbox_limit
+  };
+  Object.entries(numericValues).forEach(([id,value])=>{const input=document.querySelector(`#${id}`);if(input&&document.activeElement!==input&&Number.isInteger(value))input.value=String(value);});
+  document.querySelector("#pauseAuthorizedDiscovery").classList.toggle("hidden",!["READY","DUE","RUNNING"].includes(control.status));
+  document.querySelector("#resumeAuthorizedDiscovery").classList.toggle("hidden",!["PAUSED","AUTHORIZATION_EXPIRED"].includes(control.status));
+  document.querySelector("#retryDiscoveryRegistration").classList.toggle("hidden",!taskNeedsRepair);
+  document.querySelector("#killAuthorizedDiscovery").classList.toggle("hidden",control.configured!==true);
+  const candidates=Array.isArray(inbox.candidates)?inbox.candidates:[], list=document.querySelector("#discoveryInboxList");
+  document.querySelector("#discoveryInboxCount").textContent=String(Number(inbox.counts?.NEW||0));
+  list.classList.toggle("empty",candidates.length===0);
+  const blocked=guidedCompanionActive()||browserCompanionActive();
+  list.innerHTML=candidates.length?candidates.map(item=>`<article class="discovery-candidate" data-status="${escapeHtml(item.status)}"><div><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml([item.location,item.company_domain,item.provider].filter(Boolean).join(" · "))}</small><small><a href="${escapeHtml(item.official_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.official_url)}</a></small></div><div class="discovery-candidate-actions">${discoveryCandidateActions(item,blocked)}</div></article>`).join(""):`<p>${escapeHtml(t("discoveryInboxEmpty"))}</p>`;
+}
+
+function collectAuthorizedDiscoveryConfig(){
+  const careerUrls=splitDiscoveryValues(document.querySelector("#discoveryCareerUrls").value);
+  const includeTerms=splitDiscoveryValues(document.querySelector("#discoveryRoleTerms").value);
+  const locationTerms=splitDiscoveryValues(document.querySelector("#discoveryLocationTerms").value);
+  const excludeTerms=splitDiscoveryValues(document.querySelector("#discoveryExcludeTerms").value);
+  const intervalMinutes=Number(document.querySelector("#discoveryIntervalMinutes").value);
+  const authorizationHours=Number(document.querySelector("#discoveryAuthorizationHours").value);
+  const maxNewPerRun=Number(document.querySelector("#discoveryMaxNewPerRun").value);
+  const inboxLimit=Number(document.querySelector("#discoveryInboxLimit").value);
+  let urlsValid=careerUrls.length>=1&&careerUrls.length<=50;
+  for(const value of careerUrls){
+    try{
+      const parsed=new URL(value);
+      if(parsed.protocol!=="https:"||parsed.username||parsed.password||parsed.hash)urlsValid=false;
+    }catch(_error){urlsValid=false;}
+  }
+  const termLists=[includeTerms,locationTerms,excludeTerms];
+  const termsValid=includeTerms.length>=1&&termLists.every(items=>items.length<=24&&items.every(item=>item.length>=2&&item.length<=80));
+  const numbersValid=Number.isInteger(intervalMinutes)&&intervalMinutes>=60&&intervalMinutes<=1440
+    &&Number.isInteger(authorizationHours)&&authorizationHours>=1&&authorizationHours<=168
+    &&Number.isInteger(maxNewPerRun)&&maxNewPerRun>=1&&maxNewPerRun<=100
+    &&Number.isInteger(inboxLimit)&&inboxLimit>=10&&inboxLimit<=1000;
+  if(!urlsValid||!termsValid||!numbersValid)return null;
+  return {
+    career_urls:careerUrls,include_terms:includeTerms,exclude_terms:excludeTerms,location_terms:locationTerms,
+    interval_minutes:intervalMinutes,authorization_hours:authorizationHours,max_new_per_run:maxNewPerRun,inbox_limit:inboxLimit,
+    user_confirmed:true
+  };
+}
+
 function renderDashboard(){
   const dashboard=state.data?.dashboard;
   if(!dashboard)return;
@@ -1725,6 +1961,7 @@ function renderDashboard(){
   document.querySelector("#metricDeferred").textContent=String(queue.deferred_intake||0);
   const limitInput=document.querySelector("#pendingLimitInput");if(document.activeElement!==limitInput)limitInput.value=String(queue.pending_limit||10);
   renderIntakeControl(dashboard.intake_control);
+  renderAuthorizedDiscovery();
   document.querySelector("#pendingDashboardCount").textContent=String(pending.length);
   const safe=safety.knowledge_write_operations===0&&safety.submit_capability===false&&safety.automatic_retry===false;
   const guard=document.querySelector("#pipelineGuard");guard.textContent=t("safetyGuardOn");guard.classList.toggle("unsafe",!safe);
@@ -2558,6 +2795,70 @@ document.addEventListener("click", async event => {
       }));
       status.textContent=t("desktopUpdateWindowOpened");showToast(t("desktopUpdateWindowOpened"),false,12000);
     }catch(error){status.textContent=localizedErrorMessage(error);handleUiError(error);}
+    return;
+  }
+  const configureDiscovery=event.target.closest("#configureAuthorizedDiscovery");
+  if(configureDiscovery){
+    const payload=collectAuthorizedDiscoveryConfig();
+    if(!payload){showToast(t("discoveryConfigInvalid"),true);return;}
+    if(!document.querySelector("#authorizedDiscoveryConfirm").checked){showToast(t("discoveryConsentRequired"),true);return;}
+    try{
+      await withActivity("configuringAuthorizedDiscovery",async()=>{
+        await api("authorized-discovery-configure",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+        document.querySelector("#authorizedDiscoveryConfirm").checked=false;
+        await refreshLatest();
+      });
+      showToast(t("discoveryConfigured"));
+    }catch(error){handleUiError(error);}
+    return;
+  }
+  const pauseDiscovery=event.target.closest("#pauseAuthorizedDiscovery"), resumeDiscovery=event.target.closest("#resumeAuthorizedDiscovery"), repairDiscovery=event.target.closest("#retryDiscoveryRegistration"), killDiscovery=event.target.closest("#killAuthorizedDiscovery");
+  if(pauseDiscovery||resumeDiscovery||repairDiscovery||killDiscovery){
+    if(killDiscovery&&!window.confirm(t("discoveryKillConfirm")))return;
+    const action=pauseDiscovery?"PAUSE":resumeDiscovery?"RESUME":repairDiscovery?"RETRY_REGISTRATION":"KILL";
+    const activity=pauseDiscovery?"pausingAuthorizedDiscovery":resumeDiscovery?"resumingAuthorizedDiscovery":repairDiscovery?"repairingAuthorizedDiscovery":"killingAuthorizedDiscovery";
+    const body={action,user_confirmed:true};
+    if(action==="RESUME"){
+      const hours=Number(document.querySelector("#discoveryAuthorizationHours").value);
+      if(!Number.isInteger(hours)||hours<1||hours>168){showToast(t("discoveryConfigInvalid"),true);return;}
+      body.authorization_hours=hours;
+    }
+    try{
+      await withActivity(activity,async()=>{
+        await api("authorized-discovery-control",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+        await refreshLatest();
+      });
+      showToast(t(pauseDiscovery?"discoveryPaused":resumeDiscovery?"discoveryResumed":repairDiscovery?"discoveryTaskRepaired":"discoveryKilled"));
+    }catch(error){handleUiError(error);}
+    return;
+  }
+  const startDiscoveryCandidate=event.target.closest(".discovery-candidate-start"), ignoreDiscoveryCandidate=event.target.closest(".discovery-candidate-ignore"), restoreDiscoveryCandidate=event.target.closest(".discovery-candidate-restore");
+  if(startDiscoveryCandidate||ignoreDiscoveryCandidate||restoreDiscoveryCandidate){
+    const candidateId=(startDiscoveryCandidate||ignoreDiscoveryCandidate||restoreDiscoveryCandidate).dataset.candidateId;
+    const action=startDiscoveryCandidate?"START_GUIDED_INTAKE":ignoreDiscoveryCandidate?"IGNORE":"RESTORE";
+    if(startDiscoveryCandidate){
+      if(guidedCompanionActive()||browserCompanionActive()){handleUiError(makeUiError("BROWSER_COMPANION_SESSION_ACTIVE"));return;}
+      if(state.data?.application_readiness?.status!=="READY_FOR_OFFLINE_APPLICATION_PREPARATION"){showToast(t("guidedReadinessRequired"),true);return;}
+    }
+    try{
+      let operated=null;
+      await withActivity(startDiscoveryCandidate?"startingDiscoveryCandidate":"updatingDiscoveryCandidate",async()=>{
+        if(startDiscoveryCandidate)await requireCurrentCompanion();
+        operated=await api("authorized-discovery-candidate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({candidate_id:candidateId,action,user_confirmed:true})});
+        if(startDiscoveryCandidate){
+          const result=operated?.guided_intake;
+          if(!result)throw makeUiError("LOCAL_RESPONSE_INVALID");
+          clearCompanionPairing();
+          state.guidedIntakeSession={...result,active:true,paired:false};
+          const record={kind:"guided",paired:false,expires_epoch:Date.parse(result.expires_at),session:{...state.guidedIntakeSession},pairing:{protocol_version:result.protocol_version,base_url:location.origin,assist_path:result.intake_path}};
+          persistCompanionPairing(record);renderGuidedIntake();
+          await beginCompanionPairing(record);
+        }
+        await refreshLatest();
+      });
+      showToast(t(startDiscoveryCandidate?"discoveryCandidateStarted":ignoreDiscoveryCandidate?"discoveryCandidateIgnored":"discoveryCandidateRestored"),false,startDiscoveryCandidate?9000:4200);
+      if(startDiscoveryCandidate)document.querySelector("#guidedIntakePanel")?.scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(error){handleUiError(error);}
     return;
   }
   const configureIntake=event.target.closest("#configureIntakeControl");

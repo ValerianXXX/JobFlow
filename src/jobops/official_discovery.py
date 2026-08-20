@@ -13,6 +13,7 @@ from .sourcing import (
     _host,
     _provider_and_tenant,
     host_matches_registered,
+    is_proven_careers_entry_url,
     registrable_domain,
     url_has_sensitive_query,
 )
@@ -275,6 +276,11 @@ def _job_link(
         return None
     parsed = urlparse(canonical)
     host = _host(parsed.hostname or "")
+    entry_host = _host(urlparse(official_entry_url).hostname or "")
+    try:
+        direct_ats = _provider_and_tenant(entry_host, official_entry_url)
+    except JobOpsError:
+        direct_ats = None
     is_company = host_matches_registered(host, company_registered)
     is_ats = _is_allowed_ats(host, approved_ats_hosts)
     if not (is_company or is_ats):
@@ -282,10 +288,26 @@ def _job_link(
 
     title, title_status = _safe_title(evidence)
     path_signal = (parsed.path + " " + parsed.query).casefold()
-    if is_company and not any(hint in path_signal for hint in JOB_PATH_HINTS) and title_status == "UNKNOWN":
+    if (
+        direct_ats is None
+        and is_company
+        and not any(hint in path_signal for hint in JOB_PATH_HINTS)
+        and title_status == "UNKNOWN"
+    ):
         return None
 
-    if is_company:
+    if direct_ats is not None:
+        try:
+            provider, tenant, board, identity = _provider_and_tenant(host, canonical)
+        except JobOpsError:
+            return None
+        # Direct public ATS boards are useful inputs, but their registrable
+        # domains are shared by many companies.  Bind every discovered link to
+        # the same provider tenant and board as the exact authorized entry.
+        if (provider, tenant, board) != direct_ats[:3]:
+            return None
+        route_kind = "AUTHORIZED_ATS_BOARD_DISCOVERED"
+    elif is_company:
         provider, tenant, board = "company", company_registered, "official"
         identity = parsed.path.rstrip("/").split("/")[-1] or "UNKNOWN"
         route_kind = "OFFICIAL_DIRECT_DISCOVERED"
@@ -361,7 +383,7 @@ def discover_official_jobs(
     registered = registrable_domain(company_domain)
     if not host_matches_registered(entry_host, registered):
         raise JobOpsError("COMPANY_DOMAIN_MISMATCH", "The official careers URL does not belong to the declared company domain.")
-    if not any(hint in (urlparse(entry_url).path + " " + urlparse(entry_url).query).casefold() for hint in CAREER_HINTS):
+    if not is_proven_careers_entry_url(entry_url):
         raise JobOpsError("OFFICIAL_CAREERS_PATH_NOT_PROVEN", "The saved page URL is not identifiable as an official careers/jobs page.")
 
     resolved_format = source_format

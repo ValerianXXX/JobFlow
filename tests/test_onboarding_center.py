@@ -254,6 +254,162 @@ class OnboardingCenterTests(unittest.TestCase):
             resumed = service.set_intake_control({"action": "RESUME", "user_confirmed": True})
             self.assertIn(resumed["intake_control"]["status"], {"READY", "DUE"})
 
+    def test_authorized_discovery_service_is_explicit_read_only_and_candidates_enter_existing_intake(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            task = mock.Mock()
+            task.register.return_value = {"status": "REGISTERED"}
+            task.remove.return_value = {"status": "NOT_REGISTERED"}
+            task.lifecycle_lock.return_value = mock.MagicMock()
+            service.authorized_discovery_scheduler.task = task
+            request = {
+                "career_urls": ["https://careers.example.com/jobs"],
+                "include_terms": ["credit risk"],
+                "exclude_terms": ["director"],
+                "location_terms": ["New York", "Remote"],
+                "interval_minutes": 360,
+                "authorization_hours": 24,
+                "max_new_per_run": 20,
+                "inbox_limit": 250,
+                "user_confirmed": True,
+            }
+            with self.assertRaises(JobOpsError) as invalid:
+                service.configure_authorized_discovery({**request, "unexpected": True})
+            self.assertEqual(invalid.exception.code, "DISCOVERY_CONFIG_INPUT_INVALID")
+
+            configured = service.configure_authorized_discovery(request)
+            self.assertEqual(configured["status"], "AUTHORIZED_DISCOVERY_SCHEDULED")
+            self.assertEqual(configured["control"]["task_registration_state"], "REGISTERED")
+            self.assertFalse(configured["control"]["application_actions_authorized"])
+            self.assertFalse(configured["control"]["browser_actions_authorized"])
+            self.assertFalse(configured["control"]["material_upload_authorized"])
+            self.assertEqual(configured["control"]["final_submit"], "USER_ONLY")
+            task.register.assert_called_once()
+
+            public = service.bootstrap()["authorized_discovery"]
+            serialized = json.dumps(public)
+            self.assertEqual(public["control"]["source_count"], 1)
+            self.assertNotIn("credit risk", serialized)
+            self.assertNotIn("example.com", serialized)
+
+            greenhouse_source = service._authorized_company_sources([
+                "https://job-boards.greenhouse.io/example_board",
+            ])[0]
+            self.assertEqual(greenhouse_source["provider"], "greenhouse")
+            self.assertEqual(
+                greenhouse_source["feed_url"],
+                "https://boards-api.greenhouse.io/v1/boards/example_board/jobs",
+            )
+
+            paused = service.update_authorized_discovery({"action": "PAUSE", "user_confirmed": True})
+            self.assertEqual(paused["control"]["status"], "PAUSED")
+            self.assertEqual(paused["control"]["task_registration_state"], "NOT_REGISTERED")
+            resumed = service.update_authorized_discovery({
+                "action": "RESUME", "authorization_hours": 12, "user_confirmed": True,
+            })
+            self.assertEqual(resumed["status"], "AUTHORIZED_DISCOVERY_SCHEDULED")
+            self.assertEqual(resumed["control"]["task_registration_state"], "REGISTERED")
+
+            now = "2026-08-19T12:00:00Z"
+            candidate_id = "JDC-ABCDEF123456"
+            with service.database.connect() as connection:
+                connection.execute(
+                    """INSERT INTO discovery_candidates(
+                    candidate_id,source_id,provider,company_domain,official_url,title,location,
+                    content_hash,status,first_seen_at,last_seen_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        candidate_id, "ADS-ABCDEF123456", "company", "example.com",
+                        "https://careers.example.com/jobs/credit-risk-analyst", "Credit Risk Analyst",
+                        "New York", "sha256:" + "a" * 64, "NEW", now, now,
+                    ),
+                )
+            ignored = service.update_discovery_candidate({
+                "candidate_id": candidate_id, "action": "IGNORE", "user_confirmed": True,
+            })
+            self.assertEqual(ignored["status"], "IGNORED")
+            restored = service.update_discovery_candidate({
+                "candidate_id": candidate_id, "action": "RESTORE", "user_confirmed": True,
+            })
+            self.assertEqual(restored["status"], "NEW")
+            guided = {
+                "status": "GUIDED_INTAKE_PAIRING", "intake_id": "GIN-SYNTHETIC01",
+                "intake_path": "/intake/synthetic", "protocol_version": 1,
+                "expires_at": "2026-08-19T12:30:00Z",
+            }
+            with mock.patch.object(service, "start_guided_intake", return_value=guided) as start:
+                started = service.update_discovery_candidate({
+                    "candidate_id": candidate_id, "action": "START_GUIDED_INTAKE", "user_confirmed": True,
+                })
+            start.assert_called_once_with({
+                "official_url": "https://careers.example.com/jobs/credit-risk-analyst",
+                "search_intent": "",
+                "user_confirmed": True,
+            })
+            self.assertEqual(started["status"], "DISCOVERY_CANDIDATE_GUIDED_INTAKE_STARTED")
+            self.assertEqual(started["candidate"]["status"], "QUEUED")
+            self.assertEqual(started["final_submit"], "USER_ONLY")
+            self.assertFalse(started["automatic_retry"])
+
+            with self.assertRaises(JobOpsError) as repeated:
+                service.update_discovery_candidate({
+                    "candidate_id": candidate_id, "action": "START_GUIDED_INTAKE", "user_confirmed": True,
+                })
+            self.assertEqual(repeated.exception.code, "DISCOVERY_CANDIDATE_ALREADY_HANDLED")
+
+            rollback_candidate_id = "JDC-ABCDEF123457"
+            with service.database.connect() as connection:
+                connection.execute(
+                    """INSERT INTO discovery_candidates(
+                    candidate_id,source_id,provider,company_domain,official_url,title,location,
+                    content_hash,status,first_seen_at,last_seen_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        rollback_candidate_id, "ADS-ABCDEF123456", "company", "example.com",
+                        "https://careers.example.com/jobs/market-risk-analyst", "Market Risk Analyst",
+                        "New York", "sha256:" + "b" * 64, "NEW", now, now,
+                    ),
+                )
+
+            rollback_intake_id = "GIN-ABCDEF123456"
+            rollback_token = "synthetic-rollback-token"
+            rollback_guided = {
+                "status": "GUIDED_INTAKE_PAIRING", "intake_id": rollback_intake_id,
+                "intake_path": "/intake/synthetic-rollback", "protocol_version": 2,
+                "expires_at": "2026-08-19T12:30:00Z",
+            }
+
+            def start_with_lease(_payload):
+                service._guided_intakes[rollback_token] = {
+                    "token": rollback_token,
+                    "intake_id": rollback_intake_id,
+                    "status": "GUIDED_INTAKE_PAIRING",
+                    "job_page": None,
+                }
+                return rollback_guided
+
+            with (
+                mock.patch.object(service, "start_guided_intake", side_effect=start_with_lease),
+                mock.patch.object(
+                    service.authorized_discovery,
+                    "set_candidate_status",
+                    side_effect=RuntimeError("synthetic candidate write failure"),
+                ),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "synthetic candidate write failure"):
+                    service.update_discovery_candidate({
+                        "candidate_id": rollback_candidate_id,
+                        "action": "START_GUIDED_INTAKE",
+                        "user_confirmed": True,
+                    })
+            self.assertNotIn(rollback_token, service._guided_intakes)
+            with service.database.connect() as connection:
+                rollback_status = connection.execute(
+                    "SELECT status FROM discovery_candidates WHERE candidate_id=?",
+                    (rollback_candidate_id,),
+                ).fetchone()["status"]
+            self.assertEqual(rollback_status, "NEW")
+
     def test_bootstrap_discloses_only_truthful_offline_ats_capabilities(self) -> None:
         with project_temp() as root:
             service, _, _, _, _ = self.make_service(root)
@@ -324,6 +480,7 @@ class OnboardingCenterTests(unittest.TestCase):
             "candidate-profile", "onboarding-answer-bank", "onboarding-completion", "official-discovery",
             "external-claim-set", "application-readiness", "resume-tailoring-manifest",
             "user-present-intake-control", "support-diagnostics", "support-incident-state",
+            "authorized-discovery-control",
         ):
             shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
         (project / "config").mkdir()
@@ -494,7 +651,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v40-ats-evidence", html)
+        self.assertIn("jobflow-v42-discovery-controls", html)
         self.assertIn('class="skip-link"', html)
         self.assertIn('id="mainContent" tabindex="-1"', html)
         self.assertIn('id="downloadSupportDiagnostics"', html)
@@ -2448,6 +2605,15 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn('id="pauseIntakeControl"', html)
         self.assertIn('id="resumeIntakeControl"', html)
         self.assertIn('id="emergencyStop"', html)
+        self.assertIn('id="authorizedDiscoveryPanel"', html)
+        self.assertIn('id="discoveryCareerUrls"', html)
+        self.assertIn('id="authorizedDiscoveryConfirm"', html)
+        self.assertIn('id="discoveryInboxList"', html)
+        self.assertIn('id="configureAuthorizedDiscovery"', html)
+        self.assertIn('id="pauseAuthorizedDiscovery"', html)
+        self.assertIn('id="resumeAuthorizedDiscovery"', html)
+        self.assertIn('id="retryDiscoveryRegistration"', html)
+        self.assertIn('id="killAuthorizedDiscovery"', html)
         self.assertIn('id="reviewPacketPanel"', html)
         self.assertIn('id="applicationFieldResolutionPanel"', html)
         self.assertIn('id="applicationFieldResolutionList"', html)
@@ -2469,6 +2635,11 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("function renderApplicationReadiness()", app)
         self.assertIn("function renderTailoringProposal(", app)
         self.assertIn("function renderOfficialDiscovery", app)
+        self.assertIn("function renderAuthorizedDiscovery", app)
+        self.assertIn('api("authorized-discovery-configure"', app)
+        self.assertIn('api("authorized-discovery-control"', app)
+        self.assertIn('api("authorized-discovery-candidate"', app)
+        self.assertIn('discoveryCandidateStarted:', app)
         self.assertIn('api("intake-control"', app)
         self.assertIn('api("run-local-wake"', app)
         self.assertIn("function clearOfficialDiscovery", app)
@@ -2538,7 +2709,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v40-ats-evidence", html)
+        self.assertIn("jobflow-v42-discovery-controls", html)
 
     def test_support_diagnostics_never_reads_or_emits_private_values(self) -> None:
         with project_temp() as root:

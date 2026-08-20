@@ -26,6 +26,12 @@ $installId = [Guid]::NewGuid().ToString("N").Substring(0, 12)
 $stagingRoot = Join-Path $localRoot (".i-" + $installId)
 $repairBackupRoot = Join-Path $localRoot (".r-" + $installId)
 $skipBrowserIntegrationForAcceptance = $env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY -eq "1"
+$runtimeLockStream = $null
+$discoveryLockStream = $null
+$lockHelpers = Join-Path $PSScriptRoot "windows-runtime\jobflow-runtime-locks.ps1"
+if (-not (Test-Path -LiteralPath $lockHelpers -PathType Leaf)) {
+    throw "JOBFLOW_RUNTIME_LOCK_HELPERS_MISSING"
+}
 
 if ($skipBrowserIntegrationForAcceptance) {
     $temporaryBoundary = [IO.Path]::GetFullPath($env:TEMP)
@@ -88,6 +94,11 @@ function Assert-JobFlowLocalPath([string]$Path) {
 function Assert-SourcePath([string]$Path) {
     Assert-NoReparse $Path $projectRoot "JOBFLOW_INSTALL_SOURCE_LINK_FORBIDDEN"
 }
+
+# Validate the source chain before executing any helper from the extracted
+# package.  A normal leaf check does not detect a replaced parent junction.
+Assert-SourcePath $lockHelpers
+. $lockHelpers
 
 function Write-JsonAtomic([string]$Path, [object]$Value) {
     Assert-JobFlowLocalPath $Path
@@ -178,6 +189,9 @@ function Install-StableLaunchers {
         "update-installed-jobflow.ps1",
         "rollback-installed-jobflow.ps1",
         "uninstall-installed-jobflow.ps1",
+        "jobflow-runtime-locks.ps1",
+        "manage-authorized-discovery-task.ps1",
+        "run-authorized-discovery-task.ps1",
         "Start JobFlow.cmd",
         "Check JobFlow.cmd",
         "Update JobFlow.cmd",
@@ -315,6 +329,13 @@ try {
     }
     Set-CurrentUserOnly $dataRoot
 
+    $runtimeLockPath = Join-Path $dataRoot "state\.jobflow-runtime-maintenance.lock"
+    $discoveryLockPath = Join-Path $dataRoot "state\.authorized-discovery-task.lock"
+    Assert-JobFlowLocalPath $runtimeLockPath
+    Assert-JobFlowLocalPath $discoveryLockPath
+    $runtimeLockStream = Enter-JobFlowFileLock $runtimeLockPath "JOBFLOW_INSTALL_RUNNING_INSTANCE_ACTIVE"
+    $discoveryLockStream = Enter-JobFlowFileLock $discoveryLockPath "JOBFLOW_INSTALL_DISCOVERY_RUN_ACTIVE"
+
     $existingPointer = Read-InstalledPointer $currentPointerPath
     $versionWasRepaired = $false
     $targetAlreadyHealthy = (Test-Path -LiteralPath $targetVersionRoot -PathType Container) -and (Test-VersionHealth $targetVersionRoot)
@@ -424,6 +445,8 @@ try {
     }
 }
 finally {
+    Exit-JobFlowFileLock $discoveryLockStream
+    Exit-JobFlowFileLock $runtimeLockStream
     foreach ($path in @($stagingRoot, $repairBackupRoot)) {
         if (Test-Path -LiteralPath $path -PathType Container) {
             Assert-JobFlowLocalPath $path

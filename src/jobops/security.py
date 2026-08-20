@@ -98,7 +98,7 @@ def assert_project_io_path(candidate: Path, project: Path, *, operation: str) ->
     candidate = Path(candidate)
     absolute = candidate.absolute()
     allowed = (
-        ("workspace", "state", "tests/fixtures", "tests/.tmp", "reports/validation-artifacts", "config", "schemas")
+        ("workspace", "state", "reports", "tests/fixtures", "tests/.tmp", "config", "schemas")
         if operation == "read" else ("workspace", "state", "reports", "tests/.tmp")
     )
     if path_has_hard_excluded_name(absolute, (), ()):

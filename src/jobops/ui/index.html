@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20260819-jobflow-v40-ats-evidence">
+  <link rel="stylesheet" href="styles.css?v=20260819-jobflow-v42-discovery-controls">
 </head>
 <body>
   <a class="skip-link" href="#mainContent" data-i18n="skipToMain">跳到主要内容</a>
@@ -132,6 +132,42 @@
             <li id="guidedStepThree"><b>3</b><span><strong data-i18n="guidedStepThreeTitle">读取申请表</strong><small data-i18n="guidedStepThreeBody">JobFlow 沿公司公布的安全 Apply 链接进入申请表，并自动生成材料和审阅包。</small></span></li>
             <li id="guidedStepFour"><b>4</b><span><strong data-i18n="guidedStepFourTitle">一次审阅</strong><small data-i18n="guidedStepFourBody">确认材料与岗位问题后，才会出现浏览器辅助填写入口。</small></span></li>
           </ol>
+        </div>
+      </section>
+      <section id="authorizedDiscoveryPanel" class="authorized-discovery-board" aria-labelledby="authorizedDiscoveryTitle">
+        <div class="subheading authorized-discovery-heading">
+          <div>
+            <p class="eyebrow">AUTHORIZED DISCOVERY</p>
+            <h3 id="authorizedDiscoveryTitle" data-i18n="authorizedDiscoveryTitle">自动寻找公司官网岗位</h3>
+            <small data-i18n="authorizedDiscoveryBody">只在你明确授权的时间内，定期读取你列出的公开公司招聘页，并把匹配岗位放入候选收件箱。</small>
+          </div>
+          <span id="authorizedDiscoveryStatus" class="guard-badge">—</span>
+        </div>
+        <p id="authorizedDiscoveryMeta" class="authorized-discovery-meta" aria-live="polite"></p>
+        <small class="authorized-discovery-boundary" data-i18n="authorizedDiscoveryBoundary">这里只授权只读网络请求。不会打开申请表、创建申请、填写、上传或提交；每个候选岗位都必须由你选择后才进入现有流程。</small>
+        <div class="authorized-discovery-layout">
+          <div id="authorizedDiscoverySetup" class="authorized-discovery-settings">
+            <label class="authorized-discovery-wide"><span data-i18n="discoveryCareerUrls">公司招聘页或公开 ATS 职位板（每行一个）</span><textarea id="discoveryCareerUrls" rows="4" maxlength="12000" spellcheck="false" placeholder="https://company.example/careers"></textarea><small data-i18n="discoveryCareerUrlsHelp">支持公开 HTTPS 公司招聘页，以及 Greenhouse、Lever、Ashby、SmartRecruiters 的职位板根网址；JobFlow 会自动选择对应的只读公开职位源。不要粘贴登录、搜索会话、个人申请表或带令牌的网址。</small></label>
+            <label><span data-i18n="discoveryRoleTerms">岗位关键词</span><input id="discoveryRoleTerms" type="text" maxlength="1200" spellcheck="false" placeholder="credit risk, risk analyst"></label>
+            <label><span data-i18n="discoveryLocationTerms">地点关键词（可选）</span><input id="discoveryLocationTerms" type="text" maxlength="1200" spellcheck="false" placeholder="New York, Remote"></label>
+            <label><span data-i18n="discoveryExcludeTerms">排除关键词（可选）</span><input id="discoveryExcludeTerms" type="text" maxlength="1200" spellcheck="false" placeholder="director, senior manager"></label>
+            <label><span data-i18n="discoveryInterval">读取间隔（分钟）</span><input id="discoveryIntervalMinutes" type="number" min="60" max="1440" step="30" value="360" inputmode="numeric"></label>
+            <label><span data-i18n="discoveryAuthorization">本次授权有效（小时）</span><input id="discoveryAuthorizationHours" type="number" min="1" max="168" step="1" value="24" inputmode="numeric"></label>
+            <label><span data-i18n="discoveryMaxNew">每次最多新增</span><input id="discoveryMaxNewPerRun" type="number" min="1" max="100" step="1" value="20" inputmode="numeric"></label>
+            <label><span data-i18n="discoveryInboxLimit">候选收件箱上限</span><input id="discoveryInboxLimit" type="number" min="10" max="1000" step="10" value="250" inputmode="numeric"></label>
+            <label class="authorized-discovery-confirm authorized-discovery-wide"><input id="authorizedDiscoveryConfirm" type="checkbox"><span data-i18n="authorizedDiscoveryConsent">我确认在上述限时窗口内，只授权 JobFlow 读取这些公开招聘页；若网址是受支持的 ATS 职位板根网址，可改用其对应的公开只读职位接口。只保存公开岗位摘要，不授权任何申请、浏览器填写、材料上传或提交动作。</span></label>
+            <div class="authorized-discovery-actions authorized-discovery-wide">
+              <button id="configureAuthorizedDiscovery" class="primary compact" type="button" data-i18n="configureAuthorizedDiscovery">授权并开始只读找岗</button>
+              <button id="pauseAuthorizedDiscovery" class="secondary compact hidden" type="button" data-i18n="pauseAuthorizedDiscovery">暂停只读找岗</button>
+              <button id="resumeAuthorizedDiscovery" class="secondary compact hidden" type="button" data-i18n="resumeAuthorizedDiscovery">续期并恢复</button>
+              <button id="retryDiscoveryRegistration" class="secondary compact hidden" type="button" data-i18n="retryDiscoveryRegistration">修复后台任务</button>
+              <button id="killAuthorizedDiscovery" class="danger compact hidden" type="button" data-i18n="killAuthorizedDiscovery">撤销授权</button>
+            </div>
+          </div>
+          <section class="discovery-inbox" aria-labelledby="discoveryInboxTitle">
+            <div class="subheading"><div><h4 id="discoveryInboxTitle" data-i18n="discoveryInboxTitle">候选岗位收件箱</h4><small data-i18n="discoveryInboxBody">这里只显示公开岗位摘要。选择“处理这个岗位”后，才会进入现有的一次审阅流程。</small></div><span id="discoveryInboxCount">0</span></div>
+            <div id="discoveryInboxList" class="discovery-inbox-list"></div>
+          </section>
         </div>
       </section>
       <div class="queue-preferences">
@@ -497,6 +533,6 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20260819-jobflow-v40-ats-evidence"></script>
+  <script src="app.js?v=20260819-jobflow-v42-discovery-controls"></script>
 </body>
 </html>

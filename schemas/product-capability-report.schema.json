@@ -4,9 +4,9 @@
   "title": "JobFlow Product Capability Report",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "status", "capability_count", "capabilities", "universal_live_compatibility_claimed", "final_submit", "automatic_submission_retry", "unattended_operation", "scheduler_mode", "report_hash"],
+  "required": ["schema_version", "status", "capability_count", "capabilities", "universal_live_compatibility_claimed", "final_submit", "automatic_submission_retry", "unattended_operation", "unattended_operation_scope", "unattended_application_operation", "scheduler_mode", "report_hash"],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "status": {"const": "PRODUCT_CAPABILITY_REPORT"},
     "capability_count": {"type": "integer", "minimum": 1},
     "capabilities": {
@@ -33,8 +33,10 @@
     "universal_live_compatibility_claimed": {"const": false},
     "final_submit": {"const": "USER_ONLY"},
     "automatic_submission_retry": {"const": false},
-    "unattended_operation": {"const": false},
-    "scheduler_mode": {"const": "fake_clock_only"},
+    "unattended_operation": {"const": true},
+    "unattended_operation_scope": {"const": "READ_ONLY_DISCOVERY_ONLY"},
+    "unattended_application_operation": {"const": false},
+    "scheduler_mode": {"const": "authorized_read_only_discovery_only"},
     "report_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
   }
 }

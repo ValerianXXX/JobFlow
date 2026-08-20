@@ -651,6 +651,12 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.set_intake_control(self._json_body())
             elif route == "run-local-wake":
                 result = self.server.service.run_local_wake(self._json_body())
+            elif route == "authorized-discovery-configure":
+                result = self.server.service.configure_authorized_discovery(self._json_body())
+            elif route == "authorized-discovery-control":
+                result = self.server.service.update_authorized_discovery(self._json_body())
+            elif route == "authorized-discovery-candidate":
+                result = self.server.service.update_discovery_candidate(self._json_body())
             elif route == "start-browser-assist":
                 result = self.server.service.start_browser_assist(self._json_body())
             elif route == "plan-application-with-ai":

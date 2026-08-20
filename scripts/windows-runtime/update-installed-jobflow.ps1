@@ -255,13 +255,10 @@ try {
         throw "JOBFLOW_UPDATE_SWITCH_FAILED"
     }
 
-    $healthScript = Join-Path $localRoot "bin\check-installed-jobflow.ps1"
-    $null = & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $healthScript -Json 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        $rollbackScript = Join-Path $localRoot "bin\rollback-installed-jobflow.ps1"
-        $null = & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $rollbackScript 2>$null
-        throw "JOBFLOW_UPDATE_POST_SWITCH_HEALTH_FAILED_ROLLED_BACK"
-    }
+    # The installer already ran the final shared-data health check while it
+    # held both the foreground-runtime and discovery-run maintenance locks.
+    # Re-running it here after those locks are released could race a newly
+    # awakened task or a user reopening JobFlow.
     Write-Host "JobFlow 已安全更新到 $($updated.Value.version)。请关闭旧窗口并重新打开 JobFlow。 / JobFlow was safely updated to $($updated.Value.version). Close the old window and start JobFlow again."
     exit 0
 }

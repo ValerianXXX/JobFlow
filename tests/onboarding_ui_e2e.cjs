@@ -45,8 +45,8 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260819-jobflow-v40-ats-evidence/);
-    assert.match(initial.styleVersion, /20260819-jobflow-v40-ats-evidence/);
+    assert.match(initial.scriptVersion, /20260819-jobflow-v42-discovery-controls/);
+    assert.match(initial.styleVersion, /20260819-jobflow-v42-discovery-controls/);
     assert.equal(initial.skipHref, "#mainContent");
     assert.equal(initial.mainTabIndex, "-1");
     assert.equal(initial.supportButtonType, "button");
@@ -54,8 +54,155 @@ const {chromium} = require("playwright");
     assert.equal(initial.updateButtonType, "button");
     assert.equal(initial.updateLiveRegion, "polite");
     assert.equal(initial.aiHeadingTabIndex, "-1");
+
+    const authorizedDiscovery = await page.evaluate(() => {
+      state.locale = "en";
+      state.guidedIntakeSession = null;
+      state.browserAssistSession = null;
+      state.data = {
+        demo_mode: false,
+        browser_assist: {},
+        guided_intake: {active: false},
+        ai_engine: {status: "READY", available: true},
+        authorized_discovery: {
+          control: {
+            status: "READY", configured: true, enabled: true, paused: false,
+            generation: 3, interval_minutes: 360, max_new_per_run: 20, inbox_limit: 250,
+            source_count: 2, task_registration_state: "REGISTERED",
+            next_run_at: "2026-08-20T00:00:00Z", authorized_until: "2026-08-21T00:00:00Z",
+          },
+          inbox: {
+            counts: {NEW: 1, QUEUED: 0, IGNORED: 0},
+            candidates: [{
+              candidate_id: "ADC-SYNTHETIC01", status: "NEW", title: "Risk Analyst",
+              location: "Remote", company_domain: "example.test", provider: "company",
+              official_url: "https://careers.example.test/jobs/risk-analyst", discovered_at: "2026-08-19T00:00:00Z",
+            }],
+          },
+        },
+        dashboard: {
+          queue: {}, safety: {knowledge_write_operations: 0, submit_capability: false, automatic_retry: false},
+          pending_applications: [], deferred_intake: [], recent_applications: [], execution_runs: [],
+          intake_control: {status: "NOT_CONFIGURED", configured: false, manual_run_allowed: false, paused: false},
+        },
+      };
+      renderDashboard();
+      return {
+        hidden: document.querySelector("#authorizedDiscoveryPanel").classList.contains("hidden"),
+        status: document.querySelector("#authorizedDiscoveryStatus").textContent,
+        count: document.querySelector("#discoveryInboxCount").textContent,
+        title: document.querySelector(".discovery-candidate strong")?.textContent,
+        href: document.querySelector(".discovery-candidate a")?.getAttribute("href"),
+        processDisabled: document.querySelector(".discovery-candidate-start")?.disabled,
+        pauseHidden: document.querySelector("#pauseAuthorizedDiscovery").classList.contains("hidden"),
+        resumeHidden: document.querySelector("#resumeAuthorizedDiscovery").classList.contains("hidden"),
+      };
+    });
+    assert.equal(authorizedDiscovery.hidden, false);
+    assert.equal(authorizedDiscovery.status, "Background discovery enabled");
+    assert.equal(authorizedDiscovery.count, "1");
+    assert.equal(authorizedDiscovery.title, "Risk Analyst");
+    assert.equal(authorizedDiscovery.href, "https://careers.example.test/jobs/risk-analyst");
+    assert.equal(authorizedDiscovery.processDisabled, false);
+    assert.equal(authorizedDiscovery.pauseHidden, false);
+    assert.equal(authorizedDiscovery.resumeHidden, true);
+
     await page.keyboard.press("Tab");
     assert.equal(await page.evaluate(() => document.activeElement?.classList.contains("skip-link")), true);
+
+    const discoveryInteractions = await page.evaluate(async () => {
+      state.locale = "en";
+      state.serviceCompatible = true;
+      state.guidedIntakeSession = null;
+      state.browserAssistSession = null;
+      state.data.application_readiness = {status: "READY_FOR_OFFLINE_APPLICATION_PREPARATION"};
+      const calls = [];
+      api = async (requestPath, options = {}) => {
+        const parsedBody = options.body ? JSON.parse(options.body) : null;
+        calls.push({requestPath, method: options.method || "GET", body: parsedBody});
+        if (requestPath === "authorized-discovery-candidate" && parsedBody?.action === "START_GUIDED_INTAKE") {
+          return {guided_intake: {
+            intake_id: "GDI-SYNTHETIC01", intake_path: "/api/guided-intake/GDI-SYNTHETIC01",
+            protocol_version: 1, expires_at: new Date(Date.now() + 600000).toISOString(), status: "PAIRING",
+          }};
+        }
+        return {status: "OK"};
+      };
+      refreshLatest = async () => {};
+      requireCurrentCompanion = async () => ({available: true});
+      beginCompanionPairing = async () => {};
+      window.confirm = () => true;
+
+      document.querySelector("#discoveryCareerUrls").value = "https://careers.example.test/jobs";
+      document.querySelector("#discoveryRoleTerms").value = "risk analyst";
+      document.querySelector("#discoveryLocationTerms").value = "remote";
+      document.querySelector("#discoveryExcludeTerms").value = "director";
+      document.querySelector("#discoveryIntervalMinutes").value = "360";
+      document.querySelector("#discoveryAuthorizationHours").value = "24";
+      document.querySelector("#discoveryMaxNewPerRun").value = "20";
+      document.querySelector("#discoveryInboxLimit").value = "250";
+      document.querySelector("#authorizedDiscoveryConfirm").checked = true;
+      document.querySelector("#configureAuthorizedDiscovery").click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      document.querySelector("#pauseAuthorizedDiscovery").click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      state.data.authorized_discovery.control.status = "PAUSED";
+      renderAuthorizedDiscovery();
+      document.querySelector("#resumeAuthorizedDiscovery").click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      state.data.authorized_discovery.control.status = "READY";
+      state.data.authorized_discovery.control.task_registration_state = "REGISTRATION_REQUIRED";
+      renderAuthorizedDiscovery();
+      document.querySelector("#retryDiscoveryRegistration").click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      state.data.authorized_discovery.control.task_registration_state = "REGISTERED";
+      renderAuthorizedDiscovery();
+      document.querySelector(".discovery-candidate-ignore").click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      state.data.authorized_discovery.inbox.candidates[0].status = "IGNORED";
+      renderAuthorizedDiscovery();
+      document.querySelector(".discovery-candidate-restore").click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      state.data.authorized_discovery.inbox.candidates[0].status = "NEW";
+      renderAuthorizedDiscovery();
+      document.querySelector(".discovery-candidate-start").click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      state.guidedIntakeSession = null;
+      state.data.authorized_discovery.control.status = "READY";
+      renderAuthorizedDiscovery();
+      document.querySelector("#killAuthorizedDiscovery").click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      return {
+        calls,
+        localized: {
+          network: localizedErrorMessage({code: "DISCOVERY_NETWORK_HOST_BLOCKED"}),
+          changed: localizedErrorMessage({code: "DISCOVERY_CANDIDATE_TRANSITION_INVALID"}),
+          repeated: localizedErrorMessage({code: "DISCOVERY_REPEATED_FAILURES"}),
+        },
+      };
+    });
+    assert.deepEqual(discoveryInteractions.calls.map(item => [item.requestPath, item.body?.action || null]), [
+      ["authorized-discovery-configure", null],
+      ["authorized-discovery-control", "PAUSE"],
+      ["authorized-discovery-control", "RESUME"],
+      ["authorized-discovery-control", "RETRY_REGISTRATION"],
+      ["authorized-discovery-candidate", "IGNORE"],
+      ["authorized-discovery-candidate", "RESTORE"],
+      ["authorized-discovery-candidate", "START_GUIDED_INTAKE"],
+      ["authorized-discovery-control", "KILL"],
+    ]);
+    assert.match(discoveryInteractions.localized.network, /public HTTPS careers page/);
+    assert.match(discoveryInteractions.localized.changed, /changed state/);
+    assert.match(discoveryInteractions.localized.repeated, /paused after repeated read failures/);
+
     const toastSemantics = await page.evaluate(() => {
       showToast("Synthetic error", true, 20);
       const toast = document.querySelector("#toast");
@@ -256,6 +403,7 @@ const {chromium} = require("playwright");
       materials_before_application_console: true,
       persistent_failure_indicator: true,
       persistent_primary_workflow: true,
+      authorized_discovery_inbox: true,
       supported_locales: ["zh", "en"],
       real_external_actions: 0,
     }));

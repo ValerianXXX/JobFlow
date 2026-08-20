@@ -22,6 +22,7 @@ PRIVATE_KINDS = {
     "onboarding_center_state", "onboarding_source_document", "onboarding_ai_derived",
     "onboarding_completion_packet", "external_claim_set", "resume_tailoring_manifest",
     "application_answer_bundle", "application_execution_bundle", "continuous_evidence_bundle",
+    "authorized_discovery_config",
 }
 MAX_PRIVATE_IMPORT_FILE_BYTES = 64 * 1024 * 1024
 

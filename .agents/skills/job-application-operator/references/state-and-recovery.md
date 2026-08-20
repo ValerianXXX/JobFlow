@@ -14,4 +14,4 @@ State and append-only event are written in one transaction. `last_safe_state` re
 | `INELIGIBLE` | Never continue automatically | Close or explicit human override plus reanalysis |
 | `SUBMISSION_UNKNOWN` | Never retry | Manually verify external evidence or close |
 
-The migrations are forward-only and repeatable. Version 1 remains the legacy dry-run schema; version 2 adds exact bindings, append-only Claim/action records, private refs and recovery; version 3 adds transactional intake. Rollback is backup restoration or application downgrade after a compatibility review, not destructive table dropping.
+The migrations are forward-only and repeatable. Version 1 remains the legacy dry-run schema; later migrations add exact bindings, append-only Claim/action records, private refs, transactional intake, browser assistance, support events, and read-only discovery candidates. The current schema version is defined by `Database.LATEST_SCHEMA_VERSION` and must be verified from fresh and legacy databases. Rollback is backup restoration or application downgrade after a compatibility review, not destructive table dropping.

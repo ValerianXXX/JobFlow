@@ -17,6 +17,7 @@ The current machine-readable status is available through `jobflow product-capabi
 - [x] Approved field fill, approved material attachment, and one-use non-final navigation authorization.
 - [x] Persistent progress, safe URL cancellation, emergency stop, and non-retryable unknown-state recovery.
 - [x] User-present local processing cadence with explicit run-now, pause, and resume controls and no operating-system scheduler.
+- [x] Explicit, expiring read-only discovery for exact approved HTTPS sources, with a current-user Windows task, candidate inbox, pause, emergency stop, and fail-closed recovery.
 - [x] Synthetic Greenhouse, Lever, Workday, Ashby, SmartRecruiters, browser, security, migration, and release evidence.
 - [x] Current-tree and full-history privacy scanning plus deterministic source archives.
 - [x] User-initiated signed stable updates for fixed Windows installations, with pinned-key verification, health checking, and rollback; no background updater.
@@ -28,6 +29,6 @@ The current machine-readable status is available through `jobflow product-capabi
 - [x] User-downloaded, schema-validated support diagnostics with no private values or automatic transmission.
 - [x] Optional local fixed-code incident history with explicit opt-in, bounded retention, user clearing, and no automatic transmission.
 - [x] Reduced duplicate applicant confirmation through canonical Candidate Profile mapping from resume import through encrypted application reuse.
-- [ ] Unattended scheduling remains disabled; any future background design requires separate authorization, operating-system lifecycle controls, and a verified kill switch.
+- [ ] Unattended application processing remains disabled. Read-only discovery is the sole background scope and cannot open Apply, fill, upload, navigate, or submit.
 
-Final submission, unattended operation, credential handling, verification bypass, email, account creation, recruiter contact, and automatic retry remain outside the current product boundary.
+Final submission, unattended application operation, credential handling, verification bypass, email, account creation, recruiter contact, and automatic retry remain outside the current product boundary.

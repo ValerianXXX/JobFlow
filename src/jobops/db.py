@@ -12,7 +12,7 @@ from .state_machine import BLOCKING_STATES, assert_transition
 from .util import iso_utc
 
 
-LATEST_SCHEMA_VERSION = 13
+LATEST_SCHEMA_VERSION = 14
 
 
 MIGRATION_001_SQL = """
@@ -695,6 +695,49 @@ COMMIT;
 """
 
 
+MIGRATION_014_SQL = """
+BEGIN IMMEDIATE;
+
+CREATE TABLE discovery_candidates (
+    candidate_id TEXT PRIMARY KEY,
+    source_id TEXT NOT NULL,
+    provider TEXT NOT NULL CHECK(provider IN (
+        'company','greenhouse','lever','workday','ashby','smartrecruiters'
+    )),
+    company_domain TEXT NOT NULL,
+    official_url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    location TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('NEW','QUEUED','IGNORED')),
+    first_seen_at TEXT NOT NULL,
+    last_seen_at TEXT NOT NULL,
+    UNIQUE(source_id,official_url)
+);
+CREATE INDEX idx_discovery_candidates_status_seen
+ON discovery_candidates(status,last_seen_at DESC);
+
+CREATE TABLE discovery_candidate_events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    candidate_id TEXT NOT NULL REFERENCES discovery_candidates(candidate_id),
+    event_type TEXT NOT NULL CHECK(event_type IN ('DISCOVERED','REFRESHED','RESTORED','QUEUED','IGNORED')),
+    evidence_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX idx_discovery_candidate_events_candidate
+ON discovery_candidate_events(candidate_id,event_id);
+CREATE TRIGGER discovery_candidate_events_append_only_update
+BEFORE UPDATE ON discovery_candidate_events
+BEGIN SELECT RAISE(ABORT, 'discovery candidate events are append-only'); END;
+CREATE TRIGGER discovery_candidate_events_append_only_delete
+BEFORE DELETE ON discovery_candidate_events
+BEGIN SELECT RAISE(ABORT, 'discovery candidate events are append-only'); END;
+
+INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version','14');
+COMMIT;
+"""
+
+
 def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
@@ -807,6 +850,10 @@ class JobOpsDB:
             if version == 12:
                 connection.executescript(MIGRATION_013_SQL)
                 applied.append(13)
+                version = 13
+            if version == 13:
+                connection.executescript(MIGRATION_014_SQL)
+                applied.append(14)
         return applied
 
     def initialize(self) -> None:

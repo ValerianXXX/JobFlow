@@ -8,6 +8,7 @@
   "browser_assist_single_page_only": false,
   "final_submit_implementation_present": false,
   "live_result_observation_enabled": true,
+  "unattended_read_only_discovery_enabled": true,
   "unattended_submission_enabled": false,
   "external_actions_enabled": false,
   "official_careers_only": true,
@@ -59,7 +60,7 @@
   "phase_6_operational": false,
   "registered_adapter_kinds": ["fake", "mock", "dry-run", "disabled", "browser_companion"],
   "real_transport_adapters_registered": 1,
-  "scheduler_mode": "fake_clock_only",
+  "scheduler_mode": "authorized_read_only_discovery_only",
   "requires_new_authorization": [6],
   "external_actions_requiring_per_job_approval": [
     "create_recruiting_account",

@@ -12,6 +12,7 @@ class DryRunPolicyTests(unittest.TestCase):
         self.assertTrue(policy["real_site_prefill_enabled"])
         self.assertTrue(policy["real_site_material_upload_enabled"])
         self.assertTrue(policy["user_present_browser_assist_enabled"])
+        self.assertTrue(policy["unattended_read_only_discovery_enabled"])
         self.assertFalse(policy["unattended_submission_enabled"])
         self.assertFalse(policy["external_actions_enabled"])
         self.assertFalse(policy["final_submit_implementation_present"])
@@ -24,6 +25,7 @@ class DryRunPolicyTests(unittest.TestCase):
         self.assertFalse(policy["browser_assist_company_direct_only"])
         self.assertFalse(policy["browser_assist_single_page_only"])
         self.assertEqual(policy["real_transport_adapters_registered"], 1)
+        self.assertEqual(policy["scheduler_mode"], "authorized_read_only_discovery_only")
         self.assertEqual(policy["requires_new_authorization"], [6])
 
     def test_submission_unknown_auto_retry_is_disabled(self) -> None:

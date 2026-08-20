@@ -7,7 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from subprocess import DEVNULL, CompletedProcess, Popen as RealPopen, TimeoutExpired
+from subprocess import DEVNULL, PIPE, CompletedProcess, Popen as RealPopen, TimeoutExpired
 
 from _support import PROJECT
 from jobops import __version__
@@ -118,6 +118,7 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn('|\\.tmp|\\.git)', script)
         self.assertIn('"v$version-$($sourceHash.Substring(0, 12))"', script)
         self.assertIn("Test-VersionHealth", script)
+        self.assertLess(script.index("Assert-SourcePath $lockHelpers"), script.index(". $lockHelpers"))
         self.assertIn("Write-JsonAtomic", script)
         self.assertGreaterEqual(script.count("--quiet"), 2)
         self.assertIn("-m pip check", script)
@@ -125,6 +126,9 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn("wheel>=0.43,<1", script)
         self.assertIn('install-jobflow-browser-companion.ps1', script)
         self.assertIn('-File $companionInstaller -NoLaunch', script)
+        self.assertIn('"jobflow-runtime-locks.ps1"', script)
+        self.assertIn('Enter-JobFlowFileLock $runtimeLockPath "JOBFLOW_INSTALL_RUNNING_INSTANCE_ACTIVE"', script)
+        self.assertIn('Enter-JobFlowFileLock $discoveryLockPath "JOBFLOW_INSTALL_DISCOVERY_RUN_ACTIVE"', script)
         self.assertIn('JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY', script)
         self.assertIn('jobflow-fixed-install-qa-*', script)
         self.assertIn('JOBFLOW_INSTALL_ACCEPTANCE_BYPASS_FORBIDDEN', script)
@@ -133,6 +137,8 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn('(".r-" + $installId)', script)
         self.assertIn("Install-StableLaunchers", script)
         self.assertIn('"update-installed-jobflow.ps1"', script)
+        self.assertIn('"manage-authorized-discovery-task.ps1"', script)
+        self.assertIn('"run-authorized-discovery-task.ps1"', script)
         self.assertIn('"Update JobFlow.cmd"', script)
         self.assertIn('@{ Name = "Update JobFlow.lnk"; Target = "Update JobFlow.cmd" }', script)
         self.assertIn('"/inheritance:r" "/grant:r" $grant', script)
@@ -157,6 +163,10 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn("Test-Version", rollback)
         self.assertIn("Write-Pointer $previousPath $current.Value", rollback)
         self.assertIn("Write-Pointer $currentPath $previous.Value", rollback)
+        self.assertNotIn("Disable-AuthorizedDiscoveryTask", rollback)
+        self.assertIn("JOBFLOW_ROLLBACK_RUNNING_INSTANCE_ACTIVE", rollback)
+        self.assertIn("JOBFLOW_ROLLBACK_DISCOVERY_RUN_ACTIVE", rollback)
+        self.assertIn("keeps its authorization state", rollback)
         self.assertIn("-RemoveUserData -UserConfirmed", uninstall)
         self.assertIn('if ($RemoveUserData) { $targets += @("Data", "private") }', uninstall)
         self.assertNotIn('"Data", "private"\n)', uninstall)
@@ -164,12 +174,78 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn("JOBFLOW_UNINSTALL_REPARSE_FORBIDDEN", uninstall)
         self.assertIn("JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY", uninstall)
         self.assertIn("JOBFLOW_UNINSTALL_ACCEPTANCE_BYPASS_FORBIDDEN", uninstall)
+        self.assertIn("JOBFLOW_UNINSTALL_RUNNING_INSTANCE_ACTIVE", uninstall)
+        self.assertIn("JOBFLOW_UNINSTALL_DISCOVERY_RUN_ACTIVE", uninstall)
         self.assertIn("if (-not $skipBrowserIntegrationForAcceptance)", uninstall)
         self.assertIn("function Remove-SafeTarget", uninstall)
+        self.assertIn("$cursor = $absolute", uninstall)
+        self.assertIn("$cursorItem.Attributes -band [IO.FileAttributes]::ReparsePoint", uninstall)
+        self.assertLess(
+            uninstall.index("Assert-SafeRemovalTarget $lockHelpers"),
+            uninstall.index(". $lockHelpers"),
+        )
         self.assertIn('"\\\\?\\" + $absolute', uninstall)
         self.assertIn("[IO.Directory]::Delete($extended, $true)", uninstall)
         self.assertIn("[IO.File]::SetAttributes($file, [IO.FileAttributes]::Normal)", uninstall)
         self.assertIn('"Update JobFlow.cmd"', uninstall)
+        self.assertIn('manage-authorized-discovery-task.ps1', uninstall)
+        self.assertIn('-Action Remove', uninstall)
+
+    def test_data_preserving_uninstall_removes_only_fixed_runtime_targets(self) -> None:
+        system_temp = Path(tempfile.gettempdir()).resolve(strict=True)
+        with tempfile.TemporaryDirectory(prefix="jobflow-fixed-install-qa-", dir=system_temp) as raw:
+            acceptance_root = Path(raw)
+            local_app_data = acceptance_root / "LocalAppData"
+            install_root = local_app_data / "JobOps"
+            bin_root = install_root / "bin"
+            state_root = install_root / "Data" / "state"
+            app_root = install_root / "Application" / "versions" / "v-test"
+            private_root = install_root / "private"
+            bin_root.mkdir(parents=True)
+            state_root.mkdir(parents=True)
+            app_root.mkdir(parents=True)
+            private_root.mkdir(parents=True)
+            shutil.copy2(
+                PROJECT / "scripts" / "windows-runtime" / "jobflow-runtime-locks.ps1",
+                bin_root / "jobflow-runtime-locks.ps1",
+            )
+            (install_root / "Data" / ".jobflow-data-root").write_text(
+                '{"schema_version":1,"kind":"JOBFLOW_RUNTIME_DATA"}', encoding="utf-8"
+            )
+            (state_root / "keep.db").write_bytes(b"preserved-user-state")
+            (private_root / "keep.bin").write_bytes(b"preserved-private-state")
+            (app_root / "runtime.bin").write_bytes(b"application-runtime")
+            (install_root / "current.json").write_text("{}", encoding="utf-8")
+            environment = ISOLATED_ENVIRONMENT.copy()
+            environment.update({
+                "LOCALAPPDATA": str(local_app_data),
+                "APPDATA": str(acceptance_root / "Roaming"),
+                "TEMP": str(system_temp),
+                "TMP": str(system_temp),
+                "JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY": "1",
+            })
+            completed = __import__("subprocess").run(
+                [
+                    str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                    "-File", str(PROJECT / "scripts" / "windows-runtime" / "uninstall-installed-jobflow.ps1"),
+                    "-InstallRoot", str(install_root),
+                ],
+                cwd=PROJECT,
+                env=environment,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertFalse((install_root / "Application").exists())
+            self.assertFalse(bin_root.exists())
+            self.assertFalse((install_root / "current.json").exists())
+            self.assertEqual((state_root / "keep.db").read_bytes(), b"preserved-user-state")
+            self.assertEqual((private_root / "keep.bin").read_bytes(), b"preserved-private-state")
+            self.assertIn("local profile, queue, and private data were preserved", completed.stdout)
 
     def test_signed_update_launcher_is_user_initiated_pinned_and_fail_closed(self) -> None:
         script = (PROJECT / "scripts" / "windows-runtime" / "update-installed-jobflow.ps1").read_text(
@@ -182,8 +258,8 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn("sha256:1037057f8578a60ac5b3dc030cb2d70ad945ec3b5fb51fa3944fcafa77146339", script)
         self.assertIn("jobops.update_manifest inspect", script)
         self.assertIn("jobops.update_manifest verify", script)
-        self.assertIn("JOBFLOW_UPDATE_POST_SWITCH_HEALTH_FAILED_ROLLED_BACK", script)
-        self.assertIn("rollback-installed-jobflow.ps1", script)
+        self.assertIn("installer already ran the final shared-data health check", script)
+        self.assertNotIn("JOBFLOW_UPDATE_POST_SWITCH_HEALTH_FAILED_ROLLED_BACK", script)
         self.assertIn("AllowAutoRedirect = $false", script)
         self.assertIn("Assert-AllowedHttpsUri", script)
         self.assertIn("Expand-Archive", script)
@@ -203,7 +279,7 @@ class WindowsLauncherTests(unittest.TestCase):
             data_root = install_root / "Data"
             versions_root = install_root / "Application" / "versions"
             bin_root.mkdir(parents=True)
-            data_root.mkdir(parents=True)
+            (data_root / "state").mkdir(parents=True)
             (data_root / ".jobflow-data-root").write_text(
                 '{"schema_version":1,"kind":"JOBFLOW_RUNTIME_DATA"}', encoding="utf-8"
             )
@@ -233,6 +309,10 @@ class WindowsLauncherTests(unittest.TestCase):
                 PROJECT / "scripts" / "windows-runtime" / "rollback-installed-jobflow.ps1",
                 bin_root / "rollback-installed-jobflow.ps1",
             )
+            shutil.copy2(
+                PROJECT / "scripts" / "windows-runtime" / "jobflow-runtime-locks.ps1",
+                bin_root / "jobflow-runtime-locks.ps1",
+            )
             environment = ISOLATED_ENVIRONMENT.copy()
             environment["LOCALAPPDATA"] = str(local_app_data)
             completed = __import__("subprocess").run(
@@ -255,6 +335,116 @@ class WindowsLauncherTests(unittest.TestCase):
             self.assertEqual(current["version"], "0.4.0")
             self.assertEqual(previous["version"], "0.4.1")
             self.assertTrue((data_root / ".jobflow-data-root").is_file())
+            self.assertIn("keeps its authorization state", completed.stdout)
+
+    def test_installed_runtime_serializes_pointer_resolution_and_maintenance(self) -> None:
+        helper = (PROJECT / "scripts" / "windows-runtime" / "jobflow-runtime-locks.ps1").read_text(
+            encoding="utf-8-sig"
+        )
+        start = (PROJECT / "scripts" / "windows-runtime" / "start-installed-jobflow.ps1").read_text(
+            encoding="utf-8-sig"
+        )
+        runner = (PROJECT / "scripts" / "windows-runtime" / "run-authorized-discovery-task.ps1").read_text(
+            encoding="utf-8-sig"
+        )
+        health = (PROJECT / "scripts" / "windows-runtime" / "check-installed-jobflow.ps1").read_text(
+            encoding="utf-8-sig"
+        )
+        self.assertIn("[IO.File]::Open", helper)
+        self.assertIn("$stream.Lock(0, 1)", helper)
+        self.assertIn("JOBFLOW_ALREADY_RUNNING_OR_MAINTENANCE_ACTIVE", start)
+        self.assertLess(start.index("Enter-JobFlowFileLock"), start.index("Get-Content -LiteralPath $pointerPath"))
+        self.assertIn("JOBFLOW_DISCOVERY_TASK_LOCK_TIMEOUT", runner)
+        self.assertLess(runner.index("Enter-JobFlowFileLock"), runner.index("Get-Content -LiteralPath $pointerPath"))
+        self.assertIn('$env:JOBFLOW_DISCOVERY_TASK_LOCK_HELD = "1"', runner)
+        self.assertIn("JOBFLOW_ALREADY_RUNNING_OR_MAINTENANCE_ACTIVE", health)
+        self.assertIn("JOBFLOW_DISCOVERY_TASK_LOCK_TIMEOUT", health)
+        self.assertIn("$lockCursorItem.Attributes -band [IO.FileAttributes]::ReparsePoint", health)
+        self.assertLess(
+            health.index("$lockCursorItem.Attributes -band [IO.FileAttributes]::ReparsePoint"),
+            health.index(". $lockHelpers"),
+        )
+        self.assertLess(health.index("Enter-JobFlowFileLock"), health.index("Get-Content -LiteralPath $pointerPath"))
+        self.assertLess(
+            health.index(".jobflow-runtime-maintenance.lock"),
+            health.index(".authorized-discovery-task.lock"),
+        )
+        self.assertLess(
+            health.index("Exit-JobFlowFileLock $discoveryLock"),
+            health.index("Exit-JobFlowFileLock $runtimeLock"),
+        )
+
+    def test_runtime_file_lock_blocks_a_competing_process_and_then_releases(self) -> None:
+        temporary_root = PROJECT / "tests" / ".tmp"
+        temporary_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="runtime-lock-", dir=temporary_root) as raw:
+            lock_path = Path(raw) / "maintenance.lock"
+            helper_path = PROJECT / "scripts" / "windows-runtime" / "jobflow-runtime-locks.ps1"
+            quoted_helper = str(helper_path).replace("'", "''")
+            quoted_lock = str(lock_path).replace("'", "''")
+            holder_command = (
+                f". '{quoted_helper}'; "
+                f"$stream=Enter-JobFlowFileLock '{quoted_lock}' 'HOLDER_TIMEOUT' 2; "
+                "[Console]::Out.WriteLine('LOCKED'); Start-Sleep -Seconds 3; "
+                "Exit-JobFlowFileLock $stream"
+            )
+            contender_command = (
+                f". '{quoted_helper}'; "
+                f"$stream=Enter-JobFlowFileLock '{quoted_lock}' 'EXPECTED_LOCK_TIMEOUT' 1; "
+                "Exit-JobFlowFileLock $stream"
+            )
+            holder = RealPopen(
+                [str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", holder_command],
+                cwd=PROJECT,
+                env=ISOLATED_ENVIRONMENT,
+                stdin=DEVNULL,
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            try:
+                self.assertIsNotNone(holder.stdout)
+                self.assertEqual(holder.stdout.readline().strip(), "LOCKED")
+                blocked = __import__("subprocess").run(
+                    [str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", contender_command],
+                    cwd=PROJECT,
+                    env=ISOLATED_ENVIRONMENT,
+                    stdin=DEVNULL,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=5,
+                    check=False,
+                )
+                self.assertNotEqual(blocked.returncode, 0)
+                self.assertIn("EXPECTED_LOCK_TIMEOUT", blocked.stderr)
+                holder_code = holder.wait(timeout=5)
+                holder_error = "" if holder.stderr is None else holder.stderr.read()
+                self.assertEqual(holder_code, 0, holder_error)
+                released = __import__("subprocess").run(
+                    [str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", contender_command],
+                    cwd=PROJECT,
+                    env=ISOLATED_ENVIRONMENT,
+                    stdin=DEVNULL,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=5,
+                    check=False,
+                )
+                self.assertEqual(released.returncode, 0, released.stderr)
+            finally:
+                if holder.poll() is None:
+                    holder.kill()
+                    holder.wait(timeout=5)
+                if holder.stdout is not None:
+                    holder.stdout.close()
+                if holder.stderr is not None:
+                    holder.stderr.close()
 
     def test_launcher_messages_are_bilingual_and_external_actions_are_absent(self) -> None:
         install = (PROJECT / "scripts" / "install-jobflow.ps1").read_text(encoding="utf-8-sig")

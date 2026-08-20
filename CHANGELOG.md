@@ -4,6 +4,24 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+No changes yet.
+
+## [0.6.0] - 2026-08-19
+
+### Added
+
+- Added explicit, expiring read-only discovery for exact user-approved HTTPS company-careers pages and supported public ATS feeds, with encrypted filters, a bounded local candidate inbox, and a current-user Windows wake task.
+- Added visible configure, pause, resume, renewal, repair, candidate review, and emergency-stop controls with bilingual actionable errors.
+- Added a machine-readable distinction between authorized background read-only discovery and prohibited unattended application operation.
+
+### Changed
+
+- Rollback now serializes with the read-only discovery task, switches only validated version pointers, and preserves the current authorization and task registration so the next wake resolves the restored version.
+
+### Safety
+
+- Read-only discovery authorizations expire within seven days, are generation-bound, fail closed after three consecutive runs containing source errors, and never grant Apply, browser inspection, form fill, upload, navigation, messaging, application creation, or submission authority.
+
 ## [0.5.1] - 2026-08-19
 
 ### Fixed
