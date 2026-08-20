@@ -44,6 +44,11 @@ class ProductCapabilityReportTests(unittest.TestCase):
             "PROVIDER_SPECIFIC_REVIEW_PACKET_NOT_PROVEN",
             by_id["ashby_browser_assist"]["known_limit_codes"],
         )
+        self.assertTrue(all(
+            "SHARED_BROWSER_RUNTIME_SEPARATE_FROM_PROVIDER_EVIDENCE" not in
+            by_id[f"{provider}_browser_assist"]["known_limit_codes"]
+            for provider in ("company_direct", "greenhouse", "lever", "workday", "ashby", "smartrecruiters")
+        ))
         self.assertEqual(by_id["authorized_continuous_scheduler"]["availability"], "NOT_AVAILABLE")
         self.assertEqual(by_id["authorized_read_only_discovery_scheduler"]["availability"], "AVAILABLE")
         self.assertEqual(

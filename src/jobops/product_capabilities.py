@@ -149,7 +149,7 @@ def product_capability_report() -> dict[str, Any]:
                 "USER_PRESENT",
                 "FINAL_SUBMIT_USER_ONLY",
                 list(report["evidence_refs"]),
-                list(report["known_limit_codes"]) + ["SHARED_BROWSER_RUNTIME_SEPARATE_FROM_PROVIDER_EVIDENCE"],
+                list(report["known_limit_codes"]),
             )
             for provider, report in provider_reports.items()
         ],
