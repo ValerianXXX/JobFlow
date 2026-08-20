@@ -1,0 +1,8 @@
+{
+  "provider": "ashby",
+  "pages": [
+    "tests/fixtures/synthetic-ashby-step-1.html",
+    "tests/fixtures/synthetic-ashby-step-2.html",
+    "tests/fixtures/synthetic-ashby-step-3.html"
+  ]
+}

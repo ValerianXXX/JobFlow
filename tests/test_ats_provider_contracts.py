@@ -141,10 +141,13 @@ class ATSProviderContractTests(unittest.TestCase):
         self.assertIn("ordered_html_sequence", workday["saved_snapshot_modes"])
         self.assertIn("MULTI_PAGE_RESUME", workday["verified_stages"])
         ashby = next(item for item in report["providers"] if item["provider"] == "ashby")
-        self.assertEqual(ashby["evidence_scope"], "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT")
+        self.assertEqual(ashby["evidence_scope"], "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT")
+        self.assertIn("ordered_html_sequence", ashby["saved_snapshot_modes"])
         self.assertIn("APPROVED_DOM_PREFILL", ashby["verified_stages"])
         self.assertIn("REVIEW_PACKET", ashby["verified_stages"])
+        self.assertIn("MULTI_PAGE_RESUME", ashby["verified_stages"])
         self.assertIn("RESULT_OBSERVATION", ashby["verified_stages"])
+        self.assertEqual(ashby["known_limit_codes"], ["LIVE_SITE_ACCEPTANCE_REQUIRED"])
         self.assertEqual(
             ashby["user_present_prefill"],
             "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
@@ -160,17 +163,20 @@ class ATSProviderContractTests(unittest.TestCase):
         greenhouse = next(item for item in report["providers"] if item["provider"] == "greenhouse")
         self.assertEqual(
             greenhouse["evidence_scope"],
-            "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
+            "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
+        self.assertIn("ordered_html_sequence", greenhouse["saved_snapshot_modes"])
         self.assertEqual(
             {
                 "APPROVED_DOM_PREFILL",
                 "APPROVED_FILE_ATTACHMENT",
                 "EXPLICIT_NONFINAL_NAVIGATION",
+                "MULTI_PAGE_RESUME",
                 "RESULT_OBSERVATION",
             } - set(greenhouse["verified_stages"]),
             set(),
         )
+        self.assertEqual(greenhouse["known_limit_codes"], ["LIVE_SITE_ACCEPTANCE_REQUIRED"])
         self.assertEqual(
             greenhouse["user_present_prefill"],
             "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
@@ -271,7 +277,7 @@ class ATSProviderContractTests(unittest.TestCase):
         )
         self.assertEqual(
             by_provider["greenhouse"]["evidence_scope"],
-            "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
+            "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
         self.assertEqual(
             by_provider["lever"]["evidence_scope"],
@@ -284,8 +290,9 @@ class ATSProviderContractTests(unittest.TestCase):
         for provider in ("ashby", "smartrecruiters"):
             self.assertEqual(
                 by_provider[provider]["evidence_scope"],
-                "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
+                "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
             )
+            self.assertIn("ordered_html_sequence", by_provider[provider]["saved_snapshot_modes"])
             self.assertEqual(
                 {
                     "PRIVATE_VALUE_FREE_PLAN",
@@ -293,11 +300,13 @@ class ATSProviderContractTests(unittest.TestCase):
                     "APPROVED_DOM_PREFILL",
                     "APPROVED_FILE_ATTACHMENT",
                     "EXPLICIT_NONFINAL_NAVIGATION",
+                    "MULTI_PAGE_RESUME",
                     "RESULT_OBSERVATION",
                 } - set(by_provider[provider]["verified_stages"]),
                 set(),
             )
-            self.assertIn("MULTI_PAGE_RESUME", by_provider[provider]["unverified_stages"])
+            self.assertNotIn("MULTI_PAGE_RESUME", by_provider[provider]["unverified_stages"])
+            self.assertEqual(by_provider[provider]["known_limit_codes"], ["LIVE_SITE_ACCEPTANCE_REQUIRED"])
             self.assertEqual(
                 by_provider[provider]["approved_material_upload"],
                 "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",

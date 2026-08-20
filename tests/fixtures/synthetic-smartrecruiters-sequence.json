@@ -1,0 +1,8 @@
+{
+  "provider": "smartrecruiters",
+  "pages": [
+    "tests/fixtures/synthetic-smartrecruiters-step-1.html",
+    "tests/fixtures/synthetic-smartrecruiters-step-2.html",
+    "tests/fixtures/synthetic-smartrecruiters-step-3.html"
+  ]
+}

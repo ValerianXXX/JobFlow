@@ -49,6 +49,11 @@ class ProductCapabilityReportTests(unittest.TestCase):
             "PROVIDER_SPECIFIC_RESULT_OBSERVATION_NOT_PROVEN",
             by_id["smartrecruiters_browser_assist"]["known_limit_codes"],
         )
+        for provider in ("greenhouse", "ashby", "smartrecruiters"):
+            self.assertNotIn(
+                "PROVIDER_SPECIFIC_MULTI_PAGE_RESUME_NOT_PROVEN",
+                by_id[f"{provider}_browser_assist"]["known_limit_codes"],
+            )
         self.assertTrue(all(
             "SHARED_BROWSER_RUNTIME_SEPARATE_FROM_PROVIDER_EVIDENCE" not in
             by_id[f"{provider}_browser_assist"]["known_limit_codes"]

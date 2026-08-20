@@ -1,0 +1,22 @@
+{
+  "company_domain": "example.com",
+  "official_entry_url": "https://example.com/careers/smartrecruiters-analyst",
+  "current_url": "https://jobs.smartrecruiters.com/example/12345-synthetic-credit-analyst/apply",
+  "navigation_history": [
+    "https://example.com/careers/smartrecruiters-analyst",
+    "https://jobs.smartrecruiters.com/example/12345-synthetic-credit-analyst/apply"
+  ],
+  "guest_available": true,
+  "official_page_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "jd_snapshot_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "tenant_binding": {
+    "provider": "smartrecruiters",
+    "company_registrable_domain": "example.com",
+    "ats_host": "jobs.smartrecruiters.com",
+    "tenant": "example",
+    "board": "default",
+    "job_identity": "12345-synthetic-credit-analyst",
+    "official_page_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "jd_snapshot_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+}

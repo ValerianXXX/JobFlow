@@ -1,0 +1,22 @@
+{
+  "company_domain": "example.com",
+  "official_entry_url": "https://example.com/careers/ashby-analyst",
+  "current_url": "https://jobs.ashbyhq.com/example/11111111-1111-4111-8111-111111111111/application",
+  "navigation_history": [
+    "https://example.com/careers/ashby-analyst",
+    "https://jobs.ashbyhq.com/example/11111111-1111-4111-8111-111111111111/application"
+  ],
+  "guest_available": true,
+  "official_page_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "jd_snapshot_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "tenant_binding": {
+    "provider": "ashby",
+    "company_registrable_domain": "example.com",
+    "ats_host": "jobs.ashbyhq.com",
+    "tenant": "example",
+    "board": "default",
+    "job_identity": "11111111-1111-4111-8111-111111111111",
+    "official_page_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "jd_snapshot_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+}

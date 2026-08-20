@@ -1,0 +1,8 @@
+{
+  "provider": "greenhouse",
+  "pages": [
+    "tests/fixtures/synthetic-greenhouse-continue-form.html",
+    "tests/fixtures/synthetic-greenhouse-step-2.html",
+    "tests/fixtures/synthetic-greenhouse-step-3.html"
+  ]
+}
