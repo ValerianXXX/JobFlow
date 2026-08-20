@@ -49,6 +49,87 @@ def _latest_release_input_mtime(project: Path) -> float:
     return latest
 
 
+def _normalized_sha256(value: object) -> str:
+    material = str(value or "").strip().casefold()
+    if not material.startswith("sha256:"):
+        material = "sha256:" + material
+    return material if re.fullmatch(r"sha256:[0-9a-f]{64}", material) else ""
+
+
+def _qa_mapping(value: object) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _qa_integer(value: object, default: int = -1) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _independent_qa_matches_release(
+    independent: dict[str, Any],
+    candidate: dict[str, Any],
+    tests: dict[str, Any],
+) -> bool:
+    """Bind independent QA to the exact frozen commit and deterministic archive."""
+    archive = _qa_mapping(independent.get("archive"))
+    source_freeze = _qa_mapping(independent.get("source_freeze"))
+    qa_tests = _qa_mapping(independent.get("tests"))
+    schemas = _qa_mapping(independent.get("schemas"))
+    knowledge = _qa_mapping(independent.get("knowledge"))
+    actions = _qa_mapping(independent.get("external_actions"))
+    security = _qa_mapping(independent.get("security_scan"))
+    candidate_archive = _qa_mapping(candidate.get("archive"))
+    candidate_commit = str(candidate.get("commit") or "").casefold()
+    candidate_sha256 = _normalized_sha256(candidate.get("artifact_sha256"))
+    qa_sha256 = _normalized_sha256(archive.get("sha256"))
+
+    return bool(
+        independent.get("status") == "PASS"
+        and "ISOLATED_READ_ONLY" in str(independent.get("qa_mode") or "")
+        and independent.get("source_tree_modified_by_qa") is False
+        and candidate.get("status") == "RELEASE_CANDIDATE_BUILT"
+        and re.fullmatch(r"[0-9a-f]{40}", candidate_commit)
+        and candidate_sha256
+        and _qa_integer(candidate.get("reproducible_builds"), 0) >= 2
+        and candidate_archive.get("status") == "PASS"
+        and _qa_integer(candidate_archive.get("finding_count")) == 0
+        and _qa_integer(candidate.get("external_network_actions")) == 0
+        and _qa_integer(candidate.get("real_external_actions")) == 0
+        and archive.get("status") == "PASS"
+        and str(archive.get("commit") or "").casefold() == candidate_commit
+        and qa_sha256 == candidate_sha256
+        and archive.get("byte_reproducible_from_frozen_clone") is True
+        and _qa_integer(archive.get("candidate_findings")) == 0
+        and source_freeze.get("status") == "UNCHANGED"
+        and str(source_freeze.get("head") or "").casefold() == candidate_commit
+        and source_freeze.get("product_code_changed_since_full_isolated_regression") is False
+        and qa_tests.get("status") == "PASS"
+        and _qa_integer(qa_tests.get("passed")) == _qa_integer(tests.get("passed"), -2)
+        and _qa_integer(qa_tests.get("failed")) == 0
+        and schemas.get("status") == "PASS"
+        and _qa_integer(schemas.get("valid")) == _qa_integer(tests.get("schema_count"), -2)
+        and _qa_integer(schemas.get("total")) == _qa_integer(tests.get("schema_count"), -2)
+        and knowledge.get("status") == "UNCHANGED"
+        and _qa_integer(knowledge.get("write_operations")) == 0
+        and actions.get("status") == "PASS"
+        and _qa_integer(actions.get("qa_real_external_actions")) == 0
+        and _qa_integer(actions.get("isolated_candidate_real_external_actions")) == 0
+        and _qa_integer(actions.get("isolated_candidate_external_network_actions")) == 0
+        and _qa_integer(actions.get("real_recruiting_sites_visited")) == 0
+        and security.get("status") == "PASS"
+        and _qa_integer(security.get("isolated_candidate_findings")) == 0
+        and _qa_integer(security.get("public_tree_findings")) == 0
+        and _qa_integer(security.get("public_history_findings")) == 0
+        and _qa_integer(security.get("private_staging_files")) == 0
+        and _qa_integer(security.get("private_ciphertext_integrity_failures")) == 0
+        and _qa_integer(independent.get("p0_open")) == 0
+        and _qa_integer(independent.get("p1_open")) == 0
+        and _qa_integer(independent.get("must_fix_open")) == 0
+    )
+
+
 def _scan_text(label: str, text: str, findings: list[dict[str, str]]) -> None:
     if ABSOLUTE_USER_PATH.search(text):
         findings.append({"kind": "absolute_user_path", "location": label})
@@ -245,12 +326,14 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
     skill_validation = load_json(project / "reports" / "skill-validation.json") if (project / "reports" / "skill-validation.json").is_file() else {"status": "MISSING"}
     independent_path = project / "reports" / "independent-qa.json"
     independent = load_json(independent_path) if independent_path.is_file() else {"status": "PENDING"}
+    candidate_path = project / "reports" / "release-candidate.json"
+    candidate = load_json(candidate_path) if candidate_path.is_file() else {"status": "MISSING"}
     independent_fresh = bool(
-        independent.get("status") == "PASS"
-        and independent_path.is_file()
+        independent_path.is_file()
+        and candidate_path.is_file()
         and independent_path.stat().st_mtime >= latest_input_mtime
-        and int(independent.get("tests", {}).get("passed", -1)) == int(tests.get("passed", -2))
-        and int(independent.get("schemas", {}).get("total", -1)) == int(tests.get("schema_count", -2))
+        and independent_path.stat().st_mtime >= candidate_path.stat().st_mtime
+        and _independent_qa_matches_release(independent, candidate, tests)
     )
     independent_view = {**independent, "fresh_for_current_release": independent_fresh}
     independent_counts = {

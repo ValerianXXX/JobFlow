@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from _support import PROJECT, project_temp
 from jobops.errors import JobOpsError
+from jobops.release import _independent_qa_matches_release
 from jobops.release_readiness import _local_verification_evidence, github_release_gates, release_readiness
 
 
@@ -150,6 +151,70 @@ class ReleaseReadinessContractTests(unittest.TestCase):
             checkpoint["real_external_actions"] = 1
             (reports / "checkpoint-final.json").write_text(json.dumps(checkpoint), encoding="utf-8")
             self.assertEqual(_local_verification_evidence(root, commit), ("FAIL", False))
+
+    def test_independent_qa_is_bound_to_exact_commit_and_archive(self) -> None:
+        commit = "b" * 40
+        digest = "sha256:" + "c" * 64
+        tests = {"status": "PASS", "passed": 518, "failed": 0, "schema_count": 52}
+        candidate = {
+            "status": "RELEASE_CANDIDATE_BUILT",
+            "commit": commit,
+            "artifact_sha256": digest,
+            "reproducible_builds": 2,
+            "archive": {"status": "PASS", "finding_count": 0},
+            "external_network_actions": 0,
+            "real_external_actions": 0,
+        }
+        independent = {
+            "status": "PASS",
+            "qa_mode": "PRIMARY_AGENT_ISOLATED_READ_ONLY_FROZEN_RELEASE_ARCHIVE",
+            "source_tree_modified_by_qa": False,
+            "archive": {
+                "status": "PASS",
+                "commit": commit,
+                "sha256": digest.removeprefix("sha256:").upper(),
+                "byte_reproducible_from_frozen_clone": True,
+                "candidate_findings": 0,
+            },
+            "source_freeze": {
+                "status": "UNCHANGED",
+                "head": commit,
+                "product_code_changed_since_full_isolated_regression": False,
+            },
+            "tests": {"status": "PASS", "passed": 518, "failed": 0},
+            "schemas": {"status": "PASS", "valid": 52, "total": 52},
+            "knowledge": {"status": "UNCHANGED", "write_operations": 0},
+            "external_actions": {
+                "status": "PASS",
+                "qa_real_external_actions": 0,
+                "isolated_candidate_real_external_actions": 0,
+                "isolated_candidate_external_network_actions": 0,
+                "real_recruiting_sites_visited": 0,
+            },
+            "security_scan": {
+                "status": "PASS",
+                "isolated_candidate_findings": 0,
+                "public_tree_findings": 0,
+                "public_history_findings": 0,
+                "private_staging_files": 0,
+                "private_ciphertext_integrity_failures": 0,
+            },
+            "p0_open": 0,
+            "p1_open": 0,
+            "must_fix_open": 0,
+        }
+
+        self.assertTrue(_independent_qa_matches_release(independent, candidate, tests))
+        independent["archive"]["commit"] = "d" * 40
+        self.assertFalse(_independent_qa_matches_release(independent, candidate, tests))
+        independent["archive"]["commit"] = commit
+        independent["archive"]["sha256"] = "e" * 64
+        self.assertFalse(_independent_qa_matches_release(independent, candidate, tests))
+        independent["archive"]["sha256"] = digest
+        independent["external_actions"]["qa_real_external_actions"] = 1
+        self.assertFalse(_independent_qa_matches_release(independent, candidate, tests))
+        independent["external_actions"] = "malformed"
+        self.assertFalse(_independent_qa_matches_release(independent, candidate, tests))
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ Run these checks only on the final clean commit. This checklist does not authori
 ## Human gates
 
 - [ ] Confirm a public Git author identity, preferably a GitHub noreply address.
-- [ ] Freeze the exact commit and run fresh independent QA.
+- [ ] Freeze the exact commit and run fresh independent QA whose report names that commit and the deterministic source ZIP SHA-256.
 - [ ] Approve sanitized screenshots with no personal data or user paths.
 - [ ] Complete a clean supported Windows profile test.
 - [ ] Confirm repository metadata and private vulnerability reporting.
