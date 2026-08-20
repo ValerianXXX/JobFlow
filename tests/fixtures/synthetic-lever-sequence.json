@@ -1,0 +1,8 @@
+{
+  "provider": "lever",
+  "pages": [
+    "tests/fixtures/synthetic-lever-step-1.html",
+    "tests/fixtures/synthetic-lever-step-2.html",
+    "tests/fixtures/synthetic-lever-step-3.html"
+  ]
+}

@@ -18,6 +18,7 @@ H1 = "sha256:" + "a" * 64
 H2 = "sha256:" + "b" * 64
 ATS = [
     "greenhouse.io",
+    "lever.co",
     "ashbyhq.com",
     "smartrecruiters.com",
 ]
@@ -34,6 +35,12 @@ PROVIDERS = {
         "host": "boards.greenhouse.io",
         "url": "https://boards.greenhouse.io/example/jobs/987654",
         "identity": "987654",
+        "kinds": ["MY_INFORMATION", "APPLICATION_QUESTIONS", "REVIEW"],
+    },
+    "lever": {
+        "host": "jobs.lever.co",
+        "url": "https://jobs.lever.co/example/abc-123/apply",
+        "identity": "abc-123",
         "kinds": ["MY_INFORMATION", "APPLICATION_QUESTIONS", "REVIEW"],
     },
     "ashby": {

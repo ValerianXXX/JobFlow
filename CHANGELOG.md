@@ -17,6 +17,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 - Added Lever provider-host browser evidence for one hash-bound, explicit non-final Continue action while preserving the user-only final Submit boundary.
 - Added provider-host browser evidence that Greenhouse, Lever, Workday, Ashby, and SmartRecruiters fields can be rebound after an exact-signature framework redraw; ambiguous redraws still stop safely.
 - Added a hash-bound three-step company-direct application sequence with duplicate-field reconciliation and fail-closed upload, navigation, and final-submit checks.
+- Added a hash-bound three-step Lever application sequence and stable ATS job-identity parsing across application child pages.
 
 ### Safety
 

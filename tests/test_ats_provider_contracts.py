@@ -200,13 +200,15 @@ class ATSProviderContractTests(unittest.TestCase):
         lever = next(item for item in report["providers"] if item["provider"] == "lever")
         self.assertEqual(
             lever["evidence_scope"],
-            "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
+            "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
+        self.assertIn("ordered_html_sequence", lever["saved_snapshot_modes"])
         self.assertEqual(
             {
                 "APPROVED_DOM_PREFILL",
                 "APPROVED_FILE_ATTACHMENT",
                 "EXPLICIT_NONFINAL_NAVIGATION",
+                "MULTI_PAGE_RESUME",
                 "RESULT_OBSERVATION",
             }
             - set(lever["verified_stages"]),
@@ -278,8 +280,7 @@ class ATSProviderContractTests(unittest.TestCase):
         lever_tampered = next(
             item for item in scope_tampered["providers"] if item["provider"] == "lever"
         )
-        lever_tampered["verified_stages"].append("MULTI_PAGE_RESUME")
-        lever_tampered["unverified_stages"].remove("MULTI_PAGE_RESUME")
+        lever_tampered["evidence_scope"] = "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT"
         with self.assertRaises(JobOpsError) as scope:
             validate_ats_capability_integrity(scope_tampered)
         self.assertEqual(scope.exception.code, "ATS_CAPABILITY_SCOPE_DRIFT")
@@ -297,13 +298,13 @@ class ATSProviderContractTests(unittest.TestCase):
         )
         self.assertEqual(
             by_provider["lever"]["evidence_scope"],
-            "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
+            "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
         self.assertEqual(
             by_provider["workday"]["evidence_scope"],
             "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
-        for provider in ("ashby", "smartrecruiters"):
+        for provider in ("lever", "ashby", "smartrecruiters"):
             self.assertEqual(
                 by_provider[provider]["evidence_scope"],
                 "MULTI_PAGE_SEQUENCE_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
