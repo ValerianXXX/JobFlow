@@ -19,6 +19,7 @@ from jobops.onboarding_center import OnboardingCenterService
 from jobops.orchestrator import JobOpsOrchestrator
 from jobops.private_onboarding import PrivateOnboarding
 from jobops.secure_store import WindowsDPAPIStore
+from jobops.synthetic_lifecycle import SyntheticApplicationLifecycle
 
 
 class SyntheticGreenhouseVerticalTests(unittest.TestCase):
@@ -80,7 +81,9 @@ class SyntheticGreenhouseVerticalTests(unittest.TestCase):
             self.assertEqual(sum(row["status"] == "SEPARATE_ACTION_GATED" for row in fields), 2)
             self.assertTrue(all(row["secure_ref"] is None or str(row["secure_ref"]).startswith("secure-ref:") for row in fields))
 
-            packet = OnboardingCenterService(PROJECT, database, onboarding).review_packet(result["application_id"])["packet"]
+            service = OnboardingCenterService(PROJECT, database, onboarding)
+            displayed = service.review_packet(result["application_id"])
+            packet = displayed["packet"]
             serialized = json.dumps(packet, ensure_ascii=False)
             self.assertNotIn("DO_NOT_RETAIN_SYNTHETIC_TOKEN", serialized)
             self.assertIn("Full name", serialized)
@@ -101,6 +104,45 @@ class SyntheticGreenhouseVerticalTests(unittest.TestCase):
                 production_gateway.begin_submission(ApprovalContext.from_dict(binding))
             self.assertEqual(blocked.exception.code, "PHASE_NOT_AUTHORIZED")
             self.assertEqual(audit_real_external_actions(database)["attempt_count"], 1)
+            self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 0)
+
+            unresolved = displayed["field_resolution"]["unresolved_fields"]
+            self.assertEqual(len(unresolved), 1)
+            self.assertEqual(unresolved[0]["classification"], "work_authorization_stop")
+            rebound = service.resolve_application_fields({
+                "application_id": result["application_id"],
+                "expected_packet_hash": packet["content_hash"],
+                "resolutions": [{
+                    "control_ref": unresolved[0]["control_ref"],
+                    "decision": "CONFIRMED_VALUE",
+                    "value": "Yes",
+                }],
+                "user_confirmed": True,
+            })
+            self.assertEqual(rebound["remaining_unresolved_count"], 0)
+            current = service.review_packet(result["application_id"])
+            approved = service.decide_review_packet({
+                "application_id": result["application_id"],
+                "decision": "APPROVE",
+                "expected_packet_hash": current["packet"]["content_hash"],
+                "user_confirmed": True,
+            })
+            self.assertEqual(approved["status"], "APPROVED")
+            lifecycle = SyntheticApplicationLifecycle(database, onboarding)
+            prepared = lifecycle.prepare_until_final_authorization(
+                application_id=str(result["application_id"]),
+                user_confirmed=True,
+            )
+            self.assertEqual(prepared["status"], "AWAITING_FINAL_AUTHORIZATION")
+            completed = lifecycle.complete_with_fresh_authorization(
+                application_id=str(result["application_id"]),
+                run_id=str(prepared["run_id"]),
+                user_confirmed=True,
+                fake_confirmation_number="SYNTHETIC-GREENHOUSE-RECEIPT",
+            )
+            self.assertEqual(completed["status"], "CONFIRMED")
+            self.assertEqual(completed["network_actions"], 0)
+            self.assertEqual(completed["real_external_actions"], 0)
             self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 0)
 
             purge = onboarding.purge_synthetic()

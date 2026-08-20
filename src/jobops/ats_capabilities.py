@@ -53,13 +53,14 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
     {
         "provider": "greenhouse",
         "offline_evidence_level": "SYNTHETIC_VERTICAL_PASS",
-        "evidence_scope": "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME",
+        "evidence_scope": "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         "saved_snapshot_modes": ["single_html", "provider_json"],
         "route_shape": "OFFICIAL_TO_APPROVED_ATS",
         "dynamic_control_strategy": "opaque_control_ref",
         "verified_stages": [
             "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN", "REVIEW_PACKET",
             "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT", "EXPLICIT_NONFINAL_NAVIGATION",
+            "RESULT_OBSERVATION",
         ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
@@ -73,7 +74,6 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
         ],
         "known_limit_codes": [
             "PROVIDER_SPECIFIC_MULTI_PAGE_RESUME_NOT_PROVEN",
-            "PROVIDER_SPECIFIC_RESULT_OBSERVATION_NOT_PROVEN",
             "LIVE_SITE_ACCEPTANCE_REQUIRED",
         ],
     },

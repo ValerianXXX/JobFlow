@@ -155,12 +155,16 @@ class ATSProviderContractTests(unittest.TestCase):
             "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
         )
         greenhouse = next(item for item in report["providers"] if item["provider"] == "greenhouse")
-        self.assertEqual(greenhouse["evidence_scope"], "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME")
+        self.assertEqual(
+            greenhouse["evidence_scope"],
+            "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
+        )
         self.assertEqual(
             {
                 "APPROVED_DOM_PREFILL",
                 "APPROVED_FILE_ATTACHMENT",
                 "EXPLICIT_NONFINAL_NAVIGATION",
+                "RESULT_OBSERVATION",
             } - set(greenhouse["verified_stages"]),
             set(),
         )
@@ -260,7 +264,7 @@ class ATSProviderContractTests(unittest.TestCase):
         by_provider = {item["provider"]: item for item in report["providers"]}
         self.assertEqual(
             by_provider["greenhouse"]["evidence_scope"],
-            "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME",
+            "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",
         )
         self.assertEqual(
             by_provider["lever"]["evidence_scope"],
