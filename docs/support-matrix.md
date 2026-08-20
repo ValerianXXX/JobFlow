@@ -33,7 +33,7 @@ Expiring read-only background discovery is `AVAILABLE` for exact user-approved H
 
 The checked-in provider set and current evidence boundary are:
 
-- Company-hosted forms: discovery, route binding, form analysis, value-free planning, approved DOM prefill, approved file attachment, explicit non-final navigation, and modern-component rebinding.
+- Company-hosted forms: discovery, route binding, form analysis, value-free planning, local review packet approval, approved DOM prefill, approved file attachment, explicit non-final navigation, a user-only final Submit boundary, synthetic result observation, and modern-component rebinding. Provider-specific multi-page resume and live-site acceptance remain unverified.
 - Greenhouse: discovery through the local review packet plus synthetic provider-host DOM prefill, approved file attachment, explicit non-final Continue, a user-only final Submit boundary, and synthetic result observation. Multi-page resume and live-site acceptance remain unverified.
 - Lever: discovery through the local review packet plus synthetic provider-host approved DOM prefill, approved resume attachment, a user-only final Submit boundary, and synthetic result observation. Provider-specific non-final navigation and live-site acceptance remain unverified.
 - Workday: discovery, review, synthetic provider-host approved DOM prefill and resume attachment, explicit non-final navigation, representative multi-page resume, a user-only final Submit boundary, and synthetic result observation. Live-site acceptance remains unverified.

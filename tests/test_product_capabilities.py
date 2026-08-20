@@ -25,6 +25,7 @@ class ProductCapabilityReportTests(unittest.TestCase):
         self.assertEqual(by_id["canonical_profile_reuse"]["availability"], "AVAILABLE")
         self.assertEqual(by_id["workday_browser_assist"]["live_acceptance"], "REQUIRED_PER_SITE")
         self.assertEqual(by_id["browser_companion_runtime"]["evidence_status"], "SYNTHETIC_VERTICAL_PASS")
+        self.assertEqual(by_id["company_direct_browser_assist"]["evidence_status"], "SYNTHETIC_VERTICAL_PASS")
         self.assertIn(
             "PROVIDER_SPECIFIC_ACCEPTANCE_REQUIRED",
             by_id["browser_companion_runtime"]["known_limit_codes"],

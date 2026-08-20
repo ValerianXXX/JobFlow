@@ -150,6 +150,9 @@ class ATSProviderContractTests(unittest.TestCase):
             "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
         )
         company = next(item for item in report["providers"] if item["provider"] == "company")
+        self.assertEqual(company["evidence_scope"], "DIRECT_SITE_BROWSER_AND_SYNTHETIC_RESULT")
+        self.assertIn("REVIEW_PACKET", company["verified_stages"])
+        self.assertIn("RESULT_OBSERVATION", company["verified_stages"])
         self.assertEqual(
             company["user_present_prefill"],
             "PROVIDER_EVIDENCE_VERIFIED_WITH_RUNTIME_REVALIDATION",
@@ -262,6 +265,10 @@ class ATSProviderContractTests(unittest.TestCase):
     def test_capability_scope_does_not_promote_generic_runtime_evidence_to_provider_acceptance(self) -> None:
         report = offline_ats_capabilities()
         by_provider = {item["provider"]: item for item in report["providers"]}
+        self.assertEqual(
+            by_provider["company"]["evidence_scope"],
+            "DIRECT_SITE_BROWSER_AND_SYNTHETIC_RESULT",
+        )
         self.assertEqual(
             by_provider["greenhouse"]["evidence_scope"],
             "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",

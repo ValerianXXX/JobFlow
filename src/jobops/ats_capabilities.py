@@ -32,20 +32,24 @@ _RUNTIME_STAGES: tuple[str, ...] = (
 _CONTRACTS: tuple[dict[str, Any], ...] = (
     {
         "provider": "company",
-        "offline_evidence_level": "DIRECT_SNAPSHOT_PASS",
-        "evidence_scope": "DIRECT_SITE_AND_BROWSER_RUNTIME",
+        "offline_evidence_level": "SYNTHETIC_VERTICAL_PASS",
+        "evidence_scope": "DIRECT_SITE_BROWSER_AND_SYNTHETIC_RESULT",
         "saved_snapshot_modes": ["single_html"],
         "route_shape": "OFFICIAL_DIRECT",
         "dynamic_control_strategy": "opaque_control_ref",
         "verified_stages": [
             "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN",
-            "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT", "EXPLICIT_NONFINAL_NAVIGATION",
-            "MODERN_COMPONENT_REBINDING",
+            "REVIEW_PACKET", "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT",
+            "EXPLICIT_NONFINAL_NAVIGATION", "RESULT_OBSERVATION", "MODERN_COMPONENT_REBINDING",
         ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
+            "tests/test_company_direct_vertical.py",
             "tests/browser_companion_e2e.cjs",
             "tests/fixtures/synthetic-official-job-list.html",
+            "tests/fixtures/synthetic-company-direct-careers.html",
+            "tests/fixtures/synthetic-company-direct-route.json",
+            "tests/fixtures/synthetic-company-direct-form.html",
             "tests/fixtures/synthetic-teksystems-lwc-form.html",
         ],
         "known_limit_codes": ["NO_PROVIDER_SPECIFIC_MULTI_PAGE_SEQUENCE", "LIVE_SITE_ACCEPTANCE_REQUIRED"],

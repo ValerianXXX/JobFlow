@@ -1,0 +1,10 @@
+{
+  "official_entry_url": "https://example.com/careers/entry-data-analyst",
+  "current_url": "https://example.com/careers/entry-data-analyst/apply",
+  "navigation_history": [
+    "https://example.com/careers/entry-data-analyst",
+    "https://example.com/careers/entry-data-analyst/apply"
+  ],
+  "guest_available": true,
+  "official_snapshot": "tests/fixtures/synthetic-company-direct-careers.html"
+}

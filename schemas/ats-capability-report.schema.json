@@ -87,6 +87,7 @@
           "evidence_scope": {
             "enum": [
               "DIRECT_SITE_AND_BROWSER_RUNTIME",
+              "DIRECT_SITE_BROWSER_AND_SYNTHETIC_RESULT",
               "DISCOVERY_TO_REVIEW_PACKET",
               "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME",
               "DISCOVERY_TO_PROVIDER_BROWSER_AND_SYNTHETIC_RESULT",

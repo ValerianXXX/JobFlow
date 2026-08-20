@@ -6,6 +6,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ### Added
 
+- Added a complete company-direct local vertical from an official careers route through value-free planning, review approval, and a verified synthetic result, with network and real external actions held at zero.
 - Added provider-host synthetic Greenhouse browser evidence for approved field prefill, approved material attachment, and explicit non-final Continue navigation.
 - Extended the Greenhouse vertical through applicant confirmation, packet approval, and a verified synthetic result while keeping network and real external actions at zero.
 - Added provider-host synthetic Lever browser evidence for approved field prefill, approved resume attachment, and a user-only final Submit boundary.
