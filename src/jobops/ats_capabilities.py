@@ -53,21 +53,29 @@ _CONTRACTS: tuple[dict[str, Any], ...] = (
     {
         "provider": "greenhouse",
         "offline_evidence_level": "SYNTHETIC_VERTICAL_PASS",
-        "evidence_scope": "DISCOVERY_TO_REVIEW_PACKET",
+        "evidence_scope": "DISCOVERY_TO_PROVIDER_BROWSER_RUNTIME",
         "saved_snapshot_modes": ["single_html", "provider_json"],
         "route_shape": "OFFICIAL_TO_APPROVED_ATS",
         "dynamic_control_strategy": "opaque_control_ref",
         "verified_stages": [
             "OFFICIAL_DISCOVERY", "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN", "REVIEW_PACKET",
+            "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT", "EXPLICIT_NONFINAL_NAVIGATION",
         ],
         "evidence_refs": [
             "tests/test_official_discovery.py",
             "tests/test_greenhouse_vertical.py",
+            "tests/browser_companion_e2e.cjs",
             "tests/fixtures/synthetic-greenhouse-jobs.json",
             "tests/fixtures/synthetic-greenhouse-route.json",
             "tests/fixtures/synthetic-greenhouse-form.html",
+            "tests/fixtures/synthetic-greenhouse-continue-form.html",
+            "tests/fixtures/synthetic-material-form.html",
         ],
-        "known_limit_codes": ["PROVIDER_SPECIFIC_DOM_EXECUTION_NOT_PROVEN", "LIVE_SITE_ACCEPTANCE_REQUIRED"],
+        "known_limit_codes": [
+            "PROVIDER_SPECIFIC_MULTI_PAGE_RESUME_NOT_PROVEN",
+            "PROVIDER_SPECIFIC_RESULT_OBSERVATION_NOT_PROVEN",
+            "LIVE_SITE_ACCEPTANCE_REQUIRED",
+        ],
     },
     {
         "provider": "lever",

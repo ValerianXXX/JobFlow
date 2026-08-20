@@ -4,7 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- Added provider-host synthetic Greenhouse browser evidence for approved field prefill, approved material attachment, and explicit non-final Continue navigation.
+
+### Safety
+
+- Greenhouse final Submit remains user-only, and the capability report continues to mark live-site acceptance, multi-page resume, and result observation as unverified.
 
 ## [0.6.0] - 2026-08-19
 

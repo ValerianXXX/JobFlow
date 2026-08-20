@@ -8,6 +8,9 @@ const {chromium} = require("playwright");
 
 const project = path.resolve(__dirname, "..");
 const fixture = fs.readFileSync(path.join(project, "tests", "fixtures", "synthetic-material-form.html"), "utf8");
+const greenhouseContinueFixture = fs.readFileSync(
+  path.join(project, "tests", "fixtures", "synthetic-greenhouse-continue-form.html"), "utf8"
+);
 const tekFixture = fs.readFileSync(path.join(project, "tests", "fixtures", "synthetic-teksystems-lwc-form.html"), "utf8");
 const companion = path.join(project, "browser-companion", "dom.js");
 const browserPath = process.env.JOBFLOW_TEST_BROWSER || "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
@@ -23,10 +26,10 @@ function valueHash(value) {
   const browser = await chromium.launch({headless: true, executablePath: browserPath});
   try {
     const page = await browser.newPage();
-    await page.route("https://example.test/**", (route) => route.fulfill({
+    await page.route("https://boards.greenhouse.io/**", (route) => route.fulfill({
       status: 200, contentType: "text/html; charset=utf-8", body: fixture
     }));
-    await page.goto("https://example.test/apply", {waitUntil: "domcontentloaded"});
+    await page.goto("https://boards.greenhouse.io/example/jobs/987654", {waitUntil: "domcontentloaded"});
     await page.evaluate(({encodedFile}) => {
       globalThis.__jobflowMessages = [];
       globalThis.__jobflowListener = null;
@@ -86,6 +89,8 @@ function valueHash(value) {
     assert.equal(collected.status, "COLLECTED");
     assert.equal(collected.payload.client_refs.length, 7);
     assert.deepEqual(collected.payload.blocker_signals, []);
+    assert.equal(new URL(page.url()).hostname, "boards.greenhouse.io");
+    assert.equal(await page.locator("main[data-provider]").getAttribute("data-provider"), "greenhouse");
     assert.ok(!collected.payload.sanitized_html.includes("synthetic approved resume"));
 
     await page.evaluate(() => {
@@ -666,13 +671,13 @@ function valueHash(value) {
     assert.equal(spaBridgeMessages.length, 1);
 
     const explicitPage = await browser.newPage();
-    const explicitFixture = fs.readFileSync(
-      path.join(project, "tests", "fixtures", "synthetic-v2-workday-step-1-explicit-button.html"), "utf8"
-    );
-    await explicitPage.route("https://workday.example.test/**", (route) => route.fulfill({
-      status: 200, contentType: "text/html; charset=utf-8", body: explicitFixture
+    await explicitPage.route("https://boards.greenhouse.io/**", (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8", body: greenhouseContinueFixture
     }));
-    await explicitPage.goto("https://workday.example.test/apply", {waitUntil: "domcontentloaded"});
+    await explicitPage.goto(
+      "https://boards.greenhouse.io/example/jobs/987654/application/step-1",
+      {waitUntil: "domcontentloaded"}
+    );
     await explicitPage.evaluate(() => {
       globalThis.__jobflowListener = null;
       globalThis.__explicitClicks = 0;
@@ -691,9 +696,12 @@ function valueHash(value) {
       globalThis.__jobflowCall = (message) => new Promise((resolve) => globalThis.__jobflowListener(message, {}, resolve));
     });
     const explicitCollected = await explicitPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+    assert.equal(new URL(explicitPage.url()).hostname, "boards.greenhouse.io");
+    assert.equal(await explicitPage.locator("main").getAttribute("data-provider"), "greenhouse");
+    assert.equal(explicitCollected.payload.client_refs.length, 2);
     const explicitPageHash = valueHash(explicitCollected.payload.sanitized_html);
     const explicitSemanticsHash = valueHash(JSON.stringify([
-      explicitPageHash, explicitCollected.payload.client_refs[1], "button", "Next"
+      explicitPageHash, explicitCollected.payload.client_refs[1], "button", "Continue"
     ]));
     const explicitApplied = await explicitPage.evaluate(
       ({clientRefs, pageHash, semanticsHash, value, hash}) => globalThis.__jobflowCall({
@@ -702,7 +710,7 @@ function valueHash(value) {
         files: [], final_submit_client_refs: [],
         navigation: {
           client_ref: clientRefs[1], mode: "PROGRAMMATIC_EXPLICIT_BUTTON", control_type: "button",
-          page_content_hash: pageHash, control_semantics_hash: semanticsHash, display_label: "Next"
+          page_content_hash: pageHash, control_semantics_hash: semanticsHash, display_label: "Continue"
         }
       }),
       {
