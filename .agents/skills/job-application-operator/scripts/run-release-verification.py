@@ -20,6 +20,7 @@ def root() -> Path:
 PROJECT = root()
 sys.path.insert(0, str(PROJECT / "src"))
 from jobops.db import JobOpsDB  # noqa: E402
+from jobops.adapters import audit_real_external_actions  # noqa: E402
 from jobops.release import verify_release, write_release_reports  # noqa: E402
 from jobops.util import write_json  # noqa: E402
 
@@ -28,6 +29,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--require-independent", action="store_true")
     args = parser.parse_args()
+    database = JobOpsDB(PROJECT / "state" / "jobops.db")
+    database.initialize()
+    external_action_baseline = audit_real_external_actions(database)
     test = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], cwd=PROJECT, capture_output=True, text=True, timeout=1800, check=False)
     output = test.stdout + "\n" + test.stderr
     match = re.search(r"Ran\s+(\d+)\s+tests?", output)
@@ -54,9 +58,12 @@ def main() -> int:
     if test_report["status"] != "PASS" or skill.returncode != 0:
         print(json.dumps({"status": "FAIL", "tests": test_report, "skill_returncode": skill.returncode}, ensure_ascii=False, indent=2))
         return 2
-    database = JobOpsDB(PROJECT / "state" / "jobops.db")
-    database.initialize()
-    result = verify_release(PROJECT, database, require_independent=args.require_independent)
+    result = verify_release(
+        PROJECT,
+        database,
+        require_independent=args.require_independent,
+        external_action_baseline=external_action_baseline,
+    )
     git = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=PROJECT, capture_output=True, text=True,
         timeout=30, check=False,

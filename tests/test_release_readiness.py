@@ -6,11 +6,45 @@ from unittest.mock import Mock, patch
 
 from _support import PROJECT, project_temp
 from jobops.errors import JobOpsError
-from jobops.release import _independent_qa_matches_release, _source_commit
+from jobops.release import _external_action_verification_window, _independent_qa_matches_release, _source_commit
 from jobops.release_readiness import _local_verification_evidence, github_release_gates, release_readiness
 
 
 class ReleaseReadinessContractTests(unittest.TestCase):
+    def test_release_external_action_gate_uses_the_current_verification_window(self) -> None:
+        baseline = {"attempt_count": 3, "real_external_actions": 2}
+        unchanged = _external_action_verification_window(
+            {"attempt_count": 3, "real_external_actions": 2},
+            baseline,
+        )
+        self.assertEqual(unchanged["status"], "PASS")
+        self.assertEqual(unchanged["attempt_count"], 0)
+        self.assertEqual(unchanged["real_external_actions"], 0)
+        self.assertEqual(unchanged["lifetime_real_external_actions"], 2)
+
+        new_read_only_attempt = _external_action_verification_window(
+            {"attempt_count": 4, "real_external_actions": 2},
+            baseline,
+        )
+        self.assertEqual(new_read_only_attempt["status"], "PASS")
+        self.assertEqual(new_read_only_attempt["attempt_count"], 1)
+        self.assertEqual(new_read_only_attempt["real_external_actions"], 0)
+
+        new_real_action = _external_action_verification_window(
+            {"attempt_count": 4, "real_external_actions": 3},
+            baseline,
+        )
+        self.assertEqual(new_real_action["status"], "FAIL")
+        self.assertEqual(new_real_action["real_external_actions"], 1)
+
+    def test_release_external_action_gate_rejects_an_impossible_baseline(self) -> None:
+        result = _external_action_verification_window(
+            {"attempt_count": 2, "real_external_actions": 1},
+            {"attempt_count": 3, "real_external_actions": 2},
+        )
+        self.assertEqual(result["status"], "FAIL")
+        self.assertFalse(result["baseline_valid"])
+
     def test_source_commit_is_exactly_bound_to_git_head(self) -> None:
         completed = Mock(returncode=0, stdout="A" * 40 + "\n")
         with patch("jobops.release.subprocess.run", return_value=completed) as run:

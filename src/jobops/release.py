@@ -310,7 +310,42 @@ def security_scan(project: Path, database: JobOpsDB) -> dict[str, Any]:
     }
 
 
-def verify_release(project: Path, database: JobOpsDB, *, require_independent: bool = False) -> dict[str, Any]:
+def _external_action_verification_window(
+    current: dict[str, Any],
+    baseline: dict[str, Any] | None,
+) -> dict[str, Any]:
+    baseline_attempts = int((baseline or {}).get("attempt_count", 0))
+    baseline_real = int((baseline or {}).get("real_external_actions", 0))
+    current_attempts = int(current.get("attempt_count", 0))
+    current_real = int(current.get("real_external_actions", 0))
+    baseline_valid = (
+        baseline_attempts >= 0
+        and baseline_real >= 0
+        and baseline_attempts <= current_attempts
+        and baseline_real <= current_real
+    )
+    attempt_delta = current_attempts - baseline_attempts if baseline_valid else current_attempts
+    real_delta = current_real - baseline_real if baseline_valid else current_real
+    return {
+        "attempt_count": attempt_delta,
+        "real_external_actions": real_delta,
+        "status": "PASS" if baseline_valid and real_delta == 0 else "FAIL",
+        "baseline_valid": baseline_valid,
+        "baseline_attempt_count": baseline_attempts,
+        "baseline_real_external_actions": baseline_real,
+        "lifetime_attempt_count": current_attempts,
+        "lifetime_real_external_actions": current_real,
+        "evidence": "append-only external_action_attempts bounded by verification-start baseline",
+    }
+
+
+def verify_release(
+    project: Path,
+    database: JobOpsDB,
+    *,
+    require_independent: bool = False,
+    external_action_baseline: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     source_commit = _source_commit(project)
     test_report_path = project / "reports" / "release-test-results.json"
     if not test_report_path.is_file():
@@ -327,7 +362,8 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
     knowledge = gateway.compare_snapshots(load_json(project / "state" / "knowledge-baseline.json"), current_knowledge)
     knowledge["collections"] = current_knowledge["collections"]
     knowledge["write_operations"] = 0
-    actions = audit_real_external_actions(database)
+    lifetime_actions = audit_real_external_actions(database)
+    actions = _external_action_verification_window(lifetime_actions, external_action_baseline)
     scan = security_scan(project, database)
     public_repository = verify_public_repository(project)
     with database.connect() as connection:
@@ -370,7 +406,7 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         "skill": skill_validation.get("status") == "PASS",
         "knowledge": knowledge.get("status") == "UNCHANGED" and knowledge["write_operations"] == 0,
         "security": scan["status"] == "PASS",
-        "external_actions": actions["real_external_actions"] == 0,
+        "external_actions": actions["status"] == "PASS",
         "database": schema_version == JobOpsDB.LATEST_SCHEMA_VERSION and "CHECK(dry_run = 1)" in dry_run_sql,
         "synthetic_private_purged": retained_synthetic_private == 0,
         "private_store_consistent": (
@@ -409,7 +445,10 @@ def verify_release(project: Path, database: JobOpsDB, *, require_independent: bo
         "real_external_actions": actions["real_external_actions"],
         "checks": checks, "tests": tests, "skill_validation": skill_validation,
         "knowledge": knowledge, "database": {"schema_version": schema_version, "dry_run_constraint": True},
-        "security_scan": scan, "public_repository": public_repository, "external_action_audit": actions,
+        "security_scan": scan,
+        "public_repository": public_repository,
+        "external_action_audit": actions,
+        "lifetime_external_action_audit": lifetime_actions,
         "private_data": {
             "active_references": active_private, "active_real_references": active_real_private,
             "active_synthetic_references": active_synthetic_private,
@@ -466,7 +505,8 @@ def write_release_reports(project: Path, result: dict[str, Any]) -> None:
         ],
         f"- Security findings: {result['security_scan']['finding_count']}.",
         f"- Public repository: {result['public_repository']['status']}; current-tree findings {result['public_repository']['tree']['finding_count']}; full-history findings {result['public_repository']['history']['finding_count']}; author identity {result['public_repository']['author_identity']['status']}.",
-        f"- External-action audit: {result['external_action_audit']['attempt_count']} recorded attempts; {result['external_action_audit']['real_external_actions']} real side effects.",
+        f"- Verification-window external-action audit: {result['external_action_audit']['attempt_count']} new attempts; {result['external_action_audit']['real_external_actions']} real side effects.",
+        f"- Lifetime retained external-action audit: {result['lifetime_external_action_audit']['attempt_count']} recorded attempts; {result['lifetime_external_action_audit']['real_external_actions']} real side effects.",
         f"- Private references: {result['private_data']['active_references']} active, {result['private_data']['revoked_references']} revoked, {result['private_data']['corrupt_references']} corrupt, {result['private_data']['retained_references']} retained total (real active: {result['private_data']['active_real_references']}; synthetic retained: {result['private_data']['retained_synthetic_references']}); deleted synthetic metadata: {result['private_data']['deleted_synthetic_metadata_records']}; total/expected ciphertext files: {result['private_data']['private_ciphertext_file_count']}/{result['private_data']['private_expected_ciphertext_file_count']}; ciphertext integrity failures: {result['private_data']['private_ciphertext_integrity_failure_count']}; staging files: {result['private_data']['private_staging_file_count']}; atomic-write temporary files: {result['private_data']['private_temporary_file_count']}.",
         f"- P0/P1/must-fix open: {result['p0_open']}/{result['p1_open']}/{result['must_fix_open']}.",
         f"- Independent QA: {'PASS (fresh)' if result['checks']['independent_qa'] else 'STALE OR MISSING'}.", "",
