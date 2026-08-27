@@ -7,7 +7,11 @@ from typing import Any, Iterable
 
 from .security import normalized_name, validate_secure_reference
 from .util import sha256_bytes, write_json
-from .application_materials import field_answer_key
+from .application_materials import (
+    APPLICATION_NARRATIVE_CLASSIFICATION,
+    cover_letter_semantics_vetoed,
+    field_answer_key,
+)
 
 
 PROVIDERS = ("greenhouse", "lever", "workday", "ashby", "smartrecruiters")
@@ -18,7 +22,11 @@ CLASSIFICATION_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("work_authorization_stop", ("work authorization", "authorized to work", "legally eligible", "合法工作授权", "工作授权", "工作资格")),
     ("work_authorization_stop", ("visa sponsorship", "sponsorship", "签证担保", "签证赞助", "是否需要担保")),
     ("compensation_stop", ("salary", "compensation", "pay expectation", "薪资", "薪酬", "期望工资", "期望薪资")),
-    ("legal_declaration_stop", ("criminal", "background check", "non-compete", "non compete", "attest", "truthfulness", "背景调查", "犯罪记录", "竞业", "真实性声明", "法律声明")),
+    ("legal_declaration_stop", (
+        "criminal", "background check", "non-compete", "non compete", "attest", "truthfulness",
+        "legal declaration", "consent", "privacy agreement", "terms and conditions", "certify", "acknowledge",
+        "背景调查", "犯罪记录", "竞业", "真实性声明", "法律声明", "同意", "隐私协议", "条款和条件", "电子签名",
+    )),
     ("signature_stop", ("signature", "sign here", "electronic signature", "电子签名", "签名")),
     ("account_creation_stop", ("create account", "register account", "password", "账号注册", "创建账号", "密码")),
     ("sensitive_review", ("start date", "available to start", "relocation", "travel", "入职日期", "到岗", "搬迁", "出差")),
@@ -59,6 +67,71 @@ def _field_material(field: dict[str, Any], page_context: str = "") -> str:
     values.extend(str(item) for item in options if item is not None)
     values.append(page_context)
     return normalized_name(" ".join(values)).replace("_", " ")
+
+
+def _is_bare_person_name_field(field: dict[str, Any]) -> bool:
+    """Recognize a person's unqualified ``Name`` control without catching company names."""
+
+    def values(keys: tuple[str, ...]) -> set[str]:
+        return {
+            normalized
+            for key in keys
+            if (
+                normalized := normalized_name(str(field.get(key, "")))
+                .replace("_", " ")
+                .strip()
+            )
+        }
+
+    visible_values = values(("label", "placeholder", "aria_label"))
+    machine_values = values(("identifier", "id", "name", "autocomplete"))
+    all_material = " ".join(sorted(visible_values | machine_values))
+    disqualifiers = (
+        "company name", "employer name", "organization name", "organisation name",
+        "reference name", "manager name", "supervisor name", "recruiter name",
+        "preferred name", "middle name", "former name", "previous name", "maiden name",
+        "user name", "username", "account name",
+        "公司名称", "雇主名称", "组织名称", "推荐人姓名", "经理姓名", "首选姓名", "曾用名", "用户名",
+    )
+    if any(term in all_material for term in disqualifiers):
+        return False
+
+    person_name_values = {
+        "name", "your name", "applicant name", "candidate name", "full name", "legal name",
+        "your full name", "applicant full name", "candidate full name",
+        "姓名", "您的姓名", "申请人姓名", "候选人姓名", "法定姓名",
+    }
+    # User-facing labels win over generic machine attributes.  A visible
+    # ``Company Name`` must therefore never be reinterpreted merely because an
+    # ATS happens to use ``name=name`` underneath it.
+    return bool((visible_values if visible_values else machine_values) & person_name_values)
+
+
+def _is_application_narrative_field(field: dict[str, Any]) -> bool:
+    """Recognize only an applicant-visible Cover Letter textarea.
+
+    Protected section/help/accessibility semantics are evaluated first by
+    ``CLASSIFICATION_PATTERNS``.  Here a direct prompt is authoritative; only a
+    missing direct prompt may fall back to accessible description/help/section
+    context.  Machine identifiers never establish narrative intent.
+    """
+
+    if normalized_name(str(field.get("type") or field.get("control_type") or "")) != "textarea":
+        return False
+    if cover_letter_semantics_vetoed(field):
+        return False
+
+    def first(keys: tuple[str, ...]) -> str:
+        for key in keys:
+            value = normalized_name(str(field.get(key, ""))).replace("_", " ").strip()
+            if value:
+                return value
+        return ""
+
+    direct = first(("label", "aria_label", "placeholder"))
+    fallback = first(("aria_description", "help_text", "section_heading", "adjacent_text"))
+    prompt = direct or fallback
+    return any(term in prompt for term in ("cover letter", "motivation letter", "求职信", "动机信"))
 
 
 def _action_intent(field: dict[str, Any], page_context: str) -> tuple[bool, bool]:
@@ -114,6 +187,13 @@ def classify_application_field(field: dict[str, Any], *, page_context: str = "",
     for category in blocked_categories:
         if normalized_name(str(category).replace("_", " ")) in material:
             return "sensitive_review", "Matched configured protected category."
+    if _is_application_narrative_field(field):
+        return (
+            APPLICATION_NARRATIVE_CLASSIFICATION,
+            "Recognized a dedicated Cover Letter textarea after protected-context review.",
+        )
+    if _is_bare_person_name_field(field):
+        return "private_fixed", "Recognized applicant name; value must resolve from secure-ref."
     if any(term in material for term in ORDINARY_TERMS):
         return "ordinary_fixed", "Recognized non-private fixed field."
     if any(term in material for term in PRIVATE_TERMS):
@@ -148,6 +228,9 @@ def map_fields(fields: Iterable[dict[str, Any]], known_answers: dict[str, str], 
         record: dict[str, Any] = {
             "id": field_id, "label": label, "classification": classification, "reason": reason,
             "required": bool(field.get("required", False)),
+            "control_type": str(field.get("control_type") or field.get("type") or "other"),
+            "max_length": field.get("max_length"),
+            "max_length_status": str(field.get("max_length_status") or "ABSENT"),
         }
         record["answer_key"] = field_answer_key({**field, "classification": classification})
         if classification == "ordinary_fixed" and answer not in (None, "", "UNKNOWN"):

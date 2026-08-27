@@ -26,6 +26,9 @@ const workdayReviewFixture = fs.readFileSync(
 const ashbyFixture = fs.readFileSync(
   path.join(project, "tests", "fixtures", "synthetic-ashby-form.html"), "utf8"
 );
+const ashbyModernFixture = fs.readFileSync(
+  path.join(project, "tests", "fixtures", "synthetic-ashby-modern-form.html"), "utf8"
+);
 const smartRecruitersFixture = fs.readFileSync(
   path.join(project, "tests", "fixtures", "synthetic-smartrecruiters-form.html"), "utf8"
 );
@@ -100,9 +103,10 @@ async function verifyProviderApplicationRuntime(browser, {
     client_ref: collected.payload.client_refs[index], value, value_sha256: valueHash(value)
   }));
   const applied = await providerPage.evaluate(
-    ({refs, fields, fileIndex, finalIndex, navigationIndex, pageHash, semanticsHash, navigationLabel, fileHash}) =>
+    ({refs, fields, fileIndex, finalIndex, navigationIndex, pageHash, semanticsHash, navigationLabel, fileHash, controlSemantics}) =>
       globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields,
         files: [{
           client_ref: refs[fileIndex], purpose: "resume", filename: "resume.pdf",
@@ -116,7 +120,8 @@ async function verifyProviderApplicationRuntime(browser, {
       }),
     {
       refs: collected.payload.client_refs, fields, fileIndex, finalIndex, navigationIndex,
-      pageHash, semanticsHash, navigationLabel, fileHash
+      pageHash, semanticsHash, navigationLabel, fileHash,
+      controlSemantics: collected.payload.control_semantics_sha256
     }
   );
   assert.equal(applied.status, "APPLIED", JSON.stringify(applied));
@@ -201,14 +206,15 @@ async function verifyProviderRebindingRuntime(browser, {
     original.replaceWith(replacement);
   }, targetSelector);
   const applied = await providerPage.evaluate(
-    ({clientRefs, targetIndex, finalIndex, value, hash}) => globalThis.__jobflowCall({
+    ({clientRefs, targetIndex, finalIndex, value, hash, controlSemantics}) => globalThis.__jobflowCall({
       type: "JOBFLOW_APPLY_APPROVED",
+      control_semantics_sha256: controlSemantics,
       fields: [{client_ref: clientRefs[targetIndex], value, value_sha256: hash}],
       files: [], navigation: null, final_submit_client_refs: [clientRefs[finalIndex]]
     }),
     {
       clientRefs: collected.payload.client_refs, targetIndex, finalIndex,
-      value, hash: valueHash(value)
+      value, hash: valueHash(value), controlSemantics: collected.payload.control_semantics_sha256
     }
   );
   assert.equal(applied.status, "APPLIED", JSON.stringify(applied));
@@ -229,6 +235,251 @@ async function verifyProviderRebindingRuntime(browser, {
   assert.equal(submitSignals.length, 1);
   assert.equal(submitSignals[0].payload.trusted_user_event, true);
   await providerPage.close();
+  return true;
+}
+
+async function verifyDynamicMaxLengthFailClosed(browser) {
+  const fixtureHtml = `<!doctype html><html><body><form>
+    <label for="name">Name</label><input id="name" name="name">
+    <label for="cover">Cover Letter</label><textarea id="cover" name="cover_letter" maxlength="1200"></textarea>
+    <button id="submit" type="submit">Submit application</button>
+  </form></body></html>`;
+  const createPage = async (suffix) => {
+    const candidatePage = await browser.newPage();
+    const url = `https://boards.greenhouse.io/example/jobs/maxlength-${suffix}`;
+    await candidatePage.route(url, (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8", body: fixtureHtml
+    }));
+    await candidatePage.goto(url, {waitUntil: "domcontentloaded"});
+    await candidatePage.evaluate(() => {
+      globalThis.__jobflowListener = null;
+      globalThis.chrome = {
+        runtime: {
+          lastError: null,
+          onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+          async sendMessage() { return {status: "RECORDED"}; },
+          connect() { throw new Error("NO_FILE_STREAM_EXPECTED"); }
+        }
+      };
+      document.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+    });
+    await candidatePage.addScriptTag({path: companion});
+    await candidatePage.evaluate(() => {
+      globalThis.__jobflowCall = (message) => new Promise((resolve) => {
+        globalThis.__jobflowListener(message, {}, resolve);
+      });
+    });
+    const collected = await candidatePage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+    assert.equal(collected.status, "COLLECTED");
+    assert.equal(collected.payload.client_refs.length, 3);
+    return {
+      candidatePage, refs: collected.payload.client_refs,
+      controlSemantics: collected.payload.control_semantics_sha256
+    };
+  };
+  const fieldsFor = (refs) => {
+    const narrative = "N".repeat(600);
+    return [
+      {
+        client_ref: refs[0], value: "Synthetic Applicant", value_sha256: valueHash("Synthetic Applicant"),
+        max_length: null, max_length_status: "ABSENT"
+      },
+      {
+        client_ref: refs[1], value: narrative, value_sha256: valueHash(narrative),
+        max_length: 1200, max_length_status: "VALID"
+      }
+    ];
+  };
+
+  const direct = await createPage("direct");
+  await direct.candidatePage.locator("#cover").evaluate((element) => { element.maxLength = 500; });
+  const directResult = await direct.candidatePage.evaluate(
+    ({fields, finalRef, controlSemantics}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED", fields, files: [], navigation: null,
+      control_semantics_sha256: controlSemantics,
+      final_submit_client_refs: [finalRef]
+    }),
+    {fields: fieldsFor(direct.refs), finalRef: direct.refs[2], controlSemantics: direct.controlSemantics}
+  );
+  assert.equal(directResult.status, "BLOCKED", JSON.stringify(directResult));
+  assert.equal(directResult.code, "COMPANION_CONTROL_REBIND_FAILED");
+  assert.equal(directResult.partial_effects, false);
+  assert.equal(directResult.attempted_field_bindings.length, 0);
+  assert.deepEqual(await direct.candidatePage.locator("#name,#cover").evaluateAll(
+    (controls) => controls.map((control) => control.value)
+  ), ["", ""]);
+  await direct.candidatePage.close();
+
+  const rebound = await createPage("rebind");
+  await rebound.candidatePage.locator("#cover").evaluate((original) => {
+    const replacement = original.cloneNode(true);
+    replacement.maxLength = 500;
+    original.replaceWith(replacement);
+  });
+  const reboundResult = await rebound.candidatePage.evaluate(
+    ({fields, finalRef, controlSemantics}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED", fields, files: [], navigation: null,
+      control_semantics_sha256: controlSemantics,
+      final_submit_client_refs: [finalRef]
+    }),
+    {fields: fieldsFor(rebound.refs), finalRef: rebound.refs[2], controlSemantics: rebound.controlSemantics}
+  );
+  assert.equal(reboundResult.status, "BLOCKED", JSON.stringify(reboundResult));
+  assert.equal(reboundResult.code, "COMPANION_CONTROL_REBIND_FAILED");
+  assert.equal(reboundResult.partial_effects, false);
+  assert.equal(reboundResult.attempted_field_bindings.length, 0);
+  assert.deepEqual(await rebound.candidatePage.locator("#name,#cover").evaluateAll(
+    (controls) => controls.map((control) => control.value)
+  ), ["", ""]);
+  await rebound.candidatePage.close();
+  return true;
+}
+
+async function verifyApprovalSemanticsAndAtomicPreflight(browser) {
+  const fixtureHtml = `<!doctype html><html><body><form>
+    <label for="name">Name</label><input id="name" name="name">
+    <label id="cover-label" for="cover">Cover Letter</label>
+    <textarea id="cover" name="cover_letter" maxlength="1200"></textarea>
+    <label for="country">Country</label><select id="country" name="country">
+      <option value="">Choose</option><option value="US">United States</option><option value="CA">Canada</option>
+    </select>
+    <label for="inert-resume">Resume</label><input id="inert-resume" name="resume" type="file" inert>
+    <button id="submit" type="submit">Submit application</button>
+  </form></body></html>`;
+  const createPage = async (suffix) => {
+    const candidatePage = await browser.newPage();
+    const url = `https://boards.greenhouse.io/example/jobs/atomic-${suffix}`;
+    await candidatePage.route(url, (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8", body: fixtureHtml
+    }));
+    await candidatePage.goto(url, {waitUntil: "domcontentloaded"});
+    await candidatePage.evaluate(() => {
+      globalThis.__jobflowListener = null;
+      globalThis.chrome = {
+        runtime: {
+          lastError: null,
+          onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+          async sendMessage() { return {status: "RECORDED"}; },
+          connect() { throw new Error("NO_FILE_STREAM_EXPECTED"); }
+        }
+      };
+      document.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+    });
+    await candidatePage.addScriptTag({path: companion});
+    await candidatePage.evaluate(() => {
+      globalThis.__jobflowCall = (message) => new Promise((resolve) => {
+        globalThis.__jobflowListener(message, {}, resolve);
+      });
+    });
+    const collected = await candidatePage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+    assert.equal(collected.status, "COLLECTED", JSON.stringify(collected));
+    assert.equal(collected.payload.client_refs.length, 4, collected.payload.sanitized_html);
+    assert.ok(!collected.payload.sanitized_html.includes("inert-resume"));
+    return {candidatePage, collected};
+  };
+  const approvedField = (clientRef, value, valueSha256 = valueHash(value)) => ({
+    client_ref: clientRef, value, value_sha256: valueSha256
+  });
+
+  const labelDrift = await createPage("label-drift");
+  await labelDrift.candidatePage.locator("#cover-label").evaluate((label) => { label.textContent = "Legal Consent"; });
+  const labelDriftResult = await labelDrift.candidatePage.evaluate(
+    ({refs, semantics, fields}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED", control_semantics_sha256: semantics,
+      fields, files: [], navigation: null, final_submit_client_refs: [refs[3]]
+    }),
+    {
+      refs: labelDrift.collected.payload.client_refs,
+      semantics: labelDrift.collected.payload.control_semantics_sha256,
+      fields: [
+        approvedField(labelDrift.collected.payload.client_refs[0], "Synthetic Applicant"),
+        approvedField(labelDrift.collected.payload.client_refs[1], "Approved cover letter")
+      ]
+    }
+  );
+  assert.equal(labelDriftResult.status, "BLOCKED", JSON.stringify(labelDriftResult));
+  assert.equal(labelDriftResult.code, "COMPANION_CONTROL_REBIND_FAILED");
+  assert.equal(labelDriftResult.partial_effects, false);
+  assert.deepEqual(await labelDrift.candidatePage.locator("#name,#cover").evaluateAll(
+    (controls) => controls.map((control) => control.value)
+  ), ["", ""]);
+  await labelDrift.candidatePage.close();
+
+  const optionMismatch = await createPage("option-mismatch");
+  const optionMismatchResult = await optionMismatch.candidatePage.evaluate(
+    ({refs, semantics, fields}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED", control_semantics_sha256: semantics,
+      fields, files: [], navigation: null, final_submit_client_refs: [refs[3]]
+    }),
+    {
+      refs: optionMismatch.collected.payload.client_refs,
+      semantics: optionMismatch.collected.payload.control_semantics_sha256,
+      fields: [
+        approvedField(optionMismatch.collected.payload.client_refs[0], "Synthetic Applicant"),
+        approvedField(optionMismatch.collected.payload.client_refs[2], "Mexico")
+      ]
+    }
+  );
+  assert.equal(optionMismatchResult.status, "BLOCKED", JSON.stringify(optionMismatchResult));
+  assert.equal(optionMismatchResult.code, "COMPANION_SELECT_OPTION_NOT_FOUND");
+  assert.equal(optionMismatchResult.partial_effects, false);
+  assert.equal(await optionMismatch.candidatePage.locator("#name").inputValue(), "");
+  await optionMismatch.candidatePage.close();
+
+  const valueMismatch = await createPage("value-mismatch");
+  const valueMismatchResult = await valueMismatch.candidatePage.evaluate(
+    ({refs, semantics, fields}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED", control_semantics_sha256: semantics,
+      fields, files: [], navigation: null, final_submit_client_refs: [refs[3]]
+    }),
+    {
+      refs: valueMismatch.collected.payload.client_refs,
+      semantics: valueMismatch.collected.payload.control_semantics_sha256,
+      fields: [
+        approvedField(valueMismatch.collected.payload.client_refs[0], "Synthetic Applicant"),
+        approvedField(valueMismatch.collected.payload.client_refs[1], "Approved cover letter", valueHash("different"))
+      ]
+    }
+  );
+  assert.equal(valueMismatchResult.status, "BLOCKED", JSON.stringify(valueMismatchResult));
+  assert.equal(valueMismatchResult.code, "COMPANION_VALUE_HASH_MISMATCH");
+  assert.equal(valueMismatchResult.partial_effects, false);
+  assert.equal(await valueMismatch.candidatePage.locator("#name").inputValue(), "");
+  await valueMismatch.candidatePage.close();
+
+  const finalDrift = await createPage("final-drift");
+  await finalDrift.candidatePage.locator("#submit").evaluate((button) => { button.textContent = "I agree"; });
+  const finalDriftResult = await finalDrift.candidatePage.evaluate(
+    ({refs, semantics, field}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED", control_semantics_sha256: semantics,
+      fields: [field], files: [], navigation: null, final_submit_client_refs: [refs[3]]
+    }),
+    {
+      refs: finalDrift.collected.payload.client_refs,
+      semantics: finalDrift.collected.payload.control_semantics_sha256,
+      field: approvedField(finalDrift.collected.payload.client_refs[0], "Synthetic Applicant")
+    }
+  );
+  assert.equal(finalDriftResult.status, "BLOCKED", JSON.stringify(finalDriftResult));
+  assert.equal(finalDriftResult.code, "COMPANION_CONTROL_REBIND_FAILED");
+  assert.equal(finalDriftResult.partial_effects, false);
+  assert.equal(await finalDrift.candidatePage.locator("#name").inputValue(), "");
+  await finalDrift.candidatePage.close();
+
+  const duplicate = await createPage("duplicate-ref");
+  const duplicateField = approvedField(duplicate.collected.payload.client_refs[0], "Synthetic Applicant");
+  const duplicateResult = await duplicate.candidatePage.evaluate(
+    ({semantics, field}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED", control_semantics_sha256: semantics,
+      fields: [field, field], files: [], navigation: null, final_submit_client_refs: []
+    }),
+    {semantics: duplicate.collected.payload.control_semantics_sha256, field: duplicateField}
+  );
+  assert.equal(duplicateResult.status, "BLOCKED", JSON.stringify(duplicateResult));
+  assert.equal(duplicateResult.code, "COMPANION_DUPLICATE_CONTROL_BINDING");
+  assert.equal(duplicateResult.partial_effects, false);
+  assert.equal(await duplicate.candidatePage.locator("#name").inputValue(), "");
+  await duplicate.candidatePage.close();
   return true;
 }
 
@@ -342,19 +593,21 @@ async function verifyProviderRebindingRuntime(browser, {
       download_url: `http://127.0.0.1/assist/synthetic/file/${fileIndex}`
     }));
     const fieldApplied = await page.evaluate(
-      ({fields, finalRef}) => globalThis.__jobflowCall({
+      ({fields, finalRef, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED", fields, files: [], navigation: null,
+        control_semantics_sha256: controlSemantics,
         final_submit_client_refs: [finalRef]
       }),
-      {fields, finalRef: collected.payload.client_refs[6]}
+      {fields, finalRef: collected.payload.client_refs[6], controlSemantics: collected.payload.control_semantics_sha256}
     );
     assert.equal(fieldApplied.status, "APPLIED", JSON.stringify(fieldApplied));
     const fileApplied = await page.evaluate(
-      ({files, finalRef}) => globalThis.__jobflowCall({
+      ({files, finalRef, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED", fields: [], files, navigation: null,
+        control_semantics_sha256: controlSemantics,
         final_submit_client_refs: [finalRef]
       }),
-      {files, finalRef: collected.payload.client_refs[6]}
+      {files, finalRef: collected.payload.client_refs[6], controlSemantics: collected.payload.control_semantics_sha256}
     );
     assert.equal(fileApplied.status, "APPLIED", JSON.stringify(fileApplied));
     assert.equal(fieldApplied.field_bindings.length, 3);
@@ -427,8 +680,9 @@ async function verifyProviderRebindingRuntime(browser, {
       client_ref: leverCollected.payload.client_refs[index], value, value_sha256: valueHash(value)
     }));
     const leverApplied = await leverPage.evaluate(
-      ({refs, fields, fileHash}) => globalThis.__jobflowCall({
+      ({refs, fields, fileHash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields,
         files: [{
           client_ref: refs[3], purpose: "resume", filename: "resume.pdf",
@@ -437,7 +691,10 @@ async function verifyProviderRebindingRuntime(browser, {
         navigation: null,
         final_submit_client_refs: [refs[4]]
       }),
-      {refs: leverCollected.payload.client_refs, fields: leverFields, fileHash}
+      {
+        refs: leverCollected.payload.client_refs, fields: leverFields, fileHash,
+        controlSemantics: leverCollected.payload.control_semantics_sha256
+      }
     );
     assert.equal(leverApplied.status, "APPLIED", JSON.stringify(leverApplied));
     assert.equal(leverApplied.field_bindings.length, 3);
@@ -537,11 +794,17 @@ async function verifyProviderRebindingRuntime(browser, {
       download_url: "http://127.0.0.1/assist/synthetic/file/workday-resume"
     }];
     const workdayApplied = await workdayPage.evaluate(
-      ({refs, fields, files}) => globalThis.__jobflowCall({
+      ({refs, fields, files, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields, files, navigation: null, final_submit_client_refs: [refs[7]]
       }),
-      {refs: workdayCollected.payload.client_refs, fields: workdayFields, files: workdayFiles}
+      {
+        refs: workdayCollected.payload.client_refs,
+        fields: workdayFields,
+        files: workdayFiles,
+        controlSemantics: workdayCollected.payload.control_semantics_sha256
+      }
     );
     assert.equal(workdayApplied.status, "APPLIED", JSON.stringify(workdayApplied));
     assert.equal(workdayApplied.field_bindings.length, 5);
@@ -579,6 +842,139 @@ async function verifyProviderRebindingRuntime(browser, {
       finalIndex: 4,
       finalSelector: "button[type=submit]"
     });
+
+    const modernAshbyPage = await browser.newPage();
+    const modernAshbyUrl = "https://jobs.ashbyhq.com/example/22222222-2222-4222-8222-222222222222/application";
+    await modernAshbyPage.route(modernAshbyUrl, (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8", body: ashbyModernFixture
+    }));
+    await modernAshbyPage.goto(modernAshbyUrl, {waitUntil: "domcontentloaded"});
+    await modernAshbyPage.evaluate(({encodedFile}) => {
+      globalThis.__jobflowMessages = [];
+      globalThis.__jobflowListener = null;
+      const decode = () => Uint8Array.from(atob(encodedFile), (character) => character.charCodeAt(0));
+      globalThis.chrome = {
+        runtime: {
+          lastError: null,
+          onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+          async sendMessage(message) { globalThis.__jobflowMessages.push(message); return {status: "RECORDED"}; },
+          connect() {
+            const messageListeners = [];
+            const disconnectListeners = [];
+            return {
+              onMessage: {addListener(listener) { messageListeners.push(listener); }},
+              onDisconnect: {addListener(listener) { disconnectListeners.push(listener); }},
+              postMessage() {
+                const bytes = decode();
+                let binary = "";
+                for (const value of bytes) binary += String.fromCharCode(value);
+                queueMicrotask(() => {
+                  for (const listener of messageListeners) listener({type: "chunk", data: btoa(binary)});
+                  for (const listener of messageListeners) listener({type: "end"});
+                });
+              },
+              disconnect() { for (const listener of disconnectListeners) listener(); }
+            };
+          }
+        }
+      };
+      document.querySelector("form").addEventListener("submit", (event) => event.preventDefault());
+    }, {encodedFile: fileBytes.toString("base64")});
+    await modernAshbyPage.addScriptTag({path: companion});
+    await modernAshbyPage.evaluate(() => {
+      globalThis.__jobflowCall = (message) => new Promise((resolve) => {
+        globalThis.__jobflowListener(message, {}, resolve);
+      });
+    });
+    const modernAshbyCollected = await modernAshbyPage.evaluate(
+      () => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"})
+    );
+    assert.equal(modernAshbyCollected.status, "COLLECTED");
+    assert.equal(modernAshbyCollected.payload.client_refs.length, 9, modernAshbyCollected.payload.sanitized_html);
+    assert.equal(new Set(modernAshbyCollected.payload.client_refs).size, 9);
+    assert.ok(!modernAshbyCollected.payload.sanitized_html.includes("Search jobs"));
+    assert.ok(!modernAshbyCollected.payload.sanitized_html.includes("Autofill from resume"));
+    assert.ok(!modernAshbyCollected.payload.sanitized_html.includes("candidate_token"));
+    assert.ok(!modernAshbyCollected.payload.sanitized_html.includes("must-not-leave-page"));
+    assert.ok(!modernAshbyCollected.payload.sanitized_html.includes("OPAQUE-PATH-MUST-NOT-LEAVE"));
+    assert.ok(!modernAshbyCollected.payload.sanitized_html.includes("private-fragment"));
+    assert.ok(!modernAshbyCollected.payload.sanitized_html.includes("22222222-2222-4222-8222-222222222222"));
+    assert.match(
+      modernAshbyCollected.payload.sanitized_html,
+      /action="https:\/\/jobs\.ashbyhq\.com\/__jobflow_route_redacted__"/
+    );
+    assert.match(modernAshbyCollected.payload.sanitized_html, /<label[^>]*>Name<\/label><input[^>]*name="name"/);
+    assert.match(modernAshbyCollected.payload.sanitized_html, /<input[^>]*name="_systemfield_resume"[^>]*type="file"/);
+    assert.match(modernAshbyCollected.payload.sanitized_html, /Cover Letter[\s\S]*<textarea/);
+    const modernAshbyValues = [
+      [0, "Synthetic Applicant"],
+      [2, "+1"],
+      [6, "Synthetic cover letter text grounded only in approved test evidence."],
+      [7, "Yes"]
+    ];
+    const modernAshbyFields = modernAshbyValues.map(([index, value]) => ({
+      client_ref: modernAshbyCollected.payload.client_refs[index], value, value_sha256: valueHash(value)
+    }));
+    const modernAshbyApplied = await modernAshbyPage.evaluate(
+      ({refs, fields, fileHash, controlSemantics}) => globalThis.__jobflowCall({
+        type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
+        fields,
+        files: [{
+          client_ref: refs[5], purpose: "resume", filename: "resume.pdf", sha256: fileHash,
+          download_url: "http://127.0.0.1/assist/synthetic/file/modern-ashby-resume"
+        }],
+        navigation: null,
+        final_submit_client_refs: [refs[8]]
+      }),
+      {
+        refs: modernAshbyCollected.payload.client_refs,
+        fields: modernAshbyFields,
+        fileHash,
+        controlSemantics: modernAshbyCollected.payload.control_semantics_sha256
+      }
+    );
+    assert.equal(modernAshbyApplied.status, "APPLIED", JSON.stringify(modernAshbyApplied));
+    assert.equal(modernAshbyApplied.field_bindings.length, 4);
+    assert.equal(modernAshbyApplied.material_bindings.length, 1);
+    assert.equal(modernAshbyApplied.navigation_ready, false);
+    assert.equal(modernAshbyApplied.final_submit_armed, true);
+    assert.equal(await modernAshbyPage.locator("#candidate-name").inputValue(), "Synthetic Applicant");
+    assert.equal(await modernAshbyPage.locator("#phone-country-code").inputValue(), "+1");
+    assert.equal(
+      await modernAshbyPage.locator("#cover-letter").inputValue(),
+      "Synthetic cover letter text grounded only in approved test evidence."
+    );
+    assert.equal(await modernAshbyPage.locator('input[name="relocation"]:checked').inputValue(), "Yes");
+    assert.equal(await modernAshbyPage.locator('input[type="file"]:not([id])').evaluate((control) => control.files.length), 0);
+    assert.equal(await modernAshbyPage.locator("#_systemfield_resume").evaluate((control) => control.files[0]?.name), "resume.pdf");
+    assert.equal(await modernAshbyPage.locator("#_systemfield_resume").evaluate((control) => control.files[0]?.type), "application/pdf");
+    assert.equal((await modernAshbyPage.evaluate(() => globalThis.__jobflowMessages)).filter(
+      (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+    ).length, 0);
+    await modernAshbyPage.evaluate(() => {
+      const form = document.querySelector("form");
+      const label = document.createElement("label");
+      label.htmlFor = "duplicate-resume";
+      label.textContent = "Resume";
+      const input = document.createElement("input");
+      input.id = "duplicate-resume";
+      input.name = "duplicate_resume";
+      input.type = "file";
+      input.hidden = true;
+      form.append(label, input);
+    });
+    const ambiguousAshbyCollected = await modernAshbyPage.evaluate(
+      () => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"})
+    );
+    assert.equal(ambiguousAshbyCollected.status, "BLOCKED");
+    assert.equal(ambiguousAshbyCollected.code, "COMPANION_AMBIGUOUS_FILE_CONTROLS");
+    assert.equal(ambiguousAshbyCollected.automatic_retry, false);
+    assert.equal(ambiguousAshbyCollected.ambiguous_upload_control_count, 2);
+    assert.equal((await modernAshbyPage.evaluate(() => globalThis.__jobflowMessages)).filter(
+      (item) => item.type === "JOBFLOW_USER_SUBMIT_OBSERVED"
+    ).length, 0);
+    await modernAshbyPage.close();
     const smartRecruitersRuntime = await verifyProviderApplicationRuntime(browser, {
       url: "https://jobs.smartrecruiters.com/example/12345-synthetic-credit-analyst/apply",
       fixtureHtml: smartRecruitersFixture,
@@ -652,16 +1048,24 @@ async function verifyProviderRebindingRuntime(browser, {
     assert.match(tekCollected.payload.sanitized_html, /<label[^>]*>Phone Type<\/label><select[^>]*data-jobflow-custom-select="true"/);
     assert.match(tekCollected.payload.sanitized_html, /two professional references/);
     const tekApplied = await tekPage.evaluate(
-      ({clientRef, value, hash}) => globalThis.__jobflowCall({
+      ({clientRef, value, hash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields: [{client_ref: clientRef, value, value_sha256: hash}],
         files: [], navigation: null,
         final_submit_client_refs: []
       }),
-      {clientRef: tekCollected.payload.client_refs[6], value: "Mobile", hash: valueHash("Mobile")}
+      {
+        clientRef: tekCollected.payload.client_refs[6],
+        value: "Mobile",
+        hash: valueHash("Mobile"),
+        controlSemantics: tekCollected.payload.control_semantics_sha256
+      }
     );
     assert.equal(tekApplied.status, "APPLIED", JSON.stringify(tekApplied));
-    assert.match(await tekPage.locator("#phone-type").evaluate((host) => host.shadowRoot.querySelector("button").innerText), /^Mobile\s+Show menu$/);
+    assert.match(await tekPage.locator("#phone-type").evaluate(
+      (host) => host.shadowRoot.querySelector("lightning-button-menu > button").innerText
+    ), /^Mobile\s+Show menu$/);
     await tekPage.close();
 
     const ariaComboboxPage = await browser.newPage();
@@ -715,23 +1119,35 @@ async function verifyProviderRebindingRuntime(browser, {
     assert.equal(ariaCollected.payload.client_refs.length, 2);
     assert.match(ariaCollected.payload.sanitized_html, /data-jobflow-aria-combobox="true"/);
     const ariaApplied = await ariaComboboxPage.evaluate(
-      ({clientRefs, value, hash}) => globalThis.__jobflowCall({
+      ({clientRefs, value, hash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields: [{client_ref: clientRefs[0], value, value_sha256: hash}],
         files: [], navigation: null, final_submit_client_refs: [clientRefs[1]]
       }),
-      {clientRefs: ariaCollected.payload.client_refs, value: "United States", hash: valueHash("United States")}
+      {
+        clientRefs: ariaCollected.payload.client_refs,
+        value: "United States",
+        hash: valueHash("United States"),
+        controlSemantics: ariaCollected.payload.control_semantics_sha256
+      }
     );
     assert.equal(ariaApplied.status, "APPLIED", JSON.stringify(ariaApplied));
     assert.equal(await ariaComboboxPage.locator("#country").inputValue(), "United States");
     assert.equal(ariaApplied.final_submit_armed, true);
     const ariaMissing = await ariaComboboxPage.evaluate(
-      ({clientRef, value, hash}) => globalThis.__jobflowCall({
+      ({clientRef, value, hash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields: [{client_ref: clientRef, value, value_sha256: hash}],
         files: [], navigation: null, final_submit_client_refs: []
       }),
-      {clientRef: ariaCollected.payload.client_refs[0], value: "Mexico", hash: valueHash("Mexico")}
+      {
+        clientRef: ariaCollected.payload.client_refs[0],
+        value: "Mexico",
+        hash: valueHash("Mexico"),
+        controlSemantics: ariaCollected.payload.control_semantics_sha256
+      }
     );
     assert.equal(ariaMissing.status, "BLOCKED", JSON.stringify(ariaMissing));
     assert.equal(ariaMissing.code, "COMPANION_ARIA_COMBOBOX_OPTION_NOT_FOUND");
@@ -793,12 +1209,18 @@ async function verifyProviderRebindingRuntime(browser, {
     assert.equal(buttonComboboxCollected.payload.client_refs.length, 2);
     assert.match(buttonComboboxCollected.payload.sanitized_html, /data-jobflow-aria-combobox="true"/);
     const buttonComboboxApplied = await buttonComboboxPage.evaluate(
-      ({refs, value, hash}) => globalThis.__jobflowCall({
+      ({refs, value, hash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields: [{client_ref: refs[0], value, value_sha256: hash}],
         files: [], navigation: null, final_submit_client_refs: [refs[1]]
       }),
-      {refs: buttonComboboxCollected.payload.client_refs, value: "Hybrid", hash: valueHash("Hybrid")}
+      {
+        refs: buttonComboboxCollected.payload.client_refs,
+        value: "Hybrid",
+        hash: valueHash("Hybrid"),
+        controlSemantics: buttonComboboxCollected.payload.control_semantics_sha256
+      }
     );
     assert.equal(buttonComboboxApplied.status, "APPLIED", JSON.stringify(buttonComboboxApplied));
     assert.equal(await buttonComboboxPage.locator("#work-setting").getAttribute("aria-valuetext"), "Hybrid");
@@ -851,8 +1273,9 @@ async function verifyProviderRebindingRuntime(browser, {
     assert.equal(repaintCollected.status, "COLLECTED");
     assert.equal(repaintCollected.payload.client_refs.length, 3);
     const repaintApplied = await repaintPage.evaluate(
-      ({refs, first, last, firstHash, lastHash}) => globalThis.__jobflowCall({
+      ({refs, first, last, firstHash, lastHash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields: [
           {client_ref: refs[0], value: first, value_sha256: firstHash},
           {client_ref: refs[1], value: last, value_sha256: lastHash}
@@ -862,7 +1285,8 @@ async function verifyProviderRebindingRuntime(browser, {
       {
         refs: repaintCollected.payload.client_refs,
         first: "Synthetic", last: "Applicant",
-        firstHash: valueHash("Synthetic"), lastHash: valueHash("Applicant")
+        firstHash: valueHash("Synthetic"), lastHash: valueHash("Applicant"),
+        controlSemantics: repaintCollected.payload.control_semantics_sha256
       }
     );
     assert.equal(repaintApplied.status, "APPLIED", JSON.stringify(repaintApplied));
@@ -873,7 +1297,11 @@ async function verifyProviderRebindingRuntime(browser, {
     await repaintPage.close();
 
     const delayedPage = await browser.newPage();
-    await delayedPage.setContent("<!doctype html><html><body><main id='application-root'></main></body></html>");
+    await delayedPage.route("https://delayed.example.test/**", (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8",
+      body: "<!doctype html><html><body><main id='application-root'></main></body></html>"
+    }));
+    await delayedPage.goto("https://delayed.example.test/apply", {waitUntil: "domcontentloaded"});
     await delayedPage.evaluate(() => {
       globalThis.__jobflowListener = null;
       globalThis.chrome = {
@@ -896,7 +1324,7 @@ async function verifyProviderRebindingRuntime(browser, {
       globalThis.__jobflowCall = (message) => new Promise((resolve) => globalThis.__jobflowListener(message, {}, resolve));
     });
     const delayedCollected = await delayedPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
-    assert.equal(delayedCollected.status, "COLLECTED");
+    assert.equal(delayedCollected.status, "COLLECTED", JSON.stringify(delayedCollected));
     assert.equal(delayedCollected.payload.client_refs.length, 2);
     assert.match(delayedCollected.payload.sanitized_html, /First Name/);
     await delayedPage.close();
@@ -948,8 +1376,9 @@ async function verifyProviderRebindingRuntime(browser, {
       manualPageHash, navCollected.payload.client_refs[1], "submit", "Next"
     ]));
     const navApplied = await navigationPage.evaluate(
-      ({clientRefs, value, hash, pageHash, semanticsHash}) => globalThis.__jobflowCall({
+      ({clientRefs, value, hash, pageHash, semanticsHash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields: [{client_ref: clientRefs[0], value, value_sha256: hash}],
         files: [], navigation: {
           client_ref: clientRefs[1], mode: "MANUAL_USER_CLICK", control_type: "submit",
@@ -958,7 +1387,8 @@ async function verifyProviderRebindingRuntime(browser, {
       }),
       {
         clientRefs: navCollected.payload.client_refs, value: navValue, hash: valueHash(navValue),
-        pageHash: manualPageHash, semanticsHash: manualSemanticsHash
+        pageHash: manualPageHash, semanticsHash: manualSemanticsHash,
+        controlSemantics: navCollected.payload.control_semantics_sha256
       }
     );
     assert.equal(navApplied.navigation_ready, false);
@@ -1038,14 +1468,20 @@ async function verifyProviderRebindingRuntime(browser, {
       preventedHash, preventedCollected.payload.client_refs[1], "submit", "Next"
     ]));
     await preventedPage.evaluate(
-      ({clientRefs, pageHash, semanticsHash}) => globalThis.__jobflowCall({
+      ({clientRefs, pageHash, semanticsHash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED", fields: [], files: [], final_submit_client_refs: [],
+        control_semantics_sha256: controlSemantics,
         navigation: {
           client_ref: clientRefs[1], mode: "MANUAL_USER_CLICK", control_type: "submit",
           page_content_hash: pageHash, control_semantics_hash: semanticsHash, display_label: "Next"
         }
       }),
-      {clientRefs: preventedCollected.payload.client_refs, pageHash: preventedHash, semanticsHash: preventedSemantics}
+      {
+        clientRefs: preventedCollected.payload.client_refs,
+        pageHash: preventedHash,
+        semanticsHash: preventedSemantics,
+        controlSemantics: preventedCollected.payload.control_semantics_sha256
+      }
     );
     const preventedChallenge = {
       challenge_id: `MNC-${"C".repeat(32)}`, nonce: "prevented-one-use-nonce",
@@ -1101,14 +1537,20 @@ async function verifyProviderRebindingRuntime(browser, {
     const spaHash = valueHash(spaCollected.payload.sanitized_html);
     const spaSemantics = valueHash(JSON.stringify([spaHash, spaCollected.payload.client_refs[1], "submit", "Next"]));
     await spaPage.evaluate(
-      ({clientRefs, pageHash, semanticsHash}) => globalThis.__jobflowCall({
+      ({clientRefs, pageHash, semanticsHash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED", fields: [], files: [], final_submit_client_refs: [],
+        control_semantics_sha256: controlSemantics,
         navigation: {
           client_ref: clientRefs[1], mode: "MANUAL_USER_CLICK", control_type: "submit",
           page_content_hash: pageHash, control_semantics_hash: semanticsHash, display_label: "Next"
         }
       }),
-      {clientRefs: spaCollected.payload.client_refs, pageHash: spaHash, semanticsHash: spaSemantics}
+      {
+        clientRefs: spaCollected.payload.client_refs,
+        pageHash: spaHash,
+        semanticsHash: spaSemantics,
+        controlSemantics: spaCollected.payload.control_semantics_sha256
+      }
     );
     const spaChallenge = {
       challenge_id: `MNC-${"E".repeat(32)}`, nonce: "spa-one-use-nonce",
@@ -1164,8 +1606,9 @@ async function verifyProviderRebindingRuntime(browser, {
     ]));
     const explicitValues = [navValue, "synthetic@example.test"];
     const explicitApplied = await explicitPage.evaluate(
-      ({clientRefs, pageHash, semanticsHash, values, hashes}) => globalThis.__jobflowCall({
+      ({clientRefs, pageHash, semanticsHash, values, hashes, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields: [
           {client_ref: clientRefs[0], value: values[0], value_sha256: hashes[0]},
           {client_ref: clientRefs[1], value: values[1], value_sha256: hashes[1]}
@@ -1179,7 +1622,8 @@ async function verifyProviderRebindingRuntime(browser, {
       {
         clientRefs: explicitCollected.payload.client_refs, pageHash: explicitPageHash,
         semanticsHash: explicitSemanticsHash, values: explicitValues,
-        hashes: explicitValues.map((value) => valueHash(value))
+        hashes: explicitValues.map((value) => valueHash(value)),
+        controlSemantics: explicitCollected.payload.control_semantics_sha256
       }
     );
     assert.equal(explicitApplied.navigation_ready, true);
@@ -1265,8 +1709,9 @@ async function verifyProviderRebindingRuntime(browser, {
       value_sha256: valueHash(lwcValues[valueIndex])
     }));
     const lwcApplied = await lwcPage.evaluate(
-      ({refs, fields, fileHash}) => globalThis.__jobflowCall({
+      ({refs, fields, fileHash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields,
         files: [{
           client_ref: refs[0], purpose: "resume", filename: "resume-approved.docx",
@@ -1275,7 +1720,12 @@ async function verifyProviderRebindingRuntime(browser, {
         navigation: null,
         final_submit_client_refs: [refs[5]]
       }),
-      {refs: lwcCollected.payload.client_refs, fields: lwcFields, fileHash}
+      {
+        refs: lwcCollected.payload.client_refs,
+        fields: lwcFields,
+        fileHash,
+        controlSemantics: lwcCollected.payload.control_semantics_sha256
+      }
     );
     assert.equal(lwcApplied.status, "APPLIED", JSON.stringify(lwcApplied));
     assert.equal(lwcApplied.field_bindings.length, 6);
@@ -1302,7 +1752,7 @@ async function verifyProviderRebindingRuntime(browser, {
     assert.equal(lwcState.references, true);
     assert.equal(lwcState.finalClickMessages, 0);
     assert.equal(await lwcPage.locator("#phone-type").evaluate(
-      (host) => host.shadowRoot.querySelector("button").getAttribute("aria-expanded")
+      (host) => host.shadowRoot.querySelector("lightning-button-menu > button").getAttribute("aria-expanded")
     ), "false");
     const lwcAfterUpload = await lwcPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
     assert.equal(lwcAfterUpload.status, "COLLECTED");
@@ -1311,15 +1761,17 @@ async function verifyProviderRebindingRuntime(browser, {
     assert.match(lwcAfterUpload.payload.sanitized_html, /SUBMIT/);
 
     const choiceFailure = await lwcPage.evaluate(
-      ({clientRef, value, hash}) => globalThis.__jobflowCall({
+      ({clientRef, value, hash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields: [{client_ref: clientRef, value, value_sha256: hash}],
         files: [], navigation: null, final_submit_client_refs: []
       }),
       {
         clientRef: lwcAfterUpload.payload.client_refs[2],
         value: "Not an offered choice",
-        hash: valueHash("Not an offered choice")
+        hash: valueHash("Not an offered choice"),
+        controlSemantics: lwcAfterUpload.payload.control_semantics_sha256
       }
     );
     assert.equal(choiceFailure.status, "BLOCKED", JSON.stringify(choiceFailure));
@@ -1372,8 +1824,9 @@ async function verifyProviderRebindingRuntime(browser, {
     const partialCollected = await partialPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
     const partialValue = "Lee";
     const partialApplied = await partialPage.evaluate(
-      ({refs, value, hash, fileHash}) => globalThis.__jobflowCall({
+      ({refs, value, hash, fileHash, controlSemantics}) => globalThis.__jobflowCall({
         type: "JOBFLOW_APPLY_APPROVED",
+        control_semantics_sha256: controlSemantics,
         fields: [{client_ref: refs[2], value, value_sha256: hash}],
         files: [{
           client_ref: refs[0], purpose: "resume", filename: "resume-approved.docx",
@@ -1382,7 +1835,13 @@ async function verifyProviderRebindingRuntime(browser, {
         navigation: null,
         final_submit_client_refs: [refs[5]]
       }),
-      {refs: partialCollected.payload.client_refs, value: partialValue, hash: valueHash(partialValue), fileHash}
+      {
+        refs: partialCollected.payload.client_refs,
+        value: partialValue,
+        hash: valueHash(partialValue),
+        fileHash,
+        controlSemantics: partialCollected.payload.control_semantics_sha256
+      }
     );
     assert.equal(partialApplied.status, "BLOCKED", JSON.stringify(partialApplied));
     assert.equal(partialApplied.code, "COMPANION_CONTROL_REBIND_FAILED");
@@ -1391,6 +1850,9 @@ async function verifyProviderRebindingRuntime(browser, {
     assert.equal(partialApplied.material_bindings.length, 1);
     assert.equal(partialApplied.attempted_field_bindings.length, 0);
     await partialPage.close();
+
+    const dynamicMaxLengthFailClosed = await verifyDynamicMaxLengthFailClosed(browser);
+    const approvalSemanticsAndAtomicPreflight = await verifyApprovalSemanticsAndAtomicPreflight(browser);
 
     process.stdout.write(JSON.stringify({
       status: "PASS",
@@ -1433,6 +1895,8 @@ async function verifyProviderRebindingRuntime(browser, {
       shadow_root_mutation_settling: true,
       async_upload_replacement: true,
       partial_apply_evidence: true,
+      dynamic_maxlength_fail_closed: dynamicMaxLengthFailClosed,
+      approval_semantics_and_atomic_preflight: approvalSemanticsAndAtomicPreflight,
       programmatic_final_submit_events: 0
     }));
   } finally {

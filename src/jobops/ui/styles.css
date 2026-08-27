@@ -312,7 +312,14 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .application-field-row > div > strong,.application-field-row > div > small,.application-non-form-row > div > strong,.application-non-form-row > div > small { display: block; overflow-wrap: anywhere; }
 .application-field-row > div > small,.application-non-form-row > div > small { margin-top: 4px; color: var(--muted); font-size: 10px; }
 .application-field-row label,.application-non-form-row label { display: grid; gap: 5px; color: var(--muted); font-size: 10px; }
-.application-field-row select,.application-field-row input,.application-non-form-row select { width: 100%; min-width: 0; min-height: 40px; border: 1px solid var(--line); padding: 8px; background: #fff; }
+.application-field-row select,.application-field-row input,.application-field-row textarea,.application-non-form-row select { width: 100%; min-width: 0; min-height: 40px; border: 1px solid var(--line); padding: 8px; background: #fff; }
+.application-field-row textarea { min-height: 110px; resize: vertical; font: inherit; line-height: 1.45; }
+.application-field-answer { display: grid; gap: 8px; min-width: 0; }
+.application-narrative-tools { display: grid; gap: 7px; }
+.application-narrative-tools > .text-action { justify-self: start; }
+.application-narrative-preview { padding: 10px; border: 1px solid #b9d1c8; background: var(--green-soft); }
+.application-narrative-preview strong { display: block; margin-bottom: 7px; color: var(--green); font-size: 10px; }
+.application-narrative-preview pre { max-height: 280px; margin: 0 0 8px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); font: 11px/1.5 Georgia, "Songti SC", serif; }
 .application-field-resolution > button { min-width: 260px; }
 .packet-decision-panel { margin: 18px 0 0; padding: 18px; border: 1px solid var(--line); background: var(--green-soft); }
 .packet-decision-panel legend { padding: 0 8px; font: 600 18px/1.2 Georgia, "Songti SC", serif; }

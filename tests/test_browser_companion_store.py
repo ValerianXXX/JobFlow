@@ -30,7 +30,7 @@ class BrowserCompanionStoreTests(unittest.TestCase):
             result = module.build(first)
             module.build(second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
-            self.assertEqual(result["version"], "0.9.1")
+            self.assertEqual(result["version"], "0.9.2")
             self.assertEqual(result["private_binding_files"], 0)
             with zipfile.ZipFile(first) as archive:
                 names = archive.namelist()
@@ -201,7 +201,7 @@ class BrowserCompanionStoreTests(unittest.TestCase):
                 "schema_version": 1,
                 "type": "JOBFLOW_GET_INSTALLATION_BINDING",
                 "protocol_version": 2,
-                "extension_version": "0.9.1",
+                "extension_version": "0.9.2",
             }, separators=(",", ":")).encode("utf-8")
             framed = struct.pack("=I", len(request)) + request
 

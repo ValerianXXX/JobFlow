@@ -55,13 +55,18 @@
           const root = this.attachShadow({mode: "open"});
           root.innerHTML = `
             <p class="labelTextDropDown">Phone Type *</p>
+            <div hidden data-jobflow-option-catalog>
+              <button type="button" role="menuitem" data-value="Mobile">Mobile</button>
+              <button type="button" role="menuitem" data-value="Home">Home</button>
+              <button type="button" role="menuitem" data-value="Work">Work</button>
+            </div>
             <lightning-button-menu>
               <button type="button" aria-haspopup="true" aria-expanded="false">
                 <span data-jobflow-current>Select a Phone Type</span>
                 <span>Show menu</span>
               </button>
             </lightning-button-menu>`;
-          const button = root.querySelector("button");
+          const button = root.querySelector("lightning-button-menu > button");
           const current = root.querySelector("[data-jobflow-current]");
           button.addEventListener("click", () => {
             if (button.getAttribute("aria-expanded") === "true") {
@@ -108,7 +113,7 @@
           const finalSubmit = document.querySelector("#final-submit");
           finalSubmit.replaceWith(finalSubmit.cloneNode(true));
           document.querySelector("#first-name").setAttribute("data-resume-parser-complete", "true");
-        }, 120);
+        }, 1200);
       });
     </script>
   </body>

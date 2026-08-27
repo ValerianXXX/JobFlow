@@ -34,6 +34,17 @@ SYNTHETIC_PHONE = "+1 555 010 0" + "200"
 SYNTHETIC_STREET_ADDRESS = "100 Example " + "Avenue"
 
 
+def browser_control_contract(count: int) -> dict[str, object]:
+    refs = [f"DOM-{index:012d}" for index in range(1, count + 1)]
+    return {
+        "client_refs": refs,
+        "control_semantics_sha256": {
+            ref: sha256_bytes(f"synthetic-browser-semantics:{ref}".encode("utf-8"))
+            for ref in refs
+        },
+    }
+
+
 def manual_navigation_evidence(service, token: str, completed: dict) -> dict:
     challenge = completed["manual_navigation"]["challenge"]
     lease = service.browser_assist._leases[token]
@@ -353,6 +364,31 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertEqual(stopped["status"], "BROWSER_ASSIST_STOPPED")
             self.assertEqual(started["real_external_actions"], 0)
 
+    def test_legacy_review_requires_explicit_rebuild_before_browser_assist(self) -> None:
+        with project_temp() as temp:
+            database, onboarding, _ = self.build(temp)
+            self.seed_completed_context(onboarding)
+            service, application_id, _ = self.approved_company_application(database, onboarding)
+            bundle, context, answer_refs = service.browser_assist._bundle_manager.load_current(application_id)
+            legacy = json.loads(json.dumps(bundle))
+            for field in legacy["form_snapshot"]["fields"]:
+                field.pop("max_length", None)
+                field.pop("max_length_status", None)
+            with mock.patch.object(
+                service.browser_assist._bundle_manager,
+                "load_current",
+                return_value=(legacy, context, answer_refs),
+            ):
+                with self.assertRaises(JobOpsError) as blocked:
+                    service.start_browser_assist({
+                        "application_id": application_id,
+                        "user_confirmed": True,
+                    })
+            self.assertEqual(blocked.exception.code, "BROWSER_REVIEW_UPGRADE_REQUIRED")
+            with database.connect() as connection:
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM browser_assist_runs").fetchone()[0], 0)
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0], 0)
+
     def test_resume_contact_fields_are_ready_without_reasking_in_single_review(self) -> None:
         with project_temp() as temp:
             database, onboarding, _ = self.build(temp)
@@ -484,7 +520,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             {
                 "url": started["approved_url"],
                 "sanitized_html": (PROJECT / "tests" / "fixtures" / "synthetic-material-form.html").read_text(encoding="utf-8"),
-                "client_refs": [f"DOM-{index:012d}" for index in range(1, field_count + 1)],
+                **browser_control_contract(field_count),
                 "blocker_signals": [],
             },
             extension_origin=COMPANION_EXTENSION_ORIGIN,
@@ -1340,7 +1376,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 {
                     "url": started["approved_url"],
                     "sanitized_html": initial_html,
-                    "client_refs": [f"DOM-{index:012d}" for index in range(1, initial_count + 1)],
+                    **browser_control_contract(initial_count),
                     "blocker_signals": [],
                 },
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
@@ -1383,7 +1419,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 {
                     "url": started["approved_url"],
                     "sanitized_html": dynamic_html,
-                    "client_refs": [f"DOM-{index:012d}" for index in range(1, initial_count + 1)],
+                    **browser_control_contract(initial_count),
                     "blocker_signals": [],
                     "field_bindings": field_bindings,
                     "material_bindings": material_bindings,
@@ -1442,7 +1478,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 token,
                 {
                     "url": started["approved_url"], "sanitized_html": initial_html,
-                    "client_refs": [f"DOM-{index:012d}" for index in range(1, initial_count + 1)],
+                    **browser_control_contract(initial_count),
                     "blocker_signals": [],
                 },
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
@@ -1472,7 +1508,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 token,
                 {
                     "url": started["approved_url"], "sanitized_html": after_upload_html,
-                    "client_refs": [f"DOM-{index:012d}" for index in range(1, initial_count - 2)],
+                    **browser_control_contract(initial_count - 2),
                     "blocker_signals": [], "field_bindings": field_bindings,
                     "material_bindings": material_bindings, "submit_events": 0, "navigation_actions": 0,
                 },
@@ -1505,10 +1541,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 {
                     "url": started["approved_url"],
                     "sanitized_html": (PROJECT / "tests" / "fixtures" / "synthetic-material-form.html").read_text(encoding="utf-8"),
-                    "client_refs": [
-                        f"DOM-{index:012d}"
-                        for index in range(1, len(bundle["form_snapshot"]["fields"]) + 1)
-                    ],
+                    **browser_control_contract(len(bundle["form_snapshot"]["fields"])),
                     "blocker_signals": [],
                 },
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
@@ -1588,10 +1621,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 token,
                 {
                     "url": started["approved_url"], "sanitized_html": html,
-                    "client_refs": [
-                        f"DOM-{index:012d}"
-                        for index in range(1, len(bundle["form_snapshot"]["fields"]) + 1)
-                    ],
+                    **browser_control_contract(len(bundle["form_snapshot"]["fields"])),
                     "blocker_signals": [],
                 },
                 extension_origin=COMPANION_EXTENSION_ORIGIN,
@@ -1618,9 +1648,37 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             live = {
                 "url": started["approved_url"],
                 "sanitized_html": (PROJECT / "tests" / "fixtures" / "synthetic-material-form.html").read_text(encoding="utf-8"),
-                "client_refs": [f"DOM-{index:012d}" for index in range(1, field_count + 1)],
+                **browser_control_contract(field_count),
                 "blocker_signals": [],
             }
+            with self.assertRaises(JobOpsError) as local_prepare_on_browser_lease:
+                service.prepare_local_agent_assist({"assist_token": token, "page": live})
+            self.assertEqual(
+                local_prepare_on_browser_lease.exception.code,
+                "BROWSER_ASSIST_CHANNEL_MISMATCH",
+            )
+            with self.assertRaises(JobOpsError) as missing_semantics:
+                service.browser_assist.prepare(
+                    token,
+                    {key: value for key, value in live.items() if key != "control_semantics_sha256"},
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(
+                missing_semantics.exception.code,
+                "BROWSER_CONTROL_SEMANTICS_INVALID",
+            )
+            incomplete_semantics = dict(live["control_semantics_sha256"])
+            incomplete_semantics.pop(next(iter(incomplete_semantics)))
+            with self.assertRaises(JobOpsError) as incomplete_semantics_error:
+                service.browser_assist.prepare(
+                    token,
+                    {**live, "control_semantics_sha256": incomplete_semantics},
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(
+                incomplete_semantics_error.exception.code,
+                "BROWSER_CONTROL_SEMANTICS_INVALID",
+            )
             with self.assertRaises(JobOpsError) as drifted:
                 service.browser_assist.prepare(
                     token, {**live, "sanitized_html": live["sanitized_html"].replace("Full name", "Changed legal identity")},
@@ -1628,14 +1686,42 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 )
             self.assertEqual(drifted.exception.code, "SITE_CHANGED")
             prepared = service.browser_assist.prepare(token, live, extension_origin=COMPANION_EXTENSION_ORIGIN)
+            self.assertEqual(prepared["control_semantics_sha256"], live["control_semantics_sha256"])
             self.assertGreaterEqual(prepared["field_count"], 3)
             self.assertEqual(prepared["file_count"], 3)
             self.assertFalse(prepared["submit_capability"])
             self.assertTrue(prepared["stop_before_submit"])
+            with self.assertRaises(JobOpsError) as local_discovery_on_browser_lease:
+                service.discover_local_agent_dynamic_fields({"assist_token": token, "page": live})
+            self.assertEqual(
+                local_discovery_on_browser_lease.exception.code,
+                "BROWSER_ASSIST_CHANNEL_MISMATCH",
+            )
+            with self.assertRaises(JobOpsError) as local_complete_on_browser_lease:
+                service.complete_local_agent_assist({
+                    "assist_token": token,
+                    "evidence": {
+                        "field_bindings": [], "material_bindings": [],
+                        "submit_events": 0, "navigation_actions": 0,
+                    },
+                })
+            self.assertEqual(
+                local_complete_on_browser_lease.exception.code,
+                "BROWSER_ASSIST_CHANNEL_MISMATCH",
+            )
 
             material_bindings = []
-            for item in prepared["files"]:
+            for index, item in enumerate(prepared["files"]):
                 file_token = str(item["download_path"]).rsplit("/", 1)[-1]
+                if index == 0:
+                    with self.assertRaises(JobOpsError) as local_file_on_browser_lease:
+                        service.take_local_agent_assist_file(
+                            assist_token=token, file_token=file_token,
+                        )
+                    self.assertEqual(
+                        local_file_on_browser_lease.exception.code,
+                        "BROWSER_ASSIST_CHANNEL_MISMATCH",
+                    )
                 raw, metadata = service.browser_assist.take_file(
                     token, file_token, extension_origin=COMPANION_EXTENSION_ORIGIN,
                 )
@@ -1721,14 +1807,22 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
 
             bundle, _, _ = service.browser_assist._bundle_manager.load_current(application_id)
             field_count = len(bundle["form_snapshot"]["fields"])
+            local_page = {
+                "url": started["approved_url"],
+                "sanitized_html": (PROJECT / "tests" / "fixtures" / "synthetic-material-form.html").read_text(encoding="utf-8"),
+                **browser_control_contract(field_count),
+                "blocker_signals": [],
+            }
+            with self.assertRaises(JobOpsError) as browser_prepare_on_local_lease:
+                service.browser_assist.prepare(
+                    token, local_page, extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(
+                browser_prepare_on_local_lease.exception.code,
+                "BROWSER_ASSIST_CHANNEL_MISMATCH",
+            )
             prepared = service.prepare_local_agent_assist({
-                "assist_token": token,
-                "page": {
-                    "url": started["approved_url"],
-                    "sanitized_html": (PROJECT / "tests" / "fixtures" / "synthetic-material-form.html").read_text(encoding="utf-8"),
-                    "client_refs": [f"DOM-{index:012d}" for index in range(1, field_count + 1)],
-                    "blocker_signals": [],
-                },
+                "assist_token": token, "page": local_page,
             })
             self.assertEqual(prepared["status"], "LIVE_PAGE_APPROVED_FOR_ASSIST")
             self.assertEqual(prepared["execution_channel"], "LOCAL_AI_AGENT")
@@ -1737,8 +1831,17 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertTrue(prepared["stop_before_submit"])
 
             material_bindings = []
-            for item in prepared["files"]:
+            for index, item in enumerate(prepared["files"]):
                 file_token = str(item["download_path"]).rsplit("/", 1)[-1]
+                if index == 0:
+                    with self.assertRaises(JobOpsError) as browser_file_on_local_lease:
+                        service.browser_assist.take_file(
+                            token, file_token, extension_origin=COMPANION_EXTENSION_ORIGIN,
+                        )
+                    self.assertEqual(
+                        browser_file_on_local_lease.exception.code,
+                        "BROWSER_ASSIST_CHANNEL_MISMATCH",
+                    )
                 raw, metadata = service.take_local_agent_assist_file(
                     assist_token=token, file_token=file_token,
                 )
@@ -1754,6 +1857,19 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 {"client_ref": item["client_ref"], "value_sha256": item["value_sha256"]}
                 for item in prepared["fields"]
             ]
+            with self.assertRaises(JobOpsError) as browser_complete_on_local_lease:
+                service.browser_assist.complete(
+                    token,
+                    {
+                        "field_bindings": [], "material_bindings": [],
+                        "submit_events": 0, "navigation_actions": 0,
+                    },
+                    extension_origin=COMPANION_EXTENSION_ORIGIN,
+                )
+            self.assertEqual(
+                browser_complete_on_local_lease.exception.code,
+                "BROWSER_ASSIST_CHANNEL_MISMATCH",
+            )
             with self.assertRaises(JobOpsError) as forbidden:
                 service.complete_local_agent_assist({
                     "assist_token": token,
@@ -1779,6 +1895,11 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertEqual(completed["final_submit"], "USER_ONLY")
             self.assertFalse(completed["submit_capability"])
             self.assertEqual(audit_real_external_actions(database)["real_external_actions"], 2)
+            with database.connect() as connection:
+                self.assertEqual(connection.execute(
+                    "SELECT COUNT(*) FROM live_acceptance_runs WHERE application_id=?",
+                    (application_id,),
+                ).fetchone()[0], 0)
             service.browser_assist.stop(user_confirmed=True)
 
     def test_expired_unchanged_packet_is_renewed_only_by_fresh_start_confirmation(self) -> None:
@@ -1913,8 +2034,21 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertEqual(started["protocol_version"], 2)
             self.assertTrue(started["multi_page"])
             token = str(started["assist_token"])
+            with database.connect() as connection:
+                self.assertEqual(connection.execute(
+                    "SELECT COUNT(*) FROM live_acceptance_runs WHERE application_id=?",
+                    (application_id,),
+                ).fetchone()[0], 0)
             paired = service.browser_assist.pair(token, extension_origin=COMPANION_EXTENSION_ORIGIN)
             self.assertEqual(paired["provider"], "workday")
+            with database.connect() as connection:
+                self.assertEqual(connection.execute(
+                    "SELECT COUNT(*) FROM live_acceptance_runs WHERE application_id=?",
+                    (application_id,),
+                ).fetchone()[0], 0)
+            paired_report = service.browser_assist._live_acceptance.report()
+            self.assertFalse(paired_report["live_site_accessed"])
+            self.assertEqual(paired_report["current_page_route_evidence_count"], 0)
             fixtures = PROJECT / "tests" / "fixtures"
 
             def live(
@@ -1924,7 +2058,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 return {
                     "url": url or started["approved_url"],
                     "sanitized_html": (fixtures / name).read_text(encoding="utf-8"),
-                    "client_refs": [f"DOM-{index:012d}" for index in range(1, count + 1)],
+                    **browser_control_contract(count),
                     "companion_tab_id": 42,
                     "document_instance_id": "DOC-" + document,
                     "blocker_signals": list(signals or []),
@@ -1937,6 +2071,9 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertEqual(first["page_kind"], "INTERMEDIATE")
             self.assertEqual(first["field_count"], 1)
             self.assertEqual(first["manual_field_count"], 0)
+            observed_report = service.browser_assist._live_acceptance.report()
+            self.assertTrue(observed_report["live_site_accessed"])
+            self.assertEqual(observed_report["current_page_route_evidence_count"], 1)
             first_done = service.browser_assist.complete(
                 token,
                 {
@@ -2078,7 +2215,6 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
             self.assertEqual(acceptance_run["page_text_persisted"], 0)
             self.assertTrue({
                 "ROUTE_BINDING",
-                "REVIEW_PACKET",
                 "FORM_ANALYSIS",
                 "PRIVATE_VALUE_FREE_PLAN",
                 "APPROVED_DOM_PREFILL",
@@ -2117,7 +2253,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 return {
                     "url": url or started["approved_url"],
                     "sanitized_html": fixture,
-                    "client_refs": ["DOM-000000000001", "DOM-000000000002"],
+                    **browser_control_contract(2),
                     "companion_tab_id": 42,
                     "document_instance_id": "DOC-" + "D" * 32,
                     "blocker_signals": list(signals or []),
@@ -2203,7 +2339,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 return {
                     "url": url or started["approved_url"],
                     "sanitized_html": (fixtures / name).read_text(encoding="utf-8"),
-                    "client_refs": [f"DOM-{index:012d}" for index in range(1, count + 1)],
+                    **browser_control_contract(count),
                     "companion_tab_id": 52,
                     "document_instance_id": "DOC-" + document,
                     "blocker_signals": [],
@@ -2299,7 +2435,7 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 live = {
                     "url": started["approved_url"],
                     "sanitized_html": (fixtures / "synthetic-v2-workday-step-1-explicit-button.html").read_text(encoding="utf-8"),
-                    "client_refs": ["DOM-000000000001", "DOM-000000000002"],
+                    **browser_control_contract(2),
                     "blocker_signals": [],
                 }
 

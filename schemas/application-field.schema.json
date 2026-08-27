@@ -4,7 +4,7 @@
   "required": ["field_id", "application_id", "classification", "action", "status", "secure_ref", "redacted_summary", "field_hash"],
   "properties": {
     "field_id": {"type": "string", "pattern": "^FLD-[A-F0-9]{12}$"}, "application_id": {"type": "string", "pattern": "^APP-[A-F0-9]{12}$"},
-    "classification": {"enum": ["ordinary_fixed", "private_fixed", "sensitive_review", "work_authorization_stop", "compensation_stop", "legal_declaration_stop", "signature_stop", "voluntary_disclosure_stop", "account_creation_stop", "file_upload_stop", "navigation_control_stop", "final_submit_stop", "unknown_stop"]},
+    "classification": {"enum": ["ordinary_fixed", "private_fixed", "application_narrative_review", "sensitive_review", "work_authorization_stop", "compensation_stop", "legal_declaration_stop", "signature_stop", "voluntary_disclosure_stop", "account_creation_stop", "file_upload_stop", "navigation_control_stop", "final_submit_stop", "unknown_stop"]},
     "action": {"enum": ["PREFILL", "STOP"]}, "status": {"enum": ["READY", "STOP_REQUIRED", "UNKNOWN", "RESOLVED_FOR_APPLICATION", "SEPARATE_ACTION_GATED"]},
     "secure_ref": {"type": ["string", "null"], "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"}, "redacted_summary": {"type": ["string", "null"]},
     "field_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}

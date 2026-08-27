@@ -2,12 +2,23 @@ from __future__ import annotations
 
 import unittest
 import subprocess
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
+from docx import Document
+
 from _support import project_temp
-from jobops.document_builder import _save_document_atomic, build_cover_letter, build_resume, export_docx_to_pdf, render_pdf_to_pngs
+from jobops.application_narrative import MAX_APPLICATION_NARRATIVE_CHARACTERS
+from jobops.document_builder import (
+    _save_document_atomic,
+    build_cover_letter,
+    build_cover_letter_narrative,
+    build_resume,
+    export_docx_to_pdf,
+    render_pdf_to_pngs,
+)
 from jobops.errors import JobOpsError
 from jobops.evidence import map_evidence
 from jobops.materials import approved_wordings, master_diff
@@ -126,6 +137,110 @@ class MaterialTests(unittest.TestCase):
             self.assertEqual(letter["claim_ids"], ["CLM-SYNTHETIC01"])
             self.assertTrue((temp / "resume.docx").is_file())
             self.assertTrue((temp / "letter.docx").is_file())
+
+    def test_cover_letter_docx_and_textarea_share_one_canonical_narrative(self) -> None:
+        claim = approved_claim(
+            "CLM-SYNTHETIC01",
+            "Analyzed synthetic product evidence",
+            "synthetic product analysis evidence",
+        )
+        why_company = "Example posted a synthetic role (https://example.com/news, accessed 2026-08-12)."
+        narrative = build_cover_letter_narrative(
+            candidate_display_name="Synthetic Candidate",
+            company="Example",
+            target_role="Strategy Analyst",
+            why_company=why_company,
+            why_role=claim["allowed_wording"][0],
+            claims=[claim],
+        )
+        self.assertEqual(narrative.text, "\n\n".join(narrative.paragraphs))
+        self.assertLessEqual(len(narrative.text), MAX_APPLICATION_NARRATIVE_CHARACTERS)
+        with project_temp() as temp:
+            build_cover_letter(
+                temp / "letter.docx",
+                candidate_display_name="Synthetic Candidate",
+                company="Example",
+                target_role="Strategy Analyst",
+                why_company=why_company,
+                why_role=claim["allowed_wording"][0],
+                claims=[claim],
+                narrative=narrative,
+            )
+            body = [paragraph.text for paragraph in Document(temp / "letter.docx").paragraphs]
+        for paragraph in narrative.paragraphs:
+            self.assertIn(paragraph, body)
+
+    def test_cover_letter_rejects_a_forged_or_oversized_narrative(self) -> None:
+        claim = approved_claim(
+            "CLM-SYNTHETIC01",
+            "Analyzed synthetic product evidence",
+            "synthetic product analysis evidence",
+        )
+        why_company = "Example posted a synthetic role (https://example.com/news, accessed 2026-08-12)."
+        narrative = build_cover_letter_narrative(
+            candidate_display_name="Synthetic Candidate",
+            company="Example",
+            target_role="Strategy Analyst",
+            why_company=why_company,
+            why_role=claim["allowed_wording"][0],
+            claims=[claim],
+        )
+        forged = replace(
+            narrative,
+            paragraphs=("Dear Hiring Team,", "Fabricated external claim."),
+            text="Dear Hiring Team,\n\nFabricated external claim.",
+        )
+        with project_temp() as temp:
+            with self.assertRaises(JobOpsError) as binding:
+                build_cover_letter(
+                    temp / "forged.docx",
+                    candidate_display_name="Synthetic Candidate",
+                    company="Example",
+                    target_role="Strategy Analyst",
+                    why_company=why_company,
+                    why_role=claim["allowed_wording"][0],
+                    claims=[claim],
+                    narrative=forged,
+                )
+        self.assertEqual(binding.exception.code, "APPLICATION_NARRATIVE_BINDING_INVALID")
+
+        with self.assertRaises(JobOpsError) as oversized:
+            build_cover_letter_narrative(
+                candidate_display_name="Synthetic Candidate",
+                company="Example",
+                target_role="Strategy Analyst",
+                why_company=("X" * MAX_APPLICATION_NARRATIVE_CHARACTERS) + " https://example.com/source",
+                why_role=claim["allowed_wording"][0],
+                claims=[claim],
+            )
+        self.assertEqual(oversized.exception.code, "APPLICATION_NARRATIVE_INVALID")
+
+    def test_cover_letter_claim_ids_include_only_claims_used_by_the_canonical_text(self) -> None:
+        claims = [
+            approved_claim(f"CLM-SYNTHETIC0{index}", wording, wording.casefold())
+            for index, wording in enumerate(
+                (
+                    "First approved evidence statement",
+                    "Second approved evidence statement",
+                    "Role-specific approved statement",
+                    "Unused approved statement",
+                ),
+                start=1,
+            )
+        ]
+        narrative = build_cover_letter_narrative(
+            candidate_display_name="Synthetic Candidate",
+            company="Example",
+            target_role="Strategy Analyst",
+            why_company="Example published this role (https://example.com/source, accessed 2026-08-12).",
+            why_role=claims[2]["allowed_wording"][0],
+            claims=claims,
+        )
+        self.assertEqual(
+            narrative.claim_ids,
+            ("CLM-SYNTHETIC03", "CLM-SYNTHETIC01", "CLM-SYNTHETIC02"),
+        )
+        self.assertNotIn("CLM-SYNTHETIC04", narrative.claim_ids)
 
     def test_master_diff_is_complete(self) -> None:
         diff = master_diff("one\ntwo\n", "one\nthree\n")

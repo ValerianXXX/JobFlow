@@ -7,7 +7,7 @@ This file contains the canonical English listing copy and review notes for Chrom
 - Name: `JobFlow Browser Companion`
 - Category: `Productivity`
 - Language: `English`
-- Version: `0.9.1`
+- Version: `0.9.2`
 - Single purpose: connect the local JobFlow workflow to the job or application page explicitly chosen by the user, then perform bounded, reviewed assistance without final submission.
 
 ## Short description

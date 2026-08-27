@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Synthetic modern Ashby application</title></head>
+<body>
+  <header>
+    <label for="site-search">Search jobs</label>
+    <input id="site-search" name="site_search" type="search">
+  </header>
+  <main>
+    <form action="/candidate/OPAQUE-PATH-MUST-NOT-LEAVE/application?candidate_token=must-not-leave-page#private-fragment">
+      <section aria-label="Autofill from resume">
+        <strong>Autofill from resume</strong>
+        <input type="file" hidden>
+      </section>
+
+      <h2>Contact information</h2>
+      <label for="candidate-name">Name</label>
+      <input id="candidate-name" name="name" type="text" required>
+
+      <label for="candidate-email">Email</label>
+      <input id="candidate-email" name="email" type="email" required>
+
+      <label for="phone-country-code">Phone country code</label>
+      <select id="phone-country-code" name="phone_country_code">
+        <option value="+1">+1</option>
+        <option value="+44">+44</option>
+      </select>
+
+      <label for="candidate-phone">Phone</label>
+      <input id="candidate-phone" name="phone" type="tel">
+
+      <label for="candidate-linkedin">LinkedIn profile</label>
+      <input id="candidate-linkedin" name="linkedin" type="url">
+
+      <label for="_systemfield_resume">Resume</label>
+      <div id="resume-dropzone">Click to browse or drop a resume</div>
+      <input id="_systemfield_resume" name="_systemfield_resume" type="file" required hidden>
+
+      <label for="cover-letter">Cover Letter</label>
+      <textarea id="cover-letter" name="cover_letter"></textarea>
+
+      <fieldset>
+        <legend>Are you willing to relocate?</legend>
+        <label><input name="relocation" type="radio" value="Yes">Yes</label>
+        <label><input name="relocation" type="radio" value="No">No</label>
+      </fieldset>
+
+      <button id="final-submit" type="submit">Submit application</button>
+    </form>
+  </main>
+</body>
+</html>

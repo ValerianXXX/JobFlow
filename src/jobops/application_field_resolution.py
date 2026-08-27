@@ -8,6 +8,8 @@ from dataclasses import replace
 from typing import Any, Iterable
 
 from .application_execution import validate_application_execution_plan_integrity
+from .application_materials import APPLICATION_NARRATIVE_CLASSIFICATION, narrative_effective_max_characters
+from .application_narrative import decrypted_application_narrative
 from .approvals import ApprovalContext
 from .db import JobOpsDB
 from .errors import JobOpsError
@@ -31,6 +33,7 @@ ANSWERABLE_STOP_CLASSES = frozenset({
     "signature_stop",
     "voluntary_disclosure_stop",
     "unknown_stop",
+    APPLICATION_NARRATIVE_CLASSIFICATION,
 })
 
 SEPARATE_ACTION_STOP_CLASSES = frozenset({
@@ -45,6 +48,7 @@ RESOLUTION_DECISIONS = frozenset({
     "PREFER_NOT_TO_ANSWER",
     "NOT_APPLICABLE",
 })
+GENERATED_NARRATIVE_DECISION = "USE_GENERATED_NARRATIVE"
 NON_FORM_RESOLUTION_DECISION = "ACKNOWLEDGED_UNKNOWN"
 
 _PLACEHOLDER_OPTIONS = frozenset({
@@ -102,11 +106,113 @@ def _question_map(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return output
 
 
+def _is_cover_letter_textarea(question: dict[str, Any]) -> bool:
+    return (
+        str(question.get("classification", "")) == APPLICATION_NARRATIVE_CLASSIFICATION
+        and
+        str(question.get("answer_key", "")).casefold() == "cover_letter"
+        and str(question.get("control_type", "")).casefold() == "textarea"
+    )
+
+
+def _review_bound_narrative_hash(packet: dict[str, Any]) -> str | None:
+    cover = packet.get("material_plan", {}).get("cover_letter", {})
+    value = cover.get("narrative_sha256")
+    if value is None:
+        return None
+    if not re.fullmatch(r"sha256:[a-f0-9]{64}", str(value)):
+        raise JobOpsError(
+            "APPLICATION_NARRATIVE_BINDING_INVALID",
+            "The review packet has an invalid generated narrative binding.",
+        )
+    return str(value)
+
+
+def _required_review_bound_narrative_hash(packet: dict[str, Any]) -> str:
+    value = _review_bound_narrative_hash(packet)
+    if value is None:
+        raise JobOpsError(
+            "APPLICATION_NARRATIVE_MISSING",
+            "This review packet has no generated narrative bound to the Cover Letter textarea.",
+        )
+    return value
+
+
+def _review_bound_narrative_target(
+    packet: dict[str, Any],
+    questions: dict[str, dict[str, Any]],
+    *,
+    required: bool,
+) -> tuple[str, int] | None:
+    cover = packet.get("material_plan", {}).get("cover_letter", {})
+    if not isinstance(cover, dict):
+        raise JobOpsError("APPLICATION_NARRATIVE_BINDING_INVALID", "The review packet has an invalid Cover Letter binding.")
+    targets = sorted(control_ref for control_ref, item in questions.items() if _is_cover_letter_textarea(item))
+    status = str(cover.get("narrative_target_status") or "")
+    target_count = cover.get("narrative_target_count")
+    target_ref = cover.get("narrative_control_ref")
+    target_max = cover.get("narrative_max_characters")
+    if target_count != len(targets):
+        raise JobOpsError(
+            "APPLICATION_NARRATIVE_BINDING_INVALID",
+            "The review packet narrative target count no longer matches its application controls.",
+        )
+    if len(targets) != 1 or status not in {"BOUND_EXACT_CONTROL", "INVALID_MAX_LENGTH"}:
+        if required:
+            raise JobOpsError(
+                "APPLICATION_NARRATIVE_FIELD_INVALID",
+                "A generated narrative requires exactly one current Cover Letter textarea.",
+            )
+        return None
+    bound_ref = _safe_control_ref(target_ref)
+    if bound_ref != targets[0]:
+        raise JobOpsError(
+            "APPLICATION_NARRATIVE_BINDING_INVALID",
+            "The generated narrative is not bound to the current Cover Letter textarea.",
+        )
+    effective_max = narrative_effective_max_characters(questions[bound_ref])
+    if effective_max is None:
+        if status != "INVALID_MAX_LENGTH" or target_max is not None:
+            raise JobOpsError(
+                "APPLICATION_NARRATIVE_BINDING_INVALID",
+                "The generated narrative length binding is inconsistent with the current textarea.",
+            )
+        if required:
+            raise JobOpsError(
+                "APPLICATION_NARRATIVE_MAX_LENGTH_INVALID",
+                "The current Cover Letter textarea has an invalid or zero maximum length.",
+            )
+        return None
+    if status != "BOUND_EXACT_CONTROL" or target_max != effective_max:
+        raise JobOpsError(
+            "APPLICATION_NARRATIVE_BINDING_INVALID",
+            "The generated narrative character limit is not bound to the current textarea.",
+        )
+    character_count = cover.get("narrative_character_count")
+    if isinstance(character_count, bool) or not isinstance(character_count, int) or character_count < 1:
+        raise JobOpsError(
+            "APPLICATION_NARRATIVE_BINDING_INVALID",
+            "The generated narrative character count is missing or invalid.",
+        )
+    if character_count > effective_max:
+        if required:
+            raise JobOpsError(
+                "APPLICATION_NARRATIVE_TOO_LONG",
+                "The generated narrative exceeds the current Cover Letter textarea limit.",
+                maximum=effective_max,
+            )
+        return None
+    return bound_ref, effective_max
+
+
 def field_resolution_summary(
     packet: dict[str, Any],
     context: ApprovalContext,
+    *,
+    generated_narrative_available: bool = False,
 ) -> dict[str, Any]:
     questions = _question_map(packet)
+    narrative_target = _review_bound_narrative_target(packet, questions, required=False)
     unresolved = set(context.normalized().unresolved_stops)
     answerable: list[dict[str, Any]] = []
     separate_action_count = 0
@@ -125,6 +231,13 @@ def field_resolution_summary(
             for option in item.get("options", [])
             if _safe_display(option, limit=200).casefold() not in _PLACEHOLDER_OPTIONS
         ]
+        allowed_decisions = [
+            "CONFIRMED_VALUE",
+            *([
+                GENERATED_NARRATIVE_DECISION
+            ] if generated_narrative_available and narrative_target is not None and narrative_target[0] == control_ref else []),
+            *([] if bool(item.get("required", False)) else ["PREFER_NOT_TO_ANSWER", "NOT_APPLICABLE"]),
+        ]
         answerable.append({
             "control_ref": control_ref,
             "label": _safe_display(item.get("label") or item.get("answer_key") or control_ref),
@@ -133,10 +246,13 @@ def field_resolution_summary(
             "control_type": str(item.get("control_type") or "other"),
             "required": bool(item.get("required", False)),
             "options": options,
-            "allowed_decisions": [
-                "CONFIRMED_VALUE",
-                *([] if bool(item.get("required", False)) else ["PREFER_NOT_TO_ANSWER", "NOT_APPLICABLE"]),
-            ],
+            "allowed_decisions": allowed_decisions,
+            "generated_narrative_available": GENERATED_NARRATIVE_DECISION in allowed_decisions,
+            "max_characters": (
+                narrative_effective_max_characters(item) or MAX_RESOLUTION_VALUE_CHARACTERS
+                if str(item.get("control_type", "")).casefold() == "textarea"
+                else MAX_RESOLUTION_VALUE_CHARACTERS
+            ),
         })
     non_form_unknowns = sorted(
         item for item in context.normalized().mandatory_unknowns if item not in questions
@@ -214,6 +330,58 @@ class ApplicationFieldResolutionManager:
         if context.context_hash != row["context_hash"] or context.review_packet_hash != expected_packet_hash:
             raise JobOpsError("APPLICATION_BINDING_MISSING", "The current approval binding is inconsistent.")
         return packet, context, dict(row)
+
+    def preview_generated_narrative(
+        self,
+        *,
+        application_id: str,
+        expected_packet_hash: str,
+        control_ref: str,
+    ) -> dict[str, Any]:
+        if not re.fullmatch(r"APP-[A-F0-9]{12}", application_id):
+            raise JobOpsError("APPLICATION_ID_INVALID", "The selected application identifier is invalid.")
+        if not re.fullmatch(r"sha256:[a-f0-9]{64}", expected_packet_hash):
+            raise JobOpsError("REVIEW_PACKET_HASH_INVALID", "The selected review packet hash is invalid.")
+        target = _safe_control_ref(control_ref)
+        packet, context, _ = self._load_current(application_id, expected_packet_hash)
+        questions = _question_map(packet)
+        narrative_target = _review_bound_narrative_target(packet, questions, required=True)
+        question = questions.get(target)
+        if (
+            question is None
+            or narrative_target is None
+            or narrative_target[0] != target
+            or target not in set(context.unresolved_stops)
+            or str(question.get("classification", "")) not in ANSWERABLE_STOP_CLASSES
+            or not _is_cover_letter_textarea(question)
+        ):
+            raise JobOpsError(
+                "APPLICATION_NARRATIVE_FIELD_INVALID",
+                "A generated narrative may be previewed only for this application's current Cover Letter textarea.",
+            )
+        with decrypted_application_narrative(
+            self.database,
+            self.onboarding,
+            application_id,
+            expected_content_hash=_required_review_bound_narrative_hash(packet),
+        ) as narrative:
+            if len(narrative.text) > narrative_target[1]:
+                raise JobOpsError(
+                    "APPLICATION_NARRATIVE_TOO_LONG",
+                    "The generated narrative exceeds the current Cover Letter textarea limit.",
+                    maximum=narrative_target[1],
+                )
+            return {
+                "status": "APPLICATION_NARRATIVE_PREVIEW_READY",
+                "application_id": application_id,
+                "control_ref": target,
+                "source_content_hash": narrative.content_hash,
+                "narrative": narrative.text,
+                "max_characters": narrative_target[1],
+                "private_transport": "LOCAL_SESSION_ONLY",
+                "private_values_persisted_to_project": 0,
+                "real_external_actions": 0,
+            }
 
     @staticmethod
     def _normalize_resolutions(
@@ -432,7 +600,9 @@ class ApplicationFieldResolutionManager:
             raise JobOpsError("REVIEW_PACKET_HASH_INVALID", "The selected review packet hash is invalid.")
 
         created_references: list[dict[str, Any]] = []
+        prepared_resolutions: object = None
         try:
+            prepared_resolutions = deepcopy(raw_resolutions)
             packet, old_context, row = self._load_current(application_id, expected_packet_hash)
             questions = _question_map(packet)
             unresolved = set(old_context.unresolved_stops)
@@ -441,7 +611,56 @@ class ApplicationFieldResolutionManager:
                 if control_ref in questions
                 and str(questions[control_ref].get("classification", "")) in ANSWERABLE_STOP_CLASSES
             }
-            resolutions = self._normalize_resolutions(raw_resolutions, questions, required_refs)
+            generated_sources: dict[str, str] = {}
+            if isinstance(prepared_resolutions, list):
+                for raw in prepared_resolutions:
+                    if not isinstance(raw, dict):
+                        continue
+                    if str(raw.get("decision", "")).strip().upper() != GENERATED_NARRATIVE_DECISION:
+                        continue
+                    supplied_value = raw.get("value")
+                    if set(raw) - {"control_ref", "decision", "value"} or not (
+                        supplied_value is None or supplied_value == ""
+                    ):
+                        raise JobOpsError(
+                            "APPLICATION_FIELD_RESOLUTION_INVALID",
+                            "The generated narrative decision cannot include a browser-supplied value.",
+                        )
+                    control_ref = _safe_control_ref(raw.get("control_ref"))
+                    question = questions.get(control_ref)
+                    narrative_target = _review_bound_narrative_target(packet, questions, required=True)
+                    if (
+                        control_ref not in required_refs
+                        or question is None
+                        or narrative_target is None
+                        or narrative_target[0] != control_ref
+                        or not _is_cover_letter_textarea(question)
+                    ):
+                        raise JobOpsError(
+                            "APPLICATION_NARRATIVE_FIELD_INVALID",
+                            "A generated narrative may be used only for this application's current Cover Letter textarea.",
+                        )
+                    with decrypted_application_narrative(
+                        self.database,
+                        self.onboarding,
+                        application_id,
+                        expected_content_hash=_required_review_bound_narrative_hash(packet),
+                    ) as narrative:
+                        if len(narrative.text) > narrative_target[1]:
+                            raise JobOpsError(
+                                "APPLICATION_NARRATIVE_TOO_LONG",
+                                "The generated narrative exceeds the current Cover Letter textarea limit.",
+                                maximum=narrative_target[1],
+                            )
+                        raw["decision"] = "CONFIRMED_VALUE"
+                        raw["value"] = narrative.text
+                        generated_sources[control_ref] = narrative.content_hash
+            resolutions = self._normalize_resolutions(prepared_resolutions, questions, required_refs)
+            for item in resolutions:
+                source_hash = generated_sources.get(str(item["control_ref"]))
+                if source_hash:
+                    item["value_origin"] = "APPLICATION_NARRATIVE"
+                    item["source_content_hash"] = source_hash
             required_non_form_unknowns = set(old_context.mandatory_unknowns) - set(questions)
             non_form_resolutions = self._normalize_non_form_resolutions(
                 raw_non_form_resolutions, required_non_form_unknowns,
@@ -516,6 +735,9 @@ class ApplicationFieldResolutionManager:
                     created_references.append(bundle_ref)
                 finally:
                     raw_bundle[:] = b"\0" * len(raw_bundle)
+                    private_bundle.clear()
+                for item in combined_fields:
+                    item["value"] = None
 
             answer_bundle_content_hash = (
                 str(bundle_ref["content_sha256"])
@@ -737,3 +959,5 @@ class ApplicationFieldResolutionManager:
             raise
         finally:
             self._clear_plaintext_inputs(raw_resolutions)
+            if prepared_resolutions is not raw_resolutions:
+                self._clear_plaintext_inputs(prepared_resolutions)

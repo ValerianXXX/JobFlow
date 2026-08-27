@@ -700,6 +700,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.complete_synthetic_execution(self._json_body())
             elif route == "review-packet":
                 result = self.server.service.review_packet(str(self._json_body().get("application_id", "")))
+            elif route == "application-narrative-preview":
+                result = self.server.service.preview_application_narrative(self._json_body())
             elif route == "resolve-application-fields":
                 result = self.server.service.resolve_application_fields(self._json_body())
             elif route == "queue-decision":

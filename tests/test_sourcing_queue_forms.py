@@ -162,6 +162,22 @@ class SourcingQueueFormTests(unittest.TestCase):
             )
         self.assertEqual(ats.exception.code, "ROUTE_URL_SENSITIVE_QUERY")
 
+    def test_direct_company_route_hashes_query_bound_job_identity(self) -> None:
+        route = verify_source_route(
+            company_domain="example.com",
+            official_entry_url="https://jobs.example.com/careers",
+            current_url="https://jobs.example.com/apply?job=111&step=contact",
+            navigation_history=[
+                "https://jobs.example.com/careers",
+                "https://jobs.example.com/apply?job=111&step=contact",
+            ],
+            approved_ats_hosts=ATS,
+            guest_available=True,
+        )
+
+        self.assertTrue(route.ats_job_identity.startswith("query-sha256:"))
+        self.assertNotIn("111", route.ats_job_identity)
+
     def test_no_guest_requires_account_approval_not_auto_registration(self) -> None:
         route = verify_source_route(
             company_domain="example.com",

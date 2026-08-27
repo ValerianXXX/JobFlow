@@ -178,15 +178,24 @@ class OrchestratorForwardTests(unittest.TestCase):
                     "SELECT kind FROM materials WHERE application_id=? ORDER BY kind",
                     (result["application_id"],),
                 ).fetchall()]
+                cover_claim_bindings = connection.execute(
+                    """SELECT kind,path,claim_ids_json FROM materials
+                       WHERE application_id=? AND kind IN ('cover_letter_docx','cover_letter_pdf','application_narrative')
+                       ORDER BY kind""",
+                    (result["application_id"],),
+                ).fetchall()
                 binding = json.loads(connection.execute(
                     "SELECT context_json FROM application_bindings WHERE application_id=?",
                     (result["application_id"],),
                 ).fetchone()[0])
-            self.assertEqual(len(kinds), 8)
+            self.assertEqual(len(kinds), 9)
             self.assertIn("execution_bundle", kinds)
             self.assertIn("cover_letter_docx", kinds)
             self.assertIn("cover_letter_pdf", kinds)
+            self.assertIn("application_narrative", kinds)
             self.assertIn("portfolio_file", kinds)
+            self.assertEqual(len({str(row["claim_ids_json"]) for row in cover_claim_bindings}), 1)
+            self.assertTrue(all(str(row["path"]).startswith("secure-ref:") for row in cover_claim_bindings))
             self.assertEqual({item["purpose"] for item in binding["uploads"]}, {"resume", "cover_letter", "portfolio"})
             self.assertTrue(plan["all_uploads_and_submission_blocked"])
             self.assertEqual(plan["real_external_actions"], 0)

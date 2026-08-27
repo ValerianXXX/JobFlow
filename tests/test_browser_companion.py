@@ -5,6 +5,8 @@ import hashlib
 import json
 import re
 import unittest
+from copy import deepcopy
+from types import SimpleNamespace
 
 from _support import PROJECT
 from jobops.browser_assist import (
@@ -14,14 +16,20 @@ from jobops.browser_assist import (
     COMPANION_EXTENSION_ORIGINS,
     COMPANION_EXTENSION_VERSION,
     BrowserAssistManager,
+    _safe_hash,
     _semantic_field,
+    _source_identity_material,
 )
+from jobops.ats_browser import redacted_route_url
+from jobops.errors import JobOpsError
+from jobops.sourcing import source_route_hash
 
 
 class BrowserCompanionStaticTests(unittest.TestCase):
     def test_semantic_matching_ignores_accessibility_decoration_but_not_prompt_drift(self) -> None:
         base = {
             "control_type": "text", "required": True, "classification": "private_fixed",
+            "answer_key": "first_name", "logical_field_hash": "sha256:" + "a" * 64,
             "display_label": "First Name *", "prompt_hash": "sha256:" + "1" * 64,
             "option_count": 0, "display_options": [],
         }
@@ -39,6 +47,125 @@ class BrowserCompanionStaticTests(unittest.TestCase):
             "prompt_hash": "sha256:" + "5" * 64,
         }
         self.assertEqual(_semantic_field(uploaded), _semantic_field(decorated))
+
+    def test_semantic_matching_binds_the_approved_maxlength(self) -> None:
+        approved = {
+            "control_type": "textarea", "required": True, "classification": "application_narrative_review",
+            "answer_key": "cover_letter", "logical_field_hash": "sha256:" + "a" * 64,
+            "display_label": "Cover Letter", "prompt_hash": "sha256:" + "1" * 64,
+            "option_count": 0, "display_options": [],
+            "max_length": 1200, "max_length_status": "VALID",
+        }
+        same = {**approved, "prompt_hash": "sha256:" + "2" * 64}
+        tightened = {**approved, "max_length": 500}
+        invalid = {**approved, "max_length": None, "max_length_status": "INVALID"}
+        self.assertEqual(_semantic_field(approved), _semantic_field(same))
+        self.assertNotEqual(_semantic_field(approved), _semantic_field(tightened))
+        self.assertNotEqual(_semantic_field(approved), _semantic_field(invalid))
+
+    def test_semantic_matching_binds_answer_key_and_logical_field_hash(self) -> None:
+        approved = {
+            "control_type": "text", "required": True, "classification": "private_fixed",
+            "answer_key": "email", "logical_field_hash": "sha256:" + "1" * 64,
+            "display_label": "Contact", "prompt_hash": "sha256:" + "2" * 64,
+            "option_count": 0, "display_options": [],
+            "max_length": None, "max_length_status": "ABSENT",
+        }
+        self.assertNotEqual(_semantic_field(approved), _semantic_field({**approved, "answer_key": "phone"}))
+        self.assertNotEqual(
+            _semantic_field(approved),
+            _semantic_field({**approved, "logical_field_hash": "sha256:" + "3" * 64}),
+        )
+
+    def test_assist_start_rejects_route_hash_and_job_identity_drift(self) -> None:
+        route = {
+            "status": "ROUTE_APPROVED",
+            "company_domain": "example.com",
+            "official_entry_url": "https://careers.example.com/jobs/role-a",
+            "current_url": "https://careers.example.com/jobs/role-a/apply",
+            "route_kind": "OFFICIAL_DIRECT",
+            "provider": "company",
+            "ats_tenant": "example",
+            "ats_board": "careers",
+            "ats_job_identity": "role-a",
+            "guest_mode": "GUEST_SELECTED",
+            "account_action": "NONE",
+            "official_page_hash": "sha256:" + "1" * 64,
+            "jd_snapshot_hash": "sha256:" + "2" * 64,
+            "route_hash": "",
+            "navigation_history": [
+                "https://careers.example.com/jobs/role-a",
+                "https://careers.example.com/jobs/role-a/apply",
+            ],
+        }
+        route["route_hash"] = source_route_hash(route)
+        form_hash = "sha256:" + "3" * 64
+        bundle = {
+            "provider": "company",
+            "source_route_hash": route["route_hash"],
+            "form_snapshot_hash": form_hash,
+            "form_snapshot": {
+                "provider": "company",
+                "source_route_hash": route["route_hash"],
+                "form_snapshot_hash": form_hash,
+                "canonical_url": redacted_route_url(route["current_url"]),
+            },
+        }
+        context = SimpleNamespace(
+            source_route_hash=route["route_hash"],
+            form_snapshot_hash=form_hash,
+            canonical_url=route["current_url"],
+            ats_tenant="example",
+            ats_board="careers",
+            ats_job_identity="role-a",
+        )
+        BrowserAssistManager._validate_assisted_route(route, bundle, context)
+
+        self_hash_tampered = deepcopy(route)
+        self_hash_tampered["current_url"] = "https://careers.example.com/jobs/role-b/apply"
+        self_hash_tampered["navigation_history"][-1] = self_hash_tampered["current_url"]
+        with self.assertRaises(JobOpsError) as tampered_error:
+            BrowserAssistManager._validate_assisted_route(self_hash_tampered, bundle, context)
+        self.assertTrue(tampered_error.exception.code)
+
+        other_job = deepcopy(route)
+        other_job["ats_job_identity"] = "role-b"
+        other_job["route_hash"] = source_route_hash(other_job)
+        with self.assertRaises(JobOpsError) as identity_error:
+            BrowserAssistManager._validate_assisted_route(other_job, bundle, context)
+        self.assertEqual(identity_error.exception.code, "EXECUTION_ROUTE_CHANGED")
+
+    def test_company_assist_rejects_query_bound_job_identity_drift(self) -> None:
+        route = {
+            "company_domain": "example.com",
+            "official_entry_url": "https://jobs.example.com/careers",
+            "current_url": "https://jobs.example.com/apply?job=111&step=contact",
+            "route_kind": "OFFICIAL_DIRECT",
+            "provider": "company",
+            "ats_tenant": "example.com",
+            "ats_board": "official",
+            "ats_job_identity": "query-sha256:" + "a" * 64,
+            "official_page_hash": "sha256:" + "1" * 64,
+            "jd_snapshot_hash": "sha256:" + "2" * 64,
+        }
+        application_id = "APP-AAAAAAAAAAAA"
+        lease = SimpleNamespace(
+            application_id=application_id,
+            source_route=route,
+            source_identity_hash=_safe_hash(_source_identity_material(application_id, route)),
+            provider="company",
+        )
+
+        BrowserAssistManager._assert_source_identity(
+            lease,
+            "https://jobs.example.com/apply/step2?step=review&job=111",
+        )
+        with self.assertRaises(JobOpsError) as changed:
+            BrowserAssistManager._assert_source_identity(
+                lease,
+                "https://jobs.example.com/apply/step2?step=review&job=222",
+            )
+        self.assertEqual(changed.exception.code, "FORM_ROUTE_IDENTITY_CHANGED")
 
     def test_manifest_has_stable_identity_and_least_privilege_defaults(self) -> None:
         manifest = json.loads((PROJECT / "browser-companion" / "manifest.json").read_text(encoding="utf-8"))
@@ -170,6 +297,8 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         self.assertIn('elif route_parts == ["abort-page-apply"]:', server)
         self.assertIn("attempted_field_bindings", worker)
         self.assertIn("attempted_material_bindings", worker)
+        self.assertIn("control_semantics_sha256: collected.payload?.control_semantics_sha256 || {}", worker)
+        self.assertIn("control_semantics_sha256: prepared.control_semantics_sha256", worker)
         self.assertIn("页面可能已经填写或上传了一部分", popup)
         self.assertIn("The page may already contain some approved fields or an attachment", popup)
         self.assertIn("请结束并重新启动这项申请辅助", app)
@@ -289,7 +418,7 @@ class BrowserCompanionStaticTests(unittest.TestCase):
         worker = (PROJECT / "browser-companion" / "service-worker.js").read_text(encoding="utf-8")
         self.assertIn("const PROTOCOL = 2;", pair)
         self.assertIn("const PROTOCOL = 2;", worker)
-        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.9.1";', popup)
+        self.assertIn('const SOURCE_EXTENSION_VERSION = "0.9.2";', popup)
         self.assertIn("chrome.runtime.reload()", popup)
         self.assertIn("protocol_version:2", app)
         self.assertIn("pairing:{protocol_version:result.protocol_version", app)

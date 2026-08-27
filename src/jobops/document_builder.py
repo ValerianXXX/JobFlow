@@ -13,6 +13,7 @@ from xml.etree import ElementTree as ET
 
 from lxml import etree as LET
 
+from .application_narrative import validate_application_narrative_text
 from .claims import external_use_decision
 from .errors import JobOpsError
 from .util import canonical_json, sha256_bytes, sha256_file, stable_id
@@ -37,6 +38,16 @@ ALLOWED_TEMPLATE_SLOTS = {
     "CANDIDATE_NAME", "TARGET_ROLE", "SUMMARY", "EXPERIENCE_BULLET",
     "PROJECT", "SKILLS", "EDUCATION", "COVER_LETTER", "APPLICATION_NARRATIVE",
 }
+
+
+@dataclass(frozen=True)
+class CoverLetterNarrative:
+    candidate_display_name: str
+    company: str
+    target_role: str
+    paragraphs: tuple[str, ...]
+    text: str
+    claim_ids: tuple[str, ...]
 
 
 def _empty_custom_properties() -> bytes:
@@ -704,42 +715,108 @@ def build_resume(path: Path, *, candidate_display_name: str, target_role: str, s
     return {"path": str(path), "claim_ids": [item[0] for item in approved], "preset": "compact_reference_guide", "named_overrides": []}
 
 
+def build_cover_letter_narrative(
+    *, candidate_display_name: str, company: str, target_role: str,
+    why_company: str, why_role: str, claims: list[dict[str, Any]] | None = None,
+    external_claim_set: dict[str, Any] | None = None,
+) -> CoverLetterNarrative:
+    if (claims is None) == (external_claim_set is None):
+        raise JobOpsError("MATERIAL_CLAIM_SOURCE_INVALID", "Choose exactly one approved Claim source for the Cover Letter.")
+    if claims is not None:
+        approved = _assert_claims(claims)
+    else:
+        cover_approved = _assert_external_claims(external_claim_set or {}, use="cover_letter")
+        narrative_approved = _assert_external_claims(
+            external_claim_set or {}, use="application_narrative",
+        )
+        narrative_bindings = {
+            (claim_id, wording): sources
+            for claim_id, wording, sources in narrative_approved
+        }
+        approved = [
+            (claim_id, wording, sources)
+            for claim_id, wording, sources in cover_approved
+            if (claim_id, wording) in narrative_bindings
+        ]
+        if not approved:
+            raise JobOpsError(
+                "APPLICATION_NARRATIVE_CLAIM_NOT_APPROVED",
+                "The generated Cover Letter narrative requires the same exact Claim wording to be approved for both Cover Letter and application narrative use.",
+            )
+    role_claim = next((item for item in approved if item[1] == why_role), None)
+    if role_claim is None:
+        raise JobOpsError("WHY_ROLE_NOT_CLAIM_GATED", "Why Role must use an exact approved claim wording.")
+    if "https://" not in why_company:
+        raise JobOpsError("WHY_COMPANY_SOURCE_MISSING", "Why Company must include a dated HTTPS source citation.")
+    evidence_claims = approved[:2]
+    wording = "; ".join(item[1] for item in evidence_claims)
+    used_claim_ids = tuple(dict.fromkeys([
+        role_claim[0],
+        *(item[0] for item in evidence_claims),
+    ]))
+    paragraphs = (
+        "Dear Hiring Team,",
+        why_company,
+        why_role,
+        f"Relevant verified evidence: {wording}.",
+        "Thank you for considering this evidence-based application.",
+        f"Sincerely,\n{candidate_display_name}",
+    )
+    text = validate_application_narrative_text("\n\n".join(paragraphs))
+    return CoverLetterNarrative(
+        candidate_display_name=candidate_display_name,
+        company=company,
+        target_role=target_role,
+        paragraphs=paragraphs,
+        text=text,
+        claim_ids=used_claim_ids,
+    )
+
+
 def build_cover_letter(
     path: Path, *, candidate_display_name: str, company: str, target_role: str,
     why_company: str, why_role: str, claims: list[dict[str, Any]] | None = None,
     external_claim_set: dict[str, Any] | None = None,
+    narrative: CoverLetterNarrative | None = None,
 ) -> dict[str, object]:
     Document, _, _, WD_ALIGN_PARAGRAPH, _, _, _, Pt, _ = _modules()
-    if (claims is None) == (external_claim_set is None):
-        raise JobOpsError("MATERIAL_CLAIM_SOURCE_INVALID", "Choose exactly one approved Claim source for the Cover Letter.")
-    approved = _assert_claims(claims or []) if claims is not None else _assert_external_claims(external_claim_set or {}, use="cover_letter")
-    if why_role not in {item[1] for item in approved}:
-        raise JobOpsError("WHY_ROLE_NOT_CLAIM_GATED", "Why Role must use an exact approved claim wording.")
-    if "https://" not in why_company:
-        raise JobOpsError("WHY_COMPANY_SOURCE_MISSING", "Why Company must include a dated HTTPS source citation.")
+    expected = build_cover_letter_narrative(
+        candidate_display_name=candidate_display_name,
+        company=company,
+        target_role=target_role,
+        why_company=why_company,
+        why_role=why_role,
+        claims=claims,
+        external_claim_set=external_claim_set,
+    )
+    canonical = narrative or expected
+    if canonical != expected:
+        raise JobOpsError(
+            "APPLICATION_NARRATIVE_BINDING_INVALID",
+            "The Cover Letter document and application narrative do not share one canonical source.",
+        )
     document = Document()
     _configure_document(document)
     title = document.add_paragraph(style="JobOps Letter Title")
     title.add_run("APPLICATION LETTER")
     metadata = document.add_paragraph(style="JobOps Letter Subtitle")
     metadata.add_run(f"{target_role} | {company}")
-    for text in ("Dear Hiring Team,", why_company, why_role):
+    for text in canonical.paragraphs[:3]:
         paragraph = document.add_paragraph()
         _set_run(paragraph.add_run(text), size=11)
     evidence = document.add_paragraph()
     evidence.paragraph_format.space_after = Pt(10)
-    wording = "; ".join(item[1] for item in approved[:2])
-    _set_run(evidence.add_run(f"Relevant verified evidence: {wording}."), size=11)
+    _set_run(evidence.add_run(canonical.paragraphs[3]), size=11)
     closing = document.add_paragraph()
-    _set_run(closing.add_run("Thank you for considering this evidence-based application."), size=11)
+    _set_run(closing.add_run(canonical.paragraphs[4]), size=11)
     signoff = document.add_paragraph()
     signoff.paragraph_format.space_before = Pt(12)
-    _set_run(signoff.add_run(f"Sincerely,\n{candidate_display_name}"), size=11)
+    _set_run(signoff.add_run(canonical.paragraphs[5]), size=11)
     footer = document.sections[0].footer.paragraphs[0]
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
     _set_run(footer.add_run("Prepared from applicant-approved evidence"), size=8.5, color=GRAY)
     _save_document_atomic(document, path)
-    return {"path": str(path), "claim_ids": [item[0] for item in approved], "preset": "compact_reference_guide", "named_overrides": []}
+    return {"path": str(path), "claim_ids": list(canonical.claim_ids), "preset": "compact_reference_guide", "named_overrides": []}
 
 
 def export_docx_to_pdf(docx_path: Path, pdf_path: Path, powershell_script: Path) -> None:

@@ -40,6 +40,8 @@ def build(**changes: object) -> dict[str, object]:
         "cover_letter": {
             "docx_secure_ref": "secure-ref:SYNTHETIC_COVER_DOCX", "docx_sha256": H,
             "pdf_secure_ref": "secure-ref:SYNTHETIC_COVER_PDF", "pdf_sha256": H,
+            "narrative_secure_ref": "secure-ref:SYNTHETIC_NARRATIVE", "narrative_sha256": H,
+            "narrative_character_count": 600,
         },
         "portfolio_file": {
             "secure_ref": "secure-ref:SYNTHETIC_PORTFOLIO", "sha256": H,
@@ -85,6 +87,130 @@ class ApplicationMaterialPlanTests(unittest.TestCase):
         detected = detect_material_requests(reversed(fields()))
         self.assertEqual({item["purpose"] for item in detected["uploads"]}, {"resume", "cover_letter", "portfolio"})
         self.assertEqual({item["kind"] for item in detected["public_links"]}, {"github", "portfolio"})
+
+    def test_visible_semantics_veto_conflicting_machine_material_purposes(self) -> None:
+        detected = detect_material_requests([
+            {
+                "id": "legal", "name": "cover_letter", "answer_key": "cover_letter",
+                "classification": "unknown_stop", "control_type": "textarea",
+                "display_label": "Legal Consent", "required": True,
+            },
+            {
+                "id": "privacy", "name": "cover_letter", "answer_key": "cover_letter",
+                "classification": "unknown_stop", "control_type": "textarea",
+                "aria_label": "Privacy Agreement", "required": True,
+            },
+            {
+                "id": "background", "name": "cover_letter", "answer_key": "cover_letter",
+                "classification": "file_upload_stop", "control_type": "file",
+                "placeholder": "Background check authorization", "required": True,
+            },
+            {
+                "id": "resume-as-cover", "name": "cover_letter", "answer_key": "cover_letter",
+                "classification": "file_upload_stop", "control_type": "file",
+                "display_label": "Resume", "required": True,
+            },
+        ])
+
+        self.assertEqual(detected["narratives"], [])
+        self.assertEqual(detected["public_links"], [])
+        self.assertEqual(detected["uploads"], [
+            {"field_id": "background", "purpose": "attachment", "required": True},
+            {"field_id": "resume-as-cover", "purpose": "resume", "required": True},
+        ])
+
+    def test_protected_ancillary_semantics_and_hash_bound_unknown_veto_cover_letter(self) -> None:
+        detected = detect_material_requests([
+            {
+                "id": "signed-upload", "name": "cover_letter", "answer_key": "cover_letter",
+                "classification": "file_upload_stop", "control_type": "file",
+                "display_label": "Cover Letter", "help_text": "Electronic signature and consent",
+                "required": True,
+            },
+            {
+                "id": "reviewed-unknown", "name": "cover_letter", "answer_key": "UNKNOWN",
+                "classification": "file_upload_stop", "control_type": "file",
+                "display_label": "Cover Letter", "required": True,
+                "logical_field_hash": H, "prompt_hash": H,
+            },
+            {
+                "id": "privacy-text", "name": "cover_letter", "answer_key": "cover_letter",
+                "classification": "application_narrative_review", "control_type": "textarea",
+                "display_label": "Cover Letter", "section_heading": "Privacy Agreement",
+                "required": True, "max_length": None, "max_length_status": "ABSENT",
+            },
+        ])
+
+        self.assertEqual(detected["narratives"], [])
+        self.assertEqual(detected["uploads"], [
+            {"field_id": "signed-upload", "purpose": "attachment", "required": True},
+            {"field_id": "reviewed-unknown", "purpose": "attachment", "required": True},
+        ])
+
+    def test_protected_words_in_direct_cover_letter_prompt_veto_narrative(self) -> None:
+        detected = detect_material_requests([
+            {
+                "id": "cover-consent", "name": "cover_letter", "answer_key": "cover_letter",
+                "classification": "application_narrative_review", "control_type": "textarea",
+                "display_label": "Cover Letter and Legal Consent", "required": True,
+                "max_length": 1200, "max_length_status": "VALID",
+            },
+            {
+                "id": "cover-certify", "name": "cover_letter", "answer_key": "cover_letter",
+                "classification": "application_narrative_review", "control_type": "textarea",
+                "label": "Cover Letter - I certify this application", "required": True,
+                "max_length": 1200, "max_length_status": "VALID",
+            },
+        ])
+
+        self.assertEqual(detected["narratives"], [])
+        self.assertEqual(detected["uploads"], [])
+
+    def test_cover_letter_textarea_requests_the_same_on_demand_material(self) -> None:
+        textarea = {
+            "id": "cover-story", "answer_key": "cover_letter", "classification": "application_narrative_review",
+            "control_type": "textarea", "required": True,
+            "max_length": 900, "max_length_status": "VALID",
+        }
+        detected = detect_material_requests([textarea])
+        self.assertEqual(detected["narratives"], [{
+            "field_id": "cover-story", "purpose": "cover_letter", "required": True,
+            "max_length": 900, "max_length_status": "VALID", "effective_max_characters": 900,
+        }])
+        plan = build(fields=[textarea])
+        validate_named("material-plan", plan, PROJECT / "schemas")
+        self.assertEqual(plan["cover_letter"]["request_status"], "REQUESTED_REQUIRED")
+        self.assertEqual(plan["cover_letter"]["narrative_sha256"], H)
+        self.assertEqual(plan["cover_letter"]["narrative_target_status"], "BOUND_EXACT_CONTROL")
+        self.assertEqual(plan["cover_letter"]["narrative_control_ref"], "cover-story")
+        self.assertEqual(plan["cover_letter"]["narrative_max_characters"], 900)
+
+    def test_narrative_target_zero_multiple_and_invalid_maxlength_fail_closed(self) -> None:
+        no_target = build()
+        self.assertEqual(no_target["cover_letter"]["narrative_target_status"], "NOT_REQUESTED")
+        self.assertEqual(no_target["cover_letter"]["narrative_target_count"], 0)
+        self.assertIsNone(no_target["cover_letter"]["narrative_control_ref"])
+
+        target = {
+            "answer_key": "cover_letter", "classification": "application_narrative_review",
+            "control_type": "textarea", "required": True,
+            "max_length": None, "max_length_status": "ABSENT",
+        }
+        ambiguous = build(fields=[
+            {**target, "id": "cover-one"}, {**target, "id": "cover-two"},
+        ])
+        validate_named("material-plan", ambiguous, PROJECT / "schemas")
+        self.assertEqual(ambiguous["cover_letter"]["narrative_target_status"], "AMBIGUOUS")
+        self.assertEqual(ambiguous["cover_letter"]["narrative_target_count"], 2)
+        self.assertIsNone(ambiguous["cover_letter"]["narrative_control_ref"])
+
+        invalid = build(fields=[{
+            **target, "id": "cover-zero", "max_length_status": "INVALID",
+        }])
+        validate_named("material-plan", invalid, PROJECT / "schemas")
+        self.assertEqual(invalid["cover_letter"]["narrative_target_status"], "INVALID_MAX_LENGTH")
+        self.assertEqual(invalid["cover_letter"]["narrative_control_ref"], "cover-zero")
+        self.assertIsNone(invalid["cover_letter"]["narrative_max_characters"])
 
     def test_schema_rejects_a_cover_letter_generated_without_a_form_request(self) -> None:
         plan = build()

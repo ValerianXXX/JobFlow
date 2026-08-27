@@ -41,6 +41,7 @@ from .application_field_resolution import (
     ApplicationFieldResolutionManager,
     field_resolution_summary,
 )
+from .application_narrative import application_narrative_metadata
 from .ai_runtime import (
     ALLOWED_CATEGORIES,
     AI_QUALITY_CONTRACT,
@@ -3023,7 +3024,10 @@ class OnboardingCenterService:
         if not isinstance(page, dict):
             raise JobOpsError("ATS_FORM_SNAPSHOT_INVALID", "The local Agent did not provide one sanitized browser page.")
         result = self.browser_assist.prepare(
-            token, page, extension_origin=COMPANION_EXTENSION_ORIGIN,
+            token,
+            page,
+            extension_origin=COMPANION_EXTENSION_ORIGIN,
+            execution_channel="LOCAL_AI_AGENT",
         )
         return {
             **result,
@@ -3041,7 +3045,10 @@ class OnboardingCenterService:
         if not isinstance(page, dict):
             raise JobOpsError("ATS_FORM_SNAPSHOT_INVALID", "The local Agent did not provide one sanitized browser page.")
         result = self.browser_assist.discover_dynamic_fields(
-            token, page, extension_origin=COMPANION_EXTENSION_ORIGIN,
+            token,
+            page,
+            extension_origin=COMPANION_EXTENSION_ORIGIN,
+            execution_channel="LOCAL_AI_AGENT",
         )
         return {
             **result,
@@ -3057,7 +3064,10 @@ class OnboardingCenterService:
         if not isinstance(evidence, dict):
             raise JobOpsError("BROWSER_APPLY_EVIDENCE_INVALID", "The local Agent did not return bounded apply evidence.")
         result = self.browser_assist.complete(
-            token, evidence, extension_origin=COMPANION_EXTENSION_ORIGIN,
+            token,
+            evidence,
+            extension_origin=COMPANION_EXTENSION_ORIGIN,
+            execution_channel="LOCAL_AI_AGENT",
         )
         return {
             **result,
@@ -3075,7 +3085,10 @@ class OnboardingCenterService:
         if not re.fullmatch(r"[A-Za-z0-9_-]{40,256}", str(file_token)):
             raise JobOpsError("BROWSER_FILE_TOKEN_INVALID", "The approved material token is invalid or expired.")
         return self.browser_assist.take_file(
-            token, str(file_token), extension_origin=COMPANION_EXTENSION_ORIGIN,
+            token,
+            str(file_token),
+            extension_origin=COMPANION_EXTENSION_ORIGIN,
+            execution_channel="LOCAL_AI_AGENT",
         )
 
     def prepare_synthetic_execution(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -3175,6 +3188,16 @@ class OnboardingCenterService:
         context = ApprovalContext.from_dict(json.loads(str(row["context_json"])))
         if context.context_hash != row["context_hash"] or context.review_packet_hash != packet["content_hash"]:
             raise JobOpsError("APPLICATION_BINDING_MISSING", "The review packet approval binding is inconsistent.")
+        narrative_hash = packet.get("material_plan", {}).get("cover_letter", {}).get("narrative_sha256")
+        narrative_metadata = (
+            application_narrative_metadata(
+                self.database,
+                self.onboarding,
+                application_id,
+                expected_content_hash=str(narrative_hash),
+            )
+            if isinstance(narrative_hash, str) else None
+        )
         return {
             "status": str(row["status"]), "application_status": str(row["application_status"]),
             "application_id": application_id, "packet_id": str(row["packet_id"]),
@@ -3185,9 +3208,23 @@ class OnboardingCenterService:
                 "location": str(row["location"]) if row["location"] is not None else None,
             },
             "packet": packet, "private_transport": "LOCAL_SESSION_ONLY",
-            "field_resolution": field_resolution_summary(packet, context),
+            "field_resolution": field_resolution_summary(
+                packet,
+                context,
+                generated_narrative_available=narrative_metadata is not None,
+            ),
             "private_values_persisted_to_project": 0, "real_external_actions": 0,
         }
+
+    @_synchronized
+    def preview_application_narrative(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return ApplicationFieldResolutionManager(
+            self.database, self.onboarding,
+        ).preview_generated_narrative(
+            application_id=str(payload.get("application_id", "")).strip(),
+            expected_packet_hash=str(payload.get("expected_packet_hash", "")).strip(),
+            control_ref=str(payload.get("control_ref", "")).strip(),
+        )
 
     @_synchronized
     def resolve_application_fields(self, payload: dict[str, Any]) -> dict[str, Any]:

@@ -295,10 +295,30 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         cover_generated = cover.get("generation_status") == "GENERATED_ON_DEMAND"
         cover_values = [
             cover.get("docx_secure_ref"), cover.get("docx_sha256"),
-            cover.get("pdf_secure_ref"), cover.get("pdf_sha256"),
+            cover.get("pdf_secure_ref"), cover.get("pdf_sha256"), cover.get("narrative_sha256"),
+            cover.get("narrative_character_count"),
         ]
         if cover_requested != cover_generated or cover_generated != all(cover_values):
             raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Cover Letter generation must exactly follow the detected form request.")
+        target_status = cover.get("narrative_target_status")
+        target_count = cover.get("narrative_target_count")
+        target_ref = cover.get("narrative_control_ref")
+        target_max = cover.get("narrative_max_characters")
+        target_shape_valid = (
+            (target_status == "NOT_REQUESTED" and target_count == 0 and target_ref is None and target_max is None)
+            or (target_status == "AMBIGUOUS" and isinstance(target_count, int) and target_count > 1 and target_ref is None and target_max is None)
+            or (target_status == "INVALID_MAX_LENGTH" and target_count == 1 and bool(target_ref) and target_max is None)
+            or (
+                target_status == "BOUND_EXACT_CONTROL"
+                and target_count == 1
+                and bool(target_ref)
+                and isinstance(target_max, int)
+                and not isinstance(target_max, bool)
+                and 1 <= target_max <= 4_000
+            )
+        )
+        if not target_shape_valid:
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "The application narrative target must bind exactly one eligible textarea or fail closed.")
         for link in value.get("public_links", []):
             bound = link.get("binding_status") == "BOUND_CONFIRMED_PUBLIC_VALUE"
             if bound != bool(link.get("value_sha256")):

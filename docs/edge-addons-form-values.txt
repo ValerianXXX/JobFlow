@@ -1,7 +1,7 @@
 JOBFLOW BROWSER COMPANION - MICROSOFT EDGE ADD-ONS FORM VALUES
 
 PACKAGE
-JobFlow-Browser-Companion-v0.9.1-store.zip
+JobFlow-Browser-Companion-v0.9.2-store.zip
 
 ASSIGNED IDENTITIES
 Store ID: 0RDCKBT9MVK4

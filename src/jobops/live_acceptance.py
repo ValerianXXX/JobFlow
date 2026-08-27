@@ -38,6 +38,15 @@ STAGES: tuple[str, ...] = (
 )
 
 _RESULTS = {"PASS", "FAIL", "BLOCKED"}
+_BROWSER_ATTESTED_STAGES = frozenset(STAGES) - {"ROUTE_BINDING", "REVIEW_PACKET"}
+# Only stages whose evidence is itself an observed browser page may advance the
+# report's observation timestamp. Plans, writes, attachments, and navigation
+# actions can carry a page binding without being a fresh page observation.
+_PAGE_OBSERVATION_STAGES = frozenset({
+    "FORM_ANALYSIS",
+    "RESULT_OBSERVATION",
+    "MODERN_COMPONENT_REBINDING",
+})
 _FINISH_STATUSES = {
     "PRE_SUBMIT_VERIFIED",
     "RESULT_OBSERVED",
@@ -61,6 +70,37 @@ _NONPUBLIC_SUFFIXES = (
     ".onion",
 )
 _RESERVED_EXAMPLE_DOMAINS = ("example.com", "example.net", "example.org")
+
+
+def _passed_page_sequence(events: list[dict[str, Any]], page_fingerprint: str) -> bool:
+    """Return whether one page has an ordered FORM -> PLAN PASS sequence."""
+
+    form_ids = [
+        int(event["event_id"])
+        for event in events
+        if event["stage"] == "FORM_ANALYSIS"
+        and event["result"] == "PASS"
+        and event["page_fingerprint"] == page_fingerprint
+    ]
+    plan_ids = [
+        int(event["event_id"])
+        for event in events
+        if event["stage"] == "PRIVATE_VALUE_FREE_PLAN"
+        and event["result"] == "PASS"
+        and event["page_fingerprint"] == page_fingerprint
+    ]
+    return any(form_id < plan_id for form_id in form_ids for plan_id in plan_ids)
+
+
+def _latest_form_page(events: list[dict[str, Any]]) -> str | None:
+    for event in reversed(events):
+        if (
+            event["stage"] == "FORM_ANALYSIS"
+            and event["result"] == "PASS"
+            and event["page_fingerprint"] is not None
+        ):
+            return str(event["page_fingerprint"])
+    return None
 
 
 def _require_hash(value: str, *, field: str) -> str:
@@ -262,6 +302,64 @@ class LiveAcceptanceManager:
             )
         evidence = _require_hash(evidence_hash, field="evidence_hash")
         page = None if page_fingerprint is None else _require_hash(page_fingerprint, field="page_fingerprint")
+        if stage == "FORM_ANALYSIS" and page is None:
+            raise JobOpsError(
+                "LIVE_ACCEPTANCE_PAGE_FINGERPRINT_REQUIRED",
+                "A live form observation requires a redacted page fingerprint.",
+            )
+        prior_events: list[dict[str, Any]] = []
+        if stage in _BROWSER_ATTESTED_STAGES:
+            with self.database.connect() as connection:
+                attested = connection.execute(
+                    """SELECT e.created_at
+                       FROM live_acceptance_runs r
+                       JOIN browser_assist_events e ON e.assist_id=r.assist_id
+                       WHERE r.acceptance_id=? AND e.event_type='COMPANION_PAIRED'
+                       ORDER BY e.event_id LIMIT 1""",
+                    (acceptance_id,),
+                ).fetchone()
+                prior_events = [dict(item) for item in connection.execute(
+                    """SELECT event_id,stage,result,page_fingerprint,created_at
+                       FROM live_acceptance_events
+                       WHERE acceptance_id=? ORDER BY event_id""",
+                    (acceptance_id,),
+                ).fetchall()]
+            if attested is None or parse_iso(str(attested["created_at"])) > now_value:
+                raise JobOpsError(
+                    "LIVE_ACCEPTANCE_BROWSER_ATTESTATION_REQUIRED",
+                    "Only evidence observed after Browser Companion pairing may enter live acceptance.",
+                )
+        if stage == "PRIVATE_VALUE_FREE_PLAN":
+            if page is None or not any(
+                event["stage"] == "FORM_ANALYSIS"
+                and event["result"] == "PASS"
+                and event["page_fingerprint"] == page
+                for event in prior_events
+            ):
+                raise JobOpsError(
+                    "LIVE_ACCEPTANCE_STAGE_ORDER_INVALID",
+                    "A private-value-free plan requires a prior passed form analysis for the same page.",
+                )
+        elif stage in {
+            "APPROVED_DOM_PREFILL", "APPROVED_FILE_ATTACHMENT", "MULTI_PAGE_RESUME",
+        }:
+            if page is None or not _passed_page_sequence(prior_events, page):
+                raise JobOpsError(
+                    "LIVE_ACCEPTANCE_STAGE_ORDER_INVALID",
+                    "Page writes, files, and multi-page evidence require an ordered form analysis and plan.",
+                )
+        elif stage == "EXPLICIT_NONFINAL_NAVIGATION":
+            latest_page = _latest_form_page(prior_events)
+            if latest_page is None or not _passed_page_sequence(prior_events, latest_page):
+                raise JobOpsError(
+                    "LIVE_ACCEPTANCE_STAGE_ORDER_INVALID",
+                    "Non-final navigation requires an ordered form analysis and plan for the current page.",
+                )
+        elif stage == "RESULT_OBSERVATION" and str(row["status"]) != "PRE_SUBMIT_VERIFIED":
+            raise JobOpsError(
+                "LIVE_ACCEPTANCE_STAGE_ORDER_INVALID",
+                "Result observation requires the pre-submit checkpoint.",
+            )
         now_text = iso_utc(now_value)
         with self.database.connect() as connection:
             connection.execute(
@@ -316,6 +414,27 @@ class LiveAcceptanceManager:
                 requested_status=status,
             )
         with self.database.connect() as connection:
+            events = [dict(item) for item in connection.execute(
+                """SELECT event_id,stage,result,page_fingerprint,created_at
+                   FROM live_acceptance_events
+                   WHERE acceptance_id=? ORDER BY event_id""",
+                (acceptance_id,),
+            ).fetchall()]
+            if status == "PRE_SUBMIT_VERIFIED":
+                latest_page = _latest_form_page(events)
+                if latest_page is None or not _passed_page_sequence(events, latest_page):
+                    raise JobOpsError(
+                        "LIVE_ACCEPTANCE_PRE_SUBMIT_EVIDENCE_REQUIRED",
+                        "Pre-submit verification requires the final observed page's form analysis and plan.",
+                    )
+            if status == "RESULT_OBSERVED" and not any(
+                event["stage"] == "RESULT_OBSERVATION" and event["result"] == "PASS"
+                for event in events
+            ):
+                raise JobOpsError(
+                    "LIVE_ACCEPTANCE_RESULT_EVIDENCE_REQUIRED",
+                    "A passed result observation is required before marking the result observed.",
+                )
             connection.execute(
                 "UPDATE live_acceptance_runs SET status=?,updated_at=? WHERE acceptance_id=?",
                 (status, iso_utc(now_value), acceptance_id),
@@ -386,13 +505,40 @@ class LiveAcceptanceManager:
             events = [dict(row) for row in connection.execute(
                 "SELECT * FROM live_acceptance_events ORDER BY event_id"
             ).fetchall()]
+            companion_assist_ids = {
+                str(row["assist_id"])
+                for row in connection.execute(
+                    "SELECT DISTINCT assist_id FROM browser_assist_events WHERE event_type='COMPANION_PAIRED'"
+                ).fetchall()
+            }
         events_by_run: dict[str, list[dict[str, Any]]] = {}
         for event in events:
             events_by_run.setdefault(str(event["acceptance_id"]), []).append(event)
+        runs_by_id = {str(run["acceptance_id"]): run for run in runs}
+        observed_ids = {
+            acceptance_id
+            for acceptance_id, run_events in events_by_run.items()
+            if str(runs_by_id[acceptance_id]["assist_id"]) in companion_assist_ids
+            and any(
+                event["stage"] == "FORM_ANALYSIS"
+                and event["page_fingerprint"] is not None
+                for event in run_events
+            )
+        }
         providers: list[dict[str, Any]] = []
         for provider in PROVIDERS:
             provider_runs = [run for run in runs if run["provider"] == provider]
-            current_runs = [run for run in provider_runs if run["status"] != "EXPIRED"]
+            observed_runs = [
+                run for run in provider_runs if str(run["acceptance_id"]) in observed_ids
+            ]
+            current_runs = [
+                run for run in observed_runs
+                if run["status"] != "EXPIRED" and parse_iso(str(run["expires_at"])) > now_value
+            ]
+            expired_runs = [
+                run for run in observed_runs
+                if run["status"] == "EXPIRED" or parse_iso(str(run["expires_at"])) <= now_value
+            ]
             current_ids = {str(run["acceptance_id"]) for run in current_runs}
             passed_stages = sorted({
                 str(event["stage"])
@@ -404,12 +550,14 @@ class LiveAcceptanceManager:
                 str(event["created_at"])
                 for acceptance_id in current_ids
                 for event in events_by_run.get(acceptance_id, [])
+                if event["stage"] in _PAGE_OBSERVATION_STAGES
+                and event["page_fingerprint"] is not None
             ]
             providers.append({
                 "provider": provider,
                 "evidence_scope": "PAGE_ROUTE_SPECIFIC_NOT_UNIVERSAL",
                 "current_page_route_runs": len(current_runs),
-                "expired_page_route_runs": sum(run["status"] == "EXPIRED" for run in provider_runs),
+                "expired_page_route_runs": len(expired_runs),
                 "distinct_site_fingerprints": len({run["site_fingerprint"] for run in current_runs}),
                 "pre_submit_verified_runs": sum(
                     run["status"] in {"PRE_SUBMIT_VERIFIED", "RESULT_OBSERVED"} for run in current_runs
@@ -430,7 +578,7 @@ class LiveAcceptanceManager:
             "current_page_route_evidence_count": sum(
                 item["current_page_route_runs"] for item in providers
             ),
-            "live_site_accessed": bool(runs),
+            "live_site_accessed": any(item["current_page_route_runs"] for item in providers),
             "universal_live_compatibility": False,
             "final_submit": "USER_ONLY",
             "final_submit_actions": 0,
@@ -461,6 +609,11 @@ def validate_live_acceptance_report(value: dict[str, Any]) -> None:
         raise JobOpsError(
             "LIVE_ACCEPTANCE_COUNT_INVALID",
             "The live acceptance evidence count does not match the provider totals.",
+        )
+    if value["live_site_accessed"] is not bool(value["current_page_route_evidence_count"]):
+        raise JobOpsError(
+            "LIVE_ACCEPTANCE_ACCESS_FLAG_INVALID",
+            "The live-site access flag must reflect current observed page evidence.",
         )
     if value["report_hash"] != _report_hash(value):
         raise JobOpsError(

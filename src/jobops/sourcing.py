@@ -31,6 +31,12 @@ SENSITIVE_QUERY_KEY_PARTS = re.compile(
     r"(?:^|[_-])(?:auth|credential|email|password|secret|session|signature|token|username)(?:$|[_-])",
     re.IGNORECASE,
 )
+JOB_IDENTITY_QUERY_KEYS = frozenset({
+    "ecvid", "job", "job-id", "job_id", "jobid", "jobpostingid",
+    "opening", "openingid", "opco", "params", "position", "positionid",
+    "posting", "postingid", "req", "reqid", "requisition", "requisitionid",
+    "vacancy", "vacancyid",
+})
 
 
 def _host(value: str) -> str:
@@ -66,6 +72,29 @@ def url_has_sensitive_query(value: str) -> bool:
         return any(key in SENSITIVE_QUERY_KEYS or SENSITIVE_QUERY_KEY_PARTS.search(key) for key in keys)
     except ValueError:
         return True
+
+
+def direct_company_query_identity(value: str) -> str | None:
+    """Return a value-free binding for job-identifying query parameters.
+
+    Some direct company application systems keep every wizard page under a
+    generic path such as ``/apply`` and identify the job only in the query
+    string.  The raw values must not be copied into public evidence, so the
+    canonical key/value pairs are sorted and hashed.  Navigation-only query
+    parameters are deliberately ignored.
+    """
+
+    try:
+        pairs = sorted(
+            (key.casefold(), pair_value)
+            for key, pair_value in parse_qsl(urlparse(value).query, keep_blank_values=True)
+            if key.casefold() in JOB_IDENTITY_QUERY_KEYS and pair_value
+        )
+    except ValueError:
+        return None
+    if not pairs:
+        return None
+    return "query-" + sha256_bytes(canonical_json(pairs))
 
 
 def _canonical_url(value: str) -> str:
@@ -274,7 +303,8 @@ def verify_source_route(
     page_hash = official_page_hash or ""
     snapshot_hash = jd_snapshot_hash or ""
     if final_is_company:
-        kind, provider, tenant, board, identity = "OFFICIAL_DIRECT", "company", derived_company, "official", current.path.rstrip("/").split("/")[-1]
+        identity = direct_company_query_identity(current_canonical) or current.path.rstrip("/").split("/")[-1]
+        kind, provider, tenant, board = "OFFICIAL_DIRECT", "company", derived_company, "official"
     elif final_is_ats:
         if not tenant_binding or not page_hash or not snapshot_hash:
             raise JobOpsError("ATS_TENANT_BINDING_REQUIRED", "An ATS route needs a local official-page tenant binding and snapshot hashes.")

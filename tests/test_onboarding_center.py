@@ -2210,7 +2210,7 @@ class OnboardingCenterTests(unittest.TestCase):
                     self.assertEqual(database_connection.execute("SELECT COUNT(*) FROM intake_queue").fetchone()[0], 0)
                 diagnostic_body = json.dumps({
                     "last_error_code": "BROWSER_FORM_CHANGED",
-                    "observed_companion_version": "0.9.1",
+                    "observed_companion_version": "0.9.2",
                 }).encode("utf-8")
                 connection.request(
                     "POST", session_path + "api/support-diagnostics",
@@ -2238,7 +2238,7 @@ class OnboardingCenterTests(unittest.TestCase):
                     "code": "BROWSER_FORM_CHANGED",
                     "source": "UI_API_ERROR",
                     "ui_protocol": UI_PROTOCOL_VERSION,
-                    "observed_companion_version": "0.9.1",
+                    "observed_companion_version": "0.9.2",
                 }).encode("utf-8")
                 connection.request(
                     "POST", session_path + "api/support-incident",
@@ -2755,7 +2755,7 @@ class OnboardingCenterTests(unittest.TestCase):
             ):
                 report = service.support_diagnostics({
                     "last_error_code": "BROWSER_FORM_CHANGED",
-                    "observed_companion_version": "0.9.1",
+                    "observed_companion_version": "0.9.2",
                 })
             serialized = json.dumps(report, sort_keys=True)
             self.assertEqual(report["status"], "JOBFLOW_SUPPORT_DIAGNOSTICS_READY")
@@ -2763,7 +2763,7 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertFalse(report["safety"]["automatic_retry"])
             self.assertEqual(report["safety"]["private_values_read"], 0)
             self.assertEqual(report["safety"]["private_values_emitted"], 0)
-            self.assertEqual(report["build"]["observed_companion_version"], "0.9.1")
+            self.assertEqual(report["build"]["observed_companion_version"], "0.9.2")
             self.assertEqual(report["schema_version"], 2)
             self.assertFalse(report["incidents"]["enabled"])
             self.assertEqual(report["incidents"]["record_count"], 0)

@@ -740,6 +740,7 @@ async function collectStableForm(tabId, {minimumMilliseconds = 1800, maximumMill
     const fingerprint = await sha256(JSON.stringify({
       sanitized_html: String(collected.payload?.sanitized_html || ""),
       client_refs: Array.isArray(collected.payload?.client_refs) ? collected.payload.client_refs : [],
+      control_semantics_sha256: collected.payload?.control_semantics_sha256 || {},
       blocker_signals: Array.isArray(collected.payload?.blocker_signals) ? collected.payload.blocker_signals : []
     }));
     if (fingerprint === priorFingerprint) matchingSamples += 1;
@@ -1374,6 +1375,7 @@ async function fillCurrentTab(tabId, tabUrl) {
   }
   const applied = await chrome.tabs.sendMessage(tabId, {
     type: "JOBFLOW_APPLY_APPROVED",
+    control_semantics_sha256: prepared.control_semantics_sha256,
     fields: prepared.fields,
     files: prepared.files.map((item) => ({
       ...item,

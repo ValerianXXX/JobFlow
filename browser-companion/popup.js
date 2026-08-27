@@ -4,7 +4,7 @@
 // Edge can keep an older manifest/service worker alive. A one-time popup open
 // therefore provides a safe, user-visible hot-upgrade path without asking the
 // user to operate edge://extensions (which normal webpages cannot control).
-const SOURCE_EXTENSION_VERSION = "0.9.1";
+const SOURCE_EXTENSION_VERSION = "0.9.2";
 if (chrome.runtime.getManifest().version !== SOURCE_EXTENSION_VERSION) {
   chrome.runtime.reload();
   window.close();
@@ -60,6 +60,7 @@ function applyRestartMessage(result) {
     COMPANION_ARIA_COMBOBOX_VERIFY_FAILED: "网页没有保留可搜索下拉框的选择",
     COMPANION_CONTROL_REBIND_FAILED: "上传或页面刷新后，该字段结构发生了变化",
     COMPANION_CONTROL_CHANGED: "填写前该字段结构发生了变化",
+    COMPANION_FIELD_MAX_LENGTH_CHANGED: "字段长度限制已经变化，未填写任何内容",
     COMPANION_FIELD_VERIFY_FAILED: "网页没有保留已填写的内容",
     COMPANION_FILE_VERIFY_FAILED: "网页没有确认附件已经保留"
   } : {
@@ -72,6 +73,7 @@ function applyRestartMessage(result) {
     COMPANION_ARIA_COMBOBOX_VERIFY_FAILED: "the page did not retain the searchable-menu choice",
     COMPANION_CONTROL_REBIND_FAILED: "the field structure changed after upload or page refresh",
     COMPANION_CONTROL_CHANGED: "the field structure changed before it could be filled",
+    COMPANION_FIELD_MAX_LENGTH_CHANGED: "the field length limit changed; nothing was filled",
     COMPANION_FIELD_VERIFY_FAILED: "the page did not retain the entered value",
     COMPANION_FILE_VERIFY_FAILED: "the page did not confirm the attachment"
   };

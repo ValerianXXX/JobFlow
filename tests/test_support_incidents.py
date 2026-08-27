@@ -24,7 +24,7 @@ class SupportIncidentStoreTests(unittest.TestCase):
             "code": code,
             "source": "UI_API_ERROR",
             "ui_protocol": 35,
-            "observed_companion_version": "0.9.1",
+            "observed_companion_version": "0.9.2",
         }
 
     def test_capture_is_off_by_default_and_never_transmits(self) -> None:

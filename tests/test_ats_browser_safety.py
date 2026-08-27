@@ -88,6 +88,37 @@ class ATSBrowserSafetyTests(unittest.TestCase):
                 analyze_local_ats_form(snapshot, route=verified_route(), blocked_categories=[])
         self.assertEqual(blocked.exception.code, "ATS_FORM_COMPLEXITY_LIMIT")
 
+    def test_hidden_ancestors_are_ignored_and_maxlength_is_hash_bound(self) -> None:
+        snapshot = b"""<!doctype html><html><body><form>
+        <div hidden><textarea name='hidden-parent'>secret</textarea></div>
+        <fieldset inert><textarea name='inert-parent'></textarea></fieldset>
+        <section aria-hidden='true'><textarea name='aria-parent'></textarea></section>
+        <div style='display: none'><textarea name='style-parent'></textarea></div>
+        <textarea hidden name='hidden-self'></textarea>
+        <label for='cover'>Cover Letter</label>
+        <textarea id='cover' name='cover_letter' maxlength='275' required></textarea>
+        </form></body></html>"""
+        report = analyze_local_ats_form(snapshot, route=verified_route(), blocked_categories=[])
+        self.assertEqual(report["field_count"], 1)
+        self.assertEqual(report["ignored_hidden_control_count"], 5)
+        field = report["fields"][0]
+        self.assertEqual(field["answer_key"], "cover_letter")
+        self.assertEqual(field["max_length"], 275)
+        self.assertEqual(field["max_length_status"], "VALID")
+
+        changed = analyze_local_ats_form(snapshot.replace(b"maxlength='275'", b"maxlength='276'"), route=verified_route(), blocked_categories=[])
+        self.assertNotEqual(field["control_ref"], changed["fields"][0]["control_ref"])
+        self.assertNotEqual(field["logical_field_hash"], changed["fields"][0]["logical_field_hash"])
+        self.assertNotEqual(report["form_snapshot_hash"], changed["form_snapshot_hash"])
+
+        for raw in (b"0", b"invalid"):
+            invalid = analyze_local_ats_form(
+                snapshot.replace(b"maxlength='275'", b"maxlength='" + raw + b"'"),
+                route=verified_route(), blocked_categories=[],
+            )["fields"][0]
+            self.assertIsNone(invalid["max_length"])
+            self.assertEqual(invalid["max_length_status"], "INVALID")
+
     def test_form_parser_accepts_canonical_root_myworkday_host(self) -> None:
         entry = "https://example.com/careers/strategy-analyst"
         current = "https://www.myworkday.com/example/careers/job/123"
@@ -113,7 +144,8 @@ class ATSBrowserSafetyTests(unittest.TestCase):
         ).as_dict()
         report = analyze_local_ats_form(self.snapshot, route=route, blocked_categories=[])
         self.assertEqual(report["provider"], "workday")
-        self.assertEqual(report["canonical_url"], "https://myworkday.com/example/careers/job/123")
+        self.assertEqual(report["canonical_url"], "https://myworkday.com/__jobflow_route_redacted__")
+        self.assertNotIn("/example/careers/job/123", json.dumps(report, sort_keys=True))
 
     def test_sanitized_aria_combobox_remains_a_private_profile_binding(self) -> None:
         snapshot = b"""<!doctype html><html><body><form>

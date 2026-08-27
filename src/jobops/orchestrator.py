@@ -29,7 +29,7 @@ from .claims import verify_claim_evidence
 from .collector import JobCollector
 from .db import JobOpsDB
 from .document_builder import (
-    build_cover_letter, discover_template_slots, export_docx_to_pdf,
+    build_cover_letter, build_cover_letter_narrative, discover_template_slots, export_docx_to_pdf,
     render_pdf_to_pngs, tailor_master_resume, tailor_master_resume_with_manifest,
 )
 from .document_qa import automated_visual_probe, extract_pdf_text, structural_qa
@@ -65,7 +65,7 @@ MAX_JD_PDF_PAGES = 200
 ROLLBACK_PRIVATE_KINDS = {
     "generated_resume_docx", "generated_resume_pdf",
     "generated_cover_letter_docx", "generated_cover_letter_pdf",
-    "visual_evidence", "review_packet", "application_execution_bundle",
+    "visual_evidence", "review_packet", "application_execution_bundle", "application_narrative",
 }
 
 
@@ -806,6 +806,8 @@ class JobOpsOrchestrator:
                     "answer_key": item["answer_key"],
                     "prompt_hash": item["prompt_hash"], "control_type": item["control_type"],
                     "required": bool(item.get("required", False)),
+                    "max_length": item.get("max_length"),
+                    "max_length_status": str(item.get("max_length_status") or "ABSENT"),
                     "classification": item["classification"], "reason": item["reason_code"],
                     "gate": "PREFILL_ALLOWED" if action["action"] == "PROPOSE_PREFILL" else "STOP_REQUIRED",
                     "action": "PREFILL_FROM_SECURE_STORE" if action["binding_kind"] == "SECURE_REF" else ("PREFILL" if action["action"] == "PROPOSE_PREFILL" else "STOP"),
@@ -871,11 +873,15 @@ class JobOpsOrchestrator:
         )
         cover_requested = (
             any(item["purpose"] == "cover_letter" for item in material_requests["uploads"])
+            or bool(material_requests["narratives"])
             or anticipate_later_materials
         )
         cover_docx_ref: dict[str, Any] | None = None
         cover_pdf_ref: dict[str, Any] | None = None
         cover_visual_ref: dict[str, Any] | None = None
+        cover_narrative_ref: dict[str, Any] | None = None
+        cover_narrative_character_count: int | None = None
+        cover_claim_ids: list[str] = []
         cover_qa: dict[str, Any] | None = None
         with self.onboarding.staging_directory() as staging:
             master_path = staging / "master.docx"
@@ -949,6 +955,14 @@ class JobOpsOrchestrator:
                     cover_candidates = approved_external_claims(external_claim_set, use="cover_letter")
                     selected = next((item for item in cover_candidates if item["claim_id"] in selected_claim_ids), cover_candidates[0])
                     why_role = str(selected["allowed_wording"][0])
+                cover_narrative = build_cover_letter_narrative(
+                    candidate_display_name=str(profile["candidate_display_name"]),
+                    company=jd.company,
+                    target_role=jd.title,
+                    why_company=f"{excerpt} ({research_source.url}, accessed {research_source.accessed_at[:10]}).",
+                    why_role=why_role, claims=cover_claims, external_claim_set=cover_claim_set,
+                )
+                cover_claim_ids = list(cover_narrative.claim_ids)
                 build_cover_letter(
                     cover_docx,
                     candidate_display_name=str(profile["candidate_display_name"]),
@@ -956,6 +970,7 @@ class JobOpsOrchestrator:
                     target_role=jd.title,
                     why_company=f"{excerpt} ({research_source.url}, accessed {research_source.accessed_at[:10]}).",
                     why_role=why_role, claims=cover_claims, external_claim_set=cover_claim_set,
+                    narrative=cover_narrative,
                 )
                 export_docx_to_pdf(
                     cover_docx,
@@ -982,6 +997,16 @@ class JobOpsOrchestrator:
                     "generated_cover_letter_pdf", cover_pdf.read_bytes(), synthetic=synthetic,
                 )
                 self._remember_created_reference(cover_pdf_ref, created_references)
+                raw_narrative = bytearray(cover_narrative.text.encode("utf-8"))
+                cover_narrative_character_count = len(cover_narrative.text)
+                try:
+                    cover_narrative_ref = self.onboarding.import_bytes(
+                        "application_narrative", bytes(raw_narrative), synthetic=synthetic,
+                    )
+                finally:
+                    raw_narrative[:] = b"\0" * len(raw_narrative)
+                self._remember_created_reference(cover_narrative_ref, created_references)
+                del cover_narrative
                 cover_visual_ref = self.onboarding.import_bytes(
                     "visual_evidence", canonical_json(cover_visual), synthetic=synthetic,
                 )
@@ -1004,8 +1029,11 @@ class JobOpsOrchestrator:
                 "docx_sha256": str(cover_docx_ref["content_sha256"]),
                 "pdf_secure_ref": str(cover_pdf_ref["secure_ref"]),
                 "pdf_sha256": str(cover_pdf_ref["content_sha256"]),
+                "narrative_secure_ref": str(cover_narrative_ref["secure_ref"]),
+                "narrative_sha256": str(cover_narrative_ref["content_sha256"]),
+                "narrative_character_count": cover_narrative_character_count,
             }
-            if cover_docx_ref and cover_pdf_ref else None
+            if cover_docx_ref and cover_pdf_ref and cover_narrative_ref else None
         )
         portfolio_binding = (
             {
@@ -1147,11 +1175,12 @@ class JobOpsOrchestrator:
             {"material_id": stable_id("MAT", application_id, "resume_pdf", str(pdf_ref["content_sha256"])), "kind": "resume_pdf", "path": pdf_ref["secure_ref"], "content_hash": pdf_ref["content_sha256"], "claim_ids": selected_claim_ids},
             {"material_id": stable_id("MAT", application_id, "visual_evidence", str(visual_ref["content_sha256"])), "kind": "visual_evidence", "path": visual_ref["secure_ref"], "content_hash": visual_ref["content_sha256"], "claim_ids": []},
         ]
-        if cover_docx_ref and cover_pdf_ref and cover_visual_ref:
+        if cover_docx_ref and cover_pdf_ref and cover_visual_ref and cover_narrative_ref:
             materials.extend([
-                {"material_id": stable_id("MAT", application_id, "cover_letter_docx", str(cover_docx_ref["content_sha256"])), "kind": "cover_letter_docx", "path": cover_docx_ref["secure_ref"], "content_hash": cover_docx_ref["content_sha256"], "claim_ids": selected_claim_ids[:2]},
-                {"material_id": stable_id("MAT", application_id, "cover_letter_pdf", str(cover_pdf_ref["content_sha256"])), "kind": "cover_letter_pdf", "path": cover_pdf_ref["secure_ref"], "content_hash": cover_pdf_ref["content_sha256"], "claim_ids": selected_claim_ids[:2]},
+                {"material_id": stable_id("MAT", application_id, "cover_letter_docx", str(cover_docx_ref["content_sha256"])), "kind": "cover_letter_docx", "path": cover_docx_ref["secure_ref"], "content_hash": cover_docx_ref["content_sha256"], "claim_ids": cover_claim_ids},
+                {"material_id": stable_id("MAT", application_id, "cover_letter_pdf", str(cover_pdf_ref["content_sha256"])), "kind": "cover_letter_pdf", "path": cover_pdf_ref["secure_ref"], "content_hash": cover_pdf_ref["content_sha256"], "claim_ids": cover_claim_ids},
                 {"material_id": stable_id("MAT", application_id, "cover_visual_evidence", str(cover_visual_ref["content_sha256"])), "kind": "visual_evidence", "path": cover_visual_ref["secure_ref"], "content_hash": cover_visual_ref["content_sha256"], "claim_ids": []},
+                {"material_id": stable_id("MAT", application_id, "application_narrative", str(cover_narrative_ref["content_sha256"])), "kind": "application_narrative", "path": cover_narrative_ref["secure_ref"], "content_hash": cover_narrative_ref["content_sha256"], "claim_ids": cover_claim_ids},
             ])
         if material_plan["portfolio_file"]["binding_status"] == "BOUND_SECURE_FILE":
             materials.append({

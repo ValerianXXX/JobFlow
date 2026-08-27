@@ -93,7 +93,7 @@ def draw_popup(image: Image.Image, *, x: int, y: int, title: str, status: str, b
     draw.rounded_rectangle((x, y, x + width, y + height), radius=12, fill="white", outline=LINE, width=2)
     logo(image, (x + 20, y + 18, x + 60, y + 58))
     draw.text((x + 72, y + 17), "JobFlow", font=font(23, bold=True, serif=True), fill=INK)
-    draw.text((x + 72, y + 45), "Browser Companion v0.9.1", font=font(11), fill=MUTED)
+    draw.text((x + 72, y + 45), "Browser Companion v0.9.2", font=font(11), fill=MUTED)
     draw.line((x, y + 76, x + width, y + 76), fill=LINE, width=1)
     draw.text((x + 240, y + 94), "EN", font=font(12, bold=True), fill=GREEN_DARK)
     draw.rounded_rectangle((x + 18, y + 126, x + width - 18, y + 226), radius=4, fill=GREEN_SOFT)

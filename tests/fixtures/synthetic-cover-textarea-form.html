@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>Synthetic Cover Letter textarea form</title></head>
+  <body>
+    <main data-provider="greenhouse">
+      <h1>Synthetic Data Analyst application</h1>
+      <form action="/example/jobs/987654">
+        <input type="hidden" name="authenticity_token" value="DO_NOT_RETAIN_SYNTHETIC_TOKEN">
+        <h2>Candidate details</h2>
+        <label for="full_name">Full name</label>
+        <input id="full_name" name="full_name" type="text" autocomplete="name" required>
+        <h2>Documents</h2>
+        <label for="resume">Resume</label>
+        <input id="resume" name="resume" type="file" required>
+        <label for="cover_letter">Cover Letter</label>
+        <textarea id="cover_letter" name="cover_letter" rows="12" maxlength="1200" required></textarea>
+        <button id="submit" type="submit">Submit application</button>
+      </form>
+      <script>throw new Error('DO_NOT_EXECUTE_SYNTHETIC_SCRIPT');</script>
+    </main>
+  </body>
+</html>

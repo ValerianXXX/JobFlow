@@ -99,6 +99,26 @@ def seed_assist(
     return assist_id
 
 
+def attest_browser_companion(
+    database: JobOpsDB,
+    assist_id: str,
+    *,
+    event_type: str = "COMPANION_PAIRED",
+    now: datetime = NOW,
+) -> None:
+    with database.connect() as connection:
+        application_id = str(connection.execute(
+            "SELECT application_id FROM browser_assist_runs WHERE assist_id=?",
+            (assist_id,),
+        ).fetchone()[0])
+        connection.execute(
+            """INSERT INTO browser_assist_events(
+                   assist_id,application_id,event_type,evidence_hash,created_at
+               ) VALUES(?,?,?,?,?)""",
+            (assist_id, application_id, event_type, HASH_C, iso_utc(now)),
+        )
+
+
 class LiveAcceptanceTests(unittest.TestCase):
     def test_public_cli_reports_empty_redacted_evidence_without_overclaim(self) -> None:
         with project_temp() as temp:
@@ -148,6 +168,7 @@ class LiveAcceptanceTests(unittest.TestCase):
             started = manager.start_for_assist(assist_id, now=NOW)
             self.assertIsNotNone(started)
             acceptance_id = str(started["acceptance_id"])
+            attest_browser_companion(database, assist_id)
             manager.record_stage(
                 acceptance_id,
                 stage="FORM_ANALYSIS",
@@ -197,12 +218,88 @@ class LiveAcceptanceTests(unittest.TestCase):
             self.assertEqual(company["passed_stages"], [
                 "ROUTE_BINDING", "FORM_ANALYSIS", "PRIVATE_VALUE_FREE_PLAN",
             ])
+            self.assertEqual(company["latest_observed_at"], iso_utc(NOW + timedelta(seconds=1)))
+            self.assertTrue(report["live_site_accessed"])
             self.assertFalse(report["universal_live_compatibility"])
             self.assertEqual(report["final_submit"], "USER_ONLY")
             validate_live_acceptance_report(report)
             report["current_page_route_evidence_count"] = 99
             with self.assertRaises(JobOpsError):
                 validate_live_acceptance_report(report)
+
+    def test_latest_observed_at_uses_page_observations_not_plan_or_write_times(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            assist_id = seed_assist(database)
+            manager = LiveAcceptanceManager(database)
+            acceptance = manager.start_for_assist(assist_id, now=NOW)
+            acceptance_id = str(acceptance["acceptance_id"])
+            attest_browser_companion(database, assist_id)
+
+            manager.record_stage(
+                acceptance_id,
+                stage="FORM_ANALYSIS",
+                result="PASS",
+                evidence_hash=HASH_A,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(seconds=1),
+            )
+            manager.record_stage(
+                acceptance_id,
+                stage="PRIVATE_VALUE_FREE_PLAN",
+                result="PASS",
+                evidence_hash=HASH_B,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(seconds=2),
+            )
+            manager.record_stage(
+                acceptance_id,
+                stage="APPROVED_DOM_PREFILL",
+                result="PASS",
+                evidence_hash=HASH_C,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(seconds=3),
+            )
+            manager.record_stage(
+                acceptance_id,
+                stage="APPROVED_FILE_ATTACHMENT",
+                result="PASS",
+                evidence_hash=HASH_A,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(seconds=4),
+            )
+
+            before_result = manager.report(now=NOW + timedelta(seconds=5))["providers"][0]
+            self.assertEqual(
+                before_result["latest_observed_at"],
+                iso_utc(NOW + timedelta(seconds=1)),
+            )
+
+            manager.finish(
+                acceptance_id,
+                status="PRE_SUBMIT_VERIFIED",
+                now=NOW + timedelta(seconds=5),
+            )
+            manager.record_stage(
+                acceptance_id,
+                stage="RESULT_OBSERVATION",
+                result="PASS",
+                evidence_hash=HASH_C,
+                page_fingerprint=HASH_C,
+                now=NOW + timedelta(seconds=6),
+            )
+            manager.finish(
+                acceptance_id,
+                status="RESULT_OBSERVED",
+                now=NOW + timedelta(seconds=7),
+            )
+
+            after_result = manager.report(now=NOW + timedelta(seconds=8))["providers"][0]
+            self.assertEqual(
+                after_result["latest_observed_at"],
+                iso_utc(NOW + timedelta(seconds=6)),
+            )
 
     def test_nonpublic_or_nonproduction_assist_never_creates_live_evidence(self) -> None:
         with project_temp() as temp:
@@ -222,6 +319,64 @@ class LiveAcceptanceTests(unittest.TestCase):
             with database.connect() as connection:
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM live_acceptance_runs").fetchone()[0], 0)
 
+    def test_assist_creation_and_local_agent_pairing_are_not_live_page_evidence(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            assist_id = seed_assist(database)
+            manager = LiveAcceptanceManager(database)
+            started = manager.start_for_assist(assist_id, now=NOW)
+            acceptance_id = str(started["acceptance_id"])
+
+            report = manager.report(now=NOW + timedelta(seconds=1))
+            self.assertFalse(report["live_site_accessed"])
+            self.assertEqual(report["current_page_route_evidence_count"], 0)
+            self.assertEqual(report["providers"][0]["current_page_route_runs"], 0)
+            self.assertIsNone(report["providers"][0]["latest_observed_at"])
+
+            attest_browser_companion(database, assist_id, event_type="LOCAL_AI_AGENT_PAIRED")
+            with self.assertRaises(JobOpsError) as caught:
+                manager.record_stage(
+                    acceptance_id,
+                    stage="FORM_ANALYSIS",
+                    result="PASS",
+                    evidence_hash=HASH_A,
+                    page_fingerprint=HASH_B,
+                    now=NOW + timedelta(seconds=2),
+                )
+            self.assertEqual(caught.exception.code, "LIVE_ACCEPTANCE_BROWSER_ATTESTATION_REQUIRED")
+            with database.connect() as connection:
+                connection.execute(
+                    """INSERT INTO live_acceptance_events(
+                           acceptance_id,stage,result,evidence_hash,page_fingerprint,created_at
+                       ) VALUES(?,'FORM_ANALYSIS','PASS',?,?,?)""",
+                    (
+                        acceptance_id,
+                        HASH_B,
+                        HASH_C,
+                        iso_utc(NOW + timedelta(seconds=2)),
+                    ),
+                )
+            self.assertFalse(manager.report(now=NOW + timedelta(seconds=3))["live_site_accessed"])
+
+    def test_form_observation_requires_page_fingerprint(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            assist_id = seed_assist(database)
+            manager = LiveAcceptanceManager(database)
+            acceptance = manager.start_for_assist(assist_id, now=NOW)
+            attest_browser_companion(database, assist_id)
+            with self.assertRaises(JobOpsError) as caught:
+                manager.record_stage(
+                    str(acceptance["acceptance_id"]),
+                    stage="FORM_ANALYSIS",
+                    result="PASS",
+                    evidence_hash=HASH_A,
+                    now=NOW + timedelta(seconds=1),
+                )
+            self.assertEqual(caught.exception.code, "LIVE_ACCEPTANCE_PAGE_FINGERPRINT_REQUIRED")
+
     def test_events_are_idempotent_append_only_and_safety_counters_are_database_locked(self) -> None:
         with project_temp() as temp:
             database = JobOpsDB(temp / "jobops.db")
@@ -229,6 +384,23 @@ class LiveAcceptanceTests(unittest.TestCase):
             acceptance = LiveAcceptanceManager(database).start_for_assist(seed_assist(database), now=NOW)
             acceptance_id = str(acceptance["acceptance_id"])
             manager = LiveAcceptanceManager(database)
+            attest_browser_companion(database, str(acceptance["assist_id"]))
+            manager.record_stage(
+                acceptance_id,
+                stage="FORM_ANALYSIS",
+                result="PASS",
+                evidence_hash=HASH_B,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(milliseconds=1),
+            )
+            manager.record_stage(
+                acceptance_id,
+                stage="PRIVATE_VALUE_FREE_PLAN",
+                result="PASS",
+                evidence_hash=HASH_C,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(milliseconds=2),
+            )
             for _ in range(2):
                 manager.record_stage(
                     acceptance_id,
@@ -263,8 +435,18 @@ class LiveAcceptanceTests(unittest.TestCase):
             database = JobOpsDB(temp / "jobops.db")
             database.initialize()
             manager = LiveAcceptanceManager(database)
-            acceptance = manager.start_for_assist(seed_assist(database), now=NOW)
+            assist_id = seed_assist(database)
+            acceptance = manager.start_for_assist(assist_id, now=NOW)
             acceptance_id = str(acceptance["acceptance_id"])
+            attest_browser_companion(database, assist_id)
+            manager.record_stage(
+                acceptance_id,
+                stage="FORM_ANALYSIS",
+                result="PASS",
+                evidence_hash=HASH_A,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(seconds=1),
+            )
             report = manager.report(now=NOW + timedelta(days=31))
             company = report["providers"][0]
             self.assertEqual(company["current_page_route_runs"], 0)
@@ -284,11 +466,33 @@ class LiveAcceptanceTests(unittest.TestCase):
             database = JobOpsDB(temp / "jobops.db")
             database.initialize()
             manager = LiveAcceptanceManager(database)
-            acceptance = manager.start_for_assist(seed_assist(database), now=NOW)
+            assist_id = seed_assist(database)
+            acceptance = manager.start_for_assist(assist_id, now=NOW)
             acceptance_id = str(acceptance["acceptance_id"])
+            attest_browser_companion(database, assist_id)
             with self.assertRaises(JobOpsError):
                 manager.finish(acceptance_id, status="RESULT_OBSERVED", now=NOW)
-            manager.finish(acceptance_id, status="PRE_SUBMIT_VERIFIED", now=NOW)
+            manager.record_stage(
+                acceptance_id,
+                stage="FORM_ANALYSIS",
+                result="PASS",
+                evidence_hash=HASH_A,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(milliseconds=1),
+            )
+            manager.record_stage(
+                acceptance_id,
+                stage="PRIVATE_VALUE_FREE_PLAN",
+                result="PASS",
+                evidence_hash=HASH_B,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(milliseconds=2),
+            )
+            manager.finish(
+                acceptance_id,
+                status="PRE_SUBMIT_VERIFIED",
+                now=NOW + timedelta(milliseconds=3),
+            )
             manager.record_stage(
                 acceptance_id,
                 stage="RESULT_OBSERVATION",
@@ -310,6 +514,161 @@ class LiveAcceptanceTests(unittest.TestCase):
                     evidence_hash=HASH_A,
                     now=NOW + timedelta(seconds=3),
                 )
+
+    def test_terminal_runs_expire_by_timestamp_without_rewriting_terminal_state(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            manager = LiveAcceptanceManager(database)
+            expected_statuses = {"RESULT_OBSERVED", "FAILED", "BLOCKED", "REVOKED"}
+            for index, status in enumerate(sorted(expected_statuses), start=1):
+                assist_id = seed_assist(database, suffix=f"terminal-{index}")
+                acceptance = manager.start_for_assist(assist_id, now=NOW)
+                acceptance_id = str(acceptance["acceptance_id"])
+                attest_browser_companion(database, assist_id)
+                manager.record_stage(
+                    acceptance_id,
+                    stage="FORM_ANALYSIS",
+                    result="PASS",
+                    evidence_hash=HASH_A,
+                    page_fingerprint=HASH_B,
+                    now=NOW + timedelta(milliseconds=1),
+                )
+                manager.record_stage(
+                    acceptance_id,
+                    stage="PRIVATE_VALUE_FREE_PLAN",
+                    result="PASS",
+                    evidence_hash=HASH_B,
+                    page_fingerprint=HASH_B,
+                    now=NOW + timedelta(milliseconds=2),
+                )
+                if status == "RESULT_OBSERVED":
+                    manager.finish(
+                        acceptance_id,
+                        status="PRE_SUBMIT_VERIFIED",
+                        now=NOW + timedelta(milliseconds=3),
+                    )
+                    manager.record_stage(
+                        acceptance_id,
+                        stage="RESULT_OBSERVATION",
+                        result="PASS",
+                        evidence_hash=HASH_C,
+                        page_fingerprint=HASH_C,
+                        now=NOW + timedelta(milliseconds=4),
+                    )
+                    manager.finish(
+                        acceptance_id,
+                        status=status,
+                        now=NOW + timedelta(milliseconds=5),
+                    )
+                else:
+                    manager.finish(
+                        acceptance_id,
+                        status=status,
+                        now=NOW + timedelta(milliseconds=3),
+                    )
+
+            report = manager.report(now=NOW + timedelta(days=31))
+            company = report["providers"][0]
+            self.assertEqual(company["current_page_route_runs"], 0)
+            self.assertEqual(company["expired_page_route_runs"], 4)
+            self.assertFalse(report["live_site_accessed"])
+            with database.connect() as connection:
+                stored = {
+                    str(row[0]) for row in connection.execute(
+                        "SELECT status FROM live_acceptance_runs"
+                    ).fetchall()
+                }
+            self.assertEqual(stored, expected_statuses)
+
+    def test_stage_order_finish_prerequisites_and_pair_time_are_enforced(self) -> None:
+        with project_temp() as temp:
+            database = JobOpsDB(temp / "jobops.db")
+            database.initialize()
+            manager = LiveAcceptanceManager(database)
+            assist_id = seed_assist(database)
+            acceptance = manager.start_for_assist(assist_id, now=NOW)
+            acceptance_id = str(acceptance["acceptance_id"])
+            attest_browser_companion(database, assist_id, now=NOW + timedelta(seconds=1))
+
+            with self.assertRaises(JobOpsError) as before_pair:
+                manager.record_stage(
+                    acceptance_id,
+                    stage="FORM_ANALYSIS",
+                    result="PASS",
+                    evidence_hash=HASH_A,
+                    page_fingerprint=HASH_B,
+                    now=NOW,
+                )
+            self.assertEqual(before_pair.exception.code, "LIVE_ACCEPTANCE_BROWSER_ATTESTATION_REQUIRED")
+            with self.assertRaises(JobOpsError) as before_form:
+                manager.record_stage(
+                    acceptance_id,
+                    stage="APPROVED_DOM_PREFILL",
+                    result="PASS",
+                    evidence_hash=HASH_A,
+                    page_fingerprint=HASH_B,
+                    now=NOW + timedelta(seconds=2),
+                )
+            self.assertEqual(before_form.exception.code, "LIVE_ACCEPTANCE_STAGE_ORDER_INVALID")
+
+            manager.record_stage(
+                acceptance_id,
+                stage="FORM_ANALYSIS",
+                result="PASS",
+                evidence_hash=HASH_A,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(seconds=2),
+            )
+            with self.assertRaises(JobOpsError) as before_plan:
+                manager.record_stage(
+                    acceptance_id,
+                    stage="APPROVED_FILE_ATTACHMENT",
+                    result="PASS",
+                    evidence_hash=HASH_C,
+                    page_fingerprint=HASH_B,
+                    now=NOW + timedelta(seconds=3),
+                )
+            self.assertEqual(before_plan.exception.code, "LIVE_ACCEPTANCE_STAGE_ORDER_INVALID")
+            with self.assertRaises(JobOpsError) as pre_submit_missing:
+                manager.finish(
+                    acceptance_id,
+                    status="PRE_SUBMIT_VERIFIED",
+                    now=NOW + timedelta(seconds=3),
+                )
+            self.assertEqual(
+                pre_submit_missing.exception.code,
+                "LIVE_ACCEPTANCE_PRE_SUBMIT_EVIDENCE_REQUIRED",
+            )
+
+            manager.record_stage(
+                acceptance_id,
+                stage="PRIVATE_VALUE_FREE_PLAN",
+                result="PASS",
+                evidence_hash=HASH_B,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(seconds=4),
+            )
+            manager.record_stage(
+                acceptance_id,
+                stage="APPROVED_DOM_PREFILL",
+                result="PASS",
+                evidence_hash=HASH_C,
+                page_fingerprint=HASH_B,
+                now=NOW + timedelta(seconds=5),
+            )
+            manager.finish(
+                acceptance_id,
+                status="PRE_SUBMIT_VERIFIED",
+                now=NOW + timedelta(seconds=6),
+            )
+            with self.assertRaises(JobOpsError) as missing_result:
+                manager.finish(
+                    acceptance_id,
+                    status="RESULT_OBSERVED",
+                    now=NOW + timedelta(seconds=7),
+                )
+            self.assertEqual(missing_result.exception.code, "LIVE_ACCEPTANCE_RESULT_EVIDENCE_REQUIRED")
 
 
 if __name__ == "__main__":

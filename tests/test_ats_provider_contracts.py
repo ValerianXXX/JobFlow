@@ -7,14 +7,21 @@ import subprocess
 import sys
 import unittest
 import urllib.request
+from collections import Counter
 from unittest.mock import patch
 
 from _support import PROJECT
 from jobops.adapters import FakeBrowserPrefillAdapter
-from jobops.ats_browser import analyze_local_ats_form, build_browser_action_plan
+from jobops.ats_browser import (
+    _form_snapshot_hash,
+    analyze_local_ats_form,
+    build_browser_action_plan,
+    validate_ats_form_snapshot_integrity,
+)
 from jobops.ats_capabilities import offline_ats_capabilities, provider_transport_contract, validate_ats_capability_integrity
 from jobops.ats_transport import build_ats_transport_envelope, validate_ats_transport_envelope
 from jobops.errors import JobOpsError
+from jobops.forms import classify_application_field
 from jobops.sourcing import source_route_hash, verify_source_route
 
 
@@ -70,6 +77,41 @@ def provider_route(provider: str) -> dict:
 
 
 class ATSProviderContractTests(unittest.TestCase):
+    def test_protected_help_semantics_veto_cover_letter_narrative(self) -> None:
+        classification, _reason = classify_application_field({
+            "type": "textarea",
+            "label": "Cover Letter",
+            "name": "cover_letter",
+            "help_text": "Typing your legal name here creates an electronic signature.",
+        })
+        self.assertEqual(classification, "signature_stop")
+        privacy_classification, _reason = classify_application_field({
+            "type": "textarea",
+            "label": "Cover Letter",
+            "name": "cover_letter",
+            "section_heading": "Privacy Agreement and consent",
+        })
+        self.assertEqual(privacy_classification, "legal_declaration_stop")
+        direct_classification, _reason = classify_application_field({
+            "type": "textarea",
+            "label": "Cover Letter and Legal Consent",
+            "name": "cover_letter",
+        })
+        self.assertEqual(direct_classification, "legal_declaration_stop")
+
+    def test_legacy_form_snapshot_without_maxlength_metadata_remains_readable(self) -> None:
+        form = analyze_local_ats_form(
+            (PROJECT / "tests" / "fixtures" / "synthetic-lever-form.html").read_bytes(),
+            route=lever_route(), blocked_categories=[],
+        )
+        legacy = copy.deepcopy(form)
+        for field in legacy["fields"]:
+            field.pop("max_length", None)
+            field.pop("max_length_status", None)
+        legacy["form_snapshot_hash"] = _form_snapshot_hash(legacy)
+
+        validate_ats_form_snapshot_integrity(legacy)
+
     def test_lever_reuses_the_safe_snapshot_and_plan_protocol_without_transport(self) -> None:
         snapshot = (PROJECT / "tests" / "fixtures" / "synthetic-lever-form.html").read_bytes()
 
@@ -118,6 +160,117 @@ class ATSProviderContractTests(unittest.TestCase):
             self.assertEqual(form["browser_actions"], 0)
             self.assertEqual(form["network_actions"], 0)
             self.assertEqual(form["real_external_actions"], 0)
+
+    def test_modern_ashby_snapshot_preserves_distinct_applicant_semantics(self) -> None:
+        snapshot = b"""<!doctype html><html><body><form>
+        <label for='name'>Name</label><input id='name' name='name' type='text' required>
+        <label for='email'>Email</label><input id='email' name='email' type='email' required>
+        <label for='phone-code'>Phone country code</label><select id='phone-code' name='phone_country_code'><option>+1</option><option>+44</option></select>
+        <label for='phone'>Phone</label><input id='phone' name='phone' type='tel'>
+        <label for='linkedin'>LinkedIn profile</label><input id='linkedin' name='linkedin' type='url'>
+        <label for='resume'>Resume</label><input id='resume' name='resume' type='file' required>
+        <label for='cover'>Cover Letter</label><textarea id='cover' name='cover_letter'></textarea>
+        <label for='relocation'>Are you willing to relocate?</label><select id='relocation' name='relocation'><option>Yes</option><option>No</option></select>
+        <button type='submit'>Submit application</button>
+        </form></body></html>"""
+        with patch("socket.socket", side_effect=AssertionError("network forbidden")), patch(
+            "urllib.request.urlopen", side_effect=AssertionError("network forbidden")
+        ):
+            form = analyze_local_ats_form(
+                snapshot,
+                route=provider_route("ashby"), blocked_categories=[],
+            )
+
+        answer_key_counts = Counter(str(item["answer_key"]) for item in form["fields"] if item["answer_key"] != "UNKNOWN")
+        self.assertEqual(answer_key_counts, Counter({
+            "full_name": 1,
+            "email": 1,
+            "phone_country_code": 1,
+            "phone": 1,
+            "linkedin": 1,
+            "resume": 1,
+            "cover_letter": 1,
+            "relocation": 1,
+        }))
+        fields = {
+            answer_key: next(item for item in form["fields"] if item["answer_key"] == answer_key)
+            for answer_key in answer_key_counts
+        }
+        final_submit = next(item for item in form["fields"] if item["classification"] == "final_submit_stop")
+        self.assertEqual(form["provider"], "ashby")
+        self.assertEqual(form["field_count"], 9)
+        self.assertEqual(fields["full_name"]["classification"], "private_fixed")
+        self.assertEqual(fields["phone_country_code"]["classification"], "private_fixed")
+        self.assertEqual(fields["phone"]["classification"], "private_fixed")
+        self.assertEqual(fields["linkedin"]["classification"], "ordinary_fixed")
+        self.assertEqual(fields["resume"]["classification"], "file_upload_stop")
+        self.assertEqual(fields["cover_letter"]["classification"], "application_narrative_review")
+        self.assertEqual(fields["relocation"]["classification"], "sensitive_review")
+        self.assertEqual(fields["relocation"]["display_options"], ["Yes", "No"])
+        self.assertEqual(final_submit["answer_key"], "UNKNOWN")
+        self.assertIn("FILE_UPLOAD_STOP", form["blockers"])
+        self.assertIn("FINAL_SUBMIT_STOP", form["blockers"])
+        self.assertEqual(form["browser_actions"], 0)
+        self.assertEqual(form["network_actions"], 0)
+        self.assertEqual(form["real_external_actions"], 0)
+        self.assertEqual(
+            form["canonical_url"],
+            "https://jobs.ashbyhq.com/__jobflow_route_redacted__",
+        )
+        public_report = json.dumps(form, sort_keys=True)
+        self.assertNotIn("11111111-1111-4111-8111-111111111111", public_report)
+        self.assertNotIn("/example/", public_report)
+
+    def test_visible_name_qualifiers_veto_generic_machine_names_and_cover_letter_requires_direct_semantics(self) -> None:
+        snapshot = b"""<!doctype html><html><body><form>
+        <label for='company'>Company Name</label><input id='company' name='name' type='text'>
+        <label for='preferred'>Preferred Name</label><input id='preferred' name='name' type='text'>
+        <h2>Cover Letter</h2>
+        <label for='consent'>Consent</label><textarea id='consent' name='consent'></textarea>
+        <label for='legal'>Legal Consent</label><textarea id='legal' name='cover_letter'></textarea>
+        <textarea id='privacy' name='cover_letter' aria-label='Privacy Agreement'></textarea>
+        <input id='background' name='cover_letter' type='file' placeholder='Background check authorization'>
+        <label for='resume-as-cover'>Resume</label><input id='resume-as-cover' name='cover_letter' type='file'>
+        <label for='signed-file'>Cover Letter attachment</label><input id='signed-file' name='cover_letter' type='file' aria-description='Electronic signature consent'>
+        <h2>Electronic Signature</h2>
+        <label for='signed-cover'>Cover Letter text</label><textarea id='signed-cover' name='cover_letter'></textarea>
+        <h2>Application Materials</h2>
+        <label for='described-cover'>Cover Letter with declaration</label><textarea id='described-cover' name='cover_letter' aria-description='Electronic signature required'></textarea>
+        <label for='cover'>Cover Letter</label><textarea id='cover' name='cover_letter'></textarea>
+        <button type='submit'>Submit application</button>
+        </form></body></html>"""
+        form = analyze_local_ats_form(
+            snapshot,
+            route=provider_route("ashby"),
+            blocked_categories=[],
+        )
+
+        by_label = {str(item["display_label"]): item for item in form["fields"]}
+        self.assertEqual(by_label["Company Name"]["answer_key"], "UNKNOWN")
+        self.assertEqual(by_label["Company Name"]["classification"], "unknown_stop")
+        self.assertEqual(by_label["Preferred Name"]["answer_key"], "UNKNOWN")
+        self.assertEqual(by_label["Preferred Name"]["classification"], "unknown_stop")
+        self.assertEqual(by_label["Consent"]["answer_key"], "UNKNOWN")
+        self.assertEqual(by_label["Consent"]["classification"], "legal_declaration_stop")
+        self.assertEqual(by_label["Legal Consent"]["answer_key"], "UNKNOWN")
+        self.assertEqual(by_label["Legal Consent"]["classification"], "legal_declaration_stop")
+        self.assertEqual(by_label["Privacy Agreement"]["answer_key"], "UNKNOWN")
+        self.assertEqual(by_label["Privacy Agreement"]["classification"], "legal_declaration_stop")
+        self.assertEqual(by_label["Background check authorization"]["answer_key"], "UNKNOWN")
+        self.assertEqual(by_label["Background check authorization"]["classification"], "file_upload_stop")
+        self.assertEqual(by_label["Resume"]["answer_key"], "resume")
+        self.assertEqual(by_label["Resume"]["classification"], "file_upload_stop")
+        self.assertEqual(by_label["Cover Letter attachment"]["answer_key"], "UNKNOWN")
+        self.assertEqual(by_label["Cover Letter attachment"]["classification"], "file_upload_stop")
+        self.assertEqual(by_label["Cover Letter text"]["answer_key"], "UNKNOWN")
+        self.assertEqual(by_label["Cover Letter text"]["classification"], "signature_stop")
+        self.assertEqual(by_label["Cover Letter with declaration"]["answer_key"], "UNKNOWN")
+        self.assertEqual(by_label["Cover Letter with declaration"]["classification"], "signature_stop")
+        self.assertEqual(by_label["Cover Letter"]["answer_key"], "cover_letter")
+        self.assertEqual(by_label["Cover Letter"]["classification"], "application_narrative_review")
+        self.assertEqual(form["browser_actions"], 0)
+        self.assertEqual(form["network_actions"], 0)
+        self.assertEqual(form["real_external_actions"], 0)
 
     def test_capability_report_is_hash_bound_and_never_claims_live_compatibility(self) -> None:
         report = offline_ats_capabilities()

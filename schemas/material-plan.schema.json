@@ -26,14 +26,20 @@
     "cover_letter": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["request_status", "generation_status", "docx_secure_ref", "docx_sha256", "pdf_secure_ref", "pdf_sha256"],
+      "required": ["request_status", "generation_status", "docx_secure_ref", "docx_sha256", "pdf_secure_ref", "pdf_sha256", "narrative_sha256", "narrative_character_count", "narrative_target_status", "narrative_target_count", "narrative_control_ref", "narrative_max_characters"],
       "properties": {
         "request_status": {"enum": ["NOT_REQUESTED", "REQUESTED_OPTIONAL", "REQUESTED_REQUIRED"]},
         "generation_status": {"enum": ["NOT_GENERATED", "GENERATED_ON_DEMAND"]},
         "docx_secure_ref": {"type": ["string", "null"], "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
         "docx_sha256": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"},
         "pdf_secure_ref": {"type": ["string", "null"], "pattern": "^secure-ref:[A-Za-z0-9_-]{8,200}$"},
-        "pdf_sha256": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"}
+        "pdf_sha256": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"},
+        "narrative_sha256": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"},
+        "narrative_character_count": {"type": ["integer", "null"], "minimum": 1, "maximum": 100000},
+        "narrative_target_status": {"enum": ["NOT_REQUESTED", "BOUND_EXACT_CONTROL", "AMBIGUOUS", "INVALID_MAX_LENGTH"]},
+        "narrative_target_count": {"type": "integer", "minimum": 0, "maximum": 500},
+        "narrative_control_ref": {"type": ["string", "null"], "minLength": 1, "maxLength": 200},
+        "narrative_max_characters": {"type": ["integer", "null"], "minimum": 1, "maximum": 4000}
       }
     },
     "public_links": {

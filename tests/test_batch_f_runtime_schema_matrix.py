@@ -150,8 +150,8 @@ def valid_fixtures() -> dict[str, dict]:
                 "ui_protocol": 35,
                 "database_schema": 15,
                 "companion_protocol": 2,
-                "expected_companion_version": "0.9.1",
-                "observed_companion_version": "0.9.1",
+                "expected_companion_version": "0.9.2",
+                "observed_companion_version": "0.9.2",
             },
             "runtime": {
                 "onboarding_status": "IN_PROGRESS",
@@ -366,7 +366,10 @@ def valid_fixtures() -> dict[str, dict]:
             "cover_letter": {
                 "request_status": "NOT_REQUESTED", "generation_status": "NOT_GENERATED",
                 "docx_secure_ref": None, "docx_sha256": None,
-                "pdf_secure_ref": None, "pdf_sha256": None,
+                "pdf_secure_ref": None, "pdf_sha256": None, "narrative_sha256": None,
+                "narrative_character_count": None,
+                "narrative_target_status": "NOT_REQUESTED", "narrative_target_count": 0,
+                "narrative_control_ref": None, "narrative_max_characters": None,
             },
             "public_links": [{
                 "field_id": "github", "kind": "github", "required": False,
@@ -405,6 +408,7 @@ def valid_fixtures() -> dict[str, dict]:
             "classification_counts": {"private_fixed": 1},
             "fields": [{
                 "control_ref": "CTL-ABCDEF123456", "control_type": "email", "required": True,
+                "max_length": None, "max_length_status": "ABSENT",
                 "classification": "private_fixed", "answer_key": "email", "logical_field_hash": H,
                 "display_label": "Email address", "display_options": [],
                 "reason_code": "SECURE_REFERENCE_REQUIRED", "prompt_hash": H,

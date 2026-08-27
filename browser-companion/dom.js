@@ -114,14 +114,70 @@
     return text ? ` ${name}="${escapeHTML(text)}"` : "";
   }
 
+  function valueFreeRouteAttribute(value) {
+    try {
+      const parsed = new URL(String(value || ""), location.href);
+      if (!['http:', 'https:'].includes(parsed.protocol)) return "";
+      return `${parsed.origin}/__jobflow_route_redacted__`;
+    } catch (_error) {
+      return "";
+    }
+  }
+
+  function explicitVisibleFileLabel(element) {
+    const candidates = new Set(element.labels ? Array.from(element.labels) : []);
+    const labelledBy = compact(element.getAttribute("aria-labelledby"));
+    if (labelledBy) {
+      for (const id of labelledBy.split(/\s+/)) {
+        const candidate = rootElementById(element, id);
+        if (candidate) candidates.add(candidate);
+      }
+    }
+    const id = compact(element.getAttribute("id"));
+    if (id) {
+      const root = element.getRootNode?.();
+      const candidate = root?.querySelector?.(`label[for="${CSS.escape(id)}"]`);
+      if (candidate) candidates.add(candidate);
+    }
+    return [...candidates].some((candidate) => (
+      candidate !== element && candidate?.isConnected && visible(candidate) && compact(referencedLabelText(candidate))
+    ));
+  }
+
   function visible(element) {
-    let current = element;
+    const fileInput = element instanceof HTMLInputElement && element.type.toLowerCase() === "file";
+    if (
+      fileInput && (
+        !element.isConnected || element.disabled || element.inert || element.hasAttribute("inert") ||
+        element.getAttribute("aria-hidden") === "true"
+      )
+    ) return false;
+    let current = fileInput ? composedParent(element) : element;
     for (let depth = 0; current && depth < 64; depth += 1) {
       const style = getComputedStyle(current);
-      if (style.display === "none" || style.visibility === "hidden" || current.hidden) return false;
+      if (
+        style.display === "none" || style.visibility === "hidden" || current.hidden ||
+        current.inert || current.hasAttribute?.("inert") || current.getAttribute?.("aria-hidden") === "true"
+      ) return false;
       current = composedParent(current);
     }
-    if (element instanceof HTMLInputElement && element.type.toLowerCase() === "file") return true;
+    if (fileInput) {
+      const style = getComputedStyle(element);
+      const visuallyHidden = (
+        element.hidden || style.display === "none" || style.visibility === "hidden" ||
+        style.opacity === "0" || element.getClientRects().length === 0
+      );
+      if (!visuallyHidden) return true;
+      // ATS pages may hide the canonical upload input behind a visible
+      // dropzone.  Admit it only when it has a stable identity and an explicit,
+      // visible accessible label.  Anonymous parser/autofill inputs are never
+      // application-material targets.
+      return Boolean(
+        compact(element.getAttribute("id") || element.getAttribute("name")) &&
+        element.getAttribute("aria-hidden") !== "true" &&
+        explicitVisibleFileLabel(element)
+      );
+    }
     return element.getClientRects().length > 0;
   }
 
@@ -183,6 +239,29 @@
       element.getAttribute?.("aria-label") || element.getAttribute?.("autocomplete") ||
       element.innerText || element.textContent || element.value
     ));
+  }
+
+  function fileSemanticKey(element) {
+    if (!(element instanceof HTMLInputElement) || element.type.toLowerCase() !== "file") return "";
+    const normalize = (value) => compact(value, 1000).toLowerCase()
+      .replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ").trim();
+    const labelMaterial = normalize([labelFor(element), element.getAttribute("aria-label")].join(" "));
+    const identityMaterial = normalize([element.getAttribute("name"), element.getAttribute("id")].join(" "));
+    const material = `${labelMaterial} ${identityMaterial}`.trim();
+    if (/(?:^| )(?:resume|curriculum vitae|cv|简历)(?: |$)/.test(material)) return "resume";
+    if (/(?:^| )(?:cover letter|motivation letter|求职信|动机信)(?: |$)/.test(material)) return "cover_letter";
+    if (/(?:^| )(?:portfolio|work sample|作品集|工作样本)(?: |$)/.test(material)) return "portfolio";
+    return `upload:${labelMaterial || identityMaterial || "unresolved"}`;
+  }
+
+  function ambiguousFileSemanticCount(elements) {
+    const counts = new Map();
+    for (const element of elements) {
+      const key = fileSemanticKey(element);
+      if (!key) continue;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return [...counts.values()].filter((count) => count > 1).reduce((total, count) => total + count, 0);
   }
 
   function choiceContainer(element) {
@@ -392,6 +471,10 @@
       applicationScopeHint = applicationScope || bestForm || null;
     }
     const rawControls = scopedControls;
+    const ambiguousUploadCount = ambiguousFileSemanticCount(rawControls);
+    if (ambiguousUploadCount > 0) {
+      return {controls: [], clientRefs: [], sanitizedHTML: "", ambiguousUploadCount};
+    }
     const controls = [];
     const consumed = new Set();
     for (const element of rawControls) {
@@ -423,10 +506,10 @@
     const clientRefs = [];
     const parts = ["<!doctype html><html><body>"];
     for (const form of deepQueryAll("form")) {
-      parts.push(`<form${safeAttribute("action", form.getAttribute("action") || "")}></form>`);
+      parts.push(`<form${safeAttribute("action", valueFreeRouteAttribute(form.getAttribute("action") || location.href))}></form>`);
     }
     for (const frame of deepQueryAll("iframe[src]").filter(relevantEmbeddedFrame)) {
-      parts.push(`<iframe${safeAttribute("src", frame.getAttribute("src"))}></iframe>`);
+      parts.push(`<iframe${safeAttribute("src", valueFreeRouteAttribute(frame.getAttribute("src")))}></iframe>`);
     }
     controls.forEach((binding, index) => {
       const clientRef = `DOM-${String(index + 1).padStart(12, "0")}`;
@@ -481,7 +564,7 @@
       }
     });
     parts.push("</body></html>");
-    return {controls, clientRefs, sanitizedHTML: parts.join("")};
+    return {controls, clientRefs, sanitizedHTML: parts.join(""), ambiguousUploadCount: 0};
   }
 
   function collectForm() {
@@ -494,6 +577,14 @@
     pendingManualClick = null;
     submitSignalSent = false;
     const snapshot = serializedFormSnapshot();
+    if (snapshot.ambiguousUploadCount > 0) {
+      return {
+        status: "BLOCKED",
+        code: "COMPANION_AMBIGUOUS_FILE_CONTROLS",
+        automatic_retry: false,
+        ambiguous_upload_control_count: snapshot.ambiguousUploadCount
+      };
+    }
     snapshot.controls.forEach((element, index) => controlMap.set(snapshot.clientRefs[index], element));
     return {
       status: "COLLECTED",
@@ -509,14 +600,16 @@
 
   async function collectFormWhenReady() {
     let collected = collectForm();
-    if (collected.payload.client_refs.length > 0) return collected;
+    if (collected.status !== "COLLECTED") return collected;
+    if (collected.payload.client_refs.length > 0) return await addCollectedControlSemantics(collected);
     const deadline = Date.now() + 20000;
     while (Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 250));
       collected = collectForm();
-      if (collected.payload.client_refs.length > 0) return collected;
+      if (collected.status !== "COLLECTED") return collected;
+      if (collected.payload.client_refs.length > 0) return await addCollectedControlSemantics(collected);
     }
-    return collected;
+    return await addCollectedControlSemantics(collected);
   }
 
   function readableLines(value, limit = 750000) {
@@ -672,6 +765,46 @@
     element.dispatchEvent(new Event("change", {bubbles: true}));
   }
 
+  function maxLengthEvidence(element) {
+    if (!(element instanceof HTMLInputElement) && !(element instanceof HTMLTextAreaElement)) {
+      return {status: "ABSENT", value: null};
+    }
+    const raw = element.getAttribute("maxlength");
+    if (raw === null) return {status: "ABSENT", value: null};
+    const normalized = String(raw).trim();
+    if (!/^[0-9]{1,10}$/.test(normalized)) return {status: "INVALID", value: null};
+    const attributeValue = Number(normalized);
+    let currentValue;
+    try { currentValue = Number(element.maxLength); }
+    catch (_error) { return {status: "INVALID", value: null}; }
+    if (
+      !Number.isInteger(attributeValue) || attributeValue < 1 || attributeValue > 2147483647 ||
+      !Number.isInteger(currentValue) || currentValue !== attributeValue || currentValue < 1
+    ) {
+      return {status: "INVALID", value: null};
+    }
+    return {status: "VALID", value: currentValue};
+  }
+
+  function fieldMaxLengthFailure(binding, item) {
+    const current = maxLengthEvidence(primaryBindingElement(binding));
+    const hasApprovedBinding = Object.prototype.hasOwnProperty.call(item || {}, "max_length_status") ||
+      Object.prototype.hasOwnProperty.call(item || {}, "max_length");
+    if (hasApprovedBinding) {
+      const approvedStatus = String(item?.max_length_status || "ABSENT").trim().toUpperCase();
+      const approvedValue = approvedStatus === "VALID" && Number.isInteger(item?.max_length) && item.max_length > 0
+        ? item.max_length : null;
+      if (approvedStatus !== current.status || approvedValue !== current.value) {
+        return "COMPANION_FIELD_MAX_LENGTH_CHANGED";
+      }
+    }
+    if (current.status === "INVALID") return "COMPANION_FIELD_MAX_LENGTH_CHANGED";
+    if (current.status === "VALID" && String(item?.value ?? "").length > current.value) {
+      return "COMPANION_FIELD_MAX_LENGTH_CHANGED";
+    }
+    return null;
+  }
+
   function normalizedChoice(value) {
     return compact(value, 500).toLocaleLowerCase().replace(/[\s_-]+/g, " ");
   }
@@ -756,13 +889,35 @@
     );
   }
 
-  function waitForExactCustomOption(value, maximumMilliseconds = 7000) {
+  function customSelectOptions(binding, visibleOnly = true) {
+    const element = binding?.element;
+    const owner = binding?.owner;
+    const roots = [shadowRootFor(owner), owner, shadowRootFor(element)].filter(Boolean);
+    const popupId = compact(element?.getAttribute?.("aria-controls") || element?.getAttribute?.("aria-owns"));
+    const popup = popupId ? rootElementById(element, popupId) : null;
+    if (popup) roots.push(popup);
+    const candidates = [];
+    const seen = new Set();
+    for (const root of roots) {
+      const items = root.matches?.("lightning-menu-item,[role='menuitem'],[role='option'],[data-value]")
+        ? [root]
+        : Array.from(root.querySelectorAll?.("lightning-menu-item,[role='menuitem'],[role='option'],[data-value]") || []);
+      for (const candidate of items) {
+        if (seen.has(candidate) || (visibleOnly && !visible(candidate))) continue;
+        seen.add(candidate);
+        candidates.push(candidate);
+      }
+    }
+    return candidates;
+  }
+
+  function waitForExactCustomOption(binding, value, maximumMilliseconds = 7000) {
     const desired = normalizedChoice(value);
     const started = Date.now();
     return new Promise((resolve, reject) => {
       const inspect = () => {
-        const option = deepQueryAll("lightning-menu-item,[role='menuitem'],[role='option'],[data-value]")
-          .find((candidate) => visible(candidate) && normalizedChoice(customOptionValue(candidate)) === desired);
+        const option = customSelectOptions(binding, true)
+          .find((candidate) => normalizedChoice(customOptionValue(candidate)) === desired);
         if (option) return resolve(option);
         if (Date.now() - started >= maximumMilliseconds) return reject(new Error("CUSTOM_SELECT_OPTION_NOT_FOUND"));
         setTimeout(inspect, 80);
@@ -778,7 +933,7 @@
     }
     if (normalizedChoice(customSelectCurrentLabel(binding)) === normalizedChoice(value)) return;
     HTMLElement.prototype.click.call(element);
-    const option = await waitForExactCustomOption(value);
+    const option = await waitForExactCustomOption(binding, value);
     HTMLElement.prototype.click.call(option);
     await waitForDomQuiet({quietMilliseconds: 250, maximumMilliseconds: 5000});
     if (normalizedChoice(customSelectCurrentLabel(binding)) !== normalizedChoice(value)) {
@@ -803,12 +958,12 @@
     }
   }
 
-  function ariaComboboxOptions(binding) {
+  function ariaComboboxOptions(binding, visibleOnly = true) {
     const popup = binding?.popupId ? rootElementById(binding.element, binding.popupId) : null;
     if (!popup) return [];
     const candidates = deepQueryAll("[role='option'],option,[data-value]");
     return candidates.filter((candidate) => (
-      visible(candidate) && (candidate === popup || composedAncestors(candidate).includes(popup))
+      (!visibleOnly || visible(candidate)) && (candidate === popup || composedAncestors(candidate).includes(popup))
     ));
   }
 
@@ -903,54 +1058,120 @@
     return /upload(?:ed)?|success|attach(?:ed)?|received|已上传|上传成功|附件/i.test(text);
   }
 
-  async function attachApprovedFile(element, item) {
-    const verificationScope = deepClosest(element, "form") || element.parentElement || document.body;
+  function approvedFileMime(filename) {
+    const normalized = String(filename || "").toLowerCase();
+    if (normalized.endsWith(".pdf")) return "application/pdf";
+    if (normalized.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    if (normalized.endsWith(".txt")) return "text/plain";
+    return "application/octet-stream";
+  }
+
+  async function prepareApprovedFile(item) {
     const blob = await streamFile(item.download_url);
     const bytes = new Uint8Array(await blob.arrayBuffer());
     if (await sha256(bytes) !== item.sha256) throw new Error("COMPANION_FILE_HASH_MISMATCH");
+    return new File([bytes], item.filename, {type: approvedFileMime(item.filename), lastModified: Date.now()});
+  }
+
+  async function attachPreparedFile(element, item, file) {
+    const verificationScope = deepClosest(element, "form") || element.parentElement || document.body;
     const transfer = new DataTransfer();
-    transfer.items.add(new File([bytes], item.filename, {type: "application/octet-stream", lastModified: Date.now()}));
+    transfer.items.add(file);
     element.files = transfer.files;
     element.dispatchEvent(new Event("input", {bubbles: true}));
     element.dispatchEvent(new Event("change", {bubbles: true}));
-    await waitForDomQuiet();
+    // Resume parsers often rebuild the form well after the immediate change
+    // event.  A longer quiet window prevents JobFlow from binding values to a
+    // short-lived pre-parser tree and reporting a temporary success.
+    await waitForDomQuiet({quietMilliseconds: 1800, maximumMilliseconds: 15000});
     const retained = element.isConnected && element.files && element.files.length === 1 && element.files[0].name === item.filename;
     if (!retained && !exactFileEvidence(verificationScope, item.filename)) {
       throw new Error("COMPANION_FILE_VERIFY_FAILED");
     }
   }
 
+  function normalizedOptionValues(elements) {
+    return [...new Set(elements.map((item) => normalizedChoice(customOptionValue(item))).filter(Boolean))].sort();
+  }
+
   function bindingRebindSignature(binding) {
     if (binding?.jobflowChoiceGroup) {
+      const maximum = maxLengthEvidence(binding.elements[0]);
       return JSON.stringify([
         "choice", controlType(binding.elements[0]), compact(binding.elements[0]?.getAttribute("name")),
-        compact(binding.question), binding.options.map((item) => normalizedChoice(item))
+        compact(binding.question), binding.options.map((item) => normalizedChoice(item)),
+        binding.elements.some((element) => element.required || element.getAttribute("aria-required") === "true"),
+        maximum.status, maximum.value
       ]);
     }
     if (binding?.jobflowCustomSelect) {
+      const maximum = maxLengthEvidence(binding.element);
       return JSON.stringify([
         "custom-select", compact(binding.name), compact(binding.question),
-        compact(binding.element?.getAttribute("aria-label"))
+        compact(binding.element?.getAttribute("aria-label")),
+        normalizedOptionValues(customSelectOptions(binding, false)),
+        Boolean(binding.required), maximum.status, maximum.value
       ]);
     }
     if (binding?.jobflowAriaCombobox) {
+      const maximum = maxLengthEvidence(binding.element);
       return JSON.stringify([
         "aria-combobox", compact(binding.name), compact(binding.question), compact(binding.popupId),
-        compact(binding.element?.getAttribute("aria-label"))
+        compact(binding.element?.getAttribute("aria-label")),
+        normalizedOptionValues(ariaComboboxOptions(binding, false)),
+        Boolean(binding.required), maximum.status, maximum.value
       ]);
     }
     const element = binding;
     const type = controlType(element);
+    const maximum = maxLengthEvidence(element);
     const stableIdentity = [
       compact(element?.getAttribute?.("name")), compact(element?.getAttribute?.("autocomplete")),
       compact(element?.getAttribute?.("placeholder")), compact(element?.getAttribute?.("aria-label"))
     ];
+    const options = element instanceof HTMLSelectElement
+      ? Array.from(element.options).map((option) => [
+        normalizedChoice(option.value), normalizedChoice(option.textContent), Boolean(option.disabled)
+      ])
+      : [];
+    const visibleText = type === "button" || type === "submit"
+      ? compact(element?.innerText || element?.textContent || element?.value)
+      : "";
     return JSON.stringify([
-      "control", type, ...stableIdentity,
-      type === "button" || type === "submit"
-        ? compact(element?.innerText || element?.textContent || element?.value)
-        : stableIdentity.some(Boolean) ? "" : compact(labelFor(element))
+      "control", compact(element?.tagName).toLowerCase(), type, ...stableIdentity,
+      compact(labelFor(element)), visibleText, options,
+      Boolean(element?.required || element?.getAttribute?.("aria-required") === "true"),
+      type === "file" ? compact(element?.getAttribute?.("accept")) : "",
+      type === "file" ? Boolean(element?.multiple) : false,
+      maximum.status, maximum.value
     ]);
+  }
+
+  async function addCollectedControlSemantics(collected) {
+    if (collected?.status !== "COLLECTED") return collected;
+    const signatures = new Map();
+    for (const clientRef of collected.payload.client_refs || []) {
+      const binding = controlMap.get(clientRef);
+      if (!binding) {
+        return {status: "BLOCKED", code: "COMPANION_CONTROL_CHANGED", client_ref: clientRef};
+      }
+      signatures.set(clientRef, bindingRebindSignature(binding));
+    }
+    const semantics = Object.create(null);
+    for (const clientRef of collected.payload.client_refs || []) {
+      const binding = controlMap.get(clientRef);
+      if (!binding || bindingRebindSignature(binding) !== signatures.get(clientRef)) {
+        return {status: "BLOCKED", code: "COMPANION_CONTROL_CHANGED", client_ref: clientRef};
+      }
+      semantics[clientRef] = await sha256(signatures.get(clientRef));
+    }
+    if ([...signatures].some(([clientRef, signature]) => (
+      !bindingIsConnected(controlMap.get(clientRef)) || bindingRebindSignature(controlMap.get(clientRef)) !== signature
+    ))) {
+      return {status: "BLOCKED", code: "COMPANION_CONTROL_CHANGED"};
+    }
+    collected.payload.control_semantics_sha256 = semantics;
+    return collected;
   }
 
   function primaryBindingElement(binding) {
@@ -995,6 +1216,9 @@
 
   function rebindControlsAfterDomChange(requiredRefs, signatures) {
     const snapshot = serializedFormSnapshot();
+    if (snapshot.ambiguousUploadCount > 0) {
+      return {status: "BLOCKED", code: "COMPANION_AMBIGUOUS_FILE_CONTROLS"};
+    }
     const current = snapshot.controls.map((binding, index) => ({
       binding, clientRef: snapshot.clientRefs[index], signature: bindingRebindSignature(binding)
     }));
@@ -1009,6 +1233,113 @@
     }
     for (const [clientRef, binding] of rebound) controlMap.set(clientRef, binding);
     return {status: "REBOUND"};
+  }
+
+  function approvedSemanticHash(message, clientRef) {
+    const hashes = message?.control_semantics_sha256;
+    if (!hashes || typeof hashes !== "object" || Array.isArray(hashes)) return "";
+    const value = Object.prototype.hasOwnProperty.call(hashes, clientRef) ? String(hashes[clientRef] || "") : "";
+    return /^sha256:[0-9a-f]{64}$/.test(value) ? value : "";
+  }
+
+  async function rebindControlsFromApprovedSemantics(requiredRefs, message) {
+    const snapshot = serializedFormSnapshot();
+    if (snapshot.ambiguousUploadCount > 0) {
+      return {status: "BLOCKED", code: "COMPANION_AMBIGUOUS_FILE_CONTROLS"};
+    }
+    const current = [];
+    for (let index = 0; index < snapshot.controls.length; index += 1) {
+      const binding = snapshot.controls[index];
+      const signature = bindingRebindSignature(binding);
+      current.push({
+        binding, clientRef: snapshot.clientRefs[index], signature,
+        hash: await sha256(signature)
+      });
+    }
+    // Hashing yields to the page.  Reject a page that changed while its
+    // semantics were being measured instead of approving a mixed snapshot.
+    if (current.some((item) => bindingRebindSignature(item.binding) !== item.signature)) {
+      return {status: "BLOCKED", code: "COMPANION_CONTROL_CHANGED"};
+    }
+    const rebound = new Map();
+    const signatures = new Map();
+    const usedBindings = new Set();
+    for (const clientRef of requiredRefs) {
+      const expected = approvedSemanticHash(message, clientRef);
+      if (!expected) {
+        return {status: "BLOCKED", code: "COMPANION_APPROVED_SEMANTICS_MISSING", client_ref: clientRef};
+      }
+      const matches = current.filter((item) => item.hash === expected);
+      if (matches.length !== 1 || usedBindings.has(matches[0]?.binding)) {
+        return {status: "BLOCKED", code: "COMPANION_CONTROL_REBIND_FAILED", client_ref: clientRef};
+      }
+      usedBindings.add(matches[0].binding);
+      rebound.set(clientRef, matches[0].binding);
+      signatures.set(clientRef, matches[0].signature);
+    }
+    for (const [clientRef, binding] of rebound) controlMap.set(clientRef, binding);
+    return {status: "REBOUND", signatures};
+  }
+
+  function bindingElements(binding) {
+    if (binding?.jobflowChoiceGroup) return binding.elements;
+    const element = primaryBindingElement(binding);
+    return element ? [element] : [];
+  }
+
+  function bindingUsable(binding) {
+    const elements = bindingElements(binding);
+    return elements.length > 0 && elements.every((element) => (
+      element.isConnected && !element.disabled && element.getAttribute?.("aria-disabled") !== "true" && visible(element)
+    ));
+  }
+
+  function preflightFieldOptionFailure(binding, value) {
+    const desired = normalizedChoice(value);
+    if (binding?.jobflowChoiceGroup) {
+      const target = binding.elements.find((element) => (
+        normalizedChoice(labelFor(element)) === desired ||
+        (normalizedChoice(element.getAttribute("value")) && normalizedChoice(element.getAttribute("value")) === desired)
+      ));
+      return target && bindingUsable({jobflowChoiceGroup: true, elements: [target]})
+        ? null : "COMPANION_CHOICE_OPTION_NOT_FOUND";
+    }
+    if (binding?.jobflowCustomSelect) {
+      if (normalizedChoice(customSelectCurrentLabel(binding)) === desired) return null;
+      return customSelectOptions(binding, false).some((candidate) => (
+        normalizedChoice(customOptionValue(candidate)) === desired
+      )) ? null : "COMPANION_CUSTOM_SELECT_OPTION_NOT_FOUND";
+    }
+    if (binding?.jobflowAriaCombobox) {
+      if (normalizedChoice(ariaComboboxCurrentLabel(binding)) === desired) return null;
+      return ariaComboboxOptions(binding, false).some((candidate) => (
+        normalizedChoice(customOptionValue(candidate)) === desired
+      )) ? null : "COMPANION_ARIA_COMBOBOX_OPTION_NOT_FOUND";
+    }
+    const element = binding;
+    if (element instanceof HTMLSelectElement) {
+      const target = Array.from(element.options).find((option) => (
+        String(option.value) === String(value) || normalizedChoice(option.textContent) === desired
+      ));
+      return target && !target.disabled ? null : "COMPANION_SELECT_OPTION_NOT_FOUND";
+    }
+    if (!(element instanceof HTMLInputElement) && !(element instanceof HTMLTextAreaElement)) {
+      return "COMPANION_CONTROL_TYPE_UNSUPPORTED";
+    }
+    return null;
+  }
+
+  function duplicateReferenceFailure(fields, files, finalSubmitRefs, navigationRef) {
+    const fieldRefs = fields.map((item) => String(item.client_ref || ""));
+    const fileRefs = files.map((item) => String(item.client_ref || ""));
+    const finalRefs = finalSubmitRefs.map(String);
+    const allRefs = [...fieldRefs, ...fileRefs, ...finalRefs, ...(navigationRef ? [navigationRef] : [])];
+    if (allRefs.some((clientRef) => !clientRef)) return "COMPANION_CONTROL_CHANGED";
+    if (new Set(fieldRefs).size !== fieldRefs.length || new Set(fileRefs).size !== fileRefs.length ||
+        new Set(finalRefs).size !== finalRefs.length || new Set(allRefs).size !== allRefs.length) {
+      return "COMPANION_DUPLICATE_CONTROL_BINDING";
+    }
+    return null;
   }
 
   function streamFile(url) {
@@ -1058,22 +1389,106 @@
     armedManualChallenge = null;
     manualSignalSent = false;
     pendingManualClick = null;
+    const fields = Array.isArray(message.fields) ? message.fields : [];
+    const files = Array.isArray(message.files) ? message.files : [];
     const finalSubmitRefs = (message.final_submit_client_refs || []).map(String);
     const navigationRef = message.navigation?.client_ref ? String(message.navigation.client_ref) : null;
-    const rebindRefs = [...new Set([
-      ...(message.fields || []).map((item) => String(item.client_ref)),
+    const duplicateFailure = duplicateReferenceFailure(fields, files, finalSubmitRefs, navigationRef);
+    if (duplicateFailure) return blockedApply(duplicateFailure);
+    const rebindRefs = [
+      ...fields.map((item) => String(item.client_ref)),
+      ...files.map((item) => String(item.client_ref)),
       ...finalSubmitRefs, ...(navigationRef ? [navigationRef] : [])
-    ])];
-    const rebindSignatures = new Map();
-    domOperationStage = "REBIND_SIGNATURES";
-    for (const clientRef of rebindRefs) {
-      const binding = controlMap.get(clientRef);
-      if (!binding) return blockedApply("COMPANION_CONTROL_CHANGED", clientRef);
-      rebindSignatures.set(clientRef, bindingRebindSignature(binding));
+    ];
+
+    const validateEveryBinding = async () => {
+      for (const item of fields) {
+        const clientRef = String(item.client_ref);
+        const binding = controlMap.get(clientRef);
+        if (!bindingUsable(binding)) return {code: "COMPANION_CONTROL_CHANGED", clientRef};
+        const maximumFailure = fieldMaxLengthFailure(binding, item);
+        if (maximumFailure) return {code: maximumFailure, clientRef};
+        if (await sha256(String(item.value)) !== String(item.value_sha256 || "")) {
+          return {code: "COMPANION_VALUE_HASH_MISMATCH", clientRef};
+        }
+        const optionFailure = preflightFieldOptionFailure(binding, String(item.value));
+        if (optionFailure) return {code: optionFailure, clientRef};
+      }
+      for (const item of files) {
+        const clientRef = String(item.client_ref);
+        const binding = controlMap.get(clientRef);
+        const element = primaryBindingElement(binding);
+        if (
+          binding?.jobflowChoiceGroup || binding?.jobflowCustomSelect || binding?.jobflowAriaCombobox ||
+          !(element instanceof HTMLInputElement) || element.type.toLowerCase() !== "file" || !bindingUsable(binding)
+        ) return {code: "COMPANION_FILE_CONTROL_CHANGED", clientRef};
+      }
+      for (const clientRef of finalSubmitRefs) {
+        const binding = controlMap.get(clientRef);
+        const element = primaryBindingElement(binding);
+        if (
+          binding?.jobflowChoiceGroup || binding?.jobflowCustomSelect || binding?.jobflowAriaCombobox ||
+          !bindingUsable(binding) ||
+          (!(element instanceof HTMLButtonElement) && !(
+            element instanceof HTMLInputElement && ["button", "submit"].includes(element.type.toLowerCase())
+          ))
+        ) return {code: "COMPANION_FINAL_CONTROL_CHANGED", clientRef};
+      }
+      if (navigationRef) {
+        const binding = controlMap.get(navigationRef);
+        const element = primaryBindingElement(binding);
+        if (
+          binding?.jobflowChoiceGroup || binding?.jobflowCustomSelect || binding?.jobflowAriaCombobox ||
+          !bindingUsable(binding) ||
+          (!(element instanceof HTMLButtonElement) && !(
+            element instanceof HTMLInputElement && ["button", "submit"].includes(element.type.toLowerCase())
+          ))
+        ) return {code: "COMPANION_NAVIGATION_CONTROL_CHANGED", clientRef: navigationRef};
+      }
+      return null;
+    };
+
+    // Approval-time browser semantics are opaque to the host.  The host must
+    // echo the hash that arrived with the reviewed snapshot; the companion
+    // remeasures every protected control before the first write.
+    domOperationStage = "APPROVED_SEMANTICS_PREFLIGHT";
+    let approvedState = await rebindControlsFromApprovedSemantics(rebindRefs, message);
+    if (approvedState.status !== "REBOUND") {
+      return blockedApply(approvedState.code, approvedState.client_ref);
     }
-    if (navigationRef && finalSubmitRefs.includes(navigationRef)) {
-      return blockedApply("COMPANION_NAVIGATION_CONTROL_CHANGED");
+    let rebindSignatures = approvedState.signatures;
+    let validationFailure = await validateEveryBinding();
+    if (validationFailure) return blockedApply(validationFailure.code, validationFailure.clientRef);
+
+    // Fetch and hash every approved attachment before touching a file input or
+    // applicant field.  A later stream/hash failure therefore has zero page
+    // effects rather than leaving a half-filled form.
+    domOperationStage = "FILE_PREFLIGHT";
+    const preparedFiles = [];
+    for (const item of files) {
+      try { preparedFiles.push(await prepareApprovedFile(item)); }
+      catch (error) {
+        const code = error?.message === "COMPANION_FILE_HASH_MISMATCH"
+          ? error.message : "COMPANION_FILE_FETCH_FAILED";
+        return blockedApply(code, item.client_ref);
+      }
     }
+
+    // File streaming and cryptographic hashing yield to page scripts.  Take a
+    // second complete snapshot and repeat every deterministic validation.  A
+    // final synchronous signature comparison closes the last pre-write gap.
+    domOperationStage = "FINAL_PREWRITE_PREFLIGHT";
+    approvedState = await rebindControlsFromApprovedSemantics(rebindRefs, message);
+    if (approvedState.status !== "REBOUND") {
+      return blockedApply(approvedState.code, approvedState.client_ref);
+    }
+    rebindSignatures = approvedState.signatures;
+    validationFailure = await validateEveryBinding();
+    if (validationFailure) return blockedApply(validationFailure.code, validationFailure.clientRef);
+    if ([...rebindSignatures].some(([clientRef, signature]) => (
+      !bindingIsConnected(controlMap.get(clientRef)) || bindingRebindSignature(controlMap.get(clientRef)) !== signature
+    ))) return blockedApply("COMPANION_CONTROL_CHANGED");
+
     if (message.navigation?.client_ref) {
       navigationProof = {
         client_ref: navigationRef,
@@ -1084,30 +1499,15 @@
         display_label: compact(message.navigation.display_label || "")
       };
     }
-    for (const item of message.files || []) {
-      const element = controlMap.get(item.client_ref);
-      if (!(element instanceof HTMLInputElement) || element.type !== "file" || !element.isConnected || element.disabled) {
-        return blockedApply("COMPANION_FILE_CONTROL_CHANGED", item.client_ref);
-      }
-      attemptedMaterialBindings.push({client_ref: item.client_ref, purpose: item.purpose, sha256: item.sha256});
-      try { await attachApprovedFile(element, item); }
-      catch (error) {
-        const code = ["COMPANION_FILE_HASH_MISMATCH", "COMPANION_FILE_VERIFY_FAILED"].includes(error?.message)
-          ? error.message : "COMPANION_FILE_FETCH_FAILED";
-        return blockedApply(code, item.client_ref);
-      }
-      materialBindings.push({client_ref: item.client_ref, purpose: item.purpose, sha256: item.sha256});
-    }
-    if (materialBindings.length) {
-      const rebound = rebindControlsAfterDomChange(rebindRefs, rebindSignatures);
-      if (rebound.status !== "REBOUND") return blockedApply(rebound.code, rebound.client_ref);
-    }
     const remainingBindingRefs = (fieldIndex) => [...new Set([
-      ...(message.fields || []).slice(fieldIndex).map((item) => String(item.client_ref)),
+      ...fields.slice(fieldIndex).map((item) => String(item.client_ref)),
       ...finalSubmitRefs, ...(navigationRef ? [navigationRef] : [])
     ])];
     const ensureBindings = (refs) => {
-      if (refs.every((clientRef) => bindingIsConnected(controlMap.get(clientRef)))) {
+      if (refs.every((clientRef) => {
+        const binding = controlMap.get(clientRef);
+        return bindingIsConnected(binding) && bindingRebindSignature(binding) === rebindSignatures.get(clientRef);
+      })) {
         return {status: "CURRENT"};
       }
       return rebindControlsAfterDomChange(refs, rebindSignatures);
@@ -1118,7 +1518,7 @@
         domOperationStage = "FINAL_CONTROLS";
         const binding = controlMap.get(clientRef);
         const element = primaryBindingElement(binding);
-        if (!bindingIsConnected(binding) || !element) {
+        if (!bindingUsable(binding) || !element) {
           return {status: "BLOCKED", code: "COMPANION_FINAL_CONTROL_CHANGED", client_ref: clientRef};
         }
         finalSubmitElements.add(element);
@@ -1127,7 +1527,7 @@
       if (navigationRef) {
         const binding = controlMap.get(navigationRef);
         navigationElement = primaryBindingElement(binding);
-        if (!bindingIsConnected(binding) || !navigationElement || finalSubmitElements.has(navigationElement)) {
+        if (!bindingUsable(binding) || !navigationElement || finalSubmitElements.has(navigationElement)) {
           return {status: "BLOCKED", code: "COMPANION_NAVIGATION_CONTROL_CHANGED", client_ref: navigationRef};
         }
       }
@@ -1137,7 +1537,38 @@
     if (initialProtectedControls.status !== "CURRENT") {
       return blockedApply(initialProtectedControls.code, initialProtectedControls.client_ref);
     }
-    const fields = message.fields || [];
+
+    for (let fileIndex = 0; fileIndex < files.length; fileIndex += 1) {
+      const item = files[fileIndex];
+      const clientRef = String(item.client_ref);
+      const binding = controlMap.get(clientRef);
+      const element = primaryBindingElement(binding);
+      if (!(element instanceof HTMLInputElement) || element.type.toLowerCase() !== "file" || !bindingUsable(binding)) {
+        return blockedApply("COMPANION_FILE_CONTROL_CHANGED", clientRef);
+      }
+      attemptedMaterialBindings.push({client_ref: clientRef, purpose: item.purpose, sha256: item.sha256});
+      try { await attachPreparedFile(element, item, preparedFiles[fileIndex]); }
+      catch (error) {
+        const code = error?.message === "COMPANION_FILE_VERIFY_FAILED"
+          ? error.message : "COMPANION_FILE_APPLY_FAILED";
+        return blockedApply(code, clientRef);
+      }
+      materialBindings.push({client_ref: clientRef, purpose: item.purpose, sha256: item.sha256});
+      const remainingRefs = [
+        ...files.slice(fileIndex + 1).map((candidate) => String(candidate.client_ref)),
+        ...fields.map((candidate) => String(candidate.client_ref)),
+        ...finalSubmitRefs, ...(navigationRef ? [navigationRef] : [])
+      ];
+      if (remainingRefs.length) {
+        const rebound = rebindControlsAfterDomChange(remainingRefs, rebindSignatures);
+        if (rebound.status !== "REBOUND") return blockedApply(rebound.code, rebound.client_ref);
+        const protectedControls = refreshProtectedControls();
+        if (protectedControls.status !== "CURRENT") {
+          return blockedApply(protectedControls.code, protectedControls.client_ref);
+        }
+      }
+    }
+
     for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex += 1) {
       const item = fields[fieldIndex];
       const requiredRefs = remainingBindingRefs(fieldIndex);
@@ -1155,12 +1586,16 @@
       const binding = controlMap.get(item.client_ref);
       const element = primaryBindingElement(binding);
       domOperationStage = "FIELD_ELEMENT_SELECTED";
-      if (!element || !bindingIsConnected(binding) || element.disabled || (!binding?.jobflowChoiceGroup && !visible(element))) {
+      if (!element || !bindingUsable(binding)) {
         return blockedApply("COMPANION_CONTROL_CHANGED", item.client_ref);
       }
+      const maxLengthFailure = fieldMaxLengthFailure(binding, item);
+      if (maxLengthFailure) return blockedApply(maxLengthFailure, item.client_ref);
+      const optionFailure = preflightFieldOptionFailure(binding, String(item.value));
+      if (optionFailure) return blockedApply(optionFailure, item.client_ref);
       domOperationStage = "FIELD_ELEMENT_VALIDATED";
       domOperationStage = "FIELD_HASHING";
-      if (await sha256(String(item.value)) !== item.value_sha256) {
+      if (await sha256(String(item.value)) !== String(item.value_sha256 || "")) {
         return blockedApply("COMPANION_VALUE_HASH_MISMATCH", item.client_ref);
       }
       domOperationStage = "FIELD_HASH_VALIDATED";
@@ -1190,10 +1625,10 @@
       fieldBindings.push({client_ref: item.client_ref, value_sha256: item.value_sha256});
     }
     domOperationStage = "POST_APPLY_VALIDATION";
-    if ([...finalSubmitElements].some((element) => !element.isConnected)) {
+    if ([...finalSubmitElements].some((element) => !element.isConnected || !visible(element) || element.disabled)) {
       return blockedApply("COMPANION_FINAL_CONTROL_CHANGED");
     }
-    if (navigationElement && !navigationElement.isConnected) {
+    if (navigationElement && (!navigationElement.isConnected || !visible(navigationElement) || navigationElement.disabled)) {
       return blockedApply("COMPANION_NAVIGATION_CONTROL_CHANGED");
     }
     return {
@@ -1213,6 +1648,9 @@
 
   async function freshNavigationEvidence(clientRef, element) {
     const snapshot = serializedFormSnapshot();
+    if (snapshot.ambiguousUploadCount > 0) {
+      return {status: "BLOCKED", code: "COMPANION_AMBIGUOUS_FILE_CONTROLS"};
+    }
     const index = snapshot.clientRefs.indexOf(clientRef);
     if (index < 0 || snapshot.controls[index] !== element) {
       return {status: "BLOCKED", code: "COMPANION_NAVIGATION_CONTROL_CHANGED"};

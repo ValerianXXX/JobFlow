@@ -6,8 +6,9 @@ from html.parser import HTMLParser
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
+from .application_materials import APPLICATION_NARRATIVE_CLASSIFICATION, cover_letter_semantics_vetoed
 from .errors import JobOpsError
-from .forms import classify_application_field
+from .forms import _is_bare_person_name_field, classify_application_field
 from .runtime_schema import validate_named
 from .security import validate_secure_reference
 from .sourcing import _canonical_url, _host, host_matches_registered, url_has_sensitive_query
@@ -49,6 +50,22 @@ def _safe_display_text(value: object, *, limit: int = 500) -> str:
     return text[:limit]
 
 
+def _logical_prompt_text(value: object, *, control_type: str = "") -> str:
+    """Normalize accessibility-only decoration before hashing field identity."""
+
+    text = _compact(value).casefold()
+    text = re.sub(r"\s*\*+\s*$", "", text).strip()
+    text = re.sub(
+        r"\s*limit reached\.\s*you can only use \d+ characters? in this field\.\s*$",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    ).strip()
+    if control_type == "file":
+        text = re.sub(r"^file upload icon\s*", "", text, flags=re.IGNORECASE).strip()
+    return re.sub(r"\s+", "", text)
+
+
 def _safe_control_type(tag: str, raw_type: str) -> str:
     if tag == "select":
         return "select"
@@ -61,23 +78,97 @@ def _safe_control_type(tag: str, raw_type: str) -> str:
     return value if value in CONTROL_TYPES else "other"
 
 
-def _suggest_answer_key(field: dict[str, Any]) -> str:
+def _semantic_text(values: tuple[object, ...]) -> str:
+    return "_".join(
+        part for part in (
+            re.sub(r"[^\w\u4e00-\u9fff]+", "_", str(value or "").casefold()).strip("_")
+            for value in values
+        ) if part
+    )
+
+
+def _authoritative_visible_semantics(field: dict[str, Any]) -> str:
+    """Return the most direct applicant-visible/accessibility prompt.
+
+    A label is authoritative over aria-label, which is authoritative over a
+    placeholder.  Machine identifiers are deliberately excluded: a hostile or
+    stale ``name=cover_letter`` must not turn a visibly unrelated consent field
+    into an application narrative or material upload.
+    """
+
+    for key in ("label", "aria_label", "placeholder"):
+        value = _compact(field.get(key))
+        if value:
+            return value
+    for key in ("aria_description", "help_text", "section_heading", "adjacent_text"):
+        value = _compact(field.get(key))
+        if value:
+            return value
+    return ""
+
+
+def _material_answer_key(material: str, *, control_type: str) -> str | None:
+    normalized = _semantic_text((material,))
+    if control_type in {"file", "textarea"} and any(
+        signal in normalized for signal in ("cover_letter", "motivation_letter", "求职信", "动机信")
+    ):
+        return "cover_letter"
+    if control_type == "file" and any(
+        signal in normalized for signal in ("portfolio", "work_sample", "作品集", "工作样本")
+    ):
+        return "portfolio_file"
+    if control_type == "file" and any(
+        signal in normalized for signal in ("resume", "curriculum_vitae", "简历")
+    ):
+        return "resume"
+    if control_type == "file" and re.search(r"(?:^|_)cv(?:_|$)", normalized):
+        return "resume"
+    return None
+
+
+def _suggest_answer_key(field: dict[str, Any], *, classification: str) -> str:
     material = " ".join(
         str(field.get(key, "")) for key in (
-            "identifier", "name", "type", "autocomplete", "label", "placeholder", "aria_label", "section_heading",
+            "identifier", "name", "type", "autocomplete", "label", "placeholder", "aria_label",
+            "aria_description", "help_text", "section_heading", "adjacent_text",
         )
     ).casefold().replace("-", "_").replace(" ", "_")
-    if str(field.get("type", "")).casefold() == "file":
-        if any(signal in material for signal in ("cover_letter", "motivation_letter", "求职信", "动机信")):
-            return "cover_letter"
-        if any(signal in material for signal in ("portfolio", "work_sample", "作品集", "工作样本")):
-            return "portfolio_file"
+    control_type = str(field.get("type", "")).casefold()
+    visible_semantics = _authoritative_visible_semantics(field)
+    visible_material_key = _material_answer_key(visible_semantics, control_type=control_type)
+    machine_material_key = _material_answer_key(
+        " ".join(str(field.get(key, "")) for key in ("identifier", "name", "autocomplete")),
+        control_type=control_type,
+    )
+    if control_type in {"file", "textarea"} and cover_letter_semantics_vetoed(field):
+        return "UNKNOWN"
+    if control_type == "textarea" and classification == APPLICATION_NARRATIVE_CLASSIFICATION:
+        return "cover_letter"
+    if control_type == "textarea" and (
+        visible_material_key == "cover_letter" or machine_material_key == "cover_letter"
+    ):
+        return "UNKNOWN"
+    if visible_material_key:
+        return visible_material_key
+    if machine_material_key:
+        if not visible_semantics:
+            return machine_material_key
+        # Applicant-visible semantics explicitly veto a conflicting machine
+        # identifier.  Continue with visible text only so a machine ``resume``
+        # token cannot re-enter through the generic candidate scan below.
+        material = _semantic_text((visible_semantics, control_type))
+    if _is_bare_person_name_field(field):
+        return "full_name"
     candidates = (
         ("first_name", ("first_name", "given_name", "given-name", "名_")),
         ("last_name", ("last_name", "family_name", "family-name", "姓_")),
         ("full_name", ("full_name", "legal_name", "candidate_name", "姓名", "type_name")),
         ("email", ("email", "邮箱")),
         ("phone_type", ("phone_type", "telephone_type", "contact_phone_type", "电话类型", "手机类型")),
+        ("phone_country_code", (
+            "phone_country_code", "telephone_country_code", "country_dialing_code", "dialing_code",
+            "dial_code", "calling_code", "电话国家代码", "国际区号",
+        )),
         ("phone", ("phone", "telephone", "mobile", "电话", "手机")),
         ("linkedin", ("linkedin",)),
         ("github", ("github",)),
@@ -89,6 +180,7 @@ def _suggest_answer_key(field: dict[str, Any]) -> str:
         ("postal_code", ("postal_code", "postcode", "zip_code", "zipcode", "邮编")),
         ("country", ("country", "nation", "国家")),
         ("work_authorization", ("work_authorization", "authorized_to_work", "工作授权", "工作资格")),
+        ("relocation", ("relocation", "relocate", "willing_to_move", "搬迁", "异地搬迁")),
         ("salary", ("salary", "compensation", "薪资", "薪酬")),
         ("resume", ("resume", "cv", "简历")),
     )
@@ -141,6 +233,8 @@ class _FormHTMLParser(HTMLParser):
         self._active_button: int | None = None
         self._option_selected = False
         self._suppressed_depth = 0
+        self._ancestor_stack: list[tuple[str, bool]] = []
+        self._hidden_ancestor_depth = 0
         self._security_material: list[str] = []
         self._html_events = 0
 
@@ -157,16 +251,63 @@ class _FormHTMLParser(HTMLParser):
     def security_material(self) -> str:
         return _compact(" ".join(self._security_material), limit=250_000).casefold()
 
+    @staticmethod
+    def _is_hidden_element(attrs: dict[str, str]) -> bool:
+        style = re.sub(r"\s+", "", attrs.get("style", "")).casefold()
+        return (
+            "hidden" in attrs
+            or "inert" in attrs
+            or attrs.get("aria-hidden", "").strip().casefold() == "true"
+            or "display:none" in style
+            or "visibility:hidden" in style
+        )
+
+    @staticmethod
+    def _maxlength(attrs: dict[str, str]) -> tuple[int | None, str]:
+        if "maxlength" not in attrs:
+            return None, "ABSENT"
+        raw = attrs.get("maxlength", "").strip()
+        if not re.fullmatch(r"[0-9]{1,10}", raw):
+            return None, "INVALID"
+        value = int(raw)
+        if value < 1 or value > 2_147_483_647:
+            return None, "INVALID"
+        return value, "VALID"
+
+    def _push_ancestor(self, tag: str, hidden: bool) -> None:
+        if tag not in {
+            "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
+            "meta", "param", "source", "track", "wbr",
+        }:
+            self._ancestor_stack.append((tag, hidden))
+            if hidden:
+                self._hidden_ancestor_depth += 1
+
+    def _pop_ancestor(self, tag: str) -> None:
+        for index in range(len(self._ancestor_stack) - 1, -1, -1):
+            if self._ancestor_stack[index][0] != tag:
+                continue
+            removed = self._ancestor_stack[index:]
+            del self._ancestor_stack[index:]
+            self._hidden_ancestor_depth -= sum(1 for _, hidden in removed if hidden)
+            return
+
     def _new_control(self, tag: str, attrs: dict[str, str]) -> int | None:
         raw_type = attrs.get("type", "")
         control_type = _safe_control_type(tag, raw_type)
-        if control_type == "hidden" or (tag == "input" and raw_type.casefold() == "hidden"):
+        if (
+            self._hidden_ancestor_depth
+            or self._is_hidden_element(attrs)
+            or control_type == "hidden"
+            or (tag == "input" and raw_type.casefold() == "hidden")
+        ):
             self.ignored_hidden_controls += 1
             return None
         if len(self.controls) >= MAX_FORM_CONTROLS:
             raise JobOpsError("ATS_FORM_TOO_MANY_CONTROLS", "The local form snapshot exceeds the safe control limit.", maximum=MAX_FORM_CONTROLS)
         identifier = _compact(attrs.get("id") or attrs.get("name"), limit=256)
         existing = bool(attrs.get("value") or "checked" in attrs or "selected" in attrs)
+        max_length, max_length_status = self._maxlength(attrs)
         record = {
             "identifier": identifier,
             "name": _compact(attrs.get("name"), limit=256),
@@ -180,6 +321,8 @@ class _FormHTMLParser(HTMLParser):
             "label": "",
             "options": [],
             "required": "required" in attrs or attrs.get("aria-required", "").casefold() == "true",
+            "max_length": max_length,
+            "max_length_status": max_length_status,
             "existing_value_discarded": existing,
         }
         self.controls.append(record)
@@ -203,6 +346,12 @@ class _FormHTMLParser(HTMLParser):
             self._suppressed_depth += 1
             return
         if self._suppressed_depth:
+            return
+        hidden = self._is_hidden_element(values)
+        self._push_ancestor(lowered, hidden)
+        if self._hidden_ancestor_depth:
+            if lowered in {"input", "select", "textarea", "button"}:
+                self.ignored_hidden_controls += 1
             return
         if lowered == "form":
             self.form_actions.append(values.get("action", ""))
@@ -241,6 +390,10 @@ class _FormHTMLParser(HTMLParser):
                 self._suppressed_depth -= 1
             return
         if self._suppressed_depth:
+            return
+        was_hidden = bool(self._hidden_ancestor_depth)
+        self._pop_ancestor(lowered)
+        if was_hidden:
             return
         if lowered == self._heading_tag:
             heading = _compact(" ".join(self._heading_text))
@@ -308,6 +461,13 @@ def _provider_host_matches(provider: str, host: str, company_domain: str) -> boo
         "ashby": value == "jobs.ashbyhq.com" or value.endswith(".jobs.ashbyhq.com"),
         "smartrecruiters": value == "smartrecruiters.com" or value.endswith(".smartrecruiters.com"),
     }.get(provider, False)
+
+
+def redacted_route_url(value: str) -> str:
+    """Return the public/AI-safe route marker while keeping origin evidence."""
+
+    parsed = urlparse(_canonical_url(value))
+    return f"{parsed.scheme}://{parsed.netloc}/__jobflow_route_redacted__"
 
 
 def _action_host_status(action: str, current_url: str) -> str:
@@ -382,27 +542,39 @@ def analyze_local_ats_form(
         }.get(classification, "PROTECTED_OR_SENSITIVE_FIELD")
         semantic_material = {
             "identifier": raw["identifier"], "name": raw["name"], "type": raw["type"],
-            "label": raw["label"], "section": raw["section_heading"], "options": raw["options"], "index": index,
+            "label": raw["label"], "placeholder": raw["placeholder"], "aria_label": raw["aria_label"],
+            "aria_description": raw["aria_description"], "help_text": raw["help_text"],
+            "section": raw["section_heading"], "options": raw["options"],
+            "max_length": raw["max_length"], "max_length_status": raw["max_length_status"], "index": index,
         }
         prompt_material = {
-            "label": raw["label"], "placeholder": raw["placeholder"], "aria_label": raw["aria_label"],
-            "section": raw["section_heading"], "options": raw["options"],
+            "label": _logical_prompt_text(raw["label"], control_type=raw["type"]),
+            "placeholder": _logical_prompt_text(raw["placeholder"], control_type=raw["type"]),
+            "aria_label": _logical_prompt_text(raw["aria_label"], control_type=raw["type"]),
+            "aria_description": _logical_prompt_text(raw["aria_description"], control_type=raw["type"]),
+            "help_text": _logical_prompt_text(raw["help_text"], control_type=raw["type"]),
+            "section": _logical_prompt_text(raw["section_heading"], control_type=raw["type"]),
+            "options": [_logical_prompt_text(item) for item in raw["options"]],
         }
         prompt_hash = sha256_bytes(canonical_json(prompt_material))
-        answer_key = _suggest_answer_key(raw)
+        answer_key = _suggest_answer_key(raw, classification=classification)
         control_ref = stable_id("CTL", page_hash, canonical_json(semantic_material).decode("utf-8"))
         logical_field_hash = sha256_bytes(canonical_json({
             "provider": provider, "answer_key": answer_key, "classification": classification,
             "control_type": raw["type"], "prompt_hash": prompt_hash,
+            "max_length": raw["max_length"], "max_length_status": raw["max_length_status"],
         }))
         safe_fields.append({
             "control_ref": control_ref,
             "control_type": raw["type"],
             "required": bool(raw["required"]),
+            "max_length": raw["max_length"],
+            "max_length_status": raw["max_length_status"],
             "classification": classification,
             "answer_key": answer_key,
             "display_label": _safe_display_text(
-                raw["label"] or raw["aria_label"] or raw["placeholder"] or answer_key,
+                raw["label"] or raw["aria_label"] or raw["placeholder"]
+                or raw["aria_description"] or raw["help_text"] or raw["section_heading"] or answer_key,
             ),
             "display_options": [
                 option for option in (
@@ -445,8 +617,9 @@ def analyze_local_ats_form(
     blockers = sorted(set(blockers))
     step_kind = _infer_step_kind(security_material)
 
+    public_current_url = redacted_route_url(current_url)
     material = {
-        "route_hash": route["route_hash"], "current_url": current_url, "provider": provider,
+        "route_hash": route["route_hash"], "current_url": public_current_url, "provider": provider,
         "page_content_hash": page_hash, "step_kind": step_kind, "fields": safe_fields, "blockers": blockers,
         "form_action_statuses": action_statuses, "iframe_statuses": frame_statuses,
     }
@@ -457,7 +630,7 @@ def analyze_local_ats_form(
         "source_mode": "LOCAL_SNAPSHOT_ONLY",
         "provider": provider,
         "step_kind": step_kind,
-        "canonical_url": current_url,
+        "canonical_url": public_current_url,
         "source_route_hash": route["route_hash"],
         "page_content_hash": page_hash,
         "form_snapshot_hash": form_hash,
@@ -634,7 +807,7 @@ def analyze_local_ats_form_sequence(
         "status": "LOCAL_FORM_SEQUENCE_ANALYZED",
         "source_mode": "LOCAL_SNAPSHOT_SEQUENCE_ONLY",
         "provider": route["provider"],
-        "canonical_url": route["current_url"],
+        "canonical_url": redacted_route_url(str(route["current_url"])),
         "source_route_hash": route["route_hash"],
         "step_count": len(steps),
         "steps": steps,

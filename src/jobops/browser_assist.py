@@ -10,7 +10,7 @@ from typing import Any, Callable
 from urllib.parse import unquote, urlparse
 
 from .approvals import ApprovalContext
-from .ats_browser import analyze_local_ats_form
+from .ats_browser import analyze_local_ats_form, redacted_route_url
 from .db import JobOpsDB
 from .dynamic_form_review import DynamicFormReviewManager
 from .ephemeral_payload import EphemeralATSPayloadBroker
@@ -24,6 +24,7 @@ from .runtime_schema import validate_named
 from .sourcing import (
     SUPPORTED_ROUTE_PROVIDERS,
     _canonical_url,
+    direct_company_query_identity,
     _host,
     host_matches_registered,
     source_route_hash,
@@ -33,7 +34,7 @@ from .util import canonical_json, iso_utc, parse_iso, project_root, sha256_bytes
 
 
 COMPANION_PROTOCOL_VERSION = 2
-COMPANION_EXTENSION_VERSION = "0.9.1"
+COMPANION_EXTENSION_VERSION = "0.9.2"
 
 
 def _configured_companion_extension_ids() -> tuple[str, ...]:
@@ -101,6 +102,7 @@ SAFE_APPLY_FAILURE_CODES = frozenset({
     "COMPANION_ARIA_COMBOBOX_OPTION_NOT_FOUND",
     "COMPANION_ARIA_COMBOBOX_VERIFY_FAILED",
     "COMPANION_FIELD_APPLY_FAILED",
+    "COMPANION_FIELD_MAX_LENGTH_CHANGED",
     "COMPANION_FIELD_VERIFY_FAILED",
     "COMPANION_FILE_CONTROL_CHANGED",
     "COMPANION_FILE_FETCH_FAILED",
@@ -146,10 +148,24 @@ def _semantic_field(value: dict[str, Any]) -> tuple[Any, ...]:
     prompt_identity = ("label", display_label) if display_label else (
         "hash", str(value.get("prompt_hash", ""))
     )
+    max_length_status = str(value.get("max_length_status") or "ABSENT").strip().upper()
+    raw_max_length = value.get("max_length")
+    max_length = (
+        raw_max_length
+        if max_length_status == "VALID"
+        and not isinstance(raw_max_length, bool)
+        and isinstance(raw_max_length, int)
+        and raw_max_length > 0
+        else None
+    )
     return (
         str(value.get("control_type", "")),
         bool(value.get("required", False)),
+        max_length_status,
+        max_length,
         str(value.get("classification", "")),
+        str(value.get("answer_key", "")),
+        str(value.get("logical_field_hash", "")),
         prompt_identity,
         int(value.get("option_count", 0)),
         tuple(re.sub(r"\s+", " ", str(item)).strip().casefold() for item in value.get("display_options", [])),
@@ -158,6 +174,53 @@ def _semantic_field(value: dict[str, Any]) -> tuple[Any, ...]:
 
 def _safe_hash(value: object) -> str:
     return sha256_bytes(canonical_json(value))
+
+
+def _approved_control_semantics(
+    payload: dict[str, Any],
+    client_refs: list[str],
+) -> dict[str, str]:
+    """Validate the Companion's value-free, per-control review binding.
+
+    The hashes are created from visible control semantics in the selected tab.
+    JobFlow never attempts to reconstruct that browser-only signature; it
+    binds the exact map into the prepared evidence and echoes it back so the
+    Companion can prove that every approved control still means the same thing
+    immediately before the first write or upload.
+    """
+
+    raw = payload.get("control_semantics_sha256")
+    if not isinstance(raw, dict) or set(raw) != set(client_refs):
+        raise JobOpsError(
+            "BROWSER_CONTROL_SEMANTICS_INVALID",
+            "The live form control semantics are missing or do not match the current page.",
+        )
+    approved: dict[str, str] = {}
+    for client_ref in client_refs:
+        digest = raw.get(client_ref)
+        if not isinstance(digest, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", digest):
+            raise JobOpsError(
+                "BROWSER_CONTROL_SEMANTICS_INVALID",
+                "The live form contains an invalid control semantics binding.",
+            )
+        approved[client_ref] = digest
+    return approved
+
+
+def _require_current_review_semantics(form_snapshot: dict[str, Any]) -> None:
+    """Stop legacy approvals before a live assist inherits weaker semantics."""
+
+    fields = form_snapshot.get("fields")
+    if not isinstance(fields, list) or any(
+        not isinstance(item, dict)
+        or "max_length" not in item
+        or "max_length_status" not in item
+        for item in fields
+    ):
+        raise JobOpsError(
+            "BROWSER_REVIEW_UPGRADE_REQUIRED",
+            "This application was reviewed by an older JobFlow version. Rebuild and review the current application packet before starting browser assistance.",
+        )
 
 
 def _safe_failure_label(value: object) -> str:
@@ -205,6 +268,7 @@ class _AssistLease:
     expected_fields: list[dict[str, str]] = field(default_factory=list)
     expected_files: list[dict[str, str]] = field(default_factory=list)
     control_ref_by_client: dict[str, str] = field(default_factory=dict)
+    control_semantics_sha256: dict[str, str] = field(default_factory=dict)
     field_diagnostics: dict[str, dict[str, Any]] = field(default_factory=dict)
     accepted_fields: list[dict[str, str]] = field(default_factory=list)
     accepted_files: list[dict[str, str]] = field(default_factory=list)
@@ -340,7 +404,7 @@ class BrowserAssistManager:
     def extension_origin_allowed(origin: str | None) -> bool:
         return bool(origin and any(secrets.compare_digest(origin, allowed) for allowed in COMPANION_EXTENSION_ORIGINS))
 
-    def _start_live_acceptance(self, lease: _AssistLease, *, evidence_hash: str) -> None:
+    def _start_live_acceptance(self, lease: _AssistLease) -> None:
         """Start optional redacted acceptance evidence without weakening the assist.
 
         Reserved, local, and synthetic hosts intentionally return no acceptance
@@ -348,17 +412,13 @@ class BrowserAssistManager:
         usable but cannot claim evidence from that run.
         """
 
+        if lease.execution_channel != "BROWSER_COMPANION" or lease.acceptance_id is not None:
+            return
         try:
             row = self._live_acceptance.start_for_assist(lease.assist_id)
             if row is None:
                 return
             lease.acceptance_id = str(row["acceptance_id"])
-            self._live_acceptance.record_stage(
-                lease.acceptance_id,
-                stage="REVIEW_PACKET",
-                result="PASS",
-                evidence_hash=evidence_hash,
-            )
         except JobOpsError as exc:
             if not exc.code.startswith("LIVE_ACCEPTANCE_"):
                 raise
@@ -373,7 +433,7 @@ class BrowserAssistManager:
         evidence_hash: str,
         page_fingerprint: str | None = None,
     ) -> None:
-        if lease.acceptance_id is None:
+        if lease.acceptance_id is None or lease.execution_channel != "BROWSER_COMPANION":
             return
         try:
             self._live_acceptance.record_stage(
@@ -389,7 +449,7 @@ class BrowserAssistManager:
             lease.acceptance_id = None
 
     def _finish_live_acceptance(self, lease: _AssistLease, *, status: str) -> None:
-        if lease.acceptance_id is None:
+        if lease.acceptance_id is None or lease.execution_channel != "BROWSER_COMPANION":
             return
         try:
             self._live_acceptance.finish(lease.acceptance_id, status=status)
@@ -632,6 +692,27 @@ class BrowserAssistManager:
             )
         return lease
 
+    def _lease_for_channel(
+        self,
+        token: str,
+        *,
+        required_channel: str,
+        statuses: set[str] | None = None,
+    ) -> _AssistLease:
+        if required_channel not in {"BROWSER_COMPANION", "LOCAL_AI_AGENT"}:
+            raise JobOpsError(
+                "BROWSER_ASSIST_CHANNEL_INVALID",
+                "The requested browser-assist execution channel is not recognized.",
+            )
+        lease = self._lease(token, statuses=statuses)
+        if lease.execution_channel != required_channel:
+            raise JobOpsError(
+                "BROWSER_ASSIST_CHANNEL_MISMATCH",
+                "This application lease is bound to a different execution channel.",
+                automatic_retry=False,
+            )
+        return lease
+
     @staticmethod
     def _provider_host_allowed(provider: str, host: str, company_domain: str) -> bool:
         value = _host(host)
@@ -665,8 +746,29 @@ class BrowserAssistManager:
                 "FORM_ROUTE_IDENTITY_CHANGED",
                 "The same-origin page is outside the approved application path.",
             )
+        if lease.provider == "company":
+            approved_query_identity = direct_company_query_identity(original)
+            current_query_identity = direct_company_query_identity(canonical)
+            if approved_query_identity is not None and not secrets.compare_digest(
+                approved_query_identity,
+                current_query_identity or "",
+            ):
+                raise JobOpsError(
+                    "FORM_ROUTE_IDENTITY_CHANGED",
+                    "The direct company application no longer belongs to the approved query-bound job identity.",
+                )
+            if (
+                approved_query_identity is None
+                and current_query_identity is not None
+                and current_query_identity != str(lease.source_route.get("ats_job_identity", ""))
+            ):
+                raise JobOpsError(
+                    "FORM_ROUTE_IDENTITY_CHANGED",
+                    "A new query-bound job identity appeared outside the approved application route.",
+                )
+            return
         identity = unquote(str(lease.source_route.get("ats_job_identity", ""))).casefold()
-        if lease.provider != "company" and identity and identity != "unknown":
+        if identity and identity != "unknown":
             if identity not in current_path:
                 raise JobOpsError(
                     "FORM_ROUTE_IDENTITY_CHANGED",
@@ -691,10 +793,37 @@ class BrowserAssistManager:
         return tab_id, document_id
 
     @classmethod
-    def _validate_assisted_route(cls, route: dict[str, Any], bundle: dict[str, Any]) -> None:
+    def _validate_assisted_route(
+        cls,
+        route: dict[str, Any],
+        bundle: dict[str, Any],
+        context: ApprovalContext,
+    ) -> None:
         validate_named("source-route", route, project_root() / "schemas")
         provider = str(route.get("provider", ""))
         route_kind = str(route.get("route_kind", ""))
+        form_snapshot = bundle.get("form_snapshot", {})
+        route_hash = str(route.get("route_hash", ""))
+        calculated_route_hash = source_route_hash(route)
+        identity_changed = any(
+            str(route.get(key, "")) != str(getattr(context, key))
+            for key in ("ats_tenant", "ats_board", "ats_job_identity")
+        )
+        binding_changed = (
+            route_hash != calculated_route_hash
+            or route_hash != str(bundle.get("source_route_hash", ""))
+            or route_hash != str(form_snapshot.get("source_route_hash", ""))
+            or route_hash != context.source_route_hash
+            or str(bundle.get("form_snapshot_hash", "")) != context.form_snapshot_hash
+            or str(form_snapshot.get("form_snapshot_hash", "")) != context.form_snapshot_hash
+            or str(form_snapshot.get("provider", "")) != provider
+            or identity_changed
+        )
+        if binding_changed:
+            raise JobOpsError(
+                "EXECUTION_ROUTE_CHANGED",
+                "The approved route, job identity, form snapshot, and execution context no longer share one binding.",
+            )
         if (
             route.get("status") != "ROUTE_APPROVED"
             or route.get("account_action") != "NONE"
@@ -711,12 +840,17 @@ class BrowserAssistManager:
                 "Browser assistance requires an approved guest route from the company site to the bound company form or supported ATS.",
             )
         canonical = _canonical_url(str(route["current_url"]))
+        if canonical != _canonical_url(context.canonical_url):
+            raise JobOpsError(
+                "EXECUTION_ROUTE_CHANGED",
+                "The initial application URL differs from the exact URL bound to the approved context.",
+            )
         parsed = urlparse(canonical)
         if url_has_sensitive_query(canonical) or not cls._provider_host_allowed(
             provider, parsed.hostname or "", str(route["company_domain"]),
         ):
             raise JobOpsError("BROWSER_ASSIST_ROUTE_UNSAFE", "The approved form route is unsafe or outside the bound company/ATS host.")
-        if canonical != str(bundle.get("form_snapshot", {}).get("canonical_url", "")):
+        if redacted_route_url(canonical) != str(bundle.get("form_snapshot", {}).get("canonical_url", "")):
             raise JobOpsError("EXECUTION_ROUTE_CHANGED", "The approved execution bundle and initial application form URL differ.")
 
     def _latest_active_ref(self, kind: str) -> str | None:
@@ -817,7 +951,8 @@ class BrowserAssistManager:
                     "Finish or stop the current browser-assist session before starting another application.",
                 )
             bundle, context, _ = self._bundle_manager.load_current(application_id)
-            self._validate_assisted_route(source_route, bundle)
+            _require_current_review_semantics(bundle.get("form_snapshot", {}))
+            self._validate_assisted_route(source_route, bundle, context)
             if context.application_id != application_id:
                 raise JobOpsError("APPLICATION_BINDING_MISSING", "The approved application context is inconsistent.")
             self._session_manager.enable(user_confirmed=True)
@@ -880,7 +1015,6 @@ class BrowserAssistManager:
                     assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)""",
                     (assist_id, application_id, "ASSIST_STARTED", start_evidence_hash, lease.created_at),
                 )
-            self._start_live_acceptance(lease, evidence_hash=start_evidence_hash)
             self._leases[token] = lease
             return {
                 "status": "BROWSER_COMPANION_PAIRING",
@@ -948,6 +1082,11 @@ class BrowserAssistManager:
                 lease.execution_channel = execution_channel
                 lease.status = "READY"
                 now = iso_utc()
+                pair_evidence_hash = _safe_hash({
+                    "protocol_version": COMPANION_PROTOCOL_VERSION,
+                    "extension_id": COMPANION_EXTENSION_ID,
+                    "execution_channel": execution_channel,
+                })
                 with self.database.connect() as connection:
                     connection.execute(
                         "UPDATE browser_assist_runs SET status='READY',updated_at=? WHERE assist_id=?",
@@ -957,11 +1096,7 @@ class BrowserAssistManager:
                         "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
                         (lease.assist_id, lease.application_id, (
                             "LOCAL_AI_AGENT_PAIRED" if execution_channel == "LOCAL_AI_AGENT" else "COMPANION_PAIRED"
-                        ), _safe_hash({
-                            "protocol_version": COMPANION_PROTOCOL_VERSION,
-                            "extension_id": COMPANION_EXTENSION_ID,
-                            "execution_channel": execution_channel,
-                        }), now),
+                        ), pair_evidence_hash, now),
                     )
             elif lease.execution_channel != execution_channel:
                 raise JobOpsError(
@@ -1012,6 +1147,7 @@ class BrowserAssistManager:
         lease.expected_fields.clear()
         lease.expected_files.clear()
         lease.control_ref_by_client.clear()
+        lease.control_semantics_sha256.clear()
         lease.file_tokens.clear()
         lease.navigation_ref = None
         lease.navigation_token = None
@@ -1091,6 +1227,7 @@ class BrowserAssistManager:
         payload: dict[str, Any],
         expected_snapshot: dict[str, Any],
         enforce_initial_approval: bool = True,
+        enforce_client_ref_parity: bool = True,
     ) -> tuple[dict[str, Any], list[str]]:
         live_url = str(payload.get("url", ""))
         canonical = _canonical_url(live_url)
@@ -1141,7 +1278,7 @@ class BrowserAssistManager:
                 "NAVIGATION_DID_NOT_ADVANCE",
                 "Next/Continue returned to a page that this application session already completed.",
             )
-        if len(client_refs) != len(live["fields"]):
+        if enforce_client_ref_parity and len(client_refs) != len(live["fields"]):
             raise JobOpsError("SITE_CHANGED", "The live form control count changed after approval.")
         if set(live["blockers"]) - ALLOWED_LIVE_BLOCKERS - {
             "CAPTCHA_STOP", "MFA_STOP", "LOGIN_STOP", "ACCOUNT_CREATION_STOP",
@@ -1160,11 +1297,22 @@ class BrowserAssistManager:
                     raise JobOpsError("SITE_CHANGED", "An initial live form field differs from the approved review packet.")
         return live, list(client_refs)
 
-    def prepare(self, token: str, payload: dict[str, Any], *, extension_origin: str | None) -> dict[str, Any]:
+    def prepare(
+        self,
+        token: str,
+        payload: dict[str, Any],
+        *,
+        extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
+    ) -> dict[str, Any]:
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"READY", "HANDOFF_REQUIRED"})
+            lease = self._lease_for_channel(
+                token,
+                required_channel=execution_channel,
+                statuses={"READY", "HANDOFF_REQUIRED"},
+            )
             if not lease.paired:
                 raise JobOpsError("BROWSER_COMPANION_NOT_PAIRED", "Pair the bundled browser companion before opening the application form.")
             bundle, context, answer_refs = self._bundle_manager.load_current(lease.application_id)
@@ -1177,6 +1325,7 @@ class BrowserAssistManager:
                 required_actions={"inspect_application_form"},
             )
             canonical = _canonical_url(str(payload.get("url", "")))
+            initial_page = lease.current_step == 1 and not lease.visited_page_hashes
             if (
                 _safe_origin(canonical) != lease.allowed_page_origin
                 or not self._provider_host_allowed(
@@ -1184,6 +1333,11 @@ class BrowserAssistManager:
                 )
             ):
                 raise JobOpsError("FORM_ROUTE_BINDING_CHANGED", "The current tab is outside the approved company/ATS origin.")
+            if initial_page and canonical != str(lease.source_route["current_url"]):
+                raise JobOpsError(
+                    "FORM_ROUTE_BINDING_CHANGED",
+                    "The first live page is not the exact approved application URL.",
+                )
             if url_has_sensitive_query(canonical):
                 raise JobOpsError("ATS_ROUTE_SENSITIVE_QUERY", "The live form URL contains a sensitive query field.")
             signals = self._security_signals(payload)
@@ -1198,13 +1352,13 @@ class BrowserAssistManager:
                     lease, context, signals=signals & HANDOFF_SIGNAL_CODES,
                     page_evidence={"sanitized_html_present": isinstance(payload.get("sanitized_html"), str)},
                 )
-            initial_page = lease.current_step == 1 and not lease.visited_page_hashes
             live, client_refs = self._live_snapshot(
                 lease=lease,
                 payload=payload,
                 expected_snapshot=bundle["form_snapshot"],
                 enforce_initial_approval=not initial_page,
             )
+            control_semantics_sha256 = _approved_control_semantics(payload, client_refs)
             parser_handoffs = {
                 code.removesuffix("_STOP") for code in live["blockers"]
                 if code in {"CAPTCHA_STOP", "MFA_STOP", "LOGIN_STOP", "ACCOUNT_CREATION_STOP"}
@@ -1291,7 +1445,7 @@ class BrowserAssistManager:
             resolved_values.sort(
                 key=lambda item: live_position_by_control.get(str(item["control_ref"]), len(live_fields) + 1),
             )
-            outward_fields: list[dict[str, str]] = []
+            outward_fields: list[dict[str, Any]] = []
             expected_field_results: list[dict[str, str]] = []
             resolved_control_refs: set[str] = set()
             for item in resolved_values:
@@ -1305,6 +1459,8 @@ class BrowserAssistManager:
                 outward_fields.append({
                     "client_ref": client_ref,
                     "control_type": str(field["control_type"]),
+                    "max_length": field.get("max_length"),
+                    "max_length_status": str(field.get("max_length_status") or "ABSENT"),
                     "value": value,
                     "value_sha256": value_hash,
                 })
@@ -1395,6 +1551,7 @@ class BrowserAssistManager:
                 client_ref: control_ref
                 for control_ref, client_ref in client_by_control.items()
             }
+            lease.control_semantics_sha256 = dict(control_semantics_sha256)
             lease.field_diagnostics = {
                 client_by_control[str(item["control_ref"])]: {
                     "failure_field_label": _safe_failure_label(item.get("display_label")),
@@ -1452,6 +1609,7 @@ class BrowserAssistManager:
                 "navigation_control_type": lease.navigation_control_type,
                 "navigation_control_semantics_hash": lease.navigation_control_semantics_hash,
                 "navigation_snapshot_hash": lease.navigation_snapshot_hash,
+                "control_semantics_sha256": lease.control_semantics_sha256,
                 "manual_fields": [
                     {key: item[key] for key in ("client_ref", "classification", "required")}
                     for item in manual_fields
@@ -1465,6 +1623,7 @@ class BrowserAssistManager:
                 request_hash=_safe_hash({
                     "sanitized_html_sha256": sha256_bytes(str(payload["sanitized_html"]).encode("utf-8")),
                     "client_refs": client_refs,
+                    "control_semantics_sha256_hash": _safe_hash(lease.control_semantics_sha256),
                     "url_origin": lease.allowed_page_origin,
                     "step": lease.current_step,
                 }),
@@ -1484,6 +1643,7 @@ class BrowserAssistManager:
                     "INSERT INTO browser_assist_events(assist_id,application_id,event_type,evidence_hash,created_at) VALUES(?,?,?,?,?)",
                     (lease.assist_id, lease.application_id, "LIVE_PAGE_PREPARED", lease.prepared_hash, now),
                 )
+            self._start_live_acceptance(lease)
             self._record_live_acceptance(
                 lease,
                 stage="FORM_ANALYSIS",
@@ -1510,6 +1670,7 @@ class BrowserAssistManager:
                 "status": "LIVE_PAGE_APPROVED_FOR_ASSIST",
                 "assist_id": lease.assist_id,
                 "application_id": lease.application_id,
+                "control_semantics_sha256": dict(lease.control_semantics_sha256),
                 "fields": outward_fields,
                 "files": outward_files,
                 "field_count": len(outward_fields),
@@ -1548,11 +1709,14 @@ class BrowserAssistManager:
         file_token: str,
         *,
         extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
     ) -> tuple[bytearray, dict[str, str]]:
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"PAGE_PREPARED"})
+            lease = self._lease_for_channel(
+                token, required_channel=execution_channel, statuses={"PAGE_PREPARED"},
+            )
             item = lease.file_tokens.get(file_token)
             if item is None or item.get("used") is True:
                 raise JobOpsError("BROWSER_FILE_TOKEN_INVALID", "The one-use material token is invalid or already consumed.")
@@ -1734,6 +1898,7 @@ class BrowserAssistManager:
         payload: dict[str, Any],
         *,
         extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
     ) -> dict[str, Any]:
         """Audit a possibly partial browser write and end the lease without retrying."""
 
@@ -1743,7 +1908,9 @@ class BrowserAssistManager:
                     "BROWSER_COMPANION_ORIGIN_FORBIDDEN",
                     "The request did not come from the bundled JobFlow companion.",
                 )
-            lease = self._lease(token, statuses={"PAGE_PREPARED"})
+            lease = self._lease_for_channel(
+                token, required_channel=execution_channel, statuses={"PAGE_PREPARED"},
+            )
             if payload.get("submit_events") != 0 or payload.get("navigation_actions") != 0:
                 raise JobOpsError(
                     "FINAL_SUBMIT_FORBIDDEN",
@@ -1883,6 +2050,7 @@ class BrowserAssistManager:
         payload: dict[str, Any],
         *,
         extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
     ) -> dict[str, Any]:
         """Create a supplemental packet when approved writes reveal questions."""
 
@@ -1892,7 +2060,9 @@ class BrowserAssistManager:
                     "BROWSER_COMPANION_ORIGIN_FORBIDDEN",
                     "The request did not come from the bundled JobFlow companion.",
                 )
-            lease = self._lease(token, statuses={"PAGE_PREPARED"})
+            lease = self._lease_for_channel(
+                token, required_channel=execution_channel, statuses={"PAGE_PREPARED"},
+            )
             if lease.prepared_hash is None:
                 raise JobOpsError(
                     "BROWSER_ASSIST_NOT_PREPARED",
@@ -1917,6 +2087,11 @@ class BrowserAssistManager:
                 payload=payload,
                 expected_snapshot=bundle["form_snapshot"],
                 enforce_initial_approval=False,
+                # Successful ATS uploads can replace or collapse file-input
+                # components before this read. No values are rebound from
+                # these refs here; the semantic diff below only ignores
+                # controls whose exact write or upload evidence was accepted.
+                enforce_client_ref_parity=False,
             )
             expected_fields = list(bundle["form_snapshot"]["fields"])
             live_fields = list(live["fields"])
@@ -1985,11 +2160,20 @@ class BrowserAssistManager:
                 "real_external_actions": int(bool(fields)) + int(bool(files)),
             }
 
-    def complete(self, token: str, payload: dict[str, Any], *, extension_origin: str | None) -> dict[str, Any]:
+    def complete(
+        self,
+        token: str,
+        payload: dict[str, Any],
+        *,
+        extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
+    ) -> dict[str, Any]:
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"PAGE_PREPARED"})
+            lease = self._lease_for_channel(
+                token, required_channel=execution_channel, statuses={"PAGE_PREPARED"},
+            )
             if lease.prepared_hash is None:
                 raise JobOpsError("BROWSER_ASSIST_NOT_PREPARED", "The live form must pass approval matching before fields are changed.")
             bundle, context, _ = self._bundle_manager.load_current(lease.application_id)
@@ -2084,13 +2268,18 @@ class BrowserAssistManager:
         payload: dict[str, Any],
         *,
         extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
     ) -> dict[str, Any]:
         """Consume one page-scoped Next/Continue authorization; never a final Submit."""
 
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"PAGE_REVIEW_REQUIRED", "MANUAL_NAVIGATION_REQUIRED"})
+            lease = self._lease_for_channel(
+                token,
+                required_channel=execution_channel,
+                statuses={"PAGE_REVIEW_REQUIRED", "MANUAL_NAVIGATION_REQUIRED"},
+            )
             if (
                 lease.navigation_mode != PROGRAMMATIC_NAVIGATION_MODE
                 or lease.navigation_control_type != "button"
@@ -2165,6 +2354,7 @@ class BrowserAssistManager:
         payload: dict[str, Any],
         *,
         extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
     ) -> dict[str, Any]:
         """Accept a freshly captured page only after a trusted manual forward click.
 
@@ -2176,7 +2366,9 @@ class BrowserAssistManager:
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"MANUAL_NAVIGATION_REQUIRED"})
+            lease = self._lease_for_channel(
+                token, required_channel=execution_channel, statuses={"MANUAL_NAVIGATION_REQUIRED"},
+            )
             if lease.navigation_mode != MANUAL_NAVIGATION_MODE or lease.navigation_token is not None:
                 raise JobOpsError("MANUAL_NAVIGATION_BINDING_INVALID", "The prior control was not bound for manual navigation.")
             if payload.get("trusted_user_event") is not True:
@@ -2334,11 +2526,14 @@ class BrowserAssistManager:
         payload: dict[str, Any],
         *,
         extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
     ) -> dict[str, Any]:
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"AWAITING_NAVIGATION"})
+            lease = self._lease_for_channel(
+                token, required_channel=execution_channel, statuses={"AWAITING_NAVIGATION"},
+            )
             canonical = _canonical_url(str(payload.get("url", "")))
             event_hash = str(payload.get("event_hash", ""))
             if (
@@ -2391,11 +2586,20 @@ class BrowserAssistManager:
                 "automatic_retry": False,
             }
 
-    def submit_observed(self, token: str, payload: dict[str, Any], *, extension_origin: str | None) -> dict[str, Any]:
+    def submit_observed(
+        self,
+        token: str,
+        payload: dict[str, Any],
+        *,
+        extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
+    ) -> dict[str, Any]:
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"AWAITING_USER_SUBMIT"})
+            lease = self._lease_for_channel(
+                token, required_channel=execution_channel, statuses={"AWAITING_USER_SUBMIT"},
+            )
             if payload.get("trusted_user_event") is not True:
                 raise JobOpsError("USER_SUBMIT_NOT_PROVEN", "Only a trusted user submit event may start result observation.")
             if _safe_origin(str(payload.get("url", ""))) != lease.allowed_page_origin:
@@ -2544,11 +2748,20 @@ class BrowserAssistManager:
         self._finish_live_acceptance(lease, status="RESULT_OBSERVED")
         return str(receipt["receipt_id"])
 
-    def observe_result(self, token: str, payload: dict[str, Any], *, extension_origin: str | None) -> dict[str, Any]:
+    def observe_result(
+        self,
+        token: str,
+        payload: dict[str, Any],
+        *,
+        extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
+    ) -> dict[str, Any]:
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"AWAITING_USER_SUBMIT"})
+            lease = self._lease_for_channel(
+                token, required_channel=execution_channel, statuses={"AWAITING_USER_SUBMIT"},
+            )
             if not lease.submit_observed:
                 raise JobOpsError("USER_SUBMIT_NOT_PROVEN", "Result observation cannot start before a trusted user submit event.")
             if _safe_origin(str(payload.get("url", ""))) != lease.allowed_page_origin:
@@ -2639,13 +2852,22 @@ class BrowserAssistManager:
                 "submit_performed_by": "USER",
             }
 
-    def result_unavailable(self, token: str, payload: dict[str, Any], *, extension_origin: str | None) -> dict[str, Any]:
+    def result_unavailable(
+        self,
+        token: str,
+        payload: dict[str, Any],
+        *,
+        extension_origin: str | None,
+        execution_channel: str = "BROWSER_COMPANION",
+    ) -> dict[str, Any]:
         """Convert an unreadable post-submit page into an explicit manual question."""
 
         with self._lock:
             if not self.extension_origin_allowed(extension_origin):
                 raise JobOpsError("BROWSER_COMPANION_ORIGIN_FORBIDDEN", "The request did not come from the bundled JobFlow companion.")
-            lease = self._lease(token, statuses={"AWAITING_USER_SUBMIT"})
+            lease = self._lease_for_channel(
+                token, required_channel=execution_channel, statuses={"AWAITING_USER_SUBMIT"},
+            )
             if not lease.submit_observed:
                 raise JobOpsError("USER_SUBMIT_NOT_PROVEN", "An unreadable result page is not actionable before a trusted user submit event.")
             reason = str(payload.get("reason", ""))
