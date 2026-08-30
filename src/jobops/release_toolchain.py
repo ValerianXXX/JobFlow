@@ -17,6 +17,17 @@ from .util import has_reparse_component, sha256_bytes
 _SHA256 = re.compile(r"sha256:[0-9a-f]{64}")
 _THUMBPRINT = re.compile(r"[0-9A-F]{40}")
 _TOOLS = {"node", "git", "python"}
+_WINDOWS_EXECUTABLE_EXTENSIONS = ".COM;.EXE;.BAT;.CMD"
+_PROTECTED_ENVIRONMENT_KEYS = {
+    "COMSPEC",
+    "PATH",
+    "PATHEXT",
+    "SYSTEMDRIVE",
+    "SYSTEMROOT",
+    "TEMP",
+    "TMP",
+    "WINDIR",
+}
 _PYTHON_RUNTIME_KEYS = {
     "source_policy",
     "python_tag",
@@ -156,6 +167,10 @@ def sanitized_command_environment(
         "TEMP": str(temporary),
         "TMP": str(temporary),
         "PATH": os.pathsep.join(str(path) for path in path_entries if path.is_dir()),
+        # Windows PowerShell consults PATHEXT even for an explicitly resolved
+        # native executable. Without a deterministic .EXE entry, a trusted
+        # tool such as icacls.exe is found but silently not launched.
+        "PATHEXT": _WINDOWS_EXECUTABLE_EXTENSIONS,
     }
     if tool == "git":
         environment.update(
@@ -181,6 +196,8 @@ def sanitized_command_environment(
             if not isinstance(key, str) or not isinstance(value, str) or "\x00" in key + value:
                 raise ReleaseToolchainError("RELEASE_TOOL_ENVIRONMENT_INVALID")
             upper = key.upper()
+            if upper in _PROTECTED_ENVIRONMENT_KEYS:
+                raise ReleaseToolchainError("RELEASE_TOOL_ENVIRONMENT_INVALID")
             forbidden = (
                 upper.startswith("NODE_")
                 or upper.startswith("NPM_CONFIG_")

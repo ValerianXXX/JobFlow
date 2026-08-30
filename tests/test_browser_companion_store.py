@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import ctypes
 import hashlib
 import importlib.util
 import json
@@ -10,10 +11,44 @@ import subprocess
 import tempfile
 import textwrap
 import unittest
+import uuid
 import zipfile
 from pathlib import Path
 
 from _support import PROJECT
+
+
+def _windows_local_app_data() -> Path:
+    """Resolve LocalAppData without trusting an inherited environment value."""
+
+    class GUID(ctypes.Structure):
+        _fields_ = [
+            ("Data1", ctypes.c_ulong),
+            ("Data2", ctypes.c_ushort),
+            ("Data3", ctypes.c_ushort),
+            ("Data4", ctypes.c_ubyte * 8),
+        ]
+
+    value = uuid.UUID("F1B32785-6FBA-4FCF-9D55-7B8E7F157091")
+    guid = GUID(
+        value.time_low,
+        value.time_mid,
+        value.time_hi_version,
+        (ctypes.c_ubyte * 8)(*value.bytes[8:]),
+    )
+    pointer = ctypes.c_wchar_p()
+    result = ctypes.windll.shell32.SHGetKnownFolderPath(
+        ctypes.byref(guid),
+        0,
+        None,
+        ctypes.byref(pointer),
+    )
+    if result != 0 or not pointer.value:
+        raise OSError(f"SHGetKnownFolderPath(LocalAppData) failed with HRESULT {result}.")
+    try:
+        return Path(pointer.value).resolve(strict=True)
+    finally:
+        ctypes.windll.ole32.CoTaskMemFree(pointer)
 
 
 class BrowserCompanionStoreTests(unittest.TestCase):
@@ -121,7 +156,7 @@ class BrowserCompanionStoreTests(unittest.TestCase):
         start = installer.index("function Assert-ExistingAncestorChainNoReparse")
         end = installer.index("function Read-RegistryDefault", start)
         acl_function = installer[start:end]
-        local_app_data = Path(os.environ["LOCALAPPDATA"])
+        local_app_data = _windows_local_app_data()
         with tempfile.TemporaryDirectory(prefix="jobflow-native-acl-", dir=local_app_data) as raw_temp:
             root = Path(raw_temp) / "host"
             root.mkdir()

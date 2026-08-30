@@ -177,6 +177,21 @@ class ReleaseToolchainTests(unittest.TestCase):
                 value = sanitized_command_environment(tool, project=PROJECT)
                 self.assertEqual(value["SystemDrive"], expected)
 
+    def test_command_environment_supplies_a_fixed_native_executable_extension_set(self) -> None:
+        with patch.dict(os.environ, {"PATHEXT": ".CPL;.JS;.ATTACKER"}):
+            for tool in ("git", "node", "python"):
+                value = sanitized_command_environment(tool, project=PROJECT)
+                self.assertEqual(value["PATHEXT"], ".COM;.EXE;.BAT;.CMD")
+
+    def test_extra_environment_cannot_replace_protected_windows_values(self) -> None:
+        for name in ("COMSPEC", "PATH", "PATHEXT", "SYSTEMROOT", "TEMP"):
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(
+                    ReleaseToolchainError,
+                    "RELEASE_TOOL_ENVIRONMENT_INVALID",
+                ):
+                    sanitized_command_environment("python", extra={name: "attacker"})
+
     def test_command_environment_drops_injection_variables(self) -> None:
         injected = {
             "GIT_DIR": r"C:\attacker\repo",
