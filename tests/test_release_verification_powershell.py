@@ -218,6 +218,23 @@ class ReleaseVerificationPowerShellTests(unittest.TestCase):
             self.assertIn("SHA-256", result.stdout)
             self.assertFalse(marker.exists(), marker.read_text(encoding="utf-8") if marker.exists() else "")
 
+    def test_redacted_python_failure_code_is_surfaced(self) -> None:
+        if not SIGNED_PYTHON.is_file():
+            self.skipTest("The installer-created signed project venv is unavailable")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            script, node, git, _marker = self._harness(root)
+            (root / "src" / "jobops" / "release_verification.py").write_text(
+                "import json\n"
+                "print(json.dumps({'status':'FAIL','code':'RELEASE_SYNTHETIC_GATE_FAILED'}))\n"
+                "raise SystemExit(2)\n",
+                encoding="utf-8",
+            )
+            result = self._run(script, "-NodePath", str(node), "-GitPath", str(git))
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertIn("RELEASE_SYNTHETIC_GATE_FAILED", result.stdout)
+            self.assertNotIn("JOBFLOW_RELEASE_VERIFICATION_FAILED", result.stdout)
+
     def test_fake_systemroot_cannot_change_python_identity_resolution(self) -> None:
         if not SIGNED_PYTHON.is_file():
             self.skipTest("The installer-created signed project venv is unavailable")

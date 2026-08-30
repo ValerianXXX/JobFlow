@@ -13,6 +13,8 @@ from typing import Any
 
 from .adapters import audit_real_external_actions
 from .db import JobOpsDB
+from .knowledge import KnowledgeGateway
+from .locator import locate_knowledge_root
 from .public_release import SAFE_PUBLIC_EMAILS
 from .release import verify_release
 from .release_toolchain import (
@@ -538,6 +540,13 @@ def action_snapshot(project: Path) -> dict[str, int | str]:
     }
 
 
+def knowledge_snapshot(project: Path) -> dict[str, object]:
+    """Capture the allowlisted knowledge fingerprints for this verification run."""
+
+    location = locate_knowledge_root(project, project / "config" / "knowledge-sources.json")
+    return KnowledgeGateway(location).snapshot_collections()
+
+
 def _validated_tool(path: Path, failure_code: str) -> Path:
     if not path.is_absolute():
         raise ReleaseVerificationError(failure_code)
@@ -766,6 +775,7 @@ def _publish_report_and_checkpoint(
     baseline_attempts: int,
     baseline_real: int,
     git_path: Path,
+    knowledge_baseline: dict[str, object] | None = None,
     require_public_release: bool = False,
     verification_run_id: str = "",
     transaction_nonce_sha256: str | None = None,
@@ -815,6 +825,7 @@ def _publish_report_and_checkpoint(
                 "attempt_count": baseline_attempts,
                 "real_external_actions": baseline_real,
             },
+            knowledge_baseline=knowledge_baseline,
             git_path=git_path,
         )
         if (
@@ -932,6 +943,8 @@ def run_release_verification(
             baseline = action_snapshot(project)
             baseline_attempts, baseline_real = _strict_action_counts(baseline)
             recorder.record_operation("external-actions-baseline", baseline)
+            baseline_knowledge = knowledge_snapshot(project)
+            recorder.record_operation("knowledge-baseline", baseline_knowledge)
 
             unittest_output = recorder.run(
                 "python-unittest-discovery",
@@ -1072,6 +1085,7 @@ print("SCHEMAS_VALID=" + str(len(paths)))
                 baseline_attempts=baseline_attempts,
                 baseline_real=baseline_real,
                 git_path=git,
+                knowledge_baseline=baseline_knowledge,
                 require_public_release=require_public_release,
                 verification_run_id=verification_run_id,
                 transaction_nonce_sha256=transaction_nonce_sha256,

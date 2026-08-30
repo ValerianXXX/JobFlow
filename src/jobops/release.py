@@ -439,6 +439,7 @@ def verify_release(
     *,
     require_independent: bool = False,
     external_action_baseline: dict[str, Any] | None = None,
+    knowledge_baseline: dict[str, object] | None = None,
     git_path: Path | None = None,
 ) -> dict[str, Any]:
     source_commit = _source_commit(project, git_path=git_path)
@@ -461,7 +462,12 @@ def verify_release(
     location = locate_knowledge_root(project, project / "config" / "knowledge-sources.json")
     gateway = KnowledgeGateway(location)
     current_knowledge = gateway.snapshot_collections()
-    knowledge = gateway.compare_snapshots(load_json(project / "state" / "knowledge-baseline.json"), current_knowledge)
+    baseline_knowledge = (
+        knowledge_baseline
+        if knowledge_baseline is not None
+        else load_json(project / "state" / "knowledge-baseline.json")
+    )
+    knowledge = gateway.compare_snapshots(baseline_knowledge, current_knowledge)
     knowledge["collections"] = current_knowledge["collections"]
     knowledge["write_operations"] = 0
     lifetime_actions = audit_real_external_actions(database)

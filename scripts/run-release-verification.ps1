@@ -261,8 +261,24 @@ try {
         ([string]$finalSignature.SignerCertificate.Thumbprint).ToUpperInvariant() -cne $pythonIdentity.Thumbprint
     ) { throw "JOBFLOW_RELEASE_PYTHON_CHANGED_DURING_RUN" }
 
-    if ($exitCode -ne 0) { throw "JOBFLOW_RELEASE_VERIFICATION_FAILED" }
     $resultText = ($resultLines -join "`n").Trim()
+    if ($exitCode -ne 0) {
+        # The Python verifier emits only a bounded release error code on
+        # failure. Surface that code so local QA can identify the failed gate
+        # without exposing captured command output or machine-local paths.
+        try {
+            $failure = $resultText | ConvertFrom-Json
+            $failureCode = [string]$failure.code
+            if (
+                [string]$failure.status -eq "FAIL" -and
+                $failureCode -match '^RELEASE_[A-Z0-9_.:-]+$'
+            ) { throw $failureCode }
+        }
+        catch {
+            if ([string]$_.Exception.Message -match '^RELEASE_[A-Z0-9_.:-]+$') { throw }
+        }
+        throw "JOBFLOW_RELEASE_VERIFICATION_FAILED"
+    }
     try { $result = $resultText | ConvertFrom-Json }
     catch { throw "JOBFLOW_RELEASE_RESULT_INVALID" }
     if (

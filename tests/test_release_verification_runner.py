@@ -365,6 +365,10 @@ class ReleaseVerificationRunnerTests(unittest.TestCase):
                 ),
                 patch("jobops.release_verification.action_snapshot", return_value=snapshot),
                 patch(
+                    "jobops.release_verification.knowledge_snapshot",
+                    return_value={"schema_version": 1, "collections": {}},
+                ),
+                patch(
                     "jobops.release_verification._publish_report_and_checkpoint",
                     return_value=published,
                 ) as publish,
@@ -382,6 +386,11 @@ class ReleaseVerificationRunnerTests(unittest.TestCase):
             self.assertIn("javascript-runner", ids)
             self.assertIn("external-actions-baseline", ids)
             self.assertIn("external-actions-final", ids)
+            self.assertIn("knowledge-baseline", ids)
+            self.assertEqual(
+                publish.call_args.kwargs["knowledge_baseline"],
+                {"schema_version": 1, "collections": {}},
+            )
             self.assertEqual(
                 report["tool_identities"]["node"]["signer_subject"],
                 "CN=OpenJS Foundation, O=OpenJS Foundation, L=San Francisco, S=California, C=US",
