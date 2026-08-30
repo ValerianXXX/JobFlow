@@ -1528,6 +1528,17 @@ function Initialize-PinnedBuildTools([string]$Root, [object]$BuildLock) {
         "--requirement", $requirementsPath
     ) $Root $null (Join-Path $Root "tmp")
     if (-not [string]::IsNullOrWhiteSpace($result.stderr)) { throw "JOBFLOW_RUNTIME_BUILD_TOOL_INSTALL_FAILED" }
+    # pip-generated console launchers and their RECORD entries can embed the
+    # absolute --target path.  They are not used by the isolated PEP 517
+    # backend import below, so remove them and canonicalize every retained
+    # RECORD before the build-tool tree becomes part of the signed recipe.
+    foreach ($path in @(Get-OrdinalSortedObjects @(Get-ChildItem -LiteralPath $target -Recurse -Force | Where-Object {
+        $_.Name -in @("direct_url.json", "REQUESTED") -or $_.FullName -match '[\\/](Scripts|bin)([\\/]|$)'
+    }) "FullName" -Descending)) {
+        if ($path.PSIsContainer) { Remove-Item -LiteralPath $path.FullName -Recurse -Force }
+        elseif (Test-Path -LiteralPath $path.FullName) { [IO.File]::Delete($path.FullName) }
+    }
+    Normalize-InstalledRecords $Root $target
     $snapshot = Get-RetainedTreeSnapshot $target
     $records = @(Get-OrdinalSortedObjects @($snapshot.records) "relative" | ForEach-Object {
         if ([string]$_.kind -ceq "directory") {

@@ -46,6 +46,18 @@ class WindowsCompleteRuntimeContractTests(unittest.TestCase):
         self.assertIn("INSTALLED_RECORD_TARGET_MISSING", script)
         self.assertIn("writer = csv.writer(output, lineterminator=\"\\n\")", script)
         self.assertIn("Normalize-InstalledRecords $BuildRoot $AppRoot", script)
+        build_tools = script[
+            script.index("function Initialize-PinnedBuildTools") :
+            script.index("function Get-SourceApplicationVersion")
+        ]
+        self.assertIn("Normalize-InstalledRecords $Root $target", build_tools)
+        self.assertIn("direct_url.json", build_tools)
+        self.assertIn("REQUESTED", build_tools)
+        self.assertRegex(build_tools, r"\(Scripts\|bin\)")
+        self.assertLess(
+            build_tools.index("Normalize-InstalledRecords $Root $target"),
+            build_tools.index("Get-RetainedTreeSnapshot $target"),
+        )
 
     def test_python_role_policy_matches_metadata_ci_installer_and_complete_runtime(self) -> None:
         policy = _json(CONFIG / "python-support-policy.json")
