@@ -46,6 +46,7 @@ class RuntimeFromInputsWrapperTests(unittest.TestCase):
             capture_output=True,
             timeout=30,
             check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         self.assertIn("PS51_PARSE_OK", completed.stdout)
@@ -84,6 +85,7 @@ class RuntimeFromInputsWrapperTests(unittest.TestCase):
                 capture_output=True,
                 timeout=30,
                 check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
         self.assertEqual(completed.returncode, 1, completed.stdout + completed.stderr)
         self.assertEqual(completed.stdout.strip(), "")

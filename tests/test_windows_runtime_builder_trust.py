@@ -13,6 +13,7 @@ from _support import PROJECT
 
 
 POWERSHELL = shutil.which("powershell.exe")
+PWSH = shutil.which("pwsh.exe")
 BUILDER = PROJECT / "scripts" / "build-windows-runtime-closure.ps1"
 POLICY = PROJECT / "config" / "release-toolchain.json"
 TEST_ROOT = PROJECT / "tests" / ".tmp"
@@ -234,6 +235,62 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
             text,
         )
 
+    def test_authenticode_identity_comes_from_the_verified_state_without_path_reopen(self) -> None:
+        text = self._text()
+        helper = text[
+            text.index("function Initialize-AuthenticodeApi") :
+            text.index("function Get-Sha256")
+        ]
+        self.assertIn("WTHelperProvDataFromStateData", helper)
+        self.assertIn("WTHelperGetProvSignerFromChain", helper)
+        self.assertIn("WTHelperGetProvCertFromChain", helper)
+        self.assertIn("verifiedData.hWVTStateData", helper)
+        self.assertNotIn("CreateFromSignedFile", helper)
+
+    @unittest.skipUnless(
+        os.name == "nt" and POWERSHELL and PWSH,
+        "PowerShell 7 and an Authenticode-signed Windows binary are required",
+    )
+    def test_authenticode_helper_compiles_under_powershell_7(self) -> None:
+        text = self._text()
+        start = text.index("function Initialize-AuthenticodeApi")
+        end = text.index("function Get-Sha256", start)
+        helper = text[start:end]
+        with tempfile.TemporaryDirectory(
+            prefix="jobflow-builder-pwsh-authenticode-", dir=TEST_ROOT
+        ) as raw:
+            harness = Path(raw) / "pwsh-authenticode.ps1"
+            harness.write_text(
+                "$ErrorActionPreference = 'Stop'\n"
+                + helper
+                + "\nInitialize-AuthenticodeApi\n"
+                + "$identity = [JobFlowAuthenticodeApi]::VerifyEmbeddedSignature($args[0])\n"
+                + "if (@($identity).Count -ne 2) { throw 'AUTHENTICODE_IDENTITY_MISSING' }\n"
+                + "[Console]::Out.Write('PASS')\n",
+                encoding="utf-8-sig",
+            )
+            completed = subprocess.run(
+                [
+                    str(PWSH),
+                    "-NoLogo",
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-File",
+                    str(harness),
+                    sys.executable,
+                ],
+                cwd=harness.parent,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=120,
+                check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
+            self.assertEqual(completed.stdout.strip().lstrip("\ufeff"), "PASS")
+
     def test_exported_archive_identity_is_distinct_from_canonical_git_blob_identity(self) -> None:
         text = self._text()
         self.assertIn("archive_blob_oid=Get-RetainedGitBlobOid $retained", text)
@@ -282,6 +339,7 @@ class WindowsRuntimeBuilderTrustRuntimeTests(unittest.TestCase):
             errors="replace",
             timeout=120,
             check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
 
     def test_signed_python_is_accepted_and_untrusted_policy_fails_closed(self) -> None:

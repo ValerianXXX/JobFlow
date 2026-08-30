@@ -75,8 +75,88 @@ public static class JobFlowAuthenticodeApi {
         internal IntPtr pSignatureSettings;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct CryptProviderCertHeader {
+        internal uint cbStruct;
+        internal IntPtr pCert;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct CertContext {
+        internal uint dwCertEncodingType;
+        internal IntPtr pbCertEncoded;
+        internal uint cbCertEncoded;
+        internal IntPtr pCertInfo;
+        internal IntPtr hCertStore;
+    }
+
     [DllImport("wintrust.dll", ExactSpelling = true, CharSet = CharSet.Unicode)]
     private static extern int WinVerifyTrust(IntPtr hwnd, [MarshalAs(UnmanagedType.LPStruct)] Guid action, IntPtr data);
+
+    [DllImport("wintrust.dll", ExactSpelling = true)]
+    private static extern IntPtr WTHelperProvDataFromStateData(IntPtr stateData);
+
+    [DllImport("wintrust.dll", ExactSpelling = true)]
+    private static extern IntPtr WTHelperGetProvSignerFromChain(
+        IntPtr providerData,
+        uint signerIndex,
+        [MarshalAs(UnmanagedType.Bool)] bool counterSigner,
+        uint counterSignerIndex);
+
+    [DllImport("wintrust.dll", ExactSpelling = true)]
+    private static extern IntPtr WTHelperGetProvCertFromChain(IntPtr signer, uint certificateIndex);
+
+    private static X509Certificate2 CertificateFromTrustState(IntPtr stateData) {
+        if (stateData == IntPtr.Zero) {
+            throw new InvalidOperationException("AUTHENTICODE_STATE_INVALID");
+        }
+        IntPtr providerData = WTHelperProvDataFromStateData(stateData);
+        if (providerData == IntPtr.Zero) {
+            throw new InvalidOperationException("AUTHENTICODE_PROVIDER_DATA_INVALID");
+        }
+        IntPtr signer = WTHelperGetProvSignerFromChain(providerData, 0, false, 0);
+        if (signer == IntPtr.Zero) {
+            throw new InvalidOperationException("AUTHENTICODE_SIGNER_INVALID");
+        }
+        IntPtr providerCertificatePointer = WTHelperGetProvCertFromChain(signer, 0);
+        if (providerCertificatePointer == IntPtr.Zero) {
+            throw new InvalidOperationException("AUTHENTICODE_CERTIFICATE_INVALID");
+        }
+        var providerCertificate = (CryptProviderCertHeader)Marshal.PtrToStructure(
+            providerCertificatePointer,
+            typeof(CryptProviderCertHeader));
+        if (
+            providerCertificate.cbStruct < (uint)Marshal.SizeOf(typeof(CryptProviderCertHeader)) ||
+            providerCertificate.pCert == IntPtr.Zero
+        ) {
+            throw new InvalidOperationException("AUTHENTICODE_CERTIFICATE_INVALID");
+        }
+        var certificateContext = (CertContext)Marshal.PtrToStructure(
+            providerCertificate.pCert,
+            typeof(CertContext));
+        if (
+            certificateContext.pbCertEncoded == IntPtr.Zero ||
+            certificateContext.cbCertEncoded == 0 ||
+            certificateContext.cbCertEncoded > 1048576
+        ) {
+            throw new InvalidOperationException("AUTHENTICODE_CERTIFICATE_INVALID");
+        }
+        var encodedCertificate = new byte[(int)certificateContext.cbCertEncoded];
+        Marshal.Copy(certificateContext.pbCertEncoded, encodedCertificate, 0, encodedCertificate.Length);
+
+        // Activating the long-standing byte[] constructor by reflection keeps
+        // this helper source-compatible with both Windows PowerShell 5.1 and
+        // PowerShell 7 without reopening the executable by path.
+        var constructor = typeof(X509Certificate2).GetConstructor(new Type[] { typeof(byte[]) });
+        if (constructor == null) {
+            throw new InvalidOperationException("AUTHENTICODE_CERTIFICATE_LOADER_UNAVAILABLE");
+        }
+        var certificate = constructor.Invoke(new object[] { encodedCertificate }) as X509Certificate2;
+        if (certificate == null) {
+            throw new InvalidOperationException("AUTHENTICODE_CERTIFICATE_INVALID");
+        }
+        return certificate;
+    }
 
     public static string[] VerifyEmbeddedSignature(string path) {
         var action = new Guid("00AAC56B-CD44-11D0-8CC2-00C04FC295EE");
@@ -112,8 +192,8 @@ public static class JobFlowAuthenticodeApi {
             Marshal.StructureToPtr(data, dataPointer, false);
             int result = WinVerifyTrust(IntPtr.Zero, action, dataPointer);
             if (result != 0) { return new string[0]; }
-            using (X509Certificate certificate = X509Certificate.CreateFromSignedFile(path))
-            using (var certificate2 = new X509Certificate2(certificate)) {
+            var verifiedData = (WinTrustData)Marshal.PtrToStructure(dataPointer, typeof(WinTrustData));
+            using (var certificate2 = CertificateFromTrustState(verifiedData.hWVTStateData)) {
                 if (String.IsNullOrWhiteSpace(certificate2.Subject) || String.IsNullOrWhiteSpace(certificate2.Thumbprint)) {
                     throw new InvalidOperationException("AUTHENTICODE_SIGNER_INVALID");
                 }

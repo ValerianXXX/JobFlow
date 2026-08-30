@@ -140,6 +140,7 @@ class WindowsRuntimeClosureInputHandleRuntimeTests(unittest.TestCase):
             errors="replace",
             timeout=timeout,
             check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
 
     def test_retained_read_lock_blocks_write_and_rename_but_real_python_executes(self) -> None:
