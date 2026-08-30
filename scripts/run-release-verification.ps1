@@ -180,15 +180,23 @@ function Get-MinimalChildEnvironment {
 
 $pythonIdentity = Resolve-TrustedReleasePython $projectRoot
 $python = $pythonIdentity.Path
-$node = Resolve-AbsoluteTool $NodePath @(
-    $env:JOBFLOW_NODE_PATH,
-    (Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"),
-    (Join-Path $env:ProgramFiles "nodejs\node.exe")
-) "node" "JOBFLOW_RELEASE_NODE_MISSING"
-$git = Resolve-AbsoluteTool $GitPath @(
-    (Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\cmd\git.exe"),
-    (Join-Path $env:ProgramFiles "Git\cmd\git.exe")
-) "git" "JOBFLOW_RELEASE_GIT_MISSING"
+$nodeCandidates = @($env:JOBFLOW_NODE_PATH)
+if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
+    $nodeCandidates += Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
+}
+if (-not [string]::IsNullOrWhiteSpace($env:ProgramFiles)) {
+    $nodeCandidates += Join-Path $env:ProgramFiles "nodejs\node.exe"
+}
+$node = Resolve-AbsoluteTool $NodePath $nodeCandidates "node" "JOBFLOW_RELEASE_NODE_MISSING"
+
+$gitCandidates = @()
+if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
+    $gitCandidates += Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\cmd\git.exe"
+}
+if (-not [string]::IsNullOrWhiteSpace($env:ProgramFiles)) {
+    $gitCandidates += Join-Path $env:ProgramFiles "Git\cmd\git.exe"
+}
+$git = Resolve-AbsoluteTool $GitPath $gitCandidates "git" "JOBFLOW_RELEASE_GIT_MISSING"
 
 $sourceRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot "src"))
 $testsRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot "tests"))
