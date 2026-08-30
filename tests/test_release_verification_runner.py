@@ -398,6 +398,13 @@ class ReleaseVerificationRunnerTests(unittest.TestCase):
                 self.assertNotIn("NODE_PATH", environment)
                 self.assertNotIn("PYTHONPATH", environment)
                 self.assertNotIn("GIT_DIR", environment)
+            unittest_call = next(
+                call for call in run.call_args_list if "unittest" in call.args[0]
+            )
+            self.assertEqual(
+                unittest_call.kwargs["env"]["JOBFLOW_RELEASE_GIT_PATH"],
+                str(git.resolve()),
+            )
             self.assertEqual(report["passed"], 7)
             self.assertEqual(report["schema_count"], 3)
             self.assertEqual(report["command_count"], len(ids))

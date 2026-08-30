@@ -941,6 +941,10 @@ def run_release_verification(
                     ["-m", "unittest", "discover", "-s", "tests", "-v"],
                 ),
                 tool="python",
+                # The isolated Python environment intentionally excludes Git
+                # from PATH. Tests that create synthetic repositories receive
+                # the already resolved release Git as an explicit capability.
+                extra_environment={"JOBFLOW_RELEASE_GIT_PATH": str(git)},
             )
             matches = _UNITTEST_COUNT.findall(unittest_output)
             if len(matches) != 1:

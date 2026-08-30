@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import unittest
@@ -16,6 +17,7 @@ from jobops.public_release import (
     verify_public_history,
     verify_public_repository,
 )
+from jobops.release_toolchain import sanitized_command_environment
 
 
 class PublicReleaseBoundaryTests(unittest.TestCase):
@@ -167,19 +169,65 @@ class PublicReleaseBoundaryTests(unittest.TestCase):
             self.assertEqual(unlisted["unapproved_identity_count"], 1)
 
     def test_deleted_secret_is_still_found_in_git_history(self) -> None:
-        git_path = Path(shutil.which("git") or "").resolve()
+        configured = os.environ.get("JOBFLOW_RELEASE_GIT_PATH")
+        candidate = configured or shutil.which("git")
+        self.assertIsNotNone(candidate)
+        git_path = Path(str(candidate)).resolve(strict=True)
         self.assertTrue(git_path.is_file())
         with project_temp() as temp:
-            subprocess.run(["git", "init", "-b", "main"], cwd=temp, check=True, capture_output=True)
-            subprocess.run(["git", "config", "user.name", "Synthetic Maintainer"], cwd=temp, check=True)
-            subprocess.run(["git", "config", "user.email", "maintainer@users.noreply.github.com"], cwd=temp, check=True)
+            environment = sanitized_command_environment(
+                "git",
+                executable=git_path,
+                project=temp,
+            )
+            subprocess.run(
+                [str(git_path), "init", "-b", "main"],
+                cwd=temp,
+                env=environment,
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                [str(git_path), "config", "user.name", "Synthetic Maintainer"],
+                cwd=temp,
+                env=environment,
+                check=True,
+            )
+            subprocess.run(
+                [str(git_path), "config", "user.email", "maintainer@users.noreply.github.com"],
+                cwd=temp,
+                env=environment,
+                check=True,
+            )
             historical = temp / "historical.md"
             historical.write_text("sk-" + "S" * 24, encoding="utf-8")
-            subprocess.run(["git", "add", "historical.md"], cwd=temp, check=True)
-            subprocess.run(["git", "commit", "-m", "synthetic unsafe history"], cwd=temp, check=True, capture_output=True)
+            subprocess.run(
+                [str(git_path), "add", "historical.md"],
+                cwd=temp,
+                env=environment,
+                check=True,
+            )
+            subprocess.run(
+                [str(git_path), "commit", "-m", "synthetic unsafe history"],
+                cwd=temp,
+                env=environment,
+                check=True,
+                capture_output=True,
+            )
             historical.write_text("synthetic safe replacement", encoding="utf-8")
-            subprocess.run(["git", "add", "historical.md"], cwd=temp, check=True)
-            subprocess.run(["git", "commit", "-m", "synthetic safe current tree"], cwd=temp, check=True, capture_output=True)
+            subprocess.run(
+                [str(git_path), "add", "historical.md"],
+                cwd=temp,
+                env=environment,
+                check=True,
+            )
+            subprocess.run(
+                [str(git_path), "commit", "-m", "synthetic safe current tree"],
+                cwd=temp,
+                env=environment,
+                check=True,
+                capture_output=True,
+            )
             result = verify_public_history(temp, git_path=git_path)
             self.assertEqual(result["status"], "FAIL")
             self.assertIn("openai_key", {item["kind"] for item in result["findings"]})
