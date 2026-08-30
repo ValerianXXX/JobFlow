@@ -1825,11 +1825,20 @@ function Write-SafeIndependentVerifierFailure([string]$Prefix, [string]$Text) {
     [Console]::Error.WriteLine($Prefix + "=" + $code)
 }
 
-function Invoke-IndependentVerifier([string]$ClosureRoot, [bool]$Attested) {
+function Invoke-IndependentVerifier(
+    [string]$ClosureRoot,
+    [bool]$Attested,
+    [bool]$PendingSmoke
+) {
     Assert-RetainedRuntimeInputIdentity $script:ClosureVerifierInput -VerifyHash
     $verifier = [string]$script:ClosureVerifierInput.path
     $arguments = @("-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", $verifier, "-RuntimeRoot", $ClosureRoot)
     if (-not $Attested) { $arguments += "-AllowUnattested" }
+    if ($PendingSmoke) { $arguments += "-AllowPendingSmoke" }
+    $expectedStatus = if ($PendingSmoke) {
+        "RUNTIME_CLOSURE_STRUCTURE_VERIFIED"
+    }
+    else { "RUNTIME_CLOSURE_VERIFIED" }
     $start = [Diagnostics.ProcessStartInfo]::new()
     $start.FileName = (Get-Process -Id $PID).Path
     $start.UseShellExecute = $false
@@ -1844,7 +1853,7 @@ function Invoke-IndependentVerifier([string]$ClosureRoot, [bool]$Attested) {
         $output = $process.StandardOutput.ReadToEnd()
         $errorText = $process.StandardError.ReadToEnd()
         $process.WaitForExit()
-        if ($process.ExitCode -ne 0 -or $output -notmatch 'RUNTIME_CLOSURE_VERIFIED') {
+        if ($process.ExitCode -ne 0 -or $output -notmatch $expectedStatus) {
             Write-SafeIndependentVerifierFailure "JOBFLOW_RUNTIME_STRUCTURAL_VERIFY_DETAIL" $errorText
             throw "JOBFLOW_RUNTIME_STRUCTURAL_VERIFY_FAILED"
         }
@@ -2100,7 +2109,7 @@ exit /b %errorlevel%
 
     Write-ClosureManifest $closure $script:Application.version $false $EvidenceSha `
         $script:RuntimeLock $script:Application $script:WheelhouseTreeSha $ToolchainSha | Out-Null
-    Invoke-IndependentVerifier $closure $false
+    Invoke-IndependentVerifier $closure $false $true
     Invoke-OfflineSmoke $closure
     Write-ClosureManifest $closure $script:Application.version $true $EvidenceSha `
         $script:RuntimeLock $script:Application $script:WheelhouseTreeSha $ToolchainSha | Out-Null
@@ -2108,7 +2117,7 @@ exit /b %errorlevel%
     # independent verifier runs.  The ZIP writer consumes these same streams,
     # so no post-verification path re-enumeration can change the payload.
     $closureSnapshot = Get-RetainedTreeSnapshot $closure
-    Invoke-IndependentVerifier $closure $false
+    Invoke-IndependentVerifier $closure $false $false
     $zipPath = Join-Path $PassRoot "complete.zip"
     New-DeterministicZip $closureSnapshot $zipPath "JobFlow-v$($script:Application.version)-windows-x64/"
     return [pscustomobject]@{ closure=$closure; zip=$zipPath; sha256=Get-Sha256 $zipPath }

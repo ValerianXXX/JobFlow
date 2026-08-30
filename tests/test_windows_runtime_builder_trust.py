@@ -91,7 +91,7 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
         text = self._text()
         new_build = text[text.index("function New-OneBuild") : text.index("function Remove-SafeBuildRoot")]
         retained = new_build.index("$closureSnapshot = Get-RetainedTreeSnapshot $closure")
-        reverified = new_build.index("Invoke-IndependentVerifier $closure $false", retained)
+        reverified = new_build.index("Invoke-IndependentVerifier $closure $false $false", retained)
         archived = new_build.index("New-DeterministicZip $closureSnapshot", reverified)
         self.assertLess(retained, reverified)
         self.assertLess(reverified, archived)
@@ -127,6 +127,30 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
         self.assertIn(
             'Write-SafeIndependentVerifierFailure "JOBFLOW_RUNTIME_ARCHIVE_VERIFY_DETAIL" $errorText',
             archive,
+        )
+
+    def test_pending_smoke_and_final_verification_are_distinct_fail_closed_stages(self) -> None:
+        text = self._text()
+        verifier = text[
+            text.index("function Invoke-IndependentVerifier") :
+            text.index("function Invoke-IndependentArchiveVerifier")
+        ]
+        new_build = text[
+            text.index("function New-OneBuild") :
+            text.index("function Remove-SafeBuildRoot")
+        ]
+        self.assertIn('$arguments += "-AllowPendingSmoke"', verifier)
+        self.assertIn('"RUNTIME_CLOSURE_STRUCTURE_VERIFIED"', verifier)
+        self.assertIn('"RUNTIME_CLOSURE_VERIFIED"', verifier)
+        self.assertIn("Invoke-IndependentVerifier $closure $false $true", new_build)
+        self.assertIn("Invoke-IndependentVerifier $closure $false $false", new_build)
+        self.assertLess(
+            new_build.index("Invoke-IndependentVerifier $closure $false $true"),
+            new_build.index("Invoke-OfflineSmoke $closure"),
+        )
+        self.assertGreater(
+            new_build.index("Invoke-IndependentVerifier $closure $false $false"),
+            new_build.index("Invoke-OfflineSmoke $closure"),
         )
 
     def test_deterministic_builder_uses_ordinal_sorting_only(self) -> None:

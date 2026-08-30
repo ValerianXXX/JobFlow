@@ -141,7 +141,13 @@ class WindowsRuntimeTamperMatrixTests(unittest.TestCase):
         self._reseal(root, value)
         return value
 
-    def _run_root(self, root: Path, *, allow_unattested: bool = True) -> subprocess.CompletedProcess[str]:
+    def _run_root(
+        self,
+        root: Path,
+        *,
+        allow_unattested: bool = True,
+        allow_pending_smoke: bool = False,
+    ) -> subprocess.CompletedProcess[str]:
         command = [
             str(self.powershell),
             "-NoProfile",
@@ -155,6 +161,8 @@ class WindowsRuntimeTamperMatrixTests(unittest.TestCase):
         ]
         if allow_unattested:
             command.append("-AllowUnattested")
+        if allow_pending_smoke:
+            command.append("-AllowPendingSmoke")
         return subprocess.run(command, text=True, capture_output=True, timeout=45, check=False)
 
     def _run_archive(self, archive: Path, *, allow_unattested: bool = True) -> subprocess.CompletedProcess[str]:
@@ -225,6 +233,70 @@ class WindowsRuntimeTamperMatrixTests(unittest.TestCase):
             self.assertEqual(payload["external_actions"], 0)
             gated = self._run_root(root, allow_unattested=False)
             self._assert_failed(gated, "JOBFLOW_RUNTIME_CLOSURE_UNATTESTED")
+
+    def test_pending_smoke_is_a_separate_root_only_verification_stage(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-closure-") as raw:
+            root = Path(raw)
+            value = self._fixture(root)
+            value["offline_smoke_tests"]["import_passed"] = False
+            value["offline_smoke_tests"]["schema_passed"] = False
+            self._reseal(root, value)
+
+            final = self._run_root(root)
+            self._assert_failed(final, "JOBFLOW_RUNTIME_MANIFEST_INVALID")
+            pending = self._run_root(root, allow_pending_smoke=True)
+            self.assertEqual(pending.returncode, 0, pending.stdout + pending.stderr)
+            payload = json.loads(pending.stdout.strip())
+            self.assertEqual(payload["status"], "RUNTIME_CLOSURE_STRUCTURE_VERIFIED")
+            self.assertEqual(payload["external_actions"], 0)
+
+            value["offline_smoke_tests"]["import_passed"] = True
+            self._reseal(root, value)
+            mixed = self._run_root(root, allow_pending_smoke=True)
+            self._assert_failed(mixed, "JOBFLOW_RUNTIME_MANIFEST_INVALID")
+
+    def test_pending_smoke_cannot_bypass_attestation_or_verify_an_archive(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-closure-") as raw:
+            root = Path(raw)
+            self._fixture(root)
+            without_unattested = self._run_root(
+                root,
+                allow_unattested=False,
+                allow_pending_smoke=True,
+            )
+            self._assert_failed(
+                without_unattested,
+                "JOBFLOW_RUNTIME_PENDING_SMOKE_SCOPE_INVALID",
+            )
+            archive = root.parent / (root.name + ".zip")
+            try:
+                self._archive(root, archive)
+                command = [
+                    str(self.powershell),
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(VERIFY),
+                    "-ArchivePath",
+                    str(archive),
+                    "-AllowUnattested",
+                    "-AllowPendingSmoke",
+                ]
+                completed = subprocess.run(
+                    command,
+                    text=True,
+                    capture_output=True,
+                    timeout=45,
+                    check=False,
+                )
+                self._assert_failed(
+                    completed,
+                    "JOBFLOW_RUNTIME_PENDING_SMOKE_SCOPE_INVALID",
+                )
+            finally:
+                archive.unlink(missing_ok=True)
 
     def test_unsigned_local_claims_cannot_promote_to_attested(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-closure-") as raw:

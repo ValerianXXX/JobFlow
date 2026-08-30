@@ -2,7 +2,8 @@
 param(
     [string]$RuntimeRoot,
     [string]$ArchivePath,
-    [switch]$AllowUnattested
+    [switch]$AllowUnattested,
+    [switch]$AllowPendingSmoke
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,6 +24,13 @@ if (-not $runningOnWindows) {
 }
 if ([string]::IsNullOrWhiteSpace($RuntimeRoot) -eq [string]::IsNullOrWhiteSpace($ArchivePath)) {
     throw "JOBFLOW_RUNTIME_VERIFY_ONE_INPUT_REQUIRED"
+}
+if ($AllowPendingSmoke -and (
+    [string]::IsNullOrWhiteSpace($RuntimeRoot) -or
+    -not [string]::IsNullOrWhiteSpace($ArchivePath) -or
+    -not $AllowUnattested
+)) {
+    throw "JOBFLOW_RUNTIME_PENDING_SMOKE_SCOPE_INVALID"
 }
 
 if (-not ("JobFlow.RuntimeNative" -as [type])) {
@@ -621,7 +629,11 @@ function Assert-ApplicationWheelProvenance([object]$Manifest) {
     ) { throw "JOBFLOW_RUNTIME_APPLICATION_WHEEL_REPRODUCIBILITY_MISMATCH" }
 }
 
-function Assert-ManifestShape([object]$Manifest, [switch]$PermitUnattested) {
+function Assert-ManifestShape(
+    [object]$Manifest,
+    [switch]$PermitUnattested,
+    [switch]$PermitPendingSmoke
+) {
     Assert-ExactProperties $Manifest @(
         "schema_version", "status", "artifact_type", "platform", "application_version",
         "source_commit", "python", "build_inputs", "layout", "file_count", "total_bytes",
@@ -699,11 +711,17 @@ function Assert-ManifestShape([object]$Manifest, [switch]$PermitUnattested) {
     Assert-ExactProperties $Manifest.offline_smoke_tests @("import_passed", "schema_passed", "external_actions") "JOBFLOW_RUNTIME_MANIFEST_INVALID"
     if (
         -not ($Manifest.offline_smoke_tests.import_passed -is [bool]) -or
-        -not [bool]$Manifest.offline_smoke_tests.import_passed -or
         -not ($Manifest.offline_smoke_tests.schema_passed -is [bool]) -or
-        -not [bool]$Manifest.offline_smoke_tests.schema_passed -or
         -not (Test-JsonInteger $Manifest.offline_smoke_tests.external_actions 0 0)
     ) { throw "JOBFLOW_RUNTIME_MANIFEST_INVALID" }
+    $importPassed = [bool]$Manifest.offline_smoke_tests.import_passed
+    $schemaPassed = [bool]$Manifest.offline_smoke_tests.schema_passed
+    if ($PermitPendingSmoke) {
+        if ($importPassed -or $schemaPassed) { throw "JOBFLOW_RUNTIME_MANIFEST_INVALID" }
+    }
+    elseif (-not $importPassed -or -not $schemaPassed) {
+        throw "JOBFLOW_RUNTIME_MANIFEST_INVALID"
+    }
 
     Assert-ExactProperties $Manifest.protected_builder @(
         "evidence_sha256", "deterministic_rebuild_match", "outer_signature_ready"
@@ -780,7 +798,11 @@ function Assert-RuntimeLockBinding([string]$Root, [object]$Manifest) {
     }
 }
 
-function Test-RuntimeRoot([string]$Root, [switch]$PermitUnattested) {
+function Test-RuntimeRoot(
+    [string]$Root,
+    [switch]$PermitUnattested,
+    [switch]$PermitPendingSmoke
+) {
     $absoluteRoot = Assert-NoReparsePath $Root -Directory
     $manifestPath = Join-Path $absoluteRoot "runtime-closure.json"
     $manifestRead = Read-LockedFile $manifestPath -ReturnBytes
@@ -789,7 +811,9 @@ function Test-RuntimeRoot([string]$Root, [switch]$PermitUnattested) {
     if ($rawText -match '(?i)(?:[A-Z]:[\\/]|\\\\[^\\])') { throw "JOBFLOW_RUNTIME_ABSOLUTE_PATH_LEAK" }
     try { $manifest = $rawText | ConvertFrom-Json }
     catch { throw "JOBFLOW_RUNTIME_MANIFEST_INVALID" }
-    Assert-ManifestShape $manifest -PermitUnattested:$PermitUnattested
+    Assert-ManifestShape $manifest `
+        -PermitUnattested:$PermitUnattested `
+        -PermitPendingSmoke:$PermitPendingSmoke
 
     $actual = @(Get-RuntimeInventory $absoluteRoot "runtime-closure.json")
     $expected = @($manifest.files)
@@ -834,7 +858,10 @@ function Test-RuntimeRoot([string]$Root, [switch]$PermitUnattested) {
         if ($pth.bytes[$index] -ne $expectedPth[$index]) { throw "JOBFLOW_RUNTIME_PTH_INVALID" }
     }
     return [pscustomobject]@{
-        status = "RUNTIME_CLOSURE_VERIFIED"
+        status = if ($PermitPendingSmoke) {
+            "RUNTIME_CLOSURE_STRUCTURE_VERIFIED"
+        }
+        else { "RUNTIME_CLOSURE_VERIFIED" }
         closure_status = [string]$manifest.status
         application_version = [string]$manifest.application_version
         tree_sha256 = [string]$manifest.tree_sha256
@@ -1007,7 +1034,9 @@ Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $result = if (-not [string]::IsNullOrWhiteSpace($RuntimeRoot)) {
-    Test-RuntimeRoot $RuntimeRoot -PermitUnattested:$AllowUnattested
+    Test-RuntimeRoot $RuntimeRoot `
+        -PermitUnattested:$AllowUnattested `
+        -PermitPendingSmoke:$AllowPendingSmoke
 }
 else {
     Test-RuntimeArchive $ArchivePath -PermitUnattested:$AllowUnattested
