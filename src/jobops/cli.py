@@ -42,6 +42,7 @@ from .private_onboarding import PrivateOnboarding
 from .product_capabilities import product_capability_report
 from .queue_manager import QueueManager
 from .recovery import RecoveryManager
+from .release_attestation import import_clean_windows_acceptance
 from .resume_onboarding import ResumeOnboardingManager
 from .runtime_schema import validate_named
 from .runtime_paths import RUNTIME_AREAS, runtime_data_root, runtime_path
@@ -254,6 +255,11 @@ def parser() -> argparse.ArgumentParser:
             command.add_argument("--override-ineligible", action="store_true")
     verify_release_command = sub.add_parser("verify-release")
     verify_release_command.add_argument("--require-independent", action="store_true")
+    verify_release_command.add_argument("--git-path", type=Path)
+    import_clean = sub.add_parser("import-clean-windows-acceptance")
+    import_clean.add_argument("--input", type=Path, required=True)
+    import_clean.add_argument("--version", default=__version__)
+    import_clean.add_argument("--commit", required=True)
     return root
 
 
@@ -825,10 +831,25 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "verify-release":
             from .release import verify_release, write_release_reports
             database = _database(project)
-            result = verify_release(project, database, require_independent=bool(args.require_independent))
+            external_action_baseline = audit_real_external_actions(database)
+            result = verify_release(
+                project,
+                database,
+                require_independent=bool(args.require_independent),
+                external_action_baseline=external_action_baseline,
+                git_path=args.git_path,
+            )
             write_release_reports(project, result)
             emit(result, project)
             return 0 if result["status"] == "PASS" else 2
+        elif args.command == "import-clean-windows-acceptance":
+            result = import_clean_windows_acceptance(
+                project,
+                args.input,
+                version=args.version,
+                commit=args.commit,
+            )
+            emit({**result, "next_safe_action": "CHECK_RELEASE_READINESS"}, project)
         else:
             raise JobOpsError("UNKNOWN_COMMAND", "The requested command is not registered in this build.", command=args.command)
         return 0

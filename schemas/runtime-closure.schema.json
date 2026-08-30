@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobflow.local/schemas/runtime-closure.schema.json",
+  "title": "JobFlow complete Windows runtime closure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "artifact_type",
+    "platform",
+    "application_version",
+    "source_commit",
+    "python",
+    "build_inputs",
+    "layout",
+    "file_count",
+    "total_bytes",
+    "tree_sha256",
+    "files",
+    "offline_smoke_tests",
+    "protected_builder"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "status": {
+      "type": "string",
+      "const": "BUILT_UNATTESTED"
+    },
+    "artifact_type": {"type": "string", "const": "complete-runtime"},
+    "platform": {"type": "string", "const": "windows-x64"},
+    "application_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"
+    },
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "python": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "artifact_name",
+        "artifact_sha256",
+        "sigstore_identity",
+        "sigstore_verified"
+      ],
+      "properties": {
+        "version": {"type": "string", "const": "3.13.15"},
+        "artifact_name": {
+          "type": "string",
+          "const": "python-3.13.15-embed-amd64.zip"
+        },
+        "artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "sigstore_identity": {"type": "string", "minLength": 1},
+        "sigstore_verified": {"type": "boolean", "const": false}
+      }
+    },
+    "build_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wheel_lock_sha256",
+        "wheelhouse_tree_sha256",
+        "application_wheel_sha256",
+        "application_wheel_provenance",
+        "builder_toolchain_sha256",
+        "wheels"
+      ],
+      "properties": {
+        "wheel_lock_sha256": {"$ref": "#/$defs/sha256"},
+        "wheelhouse_tree_sha256": {"$ref": "#/$defs/sha256"},
+        "application_wheel_sha256": {"$ref": "#/$defs/sha256"},
+        "application_wheel_provenance": {"$ref": "#/$defs/applicationWheelProvenance"},
+        "builder_toolchain_sha256": {"$ref": "#/$defs/sha256"},
+        "wheels": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/wheel"}
+        }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["python", "python_pth", "application_root", "module"],
+      "properties": {
+        "python": {"type": "string", "const": "runtime/python.exe"},
+        "python_pth": {"type": "string", "const": "runtime/python313._pth"},
+        "application_root": {"type": "string", "const": "app"},
+        "module": {"type": "string", "const": "jobops.cli"}
+      }
+    },
+    "file_count": {"type": "integer", "minimum": 1, "maximum": 65535},
+    "total_bytes": {"type": "integer", "minimum": 1, "maximum": 1610612736},
+    "tree_sha256": {"$ref": "#/$defs/sha256"},
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 65535,
+      "items": {"$ref": "#/$defs/file"}
+    },
+    "offline_smoke_tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["import_passed", "schema_passed", "external_actions"],
+      "properties": {
+        "import_passed": {"type": "boolean", "const": true},
+        "schema_passed": {"type": "boolean", "const": true},
+        "external_actions": {"type": "integer", "const": 0}
+      }
+    },
+    "protected_builder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_sha256",
+        "deterministic_rebuild_match",
+        "outer_signature_ready"
+      ],
+      "properties": {
+        "evidence_sha256": {"$ref": "#/$defs/sha256"},
+        "deterministic_rebuild_match": {"type": "boolean", "const": true},
+        "outer_signature_ready": {"type": "boolean", "const": false}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "applicationWheelProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "source_commit",
+        "source_git_tree_oid",
+        "source_build_tree_sha256",
+        "source_archive_sha256",
+        "build_lock_sha256",
+        "build_recipe_sha256",
+        "pass_a_wheel_sha256",
+        "pass_b_wheel_sha256",
+        "reproducible"
+      ],
+      "properties": {
+        "format": {"type": "string", "const": "JOBFLOW_APPLICATION_WHEEL_PROVENANCE_V1"},
+        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "source_git_tree_oid": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "source_build_tree_sha256": {"$ref": "#/$defs/sha256"},
+        "source_archive_sha256": {"$ref": "#/$defs/sha256"},
+        "build_lock_sha256": {"$ref": "#/$defs/sha256"},
+        "build_recipe_sha256": {"$ref": "#/$defs/sha256"},
+        "pass_a_wheel_sha256": {"$ref": "#/$defs/sha256"},
+        "pass_b_wheel_sha256": {"$ref": "#/$defs/sha256"},
+        "reproducible": {"type": "boolean", "const": true}
+      }
+    },
+    "relativePath": {
+      "type": "string",
+      "maxLength": 768,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*:)[^\\\\]+(?:/[^\\\\]+)*$"
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/relativePath"},
+        "size": {"type": "integer", "minimum": 0, "maximum": 536870912},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "wheel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "tag", "size", "sha256"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+$"},
+        "version": {"type": "string", "minLength": 1},
+        "tag": {"type": "string", "minLength": 1},
+        "size": {"type": "integer", "minimum": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

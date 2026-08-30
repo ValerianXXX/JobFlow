@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "lock_type": "runtime-wheelhouse",
+  "python_tag": "cp313",
+  "abi": "cp313-or-abi3",
+  "platform": "win_amd64",
+  "only_binary": true,
+  "packages": [
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "filename": "cffi-2.1.1-cp313-cp313-win_amd64.whl",
+      "size": 185688,
+      "sha256": "sha256:1aa5645c30469b09530c4ebca77ebf8f17618293c58f8549cb1a543a50236e7d"
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.1",
+      "filename": "charset_normalizer-3.5.1-cp313-cp313-win_amd64.whl",
+      "size": 199295,
+      "sha256": "sha256:aea996a6aba25260827c9ea511d1addfde2da9eb686ac961838509086188b7e6"
+    },
+    {
+      "name": "cryptography",
+      "version": "50.0.0",
+      "filename": "cryptography-50.0.0-cp311-abi3-win_amd64.whl",
+      "size": 3840395,
+      "sha256": "sha256:bd1c592e4d5974f0d08d4888e432157adba757c66da0246918e43677fafa2d30"
+    },
+    {
+      "name": "lxml",
+      "version": "6.1.1",
+      "filename": "lxml-6.1.1-cp313-cp313-win_amd64.whl",
+      "size": 3995869,
+      "sha256": "sha256:a10bd2fd62e8ce916ececb342f348f190724a098c1faa056fdfb2a22ad5e8660"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "filename": "packaging-26.3-py3-none-any.whl",
+      "size": 129956,
+      "sha256": "sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+    },
+    {
+      "name": "pdfminer.six",
+      "version": "20251230",
+      "filename": "pdfminer_six-20251230-py3-none-any.whl",
+      "size": 6591909,
+      "sha256": "sha256:9ff2e3466a7dfc6de6fd779478850b6b7c2d9e9405aa2a5869376a822771f485"
+    },
+    {
+      "name": "pdfplumber",
+      "version": "0.11.9",
+      "filename": "pdfplumber-0.11.9-py3-none-any.whl",
+      "size": 60045,
+      "sha256": "sha256:33ec5580959ba524e9100138746e090879504c42955df1b8a997604dd326c443"
+    },
+    {
+      "name": "pillow",
+      "version": "11.3.0",
+      "filename": "pillow-11.3.0-cp313-cp313-win_amd64.whl",
+      "size": 6978450,
+      "sha256": "sha256:0bce5c4fd0921f99d2e858dc4d4d64193407e1b99478bc5cacecba2311abde51"
+    },
+    {
+      "name": "pycparser",
+      "version": "3.0",
+      "filename": "pycparser-3.0-py3-none-any.whl",
+      "size": 48172,
+      "sha256": "sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
+    },
+    {
+      "name": "pypdf",
+      "version": "5.9.0",
+      "filename": "pypdf-5.9.0-py3-none-any.whl",
+      "size": 313193,
+      "sha256": "sha256:be10a4c54202f46d9daceaa8788be07aa8cd5ea8c25c529c50dd509206382c35"
+    },
+    {
+      "name": "pypdfium2",
+      "version": "5.13.0",
+      "filename": "pypdfium2-5.13.0-py3-none-win_amd64.whl",
+      "size": 3885553,
+      "sha256": "sha256:47dcca2a8d507b5fd24f94c3c9d48fb379430f097bc20f01beff6c963ffbcedb"
+    },
+    {
+      "name": "python-docx",
+      "version": "1.2.0",
+      "filename": "python_docx-1.2.0-py3-none-any.whl",
+      "size": 252987,
+      "sha256": "sha256:3fd478f3250fbbbfd3b94fe1e985955737c145627498896a8a6bf81f4baf66c7"
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "filename": "typing_extensions-4.16.0-py3-none-any.whl",
+      "size": 45571,
+      "sha256": "sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+    }
+  ]
+}

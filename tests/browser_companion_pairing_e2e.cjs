@@ -228,12 +228,17 @@ async function waitUntil(predicate) {
   const externalPaired = await send(listeners.external, {type: "JOBFLOW_PAIR", pairing}, sender);
   assert.equal(externalPaired.status, "GUIDED_INTAKE_PAIRED", JSON.stringify(externalPaired));
   assert.equal(session.jobflowAssist.paired, true);
-  assert.equal(nativeMessages.length, 1, "the installation binding should come from the registered native host");
-  assert.equal(nativeMessages[0].host, "com.jobflow.browser_companion");
-  assert.deepEqual(JSON.parse(JSON.stringify(nativeMessages[0].message)), {
-    schema_version: 1, type: "JOBFLOW_GET_INSTALLATION_BINDING",
-    protocol_version: 2, extension_version: "0.9.2"
-  });
+  assert.equal(
+    nativeMessages.length, 2,
+    "an invalid service proof should invalidate the cached binding and reload it from the registered native host"
+  );
+  for (const nativeMessage of nativeMessages) {
+    assert.equal(nativeMessage.host, "com.jobflow.browser_companion");
+    assert.deepEqual(JSON.parse(JSON.stringify(nativeMessage.message)), {
+      schema_version: 1, type: "JOBFLOW_GET_INSTALLATION_BINDING",
+      protocol_version: 2, extension_version: "0.9.2"
+    });
+  }
 
   delayNextPair = true;
   const cancelledPendingPair = send(listeners.internal, {type: "JOBFLOW_PAIR", pairing}, tabSender);
@@ -371,7 +376,8 @@ async function waitUntil(predicate) {
 
   process.stdout.write(JSON.stringify({
     status: "PASS", signed_external_pairing: true, popup_pair_fallback: true,
-    installation_hmac_required: true, native_host_binding: true, fake_loopback_rejected: true, unsigned_routing_change_rejected: true,
+    installation_hmac_required: true, native_host_binding: true, native_binding_refresh_after_invalid_proof: true,
+    fake_loopback_rejected: true, unsigned_routing_change_rejected: true,
     different_mode_blocked: true, stale_async_completion_blocked: true,
     final_review_immutable: true, unrelated_tab_update_ignored: true,
     same_bound_tab_result_observed: true, binding_scoped_status: true, scoped_cancel_releases_session: true,

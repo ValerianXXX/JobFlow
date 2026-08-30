@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\install-jobflow-browser-companion.ps1"
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\install-jobflow-browser-companion.ps1"
 set "JOBFLOW_COMPANION_EXIT=%ERRORLEVEL%"
 echo.
 if not "%JOBFLOW_COMPANION_EXIT%"=="0" (

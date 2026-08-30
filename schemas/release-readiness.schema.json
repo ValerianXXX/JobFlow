@@ -4,10 +4,18 @@
   "title": "JobFlow Public Release Readiness",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "status", "version", "head_commit", "worktree_clean", "version_consistent", "local_verification_status", "public_repository_status", "source_candidate_status", "independent_qa_fresh", "author_identity_status", "release_tag_status", "manual_release_gates", "blockers", "upload_performed", "network_actions", "real_external_actions", "next_safe_action"],
+  "required": ["schema_version", "status", "public_release_ready", "runtime_closure_status", "release_attestation_status", "clean_windows_evidence_status", "release_attestation_failure_code", "version", "head_commit", "worktree_clean", "version_consistent", "local_verification_status", "public_repository_status", "source_candidate_status", "independent_qa_fresh", "author_identity_status", "release_tag_status", "manual_release_gates", "blockers", "upload_performed", "network_actions", "real_external_actions", "next_safe_action"],
   "properties": {
     "schema_version": {"const": 1},
-    "status": {"enum": ["PUBLIC_RELEASE_READY", "PUBLIC_RELEASE_BLOCKED"]},
+    "status": {"enum": ["PUBLIC_RELEASE_BLOCKED", "PUBLIC_RELEASE_READY"]},
+    "public_release_ready": {"type": "boolean"},
+    "runtime_closure_status": {"enum": ["UNATTESTED", "ATTESTED"]},
+    "release_attestation_status": {"enum": ["MISSING", "INVALID", "PASS"]},
+    "clean_windows_evidence_status": {"enum": ["NOT_CHECKED", "MISSING", "INVALID", "PASS"]},
+    "release_attestation_failure_code": {
+      "type": ["string", "null"],
+      "pattern": "^[A-Z0-9_]+$"
+    },
     "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
     "head_commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
     "worktree_clean": {"type": "boolean"},
@@ -21,18 +29,83 @@
     "manual_release_gates": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["repository_metadata", "private_vulnerability_reporting", "sanitized_screenshots", "clean_windows_profile"],
+      "required": ["repository_metadata", "private_vulnerability_reporting", "sanitized_screenshots", "clean_windows_profile", "browser_companion_stores"],
       "properties": {
         "repository_metadata": {"enum": ["CONFIRMED", "PENDING"]},
         "private_vulnerability_reporting": {"enum": ["CONFIRMED", "PENDING"]},
         "sanitized_screenshots": {"enum": ["APPROVED", "PENDING"]},
-        "clean_windows_profile": {"enum": ["PASS", "PENDING"]}
+        "clean_windows_profile": {"enum": ["PASS", "PENDING", "OUTDATED", "INVALID"]},
+        "browser_companion_stores": {"enum": ["PASS", "PENDING", "OUTDATED", "INVALID"]}
       }
     },
-    "blockers": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z0-9_]+$"}, "uniqueItems": true},
+    "blockers": {"type": "array", "minItems": 0, "items": {"type": "string", "pattern": "^[A-Z0-9_]+$"}, "uniqueItems": true},
     "upload_performed": {"const": false},
     "network_actions": {"const": 0},
     "real_external_actions": {"const": 0},
     "next_safe_action": {"type": "string", "minLength": 1}
-  }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "PUBLIC_RELEASE_READY"}}},
+      "then": {
+        "properties": {
+          "public_release_ready": {"const": true},
+          "runtime_closure_status": {"const": "ATTESTED"},
+          "release_attestation_status": {"const": "PASS"},
+          "clean_windows_evidence_status": {"const": "PASS"},
+          "release_attestation_failure_code": {"const": null},
+          "blockers": {"maxItems": 0}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "PUBLIC_RELEASE_BLOCKED"}}},
+      "then": {
+        "properties": {
+          "public_release_ready": {"const": false},
+          "blockers": {"minItems": 1}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"runtime_closure_status": {"const": "UNATTESTED"}}},
+      "then": {
+        "properties": {
+          "blockers": {"contains": {"const": "RELEASE_RUNTIME_CLOSURE_UNATTESTED"}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"release_attestation_status": {"const": "MISSING"}}},
+      "then": {
+        "properties": {
+          "blockers": {"contains": {"const": "RELEASE_ATTESTATION_MISSING"}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"release_attestation_status": {"const": "INVALID"}}},
+      "then": {
+        "properties": {
+          "blockers": {"contains": {"const": "RELEASE_ATTESTATION_INVALID"}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"clean_windows_evidence_status": {"const": "MISSING"}}},
+      "then": {
+        "properties": {
+          "blockers": {"contains": {"const": "CLEAN_WINDOWS_EVIDENCE_MISSING"}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"clean_windows_evidence_status": {"const": "INVALID"}}},
+      "then": {
+        "properties": {
+          "blockers": {"contains": {"const": "CLEAN_WINDOWS_EVIDENCE_INVALID"}}
+        }
+      }
+    }
+  ]
 }

@@ -310,6 +310,14 @@ class PublicCLIContractTests(unittest.TestCase):
         ):
             self.assertIn(command, completed.stdout)
 
+    def test_verify_release_scopes_external_actions_to_its_own_run(self) -> None:
+        cli_source = (PROJECT / "src" / "jobops" / "cli.py").read_text(encoding="utf-8")
+        verify_block = cli_source.split('elif args.command == "verify-release":', 1)[1].split(
+            "else:", 1
+        )[0]
+        self.assertIn("external_action_baseline = audit_real_external_actions(database)", verify_block)
+        self.assertIn("external_action_baseline=external_action_baseline", verify_block)
+
 
 if __name__ == "__main__":
     unittest.main()

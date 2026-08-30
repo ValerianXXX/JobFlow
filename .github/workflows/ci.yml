@@ -17,19 +17,30 @@ env:
 jobs:
   windows-tests:
     runs-on: windows-latest
-    timeout-minutes: 30
+    # The full Windows regression suite intentionally exercises DPAPI,
+    # installer rollback, and browser E2E paths. Leave enough headroom for a
+    # cold hosted runner without weakening or splitting those gates.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+      - name: Bind release checks to the canonical Windows Git
+        shell: powershell
+        run: |
+          $gitPath = [IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath("ProgramFiles")) "Git\mingw64\bin\git.exe"))
+          if (-not (Test-Path -LiteralPath $gitPath -PathType Leaf)) {
+            throw "JOBFLOW_CI_TRUSTED_GIT_MISSING"
+          }
+          "JOBFLOW_RELEASE_GIT_PATH=$gitPath" | Out-File -LiteralPath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Install JobFlow
         run: python -m pip install -e ".[build]"
       - name: Check installed dependencies
@@ -37,83 +48,32 @@ jobs:
       - name: Run redacted one-click health check
         shell: pwsh
         run: ./scripts/check-jobflow.ps1 -Json -PythonPath (Get-Command python).Source
-      - name: Exercise first-time Windows installer
+      - name: Exercise bootstrap-first Windows installer
         if: matrix.python-version == '3.12'
         shell: powershell
-        run: |
-          $runnerTemp = [IO.Path]::GetFullPath($env:RUNNER_TEMP)
-          # Keep the isolated root short enough for stock Windows runners without LongPathsEnabled.
-          $acceptanceId = [Guid]::NewGuid().ToString("N").Substring(0, 8)
-          $acceptanceRoot = [IO.Path]::GetFullPath((Join-Path $runnerTemp ("jobflow-fixed-install-qa-" + $acceptanceId)))
-          $runnerPrefix = $runnerTemp.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
-          if (
-            -not $acceptanceRoot.StartsWith($runnerPrefix, [StringComparison]::OrdinalIgnoreCase) -or
-            ([IO.Path]::GetFileName($acceptanceRoot)) -notlike "jobflow-fixed-install-qa-*"
-          ) {
-            throw "JOBFLOW_CI_ACCEPTANCE_ROOT_FORBIDDEN"
-          }
-          $savedLocalAppData = $env:LOCALAPPDATA
-          $savedAppData = $env:APPDATA
-          $savedTemp = $env:TEMP
-          $savedTmp = $env:TMP
-          $savedAcceptance = $env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY
-          try {
-            $isolatedLocalAppData = Join-Path $acceptanceRoot "LocalAppData"
-            $isolatedAppData = Join-Path $acceptanceRoot "RoamingAppData"
-            New-Item -ItemType Directory -Path $isolatedLocalAppData, $isolatedAppData -Force | Out-Null
-            $env:LOCALAPPDATA = $isolatedLocalAppData
-            $env:APPDATA = $isolatedAppData
-            $env:TEMP = $runnerTemp
-            $env:TMP = $runnerTemp
-            $env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY = "1"
-            ./scripts/install-jobflow.ps1 -NoLaunch
-            if ($LASTEXITCODE -ne 0) {
-              throw "The first-time Windows installer failed."
-            }
-            $installedRoot = Join-Path $isolatedLocalAppData "JobOps"
-            $pointer = Get-Content -LiteralPath (Join-Path $installedRoot "current.json") -Raw | ConvertFrom-Json
-            $healthScript = Join-Path $installedRoot "bin\check-installed-jobflow.ps1"
-            $healthOutput = & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $healthScript -Json
-            $healthExitCode = $LASTEXITCODE
-            $health = $healthOutput | ConvertFrom-Json
-            if (
-              $healthExitCode -ne 0 -or
-              $health.status -ne "JOBFLOW_READY" -or
-              $health.version -ne $pointer.version
-            ) {
-              throw "The first-time Windows installer did not produce a healthy installed JobFlow runtime."
-            }
-          }
-          finally {
-            $env:LOCALAPPDATA = $savedLocalAppData
-            $env:APPDATA = $savedAppData
-            $env:TEMP = $savedTemp
-            $env:TMP = $savedTmp
-            if ($null -eq $savedAcceptance) {
-              Remove-Item Env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY -ErrorAction SilentlyContinue
-            }
-            else {
-              $env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY = $savedAcceptance
-            }
-            if (
-              (Test-Path -LiteralPath $acceptanceRoot -PathType Container) -and
-              $acceptanceRoot.StartsWith($runnerPrefix, [StringComparison]::OrdinalIgnoreCase) -and
-              ([IO.Path]::GetFileName($acceptanceRoot)) -like "jobflow-fixed-install-qa-*"
-            ) {
-              [IO.Directory]::Delete("\\?\" + $acceptanceRoot, $true)
-            }
-          }
+        run: python -m unittest discover -s tests -p "test_install_jobflow_v2*.py" -v
       - name: Run regression suite
         run: python -m unittest discover -s tests -v
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install pinned Browser Companion test runtime
+        run: npm ci
+      - name: Install pinned Playwright Chromium
+        run: npx playwright install chromium
+      - name: Run Browser Companion and onboarding UI E2E suites
+        run: npm run test:e2e
       - name: Build Browser Companion store package
         if: matrix.python-version == '3.12'
         run: python scripts/build_browser_companion_store_package.py
       - name: Check public tree boundary
-        run: python -m jobops.public_release
+        run: python -m jobops.public_release --git-path $env:JOBFLOW_RELEASE_GIT_PATH
       - name: Build wheel without publishing
         run: python -m pip wheel --no-deps --no-build-isolation --wheel-dir dist .
       - name: Check CLI entry point
         run: jobflow --help
       - name: Build and smoke complete source candidate without upload
         if: matrix.python-version == '3.12'
-        run: python -m jobops.release_candidate
+        shell: powershell
+        run: python -m jobops.release_candidate --git-path $env:JOBFLOW_RELEASE_GIT_PATH

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,123 @@ def _matches_type(value: Any, expected: str) -> bool:
 
 def _fail(path: str, message: str, **details: object) -> None:
     raise JobOpsError("SCHEMA_VALIDATION_FAILED", message, path=path or "$", **details)
+
+
+_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+_COMMIT_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+_APPLICATION_WHEEL_PROVENANCE_FIELDS = {
+    "format",
+    "source_commit",
+    "source_git_tree_oid",
+    "source_build_tree_sha256",
+    "source_archive_sha256",
+    "build_lock_sha256",
+    "build_recipe_sha256",
+    "pass_a_wheel_sha256",
+    "pass_b_wheel_sha256",
+    "reproducible",
+}
+_WINDOWS_RESERVED_NAMES = {
+    "con",
+    "prn",
+    "aux",
+    "nul",
+    "conin$",
+    "conout$",
+    "clock$",
+    *(f"com{index}" for index in range(1, 10)),
+    *(f"lpt{index}" for index in range(1, 10)),
+}
+_RUNTIME_WHEEL_TAGS = {
+    "cp313-cp313-win_amd64",
+    "cp311-abi3-win_amd64",
+    "py3-none-any",
+    "py3-none-win_amd64",
+}
+
+
+def _validate_runtime_relative_path(value: object) -> str:
+    """Mirror the PS5.1 bootstrap/verifier Windows path contract exactly."""
+
+    if (
+        not isinstance(value, str)
+        or not value
+        or len(value) > 768
+        or value != unicodedata.normalize("NFC", value)
+        or "\\" in value
+        or ":" in value
+        or value.startswith("/")
+        or value.endswith("/")
+    ):
+        raise JobOpsError("RUNTIME_CLOSURE_PATH_INVALID", "A runtime closure path is unsafe on Windows.")
+    parts = value.split("/")
+    for part in parts:
+        if (
+            not part
+            or len(part) > 255
+            or part in {".", ".."}
+            or part.endswith((" ", "."))
+            or part.split(".", 1)[0].casefold() in _WINDOWS_RESERVED_NAMES
+            or any(ord(character) < 32 or ord(character) > 126 or character in '\"<>|?*' for character in part)
+        ):
+            raise JobOpsError("RUNTIME_CLOSURE_PATH_INVALID", "A runtime closure path is unsafe on Windows.")
+    return value
+
+
+def _require_explicit_utc(value: object, field: str) -> None:
+    if not isinstance(value, str) or not re.fullmatch(
+        r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,6})?Z",
+        value,
+    ):
+        raise JobOpsError("UPDATE_TIMESTAMP_INVALID", "Update timestamps must use explicit UTC Z notation.", field=field)
+
+
+def validate_application_wheel_provenance(
+    provenance: object,
+    *,
+    application_wheel_sha256: object,
+    source_commit: object,
+    build_lock_sha256: object | None = None,
+) -> dict[str, Any]:
+    """Fail closed unless one reproducible source-to-wheel chain is self-consistent."""
+    if not isinstance(provenance, dict) or set(provenance) != _APPLICATION_WHEEL_PROVENANCE_FIELDS:
+        raise JobOpsError(
+            "APPLICATION_WHEEL_PROVENANCE_INVALID",
+            "Application wheel provenance has an incomplete or unrecognized shape.",
+        )
+    if provenance.get("format") != "JOBFLOW_APPLICATION_WHEEL_PROVENANCE_V1":
+        raise JobOpsError("APPLICATION_WHEEL_PROVENANCE_INVALID", "Application wheel provenance format is unsupported.")
+    if provenance.get("reproducible") is not True:
+        raise JobOpsError("APPLICATION_WHEEL_REPRODUCIBILITY_MISMATCH", "Application wheel rebuilds did not match.")
+    if not _COMMIT_PATTERN.fullmatch(str(provenance.get("source_commit", ""))) or not _COMMIT_PATTERN.fullmatch(
+        str(provenance.get("source_git_tree_oid", ""))
+    ):
+        raise JobOpsError("APPLICATION_WHEEL_PROVENANCE_INVALID", "Application wheel source identity is invalid.")
+    for field in (
+        "source_build_tree_sha256",
+        "source_archive_sha256",
+        "build_lock_sha256",
+        "build_recipe_sha256",
+        "pass_a_wheel_sha256",
+        "pass_b_wheel_sha256",
+    ):
+        if not _SHA256_PATTERN.fullmatch(str(provenance.get(field, ""))):
+            raise JobOpsError(
+                "APPLICATION_WHEEL_PROVENANCE_INVALID",
+                "Application wheel provenance contains an invalid digest.",
+                field=field,
+            )
+    if provenance.get("source_commit") != source_commit:
+        raise JobOpsError("APPLICATION_WHEEL_SOURCE_COMMIT_MISMATCH", "Application wheel provenance binds a different source commit.")
+    expected_wheel = str(application_wheel_sha256)
+    if not _SHA256_PATTERN.fullmatch(expected_wheel) or any(
+        provenance.get(field) != expected_wheel
+        for field in ("pass_a_wheel_sha256", "pass_b_wheel_sha256")
+    ):
+        raise JobOpsError("APPLICATION_WHEEL_REPRODUCIBILITY_MISMATCH", "Application wheel digests do not agree.")
+    if build_lock_sha256 is not None and provenance.get("build_lock_sha256") != build_lock_sha256:
+        raise JobOpsError("APPLICATION_WHEEL_BUILD_LOCK_MISMATCH", "Application wheel provenance binds a different build lock.")
+    return provenance
 
 
 def validate_schema(value: Any, schema: dict[str, Any], path: str = "$", *, root: dict[str, Any] | None = None) -> None:
@@ -64,6 +182,8 @@ def validate_schema(value: Any, schema: dict[str, Any], path: str = "$", *, root
     if isinstance(value, list):
         if len(value) < int(schema.get("minItems", 0)):
             _fail(path, "Array contains too few items.")
+        if "maxItems" in schema and len(value) > int(schema["maxItems"]):
+            _fail(path, "Array contains too many items.")
         if schema.get("uniqueItems") and len({repr(item) for item in value}) != len(value):
             _fail(path, "Array items must be unique.")
         item_schema = schema.get("items")
@@ -73,6 +193,8 @@ def validate_schema(value: Any, schema: dict[str, Any], path: str = "$", *, root
     if isinstance(value, str):
         if len(value) < int(schema.get("minLength", 0)):
             _fail(path, "String is shorter than allowed.")
+        if "maxLength" in schema and len(value) > int(schema["maxLength"]):
+            _fail(path, "String is longer than allowed.")
         if "pattern" in schema and re.search(str(schema["pattern"]), value) is None:
             _fail(path, "String does not match the required pattern.", pattern=schema["pattern"])
         if schema.get("format") == "date-time":
@@ -344,11 +466,346 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
         from .application_execution import validate_application_execution_plan_integrity
         validate_application_execution_plan_integrity(value)
     if name == "release-readiness":
-        ready = not value.get("blockers")
-        if (value.get("status") == "PUBLIC_RELEASE_READY") != ready:
-            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Release readiness status must match blocker presence.")
-        if ready and not all((value.get("worktree_clean"), value.get("version_consistent"), value.get("independent_qa_fresh"))):
-            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "A ready release must satisfy every final boolean gate.")
+        blockers = value.get("blockers")
+        status = value.get("status")
+        ready = value.get("public_release_ready")
+        runtime_status = value.get("runtime_closure_status")
+        attestation_status = value.get("release_attestation_status")
+        clean_status = value.get("clean_windows_evidence_status")
+        failure_code = value.get("release_attestation_failure_code")
+        manual_clean = value.get("manual_release_gates", {}).get(
+            "clean_windows_profile"
+        )
+        if not isinstance(blockers, list):
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "Public release blockers must be a validated list.",
+            )
+        if status == "PUBLIC_RELEASE_READY":
+            if (
+                ready is not True
+                or blockers
+                or runtime_status != "ATTESTED"
+                or attestation_status != "PASS"
+                or clean_status != "PASS"
+                or failure_code is not None
+                or manual_clean != "PASS"
+            ):
+                raise JobOpsError(
+                    "SCHEMA_SEMANTIC_CONFLICT",
+                    "Public release readiness requires an empty blocker set and the complete verified evidence chain.",
+                )
+        elif status == "PUBLIC_RELEASE_BLOCKED":
+            if ready is not False or not blockers:
+                raise JobOpsError(
+                    "SCHEMA_SEMANTIC_CONFLICT",
+                    "A blocked public release must expose at least one stable blocker.",
+                )
+        else:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The public release readiness status is invalid.",
+            )
+        if runtime_status == "UNATTESTED":
+            if "RELEASE_RUNTIME_CLOSURE_UNATTESTED" not in blockers:
+                raise JobOpsError(
+                    "SCHEMA_SEMANTIC_CONFLICT",
+                    "An unattested runtime closure must block public release.",
+                )
+        elif runtime_status != "ATTESTED":
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The runtime closure attestation status is invalid.",
+            )
+        expected_attestation_blocker = {
+            "MISSING": "RELEASE_ATTESTATION_MISSING",
+            "INVALID": "RELEASE_ATTESTATION_INVALID",
+        }.get(attestation_status)
+        if expected_attestation_blocker is not None and expected_attestation_blocker not in blockers:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "Missing or invalid signed release evidence must block public release.",
+            )
+        if (attestation_status == "PASS") != (runtime_status == "ATTESTED"):
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "Only a fully verified signed release chain can attest the runtime closure.",
+            )
+        expected_clean = {
+            "PASS": "PASS",
+            "MISSING": "PENDING",
+            "INVALID": "INVALID",
+            "NOT_CHECKED": "PENDING",
+        }.get(clean_status)
+        if expected_clean is None or manual_clean != expected_clean:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The compatibility clean-Windows gate must derive from canonical external evidence.",
+            )
+        clean_blocker = {
+            "MISSING": "CLEAN_WINDOWS_EVIDENCE_MISSING",
+            "INVALID": "CLEAN_WINDOWS_EVIDENCE_INVALID",
+        }.get(clean_status)
+        if clean_blocker is not None and clean_blocker not in blockers:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "Missing or invalid clean-Windows evidence must block public release.",
+            )
+        if clean_status == "NOT_CHECKED" and attestation_status == "PASS":
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "Clean-Windows evidence may be unchecked only while the signed release chain is unavailable.",
+            )
+        if (attestation_status != "PASS" or clean_status != "PASS") and not isinstance(
+            failure_code, str
+        ):
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "An incomplete release evidence chain must expose a stable redacted failure code.",
+            )
+    if name == "update-manifest-v2":
+        from .util import canonical_json, sha256_bytes
+
+        release = value.get("release", {})
+        asset = value.get("asset", {})
+        predecessor = value.get("predecessor", {})
+        closure = value.get("runtime_closure", {})
+        attestation = value.get("publisher_attestation", {})
+        policy = value.get("policy", {})
+        version = str(release.get("version", ""))
+        for timestamp_field, timestamp_value in (
+            ("issued_at_utc", value.get("issued_at_utc")),
+            ("publisher_attestation.issued_at_utc", attestation.get("issued_at_utc")),
+            ("publisher_attestation.evidence_expires_at_utc", attestation.get("evidence_expires_at_utc")),
+        ):
+            _require_explicit_utc(timestamp_value, timestamp_field)
+        version_tuple = tuple(int(part) for part in version.split("."))
+        expected_name = f"JobFlow-v{version}-windows-x64-complete.zip"
+        expected_prefix = f"JobFlow-v{version}-windows-x64/"
+        if asset.get("name") != expected_name or asset.get("archive_prefix") != expected_prefix:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The update asset name and archive prefix must bind the declared release version.",
+            )
+        if predecessor.get("maximum_version_exclusive") != version:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The predecessor upper bound must be the declared release version.",
+            )
+        if tuple(int(part) for part in str(predecessor.get("minimum_version", "")).split(".")) >= version_tuple:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The predecessor minimum must be lower than the declared release version.",
+            )
+        legacy_predecessors = value.get("legacy_v1_predecessors")
+        if legacy_predecessors is not None:
+            if not 1 <= len(legacy_predecessors) <= 64:
+                raise JobOpsError(
+                    "SCHEMA_SEMANTIC_CONFLICT",
+                    "The signed legacy-v1 predecessor authorization set must contain 1 to 64 identities.",
+                )
+            identities: list[tuple[tuple[int, int, int], str, str]] = []
+            directories: set[str] = set()
+            for item in legacy_predecessors:
+                legacy_version = str(item.get("version", ""))
+                source_sha256 = str(item.get("source_sha256", ""))
+                version_directory = str(item.get("version_directory", ""))
+                expected_directory = f"v{legacy_version}-{source_sha256[:12]}"
+                if version_directory != expected_directory:
+                    raise JobOpsError(
+                        "SCHEMA_SEMANTIC_CONFLICT",
+                        "A legacy-v1 predecessor directory must bind its exact version and source digest.",
+                    )
+                identity = (
+                    tuple(int(part) for part in legacy_version.split(".")),
+                    source_sha256,
+                    version_directory,
+                )
+                if identity[0] >= version_tuple:
+                    raise JobOpsError(
+                        "SCHEMA_SEMANTIC_CONFLICT",
+                        "A legacy-v1 predecessor must be older than the declared release version.",
+                    )
+                if identity in identities or version_directory in directories:
+                    raise JobOpsError(
+                        "SCHEMA_SEMANTIC_CONFLICT",
+                        "The signed legacy-v1 predecessor authorization set is ambiguous or duplicated.",
+                    )
+                identities.append(identity)
+                directories.add(version_directory)
+            if identities != sorted(identities):
+                raise JobOpsError(
+                    "SCHEMA_SEMANTIC_CONFLICT",
+                    "Legacy-v1 predecessor identities must be in canonical version and digest order.",
+                )
+        for field in ("minimum_updater_version", "minimum_bootstrap_version"):
+            minimum = tuple(int(part) for part in str(policy.get(field, "")).split("."))
+            if minimum > version_tuple:
+                raise JobOpsError(
+                    "SCHEMA_SEMANTIC_CONFLICT",
+                    "Update policy cannot require a bootstrap or updater newer than the declared release.",
+                )
+        if (
+            closure.get("source_commit") != release.get("source_commit")
+            or closure.get("platform") != release.get("platform")
+            or closure.get("source_payload_sha256") != asset.get("sha256")
+        ):
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The structural runtime closure must bind the release commit, platform, and source payload.",
+            )
+        closure_build_inputs = closure.get("build_inputs", {})
+        validate_application_wheel_provenance(
+            closure_build_inputs.get("application_wheel_provenance"),
+            application_wheel_sha256=closure_build_inputs.get("application_wheel_sha256"),
+            source_commit=release.get("source_commit"),
+        )
+        attested_bindings = {
+            "runtime_closure_manifest_sha256": closure.get("manifest_sha256"),
+            "runtime_tree_sha256": closure.get("tree_sha256"),
+            "build_inputs_sha256": sha256_bytes(canonical_json(closure.get("build_inputs", {}))),
+            "source_commit": closure.get("source_commit"),
+            "source_payload_sha256": closure.get("source_payload_sha256"),
+            "file_count": closure.get("file_count"),
+            "total_bytes": closure.get("total_bytes"),
+            "policy_sha256": sha256_bytes(canonical_json(policy)),
+        }
+        if any(attestation.get(key) != expected for key, expected in attested_bindings.items()):
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The external publisher attestation must bind the structural closure, source payload, counts, and policy.",
+            )
+        attested_at = parse_iso(str(attestation.get("issued_at_utc")))
+        manifest_issued_at = parse_iso(str(value.get("issued_at_utc")))
+        evidence_expires_at = parse_iso(str(attestation.get("evidence_expires_at_utc")))
+        if attested_at > manifest_issued_at:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The publisher attestation cannot postdate the signed update manifest.",
+            )
+        if manifest_issued_at >= evidence_expires_at:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The signed update manifest must be issued before its publisher evidence expires.",
+            )
+    if name == "installed-pointer-v2":
+        version = str(value.get("version", ""))
+        source_payload = str(value.get("source_payload_sha256", ""))
+        digest = source_payload.removeprefix("sha256:")
+        expected_directory = f"v{version}-{digest[:12]}"
+        if value.get("version_directory") != expected_directory:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The installed pointer directory must bind the version and source payload digest.",
+            )
+        bootstrap = tuple(int(part) for part in str(value.get("bootstrap_version", "")).split("."))
+        installed = tuple(int(part) for part in version.split("."))
+        if bootstrap > installed:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The installed pointer cannot claim a bootstrap newer than its installed release.",
+            )
+    if name == "runtime-closure":
+        python = value.get("python", {})
+        build_inputs = value.get("build_inputs", {})
+        layout = value.get("layout", {})
+        protected = value.get("protected_builder", {})
+        smoke = value.get("offline_smoke_tests", {})
+        version = str(python.get("version", ""))
+        compact = "313"
+        expected_artifact = "python-3.13.15-embed-amd64.zip"
+        expected_pth = "runtime/python313._pth"
+        records = value.get("files", [])
+        paths = [_validate_runtime_relative_path(item.get("path")) for item in records if isinstance(item, dict)]
+        for layout_field in ("python", "python_pth", "application_root"):
+            _validate_runtime_relative_path(layout.get(layout_field))
+        if (
+            version != "3.13.15"
+            or python.get("artifact_name") != expected_artifact
+            or layout.get("python") != "runtime/python.exe"
+            or layout.get("python_pth") != expected_pth
+            or layout.get("application_root") != "app"
+            or layout.get("module") != "jobops.cli"
+        ):
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "The embedded Python artifact, version and isolated path file must agree.",
+            )
+        def _runtime_path_sort_key(path: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
+            parts = tuple(path.split("/"))
+            return tuple(part.casefold() for part in parts), parts
+
+        if paths != sorted(paths, key=_runtime_path_sort_key) or len({path.casefold() for path in paths}) != len(paths):
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "Runtime closure file records must be unique and canonically sorted.",
+            )
+        if value.get("file_count") != len(records):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Runtime closure file_count must match its records.")
+        if value.get("total_bytes") != sum(
+            item.get("size", 0) for item in records if isinstance(item, dict)
+        ):
+            raise JobOpsError("SCHEMA_SEMANTIC_CONFLICT", "Runtime closure total_bytes must match its records.")
+        from .util import canonical_json, sha256_bytes
+
+        if value.get("tree_sha256") != sha256_bytes(canonical_json(records)):
+            raise JobOpsError(
+                "RUNTIME_CLOSURE_DIGEST_MISMATCH",
+                "Runtime closure tree_sha256 must bind the canonical file records.",
+            )
+        required_paths = {
+            ".jobops-root",
+            "runtime/python.exe",
+            f"runtime/python{compact}.dll",
+            expected_pth,
+            f"runtime/python{compact}.zip",
+            "app/jobops/__init__.py",
+            "app/jobops/cli.py",
+            "app/jobops/runtime_health.py",
+            "config/windows-cp313-build.lock",
+            "config/windows-cp313-runtime.lock",
+        }
+        if not required_paths.issubset(set(paths)):
+            raise JobOpsError("RUNTIME_CLOSURE_LAYOUT_MISSING", "Runtime closure required files are missing.")
+        wheels = build_inputs.get("wheels", [])
+        wheel_names: set[str] = set()
+        for wheel in wheels:
+            name = str(wheel.get("name", ""))
+            version_value = str(wheel.get("version", ""))
+            tag = str(wheel.get("tag", ""))
+            if (
+                not re.fullmatch(r"[A-Za-z0-9_.-]+", name)
+                or not re.fullmatch(r"[A-Za-z0-9_.+-]+", version_value)
+                or tag not in _RUNTIME_WHEEL_TAGS
+                or name.casefold() in wheel_names
+            ):
+                raise JobOpsError("RUNTIME_CLOSURE_WHEEL_INVALID", "Runtime wheel metadata is unsafe or unsupported.")
+            wheel_names.add(name.casefold())
+        if value.get("status") != "BUILT_UNATTESTED":
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "A local structural runtime closure cannot self-assert trusted provenance.",
+            )
+        if python.get("sigstore_verified") is not False or protected.get("outer_signature_ready") is not False:
+            raise JobOpsError(
+                "SCHEMA_SEMANTIC_CONFLICT",
+                "A local structural runtime closure cannot self-assert external publisher verification.",
+            )
+        if (
+            smoke.get("import_passed") is not True
+            or smoke.get("schema_passed") is not True
+            or smoke.get("external_actions") != 0
+            or protected.get("deterministic_rebuild_match") is not True
+        ):
+            raise JobOpsError(
+                "RUNTIME_CLOSURE_EVIDENCE_INVALID",
+                "Runtime closure smoke and deterministic rebuild evidence must be successful.",
+            )
+        validate_application_wheel_provenance(
+            build_inputs.get("application_wheel_provenance"),
+            application_wheel_sha256=build_inputs.get("application_wheel_sha256"),
+            source_commit=value.get("source_commit"),
+        )
 
 
 def validate_named(name: str, value: dict[str, Any], schema_dir: Path) -> dict[str, Any]:

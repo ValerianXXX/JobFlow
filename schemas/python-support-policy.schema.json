@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobflow.local/schemas/python-support-policy.schema.json",
+  "title": "JobFlow Python Support Role Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "source_package",
+    "legacy_windows_source_installer",
+    "production_complete_windows_runtime"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "status": { "const": "ROLE_SPLIT_INTENTIONAL" },
+    "source_package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requires_python", "tested_minors"],
+      "properties": {
+        "requires_python": { "const": ">=3.11,<3.14" },
+        "tested_minors": {
+          "const": ["3.11", "3.12", "3.13"]
+        }
+      }
+    },
+    "legacy_windows_source_installer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed_minors", "distribution_policy"],
+      "properties": {
+        "allowed_minors": { "const": ["3.11", "3.12"] },
+        "distribution_policy": {
+          "const": "PYTHON_SOFTWARE_FOUNDATION_SIGNED_SYSTEM_INSTALLATION"
+        }
+      }
+    },
+    "production_complete_windows_runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exact_version",
+        "python_tag",
+        "runtime_tag",
+        "architecture",
+        "source_policy",
+        "runtime_lock",
+        "build_lock"
+      ],
+      "properties": {
+        "exact_version": { "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "python_tag": { "pattern": "^cp[0-9]{3}$" },
+        "runtime_tag": { "pattern": "^python[0-9]{3}$" },
+        "architecture": { "const": "AMD64" },
+        "source_policy": { "const": "config/windows-runtime-source.json" },
+        "runtime_lock": { "const": "config/windows-cp313-runtime.lock" },
+        "build_lock": { "const": "config/windows-cp313-build.lock" }
+      }
+    }
+  }
+}

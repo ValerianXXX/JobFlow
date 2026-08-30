@@ -1,5 +1,8 @@
 JOBFLOW BROWSER COMPANION - MICROSOFT EDGE ADD-ONS FORM VALUES
 
+UNRELEASED DRAFT
+Version 0.9.2 is a source-tree submission candidate. Do not describe it as published until Microsoft Edge Add-ons reports that exact version live.
+
 PACKAGE
 JobFlow-Browser-Companion-v0.9.2-store.zip
 

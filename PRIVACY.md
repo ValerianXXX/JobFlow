@@ -2,7 +2,7 @@
 
 Effective date: August 16, 2026
 
-Last updated: August 16, 2026
+Last updated: August 28, 2026
 
 JobFlow Browser Companion is a local-first browser extension for the JobFlow desktop workflow. It helps a user read a job page they explicitly choose and, after a separate application review and approval, assist with approved form fields and approved application files. Final submission always remains a user action.
 

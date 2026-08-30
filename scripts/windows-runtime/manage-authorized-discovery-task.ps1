@@ -36,6 +36,28 @@ function Assert-LocalPath([string]$Path) {
     }
 }
 
+function Get-TrustedWindowsPowerShell {
+    $systemDirectory = [IO.Path]::GetFullPath([Environment]::SystemDirectory)
+    $candidate = [IO.Path]::GetFullPath((Join-Path $systemDirectory "WindowsPowerShell\v1.0\powershell.exe"))
+    $prefix = $systemDirectory.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (
+        -not $candidate.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -or
+        -not (Test-Path -LiteralPath $candidate -PathType Leaf)
+    ) { throw "JOBFLOW_TRUSTED_WINDOWS_POWERSHELL_REQUIRED" }
+    $securityModule = Join-Path $systemDirectory "WindowsPowerShell\v1.0\Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1"
+    if (-not (Test-Path -LiteralPath $securityModule -PathType Leaf)) {
+        throw "JOBFLOW_TRUSTED_WINDOWS_POWERSHELL_REQUIRED"
+    }
+    Microsoft.PowerShell.Core\Import-Module -Name $securityModule -Force -ErrorAction Stop
+    $signature = Microsoft.PowerShell.Security\Get-AuthenticodeSignature -LiteralPath $candidate
+    if (
+        [string]$signature.Status -cne "Valid" -or
+        $null -eq $signature.SignerCertificate -or
+        [string]$signature.SignerCertificate.Subject -notmatch '(^|,\s*)O=Microsoft Corporation(,|$)'
+    ) { throw "JOBFLOW_TRUSTED_WINDOWS_POWERSHELL_REQUIRED" }
+    return $candidate
+}
+
 $lockStream = $null
 $lockAcquired = $false
 if ($env:JOBFLOW_DISCOVERY_TASK_LOCK_HELD -ne "1") {
@@ -91,7 +113,7 @@ function Write-Result([string]$Status) {
 
 $runnerPath = Join-Path $localRoot "bin\run-authorized-discovery-task.ps1"
 Assert-LocalPath $runnerPath
-$powershellPath = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
+$powershellPath = Get-TrustedWindowsPowerShell
 $taskArguments = '-NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "' + $runnerPath + '"'
 
 if ($Action -eq "Register") {
@@ -122,7 +144,7 @@ if ($null -eq $task) {
     return
 }
 if ($Action -eq "Status" -or $Action -eq "Register") {
-    $expectedPowerShell = [IO.Path]::GetFullPath((Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"))
+    $expectedPowerShell = [IO.Path]::GetFullPath((Join-Path ([Environment]::SystemDirectory) "WindowsPowerShell\v1.0\powershell.exe"))
     $actions = @($task.Actions)
     if (
         $actions.Count -ne 1 -or

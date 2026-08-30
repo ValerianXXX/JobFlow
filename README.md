@@ -20,15 +20,17 @@ JobFlow is a local-first, AI-centered job application workflow for Windows. It t
 
 ## Quick start on Windows
 
-1. Download and extract the latest source ZIP.
-2. Double-click `Install JobFlow.cmd` once.
-3. Install **JobFlow Browser Companion** from Chrome Web Store or Microsoft Edge Add-ons when the installer opens its listing.
-4. Double-click `Start JobFlow.cmd` for normal use.
-5. If startup fails, run `Check JobFlow.cmd` and follow the first failed check.
+`Install JobFlow.cmd` is a stock-Windows, bootstrap-first installer. It does not use a system Python, create a virtual environment, or build from source. It accepts only the exact complete Windows runtime named by a signed schema-v2 manifest on JobFlow's pinned stable GitHub release. If that release is not yet available, installation stops clearly and activates nothing.
 
-The installer copies the application into a fixed, versioned directory under the current Windows account. Candidate data, queues, reports, and encrypted private material remain in a separate data directory, so the extracted download can be removed after installation. Running a newer installer upgrades the application without replacing that data; the Start menu also provides signed update, health check, rollback, and uninstall shortcuts.
+1. Download and extract the latest JobFlow source ZIP.
+2. Double-click `Install JobFlow.cmd` once while connected to the internet.
+3. Install **JobFlow Browser Companion** from the official Chrome Web Store or Microsoft Edge Add-ons listing selected for the detected browser, and confirm its published version matches the release notes.
+4. Start JobFlow from the installed Start menu shortcut.
+5. If startup fails, run the installed **Check JobFlow** shortcut and follow the first failed check.
 
-Installed builds can check the fixed stable GitHub release channel only after the user clicks **Check for updates**. JobFlow accepts an update only when its canonical manifest is signed by the pinned release key and its source archive passes the signed hash, size, layout, and public-content boundary. A failed post-update health check restores the previous version. Source checkouts do not self-update and never replace their working tree.
+The installer copies the application into a fixed, versioned directory under the current Windows account. Candidate data, queues, reports, and encrypted private material remain in a separate data directory, so the extracted download can be removed after installation. Running a newer installer upgrades the application without replacing that data; the Start menu also provides update verification, health check, rollback, and uninstall shortcuts.
+
+Installed builds contain a user-initiated verifier for a fixed stable GitHub release channel. The current public signing path is intentionally disabled until a protected publisher environment can attest the complete executable runtime closure, so local QA cannot create or authorize an official signed update. When that external gate is implemented, JobFlow will accept an update only when its canonical manifest is signed by the pinned release key and its source archive passes the signed hash, size, layout, and public-content boundary. A failed post-update health check restores the previous version. Source checkouts do not self-update and never replace their working tree.
 
 To explore without private data, run `Start JobFlow Demo.cmd`. The demo uses fictional content, disables real AI and file intake, and removes its temporary state when closed.
 
@@ -57,7 +59,8 @@ An AI connection is accepted only after a structured capability test. Agent requ
 
 | Capability | Alpha status |
 |---|---|
-| Windows install, signed update with rollback, health check, and bilingual local UI | Available |
+| Windows install, health check, rollback, and bilingual local UI | Bootstrap-first entry available; activation remains fail-closed until the stable release publishes a signed schema-v2 complete Windows runtime |
+| Public signed updates | Blocked until protected publisher runtime closure is attested |
 | Encrypted onboarding, Candidate Profile, Answer Bank, and Claim review | Available |
 | Existing Agent or loopback-model connection | Available with capability gate |
 | Visible official-company job discovery and verified Apply routing | Available with user authorization |
@@ -73,7 +76,7 @@ Synthetic and saved-page tests are engineering evidence, not proof that every li
 ## Development
 
 ```powershell
-.\scripts\install-jobflow.ps1
+.\scripts\install-jobflow-v2.ps1 -NoLaunch
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 .\.venv\Scripts\python.exe -m jobops.public_release
 ```

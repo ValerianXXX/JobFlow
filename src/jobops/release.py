@@ -14,7 +14,12 @@ from .db import JobOpsDB
 from .errors import JobOpsError
 from .knowledge import KnowledgeGateway
 from .locator import locate_knowledge_root
-from .public_release import verify_public_repository
+from .public_release import SAFE_PUBLIC_EMAILS, verify_public_repository
+from .release_toolchain import (
+    ReleaseToolchainError,
+    locked_release_git,
+    sanitized_command_environment,
+)
 from .util import has_reparse_component, load_json, sha256_file, write_json
 
 
@@ -26,24 +31,47 @@ SECRET_PATTERNS = {
     "github_key": re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}\b"),
     "aws_key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
     "private_key": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
-    "credential_assignment": re.compile(r"(?i)\b(?:password|cookie|oauth[_ -]?token|api[_ -]?key)\s*[:=]\s*['\"][^'\"]{8,}['\"]"),
+    "credential_assignment": re.compile(r"(?i)\b(?:password|cookie|oauth[_ -]?token|api[_ -]?key)\s*[:=]\s*['\"][^'\"\r\n]{8,}['\"]"),
     "verification_code_assignment": re.compile(r"(?i)\b(?:otp|verification[_ -]?code|验证码)\s*[:=]\s*['\"]?[0-9]{4,10}"),
-    "username_assignment": re.compile(r"(?i)\b(?:username|user[_ -]?name|用户名)\s*[:=]\s*['\"][^'\"]{3,}['\"]"),
+    "username_assignment": re.compile(r"(?i)\b(?:username|user[_ -]?name|用户名)\s*[:=]\s*['\"][^'\"\r\n]{3,}['\"]"),
     "phone": re.compile(r"(?<![0-9])(?:\+?1[ .-]?)?\(?[2-9][0-9]{2}\)?[ .-][0-9]{3}[ .-][0-9]{4}(?![0-9])"),
     "street_address": re.compile(r"(?i)\b[0-9]{1,6}\s+[A-Z0-9.' -]{2,40}\s+(?:street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|drive|dr)\b"),
 }
 TEXT_EXTENSIONS = {".py", ".js", ".css", ".json", ".md", ".yaml", ".yml", ".txt", ".ps1", ".html", ".xml", ".rels", ".csv"}
-RELEASE_INPUT_EXTENSIONS = TEXT_EXTENSIONS | {".js", ".css"}
+RELEASE_INPUT_EXTENSIONS = TEXT_EXTENSIONS | {".bat", ".cmd"}
+RELEASE_INPUT_ROOTS = ("src", "schemas", "tests", "config", ".agents", "scripts", "browser-companion", ".github/workflows")
+ROOT_LAUNCHER_EXTENSIONS = {".bat", ".cmd", ".ps1"}
+RELEASE_RUNTIME_CLOSURE_STATUS = "UNATTESTED"
+RELEASE_RUNTIME_CLOSURE_BLOCKER = "RELEASE_RUNTIME_CLOSURE_UNATTESTED"
 
 
-def _source_commit(project: Path) -> str:
-    completed = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=project,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+def _source_commit(project: Path, *, git_path: Path | None = None) -> str:
+    try:
+        with locked_release_git(project, git_path) as executable:
+            environment = sanitized_command_environment(
+                "git", executable=executable, project=project
+            )
+            completed = subprocess.run(
+                [str(executable), "rev-parse", "HEAD"],
+                cwd=project,
+                env=environment,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+    except (OSError, ReleaseToolchainError) as error:
+        code = str(error) if isinstance(error, ReleaseToolchainError) else "RELEASE_GIT_UNTRUSTED"
+        if code not in {
+            "RELEASE_GIT_PATH_REQUIRED",
+            "RELEASE_GIT_PATH_INVALID",
+            "RELEASE_GIT_UNTRUSTED",
+            "RELEASE_GIT_CHANGED",
+        }:
+            code = "RELEASE_GIT_UNTRUSTED"
+        raise JobOpsError(
+            code,
+            "The trusted absolute Git executable required for release verification is unavailable.",
+        ) from error
     commit = completed.stdout.strip().casefold()
     if completed.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
         raise JobOpsError(
@@ -55,20 +83,48 @@ def _source_commit(project: Path) -> str:
 
 def _latest_release_input_mtime(project: Path) -> float:
     latest = 0.0
-    for root in (project / "src", project / "schemas", project / "tests", project / "config", project / ".agents"):
+    for root_name in RELEASE_INPUT_ROOTS:
+        root = project / root_name
         if not root.exists():
             continue
         for path in root.rglob("*"):
             if not path.is_file() or path.suffix.casefold() not in RELEASE_INPUT_EXTENSIONS:
                 continue
-            if any(part in {"__pycache__", ".tmp"} for part in path.parts):
+            if any(part in {"__pycache__", ".tmp"} for part in path.relative_to(root).parts):
                 continue
+            latest = max(latest, path.stat().st_mtime)
+    for path in project.iterdir():
+        if path.is_file() and path.suffix.casefold() in ROOT_LAUNCHER_EXTENSIONS:
             latest = max(latest, path.stat().st_mtime)
     return latest
 
 
+def _release_test_report_matches_source(tests: object, source_commit: str) -> bool:
+    return bool(
+        isinstance(tests, dict)
+        and tests.get("status") == "PASS"
+        and type(tests.get("failed")) is int
+        and tests.get("failed") == 0
+        and tests.get("source_commit") == source_commit
+    )
+
+
+def _skill_validation_passes(report: object) -> bool:
+    return bool(
+        isinstance(report, dict)
+        and report.get("status") == "PASS"
+        and type(report.get("returncode")) is int
+        and report.get("returncode") == 0
+        and report.get("validator") == "$CODEX_HOME/skills/.system/skill-creator/scripts/quick_validate.py"
+        and isinstance(report.get("output"), str)
+        and report["output"].strip() == "Skill is valid!"
+    )
+
+
 def _normalized_sha256(value: object) -> str:
-    material = str(value or "").strip().casefold()
+    if not isinstance(value, str):
+        return ""
+    material = value.strip().casefold()
     if not material.startswith("sha256:"):
         material = "sha256:" + material
     return material if re.fullmatch(r"sha256:[0-9a-f]{64}", material) else ""
@@ -79,10 +135,7 @@ def _qa_mapping(value: object) -> dict[str, Any]:
 
 
 def _qa_integer(value: object, default: int = -1) -> int:
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return default
+    return value if type(value) is int else default
 
 
 def _independent_qa_matches_release(
@@ -155,7 +208,8 @@ def _scan_text(label: str, text: str, findings: list[dict[str, str]]) -> None:
         if pattern.search(text):
             findings.append({"kind": kind, "location": label})
     for email in re.findall(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", text):
-        if not email.casefold().endswith(("@example.test", "@jobops.local", "@users.noreply.github.com")):
+        normalized = email.casefold()
+        if normalized not in SAFE_PUBLIC_EMAILS and not normalized.endswith(("@example.test", "@jobops.local", "@users.noreply.github.com")):
             findings.append({"kind": "email", "location": label})
 
 
@@ -314,13 +368,25 @@ def _external_action_verification_window(
     current: dict[str, Any],
     baseline: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    baseline_attempts = int((baseline or {}).get("attempt_count", 0))
-    baseline_real = int((baseline or {}).get("real_external_actions", 0))
-    current_attempts = int(current.get("attempt_count", 0))
-    current_real = int(current.get("real_external_actions", 0))
+    baseline_value = baseline or {"attempt_count": 0, "real_external_actions": 0}
+    raw_baseline_attempts = baseline_value.get("attempt_count")
+    raw_baseline_real = baseline_value.get("real_external_actions")
+    raw_current_attempts = current.get("attempt_count")
+    raw_current_real = current.get("real_external_actions")
+    counts_have_native_types = all(
+        type(value) is int
+        for value in (raw_baseline_attempts, raw_baseline_real, raw_current_attempts, raw_current_real)
+    )
+    baseline_attempts = raw_baseline_attempts if type(raw_baseline_attempts) is int else 0
+    baseline_real = raw_baseline_real if type(raw_baseline_real) is int else 0
+    current_attempts = raw_current_attempts if type(raw_current_attempts) is int else 0
+    current_real = raw_current_real if type(raw_current_real) is int else 0
     baseline_valid = (
-        baseline_attempts >= 0
+        counts_have_native_types
+        and baseline_attempts >= 0
         and baseline_real >= 0
+        and current_attempts >= 0
+        and current_real >= 0
         and baseline_attempts <= current_attempts
         and baseline_real <= current_real
     )
@@ -339,20 +405,56 @@ def _external_action_verification_window(
     }
 
 
+def _release_truth(
+    *,
+    core_pass: bool,
+    independent_fresh: bool,
+    public_repository: dict[str, Any],
+) -> dict[str, Any]:
+    """Separate repository hygiene from authoritative public-release readiness.
+
+    The local verifier can establish a clean public repository boundary and a
+    passing local QA checkpoint.  It cannot attest the protected publisher
+    runtime closure, so none of those local facts can authorize a public
+    release.  Keep the two readiness concepts explicit in every checkpoint.
+    """
+
+    blockers = [RELEASE_RUNTIME_CLOSURE_BLOCKER]
+    if not core_pass:
+        blockers.append("CORE_RELEASE_CHECK_FAILED")
+    blockers.extend(public_repository.get("public_release_blockers", []))
+    if not independent_fresh:
+        blockers.append("INDEPENDENT_QA_STALE_OR_MISSING")
+    return {
+        "public_repository_ready": public_repository.get("public_repository_ready") is True,
+        "runtime_closure_status": RELEASE_RUNTIME_CLOSURE_STATUS,
+        "public_release_ready": False,
+        "public_release_blockers": list(dict.fromkeys(blockers)),
+    }
+
+
 def verify_release(
     project: Path,
     database: JobOpsDB,
     *,
     require_independent: bool = False,
     external_action_baseline: dict[str, Any] | None = None,
+    git_path: Path | None = None,
 ) -> dict[str, Any]:
-    source_commit = _source_commit(project)
+    source_commit = _source_commit(project, git_path=git_path)
     test_report_path = project / "reports" / "release-test-results.json"
     if not test_report_path.is_file():
         raise JobOpsError("RELEASE_TEST_REPORT_MISSING", "Run the checked-in release verification script before verify-release.")
     tests = load_json(test_report_path)
-    if tests.get("status") != "PASS" or int(tests.get("failed", 1)) != 0:
+    if (
+        not isinstance(tests, dict)
+        or tests.get("status") != "PASS"
+        or type(tests.get("failed")) is not int
+        or tests.get("failed") != 0
+    ):
         raise JobOpsError("RELEASE_TESTS_FAILED", "The most recent full regression report is not passing.")
+    if not _release_test_report_matches_source(tests, source_commit):
+        raise JobOpsError("RELEASE_TEST_REPORT_SOURCE_MISMATCH", "The full regression report is not bound to the current source commit.")
     latest_input_mtime = _latest_release_input_mtime(project)
     if test_report_path.stat().st_mtime < latest_input_mtime:
         raise JobOpsError("RELEASE_TEST_REPORT_STALE", "Run the checked-in release verification script after the latest source changes.")
@@ -365,7 +467,7 @@ def verify_release(
     lifetime_actions = audit_real_external_actions(database)
     actions = _external_action_verification_window(lifetime_actions, external_action_baseline)
     scan = security_scan(project, database)
-    public_repository = verify_public_repository(project)
+    public_repository = verify_public_repository(project, git_path=git_path)
     with database.connect() as connection:
         active_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='ACTIVE'").fetchone()[0])
         active_real_private = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='ACTIVE' AND synthetic=0").fetchone()[0])
@@ -378,7 +480,11 @@ def verify_release(
         deleted_synthetic = int(connection.execute("SELECT COUNT(*) FROM private_refs WHERE status='DELETED' AND synthetic=1").fetchone()[0])
         schema_version = database.schema_version()
         dry_run_sql = connection.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='applications'").fetchone()[0]
-    skill_validation = load_json(project / "reports" / "skill-validation.json") if (project / "reports" / "skill-validation.json").is_file() else {"status": "MISSING"}
+    skill_validation_path = project / "reports" / "skill-validation.json"
+    skill_validation = load_json(skill_validation_path) if skill_validation_path.is_file() else {"status": "MISSING"}
+    skill_validation_valid = bool(
+        skill_validation_path.is_file() and _skill_validation_passes(skill_validation)
+    )
     independent_path = project / "reports" / "independent-qa.json"
     independent = load_json(independent_path) if independent_path.is_file() else {"status": "PENDING"}
     candidate_path = project / "reports" / "release-candidate.json"
@@ -403,7 +509,7 @@ def verify_release(
     )
     checks = {
         "tests": tests.get("status") == "PASS",
-        "skill": skill_validation.get("status") == "PASS",
+        "skill": skill_validation_valid,
         "knowledge": knowledge.get("status") == "UNCHANGED" and knowledge["write_operations"] == 0,
         "security": scan["status"] == "PASS",
         "external_actions": actions["status"] == "PASS",
@@ -422,18 +528,16 @@ def verify_release(
         raise JobOpsError("INDEPENDENT_QA_REQUIRED", "Final release requires a passing independent read-only QA report.")
     core_pass = all(value for key, value in checks.items() if key != "independent_qa")
     status = "PASS" if core_pass and (checks["independent_qa"] or not require_independent) else "FAIL"
-    public_release_blockers = []
-    if not core_pass:
-        public_release_blockers.append("CORE_RELEASE_CHECK_FAILED")
-    public_release_blockers.extend(public_repository.get("public_release_blockers", []))
-    if not independent_fresh:
-        public_release_blockers.append("INDEPENDENT_QA_STALE_OR_MISSING")
+    release_truth = _release_truth(
+        core_pass=core_pass,
+        independent_fresh=independent_fresh,
+        public_repository=public_repository,
+    )
     result = {
         "schema_version": 1, "status": status,
         "source_commit": source_commit,
         "verification_scope": "PUBLIC_RELEASE" if require_independent else "LOCAL_DEVELOPMENT",
-        "public_release_ready": core_pass and independent_fresh and bool(public_repository["public_release_ready"]),
-        "public_release_blockers": public_release_blockers,
+        **release_truth,
         "final_states": [
             "PHASE_0_4_HARDENED", "PHASE_4_5_SECURE_ONBOARDING_READY",
             "BILINGUAL_ONBOARDING_CENTER_READY",
@@ -488,7 +592,9 @@ def write_release_reports(project: Path, result: dict[str, Any]) -> None:
     lines = [
         "# JobFlow verification checkpoint", "",
         f"Local verification status: **{result['status']}**", "",
+        f"Public repository boundary: **{'READY' if result.get('public_repository_ready') else 'BLOCKED'}**", "",
         f"Public release readiness: **{'READY' if result.get('public_release_ready') else 'BLOCKED'}**", "",
+        f"Publisher runtime closure: **{result.get('runtime_closure_status', 'UNATTESTED')}**", "",
         *[f"- Blocker: `{value}`" for value in result.get("public_release_blockers", [])],
         "" if result.get("public_release_blockers") else "",
         *[f"- `{value}`" for value in result["final_states"]],

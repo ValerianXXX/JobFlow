@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0bin\update-installed-jobflow.ps1"
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0bin\update-installed-jobflow.ps1"
 set "JOBFLOW_UPDATE_EXIT=%ERRORLEVEL%"
 echo.
 if not "%JOBFLOW_UPDATE_EXIT%"=="0" (

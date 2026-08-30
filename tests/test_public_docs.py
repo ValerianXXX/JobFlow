@@ -64,6 +64,21 @@ class PublicDocumentationTests(unittest.TestCase):
             self.assertTrue(resolved.is_relative_to(PROJECT.resolve()))
             self.assertTrue(resolved.is_file(), target)
 
+    def test_public_install_instructions_route_only_to_bootstrap_v2(self) -> None:
+        for relative in (
+            "README.md",
+            "CONTRIBUTING.md",
+            "docs/quickstart.md",
+            ".github/workflows/ci.yml",
+        ):
+            with self.subTest(path=relative):
+                text = (PROJECT / relative).read_text(encoding="utf-8")
+                self.assertNotIn("install-jobflow.ps1", text)
+        self.assertIn(
+            "install-jobflow-v2.ps1",
+            (PROJECT / "README.md").read_text(encoding="utf-8"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

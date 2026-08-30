@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "tools": {
+    "node": {
+      "file_names": [
+        "node.exe"
+      ],
+      "allowed_signers": [
+        {
+          "subject": "CN=OpenJS Foundation, O=OpenJS Foundation, L=San Francisco, S=California, C=US",
+          "thumbprint": "8EA1D142EA3F46023BACA38C23A7E7AE6AFCE30C"
+        }
+      ],
+      "allowed_unsigned_sha256": []
+    },
+    "git": {
+      "file_names": [
+        "git.exe"
+      ],
+      "allowed_signers": [
+        {
+          "subject": "CN=Johannes Schindelin, O=Johannes Schindelin, S=Nordrhein-Westfalen, C=DE",
+          "thumbprint": "3EB14A3AEF84B7153E139397F0A49E2FAC662B0E"
+        }
+      ],
+      "allowed_unsigned_sha256": [],
+      "runtime_tree_sha256": "sha256:3eef5f85492bd4e46e810f7605cc48ebb60ecf7ee43c8faeb4fb886887ca494f"
+    },
+    "python": {
+      "file_names": [
+        "python.exe"
+      ],
+      "allowed_signers": [
+        {
+          "subject": "CN=Python Software Foundation, O=Python Software Foundation, L=Beaverton, S=Oregon, C=US",
+          "thumbprint": "36168EE17C1A240517388540C903BB6717DD2563"
+        }
+      ],
+      "allowed_unsigned_sha256": [
+        "sha256:d8e3f0adf246db00358c0c4ed349cf714898178f9558fb0e944f79f5c07f8eaa"
+      ]
+    }
+  },
+  "python_execution_runtime": {
+    "source_policy": "config/windows-runtime-source.json",
+    "python_tag": "python313",
+    "maximum_files": 128,
+    "maximum_entry_bytes": 67108864,
+    "maximum_uncompressed_bytes": 201326592,
+    "maximum_compression_ratio": 200,
+    "required_entries": [
+      "python.exe",
+      "python3.dll",
+      "python313.dll",
+      "python313.zip",
+      "python313._pth",
+      "vcruntime140.dll",
+      "vcruntime140_1.dll",
+      "_hashlib.pyd",
+      "unicodedata.pyd",
+      "select.pyd"
+    ],
+    "active_pth_entries": [
+      "python313.zip",
+      "."
+    ]
+  },
+  "javascript_dependencies": {
+    "packages": [
+      "playwright",
+      "playwright-core"
+    ],
+    "file_count": 173,
+    "total_bytes": 18516238,
+    "tree_sha256": "sha256:df85481a30bcbc0f7276548d245eba0980d136c8085ca4a3662cb6f3c568302f"
+  }
+}

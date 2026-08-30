@@ -6,6 +6,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ### Added
 
+- Added one-command, fail-closed release verification that freezes a clean Git HEAD, runs the complete local quality and safety gates, and rejects any commit, worktree, or external-action drift.
+- Added every JavaScript end-to-end suite to CI through a pinned Playwright dependency and committed npm lockfile.
 - Added a complete company-direct local vertical from an official careers route through value-free planning, review approval, and a verified synthetic result, with network and real external actions held at zero.
 - Added provider-host synthetic Greenhouse browser evidence for approved field prefill, approved material attachment, and explicit non-final Continue navigation.
 - Extended the Greenhouse vertical through applicant confirmation, packet approval, and a verified synthetic result while keeping network and real external actions at zero.
@@ -19,8 +21,25 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 - Added a hash-bound three-step company-direct application sequence with duplicate-field reconciliation and fail-closed upload, navigation, and final-submit checks.
 - Added a hash-bound three-step Lever application sequence and stable ATS job-identity parsing across application child pages.
 
+### Fixed
+
+- Closed the public-signing path until the complete publisher runtime closure is attested and signed in a protected external environment. Local signing-transaction verification returns only `LOCAL_BEST_EFFORT_VERIFICATION_PASS`; release readiness remains blocked when the canonical signed chain is missing or invalid and becomes ready only after the exact runtime, publisher, and clean-Windows evidence all verify. The two-stage bundle builder emits only pathless presign artifacts before its external signature gate; formal outputs require byte-for-byte input reconstruction and verification by the pinned production public key.
+- Prepared Browser Companion 0.9.2 as the exact extension version required by this unreleased JobFlow build; this does not claim that either browser store has published 0.9.2.
+- Bound release archives to bytes rebuilt directly from the exact clean Git HEAD and rejected coercible strings, booleans, floats, or malformed counters wherever native release-evidence types are required.
+- Hardened Windows installers and the native host against hard links, reparse points, path-leaf replacement, partial writes, and incomplete rollback by validating held handles and using atomic replacement.
+- Bound release-candidate approval to the exact Git HEAD, project version, reproducibly built archive name, byte length, SHA-256 digest, clean archive audit, isolated source smoke evidence, and zero external actions; malformed, stale, private-repository, or store-lagging evidence now remains blocked.
+- Made signed update-manifest and signature replacement a locked, crash-recoverable two-file transaction with durable recovery metadata, immutable archive reads, link-safe temporary files, post-commit verification, and rollback to the previous verified pair on failure.
+- Hardened Windows install, repair, native-host registration, and uninstall against reparse-point, junction, hard-link, pointer-shape, rollback, and cross-session concurrency attacks, including a shared native-host mutex acquired before any local installation mutation.
+- Added the official Microsoft Edge Add-ons listing to the packaged store configuration and made the Windows installer open the matching Chrome or Edge listing for the detected default browser instead of silently falling back to the other browser's store.
+- Added a release gate requiring the published Browser Companion version in both stores to match the version required by JobFlow before a public application release is declared ready.
+- Preserved an existing valid per-user Browser Companion binding across routine installs and updates, made runtime, binding, and native-host installation transactional, and changed store-launch failures into a manual-link fallback after a successful install.
+- Made unified Windows activation restore version pointers, the previous core, stable launchers, root command files, and Start menu shortcuts when Browser Companion activation fails; serialized standalone companion installs; and preserved native-host or Browser Companion backups whenever rollback cannot be proven complete.
+- Restricted public GitHub release metadata to native JSON types, one user-confirmed printable-ASCII description, fresh store attestations no older than 30 days, and strict store-version values while retaining the bilingual product interface.
+- Bound clean-Windows release evidence to the exact app version, Browser Companion version, source commit, and a fresh test date, and rejected coercible test counters in local release reports.
+
 ### Safety
 
+- Local release QA can no longer be interpreted as public-signing authorization, and no environment, configuration, acknowledgement, or force switch bypasses the runtime-closure blocker.
 - Greenhouse final Submit remains user-only, and live-site acceptance remains required per current route.
 - Lever final Submit remains user-only, and live-site acceptance remains required per current route.
 - Workday final Submit remains user-only, and live-site acceptance remains unverified.

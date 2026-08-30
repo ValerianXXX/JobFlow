@@ -102,7 +102,10 @@ class BrowserCompanionStoreTests(unittest.TestCase):
             identities["chrome_web_store_url"],
             "https://chromewebstore.google.com/detail/pgcnlkfakkacphkdojdbphccjnbbefic",
         )
-        self.assertEqual(identities["edge_addons_url"], "")
+        self.assertEqual(
+            identities["edge_addons_url"],
+            "https://microsoftedge.microsoft.com/addons/detail/cebejbohadiofomfiplljnpdefjeiccp",
+        )
         self.assertIn("COMPANION_NATIVE_HOST_ORIGIN_FORBIDDEN", source)
         self.assertIn("ReadExactly(input, 4)", source)
         self.assertIn("ReparsePoint", source)
@@ -111,7 +114,11 @@ class BrowserCompanionStoreTests(unittest.TestCase):
     @unittest.skipUnless(os.name == "nt", "ACL behavior is verified only on Windows.")
     def test_native_host_acl_keeps_installed_files_readable_by_current_user(self) -> None:
         installer = (PROJECT / "scripts" / "install-jobflow-native-host.ps1").read_text(encoding="utf-8")
-        start = installer.index("function Set-CurrentUserOnly")
+        # Exercise the ACL helper with the same path, reparse, and hard-link
+        # prerequisites that production calls. Extracting only the final helper
+        # would bypass those prerequisites and no longer represents the real
+        # installer contract.
+        start = installer.index("function Assert-ExistingAncestorChainNoReparse")
         end = installer.index("function Read-RegistryDefault", start)
         acl_function = installer[start:end]
         local_app_data = Path(os.environ["LOCALAPPDATA"])
@@ -124,6 +131,8 @@ class BrowserCompanionStoreTests(unittest.TestCase):
             script = textwrap.dedent(
                 f"""
                 $ErrorActionPreference = 'Stop'
+                $localAppDataRoot = [IO.Path]::GetFullPath('{str(Path(raw_temp)).replace("'", "''")}')
+                $localRoot = $localAppDataRoot
                 {acl_function}
                 Set-CurrentUserOnly '{escaped_root}'
                 $marker = Join-Path '{escaped_root}' 'manifest.json'

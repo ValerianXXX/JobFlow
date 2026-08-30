@@ -44,7 +44,7 @@ body:
     id: version
     attributes:
       label: JobFlow version or commit
-      placeholder: v0.3.0 or a short commit hash
+      placeholder: v0.6.0 or a short commit hash
     validations:
       required: true
   - type: checkboxes

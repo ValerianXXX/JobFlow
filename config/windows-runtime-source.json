@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "status": "PINNED_OFFICIAL_SOURCE",
+  "platform": "windows-x64",
+  "architecture": "AMD64",
+  "python": {
+    "version": "3.13.15",
+    "artifact_name": "python-3.13.15-embed-amd64.zip",
+    "artifact_url": "https://www.python.org/ftp/python/3.13.15/python-3.13.15-embed-amd64.zip",
+    "artifact_bytes": 11009825,
+    "artifact_sha256": "sha256:d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf",
+    "release_page_url": "https://www.python.org/downloads/release/python-31315/",
+    "sigstore_bundle_url": "https://www.python.org/ftp/python/3.13.15/python-3.13.15-embed-amd64.zip.sigstore",
+    "sigstore_bundle_bytes": 7164,
+    "sigstore_bundle_sha256": "sha256:3e487c064a40d94a59476eb05e2d6225c325665590797e0a03cd33592b617137",
+    "sigstore_transport_media_types": [
+      "application/octet-stream"
+    ],
+    "sigstore_media_type": "application/vnd.dev.sigstore.bundle.v0.3+json",
+    "sigstore_certificate_identity": "thomas@python.org",
+    "sigstore_certificate_oidc_issuer": "https://accounts.google.com"
+  },
+  "builder": {
+    "python_version": "3.13.15",
+    "python_architecture": "AMD64",
+    "pip_version": "26.2.1",
+    "runtime_lock": "config/windows-cp313-runtime.lock",
+    "runtime_lock_sha256": "sha256:fcff92c6cdc59601df54761c44314ec258d9dda39534abe0e5711eb0ab70bc9b",
+    "build_lock": "config/windows-cp313-build.lock",
+    "build_lock_sha256": "sha256:b2deb4864339c5942842758843942472613290da464179a1f1b8a7b0a92d4453",
+    "runtime_schema": "schemas/runtime-closure.schema.json",
+    "verification_script": "scripts/verify-windows-runtime-closure.ps1"
+  },
+  "isolation": {
+    "python_pth": [
+      "python313.zip",
+      ".",
+      "../app"
+    ],
+    "import_site": false,
+    "end_user_pip": false,
+    "network_during_assembly": false,
+    "network_during_smoke_test": false
+  },
+  "attestation_policy": {
+    "required_for_attested_status": [
+      "verified_psf_sigstore_evidence",
+      "deterministic_double_build_match",
+      "offline_smoke_passed",
+      "outer_signing_readiness_evidence",
+      "detached_signature_verified_with_pinned_trust"
+    ],
+    "default_status": "BUILT_UNATTESTED",
+    "public_release_allowed_status": "ATTESTED"
+  }
+}

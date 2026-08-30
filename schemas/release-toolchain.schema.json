@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobflow.local/schemas/release-toolchain.schema.json",
+  "title": "JobFlow release toolchain policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "tools",
+    "python_execution_runtime",
+    "javascript_dependencies"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "git",
+        "python"
+      ],
+      "properties": {
+        "node": {
+          "$ref": "#/$defs/tool"
+        },
+        "git": {
+          "$ref": "#/$defs/tool"
+        },
+        "python": {
+          "$ref": "#/$defs/tool"
+        }
+      }
+    },
+    "python_execution_runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_policy",
+        "python_tag",
+        "maximum_files",
+        "maximum_entry_bytes",
+        "maximum_uncompressed_bytes",
+        "maximum_compression_ratio",
+        "required_entries",
+        "active_pth_entries"
+      ],
+      "properties": {
+        "source_policy": {
+          "const": "config/windows-runtime-source.json"
+        },
+        "python_tag": {
+          "type": "string",
+          "pattern": "^python[0-9]{3}$"
+        },
+        "maximum_files": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 256
+        },
+        "maximum_entry_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 134217728
+        },
+        "maximum_uncompressed_bytes": {
+          "type": "integer",
+          "minimum": 8388608,
+          "maximum": 268435456
+        },
+        "maximum_compression_ratio": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "required_entries": {
+          "type": "array",
+          "minItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9._-]+$"
+          }
+        },
+        "active_pth_entries": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          }
+        }
+      }
+    },
+    "javascript_dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packages",
+        "file_count",
+        "total_bytes",
+        "tree_sha256"
+      ],
+      "properties": {
+        "packages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9@._-]+$"
+          }
+        },
+        "file_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "total_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tree_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file_names",
+        "allowed_signers",
+        "allowed_unsigned_sha256"
+      ],
+      "properties": {
+        "file_names": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$"
+          }
+        },
+        "allowed_signers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "subject",
+              "thumbprint"
+            ],
+            "properties": {
+              "subject": {
+                "type": "string",
+                "minLength": 1
+              },
+              "thumbprint": {
+                "type": "string",
+                "pattern": "^[0-9A-F]{40}$"
+              }
+            }
+          }
+        },
+        "allowed_unsigned_sha256": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        },
+        "runtime_tree_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}

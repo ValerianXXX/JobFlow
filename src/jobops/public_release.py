@@ -9,6 +9,13 @@ import zipfile
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
+from .release_toolchain import (
+    ReleaseToolchainError,
+    locked_release_git,
+    resolve_configured_release_git,
+    sanitized_command_environment,
+)
+
 
 ALLOWED_RUNTIME_SENTINELS = {
     "state/.gitkeep",
@@ -47,6 +54,7 @@ REQUIRED_PUBLIC_FILES = {
     "SECURITY.md",
     "Check JobFlow.cmd",
     "Check Release Readiness.cmd",
+    "Install JobFlow.cmd",
     "Start JobFlow Demo.cmd",
     "Install JobFlow Browser Companion.cmd",
     "browser-companion/manifest.json",
@@ -54,13 +62,18 @@ REQUIRED_PUBLIC_FILES = {
     "browser-companion/dom.js",
     "scripts/check-jobflow.ps1",
     "scripts/check-release-readiness.ps1",
+    "scripts/install-jobflow-v2.ps1",
     "scripts/install-jobflow-browser-companion.ps1",
     "scripts/start-jobflow-demo.ps1",
     "pyproject.toml",
 }
 PUBLIC_EMAIL = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")
 SAFE_PUBLIC_EMAIL_SUFFIXES = ("@example.test", "@jobops.local", "@users.noreply.github.com")
+# Public certificate identities are provenance, not applicant or maintainer data.
+# Keep this allowlist exact so ordinary addresses at the same domain still fail.
+SAFE_PUBLIC_EMAILS = frozenset({"noreply@github.com", "thomas@python.org"})
 AUTHOR_POLICIES = {"NOREPLY_ONLY", "PUBLIC_EMAIL_APPROVED"}
+GITHUB_NOREPLY_DOMAIN = "users.noreply.github.com"
 
 
 def validate_public_paths(paths: Iterable[str]) -> list[dict[str, str]]:
@@ -94,9 +107,31 @@ def validate_public_paths(paths: Iterable[str]) -> list[dict[str, str]]:
     return findings
 
 
-def tracked_files(project: Path) -> list[str]:
+def _git_executable(git_path: Path | None = None) -> str:
+    try:
+        return str(resolve_configured_release_git(git_path))
+    except (OSError, ReleaseToolchainError) as error:
+        code = str(error) if isinstance(error, ReleaseToolchainError) else "RELEASE_GIT_UNTRUSTED"
+        raise RuntimeError(code) from error
+
+
+def _git_environment(project: Path, git_path: Path) -> dict[str, str]:
+    try:
+        return sanitized_command_environment(
+            "git", executable=git_path, project=project
+        )
+    except (OSError, ReleaseToolchainError) as error:
+        raise RuntimeError("RELEASE_GIT_ENVIRONMENT_INVALID") from error
+
+
+def tracked_files(project: Path, *, git_path: Path | None = None) -> list[str]:
+    executable = Path(_git_executable(git_path))
     completed = subprocess.run(
-        ["git", "ls-files", "-z"], cwd=project, capture_output=True, check=False
+        [str(executable), "ls-files", "-z"],
+        cwd=project,
+        env=_git_environment(project, executable),
+        capture_output=True,
+        check=False,
     )
     if completed.returncode != 0:
         raise RuntimeError("GIT_REPOSITORY_REQUIRED")
@@ -126,25 +161,41 @@ def validate_public_text(label: str, text: str) -> list[dict[str, str]]:
         if pattern.search(text):
             findings.append({"kind": kind, "path": label})
     for email in PUBLIC_EMAIL.findall(text):
-        if not email.casefold().endswith(SAFE_PUBLIC_EMAIL_SUFFIXES):
+        normalized = email.casefold()
+        if normalized not in SAFE_PUBLIC_EMAILS and not normalized.endswith(SAFE_PUBLIC_EMAIL_SUFFIXES):
             findings.append({"kind": "email", "path": label})
     return findings
 
 
-def _git(project: Path, *arguments: str) -> bytes:
-    completed = subprocess.run(["git", *arguments], cwd=project, capture_output=True, check=False)
+def _git(project: Path, *arguments: str, git_path: Path | None = None) -> bytes:
+    executable = Path(_git_executable(git_path))
+    completed = subprocess.run(
+        [str(executable), *arguments],
+        cwd=project,
+        env=_git_environment(project, executable),
+        capture_output=True,
+        check=False,
+    )
     if completed.returncode != 0:
         raise RuntimeError("GIT_REPOSITORY_REQUIRED")
     return completed.stdout
 
 
-def _history_inventory(project: Path) -> tuple[list[str], dict[str, set[str]], list[dict[str, str]], int]:
-    commits = [item.decode("ascii") for item in _git(project, "rev-list", "--all").splitlines() if item]
+def _history_inventory(
+    project: Path, *, git_path: Path | None = None
+) -> tuple[list[str], dict[str, set[str]], list[dict[str, str]], int]:
+    commits = [
+        item.decode("ascii")
+        for item in _git(project, "rev-list", "--all", git_path=git_path).splitlines()
+        if item
+    ]
     paths: set[str] = set()
     blob_paths: dict[str, set[str]] = {}
     findings: list[dict[str, str]] = []
     for commit in commits:
-        for record in _git(project, "ls-tree", "-r", "-z", "--full-tree", commit).split(b"\0"):
+        for record in _git(
+            project, "ls-tree", "-r", "-z", "--full-tree", commit, git_path=git_path
+        ).split(b"\0"):
             if not record:
                 continue
             metadata, encoded_path = record.split(b"\t", 1)
@@ -214,8 +265,8 @@ def _scan_historical_document(project: Path, label: str, suffix: str, payload: b
     return findings
 
 
-def verify_public_history(project: Path) -> dict[str, Any]:
-    paths, blob_paths, findings, commit_count = _history_inventory(project)
+def verify_public_history(project: Path, *, git_path: Path | None = None) -> dict[str, Any]:
+    paths, blob_paths, findings, commit_count = _history_inventory(project, git_path=git_path)
     findings.extend(validate_public_paths(paths))
     scanned_text_blobs = 0
     scanned_document_blobs = 0
@@ -227,7 +278,7 @@ def verify_public_history(project: Path) -> dict[str, Any]:
         if not relevant:
             continue
         label = relevant[0] + "@history"
-        payload = _git(project, "cat-file", "blob", object_id)
+        payload = _git(project, "cat-file", "blob", object_id, git_path=git_path)
         suffix = PurePosixPath(label.removesuffix("@history")).suffix.casefold()
         if suffix in HISTORY_DOCUMENT_SUFFIXES:
             scanned_document_blobs += 1
@@ -256,34 +307,101 @@ def verify_public_history(project: Path) -> dict[str, Any]:
     }
 
 
-def verify_author_identity(project: Path) -> dict[str, Any]:
+def _author_identity_policy(project: Path) -> tuple[str, frozenset[str]]:
     policy_path = project / "config" / "public-release.json"
     policy: dict[str, Any] = json.loads(policy_path.read_text(encoding="utf-8")) if policy_path.is_file() else {}
-    if set(policy) != {"schema_version", "author_identity_policy"} or policy.get("schema_version") != 1:
-        author_policy = "INVALID_OR_MISSING"
-    else:
-        author_policy = str(policy.get("author_identity_policy"))
-    raw = _git(project, "log", "--all", "--format=%an%x1f%ae%x1f%cn%x1f%ce%x1e")
+    if policy.get("schema_version") != 1:
+        return "INVALID_OR_MISSING", frozenset()
+    author_policy = str(policy.get("author_identity_policy"))
+    if author_policy == "NOREPLY_ONLY" and set(policy) == {"schema_version", "author_identity_policy"}:
+        return author_policy, frozenset()
+    if author_policy != "PUBLIC_EMAIL_APPROVED" or set(policy) != {
+        "schema_version",
+        "author_identity_policy",
+        "approved_public_emails",
+    }:
+        return "INVALID_OR_MISSING", frozenset()
+    configured = policy.get("approved_public_emails")
+    if not isinstance(configured, list) or not configured:
+        return "INVALID_OR_MISSING", frozenset()
+    normalized: set[str] = set()
+    for value in configured:
+        if not isinstance(value, str) or PUBLIC_EMAIL.fullmatch(value) is None:
+            return "INVALID_OR_MISSING", frozenset()
+        email = value.casefold()
+        if email in normalized:
+            return "INVALID_OR_MISSING", frozenset()
+        normalized.add(email)
+    return author_policy, frozenset(normalized)
+
+
+def _is_github_noreply_email(email: str) -> bool:
+    if PUBLIC_EMAIL.fullmatch(email) is None:
+        return False
+    if email.casefold() == "noreply@github.com":
+        return True
+    local, separator, domain = email.rpartition("@")
+    return bool(local and separator and domain.casefold() == GITHUB_NOREPLY_DOMAIN)
+
+
+def verify_author_identity(project: Path, *, git_path: Path | None = None) -> dict[str, Any]:
+    author_policy, approved_public_emails = _author_identity_policy(project)
+    raw = _git(
+        project,
+        "log",
+        "--all",
+        "--format=%an%x1f%ae%x1f%cn%x1f%ce%x1e",
+        git_path=git_path,
+    )
     identities: set[tuple[str, str]] = set()
+    malformed_records = 0
     for record in raw.split(b"\x1e"):
-        values = record.strip().split(b"\x1f")
-        if len(values) != 4:
+        if not record.strip(b"\r\n"):
             continue
-        identities.add((values[0].decode("utf-8"), values[1].decode("utf-8")))
-        identities.add((values[2].decode("utf-8"), values[3].decode("utf-8")))
-    non_noreply = sum(1 for _, email in identities if "noreply" not in email.casefold())
-    approved = author_policy == "PUBLIC_EMAIL_APPROVED" or (author_policy == "NOREPLY_ONLY" and non_noreply == 0)
+        values = record.strip(b"\r\n").split(b"\x1f")
+        if len(values) != 4:
+            malformed_records += 1
+            continue
+        try:
+            decoded = tuple(value.decode("utf-8", errors="strict") for value in values)
+        except UnicodeDecodeError:
+            malformed_records += 1
+            continue
+        author_name, author_email, committer_name, committer_email = decoded
+        if (
+            not author_name.strip()
+            or not committer_name.strip()
+            or PUBLIC_EMAIL.fullmatch(author_email) is None
+            or PUBLIC_EMAIL.fullmatch(committer_email) is None
+        ):
+            malformed_records += 1
+            continue
+        identities.add((author_name, author_email))
+        identities.add((committer_name, committer_email))
+    non_noreply = sum(1 for _, email in identities if not _is_github_noreply_email(email))
+    unapproved = sum(1 for _, email in identities if email.casefold() not in approved_public_emails)
+    approved = bool(
+        identities
+        and malformed_records == 0
+        and (
+            (author_policy == "NOREPLY_ONLY" and non_noreply == 0)
+            or (author_policy == "PUBLIC_EMAIL_APPROVED" and unapproved == 0)
+        )
+    )
     return {
         "status": "PASS" if approved else "REVIEW_REQUIRED",
         "policy": author_policy,
         "identity_count": len(identities),
         "non_noreply_identity_count": non_noreply,
+        "unapproved_identity_count": unapproved,
+        "approved_public_email_count": len(approved_public_emails),
+        "malformed_record_count": malformed_records,
         "private_identity_values_emitted": 0,
     }
 
 
-def verify_public_tree(project: Path) -> dict[str, object]:
-    files = tracked_files(project)
+def verify_public_tree(project: Path, *, git_path: Path | None = None) -> dict[str, object]:
+    files = tracked_files(project, git_path=git_path)
     findings = validate_public_paths(files) + validate_public_contents(project, files)
     for relative in sorted(REQUIRED_PUBLIC_FILES - set(files)):
         findings.append({"kind": "required_public_file_missing", "path": relative})
@@ -296,10 +414,15 @@ def verify_public_tree(project: Path) -> dict[str, object]:
     }
 
 
-def verify_public_repository(project: Path) -> dict[str, Any]:
-    tree = verify_public_tree(project)
-    history = verify_public_history(project)
-    identity = verify_author_identity(project)
+def verify_public_repository(project: Path, *, git_path: Path | None = None) -> dict[str, Any]:
+    try:
+        with locked_release_git(project, git_path) as trusted_git:
+            tree = verify_public_tree(project, git_path=trusted_git)
+            history = verify_public_history(project, git_path=trusted_git)
+            identity = verify_author_identity(project, git_path=trusted_git)
+    except (OSError, ReleaseToolchainError) as error:
+        code = str(error) if isinstance(error, ReleaseToolchainError) else "RELEASE_GIT_UNTRUSTED"
+        raise RuntimeError(code) from error
     blockers: list[str] = []
     if tree["status"] != "PASS":
         blockers.append("PUBLIC_TREE_BOUNDARY_FAILED")
@@ -308,10 +431,16 @@ def verify_public_repository(project: Path) -> dict[str, Any]:
     if identity["status"] != "PASS":
         blockers.append("GIT_AUTHOR_IDENTITY_REVIEW_REQUIRED")
     content_pass = tree["status"] == history["status"] == "PASS"
+    repository_ready = content_pass and identity["status"] == "PASS"
     return {
         "schema_version": 1,
         "status": "PASS" if content_pass else "FAIL",
-        "public_release_ready": content_pass and identity["status"] == "PASS",
+        "readiness_scope": "PUBLIC_REPOSITORY_BOUNDARY_ONLY",
+        "public_repository_ready": repository_ready,
+        # Repository hygiene is only one input to the authoritative release
+        # gate.  Keep this literal false so the standalone scanner can never
+        # be mistaken for signing, tagging, upload, or publication approval.
+        "public_release_ready": False,
         "public_release_blockers": blockers,
         "tree": tree,
         "history": history,
@@ -322,11 +451,22 @@ def verify_public_repository(project: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--require-ready", action="store_true")
+    parser.add_argument("--git-path", type=Path)
     args = parser.parse_args()
     project = Path.cwd()
-    result = verify_public_repository(project)
+    try:
+        result = verify_public_repository(project, git_path=args.git_path)
+    except RuntimeError as error:
+        print(
+            json.dumps(
+                {"status": "FAIL", "code": str(error)},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 2
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    passed = result["public_release_ready"] if args.require_ready else result["status"] == "PASS"
+    passed = result["public_repository_ready"] if args.require_ready else result["status"] == "PASS"
     return 0 if passed else 2
 
 

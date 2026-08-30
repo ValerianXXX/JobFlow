@@ -650,6 +650,9 @@ async function pairWithJobFlow(pairing, senderOrigin, senderTabId = null) {
     }
     return {...publicResult(result), protocol_version: PROTOCOL, extension_version: EXTENSION_VERSION};
   } catch (error) {
+    if (["BROWSER_COMPANION_BINDING_MISMATCH", "COMPANION_BINDING_PROOF_INVALID"].includes(String(error?.jobflow?.code || ""))) {
+      installationBindingPromise = null;
+    }
     await restorePairingReservation(reservation);
     throw error;
   }

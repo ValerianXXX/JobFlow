@@ -7,8 +7,76 @@ param(
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+function Get-TrustedWindowsPowerShell {
+    $candidate = [IO.Path]::GetFullPath((Join-Path ([Environment]::SystemDirectory) "WindowsPowerShell\v1.0\powershell.exe"))
+    if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { throw "JOBFLOW_TRUSTED_WINDOWS_POWERSHELL_REQUIRED" }
+    $securityModule = Join-Path ([Environment]::SystemDirectory) "WindowsPowerShell\v1.0\Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1"
+    Microsoft.PowerShell.Core\Import-Module -Name $securityModule -Force -ErrorAction Stop
+    $signature = Microsoft.PowerShell.Security\Get-AuthenticodeSignature -LiteralPath $candidate
+    if (
+        [string]$signature.Status -cne "Valid" -or
+        $null -eq $signature.SignerCertificate -or
+        [string]$signature.SignerCertificate.Subject -notmatch '(^|,\s*)O=Microsoft Corporation(,|$)'
+    ) { throw "JOBFLOW_TRUSTED_WINDOWS_POWERSHELL_REQUIRED" }
+    return $candidate
+}
+$trustedWindowsPowerShell = Get-TrustedWindowsPowerShell
 if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) { throw "JOBFLOW_LOCAL_APP_DATA_NOT_FOUND" }
-$expectedRoot = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA "JobOps"))
+
+function Assert-ExistingAncestorChainNoReparse([string]$Path, [string]$Code) {
+    $cursor = [IO.Path]::GetFullPath($Path)
+    while (-not [string]::IsNullOrWhiteSpace($cursor)) {
+        if (Test-Path -LiteralPath $cursor) {
+            $item = Get-Item -LiteralPath $cursor -Force
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw $Code }
+        }
+        $parent = [IO.Path]::GetDirectoryName($cursor)
+        if ([string]::IsNullOrWhiteSpace($parent) -or $parent -eq $cursor) { break }
+        $cursor = $parent
+    }
+}
+
+function Initialize-JobFlowUninstallFileIdentityApi {
+    if ($null -ne ("JobFlowUninstallNative.FileIdentity" -as [type])) { return }
+    Add-Type -TypeDefinition @"
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
+namespace JobFlowUninstallNative {
+    [StructLayout(LayoutKind.Sequential)] public struct FileTime { public uint Low; public uint High; }
+    [StructLayout(LayoutKind.Sequential)] public struct FileIdentity {
+        public uint Attributes; public FileTime CreationTime; public FileTime LastAccessTime;
+        public FileTime LastWriteTime; public uint VolumeSerialNumber; public uint SizeHigh;
+        public uint SizeLow; public uint LinkCount; public uint FileIndexHigh; public uint FileIndexLow;
+    }
+    public static class FileIdentityApi {
+        [DllImport("kernel32.dll", SetLastError=true)]
+        public static extern bool GetFileInformationByHandle(SafeFileHandle handle, out FileIdentity information);
+    }
+}
+"@ -ErrorAction Stop
+}
+
+function Get-OpenUninstallFileLinkCount([IO.FileStream]$Stream, [string]$Code) {
+    Initialize-JobFlowUninstallFileIdentityApi
+    $information = New-Object JobFlowUninstallNative.FileIdentity
+    if (-not [JobFlowUninstallNative.FileIdentityApi]::GetFileInformationByHandle(
+        $Stream.SafeFileHandle, [ref]$information
+    )) { throw $Code }
+    return [long]$information.LinkCount
+}
+
+function Assert-SingleLinkUninstallLeaf([string]$Path, [string]$Code) {
+    $item = Get-Item -LiteralPath $Path -Force
+    if ($item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw $Code }
+    $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
+    try { if ((Get-OpenUninstallFileLinkCount $stream $Code) -ne 1) { throw $Code } }
+    finally { $stream.Dispose() }
+}
+
+$localAppDataRoot = [IO.Path]::GetFullPath($env:LOCALAPPDATA)
+Assert-ExistingAncestorChainNoReparse $localAppDataRoot "JOBFLOW_UNINSTALL_LOCAL_APP_DATA_REPARSE_FORBIDDEN"
+$expectedRoot = [IO.Path]::GetFullPath((Join-Path $localAppDataRoot "JobOps"))
 $localRoot = if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
     [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 }
@@ -22,6 +90,8 @@ if ($RemoveUserData -and -not $UserConfirmed) {
 $skipBrowserIntegrationForAcceptance = $env:JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY -eq "1"
 $runtimeLockStream = $null
 $discoveryLockStream = $null
+$nativeHostInstallMutex = $null
+$nativeHostInstallMutexHeld = $false
 if ($skipBrowserIntegrationForAcceptance) {
     $temporaryBoundary = [IO.Path]::GetFullPath($env:TEMP)
     $localAppDataRoot = [IO.Path]::GetDirectoryName($expectedRoot)
@@ -37,6 +107,7 @@ if ($skipBrowserIntegrationForAcceptance) {
 }
 
 function Assert-SafeRemovalTarget([string]$Path) {
+    Assert-ExistingAncestorChainNoReparse $localAppDataRoot "JOBFLOW_UNINSTALL_LOCAL_APP_DATA_REPARSE_FORBIDDEN"
     $absolute = [IO.Path]::GetFullPath($Path)
     $prefix = $localRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
     if ($absolute -eq $localRoot -or -not $absolute.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
@@ -65,7 +136,26 @@ function Assert-SafeRemovalTarget([string]$Path) {
             if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
                 throw "JOBFLOW_UNINSTALL_REPARSE_FORBIDDEN"
             }
+            if (-not $item.PSIsContainer) {
+                Assert-SingleLinkUninstallLeaf $item.FullName "JOBFLOW_UNINSTALL_HARDLINK_FORBIDDEN"
+            }
         }
+    }
+}
+
+function Enter-NativeHostInstallMutex {
+    $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    $name = "Global\JobFlow.NativeHostInstaller." + ($sid -replace '[^A-Za-z0-9_.-]', '_')
+    $mutex = New-Object Threading.Mutex($false, $name)
+    try {
+        try { $acquired = $mutex.WaitOne(0) }
+        catch [Threading.AbandonedMutexException] { $acquired = $true }
+        if (-not $acquired) { throw "JOBFLOW_UNINSTALL_NATIVE_HOST_INSTALL_ACTIVE" }
+        return $mutex
+    }
+    catch {
+        $mutex.Dispose()
+        throw
     }
 }
 
@@ -89,12 +179,56 @@ function Remove-SafeTarget([string]$Path) {
     }
 }
 
-$lockHelpers = Join-Path $localRoot "bin\jobflow-runtime-locks.ps1"
-if (-not (Test-Path -LiteralPath $lockHelpers -PathType Leaf)) {
-    throw "JOBFLOW_RUNTIME_LOCK_HELPERS_MISSING"
+function Enter-JobFlowFileLock {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+        [Parameter(Mandatory = $true)]
+        [string]$TimeoutCode,
+        [int]$TimeoutSeconds = 30
+    )
+
+    $parent = [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($Path))
+    if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
+        throw $TimeoutCode
+    }
+    $stream = [IO.File]::Open(
+        $Path,
+        [IO.FileMode]::OpenOrCreate,
+        [IO.FileAccess]::ReadWrite,
+        [IO.FileShare]::ReadWrite
+    )
+    try {
+        if ((Get-OpenUninstallFileLinkCount $stream "JOBFLOW_UNINSTALL_LOCK_FILE_LINKED") -ne 1) {
+            throw "JOBFLOW_UNINSTALL_LOCK_FILE_LINKED"
+        }
+        if ($stream.Length -lt 1) {
+            $stream.SetLength(1)
+            $stream.Flush()
+        }
+        $deadline = [DateTime]::UtcNow.AddSeconds([Math]::Max(1, $TimeoutSeconds))
+        while ($true) {
+            try {
+                $stream.Lock(0, 1)
+                return $stream
+            }
+            catch [IO.IOException] {
+                if ([DateTime]::UtcNow -ge $deadline) { throw $TimeoutCode }
+                Start-Sleep -Milliseconds 50
+            }
+        }
+    }
+    catch {
+        $stream.Dispose()
+        throw
+    }
 }
-Assert-SafeRemovalTarget $lockHelpers
-. $lockHelpers
+
+function Exit-JobFlowFileLock([object]$Stream) {
+    if ($null -eq $Stream) { return }
+    try { $Stream.Unlock(0, 1) } catch { }
+    $Stream.Dispose()
+}
 
 $rootItem = Get-Item -LiteralPath $localRoot -Force -ErrorAction SilentlyContinue
 if ($null -ne $rootItem -and ($rootItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
@@ -114,13 +248,17 @@ if (Test-Path -LiteralPath $stateRoot -PathType Container) {
 
 try {
     if (-not $skipBrowserIntegrationForAcceptance) {
+        $nativeHostInstallMutex = Enter-NativeHostInstallMutex
+        $nativeHostInstallMutexHeld = $true
+    }
+    if (-not $skipBrowserIntegrationForAcceptance) {
         $taskManager = Join-Path $localRoot "bin\manage-authorized-discovery-task.ps1"
         if (Test-Path -LiteralPath $taskManager -PathType Leaf) {
             Assert-SafeRemovalTarget $taskManager
             $savedTaskLock = $env:JOBFLOW_DISCOVERY_TASK_LOCK_HELD
             try {
                 if ($null -ne $discoveryLockStream) { $env:JOBFLOW_DISCOVERY_TASK_LOCK_HELD = "1" }
-                & powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass `
+                & $trustedWindowsPowerShell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass `
                     -File $taskManager -Action Remove | Out-Null
                 if ($LASTEXITCODE -ne 0) { throw "JOBFLOW_DISCOVERY_TASK_REMOVAL_FAILED" }
             }
@@ -148,13 +286,20 @@ try {
     }
 
     if (-not [string]::IsNullOrWhiteSpace($env:APPDATA)) {
-        $programsRoot = [IO.Path]::GetFullPath((Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"))
+        $appDataRoot = [IO.Path]::GetFullPath($env:APPDATA)
+        Assert-ExistingAncestorChainNoReparse $appDataRoot "JOBFLOW_UNINSTALL_START_MENU_REPARSE_FORBIDDEN"
+        $programsRoot = [IO.Path]::GetFullPath((Join-Path $appDataRoot "Microsoft\Windows\Start Menu\Programs"))
         $menuRoot = [IO.Path]::GetFullPath((Join-Path $programsRoot "JobFlow"))
+        Assert-ExistingAncestorChainNoReparse $programsRoot "JOBFLOW_UNINSTALL_START_MENU_REPARSE_FORBIDDEN"
+        Assert-ExistingAncestorChainNoReparse $menuRoot "JOBFLOW_UNINSTALL_START_MENU_REPARSE_FORBIDDEN"
         $prefix = $programsRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
         if ($menuRoot.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -and (Test-Path -LiteralPath $menuRoot -PathType Container)) {
             $menuItems = @((Get-Item -LiteralPath $menuRoot -Force)) + @(Get-ChildItem -LiteralPath $menuRoot -Recurse -Force)
             if (($menuItems | Where-Object { ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 }).Count -ne 0) {
                 throw "JOBFLOW_UNINSTALL_START_MENU_REPARSE_FORBIDDEN"
+            }
+            foreach ($menuItem in $menuItems | Where-Object { -not $_.PSIsContainer }) {
+                Assert-SingleLinkUninstallLeaf $menuItem.FullName "JOBFLOW_UNINSTALL_START_MENU_HARDLINK_FORBIDDEN"
             }
             Remove-Item -LiteralPath $menuRoot -Recurse -Force
         }
@@ -187,6 +332,12 @@ try {
     }
 }
 finally {
+    if ($nativeHostInstallMutexHeld -and $null -ne $nativeHostInstallMutex) {
+        try { $nativeHostInstallMutex.ReleaseMutex() }
+        catch { Write-Warning "JOBFLOW_UNINSTALL_NATIVE_HOST_MUTEX_RELEASE_FAILED" }
+        $nativeHostInstallMutexHeld = $false
+    }
+    if ($null -ne $nativeHostInstallMutex) { $nativeHostInstallMutex.Dispose() }
     Exit-JobFlowFileLock $discoveryLockStream
     Exit-JobFlowFileLock $runtimeLockStream
 }

@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobflow.local/schemas/clean-windows-acceptance-v1.schema.json",
+  "title": "JobFlow clean Windows acceptance evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "format",
+    "evidence_kind",
+    "status",
+    "issued_at_utc",
+    "expires_at_utc",
+    "publisher_evidence_sha256",
+    "release",
+    "signed_bundle",
+    "runtime_closure",
+    "environment",
+    "browser_companion",
+    "checks",
+    "safety"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "format": {"type": "string", "const": "JOBFLOW_CLEAN_WINDOWS_ACCEPTANCE_V1"},
+    "evidence_kind": {"type": "string", "const": "SANITIZED_CLEAN_WINDOWS_OBSERVATION"},
+    "status": {"type": "string", "const": "PASS"},
+    "issued_at_utc": {"$ref": "#/$defs/utc"},
+    "expires_at_utc": {"$ref": "#/$defs/utc"},
+    "publisher_evidence_sha256": {"$ref": "#/$defs/sha256"},
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "source_commit", "platform"],
+      "properties": {
+        "version": {"$ref": "#/$defs/version"},
+        "source_commit": {"$ref": "#/$defs/commit"},
+        "platform": {"type": "string", "const": "windows-x64"}
+      }
+    },
+    "signed_bundle": {"$ref": "#/$defs/signedBundle"},
+    "runtime_closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest_sha256", "tree_sha256", "structural_status"],
+      "properties": {
+        "manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "tree_sha256": {"$ref": "#/$defs/sha256"},
+        "structural_status": {"type": "string", "const": "BUILT_UNATTESTED"}
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os_family", "architecture", "account_profile", "preexisting_jobflow"],
+      "properties": {
+        "os_family": {"type": "string", "const": "Windows"},
+        "architecture": {"type": "string", "const": "AMD64"},
+        "account_profile": {"type": "string", "const": "FRESH_STANDARD_USER"},
+        "preexisting_jobflow": {"type": "boolean", "const": false}
+      }
+    },
+    "browser_companion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "chrome_store_version",
+        "edge_store_version",
+        "chrome_install_passed",
+        "edge_install_passed",
+        "native_host_registration_passed",
+        "chrome_pairing_passed",
+        "edge_pairing_passed"
+      ],
+      "properties": {
+        "version": {"$ref": "#/$defs/version"},
+        "chrome_store_version": {"$ref": "#/$defs/version"},
+        "edge_store_version": {"$ref": "#/$defs/version"},
+        "chrome_install_passed": {"type": "boolean", "const": true},
+        "edge_install_passed": {"type": "boolean", "const": true},
+        "native_host_registration_passed": {"type": "boolean", "const": true},
+        "chrome_pairing_passed": {"type": "boolean", "const": true},
+        "edge_pairing_passed": {"type": "boolean", "const": true}
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["install_passed", "startup_passed", "health_passed", "update_passed", "rollback_passed", "uninstall_passed"],
+      "properties": {
+        "install_passed": {"type": "boolean", "const": true},
+        "startup_passed": {"type": "boolean", "const": true},
+        "health_passed": {"type": "boolean", "const": true},
+        "update_passed": {"type": "boolean", "const": true},
+        "rollback_passed": {"type": "boolean", "const": true},
+        "uninstall_passed": {"type": "boolean", "const": true}
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["external_actions", "real_job_site_visits", "final_submit_attempts", "secret_material_in_evidence"],
+      "properties": {
+        "external_actions": {"type": "integer", "const": 0},
+        "real_job_site_visits": {"type": "integer", "const": 0},
+        "final_submit_attempts": {"type": "integer", "const": 0},
+        "secret_material_in_evidence": {"type": "boolean", "const": false}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "utc": {
+      "type": "string",
+      "pattern": "^20[0-9]{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{1,6})?Z$",
+      "format": "date-time"
+    },
+    "signedBundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest_sha256",
+        "signature_sha256",
+        "archive_name",
+        "archive_bytes",
+        "archive_sha256",
+        "release_key_id",
+        "signature_verified_with_pinned_trust"
+      ],
+      "properties": {
+        "manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "signature_sha256": {"$ref": "#/$defs/sha256"},
+        "archive_name": {"type": "string", "pattern": "^JobFlow-v[0-9]+\\.[0-9]+\\.[0-9]+-windows-x64-complete\\.zip$"},
+        "archive_bytes": {"type": "integer", "minimum": 1, "maximum": 1610612736},
+        "archive_sha256": {"$ref": "#/$defs/sha256"},
+        "release_key_id": {"type": "string", "const": "sha256:1037057f8578a60ac5b3dc030cb2d70ad945ec3b5fb51fa3944fcafa77146339"},
+        "signature_verified_with_pinned_trust": {"type": "boolean", "const": true}
+      }
+    }
+  }
+}

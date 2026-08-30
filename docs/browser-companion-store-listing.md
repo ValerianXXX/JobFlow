@@ -2,6 +2,8 @@
 
 This file contains the canonical English listing copy and review notes for Chrome Web Store and Microsoft Edge Add-ons.
 
+> **Unreleased submission draft:** version `0.9.2` is the source-tree candidate. This document does not claim that either browser store has published it.
+
 ## Product identity
 
 - Name: `JobFlow Browser Companion`

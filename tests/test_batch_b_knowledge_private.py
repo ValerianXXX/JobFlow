@@ -17,7 +17,7 @@ from jobops.errors import JobOpsError, SecurityBoundaryError
 from jobops.knowledge import KnowledgeGateway
 from jobops.locator import locate_knowledge_root
 from jobops.private_onboarding import PrivateOnboarding
-from jobops.release import security_scan
+from jobops.release import _scan_text, security_scan
 from jobops.secure_store import WindowsDPAPIStore
 from jobops.security import assert_project_io_path, path_has_hard_excluded_name
 from jobops.util import iso_utc, sha256_bytes, sha256_file
@@ -134,6 +134,24 @@ class KnowledgeEvidenceLifecycleTests(unittest.TestCase):
 
 
 class PathAndPrivateOnboardingTests(unittest.TestCase):
+    def test_release_text_scan_keeps_public_attestation_identity_exact(self) -> None:
+        findings: list[dict[str, str]] = []
+        _scan_text("attestation.json", "thomas@python.org", findings)
+        self.assertEqual(findings, [])
+
+        _scan_text("private.json", "someone" + chr(64) + "python.org", findings)
+        self.assertEqual(findings, [{"kind": "email", "location": "private.json"}])
+
+    def test_release_secret_scan_does_not_cross_line_boundaries(self) -> None:
+        findings: list[dict[str, str]] = []
+        harmless_source = 'self.assertNotIn("' + "password" + '=\")\nnext_value = "synthetic-value"'
+        _scan_text("test.py", harmless_source, findings)
+        self.assertNotIn("credential_assignment", {item["kind"] for item in findings})
+
+        credential = "password" + '="' + "x" * 12 + '"'
+        _scan_text("unsafe.py", credential, findings)
+        self.assertIn("credential_assignment", {item["kind"] for item in findings})
+
     def test_hard_excluded_patterns_cover_variants_and_project_io_is_bounded(self) -> None:
         excluded = ["数据导入区", "原始附件", "cookies", "credentials", "tokens"]
         filenames = [".env", "credentials.json"]

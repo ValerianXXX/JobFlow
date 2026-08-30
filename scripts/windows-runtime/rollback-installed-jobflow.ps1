@@ -1,127 +1,62 @@
 ﻿[CmdletBinding()]
-param()
+param([switch]$StartNewRollback)
 
 $ErrorActionPreference = "Stop"
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$localRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
-$versionsRoot = Join-Path $localRoot "Application\versions"
-$dataRoot = Join-Path $localRoot "Data"
-$currentPath = Join-Path $localRoot "current.json"
-$previousPath = Join-Path $localRoot "previous.json"
-$runtimeLockStream = $null
-$discoveryLockStream = $null
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 
-function Assert-JobFlowLocalPath([string]$Path) {
-    $absolute = [IO.Path]::GetFullPath($Path)
-    $prefix = $localRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
-    if ($absolute -ne $localRoot -and -not $absolute.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
-        throw "JOBFLOW_ROLLBACK_PATH_FORBIDDEN"
+function Assert-OrdinaryLeaf([string]$Path) {
+    $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+    if ($item.PSIsContainer -or
+        ($item.Attributes -band (
+            [IO.FileAttributes]::Directory -bor
+            [IO.FileAttributes]::Device -bor
+            [IO.FileAttributes]::ReparsePoint
+        )) -ne 0) {
+        throw "JOBFLOW_ROLLBACK_WRAPPER_FAILED"
     }
-    $cursor = $absolute
-    while ($cursor -and ($cursor -eq $localRoot -or $cursor.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase))) {
-        if (Test-Path -LiteralPath $cursor) {
-            $item = Get-Item -LiteralPath $cursor -Force
-            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
-                throw "JOBFLOW_ROLLBACK_REPARSE_FORBIDDEN"
-            }
-        }
-        if ($cursor -eq $localRoot) { break }
-        $cursor = [IO.Path]::GetDirectoryName($cursor)
-    }
+    return [IO.Path]::GetFullPath([string]$item.FullName)
 }
 
-function Read-Pointer([string]$Path) {
-    Assert-JobFlowLocalPath $Path
-    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "JOBFLOW_ROLLBACK_VERSION_MISSING" }
-    try { $value = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json }
-    catch { throw "JOBFLOW_ROLLBACK_POINTER_INVALID" }
-    $directory = [string]$value.version_directory
-    if (
-        $value.schema_version -ne 1 -or
-        $directory -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$' -or
-        ([string]$value.source_sha256) -notmatch '^[0-9a-f]{64}$'
-    ) { throw "JOBFLOW_ROLLBACK_POINTER_INVALID" }
-    $target = [IO.Path]::GetFullPath((Join-Path $versionsRoot $directory))
-    Assert-JobFlowLocalPath $target
-    if (-not (Test-Path -LiteralPath $target -PathType Container)) { throw "JOBFLOW_ROLLBACK_VERSION_MISSING" }
-    return @{ Value = $value; Root = $target }
-}
-
-function Write-Pointer([string]$Path, [object]$Value) {
-    Assert-JobFlowLocalPath $Path
-    $temporary = Join-Path $localRoot (([IO.Path]::GetFileName($Path)) + "." + [Guid]::NewGuid().ToString("N") + ".tmp")
-    $backup = Join-Path $localRoot (([IO.Path]::GetFileName($Path)) + "." + [Guid]::NewGuid().ToString("N") + ".backup")
-    try {
-        [IO.File]::WriteAllText($temporary, ($Value | ConvertTo-Json -Depth 6 -Compress), (New-Object Text.UTF8Encoding($false)))
-        if (Test-Path -LiteralPath $Path -PathType Leaf) {
-            [IO.File]::Replace($temporary, $Path, $backup, $true)
-        }
-        else { Move-Item -LiteralPath $temporary -Destination $Path }
-    }
-    finally {
-        if (Test-Path -LiteralPath $temporary -PathType Leaf) { Remove-Item -LiteralPath $temporary -Force }
-        if (Test-Path -LiteralPath $backup -PathType Leaf) { Remove-Item -LiteralPath $backup -Force }
-    }
-}
-
-function Test-Version([string]$VersionRoot) {
-    $python = Join-Path $VersionRoot ".venv\Scripts\python.exe"
-    $health = Join-Path $VersionRoot "scripts\check-jobflow.ps1"
-    if (-not (Test-Path -LiteralPath $python -PathType Leaf) -or -not (Test-Path -LiteralPath $health -PathType Leaf)) {
-        return $false
-    }
-    $saved = $env:JOBFLOW_DATA_ROOT
-    try {
-        $env:JOBFLOW_DATA_ROOT = $dataRoot
-        $null = & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $health -Json -PythonPath $python 2>$null
-        return $LASTEXITCODE -eq 0
-    }
-    catch { return $false }
-    finally {
-        if ($null -eq $saved) { Remove-Item Env:JOBFLOW_DATA_ROOT -ErrorAction SilentlyContinue }
-        else { $env:JOBFLOW_DATA_ROOT = $saved }
-    }
-}
-
-Assert-JobFlowLocalPath $versionsRoot
-Assert-JobFlowLocalPath $dataRoot
-$lockHelpers = Join-Path $PSScriptRoot "jobflow-runtime-locks.ps1"
-Assert-JobFlowLocalPath $lockHelpers
-if (-not (Test-Path -LiteralPath $lockHelpers -PathType Leaf)) { throw "JOBFLOW_RUNTIME_LOCK_HELPERS_MISSING" }
-. $lockHelpers
 try {
-    $runtimeLockPath = Join-Path $dataRoot "state\.jobflow-runtime-maintenance.lock"
-    $discoveryLockPath = Join-Path $dataRoot "state\.authorized-discovery-task.lock"
-    Assert-JobFlowLocalPath $runtimeLockPath
-    Assert-JobFlowLocalPath $discoveryLockPath
-    $runtimeLockStream = Enter-JobFlowFileLock $runtimeLockPath "JOBFLOW_ROLLBACK_RUNNING_INSTANCE_ACTIVE"
-    $discoveryLockStream = Enter-JobFlowFileLock $discoveryLockPath "JOBFLOW_ROLLBACK_DISCOVERY_RUN_ACTIVE"
-
-    $current = Read-Pointer $currentPath
-    $previous = Read-Pointer $previousPath
-    if ([string]$current.Value.version_directory -eq [string]$previous.Value.version_directory) {
-        throw "JOBFLOW_ROLLBACK_VERSION_NOT_DIFFERENT"
+    $localData = [IO.Path]::GetFullPath(
+        [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
+    )
+    if ([string]::IsNullOrWhiteSpace($localData) -or -not [IO.Directory]::Exists($localData)) {
+        throw "JOBFLOW_ROLLBACK_WRAPPER_FAILED"
     }
-    if (-not (Test-Version $previous.Root)) {
-        throw "要恢复的版本未通过本机健康检查；当前版本保持不变。 / The rollback target failed its local health check; the current version was not changed."
+    $expectedRoot = [IO.Path]::GetFullPath([IO.Path]::Combine($localData, "JobOps"))
+    $actualRoot = [IO.Path]::GetFullPath(
+        (Resolve-Path -LiteralPath ([IO.Path]::Combine($PSScriptRoot, ".."))).Path
+    )
+    if (-not $actualRoot.Equals($expectedRoot, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "JOBFLOW_ROLLBACK_WRAPPER_FAILED"
     }
-
-    Write-Pointer $previousPath $current.Value
-    try {
-        Write-Pointer $currentPath $previous.Value
-        if (-not (Test-Version $previous.Root)) { throw "JOBFLOW_ROLLBACK_POST_SWITCH_CHECK_FAILED" }
-    }
-    catch {
-        Write-Pointer $currentPath $current.Value
-        Write-Pointer $previousPath $previous.Value
-        throw
+    foreach ($directory in @($actualRoot, $PSScriptRoot)) {
+        $item = Get-Item -LiteralPath $directory -Force -ErrorAction Stop
+        if (-not $item.PSIsContainer -or
+            ($item.Attributes -band (
+                [IO.FileAttributes]::Device -bor [IO.FileAttributes]::ReparsePoint
+            )) -ne 0) {
+            throw "JOBFLOW_ROLLBACK_WRAPPER_FAILED"
+        }
     }
 
-    Write-Host "后台只读找岗任务保持原授权状态，并将在下次唤醒时读取回滚后的版本。 / The read-only discovery task keeps its authorization state and will resolve the rolled-back version at its next wake-up."
-    Write-Host "JobFlow 已恢复到版本 $($previous.Value.version)。请重新打开 JobFlow。 / JobFlow rolled back to $($previous.Value.version). Start JobFlow again."
+    $bootstrap = Assert-OrdinaryLeaf ([IO.Path]::Combine($PSScriptRoot, "jobflow-bootstrap.ps1"))
+    $trustedPowerShell = Assert-OrdinaryLeaf (
+        [IO.Path]::Combine(
+            [Environment]::SystemDirectory,
+            "WindowsPowerShell\v1.0\powershell.exe"
+        )
+    )
+    $arguments = @(
+        "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+        "-File", $bootstrap, "-Rollback"
+    )
+    if ($StartNewRollback.IsPresent) { $arguments += "-StartNewRollback" }
+    & $trustedPowerShell @arguments
+    exit $LASTEXITCODE
 }
-finally {
-    Exit-JobFlowFileLock $discoveryLockStream
-    Exit-JobFlowFileLock $runtimeLockStream
+catch {
+    [Console]::Error.WriteLine("JOBFLOW_ROLLBACK_WRAPPER_FAILED")
+    exit 1
 }
-exit 0

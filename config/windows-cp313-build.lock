@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "lock_type": "protected-builder-wheelhouse",
+  "python_tag": "py3",
+  "platform": "any",
+  "only_binary": true,
+  "packages": [
+    {
+      "name": "pip",
+      "version": "26.2.1",
+      "filename": "pip-26.2.1-py3-none-any.whl",
+      "size": 1816632,
+      "sha256": "sha256:71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e"
+    },
+    {
+      "name": "setuptools",
+      "version": "80.10.2",
+      "filename": "setuptools-80.10.2-py3-none-any.whl",
+      "size": 1064234,
+      "sha256": "sha256:95b30ddfb717250edb492926c92b5221f7ef3fbcc2b07579bcd4a27da21d0173"
+    },
+    {
+      "name": "wheel",
+      "version": "0.48.0",
+      "filename": "wheel-0.48.0-py3-none-any.whl",
+      "size": 33320,
+      "sha256": "sha256:3217dcc807155e45db462d7ef2431f5ddda0d7273b700d05a67b271ceb1287ab"
+    }
+  ]
+}

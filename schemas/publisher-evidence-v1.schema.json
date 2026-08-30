@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobflow.local/schemas/publisher-evidence-v1.schema.json",
+  "title": "JobFlow sanitized publisher evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "format",
+    "evidence_kind",
+    "status",
+    "issued_at_utc",
+    "expires_at_utc",
+    "runtime_build_evidence_sha256",
+    "release",
+    "runtime_closure",
+    "build_inputs_sha256",
+    "psf_sigstore",
+    "deterministic_rebuild",
+    "independent_verification",
+    "offline_smoke",
+    "outer_signing_readiness",
+    "release_safety"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "format": {"type": "string", "const": "JOBFLOW_PUBLISHER_EVIDENCE_V1"},
+    "evidence_kind": {"type": "string", "const": "SANITIZED_PUBLISHER_OBSERVATION"},
+    "status": {"type": "string", "const": "READY_FOR_PROTECTED_SIGNING"},
+    "issued_at_utc": {"$ref": "#/$defs/utc"},
+    "expires_at_utc": {"$ref": "#/$defs/utc"},
+    "runtime_build_evidence_sha256": {"$ref": "#/$defs/sha256"},
+    "release": {"$ref": "#/$defs/release"},
+    "runtime_closure": {"$ref": "#/$defs/runtimeClosure"},
+    "build_inputs_sha256": {"$ref": "#/$defs/sha256"},
+    "psf_sigstore": {"$ref": "#/$defs/psfSigstore"},
+    "deterministic_rebuild": {"$ref": "#/$defs/deterministicRebuild"},
+    "independent_verification": {"$ref": "#/$defs/independentVerification"},
+    "offline_smoke": {"$ref": "#/$defs/offlineSmoke"},
+    "outer_signing_readiness": {"$ref": "#/$defs/outerSigningReadiness"},
+    "release_safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["closure_relabelled", "closure_bytes_modified", "secret_material_in_evidence", "external_actions"],
+      "properties": {
+        "closure_relabelled": {"type": "boolean", "const": false},
+        "closure_bytes_modified": {"type": "boolean", "const": false},
+        "secret_material_in_evidence": {"type": "boolean", "const": false},
+        "external_actions": {"type": "integer", "const": 0}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "utc": {
+      "type": "string",
+      "pattern": "^20[0-9]{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{1,6})?Z$",
+      "format": "date-time"
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "source_commit", "platform", "archive_name", "archive_bytes", "archive_sha256", "archive_prefix"],
+      "properties": {
+        "version": {"$ref": "#/$defs/version"},
+        "source_commit": {"$ref": "#/$defs/commit"},
+        "platform": {"type": "string", "const": "windows-x64"},
+        "archive_name": {"type": "string", "pattern": "^JobFlow-v[0-9]+\\.[0-9]+\\.[0-9]+-windows-x64-complete\\.zip$"},
+        "archive_bytes": {"type": "integer", "minimum": 1, "maximum": 1610612736},
+        "archive_sha256": {"$ref": "#/$defs/sha256"},
+        "archive_prefix": {"type": "string", "pattern": "^JobFlow-v[0-9]+\\.[0-9]+\\.[0-9]+-windows-x64/$"}
+      }
+    },
+    "runtimeClosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest_sha256", "tree_sha256", "source_payload_sha256", "file_count", "total_bytes", "structural_status"],
+      "properties": {
+        "manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "tree_sha256": {"$ref": "#/$defs/sha256"},
+        "source_payload_sha256": {"$ref": "#/$defs/sha256"},
+        "file_count": {"type": "integer", "minimum": 1},
+        "total_bytes": {"type": "integer", "minimum": 1},
+        "structural_status": {"type": "string", "const": "BUILT_UNATTESTED"}
+      }
+    },
+    "psfSigstore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "python_artifact_sha256",
+        "sigstore_bundle_sha256",
+        "trusted_root_sha256",
+        "verifier_sha256",
+        "verifier_version",
+        "certificate_identity",
+        "certificate_oidc_issuer",
+        "signature_verified",
+        "transparency_log_inclusion_verified",
+        "offline_verification",
+        "network_access"
+      ],
+      "properties": {
+        "status": {"type": "string", "const": "VERIFIED"},
+        "python_artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "sigstore_bundle_sha256": {"$ref": "#/$defs/sha256"},
+        "trusted_root_sha256": {"$ref": "#/$defs/sha256"},
+        "verifier_sha256": {"$ref": "#/$defs/sha256"},
+        "verifier_version": {"type": "string", "pattern": "^[0-9A-Za-z][0-9A-Za-z.+_-]{0,31}$"},
+        "certificate_identity": {"type": "string", "const": "thomas@python.org"},
+        "certificate_oidc_issuer": {"type": "string", "const": "https://accounts.google.com"},
+        "signature_verified": {"type": "boolean", "const": true},
+        "transparency_log_inclusion_verified": {"type": "boolean", "const": true},
+        "offline_verification": {"type": "boolean", "const": true},
+        "network_access": {"type": "integer", "const": 0}
+      }
+    },
+    "deterministicRebuild": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verified", "pass_a_archive_sha256", "pass_b_archive_sha256", "pass_a_tree_sha256", "pass_b_tree_sha256"],
+      "properties": {
+        "verified": {"type": "boolean", "const": true},
+        "pass_a_archive_sha256": {"$ref": "#/$defs/sha256"},
+        "pass_b_archive_sha256": {"$ref": "#/$defs/sha256"},
+        "pass_a_tree_sha256": {"$ref": "#/$defs/sha256"},
+        "pass_b_tree_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "independentVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "runtime_build_evidence_sha256", "verifier_sha256", "archive_sha256", "closure_manifest_sha256", "tree_sha256"],
+      "properties": {
+        "status": {"type": "string", "const": "PASS"},
+        "runtime_build_evidence_sha256": {"$ref": "#/$defs/sha256"},
+        "verifier_sha256": {"$ref": "#/$defs/sha256"},
+        "archive_sha256": {"$ref": "#/$defs/sha256"},
+        "closure_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "tree_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "offlineSmoke": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "runtime_build_evidence_sha256", "result_token", "external_actions"],
+      "properties": {
+        "status": {"type": "string", "const": "PASS"},
+        "runtime_build_evidence_sha256": {"$ref": "#/$defs/sha256"},
+        "result_token": {"type": "string", "const": "JOBFLOW_OFFLINE_SMOKE_OK"},
+        "external_actions": {"type": "integer", "const": 0}
+      }
+    },
+    "outerSigningReadiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "release_key_id",
+        "provider_policy_sha256",
+        "challenge_format",
+        "challenge_sha256",
+        "challenge_signature_sha256",
+        "verified_with_pinned_trust",
+        "secret_material_in_evidence"
+      ],
+      "properties": {
+        "status": {"type": "string", "const": "VERIFIED"},
+        "release_key_id": {"type": "string", "const": "sha256:1037057f8578a60ac5b3dc030cb2d70ad945ec3b5fb51fa3944fcafa77146339"},
+        "provider_policy_sha256": {"$ref": "#/$defs/sha256"},
+        "challenge_format": {"type": "string", "const": "JOBFLOW_SIGNER_READINESS_CHALLENGE_V1"},
+        "challenge_sha256": {"$ref": "#/$defs/sha256"},
+        "challenge_signature_sha256": {"$ref": "#/$defs/sha256"},
+        "verified_with_pinned_trust": {"type": "boolean", "const": true},
+        "secret_material_in_evidence": {"type": "boolean", "const": false}
+      }
+    }
+  }
+}

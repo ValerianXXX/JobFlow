@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "status": "ROLE_SPLIT_INTENTIONAL",
+  "source_package": {
+    "requires_python": ">=3.11,<3.14",
+    "tested_minors": [
+      "3.11",
+      "3.12",
+      "3.13"
+    ]
+  },
+  "legacy_windows_source_installer": {
+    "allowed_minors": [
+      "3.11",
+      "3.12"
+    ],
+    "distribution_policy": "PYTHON_SOFTWARE_FOUNDATION_SIGNED_SYSTEM_INSTALLATION"
+  },
+  "production_complete_windows_runtime": {
+    "exact_version": "3.13.15",
+    "python_tag": "cp313",
+    "runtime_tag": "python313",
+    "architecture": "AMD64",
+    "source_policy": "config/windows-runtime-source.json",
+    "runtime_lock": "config/windows-cp313-runtime.lock",
+    "build_lock": "config/windows-cp313-build.lock"
+  }
+}

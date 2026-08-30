@@ -10,21 +10,55 @@ from jobops.application_readiness import build_application_readiness
 from jobops.errors import JobOpsError
 from jobops.external_claims import build_external_claim_set, claim_review_hash
 from jobops.product_capabilities import product_capability_report
+from jobops.publisher_attestation import signer_readiness_challenge_sha256
 from jobops.resume_tailoring import build_resume_tailoring_manifest
 from jobops.runtime_schema import validate_named
 from jobops.sourcing import source_route_hash
-from jobops.util import canonical_json, sha256_bytes
+from jobops.util import canonical_json, load_json, sha256_bytes
 
 
 H = "sha256:" + "a" * 64
+PRODUCTION_RELEASE_KEY_ID = "sha256:1037057f8578a60ac5b3dc030cb2d70ad945ec3b5fb51fa3944fcafa77146339"
 T = "2026-08-12T00:00:00Z"
 FUTURE = "2099-01-01T00:00:00Z"
 JOB = "JOB-ABCDEF123456"
 APP = "APP-ABCDEF123456"
 
 
+def application_wheel_provenance(
+    *, wheel: str, build_lock: str, commit: str = "a" * 40
+) -> dict[str, object]:
+    return {
+        "format": "JOBFLOW_APPLICATION_WHEEL_PROVENANCE_V1",
+        "source_commit": commit,
+        "source_git_tree_oid": "b" * 40,
+        "source_build_tree_sha256": "sha256:" + "c" * 64,
+        "source_archive_sha256": "sha256:" + "d" * 64,
+        "build_lock_sha256": build_lock,
+        "build_recipe_sha256": "sha256:" + "e" * 64,
+        "pass_a_wheel_sha256": wheel,
+        "pass_b_wheel_sha256": wheel,
+        "reproducible": True,
+    }
+
+
 def dimension() -> dict:
     return {"score": 80, "evidence": ["synthetic fixture"], "calculation": "one local fixture", "gaps": [], "confidence": "MEDIUM", "decision_impact": "Does not override hard gates."}
+
+
+def runtime_closure_records() -> list[dict[str, object]]:
+    return [
+        {"path": ".jobops-root", "size": 1, "sha256": H},
+        {"path": "app/jobops/__init__.py", "size": 1, "sha256": H},
+        {"path": "app/jobops/cli.py", "size": 1, "sha256": H},
+        {"path": "app/jobops/runtime_health.py", "size": 1, "sha256": H},
+        {"path": "config/windows-cp313-build.lock", "size": 1, "sha256": H},
+        {"path": "config/windows-cp313-runtime.lock", "size": 1, "sha256": H},
+        {"path": "runtime/python.exe", "size": 1, "sha256": H},
+        {"path": "runtime/python313._pth", "size": 1, "sha256": H},
+        {"path": "runtime/python313.dll", "size": 1, "sha256": H},
+        {"path": "runtime/python313.zip", "size": 1, "sha256": H},
+    ]
 
 
 def valid_fixtures() -> dict[str, dict]:
@@ -136,7 +170,245 @@ def valid_fixtures() -> dict[str, dict]:
         "page_text_persisted": 0,
     }
     live_acceptance["report_hash"] = sha256_bytes(canonical_json(live_acceptance))
+    update_policy = {
+        "minimum_updater_version": "0.6.0",
+        "minimum_bootstrap_version": "0.6.0",
+        "required_structural_status": "BUILT_UNATTESTED",
+        "publisher_attestation_required": True,
+        "final_submit_user_only": True,
+        "automatic_retry_submission_unknown": False,
+        "external_actions_during_update": 0,
+    }
+    runtime_source = load_json(PROJECT / "config" / "windows-runtime-source.json")
+    runtime_lock = load_json(PROJECT / "config" / "windows-cp313-runtime.lock")
+    build_lock = load_json(PROJECT / "config" / "windows-cp313-build.lock")
+    runtime_build_inputs = {
+        "runtime_wheel_lock_sha256": runtime_source["builder"]["runtime_lock_sha256"],
+        "build_wheel_lock_sha256": runtime_source["builder"]["build_lock_sha256"],
+        "wheelhouse_tree_sha256": "sha256:" + "4" * 64,
+        "application_wheel_sha256": "sha256:" + "5" * 64,
+        "application_wheel_provenance": application_wheel_provenance(
+            wheel="sha256:" + "5" * 64,
+            build_lock=runtime_source["builder"]["build_lock_sha256"],
+        ),
+        "builder_toolchain_sha256": "sha256:" + "6" * 64,
+        "runtime_wheel_count": len(runtime_lock["packages"]),
+        "build_wheel_count": len(build_lock["packages"]),
+    }
+    runtime_build_evidence = {
+        "schema_version": 1,
+        "format": "JOBFLOW_RUNTIME_BUILD_EVIDENCE_V1",
+        "evidence_kind": "SANITIZED_BUILD_OBSERVATION",
+        "issued_at_utc": T,
+        "expires_at_utc": "2026-08-13T00:00:00Z",
+        "application_version": "0.6.0",
+        "source_commit": "a" * 40,
+        "platform": "windows-x64",
+        "structural_status": "BUILT_UNATTESTED",
+        "archive": {
+            "name": "JobFlow-v0.6.0-windows-x64-complete.zip",
+            "bytes": 123456,
+            "sha256": "sha256:" + "1" * 64,
+            "archive_prefix": "JobFlow-v0.6.0-windows-x64/",
+        },
+        "runtime_closure": {
+            "manifest_sha256": "sha256:" + "2" * 64,
+            "tree_sha256": "sha256:" + "3" * 64,
+            "source_payload_sha256": "sha256:" + "1" * 64,
+            "file_count": 412,
+            "total_bytes": 9876543,
+            "python_version": "3.13.15",
+            "platform": "windows-x64",
+        },
+        "python_source": {
+            "version": runtime_source["python"]["version"],
+            "artifact_name": runtime_source["python"]["artifact_name"],
+            "artifact_bytes": runtime_source["python"]["artifact_bytes"],
+            "artifact_sha256": runtime_source["python"]["artifact_sha256"],
+            "sigstore_bundle_name": runtime_source["python"]["artifact_name"] + ".sigstore",
+            "sigstore_bundle_bytes": runtime_source["python"]["sigstore_bundle_bytes"],
+            "sigstore_bundle_sha256": runtime_source["python"]["sigstore_bundle_sha256"],
+        },
+        "build_inputs": runtime_build_inputs,
+        "build_inputs_sha256": sha256_bytes(canonical_json(runtime_build_inputs)),
+        "deterministic_build": {
+            "pass_a_archive_sha256": "sha256:" + "1" * 64,
+            "pass_b_archive_sha256": "sha256:" + "1" * 64,
+            "pass_a_tree_sha256": "sha256:" + "3" * 64,
+            "pass_b_tree_sha256": "sha256:" + "3" * 64,
+            "match": True,
+        },
+        "independent_verification": {
+            "status": "PASS",
+            "verifier_sha256": "sha256:" + "7" * 64,
+            "archive_sha256": "sha256:" + "1" * 64,
+            "closure_manifest_sha256": "sha256:" + "2" * 64,
+            "tree_sha256": "sha256:" + "3" * 64,
+        },
+        "offline_smoke": {
+            "status": "PASS",
+            "result_token": "JOBFLOW_OFFLINE_SMOKE_OK",
+            "archive_sha256": "sha256:" + "1" * 64,
+            "closure_manifest_sha256": "sha256:" + "2" * 64,
+            "tree_sha256": "sha256:" + "3" * 64,
+            "external_actions": 0,
+        },
+        "closure_self_claims": {
+            "sigstore_verified": False,
+            "outer_signature_ready": False,
+        },
+        "external_actions": 0,
+    }
+    runtime_build_evidence_sha256 = sha256_bytes(canonical_json(runtime_build_evidence))
+    provider_policy_sha256 = "sha256:" + "8" * 64
+    signer_challenge_sha256 = signer_readiness_challenge_sha256(
+        runtime_build_evidence_sha256=runtime_build_evidence_sha256,
+        archive_sha256=runtime_build_evidence["archive"]["sha256"],
+        source_commit=runtime_build_evidence["source_commit"],
+        provider_policy_sha256=provider_policy_sha256,
+        release_key_id=PRODUCTION_RELEASE_KEY_ID,
+    )
+    publisher_evidence = {
+        "schema_version": 1,
+        "format": "JOBFLOW_PUBLISHER_EVIDENCE_V1",
+        "evidence_kind": "SANITIZED_PUBLISHER_OBSERVATION",
+        "status": "READY_FOR_PROTECTED_SIGNING",
+        "issued_at_utc": "2026-08-12T00:10:00Z",
+        "expires_at_utc": "2026-08-12T04:10:00Z",
+        "runtime_build_evidence_sha256": runtime_build_evidence_sha256,
+        "release": {
+            "version": "0.6.0",
+            "source_commit": "a" * 40,
+            "platform": "windows-x64",
+            "archive_name": "JobFlow-v0.6.0-windows-x64-complete.zip",
+            "archive_bytes": 123456,
+            "archive_sha256": "sha256:" + "1" * 64,
+            "archive_prefix": "JobFlow-v0.6.0-windows-x64/",
+        },
+        "runtime_closure": {
+            "manifest_sha256": "sha256:" + "2" * 64,
+            "tree_sha256": "sha256:" + "3" * 64,
+            "source_payload_sha256": "sha256:" + "1" * 64,
+            "file_count": 412,
+            "total_bytes": 9876543,
+            "structural_status": "BUILT_UNATTESTED",
+        },
+        "build_inputs_sha256": runtime_build_evidence["build_inputs_sha256"],
+        "psf_sigstore": {
+            "status": "VERIFIED",
+            "python_artifact_sha256": runtime_source["python"]["artifact_sha256"],
+            "sigstore_bundle_sha256": runtime_source["python"]["sigstore_bundle_sha256"],
+            "trusted_root_sha256": "sha256:" + "9" * 64,
+            "verifier_sha256": "sha256:" + "a" * 64,
+            "verifier_version": "3.7.2",
+            "certificate_identity": runtime_source["python"]["sigstore_certificate_identity"],
+            "certificate_oidc_issuer": runtime_source["python"]["sigstore_certificate_oidc_issuer"],
+            "signature_verified": True,
+            "transparency_log_inclusion_verified": True,
+            "offline_verification": True,
+            "network_access": 0,
+        },
+        "deterministic_rebuild": {
+            "verified": True,
+            "pass_a_archive_sha256": "sha256:" + "1" * 64,
+            "pass_b_archive_sha256": "sha256:" + "1" * 64,
+            "pass_a_tree_sha256": "sha256:" + "3" * 64,
+            "pass_b_tree_sha256": "sha256:" + "3" * 64,
+        },
+        "independent_verification": {
+            "status": "PASS",
+            "runtime_build_evidence_sha256": runtime_build_evidence_sha256,
+            "verifier_sha256": "sha256:" + "7" * 64,
+            "archive_sha256": "sha256:" + "1" * 64,
+            "closure_manifest_sha256": "sha256:" + "2" * 64,
+            "tree_sha256": "sha256:" + "3" * 64,
+        },
+        "offline_smoke": {
+            "status": "PASS",
+            "runtime_build_evidence_sha256": runtime_build_evidence_sha256,
+            "result_token": "JOBFLOW_OFFLINE_SMOKE_OK",
+            "external_actions": 0,
+        },
+        "outer_signing_readiness": {
+            "status": "VERIFIED",
+            "release_key_id": PRODUCTION_RELEASE_KEY_ID,
+            "provider_policy_sha256": provider_policy_sha256,
+            "challenge_format": "JOBFLOW_SIGNER_READINESS_CHALLENGE_V1",
+            "challenge_sha256": signer_challenge_sha256,
+            "challenge_signature_sha256": "sha256:" + "b" * 64,
+            "verified_with_pinned_trust": True,
+            "secret_material_in_evidence": False,
+        },
+        "release_safety": {
+            "closure_relabelled": False,
+            "closure_bytes_modified": False,
+            "secret_material_in_evidence": False,
+            "external_actions": 0,
+        },
+    }
+    publisher_evidence_sha256 = sha256_bytes(canonical_json(publisher_evidence))
+    clean_windows_acceptance = {
+        "schema_version": 1,
+        "format": "JOBFLOW_CLEAN_WINDOWS_ACCEPTANCE_V1",
+        "evidence_kind": "SANITIZED_CLEAN_WINDOWS_OBSERVATION",
+        "status": "PASS",
+        "issued_at_utc": "2026-08-12T00:20:00Z",
+        "expires_at_utc": "2026-08-13T00:20:00Z",
+        "publisher_evidence_sha256": publisher_evidence_sha256,
+        "release": {
+            "version": "0.6.0",
+            "source_commit": "a" * 40,
+            "platform": "windows-x64",
+        },
+        "signed_bundle": {
+            "manifest_sha256": "sha256:" + "c" * 64,
+            "signature_sha256": "sha256:" + "d" * 64,
+            "archive_name": "JobFlow-v0.6.0-windows-x64-complete.zip",
+            "archive_bytes": 123456,
+            "archive_sha256": "sha256:" + "1" * 64,
+            "release_key_id": PRODUCTION_RELEASE_KEY_ID,
+            "signature_verified_with_pinned_trust": True,
+        },
+        "runtime_closure": {
+            "manifest_sha256": "sha256:" + "2" * 64,
+            "tree_sha256": "sha256:" + "3" * 64,
+            "structural_status": "BUILT_UNATTESTED",
+        },
+        "environment": {
+            "os_family": "Windows",
+            "architecture": "AMD64",
+            "account_profile": "FRESH_STANDARD_USER",
+            "preexisting_jobflow": False,
+        },
+        "browser_companion": {
+            "version": "0.9.1",
+            "chrome_store_version": "0.9.1",
+            "edge_store_version": "0.9.1",
+            "chrome_install_passed": True,
+            "edge_install_passed": True,
+            "native_host_registration_passed": True,
+            "chrome_pairing_passed": True,
+            "edge_pairing_passed": True,
+        },
+        "checks": {
+            "install_passed": True,
+            "startup_passed": True,
+            "health_passed": True,
+            "update_passed": True,
+            "rollback_passed": True,
+            "uninstall_passed": True,
+        },
+        "safety": {
+            "external_actions": 0,
+            "real_job_site_visits": 0,
+            "final_submit_attempts": 0,
+            "secret_material_in_evidence": False,
+        },
+    }
     return {
+        "runtime-build-evidence-v1": runtime_build_evidence,
+        "publisher-evidence-v1": publisher_evidence,
+        "clean-windows-acceptance-v1": clean_windows_acceptance,
         "live-acceptance-report": live_acceptance,
         "product-capability-report": product_capability_report(),
         "support-diagnostics": {
@@ -560,6 +832,9 @@ def valid_fixtures() -> dict[str, dict]:
         },
         "release-readiness": {
             "schema_version": 1, "status": "PUBLIC_RELEASE_BLOCKED", "version": "0.1.0",
+            "public_release_ready": False, "runtime_closure_status": "UNATTESTED",
+            "release_attestation_status": "MISSING", "clean_windows_evidence_status": "NOT_CHECKED",
+            "release_attestation_failure_code": "RELEASE_ATTESTATION_MISSING",
             "head_commit": "a" * 40, "worktree_clean": True, "version_consistent": True,
             "local_verification_status": "PASS", "public_repository_status": "PASS",
             "source_candidate_status": "PASS", "independent_qa_fresh": False,
@@ -567,10 +842,192 @@ def valid_fixtures() -> dict[str, dict]:
             "manual_release_gates": {
                 "repository_metadata": "PENDING", "private_vulnerability_reporting": "PENDING",
                 "sanitized_screenshots": "PENDING", "clean_windows_profile": "PENDING",
+                "browser_companion_stores": "PENDING",
             },
-            "blockers": ["GIT_AUTHOR_IDENTITY_REVIEW_REQUIRED", "INDEPENDENT_QA_STALE_OR_MISSING", "RELEASE_TAG_MISSING"],
+            "blockers": ["RELEASE_ATTESTATION_MISSING", "RELEASE_RUNTIME_CLOSURE_UNATTESTED", "GIT_AUTHOR_IDENTITY_REVIEW_REQUIRED", "INDEPENDENT_QA_STALE_OR_MISSING", "RELEASE_TAG_MISSING"],
             "upload_performed": False, "network_actions": 0, "real_external_actions": 0,
             "next_safe_action": "confirm a public GitHub noreply author identity policy",
+        },
+        "release-toolchain": {
+            "schema_version": 1,
+            "tools": {
+                "node": {
+                    "file_names": ["node.exe"],
+                    "allowed_signers": [],
+                    "allowed_unsigned_sha256": [H],
+                },
+                "git": {
+                    "file_names": ["git.exe"],
+                    "allowed_signers": [],
+                    "allowed_unsigned_sha256": [H],
+                },
+                "python": {
+                    "file_names": ["python.exe"],
+                    "allowed_signers": [],
+                    "allowed_unsigned_sha256": [H],
+                },
+            },
+            "python_execution_runtime": {
+                "source_policy": "config/windows-runtime-source.json",
+                "python_tag": "python313",
+                "maximum_files": 256,
+                "maximum_entry_bytes": 134217728,
+                "maximum_uncompressed_bytes": 268435456,
+                "maximum_compression_ratio": 500,
+                "required_entries": [
+                    "python.exe",
+                    "python3.dll",
+                    "python313.dll",
+                    "python313.zip",
+                    "python313._pth",
+                    "vcruntime140.dll",
+                    "vcruntime140_1.dll",
+                    "_hashlib.pyd",
+                    "unicodedata.pyd",
+                    "select.pyd",
+                ],
+                "active_pth_entries": ["python313.zip", "."],
+            },
+            "javascript_dependencies": {
+                "packages": ["playwright"],
+                "file_count": 1,
+                "total_bytes": 1,
+                "tree_sha256": H,
+            },
+        },
+        "python-support-policy": load_json(PROJECT / "config" / "python-support-policy.json"),
+        "runtime-closure": {
+            "schema_version": 1,
+            "status": "BUILT_UNATTESTED",
+            "artifact_type": "complete-runtime",
+            "platform": "windows-x64",
+            "application_version": "0.6.0",
+            "source_commit": "a" * 40,
+            "python": {
+                "version": "3.13.15",
+                "artifact_name": "python-3.13.15-embed-amd64.zip",
+                "artifact_sha256": H,
+                "sigstore_identity": "https://www.python.org/",
+                "sigstore_verified": False,
+            },
+            "build_inputs": {
+                "wheel_lock_sha256": H,
+                "wheelhouse_tree_sha256": H,
+                "application_wheel_sha256": H,
+                "application_wheel_provenance": application_wheel_provenance(
+                    wheel=H, build_lock=H
+                ),
+                "builder_toolchain_sha256": H,
+                "wheels": [],
+            },
+            "layout": {
+                "python": "runtime/python.exe",
+                "python_pth": "runtime/python313._pth",
+                "application_root": "app",
+                "module": "jobops.cli",
+            },
+            "file_count": len(runtime_closure_records()),
+            "total_bytes": sum(int(item["size"]) for item in runtime_closure_records()),
+            "tree_sha256": sha256_bytes(canonical_json(runtime_closure_records())),
+            "files": runtime_closure_records(),
+            "offline_smoke_tests": {
+                "import_passed": True,
+                "schema_passed": True,
+                "external_actions": 0,
+            },
+            "protected_builder": {
+                "evidence_sha256": H,
+                "deterministic_rebuild_match": True,
+                "outer_signature_ready": False,
+            },
+        },
+        "update-manifest-v2": {
+            "schema_version": 2,
+            "product": "JobFlow",
+            "channel": "stable",
+            "release": {
+                "version": "0.6.0",
+                "source_commit": "a" * 40,
+                "platform": "windows-x64",
+            },
+            "predecessor": {
+                "minimum_version": "0.4.1",
+                "maximum_version_exclusive": "0.6.0",
+                "disallow_downgrade": True,
+                "require_current_runtime_closure": True,
+            },
+            "asset": {
+                "name": "JobFlow-v0.6.0-windows-x64-complete.zip",
+                "bytes": 1,
+                "sha256": H,
+                "archive_prefix": "JobFlow-v0.6.0-windows-x64/",
+            },
+            "runtime_closure": {
+                "manifest_sha256": H,
+                "tree_sha256": H,
+                "structural_status": "BUILT_UNATTESTED",
+                "source_commit": "a" * 40,
+                "source_payload_sha256": H,
+                "file_count": 2,
+                "total_bytes": 2,
+                "python_version": "3.13.15",
+                "platform": "windows-x64",
+                "build_inputs": {
+                    "python_artifact_sha256": H,
+                    "wheel_lock_sha256": H,
+                    "wheelhouse_tree_sha256": H,
+                    "application_wheel_sha256": H,
+                    "application_wheel_provenance": application_wheel_provenance(
+                        wheel=H, build_lock=H
+                    ),
+                    "builder_toolchain_sha256": H,
+                    "wheel_count": 0,
+                },
+            },
+            "publisher_attestation": {
+                "status": "ATTESTED",
+                "format": "JOBFLOW_PUBLISHER_ATTESTATION_V2",
+                "release_key_id": PRODUCTION_RELEASE_KEY_ID,
+                "evidence_format": "JOBFLOW_PUBLISHER_EVIDENCE_V1",
+                "runtime_build_evidence_sha256": runtime_build_evidence_sha256,
+                "publisher_evidence_sha256": publisher_evidence_sha256,
+                "evidence_expires_at_utc": publisher_evidence["expires_at_utc"],
+                "signer_readiness_challenge_sha256": signer_challenge_sha256,
+                "runtime_closure_manifest_sha256": H,
+                "runtime_tree_sha256": H,
+                "build_inputs_sha256": sha256_bytes(canonical_json({
+                    "python_artifact_sha256": H,
+                    "wheel_lock_sha256": H,
+                    "wheelhouse_tree_sha256": H,
+                    "application_wheel_sha256": H,
+                    "application_wheel_provenance": application_wheel_provenance(
+                        wheel=H, build_lock=H
+                    ),
+                    "builder_toolchain_sha256": H,
+                    "wheel_count": 0,
+                })),
+                "source_commit": "a" * 40,
+                "source_payload_sha256": H,
+                "file_count": 2,
+                "total_bytes": 2,
+                "policy_sha256": sha256_bytes(canonical_json(update_policy)),
+                "issued_at_utc": T,
+            },
+            "policy": update_policy,
+            "issued_at_utc": T,
+        },
+        "installed-pointer-v2": {
+            "schema_version": 2,
+            "product": "JobFlow",
+            "version_directory": "v0.6.0-aaaaaaaaaaaa",
+            "version": "0.6.0",
+            "source_commit": "a" * 40,
+            "source_payload_sha256": H,
+            "runtime_closure_manifest_sha256": H,
+            "runtime_tree_sha256": H,
+            "release_key_id": PRODUCTION_RELEASE_KEY_ID,
+            "bootstrap_version": "0.6.0",
+            "platform": "windows-x64",
         },
         "queue-reservation": {"reservation_id": "RSV-ABCDEF123456", "intake_key": H, "application_id": APP, "status": "CONSUMED", "pending_limit": 3, "pending_count": 1, "reserved_count": 1, "created_at": T, "updated_at": T},
         "recovery-event": {"recovery_id": "RCV-ABCDEF123456", "application_id": APP, "blocked_state": "SUBMISSION_UNKNOWN", "last_safe_state": "APPROVED", "validation_hash": H, "decision": "NO_AUTO_RETRY", "created_at": T},

@@ -2,11 +2,14 @@
 
 ## Install once
 
+`Install JobFlow.cmd` uses Windows PowerShell 5.1 to bootstrap the exact complete runtime published on JobFlow's pinned stable GitHub release. It does not use a system Python, create a virtual environment, extract a source runtime, or execute the legacy source installer. The manifest must be schema v2, its signature must match JobFlow's pinned release key, and the complete-runtime archive must match the signed name, size, SHA-256, and runtime-closure identity. Otherwise it stops without activating a new version.
+
 1. Extract the complete JobFlow source ZIP.
-2. Double-click `Install JobFlow.cmd`.
-3. Wait for installation to finish. The installer registers JobFlow's private, user-scoped browser channel and opens the Browser Companion store listing.
-4. Choose **Add to Chrome** or **Get** in Microsoft Edge. Confirm that the publisher and version match the release notes.
-5. Pin the JobFlow J icon if you want it visible in the toolbar.
+2. Double-click `Install JobFlow.cmd` while connected to the internet.
+3. Wait for signed runtime activation and the installed health check to finish.
+4. The installer then registers JobFlow's private, user-scoped browser channel and opens the official Browser Companion listing for the detected default Chrome or Edge browser.
+5. Choose **Add to Chrome** or **Get** in Microsoft Edge. Confirm that the publisher and the published extension version exactly match the JobFlow release notes; a different version will stop safely and request an extension update.
+6. Pin the JobFlow J icon if you want it visible in the toolbar.
 
 The browser requires this one store-install gesture. JobFlow cannot bypass it. Developers testing source changes may use `Install JobFlow Browser Companion.cmd` and the unpacked Local AppData runtime, but ordinary users should install the signed store version.
 
@@ -20,7 +23,7 @@ For a fictional, auto-cleaned tour, run `Start JobFlow Demo.cmd` instead.
 
 ## Update, roll back, or uninstall
 
-- **Update:** download and extract the newer release, then run its `Install JobFlow.cmd`. The new version is health-checked before it becomes current. Candidate data, queues, reports, and encrypted private files are preserved.
+- **Update:** use the installed **Update JobFlow** shortcut for the signed stable channel. Re-running `Install JobFlow.cmd` performs recovery and verifies the installed state; it is not a source-tree update mechanism. Only an exact signed schema-v2 complete runtime can become current. A missing, recovered, retry-required, or unknown state stops without an automatic retry; the existing healthy version and all candidate data remain unchanged.
 - **Roll back:** choose **Roll Back JobFlow** from the Windows Start menu. JobFlow switches only to the previously health-checked version and keeps the same data.
 - **Uninstall the application:** choose **Uninstall JobFlow** from the Start menu. By default this removes application code and browser-channel registration but preserves local user data for a later reinstall.
 - **Remove all local user data:** open PowerShell and run the installed uninstall script with both explicit flags: `& "$env:LOCALAPPDATA\JobOps\bin\uninstall-installed-jobflow.ps1" -RemoveUserData -UserConfirmed`. This is irreversible. The browser extension must still be removed separately in Chrome or Edge.

@@ -1,11 +1,11 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("Initialize", "Sign")]
+    [ValidateSet("InitializeDevelopmentFixture", "SignDevelopmentFixture")]
     [string]$Action,
     [string]$ManifestPath,
     [string]$SignatureOutput,
-    [switch]$EmitChannel
+    [switch]$EmitDevelopmentFixtureChannel
 )
 
 $ErrorActionPreference = "Stop"
@@ -21,10 +21,26 @@ if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
 
 $localAppDataRoot = (Resolve-Path -LiteralPath $env:LOCALAPPDATA).Path
 $jobFlowRoot = [IO.Path]::GetFullPath((Join-Path $localAppDataRoot "JobOps"))
-$keyRoot = [IO.Path]::GetFullPath((Join-Path $jobFlowRoot "ReleaseSigning"))
-$markerPath = Join-Path $keyRoot ".jobflow-release-signing-root"
-$keyPath = Join-Path $keyRoot "release-signing-key.dpapi"
+$keyRoot = [IO.Path]::GetFullPath((Join-Path $jobFlowRoot "DevelopmentFixtureSigning"))
+$markerPath = Join-Path $keyRoot ".jobflow-development-fixture-signing-root"
+$keyPath = Join-Path $keyRoot "development-fixture-signing-key.dpapi"
+$legacyPublisherKeyPath = Join-Path ([IO.Path]::GetFullPath((Join-Path $jobFlowRoot "ReleaseSigning"))) "release-signing-key.dpapi"
 $algorithm = "RSA-PKCS1-v1_5-SHA256"
+$productionChannelPath = Join-Path $projectRoot "config\update-channel.json"
+try {
+    $productionChannel = Get-Content -LiteralPath $productionChannelPath -Raw | ConvertFrom-Json
+    $productionPinnedKeyId = [string]$productionChannel.signature.key_id
+}
+catch { throw "JOBFLOW_PRODUCTION_UPDATE_CHANNEL_INVALID" }
+if ($productionPinnedKeyId -notmatch '^sha256:[0-9a-f]{64}$') {
+    throw "JOBFLOW_PRODUCTION_UPDATE_CHANNEL_INVALID"
+}
+if ([IO.File]::Exists($legacyPublisherKeyPath)) {
+    # Never read, decrypt, migrate, or reuse the former local publisher key.
+    # Its mere presence blocks this development-fixture helper until the user
+    # deliberately removes that obsolete state outside this script.
+    throw "JOBFLOW_LEGACY_PUBLISHER_SIGNING_STATE_PRESENT"
+}
 
 function ConvertTo-ExtendedFileSystemPath([string]$Path) {
     $absolute = [IO.Path]::GetFullPath($Path)
@@ -55,15 +71,17 @@ function Assert-NoReparse([string]$Path, [string]$Boundary, [string]$Code) {
 }
 
 function Assert-KeyPath([string]$Path) {
-    Assert-NoReparse $localAppDataRoot $localAppDataRoot "JOBFLOW_RELEASE_KEY_ROOT_UNTRUSTED"
-    Assert-NoReparse $Path $jobFlowRoot "JOBFLOW_RELEASE_KEY_PATH_UNTRUSTED"
+    Assert-NoReparse $localAppDataRoot $localAppDataRoot "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_ROOT_UNTRUSTED"
+    Assert-NoReparse $Path $jobFlowRoot "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_PATH_UNTRUSTED"
 }
 
 function Set-CurrentUserOnly([string]$Path) {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     $grant = "*$($identity.User.Value):(OI)(CI)F"
-    & "$env:SystemRoot\System32\icacls.exe" $Path "/inheritance:r" "/grant:r" $grant | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "JOBFLOW_RELEASE_KEY_ACL_FAILED" }
+    $icacls = Join-Path ([Environment]::SystemDirectory) "icacls.exe"
+    if (-not [IO.File]::Exists($icacls)) { throw "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_ACL_FAILED" }
+    & $icacls $Path "/inheritance:r" "/grant:r" $grant | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_ACL_FAILED" }
 }
 
 function ConvertTo-Base64Url([byte[]]$Bytes) {
@@ -91,7 +109,7 @@ function Import-PrivateParameters([string]$Json) {
     $value = $Json | ConvertFrom-Json
     $required = @("D", "DP", "DQ", "Exponent", "InverseQ", "Modulus", "P", "Q")
     foreach ($name in $required) {
-        if ([string]::IsNullOrWhiteSpace([string]$value.$name)) { throw "JOBFLOW_RELEASE_KEY_INVALID" }
+        if ([string]::IsNullOrWhiteSpace([string]$value.$name)) { throw "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_INVALID" }
     }
     $parameters = New-Object Security.Cryptography.RSAParameters
     $parameters.D = ConvertFrom-Base64Value ([string]$value.D)
@@ -103,7 +121,7 @@ function Import-PrivateParameters([string]$Json) {
     $parameters.P = ConvertFrom-Base64Value ([string]$value.P)
     $parameters.Q = ConvertFrom-Base64Value ([string]$value.Q)
     if ($parameters.Modulus.Length -lt 256 -or $parameters.Exponent.Length -lt 1) {
-        throw "JOBFLOW_RELEASE_KEY_INVALID"
+        throw "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_INVALID"
     }
     return $parameters
 }
@@ -113,7 +131,7 @@ function Protect-Key([Security.Cryptography.RSAParameters]$Parameters) {
     try {
         return [Security.Cryptography.ProtectedData]::Protect(
             $plain,
-            [Text.Encoding]::UTF8.GetBytes("JobFlow release signing key v1"),
+            [Text.Encoding]::UTF8.GetBytes("JobFlow development fixture signing key v1"),
             [Security.Cryptography.DataProtectionScope]::CurrentUser
         )
     }
@@ -125,21 +143,21 @@ function Read-Key {
     $ioMarkerPath = ConvertTo-ExtendedFileSystemPath $markerPath
     $ioKeyPath = ConvertTo-ExtendedFileSystemPath $keyPath
     if (-not [IO.File]::Exists($ioMarkerPath) -or
-        [IO.File]::ReadAllText($ioMarkerPath).Trim() -ne "JOBFLOW_RELEASE_SIGNING_ROOT_V1" -or
+        [IO.File]::ReadAllText($ioMarkerPath).Trim() -ne "JOBFLOW_DEVELOPMENT_FIXTURE_SIGNING_ROOT_V1" -or
         -not [IO.File]::Exists($ioKeyPath)) {
-        throw "JOBFLOW_RELEASE_KEY_NOT_INITIALIZED"
+        throw "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_NOT_INITIALIZED"
     }
     $protected = [IO.File]::ReadAllBytes($ioKeyPath)
     try {
         $plain = [Security.Cryptography.ProtectedData]::Unprotect(
             $protected,
-            [Text.Encoding]::UTF8.GetBytes("JobFlow release signing key v1"),
+            [Text.Encoding]::UTF8.GetBytes("JobFlow development fixture signing key v1"),
             [Security.Cryptography.DataProtectionScope]::CurrentUser
         )
         try { return Import-PrivateParameters ([Text.Encoding]::UTF8.GetString($plain)) }
         finally { [Array]::Clear($plain, 0, $plain.Length) }
     }
-    catch { throw "JOBFLOW_RELEASE_KEY_DECRYPT_FAILED" }
+    catch { throw "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_DECRYPT_FAILED" }
     finally { [Array]::Clear($protected, 0, $protected.Length) }
 }
 
@@ -158,6 +176,12 @@ function Get-PublicDescriptor([Security.Cryptography.RSAParameters]$Parameters) 
     }
 }
 
+function Assert-DevelopmentFixtureKeySeparated($PublicDescriptor) {
+    if ([string]$PublicDescriptor.key_id -ceq $productionPinnedKeyId) {
+        throw "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_MATCHES_PRODUCTION"
+    }
+}
+
 function Write-BytesAtomic([string]$Path, [byte[]]$Bytes) {
     $absolute = [IO.Path]::GetFullPath($Path)
     $parent = [IO.Path]::GetDirectoryName($absolute)
@@ -170,7 +194,17 @@ function Write-BytesAtomic([string]$Path, [byte[]]$Bytes) {
     $ioAbsolute = ConvertTo-ExtendedFileSystemPath $absolute
     $ioBackup = ConvertTo-ExtendedFileSystemPath $backup
     try {
-        [IO.File]::WriteAllBytes($ioTemporary, $Bytes)
+        $temporaryStream = [IO.File]::Open(
+            $ioTemporary,
+            [IO.FileMode]::CreateNew,
+            [IO.FileAccess]::ReadWrite,
+            [IO.FileShare]::Read
+        )
+        try {
+            $temporaryStream.Write($Bytes, 0, $Bytes.Length)
+            $temporaryStream.Flush($true)
+        }
+        finally { $temporaryStream.Dispose() }
         if ([IO.File]::Exists($ioAbsolute)) {
             # Windows PowerShell binds a null backup path as an empty string on
             # some .NET runtimes.  A same-directory backup keeps replacement
@@ -187,7 +221,7 @@ function Write-BytesAtomic([string]$Path, [byte[]]$Bytes) {
     }
 }
 
-if ($Action -eq "Initialize") {
+if ($Action -eq "InitializeDevelopmentFixture") {
     Assert-KeyPath $keyRoot
     if ([IO.File]::Exists((ConvertTo-ExtendedFileSystemPath $keyPath))) {
         $parameters = Read-Key
@@ -196,10 +230,11 @@ if ($Action -eq "Initialize") {
     else {
         if ([IO.Directory]::Exists((ConvertTo-ExtendedFileSystemPath $keyRoot))) { Assert-KeyPath $keyRoot }
         else { [IO.Directory]::CreateDirectory((ConvertTo-ExtendedFileSystemPath $keyRoot)) | Out-Null }
-        Write-BytesAtomic $markerPath ([Text.Encoding]::UTF8.GetBytes("JOBFLOW_RELEASE_SIGNING_ROOT_V1"))
+        Write-BytesAtomic $markerPath ([Text.Encoding]::UTF8.GetBytes("JOBFLOW_DEVELOPMENT_FIXTURE_SIGNING_ROOT_V1"))
         $rsa = New-Object Security.Cryptography.RSACng 3072
         try {
             $parameters = $rsa.ExportParameters($true)
+            Assert-DevelopmentFixtureKeySeparated (Get-PublicDescriptor $parameters)
             $protected = Protect-Key $parameters
             try { Write-BytesAtomic $keyPath $protected }
             finally { [Array]::Clear($protected, 0, $protected.Length) }
@@ -209,9 +244,16 @@ if ($Action -eq "Initialize") {
         $created = $true
     }
     $public = Get-PublicDescriptor $parameters
-    $result = [ordered]@{ schema_version = 1; status = "RELEASE_SIGNING_KEY_READY"; created = $created; key_id = $public.key_id }
-    if ($EmitChannel) {
-        $result.channel = [ordered]@{
+    Assert-DevelopmentFixtureKeySeparated $public
+    $result = [ordered]@{
+        schema_version = 1
+        status = "DEVELOPMENT_FIXTURE_SIGNING_KEY_READY"
+        created = $created
+        signing_scope = "development-fixture"
+        key_id = $public.key_id
+    }
+    if ($EmitDevelopmentFixtureChannel) {
+        $result.development_fixture_channel = [ordered]@{
             schema_version = 1
             product = "JobFlow"
             channel = "stable"
@@ -247,6 +289,7 @@ if (-not [IO.Directory]::Exists((ConvertTo-ExtendedFileSystemPath $outputParent)
 Assert-NoReparse $outputParent $projectRoot "JOBFLOW_RELEASE_SIGNATURE_OUTPUT_UNTRUSTED"
 $parameters = Read-Key
 $public = Get-PublicDescriptor $parameters
+Assert-DevelopmentFixtureKeySeparated $public
 $rsa = New-Object Security.Cryptography.RSACng
 $manifestBytes = [IO.File]::ReadAllBytes((ConvertTo-ExtendedFileSystemPath $manifest))
 try {
@@ -257,7 +300,7 @@ try {
         [Security.Cryptography.RSASignaturePadding]::Pkcs1
     )
     $encoded = ConvertTo-Base64Url $signature
-    $json = "{`"algorithm`":`"$algorithm`",`"key_id`":`"$($public.key_id)`",`"schema_version`":1,`"signature_b64url`":`"$encoded`"}"
+    $json = "{`"algorithm`":`"$algorithm`",`"key_id`":`"$($public.key_id)`",`"schema_version`":1,`"scope`":`"development-fixture`",`"signature_b64url`":`"$encoded`"}"
     Write-BytesAtomic $output ([Text.Encoding]::UTF8.GetBytes($json))
 }
 finally {
@@ -265,5 +308,10 @@ finally {
     [Array]::Clear($manifestBytes, 0, $manifestBytes.Length)
     if ($null -ne $signature) { [Array]::Clear($signature, 0, $signature.Length) }
 }
-@{ schema_version = 1; status = "UPDATE_MANIFEST_SIGNED"; key_id = $public.key_id } | ConvertTo-Json -Compress
+@{
+    schema_version = 1
+    status = "DEVELOPMENT_FIXTURE_MANIFEST_SIGNED"
+    signing_scope = "development-fixture"
+    key_id = $public.key_id
+} | ConvertTo-Json -Compress
 exit 0
