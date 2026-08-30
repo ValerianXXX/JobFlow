@@ -2293,8 +2293,21 @@ if ([string]$buildToolsA.tree_sha256 -cne [string]$buildToolsB.tree_sha256) {
 }
 $recipeMaterial["build_tools_tree_sha256"] = [string]$buildToolsA.tree_sha256
 $recipeSha = Get-BytesSha256 ([Text.Encoding]::UTF8.GetBytes((ConvertTo-CanonicalJson $recipeMaterial)))
+$sourceWorkA = Join-Path $script:SourceBuildRoot "pass-a-source-work"
+$sourceWorkB = Join-Path $script:SourceBuildRoot "pass-b-source-work"
+Copy-SafeTree $script:SourceSnapshots.retained_a $sourceWorkA
+Copy-SafeTree $script:SourceSnapshots.retained_b $sourceWorkB
+$sourceWorkTreeA = Get-SourceSnapshotIdentity $sourceWorkA @($script:SourceIdentity.entries)
+$sourceWorkTreeB = Get-SourceSnapshotIdentity $sourceWorkB @($script:SourceIdentity.entries)
+if (
+    [string]$sourceWorkTreeA.sha256 -cne [string]$script:SourceSnapshots.source_build_tree_sha256 -or
+    [string]$sourceWorkTreeB.sha256 -cne [string]$script:SourceSnapshots.source_build_tree_sha256
+) { throw "JOBFLOW_RUNTIME_SOURCE_BUILD_TREE_MISMATCH" }
+# Setuptools may create standard metadata beside the source it builds.  Build
+# only inside disposable copies while the two retained commit snapshots stay
+# immutable and are revalidated after each pass.
 $wheelA = Build-ApplicationWheel `
-    $script:SourceSnapshots.snapshot_a `
+    $sourceWorkA `
     (Join-Path $script:SourceBuildRoot "wheel-a") `
     $buildToolsA.root `
     (Join-Path $script:SourceBuildRoot "pass-a-wheel-tmp")
@@ -2303,7 +2316,7 @@ if ([string]$postBuildTreeA.sha256 -cne [string]$script:SourceSnapshots.source_b
     throw "JOBFLOW_RUNTIME_SOURCE_BUILD_TREE_CHANGED"
 }
 $wheelB = Build-ApplicationWheel `
-    $script:SourceSnapshots.snapshot_b `
+    $sourceWorkB `
     (Join-Path $script:SourceBuildRoot "wheel-b") `
     $buildToolsB.root `
     (Join-Path $script:SourceBuildRoot "pass-b-wheel-tmp")
