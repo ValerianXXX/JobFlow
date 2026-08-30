@@ -1871,9 +1871,17 @@ for record in records:
             normalized.append((name, "", ""))
             continue
         if not target.exists():
-            if pure.name not in {"direct_url.json", "REQUESTED"}:
-                raise SystemExit("INSTALLED_RECORD_TARGET_MISSING")
-            continue
+            if pure.name in {"direct_url.json", "REQUESTED"}:
+                continue
+            # Vendored wheels can contain a .data script whose RECORD path is
+            # rewritten as bin/<name> relative to the nested vendor root even
+            # though pip installs the generated launcher in AppRoot/bin.  That
+            # top-level launcher is deliberately removed above.  Accept only
+            # this verified nested relocation shape; every other absent file
+            # remains a hard failure.
+            if record_root != root and pure.parts[0].casefold() in {"bin", "scripts"}:
+                continue
+            raise SystemExit("INSTALLED_RECORD_TARGET_MISSING")
         if target.is_symlink() or not target.is_file():
             raise SystemExit("INSTALLED_RECORD_TARGET_UNSAFE")
         payload = target.read_bytes()

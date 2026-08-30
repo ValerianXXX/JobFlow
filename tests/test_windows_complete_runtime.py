@@ -100,7 +100,7 @@ class WindowsCompleteRuntimeContractTests(unittest.TestCase):
             vendor_info = vendor_root / "vendored-2.0.dist-info"
             vendor_info.mkdir()
             (vendor_info / "RECORD").write_text(
-                "../../bin/vendored.exe,,\nvendored.py,,\n"
+                "../../bin/vendored.exe,,\nbin/vendored,,\nvendored.py,,\n"
                 "vendored-2.0.dist-info/REQUESTED,,\n"
                 "vendored-2.0.dist-info/RECORD,,\n",
                 encoding="utf-8",
