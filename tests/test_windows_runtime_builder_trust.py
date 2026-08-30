@@ -155,6 +155,34 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
             new_build.index("Invoke-OfflineSmoke $closure"),
         )
 
+    def test_offline_smoke_cannot_leave_path_bearing_python_bytecode(self) -> None:
+        text = self._text()
+        smoke = text[
+            text.index("function Invoke-OfflineSmoke") :
+            text.index("function Assert-NoGeneratedBytecodeArtifacts")
+        ]
+        bytecode_guard = text[
+            text.index("function Assert-NoGeneratedBytecodeArtifacts") :
+            text.index("function Assert-CompleteRuntimeArchiveBounds")
+        ]
+        new_build = text[
+            text.index("function New-OneBuild") :
+            text.index("function Remove-SafeBuildRoot")
+        ]
+        self.assertIn('Join-NativeArguments @("-I", "-B", ".offline-smoke.py")', smoke)
+        self.assertIn('$start.EnvironmentVariables["PYTHONDONTWRITEBYTECODE"] = "1"', smoke)
+        self.assertIn('"__pycache__"', bytecode_guard)
+        self.assertIn('@(".pyc", ".pyo")', bytecode_guard)
+        self.assertEqual(new_build.count("Assert-NoGeneratedBytecodeArtifacts $closure"), 2)
+        self.assertLess(
+            new_build.index("Assert-NoGeneratedBytecodeArtifacts $closure"),
+            new_build.index("Invoke-OfflineSmoke $closure"),
+        )
+        self.assertGreater(
+            new_build.rindex("Assert-NoGeneratedBytecodeArtifacts $closure"),
+            new_build.index("Invoke-OfflineSmoke $closure"),
+        )
+
     def test_builder_and_verifier_use_the_same_locale_independent_inventory_order(self) -> None:
         builder = self._text()
         verifier = (PROJECT / "scripts" / "verify-windows-runtime-closure.ps1").read_text(

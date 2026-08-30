@@ -1939,7 +1939,10 @@ print("JOBFLOW_OFFLINE_SMOKE_OK|external_actions=0")
         $start.CreateNoWindow = $true
         $start.RedirectStandardOutput = $true
         $start.RedirectStandardError = $true
-        $start.Arguments = Join-NativeArguments @("-I", ".offline-smoke.py")
+        # The smoke test must never leave path-bearing .pyc files in the
+        # closure.  Both the interpreter flag and environment variable are
+        # deliberate defense in depth for every supported Python build.
+        $start.Arguments = Join-NativeArguments @("-I", "-B", ".offline-smoke.py")
         $start.EnvironmentVariables.Clear()
         foreach ($name in @("SystemRoot", "WINDIR", "TEMP", "TMP")) {
             $value = [Environment]::GetEnvironmentVariable($name)
@@ -1947,6 +1950,7 @@ print("JOBFLOW_OFFLINE_SMOKE_OK|external_actions=0")
         }
         $start.EnvironmentVariables["JOBFLOW_OFFLINE_SMOKE"] = "1"
         $start.EnvironmentVariables["NO_PROXY"] = "*"
+        $start.EnvironmentVariables["PYTHONDONTWRITEBYTECODE"] = "1"
         $process = [Diagnostics.Process]::new()
         $process.StartInfo = $start
         try {
@@ -1961,6 +1965,15 @@ print("JOBFLOW_OFFLINE_SMOKE_OK|external_actions=0")
         finally { $process.Dispose() }
     }
     finally { if ([IO.File]::Exists($scriptPath)) { [IO.File]::Delete($scriptPath) } }
+}
+
+function Assert-NoGeneratedBytecodeArtifacts([string]$ClosureRoot) {
+    foreach ($item in @(Get-ChildItem -LiteralPath $ClosureRoot -Force -Recurse)) {
+        if (
+            ($item.PSIsContainer -and $item.Name -ieq "__pycache__") -or
+            (-not $item.PSIsContainer -and $item.Extension -in @(".pyc", ".pyo"))
+        ) { throw "JOBFLOW_RUNTIME_GENERATED_BYTECODE_REJECTED" }
+    }
 }
 
 function Assert-CompleteRuntimeArchiveBounds([IO.Stream]$Stream, [string]$Prefix) {
@@ -2115,8 +2128,10 @@ exit /b %errorlevel%
 
     Write-ClosureManifest $closure $script:Application.version $false $EvidenceSha `
         $script:RuntimeLock $script:Application $script:WheelhouseTreeSha $ToolchainSha | Out-Null
+    Assert-NoGeneratedBytecodeArtifacts $closure
     Invoke-IndependentVerifier $closure $false $true
     Invoke-OfflineSmoke $closure
+    Assert-NoGeneratedBytecodeArtifacts $closure
     Write-ClosureManifest $closure $script:Application.version $true $EvidenceSha `
         $script:RuntimeLock $script:Application $script:WheelhouseTreeSha $ToolchainSha | Out-Null
     # Hold every final closure file with no write/delete sharing before the
