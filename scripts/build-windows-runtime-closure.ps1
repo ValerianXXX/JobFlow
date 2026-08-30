@@ -1989,6 +1989,78 @@ function Invoke-IndependentArchiveVerifier([object]$ArchiveInput, [bool]$Atteste
     }
 }
 
+function Invoke-RuntimeBuildEvidenceVerifier(
+    [string]$ClosureRoot,
+    [object]$EvidenceInput
+) {
+    Assert-RetainedRuntimeInputIdentity $EvidenceInput -VerifyHash
+    $runtimePython = Join-Path $ClosureRoot "runtime\python.exe"
+    if (-not [IO.File]::Exists($runtimePython)) {
+        throw "JOBFLOW_RUNTIME_BUILD_EVIDENCE_VERIFY_FAILED"
+    }
+    $scriptPath = Join-Path $script:RuntimeBuildRoot (
+        ".runtime-build-evidence-verify-" + [Guid]::NewGuid().ToString("N") + ".py"
+    )
+    $program = @'
+from pathlib import Path
+import sys
+
+from jobops.publisher_attestation import validate_runtime_build_evidence
+
+document = validate_runtime_build_evidence(Path(sys.argv[1]).read_bytes())
+if not document.sha256.startswith("sha256:"):
+    raise RuntimeError("RUNTIME_BUILD_EVIDENCE_DIGEST_INVALID")
+sys.stdout.write("JOBFLOW_RUNTIME_BUILD_EVIDENCE_OK")
+'@
+    Write-Utf8NoBom $scriptPath $program
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = $runtimePython
+    $start.WorkingDirectory = $ClosureRoot
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $start.Arguments = Join-NativeArguments @(
+        "-I", "-B", $scriptPath, [string]$EvidenceInput.path
+    )
+    $start.EnvironmentVariables.Clear()
+    foreach ($name in @("SystemRoot", "WINDIR", "COMSPEC")) {
+        $value = [Environment]::GetEnvironmentVariable($name)
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            $start.EnvironmentVariables[$name] = $value
+        }
+    }
+    $temporary = Join-Path $script:RuntimeBuildRoot "runtime-evidence-verify-tmp"
+    [IO.Directory]::CreateDirectory($temporary) | Out-Null
+    $start.EnvironmentVariables["TEMP"] = $temporary
+    $start.EnvironmentVariables["TMP"] = $temporary
+    $start.EnvironmentVariables["PYTHONNOUSERSITE"] = "1"
+    $start.EnvironmentVariables["PYTHONDONTWRITEBYTECODE"] = "1"
+    $start.EnvironmentVariables["NO_PROXY"] = "*"
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $start
+    try {
+        if (-not $process.Start()) {
+            throw "JOBFLOW_RUNTIME_BUILD_EVIDENCE_VERIFY_FAILED"
+        }
+        $output = $process.StandardOutput.ReadToEnd()
+        $errorText = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
+        if (
+            $process.ExitCode -ne 0 -or
+            $output -cne "JOBFLOW_RUNTIME_BUILD_EVIDENCE_OK" -or
+            -not [string]::IsNullOrWhiteSpace($errorText)
+        ) {
+            throw "JOBFLOW_RUNTIME_BUILD_EVIDENCE_VERIFY_FAILED"
+        }
+    }
+    finally {
+        $process.Dispose()
+        if ([IO.File]::Exists($scriptPath)) { [IO.File]::Delete($scriptPath) }
+        Assert-RetainedRuntimeInputIdentity $EvidenceInput -VerifyHash
+    }
+}
+
 function Invoke-OfflineSmoke([string]$ClosureRoot) {
     $scriptPath = Join-Path $ClosureRoot ".offline-smoke.py"
     $code = @'
@@ -2212,8 +2284,8 @@ exit /b %errorlevel%
     Invoke-IndependentVerifier $closure $false $true
     Invoke-OfflineSmoke $closure
     Assert-NoGeneratedBytecodeArtifacts $closure
-    Write-ClosureManifest $closure $script:Application.version $true $EvidenceSha `
-        $script:RuntimeLock $script:Application $script:WheelhouseTreeSha $ToolchainSha | Out-Null
+    $finalManifest = Write-ClosureManifest $closure $script:Application.version $true $EvidenceSha `
+        $script:RuntimeLock $script:Application $script:WheelhouseTreeSha $ToolchainSha
     # Hold every final closure file with no write/delete sharing before the
     # independent verifier runs.  The ZIP writer consumes these same streams,
     # so no post-verification path re-enumeration can change the payload.
@@ -2221,7 +2293,121 @@ exit /b %errorlevel%
     Invoke-IndependentVerifier $closure $false $false
     $zipPath = Join-Path $PassRoot "complete.zip"
     New-DeterministicZip $closureSnapshot $zipPath "JobFlow-v$($script:Application.version)-windows-x64/"
-    return [pscustomobject]@{ closure=$closure; zip=$zipPath; sha256=Get-Sha256 $zipPath }
+    $manifestRecords = @($closureSnapshot.records | Where-Object {
+        [string]$_.relative -ceq "runtime-closure.json"
+    })
+    if ($manifestRecords.Count -ne 1) {
+        throw "JOBFLOW_RUNTIME_BUILD_MANIFEST_IDENTITY_INVALID"
+    }
+    return [pscustomobject]@{
+        closure = $closure
+        zip = $zipPath
+        sha256 = Get-Sha256 $zipPath
+        manifest_sha256 = [string]$manifestRecords[0].input.sha256
+        tree_sha256 = [string]$finalManifest.tree_sha256
+        file_count = [long]$finalManifest.file_count
+        total_bytes = [long]$finalManifest.total_bytes
+    }
+}
+
+function New-RuntimeBuildEvidence(
+    [object]$FirstBuild,
+    [object]$SecondBuild,
+    [object]$ArchiveInput,
+    [string]$ArchiveName,
+    [object]$SourcePolicy,
+    [object]$RuntimeLock,
+    [object]$BuildLock,
+    [object]$Application,
+    [object]$ApplicationWheelProvenance,
+    [string]$WheelhouseTreeSha,
+    [string]$BuilderToolchainSha,
+    [string]$VerifierSha256,
+    [string]$Commit
+) {
+    $issued = [DateTime]::UtcNow
+    $expires = $issued.AddHours(23)
+    $buildInputs = [ordered]@{
+        runtime_wheel_lock_sha256 = [string]$RuntimeLock.sha256
+        build_wheel_lock_sha256 = [string]$BuildLock.sha256
+        wheelhouse_tree_sha256 = $WheelhouseTreeSha
+        application_wheel_sha256 = [string]$Application.sha256
+        application_wheel_provenance = $ApplicationWheelProvenance
+        builder_toolchain_sha256 = $BuilderToolchainSha
+        runtime_wheel_count = [long]@($RuntimeLock.value.packages).Count
+        build_wheel_count = [long]@($BuildLock.value.packages).Count
+    }
+    $buildInputsSha = Get-BytesSha256 (
+        [Text.UTF8Encoding]::new($false).GetBytes((ConvertTo-CanonicalJson $buildInputs))
+    )
+    return [ordered]@{
+        schema_version = 1
+        format = "JOBFLOW_RUNTIME_BUILD_EVIDENCE_V1"
+        evidence_kind = "SANITIZED_BUILD_OBSERVATION"
+        issued_at_utc = $issued.ToString(
+            "yyyy-MM-ddTHH:mm:ssZ", [Globalization.CultureInfo]::InvariantCulture
+        )
+        expires_at_utc = $expires.ToString(
+            "yyyy-MM-ddTHH:mm:ssZ", [Globalization.CultureInfo]::InvariantCulture
+        )
+        application_version = [string]$Application.version
+        source_commit = $Commit
+        platform = "windows-x64"
+        structural_status = "BUILT_UNATTESTED"
+        archive = [ordered]@{
+            name = $ArchiveName
+            bytes = [long]$ArchiveInput.size
+            sha256 = [string]$ArchiveInput.sha256
+            archive_prefix = "JobFlow-v$([string]$Application.version)-windows-x64/"
+        }
+        runtime_closure = [ordered]@{
+            manifest_sha256 = [string]$FirstBuild.manifest_sha256
+            tree_sha256 = [string]$FirstBuild.tree_sha256
+            source_payload_sha256 = [string]$ArchiveInput.sha256
+            file_count = [long]$FirstBuild.file_count
+            total_bytes = [long]$FirstBuild.total_bytes
+            python_version = [string]$SourcePolicy.python.version
+            platform = "windows-x64"
+        }
+        python_source = [ordered]@{
+            version = [string]$SourcePolicy.python.version
+            artifact_name = [string]$SourcePolicy.python.artifact_name
+            artifact_bytes = [long]$SourcePolicy.python.artifact_bytes
+            artifact_sha256 = [string]$SourcePolicy.python.artifact_sha256
+            sigstore_bundle_name = [string]$SourcePolicy.python.artifact_name + ".sigstore"
+            sigstore_bundle_bytes = [long]$SourcePolicy.python.sigstore_bundle_bytes
+            sigstore_bundle_sha256 = [string]$SourcePolicy.python.sigstore_bundle_sha256
+        }
+        build_inputs = $buildInputs
+        build_inputs_sha256 = $buildInputsSha
+        deterministic_build = [ordered]@{
+            pass_a_archive_sha256 = [string]$FirstBuild.sha256
+            pass_b_archive_sha256 = [string]$SecondBuild.sha256
+            pass_a_tree_sha256 = [string]$FirstBuild.tree_sha256
+            pass_b_tree_sha256 = [string]$SecondBuild.tree_sha256
+            match = $true
+        }
+        independent_verification = [ordered]@{
+            status = "PASS"
+            verifier_sha256 = $VerifierSha256
+            archive_sha256 = [string]$ArchiveInput.sha256
+            closure_manifest_sha256 = [string]$FirstBuild.manifest_sha256
+            tree_sha256 = [string]$FirstBuild.tree_sha256
+        }
+        offline_smoke = [ordered]@{
+            status = "PASS"
+            result_token = "JOBFLOW_OFFLINE_SMOKE_OK"
+            archive_sha256 = [string]$ArchiveInput.sha256
+            closure_manifest_sha256 = [string]$FirstBuild.manifest_sha256
+            tree_sha256 = [string]$FirstBuild.tree_sha256
+            external_actions = 0
+        }
+        closure_self_claims = [ordered]@{
+            sigstore_verified = $false
+            outer_signature_ready = $false
+        }
+        external_actions = 0
+    }
 }
 
 function Remove-SafeBuildRoot([string]$Path) {
@@ -2240,6 +2426,9 @@ $script:ProtectedRuntimeDirectoryLocks = New-Object System.Collections.Generic.L
 $script:ProtectedBuilderRuntime = $null
 $script:SourceBuildRoot = $null
 $script:RuntimeBuildRoot = $null
+$script:RuntimeOutputRoot = $null
+$script:CreatedRuntimeOutputs = New-Object System.Collections.Generic.List[string]
+$script:RuntimeBuildSucceeded = $false
 try {
 $script:Project = Assert-OrdinaryInput $ProjectRoot -Directory
 $script:PythonArtifactInput = Enter-RetainedRuntimeInput $PythonArtifactPath 1 268435456
@@ -2254,6 +2443,7 @@ $script:BuildScriptInput = Enter-RetainedRuntimeInput $MyInvocation.MyCommand.Pa
 $outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
 if (-not [IO.Directory]::Exists($outputRoot)) { [IO.Directory]::CreateDirectory($outputRoot) | Out-Null }
 $outputRoot = Assert-OrdinaryInput $outputRoot -Directory
+$script:RuntimeOutputRoot = $outputRoot
 
 $script:SourcePolicyInput = Enter-RetainedRuntimeInput (Join-Path $script:Project "config\windows-runtime-source.json") 2 1048576
 $sourceDocument = Read-JsonObject $script:SourcePolicyInput
@@ -2505,26 +2695,49 @@ try {
     [IO.Directory]::CreateDirectory($secondRoot) | Out-Null
     $first = New-OneBuild $firstRoot $evidenceSha $toolchainSha
     $second = New-OneBuild $secondRoot $evidenceSha $toolchainSha
-    if ($first.sha256 -cne $second.sha256) { throw "JOBFLOW_RUNTIME_DETERMINISTIC_REBUILD_MISMATCH" }
+    if (
+        $first.sha256 -cne $second.sha256 -or
+        $first.manifest_sha256 -cne $second.manifest_sha256 -or
+        $first.tree_sha256 -cne $second.tree_sha256 -or
+        $first.file_count -ne $second.file_count -or
+        $first.total_bytes -ne $second.total_bytes
+    ) { throw "JOBFLOW_RUNTIME_DETERMINISTIC_REBUILD_MISMATCH" }
 
     $outputName = "JobFlow-v$($script:Application.version)-windows-x64-complete.zip"
     $outputPath = Join-Path $outputRoot $outputName
-    if ([IO.File]::Exists($outputPath) -or [IO.Directory]::Exists($outputPath)) { throw "JOBFLOW_RUNTIME_OUTPUT_EXISTS" }
+    $evidenceOutputName = "JobFlow-runtime-build-evidence.json"
+    $evidenceOutputPath = Join-Path $outputRoot $evidenceOutputName
+    if (
+        [IO.File]::Exists($outputPath) -or [IO.Directory]::Exists($outputPath) -or
+        [IO.File]::Exists($evidenceOutputPath) -or [IO.Directory]::Exists($evidenceOutputPath)
+    ) { throw "JOBFLOW_RUNTIME_OUTPUT_EXISTS" }
     $sourceStream = [IO.File]::Open($first.zip, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
     $targetStream = [IO.File]::Open($outputPath, [IO.FileMode]::CreateNew, [IO.FileAccess]::ReadWrite, [IO.FileShare]::Read)
     try { $sourceStream.CopyTo($targetStream); $targetStream.Flush($true) }
     finally { $targetStream.Dispose(); $sourceStream.Dispose() }
+    $script:CreatedRuntimeOutputs.Add($outputPath)
     if ((Get-Sha256 $outputPath) -cne $first.sha256) { throw "JOBFLOW_RUNTIME_OUTPUT_COMMIT_MISMATCH" }
     # Re-open the exact committed output with a deny-write/delete retained
     # handle and run the verifier shipped by SourceCommit against the archive,
     # not merely the pre-ZIP staging tree.
     $outputInput = Enter-RetainedRuntimeInput $outputPath 1 $script:RuntimeArchiveMaximumUncompressedBytes $first.sha256
     Invoke-IndependentArchiveVerifier $outputInput $false
-    [ordered]@{
+    $runtimeEvidence = New-RuntimeBuildEvidence `
+        $first $second $outputInput $outputName $source $script:RuntimeLock $buildLock `
+        $script:Application $script:ApplicationWheelProvenance $script:WheelhouseTreeSha `
+        $toolchainSha ([string]$script:ClosureVerifierInput.sha256) $SourceCommit
+    Write-Utf8NoBom $evidenceOutputPath (ConvertTo-CanonicalJson $runtimeEvidence)
+    $script:CreatedRuntimeOutputs.Add($evidenceOutputPath)
+    $evidenceInput = Enter-RetainedRuntimeInput $evidenceOutputPath 2 262144
+    Invoke-RuntimeBuildEvidenceVerifier $first.closure $evidenceInput
+    Invoke-IndependentVerifier $first.closure $false $false
+    $result = [ordered]@{
         status = "COMPLETE_RUNTIME_BUILT"
         closure_status = $status
         artifact_name = $outputName
         artifact_sha256 = $first.sha256
+        runtime_build_evidence_name = $evidenceOutputName
+        runtime_build_evidence_sha256 = [string]$evidenceInput.sha256
         deterministic_rebuild_match = $true
         psf_sigstore_verified = $false
         outer_signing_ready = $false
@@ -2532,6 +2745,8 @@ try {
         offline_smoke_external_actions = 0
         public_release_blocked = ($status -cne "ATTESTED")
     } | ConvertTo-Json -Compress
+    $script:RuntimeBuildSucceeded = $true
+    [Console]::Out.Write($result)
 }
 finally { }
 }
@@ -2542,6 +2757,19 @@ finally {
     # archive, and verification phase.  Release them before deleting staging.
     Close-ProtectedRuntimeDirectoryLocks
     Close-RetainedRuntimeInputs
+    if (-not $script:RuntimeBuildSucceeded -and $null -ne $script:RuntimeOutputRoot) {
+        foreach ($createdPath in @($script:CreatedRuntimeOutputs)) {
+            $absoluteCreated = [IO.Path]::GetFullPath([string]$createdPath)
+            if (
+                [IO.Path]::GetDirectoryName($absoluteCreated) -cne [string]$script:RuntimeOutputRoot -or
+                [IO.Path]::GetFileName($absoluteCreated) -notin @(
+                    "JobFlow-runtime-build-evidence.json",
+                    "JobFlow-v$($script:Application.version)-windows-x64-complete.zip"
+                )
+            ) { throw "JOBFLOW_RUNTIME_OUTPUT_CLEANUP_REFUSED" }
+            if ([IO.File]::Exists($absoluteCreated)) { [IO.File]::Delete($absoluteCreated) }
+        }
+    }
     if ($null -ne $script:RuntimeBuildRoot -and [IO.Directory]::Exists([string]$script:RuntimeBuildRoot)) {
         Remove-SafeBuildRoot ([string]$script:RuntimeBuildRoot)
     }

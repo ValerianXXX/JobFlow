@@ -236,6 +236,72 @@ class WindowsCompleteRuntimeContractTests(unittest.TestCase):
         self.assertIn('digest_format = "JOBFLOW_BUILDER_TOOLCHAIN_DIGEST_V1"', script)
         self.assertIn('digest_format = "JOBFLOW_PROTECTED_BUILDER_EVIDENCE_DIGEST_V1"', script)
 
+    def test_builder_emits_and_revalidates_canonical_runtime_build_evidence(self) -> None:
+        script = (SCRIPTS / "build-windows-runtime-closure.ps1").read_text(
+            encoding="utf-8"
+        )
+        producer = script[
+            script.index("function New-RuntimeBuildEvidence") :
+            script.index("function Remove-SafeBuildRoot")
+        ]
+        for required in (
+            'format = "JOBFLOW_RUNTIME_BUILD_EVIDENCE_V1"',
+            'evidence_kind = "SANITIZED_BUILD_OBSERVATION"',
+            'structural_status = "BUILT_UNATTESTED"',
+            "runtime_wheel_lock_sha256",
+            "build_wheel_lock_sha256",
+            "application_wheel_provenance",
+            "pass_a_archive_sha256",
+            "pass_b_archive_sha256",
+            'status = "PASS"',
+            'result_token = "JOBFLOW_OFFLINE_SMOKE_OK"',
+            "sigstore_verified = $false",
+            "outer_signature_ready = $false",
+            "external_actions = 0",
+        ):
+            self.assertIn(required, producer)
+        self.assertIn(
+            '$evidenceOutputName = "JobFlow-runtime-build-evidence.json"', script
+        )
+        committed = script.index(
+            "Invoke-IndependentArchiveVerifier $outputInput $false"
+        )
+        evidence_written = script.index(
+            "Write-Utf8NoBom $evidenceOutputPath", committed
+        )
+        evidence_verified = script.index(
+            "Invoke-RuntimeBuildEvidenceVerifier $first.closure $evidenceInput",
+            evidence_written,
+        )
+        succeeded = script.index("$script:RuntimeBuildSucceeded = $true")
+        self.assertLess(committed, evidence_written)
+        self.assertLess(evidence_written, evidence_verified)
+        self.assertLess(evidence_verified, succeeded)
+        self.assertIn(
+            "validate_runtime_build_evidence(Path(sys.argv[1]).read_bytes())",
+            script,
+        )
+        self.assertIn("$start.CreateNoWindow = $true", script)
+        self.assertIn(
+            "runtime_build_evidence_sha256 = [string]$evidenceInput.sha256",
+            script,
+        )
+
+    def test_failed_runtime_evidence_commit_removes_only_this_build_outputs(self) -> None:
+        script = (SCRIPTS / "build-windows-runtime-closure.ps1").read_text(
+            encoding="utf-8"
+        )
+        cleanup = script[script.rindex("finally {") :]
+        self.assertIn("Close-RetainedRuntimeInputs", cleanup)
+        self.assertIn("if (-not $script:RuntimeBuildSucceeded", cleanup)
+        self.assertIn("$script:CreatedRuntimeOutputs", cleanup)
+        self.assertIn("JOBFLOW_RUNTIME_OUTPUT_CLEANUP_REFUSED", cleanup)
+        self.assertLess(
+            cleanup.index("Close-RetainedRuntimeInputs"),
+            cleanup.index("if (-not $script:RuntimeBuildSucceeded"),
+        )
+        self.assertNotIn("Remove-Item -LiteralPath $script:RuntimeOutputRoot", cleanup)
+
         verifier = (SCRIPTS / "verify-windows-runtime-closure.ps1").read_text(encoding="utf-8")
         self.assertIn('throw "JOBFLOW_RUNTIME_ATTESTATION_UNVERIFIABLE"', verifier)
         self.assertNotIn('$Manifest.status -notin @("BUILT_UNATTESTED", "ATTESTED")', verifier)
