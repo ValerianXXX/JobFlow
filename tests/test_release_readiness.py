@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import unittest
 from contextlib import nullcontext
 from copy import deepcopy
@@ -137,6 +138,7 @@ class ReleaseReadinessContractTests(unittest.TestCase):
             capture_output=True,
             text=True,
             check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
 
     def test_source_commit_fails_closed_when_git_identity_is_unavailable(self) -> None:

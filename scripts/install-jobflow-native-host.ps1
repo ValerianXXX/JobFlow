@@ -1,5 +1,7 @@
 [CmdletBinding()]
-param()
+param(
+    [switch]$Development
+)
 
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
@@ -7,6 +9,7 @@ $sourcePath = Join-Path $PSScriptRoot "native-messaging\JobFlowBrowserCompanionH
 $storeIdentityPath = Join-Path $projectRoot "config\browser-companion-stores.json"
 $projectMarkerPath = Join-Path $projectRoot ".jobops-root"
 $hostName = "com.jobflow.browser_companion"
+$developmentExtensionId = "hhlliaaafegldkmcgmaoaelabipcaooj"
 
 function Assert-JobFlowSourcePath([string]$Path) {
     $absolute = [IO.Path]::GetFullPath($Path)
@@ -448,14 +451,21 @@ try {
         -not ($identity.extension_ids -is [System.Array])) {
         throw "JOBFLOW_BROWSER_STORE_IDENTITY_INVALID"
     }
-    $extensionIds = @($identity.extension_ids)
-    if ($extensionIds.Count -lt 1 -or
-        ($extensionIds | Where-Object {
+    $configuredExtensionIds = @($identity.extension_ids)
+    if ($configuredExtensionIds.Count -lt 1 -or
+        ($configuredExtensionIds | Where-Object {
             -not ($_ -is [string]) -or $_ -cnotmatch '^[a-p]{32}$'
         }).Count -gt 0 -or
-        (@($extensionIds | Select-Object -Unique).Count -ne $extensionIds.Count)) {
+        (@($configuredExtensionIds | Select-Object -Unique).Count -ne $configuredExtensionIds.Count)) {
         throw "JOBFLOW_BROWSER_STORE_IDENTITY_INVALID"
     }
+    $productionExtensionIds = @($configuredExtensionIds | Where-Object {
+        -not $_.Equals($developmentExtensionId, [StringComparison]::Ordinal)
+    })
+    if ($productionExtensionIds.Count -lt 1) {
+        throw "JOBFLOW_BROWSER_STORE_IDENTITY_INVALID"
+    }
+    $extensionIds = if ($Development) { $configuredExtensionIds } else { $productionExtensionIds }
     $allowedOrigins = @($extensionIds | ForEach-Object { "chrome-extension://$_/" })
 
     New-Item -ItemType Directory -Path $stagingRoot -Force | Out-Null

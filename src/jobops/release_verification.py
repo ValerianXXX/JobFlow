@@ -133,6 +133,7 @@ class _CommandRecorder:
             encoding="utf-8",
             errors="replace",
             check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
         output = self._record(command_id, completed.returncode, completed.stdout or "")
         print(f"[PASS] {command_id}", file=sys.stderr, flush=True)
@@ -503,6 +504,7 @@ def _git(git_path: Path, project: Path, *arguments: str) -> str:
         encoding="utf-8",
         errors="replace",
         check=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     if completed.returncode != 0:
         raise ReleaseVerificationError("RELEASE_GIT_FAILED")

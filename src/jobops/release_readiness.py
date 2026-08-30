@@ -252,6 +252,7 @@ def _git(
                 capture_output=True,
                 text=True,
                 check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
     except (OSError, ReleaseToolchainError) as error:
         code = str(error) if isinstance(error, ReleaseToolchainError) else "RELEASE_GIT_UNTRUSTED"

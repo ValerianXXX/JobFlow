@@ -202,6 +202,7 @@ class WindowsAuthorizedDiscoveryTask:
                 errors="replace",
                 timeout=30,
                 check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
         except (OSError, subprocess.SubprocessError) as exc:
             raise JobOpsError("DISCOVERY_TASK_OPERATION_FAILED", "The Windows discovery task operation did not complete.") from exc

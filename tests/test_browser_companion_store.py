@@ -124,6 +124,8 @@ class BrowserCompanionStoreTests(unittest.TestCase):
         self.assertNotIn("icacls.exe", installer)
         self.assertIn("ReparsePoint", installer)
         self.assertIn("allowed_origins", installer)
+        self.assertIn('$developmentExtensionId = "hhlliaaafegldkmcgmaoaelabipcaooj"', installer)
+        self.assertIn("$extensionIds = if ($Development)", installer)
         self.assertNotIn("Write-Host $secret", installer)
         self.assertEqual(
             identities["extension_ids"],

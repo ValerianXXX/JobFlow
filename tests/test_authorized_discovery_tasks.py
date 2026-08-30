@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import unittest
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -140,6 +141,10 @@ class AuthorizedDiscoveryTaskTests(unittest.TestCase):
             self.assertIn("manage-authorized-discovery-task.ps1", serialized)
             self.assertIn("Register", calls[0][0])
             self.assertEqual(calls[0][1]["env"]["JOBFLOW_DISCOVERY_TASK_LOCK_HELD"], "1")
+            self.assertEqual(
+                calls[0][1]["creationflags"],
+                getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
             for forbidden in (
                 "secure-ref:", "example.com", "credit risk", "authorization_id",
                 "application", "resume", "submit",

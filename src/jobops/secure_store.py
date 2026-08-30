@@ -28,7 +28,8 @@ class WindowsDPAPIStore:
 
     def _run(self, operation: str, reference: str | None = None, payload: str | None = None, *, input_encoding: str = "Utf8", output_encoding: str = "Utf8") -> subprocess.CompletedProcess[str]:
         command = [
-            "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(self.script_path),
+            "powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive",
+            "-ExecutionPolicy", "Bypass", "-File", str(self.script_path),
             "-Operation", operation, "-InputEncoding", input_encoding, "-OutputEncoding", output_encoding,
         ]
         if reference:
@@ -37,7 +38,16 @@ class WindowsDPAPIStore:
         environment = os.environ.copy()
         if self.local_app_data:
             environment["LOCALAPPDATA"] = str(self.local_app_data)
-        completed = subprocess.run(command, input=payload, capture_output=True, text=True, timeout=30, check=False, env=environment)
+        completed = subprocess.run(
+            command,
+            input=payload,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+            env=environment,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
         if completed.returncode != 0:
             raise JobOpsError("SECURE_STORE_FAILED", "Windows DPAPI operation failed without exposing private content.", operation=operation, returncode=completed.returncode)
         return completed

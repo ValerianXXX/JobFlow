@@ -321,6 +321,54 @@ function Restore-RegistryDefault([string]$Subkey, [hashtable]$Previous) { }
             )
             self.assertEqual(manifest["allowed_origins"], ["chrome-extension://" + "a" * 32 + "/"])
 
+    def test_production_install_excludes_unpackaged_development_origin(self) -> None:
+        development_id = "hhlliaaafegldkmcgmaoaelabipcaooj"
+        store_ids = ["b" * 32, "c" * 32]
+        for development in (False, True):
+            with self.subTest(development=development), tempfile.TemporaryDirectory(
+                prefix="jobflow-native-origin-mode-"
+            ) as raw:
+                source, local_app_data, environment, command = self._fixture(raw)
+                (source / "config" / "browser-companion-stores.json").write_text(
+                    json.dumps(
+                        {
+                            "schema_version": 1,
+                            "native_host_name": "com.jobflow.browser_companion",
+                            "extension_ids": [development_id, *store_ids],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                installer = source / "scripts" / "install-jobflow-native-host.ps1"
+                script = self._stub_compilation(installer.read_text(encoding="utf-8-sig"))
+                fake_registry = r'''function Read-RegistryDefault([string]$Subkey) {
+    return @{ KeyExists = $false; DefaultExists = $false; Value = $null; Kind = $null }
+}
+function Write-RegistryDefault([string]$Subkey, [string]$Value) { }
+function Restore-RegistryDefault([string]$Subkey, [hashtable]$Previous) { }
+'''
+                installer.write_text(
+                    self._replace_registry_functions(script, fake_registry),
+                    encoding="utf-8",
+                )
+                if development:
+                    command.append("-Development")
+                result = self._run(command, cwd=source, environment=environment)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                manifest = json.loads(
+                    (
+                        local_app_data
+                        / "JobOps"
+                        / "BrowserCompanionHost"
+                        / "com.jobflow.browser_companion.json"
+                    ).read_text(encoding="utf-8")
+                )
+                expected = [development_id, *store_ids] if development else store_ids
+                self.assertEqual(
+                    manifest["allowed_origins"],
+                    [f"chrome-extension://{item}/" for item in expected],
+                )
+
     def test_store_identity_rejects_coercive_json_types_and_duplicate_ids(self) -> None:
         invalid_values = (
             {

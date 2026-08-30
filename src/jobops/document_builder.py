@@ -823,11 +823,19 @@ def export_docx_to_pdf(docx_path: Path, pdf_path: Path, powershell_script: Path)
     pdf_path.parent.mkdir(parents=True, exist_ok=True)
     temporary_pdf = pdf_path.with_name(f".{pdf_path.stem}.jobflow-{uuid.uuid4().hex}.tmp.pdf")
     command = [
-        "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(powershell_script),
+        "powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive",
+        "-ExecutionPolicy", "Bypass", "-File", str(powershell_script),
         "-InputPath", str(docx_path), "-OutputPath", str(temporary_pdf),
     ]
     try:
-        completed = subprocess.run(command, capture_output=True, text=True, timeout=90, check=False)
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=90,
+            check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
         if completed.returncode != 0 or not temporary_pdf.is_file() or temporary_pdf.stat().st_size == 0:
             raise JobOpsError("DOCX_PDF_EXPORT_FAILED", "Microsoft Word PDF export failed.", returncode=completed.returncode, stderr=completed.stderr[-1000:])
         os.replace(temporary_pdf, pdf_path)
@@ -843,7 +851,14 @@ def render_pdf_to_pngs(pdf_path: Path, output_dir: Path, pdftoppm: str) -> list[
     output_dir.mkdir(parents=True, exist_ok=True)
     prefix = output_dir / f".{pdf_path.stem}.jobflow-{uuid.uuid4().hex}"
     try:
-        completed = subprocess.run([pdftoppm, "-png", "-r", "150", str(pdf_path), str(prefix)], capture_output=True, text=True, timeout=90, check=False)
+        completed = subprocess.run(
+            [pdftoppm, "-png", "-r", "150", str(pdf_path), str(prefix)],
+            capture_output=True,
+            text=True,
+            timeout=90,
+            check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
     except (OSError, subprocess.SubprocessError) as exc:
         for page in output_dir.glob(f"{prefix.name}-*.png"):
             page.unlink(missing_ok=True)

@@ -17,6 +17,7 @@ from .util import has_reparse_component, sha256_bytes
 _SHA256 = re.compile(r"sha256:[0-9a-f]{64}")
 _THUMBPRINT = re.compile(r"[0-9A-F]{40}")
 _TOOLS = {"node", "git", "python"}
+_SANITIZED_COMMAND_TOOLS = {*_TOOLS, "powershell"}
 _WINDOWS_EXECUTABLE_EXTENSIONS = ".COM;.EXE;.BAT;.CMD"
 _PROTECTED_ENVIRONMENT_KEYS = {
     "COMSPEC",
@@ -141,7 +142,7 @@ def sanitized_command_environment(
 ) -> dict[str, str]:
     """Build a minimal command environment instead of inheriting caller injection state."""
 
-    if tool not in _TOOLS:
+    if tool not in _SANITIZED_COMMAND_TOOLS:
         raise ReleaseToolchainError("RELEASE_TOOL_KIND_INVALID")
     system = windows_system_directory()
     windows = windows_directory()
@@ -582,6 +583,7 @@ def _embedded_signer_identity(path: Path) -> tuple[str, str]:
         encoding="utf-8",
         errors="replace",
         check=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     try:
         value = json.loads((completed.stdout or "").strip())

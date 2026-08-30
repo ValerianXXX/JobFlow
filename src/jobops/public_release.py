@@ -132,6 +132,7 @@ def tracked_files(project: Path, *, git_path: Path | None = None) -> list[str]:
         env=_git_environment(project, executable),
         capture_output=True,
         check=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     if completed.returncode != 0:
         raise RuntimeError("GIT_REPOSITORY_REQUIRED")
@@ -175,6 +176,7 @@ def _git(project: Path, *arguments: str, git_path: Path | None = None) -> bytes:
         env=_git_environment(project, executable),
         capture_output=True,
         check=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     if completed.returncode != 0:
         raise RuntimeError("GIT_REPOSITORY_REQUIRED")
@@ -227,7 +229,12 @@ def _extract_historical_pdf(project: Path, payload: bytes) -> tuple[str, str]:
             if not interpreter.is_file() or not helper.is_file():
                 continue
             completed = subprocess.run(
-                [str(interpreter), str(helper)], input=payload, capture_output=True, timeout=45, check=False
+                [str(interpreter), str(helper)],
+                input=payload,
+                capture_output=True,
+                timeout=45,
+                check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
             if completed.returncode != 0:
                 continue

@@ -18,6 +18,8 @@ from .authorized_discovery import AuthorizedDiscoveryControl
 from .authorized_discovery_runner import run_authorized_discovery
 from .authorized_discovery_tasks import AuthorizedDiscoveryScheduler, WindowsAuthorizedDiscoveryTask
 from .claim_registry import ClaimRegistry
+from .clean_windows_acceptance import BrowserAcceptanceProbe
+from .clean_windows_runner import run_clean_windows_acceptance
 from .collector import JobCollector
 from .continuous_intake import (
     ContinuousIntakeDescriptorStore,
@@ -260,6 +262,17 @@ def parser() -> argparse.ArgumentParser:
     import_clean.add_argument("--input", type=Path, required=True)
     import_clean.add_argument("--version", default=__version__)
     import_clean.add_argument("--commit", required=True)
+    browser_acceptance = sub.add_parser("probe-clean-windows-browsers")
+    browser_acceptance.add_argument("--timeout-seconds", type=int, default=300)
+    clean_windows = sub.add_parser("run-clean-windows-acceptance")
+    clean_windows.add_argument("--version", default=__version__)
+    clean_windows.add_argument("--commit", required=True)
+    clean_windows.add_argument("--predecessor-version", required=True)
+    clean_windows.add_argument("--predecessor-manifest", type=Path, required=True)
+    clean_windows.add_argument("--predecessor-signature", type=Path, required=True)
+    clean_windows.add_argument("--predecessor-archive", type=Path, required=True)
+    clean_windows.add_argument("--output", type=Path, required=True)
+    clean_windows.add_argument("--browser-timeout-seconds", type=int, default=300)
     return root
 
 
@@ -850,6 +863,24 @@ def main(argv: list[str] | None = None) -> int:
                 commit=args.commit,
             )
             emit({**result, "next_safe_action": "CHECK_RELEASE_READINESS"}, project)
+        elif args.command == "probe-clean-windows-browsers":
+            with BrowserAcceptanceProbe(project) as probe:
+                probe.open_browsers()
+                result = probe.wait(args.timeout_seconds)
+            emit({**result, "next_safe_action": "RUN_FULL_CLEAN_WINDOWS_ACCEPTANCE"}, project)
+        elif args.command == "run-clean-windows-acceptance":
+            result = run_clean_windows_acceptance(
+                project,
+                version=args.version,
+                commit=args.commit,
+                predecessor_version=args.predecessor_version,
+                predecessor_manifest=args.predecessor_manifest,
+                predecessor_signature=args.predecessor_signature,
+                predecessor_archive=args.predecessor_archive,
+                output=args.output,
+                browser_timeout_seconds=args.browser_timeout_seconds,
+            )
+            emit({**result, "next_safe_action": "IMPORT_CLEAN_WINDOWS_ACCEPTANCE"}, project)
         else:
             raise JobOpsError("UNKNOWN_COMMAND", "The requested command is not registered in this build.", command=args.command)
         return 0

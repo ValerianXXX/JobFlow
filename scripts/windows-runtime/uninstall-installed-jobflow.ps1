@@ -179,6 +179,37 @@ function Remove-SafeTarget([string]$Path) {
     }
 }
 
+function Remove-SafeInstallerStateRoot {
+    # Installer downloads and transaction journals are product-owned state,
+    # not applicant data.  A full uninstall must remove this exact sibling so
+    # that a subsequent clean-Windows run cannot inherit a stale updater.
+    $installerStateRoot = [IO.Path]::GetFullPath((Join-Path $localAppDataRoot "JobFlowInstaller"))
+    $expectedParent = [IO.Path]::GetDirectoryName($installerStateRoot)
+    if (-not $expectedParent.Equals($localAppDataRoot, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "JOBFLOW_UNINSTALL_INSTALLER_STATE_ROOT_FORBIDDEN"
+    }
+    Assert-ExistingAncestorChainNoReparse $installerStateRoot "JOBFLOW_UNINSTALL_INSTALLER_STATE_REPARSE_FORBIDDEN"
+    if (-not (Test-Path -LiteralPath $installerStateRoot)) { return }
+    $items = @((Get-Item -LiteralPath $installerStateRoot -Force))
+    if (-not $items[0].PSIsContainer) {
+        throw "JOBFLOW_UNINSTALL_INSTALLER_STATE_ROOT_FORBIDDEN"
+    }
+    $items += @(Get-ChildItem -LiteralPath $installerStateRoot -Recurse -Force)
+    foreach ($item in $items) {
+        if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+            throw "JOBFLOW_UNINSTALL_INSTALLER_STATE_REPARSE_FORBIDDEN"
+        }
+        if (-not $item.PSIsContainer) {
+            Assert-SingleLinkUninstallLeaf $item.FullName "JOBFLOW_UNINSTALL_INSTALLER_STATE_HARDLINK_FORBIDDEN"
+        }
+    }
+    $extended = "\\?\" + $installerStateRoot
+    foreach ($file in [IO.Directory]::EnumerateFiles($extended, "*", [IO.SearchOption]::AllDirectories)) {
+        [IO.File]::SetAttributes($file, [IO.FileAttributes]::Normal)
+    }
+    [IO.Directory]::Delete($extended, $true)
+}
+
 function Enter-JobFlowFileLock {
     param(
         [Parameter(Mandatory = $true)]
@@ -330,6 +361,7 @@ try {
         $remaining = @(Get-ChildItem -LiteralPath $localRoot -Force)
         if ($remaining.Count -eq 0) { Remove-Item -LiteralPath $localRoot -Force }
     }
+    Remove-SafeInstallerStateRoot
 }
 finally {
     if ($nativeHostInstallMutexHeld -and $null -ne $nativeHostInstallMutex) {

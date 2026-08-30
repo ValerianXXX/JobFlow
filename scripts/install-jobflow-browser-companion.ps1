@@ -1023,9 +1023,11 @@ try {
     Set-CurrentUserOnly $bindingPath
     Assert-JobFlowSourcePath $nativeHostInstaller
     $trustedPowerShell = Get-TrustedWindowsPowerShellExecutable
+    $nativeHostArguments = @("-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $nativeHostInstaller)
+    if ($Development) { $nativeHostArguments += "-Development" }
     Invoke-TrustedConsoleExecutable `
         $trustedPowerShell `
-        @("-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $nativeHostInstaller) `
+        $nativeHostArguments `
         "JOBFLOW_NATIVE_HOST_INSTALL_FAILED"
     $activationCommitted = $true
 }

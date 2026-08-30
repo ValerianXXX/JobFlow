@@ -123,7 +123,14 @@ def extract_pdf_text(
             command = [str(interpreter), str(helper), str(path)]
             if layout:
                 command.append("--layout")
-            completed = subprocess.run(command, capture_output=True, text=True, timeout=45, check=False)
+            completed = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                timeout=45,
+                check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
             if completed.returncode == 0:
                 try:
                     result = json.loads(completed.stdout)

@@ -1566,6 +1566,10 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn("JOBFLOW_UNINSTALL_DISCOVERY_RUN_ACTIVE", uninstall)
         self.assertIn("if (-not $skipBrowserIntegrationForAcceptance)", uninstall)
         self.assertIn("function Remove-SafeTarget", uninstall)
+        self.assertIn("function Remove-SafeInstallerStateRoot", uninstall)
+        self.assertIn('Join-Path $localAppDataRoot "JobFlowInstaller"', uninstall)
+        self.assertIn("JOBFLOW_UNINSTALL_INSTALLER_STATE_REPARSE_FORBIDDEN", uninstall)
+        self.assertIn("JOBFLOW_UNINSTALL_INSTALLER_STATE_HARDLINK_FORBIDDEN", uninstall)
         self.assertIn("$cursor = $absolute", uninstall)
         self.assertIn("$cursorItem.Attributes -band [IO.FileAttributes]::ReparsePoint", uninstall)
         self.assertIn("function Enter-JobFlowFileLock", uninstall)
@@ -1588,10 +1592,12 @@ class WindowsLauncherTests(unittest.TestCase):
             state_root = install_root / "Data" / "state"
             app_root = install_root / "Application" / "versions" / "v-test"
             private_root = install_root / "private"
+            installer_state = local_app_data / "JobFlowInstaller"
             bin_root.mkdir(parents=True)
             state_root.mkdir(parents=True)
             app_root.mkdir(parents=True)
             private_root.mkdir(parents=True)
+            installer_state.mkdir(parents=True)
             shutil.copy2(
                 PROJECT / "scripts" / "windows-runtime" / "jobflow-runtime-locks.ps1",
                 bin_root / "jobflow-runtime-locks.ps1",
@@ -1603,6 +1609,7 @@ class WindowsLauncherTests(unittest.TestCase):
             (private_root / "keep.bin").write_bytes(b"preserved-private-state")
             (app_root / "runtime.bin").write_bytes(b"application-runtime")
             (install_root / "current.json").write_text("{}", encoding="utf-8")
+            (installer_state / "cached-update.bin").write_bytes(b"product-owned-installer-state")
             environment = ISOLATED_ENVIRONMENT.copy()
             environment.update({
                 "LOCALAPPDATA": str(local_app_data),
@@ -1630,6 +1637,7 @@ class WindowsLauncherTests(unittest.TestCase):
             self.assertFalse((install_root / "Application").exists())
             self.assertFalse(bin_root.exists())
             self.assertFalse((install_root / "current.json").exists())
+            self.assertFalse(installer_state.exists())
             self.assertEqual((state_root / "keep.db").read_bytes(), b"preserved-user-state")
             self.assertEqual((private_root / "keep.bin").read_bytes(), b"preserved-private-state")
             self.assertIn("local profile, queue, and private data were preserved", completed.stdout)

@@ -198,6 +198,28 @@ class ReleaseToolchainTests(unittest.TestCase):
                 value = sanitized_command_environment(tool, project=PROJECT)
                 self.assertEqual(value["PATHEXT"], ".COM;.EXE;.BAT;.CMD")
 
+    def test_powershell_acceptance_environment_is_minimal_and_not_a_release_tool_role(self) -> None:
+        injected = {
+            "PSModulePath": r"C:\attacker\modules",
+            "PYTHONPATH": r"C:\attacker\python",
+            "GIT_DIR": r"C:\attacker\repo",
+        }
+        with patch.dict(os.environ, injected, clear=False):
+            value = sanitized_command_environment(
+                "powershell",
+                project=PROJECT,
+                extra={
+                    "LOCALAPPDATA": r"C:\JobFlowTestProfile\AppData\Local",
+                    "APPDATA": r"C:\JobFlowTestProfile\AppData\Roaming",
+                    "USERPROFILE": r"C:\JobFlowTestProfile",
+                },
+            )
+        self.assertNotIn("PSModulePath", value)
+        self.assertNotIn("PYTHONPATH", value)
+        self.assertNotIn("GIT_DIR", value)
+        self.assertEqual(value["LOCALAPPDATA"], r"C:\JobFlowTestProfile\AppData\Local")
+        self.assertEqual(set(load_release_toolchain_policy(PROJECT)["tools"]), {"git", "node", "python"})
+
     def test_extra_environment_cannot_replace_protected_windows_values(self) -> None:
         for name in (
             "COMSPEC",

@@ -94,6 +94,7 @@ def _run_git(project: Path, git_path: Path, *arguments: str) -> subprocess.Compl
         env=_git_environment(project, git_path),
         capture_output=True,
         check=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
 
 
@@ -265,12 +266,14 @@ def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Pa
     help_result = subprocess.run(
         [python, *isolated, str(entry), "--help"], cwd=candidate, env=environment,
         capture_output=True, text=True, timeout=30, check=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     if help_result.returncode != 0 or not all(command in help_result.stdout for command in ("onboarding-center", "demo", "check-private-store")):
         raise JobOpsError("RELEASE_SMOKE_CLI_FAILED", "The extracted source candidate public CLI did not start correctly.")
     private_check = subprocess.run(
         [python, *isolated, str(entry), "check-private-store"], cwd=candidate, env=environment,
         capture_output=True, text=True, timeout=30, check=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     try:
         private_result = json.loads(private_check.stdout)
@@ -290,6 +293,7 @@ def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Pa
     service_result = subprocess.run(
         [python, *isolated, str(smoke)], cwd=candidate, env=environment,
         capture_output=True, text=True, timeout=45, check=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     if service_result.returncode != 0:
         raise JobOpsError("RELEASE_SMOKE_UI_FAILED", "The extracted source candidate local UI smoke failed.")
