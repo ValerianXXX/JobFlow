@@ -103,6 +103,32 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
         final_verify = text.index("Invoke-IndependentArchiveVerifier $outputInput $false", committed)
         self.assertLess(committed, final_verify)
 
+    def test_independent_verifier_failure_diagnostics_emit_only_fixed_codes(self) -> None:
+        text = self._text()
+        helper = text[
+            text.index("function Write-SafeIndependentVerifierFailure") :
+            text.index("function Invoke-IndependentVerifier")
+        ]
+        verifier = text[
+            text.index("function Invoke-IndependentVerifier") :
+            text.index("function Invoke-IndependentArchiveVerifier")
+        ]
+        archive = text[
+            text.index("function Invoke-IndependentArchiveVerifier") :
+            text.index("function Invoke-OfflineSmoke")
+        ]
+        self.assertIn("'JOBFLOW_RUNTIME_[A-Z0-9_]+'", helper)
+        self.assertIn('$Prefix + "=" + $code', helper)
+        self.assertNotIn("WriteLine($Text)", helper)
+        self.assertIn(
+            'Write-SafeIndependentVerifierFailure "JOBFLOW_RUNTIME_STRUCTURAL_VERIFY_DETAIL" $errorText',
+            verifier,
+        )
+        self.assertIn(
+            'Write-SafeIndependentVerifierFailure "JOBFLOW_RUNTIME_ARCHIVE_VERIFY_DETAIL" $errorText',
+            archive,
+        )
+
     def test_deterministic_builder_uses_ordinal_sorting_only(self) -> None:
         text = self._text()
         self.assertNotIn("Sort-Object", text)

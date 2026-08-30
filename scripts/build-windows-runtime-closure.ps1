@@ -1816,6 +1816,15 @@ function Write-ClosureManifest(
     return $manifest
 }
 
+function Write-SafeIndependentVerifierFailure([string]$Prefix, [string]$Text) {
+    $match = [Text.RegularExpressions.Regex]::Match(
+        [string]$Text,
+        'JOBFLOW_RUNTIME_[A-Z0-9_]+'
+    )
+    $code = if ($match.Success) { [string]$match.Value } else { "UNKNOWN" }
+    [Console]::Error.WriteLine($Prefix + "=" + $code)
+}
+
 function Invoke-IndependentVerifier([string]$ClosureRoot, [bool]$Attested) {
     Assert-RetainedRuntimeInputIdentity $script:ClosureVerifierInput -VerifyHash
     $verifier = [string]$script:ClosureVerifierInput.path
@@ -1836,6 +1845,7 @@ function Invoke-IndependentVerifier([string]$ClosureRoot, [bool]$Attested) {
         $errorText = $process.StandardError.ReadToEnd()
         $process.WaitForExit()
         if ($process.ExitCode -ne 0 -or $output -notmatch 'RUNTIME_CLOSURE_VERIFIED') {
+            Write-SafeIndependentVerifierFailure "JOBFLOW_RUNTIME_STRUCTURAL_VERIFY_DETAIL" $errorText
             throw "JOBFLOW_RUNTIME_STRUCTURAL_VERIFY_FAILED"
         }
     }
@@ -1872,7 +1882,10 @@ function Invoke-IndependentArchiveVerifier([object]$ArchiveInput, [bool]$Atteste
             $process.ExitCode -ne 0 -or
             $output -notmatch 'RUNTIME_CLOSURE_VERIFIED' -or
             -not [string]::IsNullOrWhiteSpace($errorText)
-        ) { throw "JOBFLOW_RUNTIME_ARCHIVE_VERIFY_FAILED" }
+        ) {
+            Write-SafeIndependentVerifierFailure "JOBFLOW_RUNTIME_ARCHIVE_VERIFY_DETAIL" $errorText
+            throw "JOBFLOW_RUNTIME_ARCHIVE_VERIFY_FAILED"
+        }
     }
     finally {
         $process.Dispose()
