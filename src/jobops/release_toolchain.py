@@ -20,8 +20,11 @@ _TOOLS = {"node", "git", "python"}
 _WINDOWS_EXECUTABLE_EXTENSIONS = ".COM;.EXE;.BAT;.CMD"
 _PROTECTED_ENVIRONMENT_KEYS = {
     "COMSPEC",
+    "HOMEDRIVE",
     "PATH",
     "PATHEXT",
+    "PROGRAMFILES",
+    "PROGRAMFILES(X86)",
     "SYSTEMDRIVE",
     "SYSTEMROOT",
     "TEMP",
@@ -162,6 +165,12 @@ def sanitized_command_environment(
     environment = {
         "SystemRoot": str(windows),
         "SystemDrive": system_drive,
+        # Playwright resolves the system Edge installation from these standard
+        # Windows locations. Derive them from the authenticated Windows drive
+        # instead of inheriting caller-controlled environment values.
+        "HOMEDRIVE": system_drive,
+        "PROGRAMFILES": str(Path(system_drive + "\\") / "Program Files"),
+        "PROGRAMFILES(X86)": str(Path(system_drive + "\\") / "Program Files (x86)"),
         "WINDIR": str(windows),
         "COMSPEC": str(system / "cmd.exe"),
         "TEMP": str(temporary),

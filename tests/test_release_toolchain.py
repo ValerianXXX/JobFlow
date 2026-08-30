@@ -172,10 +172,25 @@ class ReleaseToolchainTests(unittest.TestCase):
 
     def test_command_environment_uses_the_trusted_windows_drive(self) -> None:
         expected = windows_directory().drive
-        with patch.dict(os.environ, {"SystemDrive": r"Z:", "SystemRoot": r"Z:\attacker"}):
+        with patch.dict(
+            os.environ,
+            {
+                "SystemDrive": r"Z:",
+                "SystemRoot": r"Z:\attacker",
+                "HOMEDRIVE": r"Z:",
+                "PROGRAMFILES": r"Z:\attacker",
+                "PROGRAMFILES(X86)": r"Z:\attacker-x86",
+            },
+        ):
             for tool in ("git", "node", "python"):
                 value = sanitized_command_environment(tool, project=PROJECT)
                 self.assertEqual(value["SystemDrive"], expected)
+                self.assertEqual(value["HOMEDRIVE"], expected)
+                self.assertEqual(value["PROGRAMFILES"], str(Path(expected + "\\") / "Program Files"))
+                self.assertEqual(
+                    value["PROGRAMFILES(X86)"],
+                    str(Path(expected + "\\") / "Program Files (x86)"),
+                )
 
     def test_command_environment_supplies_a_fixed_native_executable_extension_set(self) -> None:
         with patch.dict(os.environ, {"PATHEXT": ".CPL;.JS;.ATTACKER"}):
@@ -184,7 +199,16 @@ class ReleaseToolchainTests(unittest.TestCase):
                 self.assertEqual(value["PATHEXT"], ".COM;.EXE;.BAT;.CMD")
 
     def test_extra_environment_cannot_replace_protected_windows_values(self) -> None:
-        for name in ("COMSPEC", "PATH", "PATHEXT", "SYSTEMROOT", "TEMP"):
+        for name in (
+            "COMSPEC",
+            "HOMEDRIVE",
+            "PATH",
+            "PATHEXT",
+            "PROGRAMFILES",
+            "PROGRAMFILES(X86)",
+            "SYSTEMROOT",
+            "TEMP",
+        ):
             with self.subTest(name=name):
                 with self.assertRaisesRegex(
                     ReleaseToolchainError,
