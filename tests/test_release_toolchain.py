@@ -15,6 +15,7 @@ from jobops.release_toolchain import (
     locked_authenticated_tool,
     sanitized_command_environment,
     verify_javascript_dependency_tree,
+    windows_directory,
     windows_system_directory,
 )
 
@@ -168,6 +169,13 @@ class ReleaseToolchainTests(unittest.TestCase):
         expected = windows_system_directory()
         with patch.dict(os.environ, {"SystemRoot": r"C:\attacker", "WINDIR": r"C:\attacker"}):
             self.assertEqual(windows_system_directory(), expected)
+
+    def test_command_environment_uses_the_trusted_windows_drive(self) -> None:
+        expected = windows_directory().drive
+        with patch.dict(os.environ, {"SystemDrive": r"Z:", "SystemRoot": r"Z:\attacker"}):
+            for tool in ("git", "node", "python"):
+                value = sanitized_command_environment(tool, project=PROJECT)
+                self.assertEqual(value["SystemDrive"], expected)
 
     def test_command_environment_drops_injection_variables(self) -> None:
         injected = {

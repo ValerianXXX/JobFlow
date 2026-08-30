@@ -8,7 +8,12 @@ $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $trustedSystemDirectory = [Environment]::SystemDirectory
 $trustedWindowsRoot = [IO.Directory]::GetParent($trustedSystemDirectory).FullName
+$trustedSystemDrive = [IO.Path]::GetPathRoot($trustedWindowsRoot).TrimEnd('\')
+if ($trustedSystemDrive -notmatch '^[A-Za-z]:$') {
+    throw "JOBFLOW_RELEASE_WINDOWS_DRIVE_INVALID"
+}
 $env:SystemRoot = $trustedWindowsRoot
+$env:SystemDrive = $trustedSystemDrive
 $windowsModuleRoot = Join-Path $trustedSystemDirectory "WindowsPowerShell\v1.0\Modules"
 foreach ($moduleName in @("Microsoft.PowerShell.Management", "Microsoft.PowerShell.Security", "Microsoft.PowerShell.Utility")) {
     $moduleManifest = Join-Path (Join-Path $windowsModuleRoot $moduleName) ($moduleName + ".psd1")
@@ -162,6 +167,7 @@ function Get-MinimalChildEnvironment {
         }
     }
     $result["SystemRoot"] = $trustedWindowsRoot
+    $result["SystemDrive"] = $trustedSystemDrive
     $result["WINDIR"] = $trustedWindowsRoot
     $result["COMSPEC"] = Join-Path $trustedSystemDirectory "cmd.exe"
     $result["PATH"] = $trustedSystemDirectory + ";" + (Join-Path $trustedSystemDirectory "WindowsPowerShell\v1.0")

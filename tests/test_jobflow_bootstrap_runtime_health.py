@@ -6,8 +6,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from tests import test_jobflow_bootstrap_activation as activation_tests
-from tests.test_jobflow_bootstrap_trust import SCRIPT
+import test_jobflow_bootstrap_activation as activation_tests
+from test_jobflow_bootstrap_trust import SCRIPT
 
 
 OK = b"JOBFLOW_RUNTIME_HEALTH_OK_V1\n"

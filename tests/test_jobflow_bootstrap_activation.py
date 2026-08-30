@@ -17,14 +17,14 @@ from pathlib import Path
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
-from tests.test_jobflow_bootstrap_trust import (
+from test_jobflow_bootstrap_trust import (
     POWERSHELL,
     PRODUCTION_KEY_ID,
     PRODUCTION_MODULUS,
     PROJECT,
     SCRIPT,
 )
-from tests.test_runtime_health import (
+from test_runtime_health import (
     CONFIG_NAMES,
     HEALTH_SOURCE,
     PACKAGE_SENTINELS,

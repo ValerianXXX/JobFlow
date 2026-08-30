@@ -131,6 +131,8 @@ class ReleaseVerificationPowerShellTests(unittest.TestCase):
         self.assertNotIn('Get-Command "python"', script)
         self.assertIn("$trustedSystemDirectory = [Environment]::SystemDirectory", script)
         self.assertIn("$env:SystemRoot = $trustedWindowsRoot", script)
+        self.assertIn("$env:SystemDrive = $trustedSystemDrive", script)
+        self.assertIn('$result["SystemDrive"] = $trustedSystemDrive', script)
         self.assertNotIn("Join-Path $env:SystemRoot", script)
         self.assertIn("Microsoft.PowerShell.Security\\Get-AuthenticodeSignature", script)
         self.assertIn("JOBFLOW_RELEASE_PYTHON_SIGNER_UNPINNED", script)

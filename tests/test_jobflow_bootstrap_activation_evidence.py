@@ -7,8 +7,8 @@ import subprocess
 import unittest
 from pathlib import Path
 
-from tests import test_jobflow_bootstrap_activation as activation_tests
-from tests.test_jobflow_bootstrap_trust import POWERSHELL, PROJECT
+import test_jobflow_bootstrap_activation as activation_tests
+from test_jobflow_bootstrap_trust import POWERSHELL, PROJECT
 
 
 class JobFlowBootstrapActivationEvidenceTests(unittest.TestCase):

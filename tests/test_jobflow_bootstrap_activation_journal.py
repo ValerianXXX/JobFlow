@@ -6,7 +6,7 @@ import os
 import unittest
 from pathlib import Path
 
-from tests import test_jobflow_bootstrap_activation as activation_tests
+import test_jobflow_bootstrap_activation as activation_tests
 
 
 class JobFlowBootstrapActivationJournalTests(unittest.TestCase):

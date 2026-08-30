@@ -131,6 +131,9 @@ def sanitized_command_environment(
         raise ReleaseToolchainError("RELEASE_TOOL_KIND_INVALID")
     system = windows_system_directory()
     windows = windows_directory()
+    system_drive = windows.drive
+    if len(system_drive) != 2 or system_drive[1] != ":" or not system_drive[0].isalpha():
+        raise ReleaseToolchainError("RELEASE_WINDOWS_DRIVE_INVALID")
     temporary = windows_temp_directory()
     path_entries = [system, windows, system / "WindowsPowerShell" / "v1.0"]
     if executable is not None:
@@ -147,6 +150,7 @@ def sanitized_command_environment(
             path_entries.extend([root / "mingw64" / "bin", root / "usr" / "bin"])
     environment = {
         "SystemRoot": str(windows),
+        "SystemDrive": system_drive,
         "WINDIR": str(windows),
         "COMSPEC": str(system / "cmd.exe"),
         "TEMP": str(temporary),

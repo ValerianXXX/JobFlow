@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 from _support import PROJECT
-from tests import test_signed_update_presign_v2 as presign_fixtures
+import test_signed_update_presign_v2 as presign_fixtures
 
 
 WINDOWS_POWERSHELL = shutil.which("powershell.exe")

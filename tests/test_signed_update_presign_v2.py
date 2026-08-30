@@ -25,7 +25,7 @@ from jobops.update_manifest import (
     build_update_signing_request,
 )
 from jobops.util import canonical_json, sha256_bytes, sha256_file
-from tests import test_update_manifest_v2_producer as producer_fixture
+import test_update_manifest_v2_producer as producer_fixture
 
 
 PROJECT = Path(__file__).resolve().parents[1]

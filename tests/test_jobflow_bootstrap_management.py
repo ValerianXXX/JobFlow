@@ -7,9 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tests import test_jobflow_bootstrap_activation as activation_tests
-from tests import test_jobflow_bootstrap_activation_journal as journal_tests
-from tests.test_jobflow_bootstrap_trust import (
+import test_jobflow_bootstrap_activation as activation_tests
+import test_jobflow_bootstrap_activation_journal as journal_tests
+from test_jobflow_bootstrap_trust import (
     POWERSHELL,
     PROJECT,
     SCRIPT,

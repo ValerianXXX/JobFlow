@@ -250,6 +250,14 @@ def _checkpoint(commit: str, report: dict[str, object]) -> dict[str, object]:
 
 
 class ReleaseVerificationRunnerTests(unittest.TestCase):
+    def test_test_modules_use_the_isolated_tests_root_import_contract(self) -> None:
+        offenders: list[str] = []
+        for path in sorted((PROJECT / "tests").glob("test_*.py")):
+            for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if line.startswith("from tests") or line.startswith("import tests"):
+                    offenders.append(f"{path.name}:{line_number}")
+        self.assertEqual(offenders, [])
+
     def test_powershell_runner_has_the_complete_offline_contract(self) -> None:
         script = (PROJECT / "scripts" / "run-release-verification.ps1").read_text(encoding="utf-8")
         self.assertIn('.venv\\Scripts\\python.exe', script)
