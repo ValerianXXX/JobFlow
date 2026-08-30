@@ -248,7 +248,10 @@ def inventory_runtime_tree(root: Path, *, excluded: Iterable[str] = ("runtime-cl
 
     def visit(directory: Path, prefix: tuple[str, ...]) -> None:
         try:
-            entries = sorted(os.scandir(directory), key=lambda item: unicodedata.normalize("NFC", item.name).casefold())
+            # Runtime paths are restricted to ASCII.  Uppercase ordering is
+            # therefore the cross-language equivalent of .NET's
+            # StringComparer.OrdinalIgnoreCase used by the Windows producer.
+            entries = sorted(os.scandir(directory), key=lambda item: unicodedata.normalize("NFC", item.name).upper())
         except OSError as exc:
             _fail("RUNTIME_CLOSURE_SCAN_FAILED", "The runtime tree could not be enumerated.", error=type(exc).__name__)
         for entry in entries:

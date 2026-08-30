@@ -174,7 +174,7 @@ class JobFlowBootstrapActivationTests(unittest.TestCase):
                 files[relative] = b"dependency-sentinel"
         records = [
             {"path": name, "sha256": self._sha(body), "size": len(body)}
-            for name, body in sorted(files.items(), key=lambda item: item[0].casefold())
+            for name, body in sorted(files.items(), key=lambda item: item[0].upper())
         ]
         build_inputs = {
             "application_wheel_sha256": "sha256:" + "4" * 64,

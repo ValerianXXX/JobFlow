@@ -155,6 +155,20 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
             new_build.index("Invoke-OfflineSmoke $closure"),
         )
 
+    def test_builder_and_verifier_use_the_same_locale_independent_inventory_order(self) -> None:
+        builder = self._text()
+        verifier = (PROJECT / "scripts" / "verify-windows-runtime-closure.ps1").read_text(
+            encoding="utf-8"
+        )
+        inventory = verifier[
+            verifier.index("function Get-RuntimeInventory") :
+            verifier.index("function Get-TreeSha256")
+        ]
+        self.assertIn("[StringComparer]::OrdinalIgnoreCase", builder)
+        self.assertIn("[StringComparer]::OrdinalIgnoreCase", inventory)
+        self.assertIn("[Array]::Sort($entryNames, [StringComparer]::OrdinalIgnoreCase)", inventory)
+        self.assertNotIn("Sort-Object", inventory)
+
     def test_deterministic_builder_uses_ordinal_sorting_only(self) -> None:
         text = self._text()
         self.assertNotIn("Sort-Object", text)

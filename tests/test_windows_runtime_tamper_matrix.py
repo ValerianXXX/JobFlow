@@ -319,7 +319,7 @@ class WindowsRuntimeTamperMatrixTests(unittest.TestCase):
                 encoding="utf-8",
             )
             entry = self._run_root(root)
-            self._assert_failed(entry, "JOBFLOW_RUNTIME_INVENTORY_ENTRY_MISMATCH")
+            self._assert_failed(entry, "JOBFLOW_RUNTIME_INVENTORY_HASH_MISMATCH")
 
             root = Path(raw) / "summary"
             value = self._fixture(root)

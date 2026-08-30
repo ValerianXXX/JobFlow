@@ -179,7 +179,7 @@ class UpdateManifestV2ProducerTests(unittest.TestCase):
         payloads = UpdateManifestV2ProducerTests._runtime_payloads()
         files = [
             {"path": path, "size": len(body), "sha256": sha256_bytes(body)}
-            for path, body in sorted(payloads.items(), key=lambda item: item[0].casefold())
+            for path, body in sorted(payloads.items(), key=lambda item: item[0].upper())
         ]
         return {
             "schema_version": 1,

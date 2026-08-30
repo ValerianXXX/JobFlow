@@ -49,15 +49,15 @@ def dimension() -> dict:
 def runtime_closure_records() -> list[dict[str, object]]:
     return [
         {"path": ".jobops-root", "size": 1, "sha256": H},
-        {"path": "app/jobops/__init__.py", "size": 1, "sha256": H},
         {"path": "app/jobops/cli.py", "size": 1, "sha256": H},
         {"path": "app/jobops/runtime_health.py", "size": 1, "sha256": H},
+        {"path": "app/jobops/__init__.py", "size": 1, "sha256": H},
         {"path": "config/windows-cp313-build.lock", "size": 1, "sha256": H},
         {"path": "config/windows-cp313-runtime.lock", "size": 1, "sha256": H},
         {"path": "runtime/python.exe", "size": 1, "sha256": H},
-        {"path": "runtime/python313._pth", "size": 1, "sha256": H},
         {"path": "runtime/python313.dll", "size": 1, "sha256": H},
         {"path": "runtime/python313.zip", "size": 1, "sha256": H},
+        {"path": "runtime/python313._pth", "size": 1, "sha256": H},
     ]
 
 

@@ -731,9 +731,11 @@ def semantic_validate(name: str, value: dict[str, Any]) -> None:
                 "SCHEMA_SEMANTIC_CONFLICT",
                 "The embedded Python artifact, version and isolated path file must agree.",
             )
-        def _runtime_path_sort_key(path: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
-            parts = tuple(path.split("/"))
-            return tuple(part.casefold() for part in parts), parts
+        def _runtime_path_sort_key(path: str) -> tuple[str, ...]:
+            # Runtime paths are already restricted to ASCII.  Uppercasing
+            # matches the Windows producer's OrdinalIgnoreCase ordering,
+            # including punctuation relative to letters.
+            return tuple(part.upper() for part in path.split("/"))
 
         if paths != sorted(paths, key=_runtime_path_sort_key) or len({path.casefold() for path in paths}) != len(paths):
             raise JobOpsError(

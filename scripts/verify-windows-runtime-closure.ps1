@@ -559,9 +559,20 @@ function Get-RuntimeInventory([string]$Root, [string]$ExcludedRelative) {
         if (($directoryItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
             throw "JOBFLOW_RUNTIME_REPARSE_REJECTED"
         }
-        $entries = @(Get-ChildItem -LiteralPath $DirectoryPath -Force | Sort-Object `
-            @{Expression = { $_.Name.Normalize([Text.NormalizationForm]::FormC).ToLowerInvariant() }}, `
-            @{Expression = { $_.Name }})
+        # The producer seals records with OrdinalIgnoreCase ordering.  Use the
+        # identical locale-independent ordering here: the default PowerShell
+        # sorter is culture sensitive on 5.1 and can reorder punctuation in
+        # wheel metadata, producing a false inventory mismatch.
+        $entryMap = New-Object "System.Collections.Generic.Dictionary[string,object]" ([StringComparer]::OrdinalIgnoreCase)
+        foreach ($candidate in @(Get-ChildItem -LiteralPath $DirectoryPath -Force)) {
+            if ($entryMap.ContainsKey([string]$candidate.Name)) {
+                throw "JOBFLOW_RUNTIME_PATH_COLLISION"
+            }
+            $entryMap.Add([string]$candidate.Name, $candidate)
+        }
+        $entryNames = [string[]]@($entryMap.Keys)
+        [Array]::Sort($entryNames, [StringComparer]::OrdinalIgnoreCase)
+        $entries = @($entryNames | ForEach-Object { $entryMap[$_] })
         foreach ($entry in $entries) {
             $relative = if ([string]::IsNullOrEmpty($Prefix)) { $entry.Name } else { "$Prefix/$($entry.Name)" }
             $relative = Get-NormalizedRuntimePath $relative
@@ -826,11 +837,17 @@ function Test-RuntimeRoot(
         if (-not $aliases.Add($path.ToLowerInvariant())) { throw "JOBFLOW_RUNTIME_PATH_COLLISION" }
         if (
             -not (Test-JsonInteger $item.size 0 ([long]::MaxValue)) -or
-            [string]$item.sha256 -notmatch '^sha256:[0-9a-f]{64}$' -or
-            [string]$actual[$index].path -cne $path -or
-            [long]$actual[$index].size -ne [long]$item.size -or
-            [string]$actual[$index].sha256 -cne [string]$item.sha256
-        ) { throw "JOBFLOW_RUNTIME_INVENTORY_ENTRY_MISMATCH" }
+            [string]$item.sha256 -notmatch '^sha256:[0-9a-f]{64}$'
+        ) { throw "JOBFLOW_RUNTIME_MANIFEST_INVALID" }
+        if ([string]$actual[$index].path -cne $path) {
+            throw "JOBFLOW_RUNTIME_INVENTORY_ORDER_MISMATCH"
+        }
+        if ([long]$actual[$index].size -ne [long]$item.size) {
+            throw "JOBFLOW_RUNTIME_INVENTORY_SIZE_MISMATCH"
+        }
+        if ([string]$actual[$index].sha256 -cne [string]$item.sha256) {
+            throw "JOBFLOW_RUNTIME_INVENTORY_HASH_MISMATCH"
+        }
     }
     if (
         -not (Test-JsonInteger $manifest.file_count 1 ([long]::MaxValue)) -or

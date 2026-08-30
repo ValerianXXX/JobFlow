@@ -112,6 +112,14 @@ class RuntimeClosureTests(unittest.TestCase):
             expected = self._fixture(root)
             self.assertEqual(verify_runtime_closure(root, schema_dir=SCHEMAS), expected)
 
+    def test_inventory_uses_windows_ordinal_ignore_case_ascii_order(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "__marker").write_text("underscore\n", encoding="utf-8")
+            (root / "alpha").write_text("letter\n", encoding="utf-8")
+            records = inventory_runtime_tree(root)
+            self.assertEqual([record["path"] for record in records], ["alpha", "__marker"])
+
     def test_structural_runtime_cannot_self_attest(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

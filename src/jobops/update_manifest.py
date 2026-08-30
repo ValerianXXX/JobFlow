@@ -91,6 +91,18 @@ def _payload_path_key(value: str) -> str:
     return unicodedata.normalize("NFC", value).casefold()
 
 
+def _payload_path_sort_key(value: str) -> tuple[str, str]:
+    """Match the Windows runtime producer's ordinal-ignore-case order.
+
+    Runtime closure paths are ASCII-only, so uppercasing is the portable
+    equivalent of .NET StringComparer.OrdinalIgnoreCase.  Keep the stricter
+    casefold key above for alias detection; sorting and alias rejection serve
+    different purposes.
+    """
+    normalized = unicodedata.normalize("NFC", value)
+    return normalized.upper(), normalized
+
+
 def _archive_payload_records_with_capture(
     archive_path: Path,
     archive_prefix: str,
@@ -188,8 +200,8 @@ def _archive_payload_records_with_capture(
         archive.close()
     if not records:
         raise _payload_error("The update archive contains no payload files.")
-    return sorted(directories, key=lambda item: (_payload_path_key(item), item)), sorted(
-        records, key=lambda item: (_payload_path_key(str(item["relative"])), str(item["relative"]))
+    return sorted(directories, key=_payload_path_sort_key), sorted(
+        records, key=lambda item: _payload_path_sort_key(str(item["relative"]))
     ), captured
 
 
@@ -285,8 +297,8 @@ def _extracted_payload_records(extracted_root: Path) -> tuple[list[str], list[di
             if extracted != item_stat.st_size:
                 raise JobOpsError("UPDATE_EXTRACTED_PAYLOAD_MISMATCH", "An extracted update file changed during attestation.")
             records.append({"relative": relative, "length": extracted, "sha256": digest.hexdigest()})
-    return sorted(directories, key=lambda item: (_payload_path_key(item), item)), sorted(
-        records, key=lambda item: (_payload_path_key(str(item["relative"])), str(item["relative"]))
+    return sorted(directories, key=_payload_path_sort_key), sorted(
+        records, key=lambda item: _payload_path_sort_key(str(item["relative"]))
     )
 
 

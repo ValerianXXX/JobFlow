@@ -313,7 +313,7 @@ class JobFlowBootstrapTrustTests(unittest.TestCase):
             files.pop(omitted)
         records = [
             {"path": path, "sha256": self._sha(body), "size": len(body)}
-            for path, body in sorted(files.items(), key=lambda item: item[0].casefold())
+            for path, body in sorted(files.items(), key=lambda item: item[0].upper())
         ]
         build_inputs = {
             "application_wheel_sha256": "sha256:" + "4" * 64,
@@ -587,7 +587,7 @@ class JobFlowBootstrapTrustTests(unittest.TestCase):
             self.assertNotIn(secret, completed.stdout + completed.stderr)
             self.assertNotIn(str(manifest), completed.stdout + completed.stderr)
 
-    def test_inventory_uses_exact_path_map_for_casefold_order_and_accepts_empty_file(self) -> None:
+    def test_inventory_uses_exact_path_map_for_windows_order_and_accepts_empty_file(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-bootstrap-") as raw:
             script, manifest, signature, archive, value = self._complete_release_fixture(Path(raw))
             prefix = str(value["asset"]["archive_prefix"])  # type: ignore[index]
