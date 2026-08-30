@@ -1785,7 +1785,15 @@ if not records:
 for record in records:
     if record.is_symlink() or not record.is_file():
         raise SystemExit("INSTALLED_RECORD_UNSAFE")
-    self_path = record.relative_to(root).as_posix()
+    record_path = record.resolve()
+    record_root = record.parent.parent.resolve()
+    try:
+        record_root.relative_to(root)
+        self_path = record_path.relative_to(record_root).as_posix()
+    except ValueError:
+        raise SystemExit("INSTALLED_RECORD_ROOT_UNSAFE")
+    if not record_root.is_dir():
+        raise SystemExit("INSTALLED_RECORD_ROOT_UNSAFE")
     with record.open("r", encoding="utf-8", newline="") as handle:
         source_rows = list(csv.reader(handle))
 
@@ -1817,7 +1825,11 @@ for record in records:
                 raise SystemExit("INSTALLED_RECORD_ESCAPE_INVALID")
             continue
 
-        target = root.joinpath(*pure.parts)
+        # A RECORD is relative to the installation root containing its
+        # .dist-info directory.  Top-level wheels therefore resolve against
+        # AppRoot, while vendored distributions (for example setuptools'
+        # embedded dependencies) resolve against their bounded vendor root.
+        target = record_root.joinpath(*pure.parts)
         if name == self_path:
             self_seen = True
             normalized.append((name, "", ""))

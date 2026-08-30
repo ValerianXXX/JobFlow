@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import tomllib
 import unittest
 from pathlib import Path
@@ -58,6 +59,60 @@ class WindowsCompleteRuntimeContractTests(unittest.TestCase):
             build_tools.index("Normalize-InstalledRecords $Root $target"),
             build_tools.index("Get-RetainedTreeSnapshot $target"),
         )
+
+    def test_installed_record_normalizer_supports_bounded_vendored_records(self) -> None:
+        script = (SCRIPTS / "build-windows-runtime-closure.ps1").read_text(
+            encoding="utf-8"
+        )
+        match = re.search(
+            r"function Normalize-InstalledRecords.*?\$program = @'\n(?P<program>.*?)\n'@",
+            script,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(match)
+        with tempfile.TemporaryDirectory(prefix="jobflow-record-normalizer-test-") as temporary:
+            root = Path(temporary)
+            (root / "package.py").write_text("TOP_LEVEL = True\n", encoding="utf-8")
+            top_info = root / "package-1.0.dist-info"
+            top_info.mkdir()
+            (top_info / "RECORD").write_text(
+                "package.py,,\npackage-1.0.dist-info/REQUESTED,,\n"
+                "package-1.0.dist-info/RECORD,,\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+
+            vendor_root = root / "setuptools" / "_vendor"
+            vendor_root.mkdir(parents=True)
+            (vendor_root / "vendored.py").write_text(
+                "VENDORED = True\n", encoding="utf-8"
+            )
+            vendor_info = vendor_root / "vendored-2.0.dist-info"
+            vendor_info.mkdir()
+            (vendor_info / "RECORD").write_text(
+                "../../bin/vendored.exe,,\nvendored.py,,\n"
+                "vendored-2.0.dist-info/REQUESTED,,\n"
+                "vendored-2.0.dist-info/RECORD,,\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+
+            completed = subprocess.run(
+                [sys.executable, "-I", "-c", match.group("program"), str(root)],  # type: ignore[union-attr]
+                text=True,
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(
+                completed.stdout, "JOBFLOW_INSTALLED_RECORDS_NORMALIZED"
+            )
+            normalized = (vendor_info / "RECORD").read_text(encoding="utf-8")
+            self.assertIn("vendored.py,sha256=", normalized)
+            self.assertIn("vendored-2.0.dist-info/RECORD,,", normalized)
+            self.assertNotIn("REQUESTED", normalized)
+            self.assertNotIn("../../bin", normalized)
 
     def test_python_role_policy_matches_metadata_ci_installer_and_complete_runtime(self) -> None:
         policy = _json(CONFIG / "python-support-policy.json")
