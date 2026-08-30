@@ -1296,7 +1296,11 @@ function Get-TrustedSourceIdentity {
     $directoryAliases = New-Object "System.Collections.Generic.HashSet[string]" ([StringComparer]::OrdinalIgnoreCase)
     $entries = New-Object System.Collections.Generic.List[object]
     $raw = (Invoke-TrustedGit @("ls-tree", "-rz", "--full-tree", $SourceCommit)).stdout
-    foreach ($record in @($raw.Split([char]0, [StringSplitOptions]::RemoveEmptyEntries))) {
+    # Windows PowerShell 5.1 can bind the scalar-char overload ambiguously and
+    # retain the terminal empty record produced by `git ls-tree -z`. Pin the
+    # separator-array overload so a valid NUL-terminated tree is parsed
+    # identically on every supported PowerShell runtime.
+    foreach ($record in @($raw.Split([char[]]@([char]0), [StringSplitOptions]::RemoveEmptyEntries))) {
         if ($record -notmatch '^(?<mode>[0-9]{6}) (?<type>[a-z]+) (?<oid>[0-9a-f]{40})\t(?<path>.+)$') {
             throw "JOBFLOW_RUNTIME_SOURCE_TREE_UNSAFE"
         }

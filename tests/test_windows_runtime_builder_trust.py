@@ -121,6 +121,17 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
         ):
             self.assertIn(stage, text)
 
+    def test_git_tree_nul_records_use_the_unambiguous_separator_array_overload(self) -> None:
+        text = self._text()
+        self.assertIn(
+            ".Split([char[]]@([char]0), [StringSplitOptions]::RemoveEmptyEntries)",
+            text,
+        )
+        self.assertNotIn(
+            ".Split([char]0, [StringSplitOptions]::RemoveEmptyEntries)",
+            text,
+        )
+
 
 @unittest.skipUnless(
     os.name == "nt" and POWERSHELL,
@@ -264,6 +275,27 @@ class WindowsRuntimeBuilderTrustRuntimeTests(unittest.TestCase):
             self.assertEqual(result["paths"], ["B", "a", "z"])
             self.assertEqual(
                 result["collision"], "JOBFLOW_RUNTIME_ORDINAL_SORT_KEY_INVALID"
+            )
+
+    def test_powershell_51_drops_the_terminal_git_tree_nul_record(self) -> None:
+        with tempfile.TemporaryDirectory(
+            prefix="jobflow-builder-tree-split-", dir=TEST_ROOT
+        ) as raw:
+            root = Path(raw)
+            harness = root / "tree-split.ps1"
+            harness.write_text(
+                "$ErrorActionPreference = 'Stop'\n"
+                "$raw = 'first' + [char]0 + 'second' + [char]0\n"
+                "$records = @($raw.Split([char[]]@([char]0), [StringSplitOptions]::RemoveEmptyEntries))\n"
+                "[Console]::Out.Write(($records | ConvertTo-Json -Compress))\n",
+                encoding="utf-8-sig",
+            )
+            completed = self._run(harness)
+            self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
+            self.assertEqual(completed.stderr.strip().lstrip("\ufeff"), "")
+            self.assertEqual(
+                json.loads(completed.stdout.strip().lstrip("\ufeff")),
+                ["first", "second"],
             )
 
 
