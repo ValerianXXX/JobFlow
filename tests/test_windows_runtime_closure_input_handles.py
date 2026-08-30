@@ -277,6 +277,40 @@ class WindowsRuntimeClosureInputHandleRuntimeTests(unittest.TestCase):
                 result["failure"], "JOBFLOW_RUNTIME_PROTECTED_BUILDER_CHANGED"
             )
 
+    def test_retained_tree_snapshot_accepts_empty_package_marker(self) -> None:
+        with tempfile.TemporaryDirectory(
+            prefix="jobflow-runtime-empty-marker-", dir=TEST_ROOT
+        ) as raw:
+            root = Path(raw)
+            tree = root / "tree"
+            tree.mkdir()
+            (tree / "py.typed").write_bytes(b"")
+            harness = root / "empty-marker-runtime.ps1"
+            harness.write_text(
+                "$ErrorActionPreference = 'Stop'\n"
+                "Add-Type -AssemblyName System.IO.Compression\n"
+                "Add-Type -AssemblyName System.IO.Compression.FileSystem\n"
+                + self._function_prelude()
+                + "\n$script:RetainedRuntimeInputs = New-Object System.Collections.Generic.List[object]\n"
+                + "$script:RetainedRuntimeInputsByPath = New-Object 'System.Collections.Generic.Dictionary[string,object]' ([StringComparer]::OrdinalIgnoreCase)\n"
+                + "try {\n"
+                + "  $snapshot=Get-RetainedTreeSnapshot $args[0]\n"
+                + "  $marker=@($snapshot.records|Where-Object{$_.relative -ceq 'py.typed'})[0].input\n"
+                + "  [Console]::Out.Write(([ordered]@{size=[long]$marker.size;sha256=[string]$marker.sha256}|ConvertTo-Json -Compress))\n"
+                + "}\n"
+                + "finally { Close-RetainedRuntimeInputs }\n",
+                encoding="utf-8-sig",
+            )
+            completed = self._run(harness, tree.resolve())
+            self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
+            result = json.loads(completed.stdout.strip().lstrip("\ufeff"))
+            self.assertEqual(result["size"], 0)
+            self.assertEqual(
+                result["sha256"],
+                "sha256:e3b0c44298fc1c149afbf4c8996fb924"
+                "27ae41e4649b934ca495991b7852b855",
+            )
+
     def test_hardlinked_file_and_reserved_leaf_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory(
             prefix="jobflow-runtime-input-hardlink-", dir=TEST_ROOT

@@ -1610,7 +1610,10 @@ function Get-RetainedTreeSnapshot([string]$Source) {
             $records.Add([pscustomobject]@{ kind = "directory"; relative = $relative; input = $null })
             continue
         }
-        $retainedInput = Enter-RetainedRuntimeInput $item.FullName
+        # Empty package marker files (for example `py.typed`) are valid tree
+        # members.  Artifact entry points remain non-empty by default, while a
+        # recursively retained tree explicitly allows zero-byte ordinary files.
+        $retainedInput = Enter-RetainedRuntimeInput $item.FullName 0
         $records.Add([pscustomobject]@{ kind = "file"; relative = $relative; input = $retainedInput })
     }
     return [pscustomobject]@{ root = $sourceRoot; records = $records.ToArray() }
