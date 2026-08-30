@@ -88,6 +88,22 @@ class WindowsRuntimeApplicationWheelTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr)
             self.assertIn('"tag":"py3-none-any"', completed.stdout)
 
+    def test_canonical_metadata_specifier_reordering_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-wheel-") as raw:
+            wheel = Path(raw) / f"jobflow_local-{VERSION}-py3-none-any.whl"
+            _write_wheel(
+                wheel,
+                metadata=(
+                    b"Metadata-Version: 2.4\n"
+                    b"Name: jobflow-local\n"
+                    b"Version: 0.4.1\n"
+                    b"Requires-Python: <3.14,>=3.11\n"
+                ),
+            )
+            completed = self._validate(wheel)
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertIn('"tag":"py3-none-any"', completed.stdout)
+
     def test_file_directory_collision_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-wheel-") as raw:
             wheel = Path(raw) / f"jobflow_local-{VERSION}-py3-none-any.whl"

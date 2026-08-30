@@ -1555,7 +1555,8 @@ with zipfile.ZipFile(p,"r") as z:
         if len(values)!=1: fail()
         return values[0].strip()
     if singleton(metadata,"Name")!="jobflow-local" or singleton(metadata,"Version")!=expected_version: fail()
-    if re.sub(r"\s+","",singleton(metadata,"Requires-Python")) != ">=3.11,<3.14": fail()
+    requires_python={part.strip() for part in singleton(metadata,"Requires-Python").split(",")}
+    if requires_python != {">=3.11","<3.14"}: fail()
     wheel_headers=email.parser.Parser().parsestr(z.read(wheel).decode("utf-8","strict"),headersonly=True)
     if singleton(wheel_headers,"Wheel-Version")!="1.0" or singleton(wheel_headers,"Root-Is-Purelib").lower()!="true": fail()
     if wheel_headers.get_all("Tag",[]) != ["py3-none-any"]: fail()
