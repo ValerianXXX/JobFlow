@@ -14,7 +14,9 @@ from unittest.mock import patch
 
 from _support import PROJECT
 from jobops.release_verification import (
+    _PYTHON_CHECK_BOOTSTRAP,
     ReleaseVerificationError,
+    _isolated_python_arguments,
     _publish_report_and_checkpoint,
     _resolved_git_executable,
     authenticate_signing_evidence,
@@ -250,6 +252,31 @@ def _checkpoint(commit: str, report: dict[str, object]) -> dict[str, object]:
 
 
 class ReleaseVerificationRunnerTests(unittest.TestCase):
+    def test_windows_release_checks_hide_nested_console_processes(self) -> None:
+        self.assertIn('if os.name == "nt":', _PYTHON_CHECK_BOOTSTRAP)
+        self.assertIn('getattr(subprocess, "CREATE_NO_WINDOW", 0)', _PYTHON_CHECK_BOOTSTRAP)
+        self.assertIn('kwargs["creationflags"]', _PYTHON_CHECK_BOOTSTRAP)
+        self.assertIn('| _jobflow_no_window', _PYTHON_CHECK_BOOTSTRAP)
+        completed = subprocess.run(
+            [
+                sys.executable,
+                *_isolated_python_arguments(
+                    PROJECT,
+                    ["-c", "import subprocess; print(subprocess.Popen.__init__.__name__)"],
+                ),
+            ],
+            cwd=PROJECT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        expected = "_jobflow_hidden_popen_init" if os.name == "nt" else "__init__"
+        self.assertEqual(completed.stdout.strip(), expected)
+
     def test_test_modules_use_the_isolated_tests_root_import_contract(self) -> None:
         offenders: list[str] = []
         for path in sorted((PROJECT / "tests").glob("test_*.py")):

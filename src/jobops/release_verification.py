@@ -563,8 +563,23 @@ def _report_tool_identity(identity: LockedToolIdentity) -> dict[str, Any]:
 
 
 _PYTHON_CHECK_BOOTSTRAP = """\
+import os
 import runpy
+import subprocess
 import sys
+
+if os.name == "nt":
+    # Release tests intentionally exercise the Windows installer and runtime
+    # from child processes.  Keep those children attached to the captured test
+    # streams without opening transient PowerShell or console windows.
+    _jobflow_original_popen_init = subprocess.Popen.__init__
+    _jobflow_no_window = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+    def _jobflow_hidden_popen_init(self, *args, **kwargs):
+        kwargs["creationflags"] = int(kwargs.get("creationflags", 0)) | _jobflow_no_window
+        return _jobflow_original_popen_init(self, *args, **kwargs)
+
+    subprocess.Popen.__init__ = _jobflow_hidden_popen_init
 
 source_root, tests_root, site_packages, mode, *payload = sys.argv[1:]
 sys.dont_write_bytecode = True
