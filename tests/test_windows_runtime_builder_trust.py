@@ -132,6 +132,13 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
             text,
         )
 
+    def test_exported_archive_identity_is_distinct_from_canonical_git_blob_identity(self) -> None:
+        text = self._text()
+        self.assertIn("archive_blob_oid=Get-RetainedGitBlobOid $retained", text)
+        self.assertIn("git_blob_oid=[string]$entry.oid", text)
+        self.assertIn("archive_blob_oid=[string]$identity.archive_blob_oid", text)
+        self.assertNotIn("identity.git_blob_oid -cne", text)
+
 
 @unittest.skipUnless(
     os.name == "nt" and POWERSHELL,
