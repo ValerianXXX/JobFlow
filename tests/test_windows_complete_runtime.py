@@ -281,6 +281,12 @@ class WindowsCompleteRuntimeContractTests(unittest.TestCase):
             "validate_runtime_build_evidence(Path(sys.argv[1]).read_bytes())",
             script,
         )
+        self.assertIn(
+            '"JOBFLOW_RUNTIME_BUILD_EVIDENCE_VERIFY_DETAIL=" + $failureCode',
+            script,
+        )
+        self.assertIn("RUNTIME_BUILD_EVIDENCE_UNKNOWN", script)
+        self.assertNotIn("WriteLine($errorText)", script)
         self.assertIn("$start.CreateNoWindow = $true", script)
         self.assertIn(
             "runtime_build_evidence_sha256 = [string]$evidenceInput.sha256",

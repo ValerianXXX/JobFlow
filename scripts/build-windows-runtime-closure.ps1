@@ -2003,14 +2003,23 @@ function Invoke-RuntimeBuildEvidenceVerifier(
     )
     $program = @'
 from pathlib import Path
+import re
 import sys
 
 from jobops.publisher_attestation import validate_runtime_build_evidence
 
-document = validate_runtime_build_evidence(Path(sys.argv[1]).read_bytes())
-if not document.sha256.startswith("sha256:"):
-    raise RuntimeError("RUNTIME_BUILD_EVIDENCE_DIGEST_INVALID")
-sys.stdout.write("JOBFLOW_RUNTIME_BUILD_EVIDENCE_OK")
+try:
+    document = validate_runtime_build_evidence(Path(sys.argv[1]).read_bytes())
+    if not document.sha256.startswith("sha256:"):
+        raise RuntimeError("RUNTIME_BUILD_EVIDENCE_DIGEST_INVALID")
+except Exception as error:
+    code = getattr(error, "code", "RUNTIME_BUILD_EVIDENCE_UNKNOWN")
+    if not isinstance(code, str) or re.fullmatch(r"[A-Z][A-Z0-9_]{0,95}", code) is None:
+        code = "RUNTIME_BUILD_EVIDENCE_UNKNOWN"
+    sys.stderr.write(code)
+    raise SystemExit(2)
+else:
+    sys.stdout.write("JOBFLOW_RUNTIME_BUILD_EVIDENCE_OK")
 '@
     Write-Utf8NoBom $scriptPath $program
     $start = [Diagnostics.ProcessStartInfo]::new()
@@ -2051,6 +2060,17 @@ sys.stdout.write("JOBFLOW_RUNTIME_BUILD_EVIDENCE_OK")
             $output -cne "JOBFLOW_RUNTIME_BUILD_EVIDENCE_OK" -or
             -not [string]::IsNullOrWhiteSpace($errorText)
         ) {
+            $failure = [Text.RegularExpressions.Regex]::Match(
+                [string]$errorText,
+                '^[A-Z][A-Z0-9_]{0,95}$'
+            )
+            $failureCode = if ($failure.Success) {
+                [string]$failure.Value
+            }
+            else { "RUNTIME_BUILD_EVIDENCE_UNKNOWN" }
+            [Console]::Error.WriteLine(
+                "JOBFLOW_RUNTIME_BUILD_EVIDENCE_VERIFY_DETAIL=" + $failureCode
+            )
             throw "JOBFLOW_RUNTIME_BUILD_EVIDENCE_VERIFY_FAILED"
         }
     }
