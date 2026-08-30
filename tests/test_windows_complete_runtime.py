@@ -58,6 +58,13 @@ class WindowsCompleteRuntimeContractTests(unittest.TestCase):
         self.assertIn("REQUESTED", script)
         self.assertIn('return [string]$parts[0] -in @("Scripts", "bin")', script)
         self.assertNotIn("-match '[\\/](Scripts|bin)([\\/]|$)'", script)
+        for stage_code in (
+            "JOBFLOW_RUNTIME_BUILD_TOOL_INSTALL_PROCESS_FAILED",
+            "JOBFLOW_RUNTIME_APPLICATION_VERSION_PROCESS_FAILED",
+            "JOBFLOW_RUNTIME_INSTALLED_RECORD_NORMALIZATION_PROCESS_FAILED",
+            "JOBFLOW_RUNTIME_OFFLINE_INSTALL_PROCESS_FAILED",
+        ):
+            self.assertIn(stage_code, script)
         self.assertLess(
             build_tools.index("Normalize-InstalledRecords $Root $target"),
             build_tools.index("Get-RetainedTreeSnapshot $target"),

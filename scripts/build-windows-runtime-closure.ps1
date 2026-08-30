@@ -1542,11 +1542,19 @@ function Initialize-PinnedBuildTools([string]$Root, [object]$BuildLock) {
     }
     $requirementsPath = Join-Path $Root "build-requirements.lock"
     Write-Utf8NoBom $requirementsPath ([string]::Join("`n", $requirements) + "`n")
-    $result = Invoke-BuilderPython @(
-        "-I", "-m", "pip", "install", "--require-hashes", "--only-binary=:all:", "--no-index", "--no-deps",
-        "--no-compile", "--disable-pip-version-check", "--find-links", $wheelhouse, "--target", $target,
-        "--requirement", $requirementsPath
-    ) $Root $null (Join-Path $Root "tmp")
+    try {
+        $result = Invoke-BuilderPython @(
+            "-I", "-m", "pip", "install", "--require-hashes", "--only-binary=:all:", "--no-index", "--no-deps",
+            "--no-compile", "--disable-pip-version-check", "--find-links", $wheelhouse, "--target", $target,
+            "--requirement", $requirementsPath
+        ) $Root $null (Join-Path $Root "tmp")
+    }
+    catch {
+        if ($_.Exception.Message -ceq "JOBFLOW_RUNTIME_BUILDER_PYTHON_FAILED") {
+            throw "JOBFLOW_RUNTIME_BUILD_TOOL_INSTALL_PROCESS_FAILED"
+        }
+        throw
+    }
     if (-not [string]::IsNullOrWhiteSpace($result.stderr)) { throw "JOBFLOW_RUNTIME_BUILD_TOOL_INSTALL_FAILED" }
     # pip-generated console launchers and their RECORD entries can embed the
     # absolute --target path.  They are not used by the isolated PEP 517
@@ -1580,7 +1588,15 @@ function Initialize-PinnedBuildTools([string]$Root, [object]$BuildLock) {
 
 function Get-SourceApplicationVersion([string]$SourceRoot) {
     $program = "import pathlib,sys,tomllib;print(tomllib.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))['project']['version'])"
-    $result = Invoke-BuilderPython @("-I", "-c", $program, (Join-Path $SourceRoot "pyproject.toml")) $SourceRoot
+    try {
+        $result = Invoke-BuilderPython @("-I", "-c", $program, (Join-Path $SourceRoot "pyproject.toml")) $SourceRoot
+    }
+    catch {
+        if ($_.Exception.Message -ceq "JOBFLOW_RUNTIME_BUILDER_PYTHON_FAILED") {
+            throw "JOBFLOW_RUNTIME_APPLICATION_VERSION_PROCESS_FAILED"
+        }
+        throw
+    }
     if ($result.stdout -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$' -or -not [string]::IsNullOrWhiteSpace($result.stderr)) {
         throw "JOBFLOW_RUNTIME_APPLICATION_VERSION_MISMATCH"
     }
@@ -1874,7 +1890,15 @@ for record in records:
 
 sys.stdout.write("JOBFLOW_INSTALLED_RECORDS_NORMALIZED")
 '@
-    $result = Invoke-BuilderPython @("-I", "-c", $program, $AppRoot) $BuildRoot
+    try {
+        $result = Invoke-BuilderPython @("-I", "-c", $program, $AppRoot) $BuildRoot
+    }
+    catch {
+        if ($_.Exception.Message -ceq "JOBFLOW_RUNTIME_BUILDER_PYTHON_FAILED") {
+            throw "JOBFLOW_RUNTIME_INSTALLED_RECORD_NORMALIZATION_PROCESS_FAILED"
+        }
+        throw
+    }
     if (
         [string]$result.stdout -cne "JOBFLOW_INSTALLED_RECORDS_NORMALIZED" -or
         -not [string]::IsNullOrWhiteSpace([string]$result.stderr)
@@ -1902,7 +1926,15 @@ function Install-OfflineApplication([string]$BuildRoot, [string]$AppRoot, [objec
         "--no-compile", "--disable-pip-version-check", "--no-warn-script-location", "--find-links", ".\wheelhouse",
         "--target", ".\closure\app", "--requirement", ".\requirements.lock"
     )
-    $result = Invoke-BuilderPython $arguments $BuildRoot
+    try {
+        $result = Invoke-BuilderPython $arguments $BuildRoot
+    }
+    catch {
+        if ($_.Exception.Message -ceq "JOBFLOW_RUNTIME_BUILDER_PYTHON_FAILED") {
+            throw "JOBFLOW_RUNTIME_OFFLINE_INSTALL_PROCESS_FAILED"
+        }
+        throw
+    }
     if (-not [string]::IsNullOrWhiteSpace($result.stderr) -and $result.stderr -notmatch '^WARNING: Target directory') {
         throw "JOBFLOW_RUNTIME_OFFLINE_INSTALL_FAILED"
     }
