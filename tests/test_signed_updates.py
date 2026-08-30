@@ -875,8 +875,12 @@ class SignedUpdateTests(unittest.TestCase):
                 "function Invoke-SanitizedTextCommand"
             )
         ]
-        git_root = GIT.parent.parent
-        git_application = git_root / "mingw64" / "bin" / "git.exe"
+        if GIT.parent.name.casefold() == "bin" and GIT.parent.parent.name.casefold() == "mingw64":
+            git_root = GIT.parent.parent.parent
+            git_application = GIT
+        else:
+            git_root = GIT.parent.parent
+            git_application = git_root / "mingw64" / "bin" / "git.exe"
         self.assertTrue(git_application.is_file(), str(git_application))
         with tempfile.TemporaryDirectory(
             prefix="jobflow-tool-path-isolation-", dir=SIGNED_UPDATE_TEST_ROOT
