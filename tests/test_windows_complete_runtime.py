@@ -35,6 +35,10 @@ def _portable_text_sha256(path: Path) -> str:
 
 
 class WindowsCompleteRuntimeContractTests(unittest.TestCase):
+    def test_runtime_lock_files_are_exported_with_canonical_lf_bytes(self) -> None:
+        attributes = (PROJECT / ".gitattributes").read_text(encoding="utf-8")
+        self.assertIn("*.lock text eol=lf", attributes.splitlines())
+
     def test_python_role_policy_matches_metadata_ci_installer_and_complete_runtime(self) -> None:
         policy = _json(CONFIG / "python-support-policy.json")
         self.assertEqual(policy["schema_version"], 1)
