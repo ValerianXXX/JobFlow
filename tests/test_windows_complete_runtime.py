@@ -39,6 +39,14 @@ class WindowsCompleteRuntimeContractTests(unittest.TestCase):
         attributes = (PROJECT / ".gitattributes").read_text(encoding="utf-8")
         self.assertIn("*.lock text eol=lf", attributes.splitlines())
 
+    def test_complete_runtime_normalizes_installed_record_files(self) -> None:
+        script = (SCRIPTS / "build-windows-runtime-closure.ps1").read_text(encoding="utf-8")
+        self.assertIn("function Normalize-InstalledRecords", script)
+        self.assertIn("JOBFLOW_INSTALLED_RECORDS_NORMALIZED", script)
+        self.assertIn("INSTALLED_RECORD_TARGET_MISSING", script)
+        self.assertIn("writer = csv.writer(output, lineterminator=\"\\n\")", script)
+        self.assertIn("Normalize-InstalledRecords $BuildRoot $AppRoot", script)
+
     def test_python_role_policy_matches_metadata_ci_installer_and_complete_runtime(self) -> None:
         policy = _json(CONFIG / "python-support-policy.json")
         self.assertEqual(policy["schema_version"], 1)
