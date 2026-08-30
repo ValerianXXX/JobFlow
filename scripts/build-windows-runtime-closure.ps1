@@ -1509,6 +1509,26 @@ function New-TrustedSourceSnapshots([string]$Root, [object]$Identity) {
     }
 }
 
+function Test-TransientInstalledArtifact([string]$Root, [object]$Item) {
+    if ([string]$Item.Name -in @("direct_url.json", "REQUESTED")) { return $true }
+    $rootFull = [IO.Path]::GetFullPath($Root).TrimEnd([char[]]@(
+        [IO.Path]::DirectorySeparatorChar,
+        [IO.Path]::AltDirectorySeparatorChar
+    ))
+    $rootPrefix = $rootFull + [IO.Path]::DirectorySeparatorChar
+    $itemFull = [IO.Path]::GetFullPath([string]$Item.FullName)
+    if (-not $itemFull.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "JOBFLOW_RUNTIME_TRANSIENT_ARTIFACT_OUTSIDE_ROOT"
+    }
+    $relative = $itemFull.Substring($rootPrefix.Length)
+    $parts = $relative.Split(
+        [char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar),
+        [StringSplitOptions]::RemoveEmptyEntries
+    )
+    if ($parts.Length -eq 0) { throw "JOBFLOW_RUNTIME_TRANSIENT_ARTIFACT_INVALID" }
+    return [string]$parts[0] -in @("Scripts", "bin")
+}
+
 function Initialize-PinnedBuildTools([string]$Root, [object]$BuildLock) {
     $wheelhouse = Join-Path $Root "build-wheelhouse"
     $target = Join-Path $Root "build-tools"
@@ -1533,7 +1553,7 @@ function Initialize-PinnedBuildTools([string]$Root, [object]$BuildLock) {
     # backend import below, so remove them and canonicalize every retained
     # RECORD before the build-tool tree becomes part of the signed recipe.
     foreach ($path in @(Get-OrdinalSortedObjects @(Get-ChildItem -LiteralPath $target -Recurse -Force | Where-Object {
-        $_.Name -in @("direct_url.json", "REQUESTED") -or $_.FullName -match '[\\/](Scripts|bin)([\\/]|$)'
+        Test-TransientInstalledArtifact $target $_
     }) "FullName" -Descending)) {
         if ($path.PSIsContainer) { Remove-Item -LiteralPath $path.FullName -Recurse -Force }
         elseif (Test-Path -LiteralPath $path.FullName) { [IO.File]::Delete($path.FullName) }
@@ -1887,7 +1907,7 @@ function Install-OfflineApplication([string]$BuildRoot, [string]$AppRoot, [objec
         throw "JOBFLOW_RUNTIME_OFFLINE_INSTALL_FAILED"
     }
     foreach ($path in @(Get-OrdinalSortedObjects @(Get-ChildItem -LiteralPath $AppRoot -Recurse -Force | Where-Object {
-        $_.Name -in @("direct_url.json", "REQUESTED") -or $_.FullName -match '[\\/](Scripts|bin)([\\/]|$)'
+        Test-TransientInstalledArtifact $AppRoot $_
     }) "FullName" -Descending)) {
         if ($path.PSIsContainer) { Remove-Item -LiteralPath $path.FullName -Recurse -Force }
         elseif (Test-Path -LiteralPath $path.FullName) { [IO.File]::Delete($path.FullName) }

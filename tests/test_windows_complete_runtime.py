@@ -52,9 +52,12 @@ class WindowsCompleteRuntimeContractTests(unittest.TestCase):
             script.index("function Get-SourceApplicationVersion")
         ]
         self.assertIn("Normalize-InstalledRecords $Root $target", build_tools)
-        self.assertIn("direct_url.json", build_tools)
-        self.assertIn("REQUESTED", build_tools)
-        self.assertRegex(build_tools, r"\(Scripts\|bin\)")
+        self.assertIn("function Test-TransientInstalledArtifact", script)
+        self.assertIn("Test-TransientInstalledArtifact $target $_", build_tools)
+        self.assertIn("direct_url.json", script)
+        self.assertIn("REQUESTED", script)
+        self.assertIn('return [string]$parts[0] -in @("Scripts", "bin")', script)
+        self.assertNotIn("-match '[\\/](Scripts|bin)([\\/]|$)'", script)
         self.assertLess(
             build_tools.index("Normalize-InstalledRecords $Root $target"),
             build_tools.index("Get-RetainedTreeSnapshot $target"),
