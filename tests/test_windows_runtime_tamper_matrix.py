@@ -298,6 +298,39 @@ class WindowsRuntimeTamperMatrixTests(unittest.TestCase):
             finally:
                 archive.unlink(missing_ok=True)
 
+    def test_inventory_failures_have_fixed_non_disclosing_subcodes(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-closure-") as raw:
+            root = Path(raw) / "count"
+            value = self._fixture(root)
+
+            value["files"] = value["files"][:-1]
+            (root / "runtime-closure.json").write_text(
+                json.dumps(value, ensure_ascii=False, separators=(",", ":")) + "\n",
+                encoding="utf-8",
+            )
+            count = self._run_root(root)
+            self._assert_failed(count, "JOBFLOW_RUNTIME_INVENTORY_COUNT_MISMATCH")
+
+            root = Path(raw) / "entry"
+            value = self._fixture(root)
+            value["files"][0]["sha256"] = "sha256:" + "0" * 64
+            (root / "runtime-closure.json").write_text(
+                json.dumps(value, ensure_ascii=False, separators=(",", ":")) + "\n",
+                encoding="utf-8",
+            )
+            entry = self._run_root(root)
+            self._assert_failed(entry, "JOBFLOW_RUNTIME_INVENTORY_ENTRY_MISMATCH")
+
+            root = Path(raw) / "summary"
+            value = self._fixture(root)
+            value["tree_sha256"] = "sha256:" + "0" * 64
+            (root / "runtime-closure.json").write_text(
+                json.dumps(value, ensure_ascii=False, separators=(",", ":")) + "\n",
+                encoding="utf-8",
+            )
+            summary = self._run_root(root)
+            self._assert_failed(summary, "JOBFLOW_RUNTIME_INVENTORY_SUMMARY_MISMATCH")
+
     def test_unsigned_local_claims_cannot_promote_to_attested(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-closure-") as raw:
             root = Path(raw)

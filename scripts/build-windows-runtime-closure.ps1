@@ -1839,6 +1839,12 @@ function Invoke-IndependentVerifier(
         "RUNTIME_CLOSURE_STRUCTURE_VERIFIED"
     }
     else { "RUNTIME_CLOSURE_VERIFIED" }
+    $failurePrefix = if ($PendingSmoke) {
+        "JOBFLOW_RUNTIME_STRUCTURAL_PRE_SMOKE_VERIFY_DETAIL"
+    }
+    else {
+        "JOBFLOW_RUNTIME_STRUCTURAL_FINAL_VERIFY_DETAIL"
+    }
     $start = [Diagnostics.ProcessStartInfo]::new()
     $start.FileName = (Get-Process -Id $PID).Path
     $start.UseShellExecute = $false
@@ -1854,7 +1860,7 @@ function Invoke-IndependentVerifier(
         $errorText = $process.StandardError.ReadToEnd()
         $process.WaitForExit()
         if ($process.ExitCode -ne 0 -or $output -notmatch $expectedStatus) {
-            Write-SafeIndependentVerifierFailure "JOBFLOW_RUNTIME_STRUCTURAL_VERIFY_DETAIL" $errorText
+            Write-SafeIndependentVerifierFailure $failurePrefix $errorText
             throw "JOBFLOW_RUNTIME_STRUCTURAL_VERIFY_FAILED"
         }
     }

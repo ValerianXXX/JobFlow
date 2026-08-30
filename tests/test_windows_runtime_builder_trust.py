@@ -120,8 +120,10 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
         self.assertIn("'JOBFLOW_RUNTIME_[A-Z0-9_]+'", helper)
         self.assertIn('$Prefix + "=" + $code', helper)
         self.assertNotIn("WriteLine($Text)", helper)
+        self.assertIn('"JOBFLOW_RUNTIME_STRUCTURAL_PRE_SMOKE_VERIFY_DETAIL"', verifier)
+        self.assertIn('"JOBFLOW_RUNTIME_STRUCTURAL_FINAL_VERIFY_DETAIL"', verifier)
         self.assertIn(
-            'Write-SafeIndependentVerifierFailure "JOBFLOW_RUNTIME_STRUCTURAL_VERIFY_DETAIL" $errorText',
+            "Write-SafeIndependentVerifierFailure $failurePrefix $errorText",
             verifier,
         )
         self.assertIn(

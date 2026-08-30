@@ -817,7 +817,7 @@ function Test-RuntimeRoot(
 
     $actual = @(Get-RuntimeInventory $absoluteRoot "runtime-closure.json")
     $expected = @($manifest.files)
-    if ($actual.Count -ne $expected.Count) { throw "JOBFLOW_RUNTIME_INVENTORY_MISMATCH" }
+    if ($actual.Count -ne $expected.Count) { throw "JOBFLOW_RUNTIME_INVENTORY_COUNT_MISMATCH" }
     $aliases = New-Object "System.Collections.Generic.HashSet[string]" ([StringComparer]::Ordinal)
     for ($index = 0; $index -lt $expected.Count; $index++) {
         $item = $expected[$index]
@@ -830,7 +830,7 @@ function Test-RuntimeRoot(
             [string]$actual[$index].path -cne $path -or
             [long]$actual[$index].size -ne [long]$item.size -or
             [string]$actual[$index].sha256 -cne [string]$item.sha256
-        ) { throw "JOBFLOW_RUNTIME_INVENTORY_MISMATCH" }
+        ) { throw "JOBFLOW_RUNTIME_INVENTORY_ENTRY_MISMATCH" }
     }
     if (
         -not (Test-JsonInteger $manifest.file_count 1 ([long]::MaxValue)) -or
@@ -838,7 +838,7 @@ function Test-RuntimeRoot(
         -not (Test-JsonInteger $manifest.total_bytes 1 ([long]::MaxValue)) -or
         [long]$manifest.total_bytes -ne [long](($actual | Measure-Object -Property size -Sum).Sum) -or
         [string]$manifest.tree_sha256 -cne (Get-TreeSha256 $actual)
-    ) { throw "JOBFLOW_RUNTIME_INVENTORY_MISMATCH" }
+    ) { throw "JOBFLOW_RUNTIME_INVENTORY_SUMMARY_MISMATCH" }
 
     $paths = @{}
     foreach ($record in $actual) { $paths[[string]$record.path] = $true }
