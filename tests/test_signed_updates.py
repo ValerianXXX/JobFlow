@@ -19,6 +19,7 @@ from _support import PROJECT
 from jobops.errors import JobOpsError
 from jobops.public_release import REQUIRED_PUBLIC_FILES
 from jobops.release_candidate import WINDOWS_POWERSHELL_UTF8_BOM_FILES
+from jobops.release_toolchain import sanitized_command_environment
 from jobops.update_manifest import (
     attest_extracted_payload,
     build_legacy_update_manifest_v1,
@@ -34,7 +35,7 @@ _WINDOWS_POWERSHELL = shutil.which("powershell.exe")
 if not _WINDOWS_POWERSHELL:
     raise RuntimeError("Windows PowerShell is required for signed-update tests.")
 WINDOWS_POWERSHELL = Path(_WINDOWS_POWERSHELL).resolve(strict=True)
-_GIT = shutil.which("git.exe")
+_GIT = os.environ.get("JOBFLOW_RELEASE_GIT_PATH") or shutil.which("git.exe")
 if not _GIT:
     raise RuntimeError("Git for Windows is required for signed-update tests.")
 GIT = Path(_GIT).resolve(strict=True)
@@ -128,8 +129,13 @@ class SignedUpdateTests(unittest.TestCase):
 
     @staticmethod
     def _git(project: Path, *arguments: str) -> str:
+        environment = sanitized_command_environment(
+            "git",
+            executable=GIT,
+            project=project,
+        )
         completed = subprocess.run(
-            [str(GIT), *arguments], cwd=project, capture_output=True, text=True,
+            [str(GIT), *arguments], cwd=project, env=environment, capture_output=True, text=True,
             encoding="utf-8", errors="replace", check=False,
         )
         if completed.returncode != 0:
