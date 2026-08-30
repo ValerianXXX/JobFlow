@@ -46,7 +46,9 @@ def synthetic_v2_pointer(*, directory: str, version: str, digest: str) -> dict[s
     }
 
 
-def run_process(command: list[str], *, timeout: int) -> CompletedProcess[str]:
+def run_process(
+    command: list[str], *, timeout: int, env: dict[str, str] | None = None,
+) -> CompletedProcess[str]:
     """Run a launcher with clean process state and file-backed output capture."""
     helper = (
         "import json, subprocess, sys\n"
@@ -65,10 +67,13 @@ def run_process(command: list[str], *, timeout: int) -> CompletedProcess[str]:
     temporary_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="launcher-", dir=temporary_root) as raw:
         result_path = Path(raw) / "result.json"
+        process_environment = ISOLATED_ENVIRONMENT.copy()
+        if env is not None:
+            process_environment.update(env)
         process = RealPopen(
             [sys.executable, "-I", "-c", helper, str(result_path), *command],
             cwd=PROJECT,
-            env=ISOLATED_ENVIRONMENT,
+            env=process_environment,
             stdin=DEVNULL,
             stdout=DEVNULL,
             stderr=DEVNULL,
@@ -2227,14 +2232,23 @@ class WindowsLauncherTests(unittest.TestCase):
             self.assertNotIn(forbidden, combined)
 
     def test_one_click_health_check_is_redacted_local_only_and_passing(self) -> None:
-        completed = run_process(
-            [
-                str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
-                "-File", str(PROJECT / "scripts" / "check-jobflow.ps1"), "-Json",
-                "-PythonPath", str(HEALTH_PYTHON),
-            ],
-            timeout=60,
-        )
+        temporary_root = PROJECT / "tests" / ".tmp"
+        temporary_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="health-data-", dir=temporary_root) as raw:
+            data_root = Path(raw)
+            (data_root / ".jobflow-data-root").write_text(
+                json.dumps({"schema_version": 1, "kind": "JOBFLOW_RUNTIME_DATA"}),
+                encoding="utf-8",
+            )
+            completed = run_process(
+                [
+                    str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                    "-File", str(PROJECT / "scripts" / "check-jobflow.ps1"), "-Json",
+                    "-PythonPath", str(HEALTH_PYTHON),
+                ],
+                timeout=60,
+                env={"JOBFLOW_DATA_ROOT": str(data_root)},
+            )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         result = json.loads(completed.stdout.lstrip("\ufeff"))
         self.assertEqual(result["status"], "JOBFLOW_READY")
