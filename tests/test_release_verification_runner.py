@@ -109,6 +109,8 @@ def _complete_report(commit: str, *, baseline_attempts: int = 0, baseline_real: 
         "javascript-e2e-browser-companion",
         "python-compileall",
         "runtime-schema-json",
+        "browser-companion-store-package",
+        "browser-companion-store-package-validation",
         "public-repository-boundary",
         "git-head-before-report",
         "git-clean-before-report",
@@ -334,6 +336,17 @@ class ReleaseVerificationRunnerTests(unittest.TestCase):
                     )
                 elif "compileall" in arguments:
                     output = ""
+                elif "jobops.browser_companion_store" in arguments:
+                    output = json.dumps({
+                        "schema_version": 1,
+                        "status": "BUILT",
+                        "version": "0.9.2",
+                        "path": "JobFlow-Browser-Companion-v0.9.2-store.zip",
+                        "sha256": "sha256:" + "b" * 64,
+                        "source_sha256": "sha256:" + "c" * 64,
+                        "file_count": 11,
+                        "private_binding_files": 0,
+                    })
                 elif arguments[-2:-1] == ["-c"]:
                     output = "SCHEMAS_VALID=3\n"
                 elif arguments[-2:] == ["jobops.public_release"] or "jobops.public_release" in arguments:
@@ -372,6 +385,17 @@ class ReleaseVerificationRunnerTests(unittest.TestCase):
                     "jobops.release_verification._publish_report_and_checkpoint",
                     return_value=published,
                 ) as publish,
+                patch(
+                    "jobops.release_verification.verify_store_package",
+                    return_value={
+                        "status": "PASS",
+                        "version": "0.9.2",
+                        "sha256": "sha256:" + "b" * 64,
+                        "file_count": 11,
+                        "private_binding_files": 0,
+                        "findings": [],
+                    },
+                ),
             ):
                 result = run_release_verification(project, node_path=node, git_path=git)
             self.assertEqual(result, published)
@@ -384,6 +408,8 @@ class ReleaseVerificationRunnerTests(unittest.TestCase):
             self.assertIn("javascript-dependency-tree", ids)
             self.assertIn("javascript-runtime-version", ids)
             self.assertIn("javascript-runner", ids)
+            self.assertIn("browser-companion-store-package", ids)
+            self.assertIn("browser-companion-store-package-validation", ids)
             self.assertIn("external-actions-baseline", ids)
             self.assertIn("external-actions-final", ids)
             self.assertIn("knowledge-baseline", ids)

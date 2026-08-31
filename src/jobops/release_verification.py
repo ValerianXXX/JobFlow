@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from .adapters import audit_real_external_actions
+from .browser_companion_store import verify_store_package
 from .db import JobOpsDB
 from .knowledge import KnowledgeGateway
 from .locator import locate_knowledge_root
@@ -409,6 +410,8 @@ def validate_release_test_report(
         "javascript-runner",
         "python-compileall",
         "runtime-schema-json",
+        "browser-companion-store-package",
+        "browser-companion-store-package-validation",
         "public-repository-boundary",
         "git-head-before-report",
         "git-clean-before-report",
@@ -1020,6 +1023,62 @@ print("SCHEMAS_VALID=" + str(len(paths)))
             if schema_match is None:
                 raise ReleaseVerificationError("RELEASE_SCHEMA_COUNT_INVALID")
             schema_count = int(schema_match.group(1))
+
+            store_output = recorder.run(
+                "browser-companion-store-package",
+                python,
+                _isolated_python_arguments(
+                    project,
+                    ["-m", "jobops.browser_companion_store"],
+                ),
+                tool="python",
+            )
+            try:
+                store_result = json.loads(store_output)
+            except json.JSONDecodeError as exc:
+                raise ReleaseVerificationError("RELEASE_BROWSER_STORE_PACKAGE_INVALID") from exc
+            if (
+                not isinstance(store_result, dict)
+                or set(store_result)
+                != {
+                    "schema_version",
+                    "status",
+                    "version",
+                    "path",
+                    "sha256",
+                    "source_sha256",
+                    "file_count",
+                    "private_binding_files",
+                }
+                or store_result.get("schema_version") != 1
+                or store_result.get("status") != "BUILT"
+                or not isinstance(store_result.get("version"), str)
+                or _SEMVER.fullmatch(store_result["version"]) is None
+                or store_result.get("path")
+                != f"JobFlow-Browser-Companion-v{store_result['version']}-store.zip"
+                or not isinstance(store_result.get("sha256"), str)
+                or _SHA256.fullmatch(store_result["sha256"]) is None
+                or not isinstance(store_result.get("source_sha256"), str)
+                or _SHA256.fullmatch(store_result["source_sha256"]) is None
+                or store_result.get("file_count") != 11
+                or store_result.get("private_binding_files") != 0
+            ):
+                raise ReleaseVerificationError("RELEASE_BROWSER_STORE_PACKAGE_INVALID")
+            store_path = project / "dist" / store_result["path"]
+            store_validation = verify_store_package(store_path)
+            if (
+                store_validation.get("status") != "PASS"
+                or store_validation.get("version") != store_result["version"]
+                or store_validation.get("sha256") != store_result["sha256"]
+                or store_validation.get("file_count") != store_result["file_count"]
+                or store_validation.get("private_binding_files") != 0
+                or store_validation.get("findings") != []
+            ):
+                raise ReleaseVerificationError("RELEASE_BROWSER_STORE_PACKAGE_INVALID")
+            recorder.record_operation(
+                "browser-companion-store-package-validation",
+                store_validation,
+            )
 
             public_output = recorder.run(
                 "public-repository-boundary",

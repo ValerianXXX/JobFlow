@@ -67,6 +67,10 @@ class BrowserCompanionStoreTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             self.assertEqual(result["version"], "0.9.2")
             self.assertEqual(result["private_binding_files"], 0)
+            self.assertEqual(result["status"], "BUILT")
+            self.assertTrue(str(result["sha256"]).startswith("sha256:"))
+            self.assertTrue(str(result["source_sha256"]).startswith("sha256:"))
+            self.assertEqual(module.verify_store_package(first)["status"], "PASS")
             with zipfile.ZipFile(first) as archive:
                 names = archive.namelist()
                 self.assertEqual(names, sorted(names))
@@ -79,6 +83,21 @@ class BrowserCompanionStoreTests(unittest.TestCase):
                 self.assertIn("nativeMessaging", manifest["permissions"])
                 for size in (16, 32, 48, 128):
                     self.assertIn(f"icons/icon-{size}.png", names)
+
+    def test_store_package_atomically_replaces_a_stale_archive(self) -> None:
+        script_path = PROJECT / "scripts" / "build_browser_companion_store_package.py"
+        spec = importlib.util.spec_from_file_location("jobflow_store_rebuilder", script_path)
+        self.assertIsNotNone(spec)
+        module = importlib.util.module_from_spec(spec)
+        assert spec and spec.loader
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory(prefix="jobflow-store-rebuild-") as raw_temp:
+            output = Path(raw_temp) / "store.zip"
+            output.write_bytes(b"stale package")
+            result = module.build(output)
+            self.assertEqual(result["status"], "BUILT")
+            self.assertEqual(module.verify_store_package(output)["status"], "PASS")
+            self.assertEqual(list(output.parent.glob("*.tmp")), [])
 
     def test_store_listing_privacy_and_assets_are_public_english_artifacts(self) -> None:
         policy = (PROJECT / "PRIVACY.md").read_text(encoding="utf-8")
