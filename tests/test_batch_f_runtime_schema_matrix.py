@@ -14,7 +14,7 @@ from jobops.publisher_attestation import signer_readiness_challenge_sha256
 from jobops.resume_tailoring import build_resume_tailoring_manifest
 from jobops.runtime_schema import validate_named
 from jobops.sourcing import source_route_hash
-from jobops.util import canonical_json, load_json, sha256_bytes
+from jobops.util import canonical_json, load_json, sha256_bytes, sha256_file
 
 
 H = "sha256:" + "a" * 64
@@ -347,6 +347,64 @@ def valid_fixtures() -> dict[str, dict]:
         },
     }
     publisher_evidence_sha256 = sha256_bytes(canonical_json(publisher_evidence))
+    update_channel = load_json(PROJECT / "config" / "update-channel.json")
+    protected_publisher_request = {
+        "schema_version": 1,
+        "format": "JOBFLOW_PROTECTED_PUBLISHER_REQUEST_V1",
+        "status": "AWAITING_PROTECTED_PUBLISHER_EVIDENCE",
+        "release": {
+            "version": "0.6.0",
+            "source_commit": "a" * 40,
+            "platform": "windows-x64",
+        },
+        "archive": {
+            **runtime_build_evidence["archive"],
+        },
+        "runtime_build_evidence": {
+            "name": "JobFlow-runtime-build-evidence.json",
+            "bytes": len(canonical_json(runtime_build_evidence)),
+            "sha256": runtime_build_evidence_sha256,
+            "issued_at_utc": runtime_build_evidence["issued_at_utc"],
+            "expires_at_utc": runtime_build_evidence["expires_at_utc"],
+        },
+        "runtime_closure": {
+            "manifest_sha256": runtime_build_evidence["runtime_closure"]["manifest_sha256"],
+            "tree_sha256": runtime_build_evidence["runtime_closure"]["tree_sha256"],
+            "source_payload_sha256": runtime_build_evidence["runtime_closure"]["source_payload_sha256"],
+            "file_count": runtime_build_evidence["runtime_closure"]["file_count"],
+            "total_bytes": runtime_build_evidence["runtime_closure"]["total_bytes"],
+        },
+        "build_inputs_sha256": runtime_build_evidence["build_inputs_sha256"],
+        "python_source": {
+            "artifact_name": runtime_build_evidence["python_source"]["artifact_name"],
+            "artifact_bytes": runtime_build_evidence["python_source"]["artifact_bytes"],
+            "artifact_sha256": runtime_build_evidence["python_source"]["artifact_sha256"],
+            "sigstore_bundle_name": runtime_build_evidence["python_source"]["sigstore_bundle_name"],
+            "sigstore_bundle_bytes": runtime_build_evidence["python_source"]["sigstore_bundle_bytes"],
+            "sigstore_bundle_sha256": runtime_build_evidence["python_source"]["sigstore_bundle_sha256"],
+        },
+        "pinned_policy": {
+            "windows_runtime_source_sha256": sha256_file(PROJECT / "config" / "windows-runtime-source.json"),
+            "update_channel_sha256": sha256_file(PROJECT / "config" / "update-channel.json"),
+            "release_key_id": update_channel["signature"]["key_id"],
+            "sigstore_certificate_identity": runtime_source["python"]["sigstore_certificate_identity"],
+            "sigstore_certificate_oidc_issuer": runtime_source["python"]["sigstore_certificate_oidc_issuer"],
+        },
+        "required_response": {
+            "name": "JobFlow-publisher-evidence.json",
+            "schema_name": "publisher-evidence-v1",
+            "format": "JOBFLOW_PUBLISHER_EVIDENCE_V1",
+            "status": "READY_FOR_PROTECTED_SIGNING",
+            "maximum_bytes": 262144,
+            "signer_challenge_format": "JOBFLOW_SIGNER_READINESS_CHALLENGE_V1",
+        },
+        "safety": {
+            "request_contains_local_paths": False,
+            "request_contains_secret_material": False,
+            "protected_key_required_by_request": False,
+            "external_actions": 0,
+        },
+    }
     clean_windows_acceptance = {
         "schema_version": 1,
         "format": "JOBFLOW_CLEAN_WINDOWS_ACCEPTANCE_V1",
@@ -408,6 +466,7 @@ def valid_fixtures() -> dict[str, dict]:
     return {
         "runtime-build-evidence-v1": runtime_build_evidence,
         "publisher-evidence-v1": publisher_evidence,
+        "protected-publisher-request-v1": protected_publisher_request,
         "clean-windows-acceptance-v1": clean_windows_acceptance,
         "live-acceptance-report": live_acceptance,
         "product-capability-report": product_capability_report(),
