@@ -622,7 +622,7 @@ class JobFlowBootstrapTrustTests(unittest.TestCase):
             seed = Path(raw) / "seed"
             seed.mkdir()
             _, _, _, _, value = self._complete_release_fixture(seed)
-            value["policy"]["minimum_bootstrap_version"] = "0.6.1"  # type: ignore[index]
+            value["policy"]["minimum_bootstrap_version"] = "0.7.1"  # type: ignore[index]
             value["publisher_attestation"]["policy_sha256"] = self._sha(  # type: ignore[index]
                 self._canonical(value["policy"])
             )
