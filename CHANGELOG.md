@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-31
+
 ### Added
 
 - Added one-command, fail-closed release verification that freezes a clean Git HEAD, runs the complete local quality and safety gates, and rejects any commit, worktree, or external-action drift.

@@ -612,7 +612,7 @@ class JobFlowBootstrapActivationTests(unittest.TestCase):
         self.assertNotIn(str(self.local_app_data), completed.stdout + completed.stderr)
         pointer = self._pointer()
         self.assertEqual(len(pointer), 11)
-        self.assertEqual(pointer["bootstrap_version"], "0.6.0")
+        self.assertEqual(pointer["bootstrap_version"], "0.7.0")
         target = self._target(pointer)
         self.assertTrue((target / "runtime-closure.json").is_file())
         self.assertFalse((self.install / str(pointer["version_directory"])).exists())
@@ -707,8 +707,8 @@ class JobFlowBootstrapActivationTests(unittest.TestCase):
         self.assertEqual((self.install / "current.json").read_bytes(), pointer_before)
 
         for label, kwargs in (
-            ("bootstrap", {"minimum_bootstrap": "0.6.1"}),
-            ("updater", {"minimum_updater": "0.6.1"}),
+            ("bootstrap", {"minimum_bootstrap": "0.7.1"}),
+            ("updater", {"minimum_updater": "0.7.1"}),
         ):
             with self.subTest(label=label):
                 other = self.root / ("future-" + label)
