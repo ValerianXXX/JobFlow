@@ -60,6 +60,11 @@ function applyRestartMessage(result) {
     COMPANION_ARIA_COMBOBOX_VERIFY_FAILED: "网页没有保留可搜索下拉框的选择",
     COMPANION_CONTROL_REBIND_FAILED: "上传或页面刷新后，该字段结构发生了变化",
     COMPANION_CONTROL_CHANGED: "填写前该字段结构发生了变化",
+    COMPANION_CAPTCHA_STOP: "页面出现了人机验证，必须由你亲自完成",
+    COMPANION_MFA_STOP: "页面出现了多重验证或一次性验证码，必须由你亲自完成",
+    COMPANION_LOGIN_STOP: "页面要求登录，密码必须由你亲自填写",
+    COMPANION_ACCOUNT_CREATION_STOP: "页面要求创建账户，必须由你亲自决定并完成",
+    COMPANION_PROTECTED_CREDENTIAL_CONTROL: "当前字段是密码、验证码或一次性代码，JobFlow 按安全规则拒绝读取或填写",
     COMPANION_FIELD_MAX_LENGTH_CHANGED: "字段长度限制已经变化，未填写任何内容",
     COMPANION_FIELD_VERIFY_FAILED: "网页没有保留已填写的内容",
     COMPANION_FILE_VERIFY_FAILED: "网页没有确认附件已经保留"
@@ -73,6 +78,11 @@ function applyRestartMessage(result) {
     COMPANION_ARIA_COMBOBOX_VERIFY_FAILED: "the page did not retain the searchable-menu choice",
     COMPANION_CONTROL_REBIND_FAILED: "the field structure changed after upload or page refresh",
     COMPANION_CONTROL_CHANGED: "the field structure changed before it could be filled",
+    COMPANION_CAPTCHA_STOP: "the page requires a human CAPTCHA check",
+    COMPANION_MFA_STOP: "the page requires MFA or a one-time verification code that only you may enter",
+    COMPANION_LOGIN_STOP: "the page requires login credentials that only you may enter",
+    COMPANION_ACCOUNT_CREATION_STOP: "the page requires an account-creation decision and action from you",
+    COMPANION_PROTECTED_CREDENTIAL_CONTROL: "the field is a password, verification-code, or one-time-code control that JobFlow will not read or fill",
     COMPANION_FIELD_MAX_LENGTH_CHANGED: "the field length limit changed; nothing was filled",
     COMPANION_FIELD_VERIFY_FAILED: "the page did not retain the entered value",
     COMPANION_FILE_VERIFY_FAILED: "the page did not confirm the attachment"

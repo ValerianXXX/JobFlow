@@ -406,13 +406,36 @@
     return rect.width >= 80 && rect.height >= 50 && rect.width * rect.height >= 8_000;
   }
 
+  function visibleActionMatches(pattern) {
+    return deepQueryAll("button,input[type='submit'],input[type='button'],[role='button']")
+      .filter(visible)
+      .some((element) => pattern.test(compact(
+        labelFor(element) || element.innerText || element.textContent || element.value ||
+        element.getAttribute?.("aria-label")
+      ).toLowerCase()));
+  }
+
   function blockerSignals() {
     const text = compact(document.body?.innerText || "", 250000).toLowerCase();
     const signals = [];
+    const visiblePasswords = deepQueryAll('input[type="password"]').filter(visible);
+    const visibleApplicantInputs = deepQueryAll("input,select,textarea,[role='combobox']")
+      .filter(visible)
+      .filter((element) => {
+        const type = controlType(element);
+        return !["hidden", "password", "button", "submit", "reset"].includes(type) &&
+          meaningfulApplicantControl(element);
+      });
     if (/captcha|recaptcha|hcaptcha|verify you are human|人机验证/.test(text)) signals.push("CAPTCHA");
     if (/multi[- ]factor|two[- ]factor|one[- ]time password|verification code|验证码|动态口令/.test(text)) signals.push("MFA");
-    if (/sign in|log in|login required|登录/.test(text) && deepQuery('input[type="password"]')) signals.push("LOGIN");
-    if (/create account|register account|sign up|创建账号|注册账号/.test(text)) signals.push("ACCOUNT_CREATION");
+    if (/sign in|log in|login required|登录/.test(text) && visiblePasswords.length) signals.push("LOGIN");
+    if (
+      /create account|register account|sign up|创建账号|注册账号/.test(text) &&
+      (visiblePasswords.length || (
+        visibleApplicantInputs.length <= 1 &&
+        visibleActionMatches(/^(?:create account|register(?: account)?|sign up|创建账号|注册账号)$/i)
+      ))
+    ) signals.push("ACCOUNT_CREATION");
     for (const frame of deepQueryAll("iframe[src]").filter(relevantEmbeddedFrame)) {
       try { if (new URL(frame.src, location.href).origin !== location.origin) signals.push("CROSS_ORIGIN_IFRAME"); }
       catch (_error) { signals.push("CROSS_ORIGIN_IFRAME"); }
@@ -422,6 +445,29 @@
       catch (_error) { signals.push("CROSS_ORIGIN_FORM"); }
     }
     return [...new Set(signals)].sort();
+  }
+
+  function protectedPageGateFailure() {
+    const signals = new Set(blockerSignals());
+    for (const signal of ["CAPTCHA", "MFA", "LOGIN", "ACCOUNT_CREATION"]) {
+      if (signals.has(signal)) return `COMPANION_${signal}_STOP`;
+    }
+    return "";
+  }
+
+  function protectedCredentialBinding(binding) {
+    return bindingElements(binding).some((element) => {
+      if (!(element instanceof HTMLInputElement)) return false;
+      const type = controlType(element);
+      const autocomplete = compact(element.getAttribute("autocomplete")).toLowerCase();
+      const context = compact([
+        labelFor(element), element.getAttribute("name"), element.getAttribute("placeholder"),
+        element.getAttribute("aria-label")
+      ].join(" ")).toLowerCase();
+      return type === "password" ||
+        ["current-password", "new-password", "one-time-code"].includes(autocomplete) ||
+        /(?:^|\b)(?:password|passcode|one[- ]time code|verification code|security code|otp)(?:\b|$)|密码|验证码|动态口令/.test(context);
+    });
   }
 
   function serializedFormSnapshot() {
@@ -1389,6 +1435,8 @@
     armedManualChallenge = null;
     manualSignalSent = false;
     pendingManualClick = null;
+    const initialPageGateFailure = protectedPageGateFailure();
+    if (initialPageGateFailure) return blockedApply(initialPageGateFailure);
     const fields = Array.isArray(message.fields) ? message.fields : [];
     const files = Array.isArray(message.files) ? message.files : [];
     const finalSubmitRefs = (message.final_submit_client_refs || []).map(String);
@@ -1402,10 +1450,15 @@
     ];
 
     const validateEveryBinding = async () => {
+      const pageGateFailure = protectedPageGateFailure();
+      if (pageGateFailure) return {code: pageGateFailure};
       for (const item of fields) {
         const clientRef = String(item.client_ref);
         const binding = controlMap.get(clientRef);
         if (!bindingUsable(binding)) return {code: "COMPANION_CONTROL_CHANGED", clientRef};
+        if (protectedCredentialBinding(binding)) {
+          return {code: "COMPANION_PROTECTED_CREDENTIAL_CONTROL", clientRef};
+        }
         const maximumFailure = fieldMaxLengthFailure(binding, item);
         if (maximumFailure) return {code: maximumFailure, clientRef};
         if (await sha256(String(item.value)) !== String(item.value_sha256 || "")) {
@@ -1554,6 +1607,8 @@
         return blockedApply(code, clientRef);
       }
       materialBindings.push({client_ref: clientRef, purpose: item.purpose, sha256: item.sha256});
+      const pageGateFailure = protectedPageGateFailure();
+      if (pageGateFailure) return blockedApply(pageGateFailure);
       const remainingRefs = [
         ...files.slice(fileIndex + 1).map((candidate) => String(candidate.client_ref)),
         ...fields.map((candidate) => String(candidate.client_ref)),
@@ -1609,6 +1664,8 @@
       }
       catch (error) { return blockedApply(fieldApplyFailureCode(error), item.client_ref); }
       await waitForDomQuiet({quietMilliseconds: 300, maximumMilliseconds: 1800});
+      const pageGateFailure = protectedPageGateFailure();
+      if (pageGateFailure) return blockedApply(pageGateFailure);
       const afterApply = ensureBindings(requiredRefs);
       if (!["CURRENT", "REBOUND"].includes(afterApply.status)) {
         return blockedApply(afterApply.code, afterApply.client_ref);

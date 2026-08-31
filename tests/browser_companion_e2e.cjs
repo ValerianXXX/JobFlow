@@ -483,6 +483,137 @@ async function verifyApprovalSemanticsAndAtomicPreflight(browser) {
   return true;
 }
 
+async function verifyProtectedAccountAndCredentialGates(browser) {
+  const createPage = async (suffix, fixtureHtml) => {
+    const candidatePage = await browser.newPage();
+    const url = `https://tenant.wd1.myworkdayjobs.com/en-US/Careers/account-gate-${suffix}`;
+    await candidatePage.route(url, (route) => route.fulfill({
+      status: 200, contentType: "text/html; charset=utf-8", body: fixtureHtml
+    }));
+    await candidatePage.goto(url, {waitUntil: "domcontentloaded"});
+    await candidatePage.evaluate(() => {
+      globalThis.__jobflowListener = null;
+      globalThis.chrome = {
+        runtime: {
+          lastError: null,
+          onMessage: {addListener(listener) { globalThis.__jobflowListener = listener; }},
+          async sendMessage() { return {status: "RECORDED"}; },
+          connect() { throw new Error("NO_FILE_STREAM_EXPECTED"); }
+        }
+      };
+      document.querySelector("form")?.addEventListener("submit", (event) => event.preventDefault());
+    });
+    await candidatePage.addScriptTag({path: companion});
+    await candidatePage.evaluate(() => {
+      globalThis.__jobflowCall = (message) => new Promise((resolve) => {
+        globalThis.__jobflowListener(message, {}, resolve);
+      });
+    });
+    return candidatePage;
+  };
+
+  const guestPage = await createPage("guest", `<!doctype html><html><body><main>
+    <h1>Apply for this role</h1><form>
+      <label for="name">Full name</label><input id="name" name="name" required>
+      <label for="email">Email</label><input id="email" name="email" type="email" required>
+      <label for="resume">Resume</label><input id="resume" name="resume" type="file">
+      <button id="submit" type="submit">Submit application</button>
+    </form><a href="/create-account">Create account</a>
+  </main></body></html>`);
+  const guestCollected = await guestPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+  assert.equal(guestCollected.status, "COLLECTED", JSON.stringify(guestCollected));
+  assert.ok(!guestCollected.payload.blocker_signals.includes("ACCOUNT_CREATION"));
+  assert.ok(!guestCollected.payload.blocker_signals.includes("LOGIN"));
+  await guestPage.close();
+
+  const accountPage = await createPage("actual", `<!doctype html><html><body><main>
+    <h1>Create Account</h1><form>
+      <label for="account-email">Email</label><input id="account-email" name="email" type="email">
+      <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password">
+      <label for="verify">Verify New Password</label><input id="verify" name="verify_password" type="password" autocomplete="new-password">
+      <button type="submit">Create Account</button>
+    </form><a href="/sign-in">Sign In</a>
+  </main></body></html>`);
+  const accountCollected = await accountPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+  assert.equal(accountCollected.status, "COLLECTED", JSON.stringify(accountCollected));
+  assert.ok(accountCollected.payload.blocker_signals.includes("ACCOUNT_CREATION"));
+  assert.ok(accountCollected.payload.blocker_signals.includes("LOGIN"));
+  const accountApply = await accountPage.evaluate(
+    ({clientRef, semantics, value, hash}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED", control_semantics_sha256: semantics,
+      fields: [{client_ref: clientRef, value, value_sha256: hash}],
+      files: [], navigation: null, final_submit_client_refs: []
+    }),
+    {
+      clientRef: accountCollected.payload.client_refs[1],
+      semantics: accountCollected.payload.control_semantics_sha256,
+      value: "never-write-this-password", hash: valueHash("never-write-this-password")
+    }
+  );
+  assert.equal(accountApply.status, "BLOCKED", JSON.stringify(accountApply));
+  assert.equal(accountApply.code, "COMPANION_LOGIN_STOP");
+  assert.equal(accountApply.partial_effects, false);
+  assert.equal(await accountPage.locator("#password").inputValue(), "");
+  await accountPage.close();
+
+  const credentialPage = await createPage("credential-control", `<!doctype html><html><body><main>
+    <h1>Candidate details</h1><form>
+      <label for="name">Full name</label><input id="name" name="name">
+      <label for="secret">Access credential</label><input id="secret" name="access_credential" type="password" autocomplete="new-password">
+      <button type="submit">Continue</button>
+    </form>
+  </main></body></html>`);
+  const credentialCollected = await credentialPage.evaluate(() => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"}));
+  assert.equal(credentialCollected.status, "COLLECTED", JSON.stringify(credentialCollected));
+  assert.deepEqual(credentialCollected.payload.blocker_signals, []);
+  const credentialApply = await credentialPage.evaluate(
+    ({clientRef, semantics, value, hash}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED", control_semantics_sha256: semantics,
+      fields: [{client_ref: clientRef, value, value_sha256: hash}],
+      files: [], navigation: null, final_submit_client_refs: []
+    }),
+    {
+      clientRef: credentialCollected.payload.client_refs[1],
+      semantics: credentialCollected.payload.control_semantics_sha256,
+      value: "never-write-this-password", hash: valueHash("never-write-this-password")
+    }
+  );
+  assert.equal(credentialApply.status, "BLOCKED", JSON.stringify(credentialApply));
+  assert.equal(credentialApply.code, "COMPANION_PROTECTED_CREDENTIAL_CONTROL");
+  assert.equal(credentialApply.partial_effects, false);
+  assert.equal(await credentialPage.locator("#secret").inputValue(), "");
+
+  await credentialPage.locator("#secret").evaluate((control) => {
+    control.type = "text";
+    control.name = "candidate_code";
+    control.autocomplete = "one-time-code";
+    document.querySelector('label[for="secret"]').textContent = "Candidate code";
+  });
+  const oneTimeCodeCollected = await credentialPage.evaluate(
+    () => globalThis.__jobflowCall({type: "JOBFLOW_COLLECT_FORM"})
+  );
+  assert.equal(oneTimeCodeCollected.status, "COLLECTED", JSON.stringify(oneTimeCodeCollected));
+  assert.deepEqual(oneTimeCodeCollected.payload.blocker_signals, []);
+  const oneTimeCodeApply = await credentialPage.evaluate(
+    ({clientRef, semantics, value, hash}) => globalThis.__jobflowCall({
+      type: "JOBFLOW_APPLY_APPROVED", control_semantics_sha256: semantics,
+      fields: [{client_ref: clientRef, value, value_sha256: hash}],
+      files: [], navigation: null, final_submit_client_refs: []
+    }),
+    {
+      clientRef: oneTimeCodeCollected.payload.client_refs[1],
+      semantics: oneTimeCodeCollected.payload.control_semantics_sha256,
+      value: "123456", hash: valueHash("123456")
+    }
+  );
+  assert.equal(oneTimeCodeApply.status, "BLOCKED", JSON.stringify(oneTimeCodeApply));
+  assert.equal(oneTimeCodeApply.code, "COMPANION_PROTECTED_CREDENTIAL_CONTROL");
+  assert.equal(oneTimeCodeApply.partial_effects, false);
+  assert.equal(await credentialPage.locator("#secret").inputValue(), "");
+  await credentialPage.close();
+  return true;
+}
+
 (async () => {
   assert.ok(fs.existsSync(browserPath), `Browser executable is missing: ${browserPath}`);
   const browser = await chromium.launch({headless: true, executablePath: browserPath});
@@ -1853,6 +1984,7 @@ async function verifyApprovalSemanticsAndAtomicPreflight(browser) {
 
     const dynamicMaxLengthFailClosed = await verifyDynamicMaxLengthFailClosed(browser);
     const approvalSemanticsAndAtomicPreflight = await verifyApprovalSemanticsAndAtomicPreflight(browser);
+    const protectedAccountAndCredentialGates = await verifyProtectedAccountAndCredentialGates(browser);
 
     process.stdout.write(JSON.stringify({
       status: "PASS",
@@ -1897,6 +2029,7 @@ async function verifyApprovalSemanticsAndAtomicPreflight(browser) {
       partial_apply_evidence: true,
       dynamic_maxlength_fail_closed: dynamicMaxLengthFailClosed,
       approval_semantics_and_atomic_preflight: approvalSemanticsAndAtomicPreflight,
+      protected_account_and_credential_gates: protectedAccountAndCredentialGates,
       programmatic_final_submit_events: 0
     }));
   } finally {
