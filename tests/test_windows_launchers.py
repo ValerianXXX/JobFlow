@@ -54,12 +54,20 @@ def run_process(
         "import json, subprocess, sys\n"
         "from pathlib import Path\n"
         "result_path = Path(sys.argv[1])\n"
+        "timeout_seconds = float(sys.argv[2])\n"
         "stdout_path = result_path.with_suffix('.stdout')\n"
         "stderr_path = result_path.with_suffix('.stderr')\n"
         "with stdout_path.open('wb') as stdout_file, stderr_path.open('wb') as stderr_file:\n"
-        "    completed = subprocess.run(sys.argv[2:], stdout=stdout_file, stderr=stderr_file, check=False)\n"
+        "    try:\n"
+        "        completed = subprocess.run(sys.argv[3:], stdout=stdout_file, stderr=stderr_file, check=False, timeout=timeout_seconds)\n"
+        "        returncode = completed.returncode\n"
+        "        timed_out = False\n"
+        "    except subprocess.TimeoutExpired:\n"
+        "        returncode = 124\n"
+        "        timed_out = True\n"
         "result_path.write_text(json.dumps({"
-        "'returncode': completed.returncode, "
+        "'returncode': returncode, "
+        "'timed_out': timed_out, "
         "'stdout': stdout_path.read_bytes().decode('utf-8-sig'), "
         "'stderr': stderr_path.read_bytes().decode('utf-8-sig')}), encoding='utf-8')\n"
     )
@@ -71,7 +79,7 @@ def run_process(
         if env is not None:
             process_environment.update(env)
         process = RealPopen(
-            [sys.executable, "-I", "-c", helper, str(result_path), *command],
+            [sys.executable, "-I", "-c", helper, str(result_path), str(timeout), *command],
             cwd=PROJECT,
             env=process_environment,
             stdin=DEVNULL,
@@ -79,7 +87,7 @@ def run_process(
             stderr=DEVNULL,
         )
         try:
-            process.wait(timeout=timeout)
+            process.wait(timeout=timeout + 10)
         except TimeoutExpired:
             process.kill()
             process.wait()
@@ -87,6 +95,8 @@ def run_process(
         if process.returncode != 0 or not result_path.is_file():
             raise AssertionError("The isolated launcher test helper did not return a result.")
         value = json.loads(result_path.read_text(encoding="utf-8"))
+        if value.get("timed_out") is True:
+            raise TimeoutExpired(command, timeout)
     return CompletedProcess(
         command,
         int(value["returncode"]),

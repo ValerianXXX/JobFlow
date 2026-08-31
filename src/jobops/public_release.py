@@ -7,7 +7,7 @@ import re
 import subprocess
 import zipfile
 from pathlib import Path, PurePosixPath
-from typing import Any, Iterable
+from typing import Any, BinaryIO, Iterable, Iterator
 
 from .release_toolchain import (
     ReleaseToolchainError,
@@ -43,6 +43,8 @@ SECRET_PATTERNS = {
 TEXT_SUFFIXES = {".py", ".js", ".css", ".json", ".md", ".yaml", ".yml", ".txt", ".ps1", ".html", ".toml", ".in"}
 HISTORY_DOCUMENT_SUFFIXES = {".docx", ".pdf"}
 MAX_HISTORY_TEXT_BYTES = 5_000_000
+MAX_HISTORY_DOCUMENT_BYTES = 100_000_000
+MAX_GIT_BATCH_HEADER_BYTES = 192
 REQUIRED_PUBLIC_FILES = {
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -183,6 +185,112 @@ def _git(project: Path, *arguments: str, git_path: Path | None = None) -> bytes:
     return completed.stdout
 
 
+def _read_exact(stream: BinaryIO, size: int) -> bytes:
+    payload = bytearray()
+    remaining = size
+    while remaining:
+        chunk = stream.read(min(remaining, 1024 * 1024))
+        if not chunk:
+            raise RuntimeError("GIT_HISTORY_OBJECT_TRUNCATED")
+        payload.extend(chunk)
+        remaining -= len(chunk)
+    return bytes(payload)
+
+
+def _discard_exact(stream: BinaryIO, size: int) -> None:
+    remaining = size
+    while remaining:
+        chunk = stream.read(min(remaining, 1024 * 1024))
+        if not chunk:
+            raise RuntimeError("GIT_HISTORY_OBJECT_TRUNCATED")
+        remaining -= len(chunk)
+
+
+def _iter_git_blobs(
+    project: Path,
+    requests: Iterable[tuple[str, int]],
+    *,
+    git_path: Path | None = None,
+) -> Iterator[tuple[str, int, bytes | None]]:
+    """Read validated historical blobs through one locked Git batch process.
+
+    Starting one Git process per historical blob made the public-history gate
+    exceed the one-click check's bounded runtime once the repository accumulated
+    a few thousand unique objects.  The batch protocol retains the same complete
+    scan while validating every response before its bytes are used.
+    """
+
+    normalized: list[tuple[str, int]] = []
+    seen: set[str] = set()
+    for object_id, maximum_bytes in requests:
+        if (
+            re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", object_id) is None
+            or object_id in seen
+            or type(maximum_bytes) is not int
+            or maximum_bytes < 0
+        ):
+            raise RuntimeError("GIT_HISTORY_OBJECT_REQUEST_INVALID")
+        seen.add(object_id)
+        normalized.append((object_id, maximum_bytes))
+    if not normalized:
+        return
+
+    executable = Path(_git_executable(git_path))
+    process = subprocess.Popen(
+        [str(executable), "cat-file", "--batch"],
+        cwd=project,
+        env=_git_environment(project, executable),
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    if process.stdin is None or process.stdout is None:
+        process.kill()
+        process.wait()
+        raise RuntimeError("GIT_HISTORY_BATCH_UNAVAILABLE")
+    completed_normally = False
+    try:
+        for object_id, maximum_bytes in normalized:
+            encoded_id = object_id.encode("ascii")
+            process.stdin.write(encoded_id + b"\n")
+            process.stdin.flush()
+            header = process.stdout.readline(MAX_GIT_BATCH_HEADER_BYTES + 1)
+            if (
+                not header.endswith(b"\n")
+                or len(header) > MAX_GIT_BATCH_HEADER_BYTES
+            ):
+                raise RuntimeError("GIT_HISTORY_BATCH_HEADER_INVALID")
+            parts = header[:-1].split(b" ")
+            if (
+                len(parts) != 3
+                or parts[0] != encoded_id
+                or parts[1] != b"blob"
+                or re.fullmatch(rb"(?:0|[1-9][0-9]*)", parts[2]) is None
+            ):
+                raise RuntimeError("GIT_HISTORY_BATCH_HEADER_INVALID")
+            payload_size = int(parts[2])
+            if payload_size > maximum_bytes:
+                _discard_exact(process.stdout, payload_size)
+                payload = None
+            else:
+                payload = _read_exact(process.stdout, payload_size)
+            if process.stdout.read(1) != b"\n":
+                raise RuntimeError("GIT_HISTORY_BATCH_SEPARATOR_INVALID")
+            yield object_id, payload_size, payload
+        process.stdin.close()
+        if process.wait(timeout=30) != 0:
+            raise RuntimeError("GIT_REPOSITORY_REQUIRED")
+        completed_normally = True
+    finally:
+        if not completed_normally and process.poll() is None:
+            process.kill()
+            process.wait()
+        if not process.stdin.closed:
+            process.stdin.close()
+        process.stdout.close()
+
+
 def _history_inventory(
     project: Path, *, git_path: Path | None = None
 ) -> tuple[list[str], dict[str, set[str]], list[dict[str, str]], int]:
@@ -277,6 +385,8 @@ def verify_public_history(project: Path, *, git_path: Path | None = None) -> dic
     findings.extend(validate_public_paths(paths))
     scanned_text_blobs = 0
     scanned_document_blobs = 0
+    requests: list[tuple[str, int]] = []
+    request_metadata: dict[str, tuple[str, str]] = {}
     for object_id, aliases in blob_paths.items():
         relevant = sorted(
             alias for alias in aliases
@@ -285,15 +395,31 @@ def verify_public_history(project: Path, *, git_path: Path | None = None) -> dic
         if not relevant:
             continue
         label = relevant[0] + "@history"
-        payload = _git(project, "cat-file", "blob", object_id, git_path=git_path)
         suffix = PurePosixPath(label.removesuffix("@history")).suffix.casefold()
         if suffix in HISTORY_DOCUMENT_SUFFIXES:
             scanned_document_blobs += 1
-            findings.extend(_scan_historical_document(project, label, suffix, payload))
+            maximum_bytes = MAX_HISTORY_DOCUMENT_BYTES
+        else:
+            scanned_text_blobs += 1
+            maximum_bytes = MAX_HISTORY_TEXT_BYTES
+        requests.append((object_id, maximum_bytes))
+        request_metadata[object_id] = (label, suffix)
+    for object_id, _payload_size, payload in _iter_git_blobs(
+        project,
+        requests,
+        git_path=git_path,
+    ):
+        label, suffix = request_metadata[object_id]
+        if payload is None:
+            kind = (
+                "oversized_historical_document"
+                if suffix in HISTORY_DOCUMENT_SUFFIXES
+                else "oversized_historical_text"
+            )
+            findings.append({"kind": kind, "path": label})
             continue
-        scanned_text_blobs += 1
-        if len(payload) > MAX_HISTORY_TEXT_BYTES:
-            findings.append({"kind": "oversized_historical_text", "path": label})
+        if suffix in HISTORY_DOCUMENT_SUFFIXES:
+            findings.extend(_scan_historical_document(project, label, suffix, payload))
             continue
         try:
             text = payload.decode("utf-8-sig")
