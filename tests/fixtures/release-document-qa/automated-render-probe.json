@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "rendered_at": "2026-09-01T07:10:15.197629Z",
+  "reviewed_at": "2026-09-01T07:10:15.197629Z",
+  "reviewer_type": "automated_render_probe",
+  "pages": [
+    {
+      "page": 1,
+      "filename": "complex-master-resume-page-1.png",
+      "render_sha256": "sha256:e0bf8038dfaa24234226f63388de5bdab9dbb717757a9a383ec9d23b7d5682ce",
+      "result": "PASS",
+      "reasons": [
+        "Readable raster detected at 1275x1650; blank-page and corruption probes passed."
+      ]
+    }
+  ]
+}

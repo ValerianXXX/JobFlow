@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "rendered_at": "2026-09-01T07:10:15.197629Z",
+  "reviewed_at": "2026-09-01T07:10:27.0806081Z",
+  "reviewer_type": "codex_visual",
+  "pages": [
+    {
+      "page": 1,
+      "filename": "complex-master-resume-page-1.png",
+      "render_sha256": "sha256:e0bf8038dfaa24234226f63388de5bdab9dbb717757a9a383ec9d23b7d5682ce",
+      "result": "PASS",
+      "reasons": [
+        "Inspected at the original 1275x1650 resolution: all headings, tables, bullets, dates, text, hyperlink styling, borders and footer are visible without clipping, overlap or overflow.",
+        "The page has no blank, duplicated or substituted-content region, and the one-page layout preserves readable spacing and hierarchy."
+      ]
+    }
+  ]
+}

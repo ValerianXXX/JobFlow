@@ -11,6 +11,7 @@ from typing import Any
 
 from .adapters import audit_real_external_actions
 from .db import JobOpsDB
+from .document_qa import structural_qa
 from .errors import JobOpsError
 from .knowledge import KnowledgeGateway
 from .locator import locate_knowledge_root
@@ -43,6 +44,76 @@ RELEASE_INPUT_ROOTS = ("src", "schemas", "tests", "config", ".agents", "scripts"
 ROOT_LAUNCHER_EXTENSIONS = {".bat", ".cmd", ".ps1"}
 RELEASE_RUNTIME_CLOSURE_STATUS = "UNATTESTED"
 RELEASE_RUNTIME_CLOSURE_BLOCKER = "RELEASE_RUNTIME_CLOSURE_UNATTESTED"
+
+
+def _release_document_visual_review(project: Path) -> dict[str, Any]:
+    """Validate tracked synthetic document evidence without using local residue."""
+
+    project = project.resolve()
+    root = (project / "tests" / "fixtures" / "release-document-qa").resolve()
+    docx_path = root / "complex-master-resume.docx"
+    pdf_path = root / "complex-master-resume.pdf"
+    review_path = root / "visual-review.json"
+    required = (docx_path, pdf_path, review_path)
+    if any(not path.is_file() or path.is_symlink() for path in required):
+        raise JobOpsError(
+            "RELEASE_DOCUMENT_VISUAL_EVIDENCE_MISSING",
+            "The tracked synthetic document visual-evidence bundle is incomplete.",
+        )
+    if has_reparse_component(root, project):
+        raise JobOpsError(
+            "RELEASE_DOCUMENT_VISUAL_EVIDENCE_UNSAFE",
+            "The tracked synthetic document visual-evidence bundle crosses a reparse point.",
+        )
+    page_paths = sorted(
+        (
+            path
+            for path in root.glob("complex-master-resume-page-*.png")
+            if path.is_file() and not path.is_symlink()
+        ),
+        key=lambda path: int(path.stem.rsplit("-", 1)[-1])
+        if path.stem.rsplit("-", 1)[-1].isdigit()
+        else 10**9,
+    )
+    if not page_paths or any(has_reparse_component(path, root) for path in page_paths):
+        raise JobOpsError(
+            "RELEASE_DOCUMENT_VISUAL_EVIDENCE_MISSING",
+            "The tracked synthetic document visual-evidence bundle has no safe reviewed page renders.",
+        )
+    review = load_json(review_path)
+    if not isinstance(review, dict) or review.get("reviewer_type") not in {
+        "codex_visual",
+        "human",
+        "independent_qa",
+    }:
+        raise JobOpsError(
+            "RELEASE_DOCUMENT_VISUAL_REVIEW_REQUIRED",
+            "Release document evidence requires an explicit page-by-page visual reviewer, not an automated PASS.",
+        )
+    qa = structural_qa(
+        docx_path,
+        pdf_path,
+        page_paths,
+        visual_record=review,
+        page_limit=2,
+    )
+    if qa.status != "PASS":
+        raise JobOpsError(
+            "RELEASE_DOCUMENT_QA_FAILED",
+            "The tracked synthetic document fixture failed structural, textual, or visual QA.",
+        )
+    return {
+        "schema_version": 1,
+        "status": "PASS",
+        "scope": "TRACKED_SYNTHETIC_RELEASE_FIXTURE",
+        "synthetic_only": True,
+        "reviewer_type": review["reviewer_type"],
+        "pages": review["pages"],
+        "docx_sha256": qa.docx_hash,
+        "pdf_sha256": qa.pdf_hash,
+        "visual_record_sha256": qa.visual_record_hash,
+        "structural_qa": qa.as_dict(),
+    }
 
 
 def _source_commit(project: Path, *, git_path: Path | None = None) -> str:
@@ -576,7 +647,7 @@ def verify_release(
             "private_ciphertext_integrity_failure_count": scan["private_ciphertext_integrity_failure_count"],
         },
         "independent_qa": independent_view,
-        "document_visual_review": load_json(project / "reports" / "validation-artifacts" / "complex-resume-visual-review.json"),
+        "document_visual_review": _release_document_visual_review(project),
         **independent_counts,
         "closed_capabilities": [
             "final submit", "automatic retry", "login or account creation",
@@ -637,8 +708,8 @@ def write_release_reports(project: Path, result: dict[str, Any]) -> None:
         "## Public CLI", "",
         "`status`, `audit`, `locate`, `init-db`, `migrate-db`, `secure-onboard`, `secure-onboard-resume`, `finalize-resume-onboarding`, `review-onboarding`, `secure-import-master-resume`, `secure-import-answer-bank`, `secure-store-status`, `purge-synthetic-private-data`, `propose-claims`, `list-claim-proposals`, `approve-claim`, `reject-claim`, `revoke-claim`, `revalidate-claims`, `ats-capabilities`, `product-capabilities`, `live-acceptance`, `discover-official-jobs`, `verify-route`, `analyze-ats-form`, `analyze-ats-sequence`, `import-jd`, `analyze-job`, `run-to-awaiting-approval`, `plan-continuous-intake`, `run-queue`, `list-pending`, `show-review-packet`, `revise-application`, `approve-review-packet`, `reject-review-packet`, `resume-blocked`, `retry-safe-step`, `explain`, `verify-release`.", "",
         "## Document QA", "",
-        f"- Reviewer: {result['document_visual_review']['reviewer_type']}; rendered pages: {len(result['document_visual_review']['pages'])}; failed pages: {sum(page['result'] != 'PASS' for page in result['document_visual_review']['pages'])}.",
-        "- The complex synthetic master and tailored DOCX/PDF were rendered; page hashes, timestamps and per-page reasons are retained in the visual record.", "",
+        f"- Scope: {result['document_visual_review']['scope']}; reviewer: {result['document_visual_review']['reviewer_type']}; rendered pages: {len(result['document_visual_review']['pages'])}; failed pages: {sum(page['result'] != 'PASS' for page in result['document_visual_review']['pages'])}.",
+        "- The tracked complex synthetic DOCX/PDF and every reviewed page raster are included in the source tree and revalidated by hash, text consistency, page count and visual-record binding during release verification.", "",
         "## Closed capabilities", "",
         *[f"- {item}" for item in result["closed_capabilities"]], "",
         "## Next safe action", "", result["next_safe_action"], "",

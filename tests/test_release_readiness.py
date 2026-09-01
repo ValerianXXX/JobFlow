@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import unittest
 from contextlib import nullcontext
@@ -14,6 +15,7 @@ from jobops.release import (
     _external_action_verification_window,
     _independent_qa_matches_release,
     _latest_release_input_mtime,
+    _release_document_visual_review,
     _release_test_report_matches_source,
     _skill_validation_passes,
     _source_commit,
@@ -202,6 +204,37 @@ class ReleaseReadinessContractTests(unittest.TestCase):
                 with self.assertRaises(JobOpsError) as raised:
                     verify_release(root, object())  # type: ignore[arg-type]
             self.assertEqual(raised.exception.code, "RELEASE_TEST_REPORT_SOURCE_MISMATCH")
+
+    def test_release_document_visual_evidence_is_tracked_and_self_contained(self) -> None:
+        result = _release_document_visual_review(PROJECT)
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["scope"], "TRACKED_SYNTHETIC_RELEASE_FIXTURE")
+        self.assertTrue(result["synthetic_only"])
+        self.assertIn(result["reviewer_type"], {"codex_visual", "human", "independent_qa"})
+        self.assertEqual(result["structural_qa"]["status"], "PASS")
+
+    def test_release_document_visual_evidence_rejects_a_changed_render(self) -> None:
+        with project_temp() as root:
+            source = PROJECT / "tests" / "fixtures" / "release-document-qa"
+            target = root / "tests" / "fixtures" / "release-document-qa"
+            target.parent.mkdir(parents=True)
+            shutil.copytree(source, target)
+            page = next(target.glob("complex-master-resume-page-*.png"))
+            page.write_bytes(page.read_bytes() + b"changed")
+            with self.assertRaises(JobOpsError) as raised:
+                _release_document_visual_review(root)
+            self.assertEqual(raised.exception.code, "VISUAL_RENDER_CHANGED")
+
+    def test_release_document_visual_evidence_rejects_an_automated_pass(self) -> None:
+        with project_temp() as root:
+            source = PROJECT / "tests" / "fixtures" / "release-document-qa"
+            target = root / "tests" / "fixtures" / "release-document-qa"
+            target.parent.mkdir(parents=True)
+            shutil.copytree(source, target)
+            shutil.copy2(target / "automated-render-probe.json", target / "visual-review.json")
+            with self.assertRaises(JobOpsError) as raised:
+                _release_document_visual_review(root)
+            self.assertEqual(raised.exception.code, "RELEASE_DOCUMENT_VISUAL_REVIEW_REQUIRED")
 
     def test_release_freshness_covers_companion_scripts_workflows_and_root_launchers(self) -> None:
         with project_temp() as root:
