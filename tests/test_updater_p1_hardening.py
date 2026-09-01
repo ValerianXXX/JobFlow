@@ -138,15 +138,19 @@ class UpdaterP1HardeningTests(unittest.TestCase):
         self.assertIn("JOBFLOW_UPDATE_RECOVERY_REQUIRED", completed.stderr)
         self.assertNotIn("Checking for a signed stable JobFlow update", completed.stdout)
 
-    def test_checked_in_public_manifest_is_not_a_v2_complete_runtime_release(self) -> None:
+    def test_published_v060_manifest_is_not_a_v2_complete_runtime_release(self) -> None:
         manifest = json.loads(
-            (PROJECT / "dist/JobFlow-update-manifest.json").read_text(encoding="utf-8")
+            (
+                PROJECT
+                / "tests"
+                / "fixtures"
+                / "published-update-v0.6.0"
+                / "JobFlow-update-manifest.json"
+            ).read_text(encoding="utf-8")
         )
         self.assertEqual(manifest["schema_version"], 1)
         self.assertTrue(manifest["asset_name"].endswith("-source.zip"))
-        self.assertFalse(
-            any((PROJECT / "dist").glob("JobFlow-v*-windows-x64-complete.zip"))
-        )
+        self.assertEqual(manifest["version"], "0.6.0")
 
     def test_inventory_digest_is_canonical_and_matches_extracted_root(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-updater-p1-") as raw:

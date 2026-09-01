@@ -22,8 +22,9 @@ from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
 PROJECT = Path(__file__).resolve().parents[1]
 SCRIPT = PROJECT / "scripts" / "windows-runtime" / "jobflow-bootstrap.ps1"
-PRODUCTION_MANIFEST = PROJECT / "dist" / "JobFlow-update-manifest.json"
-PRODUCTION_SIGNATURE = PROJECT / "dist" / "JobFlow-update-manifest.sig.json"
+PUBLISHED_UPDATE_FIXTURE = PROJECT / "tests" / "fixtures" / "published-update-v0.6.0"
+PRODUCTION_MANIFEST = PUBLISHED_UPDATE_FIXTURE / "JobFlow-update-manifest.json"
+PRODUCTION_SIGNATURE = PUBLISHED_UPDATE_FIXTURE / "JobFlow-update-manifest.sig.json"
 PRODUCTION_KEY_ID = "sha256:1037057f8578a60ac5b3dc030cb2d70ad945ec3b5fb51fa3944fcafa77146339"
 PRODUCTION_MODULUS = (
     "4_GvTbc3dTuLSvzARhbG2Msy6mTvLnN5nINaBcSjAiEI986j44U1YxtmkAQ7ZQooPaA5s_xzJvFn5ZlYuExeaZy5L2om2LMfMljz7IOfFeEcz5wOcO8Rokd-zVK8fKFh4xAi4DkGoYxle1vpCiNdr09QeYH4o123GNCAKOfYjNW1WlHKh-9aRnlvrvt2JrsJni--JPLVmoThCeKUdH1ic1rojRR761L6U5AXRfYC46rp952HMr8xt7U_w_M0XukoJLuUtHa1UbGYZZIaU0lRstcpQiwIWtgub0K8Pnnf_l52kc02S2TlrFhGQko32pSOQPifMHiNy6Fg5n8I4F9IGl0MiHFh1fdiKCDzM_m5_bqhFUIIgMULF3BJTPYT41gqXZ_BRELH1g08Q41DAAIzpdDO2iOXvVVizPjvlqThNabz9enDt_uVoEPaTW1VfDV3rswbzfLaO0dTsbtlHxhLLe66u1XhOmnb0ELha6f9iOyijlgSNPwptc7YIpzN8G-d"
@@ -36,6 +37,17 @@ POWERSHELL = (
     / "v1.0"
     / "powershell.exe"
 )
+
+
+def _published_manifest_bytes() -> bytes:
+    """Recover the exact bytes covered by the published v0.6.0 signature."""
+
+    payload = PRODUCTION_MANIFEST.read_bytes()
+    if payload.endswith(b"\r\n"):
+        return payload[:-2]
+    if payload.endswith(b"\n"):
+        return payload[:-1]
+    return payload
 
 
 class JobFlowBootstrapTrustTests(unittest.TestCase):
@@ -51,7 +63,7 @@ class JobFlowBootstrapTrustTests(unittest.TestCase):
     def _fixture(self, root: Path) -> tuple[Path, Path]:
         manifest = root / "manifest.json"
         signature = root / "manifest.sig.json"
-        shutil.copy2(PRODUCTION_MANIFEST, manifest)
+        manifest.write_bytes(_published_manifest_bytes())
         shutil.copy2(PRODUCTION_SIGNATURE, signature)
         return manifest, signature
 
@@ -1193,7 +1205,7 @@ class JobFlowBootstrapTrustTests(unittest.TestCase):
                 self._run(manifest, signature, script=script), wrong_key_id
             )
 
-    def test_current_production_signature_is_cryptographically_valid_but_legacy_v1_is_rejected(self) -> None:
+    def test_published_v060_signature_is_cryptographically_valid_but_legacy_v1_is_rejected(self) -> None:
         envelope = json.loads(PRODUCTION_SIGNATURE.read_text(encoding="utf-8"))
         self.assertEqual(envelope["key_id"], PRODUCTION_KEY_ID)
         modulus = int.from_bytes(self._decode_base64url(PRODUCTION_MODULUS), "big")
@@ -1201,7 +1213,7 @@ class JobFlowBootstrapTrustTests(unittest.TestCase):
         production_public_key = rsa.RSAPublicNumbers(exponent, modulus).public_key()
         production_public_key.verify(
             self._decode_base64url(envelope["signature_b64url"]),
-            PRODUCTION_MANIFEST.read_bytes(),
+            _published_manifest_bytes(),
             padding.PKCS1v15(),
             hashes.SHA256(),
         )

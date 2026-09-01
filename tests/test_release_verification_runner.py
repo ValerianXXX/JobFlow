@@ -259,22 +259,30 @@ class ReleaseVerificationRunnerTests(unittest.TestCase):
         self.assertIn('getattr(subprocess, "CREATE_NO_WINDOW", 0)', _PYTHON_CHECK_BOOTSTRAP)
         self.assertIn('kwargs["creationflags"]', _PYTHON_CHECK_BOOTSTRAP)
         self.assertIn('| _jobflow_no_window', _PYTHON_CHECK_BOOTSTRAP)
-        completed = subprocess.run(
-            [
-                sys.executable,
-                *_isolated_python_arguments(
-                    PROJECT,
-                    ["-c", "import subprocess; print(subprocess.Popen.__init__.__name__)"],
-                ),
-            ],
-            cwd=PROJECT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            check=False,
-        )
+        with tempfile.TemporaryDirectory(prefix="jobflow-release-python-roots-") as raw:
+            fixture = Path(raw)
+            for root in (
+                fixture / "src",
+                fixture / "tests",
+                fixture / ".venv" / "Lib" / "site-packages",
+            ):
+                root.mkdir(parents=True)
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    *_isolated_python_arguments(
+                        fixture,
+                        ["-c", "import subprocess; print(subprocess.Popen.__init__.__name__)"],
+                    ),
+                ],
+                cwd=fixture,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False,
+            )
         self.assertEqual(completed.returncode, 0, completed.stdout)
         expected = "_jobflow_hidden_popen_init" if os.name == "nt" else "__init__"
         self.assertEqual(completed.stdout.strip(), expected)
