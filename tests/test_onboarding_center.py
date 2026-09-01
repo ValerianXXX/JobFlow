@@ -540,6 +540,38 @@ class OnboardingCenterTests(unittest.TestCase):
         engine = LocalSubprocessAIEngine([sys.executable, str(PROJECT / "tests" / "fixtures" / "fake_jobops_ai.py")]) if with_ai else AIAnalysisEngine()
         return OnboardingCenterService(project, database, onboarding, ai_engine=engine), onboarding, store, str(profile_record["secure_ref"]), profile_bytes
 
+    @staticmethod
+    def prepare_completion(service: OnboardingCenterService) -> None:
+        service.save_answers({"locale": "en", "answers": full_answers()})
+        bootstrap = service.bootstrap()
+        service.save_review({
+            "profile_review": "CONFIRMED",
+            "claim_decisions": {item["claim_id"]: "CONFIRMED" for item in bootstrap["claims"]},
+            "conflict_resolutions": {
+                item["conflict_id"]: {"resolution": "USE_RESUME", "manual_value": None}
+                for item in bootstrap["conflicts"]
+            },
+        })
+
+    @staticmethod
+    def record_external_action(
+        service: OnboardingCenterService,
+        attempt_id: str,
+        *,
+        created_at: str,
+        real_side_effect: int,
+    ) -> None:
+        with service.database.connect() as connection:
+            connection.execute(
+                """INSERT INTO external_action_attempts(
+                attempt_id,application_id,action,adapter_kind,result_code,context_hash,real_side_effect,created_at
+                ) VALUES(?,?,?,?,?,?,?,?)""",
+                (
+                    attempt_id, None, "synthetic_user_present_prefill", "user_present_browser",
+                    "SYNTHETIC_TEST_RESULT", "sha256:" + "a" * 64, real_side_effect, created_at,
+                ),
+            )
+
     def test_catalog_is_complete_and_bilingual(self) -> None:
         catalog = public_catalog()
         self.assertEqual(len(catalog["fields"]), 39)
@@ -1941,6 +1973,112 @@ class OnboardingCenterTests(unittest.TestCase):
                     previous_active,
                 )
             self.assertEqual(service.complete(user_confirmed=True)["status"], "ONBOARDING_COMPLETE")
+
+    def test_new_revision_ignores_preserved_external_actions_from_earlier_work(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            self.prepare_completion(service)
+            service.complete(user_confirmed=True)
+            self.record_external_action(
+                service,
+                "ATT-HISTORICAL01",
+                created_at="2026-08-20T12:00:00Z",
+                real_side_effect=1,
+            )
+
+            revised = service.start_revision()
+            self.assertEqual(revised["status"], "ONBOARDING_REVISION_STARTED")
+            _, revision_state = service.ensure_state()
+            self.assertEqual(revision_state["external_action_baseline"]["attempt_count"], 1)
+            self.assertEqual(revision_state["external_action_baseline"]["real_external_actions"], 1)
+
+            self.prepare_completion(service)
+            completed = service.complete(user_confirmed=True)
+            self.assertEqual(completed["status"], "ONBOARDING_COMPLETE")
+            self.assertEqual(completed["real_external_actions"], 0)
+            with service.database.connect() as connection:
+                row = connection.execute(
+                    "SELECT COUNT(*),SUM(real_side_effect) FROM external_action_attempts"
+                ).fetchone()
+            self.assertEqual(tuple(row), (1, 1))
+
+    def test_external_action_during_current_revision_blocks_completion(self) -> None:
+        with project_temp() as root:
+            service, _, _, _, _ = self.make_service(root)
+            _, state = service.ensure_state()
+            self.assertEqual(state["external_action_baseline"]["real_external_actions"], 0)
+            self.record_external_action(
+                service,
+                "ATT-CURRENT0001",
+                created_at="2026-08-31T12:00:00Z",
+                real_side_effect=1,
+            )
+            self.prepare_completion(service)
+
+            with self.assertRaises(JobOpsError) as blocked:
+                service.complete(user_confirmed=True)
+            self.assertEqual(blocked.exception.code, "REAL_EXTERNAL_ACTION_DETECTED")
+            self.assertEqual(service.redacted_status()["real_external_actions"], 1)
+            with service.database.connect() as connection:
+                row = connection.execute(
+                    "SELECT attempt_id,real_side_effect FROM external_action_attempts"
+                ).fetchone()
+            self.assertEqual(tuple(row), ("ATT-CURRENT0001", 1))
+
+    def test_legacy_revision_derives_baseline_from_created_at_and_detects_new_action(self) -> None:
+        with project_temp() as root:
+            service, onboarding, _, _, _ = self.make_service(root)
+            self.record_external_action(
+                service,
+                "ATT-LEGACY-OLD1",
+                created_at="2026-08-01T12:00:00Z",
+                real_side_effect=1,
+            )
+            state_ref, state = service.ensure_state()
+            state.pop("external_action_baseline")
+            state["created_at"] = "2026-08-15T12:00:00Z"
+            onboarding.rotate(state_ref, canonical_json(state))
+            self.record_external_action(
+                service,
+                "ATT-LEGACY-NEW1",
+                created_at="2026-08-20T12:00:00Z",
+                real_side_effect=1,
+            )
+            self.prepare_completion(service)
+
+            with self.assertRaises(JobOpsError) as blocked:
+                service.complete(user_confirmed=True)
+            self.assertEqual(blocked.exception.code, "REAL_EXTERNAL_ACTION_DETECTED")
+            _, normalized = service.ensure_state()
+            window = service._external_action_window(normalized)
+            self.assertTrue(window["baseline_valid"])
+            self.assertEqual(window["baseline_source"], "LEGACY_STATE_CREATED_AT")
+            self.assertEqual(window["baseline_real_external_actions"], 1)
+            self.assertEqual(window["real_external_actions"], 1)
+
+    def test_legacy_revision_without_trusted_boundary_fails_closed(self) -> None:
+        with project_temp() as root:
+            service, onboarding, _, _, _ = self.make_service(root)
+            self.record_external_action(
+                service,
+                "ATT-LEGACY-UNBOUND",
+                created_at="2026-08-01T12:00:00Z",
+                real_side_effect=1,
+            )
+            state_ref, state = service.ensure_state()
+            state.pop("external_action_baseline")
+            state["created_at"] = "not-a-timestamp"
+            onboarding.rotate(state_ref, canonical_json(state))
+            self.prepare_completion(service)
+
+            with self.assertRaises(JobOpsError) as blocked:
+                service.complete(user_confirmed=True)
+            self.assertEqual(blocked.exception.code, "ONBOARDING_EXTERNAL_ACTION_BASELINE_INVALID")
+            with service.database.connect() as connection:
+                self.assertEqual(
+                    connection.execute("SELECT COUNT(*) FROM external_action_attempts").fetchone()[0],
+                    1,
+                )
 
     def test_completed_snapshot_requires_versioned_revision_for_edits(self) -> None:
         with project_temp() as root:

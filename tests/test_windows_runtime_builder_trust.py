@@ -17,6 +17,7 @@ PWSH = shutil.which("pwsh.exe")
 BUILDER = PROJECT / "scripts" / "build-windows-runtime-closure.ps1"
 POLICY = PROJECT / "config" / "release-toolchain.json"
 TEST_ROOT = PROJECT / "tests" / ".tmp"
+SIGNED_WINDOWS_BINARY = Path(PWSH).resolve() if PWSH else None
 TEST_ROOT.mkdir(parents=True, exist_ok=True)
 
 
@@ -248,7 +249,7 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
         self.assertNotIn("CreateFromSignedFile", helper)
 
     @unittest.skipUnless(
-        os.name == "nt" and POWERSHELL and PWSH,
+        os.name == "nt" and POWERSHELL and PWSH and SIGNED_WINDOWS_BINARY is not None,
         "PowerShell 7 and an Authenticode-signed Windows binary are required",
     )
     def test_authenticode_helper_compiles_under_powershell_7(self) -> None:
@@ -277,7 +278,7 @@ class WindowsRuntimeBuilderTrustStaticTests(unittest.TestCase):
                     "-NonInteractive",
                     "-File",
                     str(harness),
-                    sys.executable,
+                    str(SIGNED_WINDOWS_BINARY),
                 ],
                 cwd=harness.parent,
                 capture_output=True,

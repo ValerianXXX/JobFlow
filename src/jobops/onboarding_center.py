@@ -115,6 +115,7 @@ from .util import canonical_json, iso_utc, load_json, sha256_bytes, sha256_file,
 
 IN_PROGRESS = "IN_PROGRESS"
 COMPLETE = "ONBOARDING_COMPLETE"
+ONBOARDING_STATE_SCHEMA_VERSION = 4
 MAX_UPLOAD_BYTES = 256 * 1024 * 1024
 MAX_RETAINED_SOURCE_BYTES = 64 * 1024 * 1024
 LARGE_EXPORT_THRESHOLD_BYTES = 200 * 1024 * 1024
@@ -1237,21 +1238,103 @@ class OnboardingCenterService:
                 for field_id in FIELD_IDS:
                     if isinstance(existing["answers"].get(field_id), dict):
                         answers[field_id] = existing["answers"][field_id]
+        external_action_baseline = self._capture_external_action_baseline()
         now = iso_utc()
         return {
-            "schema_version": 3, "status": IN_PROGRESS, "locale": "zh", "answers": answers,
+            "schema_version": ONBOARDING_STATE_SCHEMA_VERSION, "status": IN_PROGRESS,
+            "locale": "zh", "answers": answers,
             "sources": [], "pending_sources": [], "suggestions": [], "material_claims": [],
             "claim_overrides": {},
             "claim_decisions": claim_decisions, "conflict_resolutions": conflict_resolutions,
             "strict_ai_claims": True,
             "profile_review": "PENDING", "revision_number": 1, "previous_state_ref": None,
-            "answer_bank_ref": answer_ref, "created_at": now, "updated_at": now, "completed_at": None,
+            "answer_bank_ref": answer_ref, "external_action_baseline": external_action_baseline,
+            "created_at": now, "updated_at": now, "completed_at": None,
+        }
+
+    @staticmethod
+    def _utc_boundary(value: Any) -> str | None:
+        if not isinstance(value, str) or not value.strip():
+            return None
+        try:
+            parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        if parsed.tzinfo is None:
+            return None
+        return parsed.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    def _capture_external_action_baseline(self) -> dict[str, Any]:
+        actions = audit_real_external_actions(self.database)
+        return {
+            "attempt_count": int(actions["attempt_count"]),
+            "real_external_actions": int(actions["real_external_actions"]),
+            "captured_at": iso_utc(),
+            "source": "STATE_CREATION_SNAPSHOT",
+        }
+
+    def _external_action_window(self, state: dict[str, Any]) -> dict[str, Any]:
+        completed_boundary = (
+            self._utc_boundary(state.get("completed_at"))
+            if state.get("status") == COMPLETE
+            else None
+        )
+        current = audit_real_external_actions(self.database, before=completed_boundary)
+        baseline = state.get("external_action_baseline")
+        baseline_source = "STATE_CREATION_SNAPSHOT"
+        baseline_valid = isinstance(baseline, dict)
+        baseline_attempts: Any = baseline.get("attempt_count") if isinstance(baseline, dict) else None
+        baseline_real: Any = baseline.get("real_external_actions") if isinstance(baseline, dict) else None
+
+        if not baseline_valid:
+            created_boundary = self._utc_boundary(state.get("created_at"))
+            if created_boundary is not None:
+                derived = audit_real_external_actions(self.database, before=created_boundary)
+                baseline_attempts = derived["attempt_count"]
+                baseline_real = derived["real_external_actions"]
+                baseline_valid = True
+                baseline_source = "LEGACY_STATE_CREATED_AT"
+            elif int(current["real_external_actions"]) == 0:
+                baseline_attempts = 0
+                baseline_real = 0
+                baseline_valid = True
+                baseline_source = "LEGACY_ZERO_SIDE_EFFECT_FALLBACK"
+
+        counts_valid = (
+            type(baseline_attempts) is int
+            and type(baseline_real) is int
+            and baseline_attempts >= 0
+            and baseline_real >= 0
+            and baseline_real <= baseline_attempts
+            and baseline_attempts <= int(current["attempt_count"])
+            and baseline_real <= int(current["real_external_actions"])
+        )
+        baseline_valid = bool(baseline_valid and counts_valid)
+        attempt_delta = (
+            int(current["attempt_count"]) - int(baseline_attempts)
+            if baseline_valid else int(current["attempt_count"])
+        )
+        real_delta = (
+            int(current["real_external_actions"]) - int(baseline_real)
+            if baseline_valid else int(current["real_external_actions"])
+        )
+        return {
+            "attempt_count": attempt_delta,
+            "real_external_actions": real_delta,
+            "status": "PASS" if baseline_valid and real_delta == 0 else "FAIL",
+            "baseline_valid": baseline_valid,
+            "baseline_source": baseline_source if baseline_valid else "INVALID_OR_MISSING",
+            "baseline_attempt_count": int(baseline_attempts) if type(baseline_attempts) is int else 0,
+            "baseline_real_external_actions": int(baseline_real) if type(baseline_real) is int else 0,
+            "lifetime_attempt_count": int(current["attempt_count"]),
+            "lifetime_real_external_actions": int(current["real_external_actions"]),
+            "evidence": "append-only external actions bounded to the editable onboarding revision",
         }
 
     def _normalized_state(self, state: dict[str, Any]) -> dict[str, Any]:
         """Backfill encrypted v1 state without mutating its historical ciphertext."""
 
-        state["schema_version"] = 3
+        state["schema_version"] = ONBOARDING_STATE_SCHEMA_VERSION
         state["strict_ai_claims"] = True
         answers = state.get("answers")
         if not isinstance(answers, dict):
@@ -1316,13 +1399,15 @@ class OnboardingCenterService:
         answers = state.get("answers", {})
         completion = self._completion(answers)
         review = self._review_counts(state)
+        actions = self._external_action_window(state)
         value = {
             "schema_version": 1, "status": state.get("status", IN_PROGRESS), "state_ref": state_ref,
             "completion_ref": completion_ref, "locale": state.get("locale", "zh"),
             "answers": completion, "sources": len(state.get("sources", [])),
             "claims": {"total": review["claims_total"], "reviewed": review["claims_reviewed"]},
             "conflicts": {"total": review["conflicts_total"], "resolved": review["conflicts_resolved"]},
-            "updated_at": state.get("updated_at"), "real_external_actions": 0,
+            "updated_at": state.get("updated_at"),
+            "real_external_actions": int(actions["real_external_actions"]),
         }
         write_json(self.index_path, value)
 
@@ -4871,19 +4956,23 @@ class OnboardingCenterService:
     def start_revision(self) -> dict[str, Any]:
         previous_ref, state = self.ensure_state()
         if state.get("status") != COMPLETE:
+            actions = self._external_action_window(state)
             return {
                 "status": "ONBOARDING_ALREADY_EDITABLE",
                 "revision_number": int(state.get("revision_number", 1)),
                 "state_ref": previous_ref,
                 "changed": False,
-                "real_external_actions": 0,
+                "real_external_actions": int(actions["real_external_actions"]),
             }
+        external_action_baseline = self._capture_external_action_baseline()
         now = iso_utc()
         revision = deepcopy(state)
         revision.update({
-            "schema_version": 3, "status": IN_PROGRESS, "revision_number": int(state.get("revision_number", 1)) + 1,
+            "schema_version": ONBOARDING_STATE_SCHEMA_VERSION, "status": IN_PROGRESS,
+            "revision_number": int(state.get("revision_number", 1)) + 1,
             "previous_state_ref": previous_ref, "answer_bank_ref": None, "profile_review": "PENDING",
-            "pending_sources": [], "created_at": now, "updated_at": now, "completed_at": None,
+            "pending_sources": [], "external_action_baseline": external_action_baseline,
+            "created_at": now, "updated_at": now, "completed_at": None,
         })
         answer_bank = {
             "schema_version": 2, "status": IN_PROGRESS, "locale": revision["locale"], "answers": revision["answers"],
@@ -4923,12 +5012,14 @@ class OnboardingCenterService:
         state_ref, state = self.ensure_state()
         completion = self._completion(state["answers"])
         review = self._review_counts(state)
+        actions = self._external_action_window(state)
         return {
             "status": state.get("status", IN_PROGRESS), "state_ref": state_ref,
             "supported_locales": ["zh", "en"], "current_locale": state.get("locale", "zh"),
             "answers": completion, "sources": len(state.get("sources", [])), **review,
             "profile_review": state.get("profile_review", "PENDING"),
-            "private_values_emitted": 0, "real_external_actions": 0,
+            "private_values_emitted": 0,
+            "real_external_actions": int(actions["real_external_actions"]),
             "next_safe_action": "onboarding-center" if state.get("status") != COMPLETE else "start offline job intake",
         }
 
@@ -5080,9 +5171,21 @@ class OnboardingCenterService:
         for field_id in ALWAYS_CONFIRM_FIELDS:
             if state["answers"][field_id]["use_policy"] != "confirm_each_application":
                 raise JobOpsError("LEGAL_CONFIRMATION_POLICY_INVALID", "Legal and signature answers must remain gated per application.")
-        actions = audit_real_external_actions(self.database)
+        actions = self._external_action_window(state)
+        if not actions["baseline_valid"]:
+            raise JobOpsError(
+                "ONBOARDING_EXTERNAL_ACTION_BASELINE_INVALID",
+                "The onboarding revision cannot prove its external-action boundary. Start a fresh revision before completion.",
+                lifetime_attempt_count=actions["lifetime_attempt_count"],
+                lifetime_real_external_actions=actions["lifetime_real_external_actions"],
+            )
         if actions["real_external_actions"] != 0:
-            raise JobOpsError("REAL_EXTERNAL_ACTION_DETECTED", "Onboarding completion detected an external side effect.")
+            raise JobOpsError(
+                "REAL_EXTERNAL_ACTION_DETECTED",
+                "Onboarding completion detected an external side effect within this editable revision.",
+                revision_attempt_count=actions["attempt_count"],
+                revision_real_external_actions=actions["real_external_actions"],
+            )
         answer_ref = state.get("answer_bank_ref")
         if not answer_ref:
             raise JobOpsError("ANSWER_BANK_MISSING", "The encrypted Answer Bank is missing.")

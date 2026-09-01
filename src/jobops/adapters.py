@@ -261,12 +261,25 @@ class AdapterRegistry:
         return {name: str(getattr(adapter, "kind", "unknown")) for name, adapter in sorted(self.adapters.items())}
 
 
-def audit_real_external_actions(database: JobOpsDB) -> dict[str, Any]:
+def audit_real_external_actions(database: JobOpsDB, *, before: str | None = None) -> dict[str, Any]:
     with database.connect() as connection:
-        row = connection.execute("SELECT COUNT(*) AS attempts, COALESCE(SUM(real_side_effect),0) AS real FROM external_action_attempts").fetchone()
+        if before is None:
+            row = connection.execute(
+                "SELECT COUNT(*) AS attempts, COALESCE(SUM(real_side_effect),0) AS real FROM external_action_attempts"
+            ).fetchone()
+        else:
+            row = connection.execute(
+                """SELECT COUNT(*) AS attempts, COALESCE(SUM(real_side_effect),0) AS real
+                   FROM external_action_attempts WHERE created_at < ?""",
+                (before,),
+            ).fetchone()
     return {
         "attempt_count": int(row["attempts"]),
         "real_external_actions": int(row["real"]),
         "status": "PASS" if int(row["real"]) == 0 else "FAIL",
-        "evidence": "append-only external_action_attempts",
+        "evidence": (
+            "append-only external_action_attempts"
+            if before is None
+            else "append-only external_action_attempts before a trusted UTC boundary"
+        ),
     }
