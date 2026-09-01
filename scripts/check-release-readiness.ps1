@@ -177,7 +177,14 @@ else {
         Pop-Location
     }
     try {
-        $result = $raw | ConvertFrom-Json
+        if ([string]::IsNullOrWhiteSpace($raw)) {
+            throw "JOBFLOW_RELEASE_READINESS_OUTPUT_EMPTY"
+        }
+        $parsed = $raw | ConvertFrom-Json
+        if ($null -eq $parsed -or [string]::IsNullOrWhiteSpace([string]$parsed.status)) {
+            throw "JOBFLOW_RELEASE_READINESS_OUTPUT_INVALID"
+        }
+        $result = $parsed
     }
     catch {
         $result = New-UnavailableResult "READINESS_REPORT_INVALID" "Run Check JobFlow.cmd, then retry"

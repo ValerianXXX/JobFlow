@@ -2327,6 +2327,32 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertNotIn("secure-ref:", serialized)
         validate_named("release-readiness", result, PROJECT / "schemas")
 
+    def test_release_check_fails_closed_with_json_when_runtime_emits_nothing(self) -> None:
+        temporary_root = PROJECT / "tests" / ".tmp"
+        temporary_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="release-empty-", dir=temporary_root) as raw:
+            fixture = Path(raw)
+            broken_python = fixture / "broken-python.cmd"
+            broken_python.write_text("@exit /b 1\r\n", encoding="ascii")
+            placeholder_git = fixture / "git.exe"
+            shutil.copy2(WINDOWS_POWERSHELL, placeholder_git)
+            completed = run_process(
+                [
+                    str(WINDOWS_POWERSHELL), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                    "-File", str(PROJECT / "scripts" / "check-release-readiness.ps1"), "-Json",
+                    "-PythonPath", str(broken_python), "-GitPath", str(placeholder_git),
+                ],
+                timeout=30,
+            )
+        self.assertEqual(completed.returncode, 2, completed.stderr)
+        result = json.loads(completed.stdout.lstrip("\ufeff"))
+        self.assertEqual(result["status"], "PUBLIC_RELEASE_BLOCKED")
+        self.assertIn("READINESS_REPORT_INVALID", result["blockers"])
+        self.assertFalse(result["public_release_ready"])
+        self.assertEqual(result["network_actions"], 0)
+        self.assertEqual(result["real_external_actions"], 0)
+        validate_named("release-readiness", result, PROJECT / "schemas")
+
 
 if __name__ == "__main__":
     unittest.main()
