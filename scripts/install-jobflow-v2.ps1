@@ -1361,6 +1361,25 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value, [int]$Depth = 0) {
             $script:progressCliXmlDiagnostic = "ENVELOPE"
             return $false
         }
+        if ($Depth -eq 0) {
+            $errorTexts = [Collections.Generic.List[string]]::new()
+            foreach ($diagnosticRoot in $envelopeRoot.ChildNodes) {
+                if ($diagnosticRoot.NodeType -ne [Xml.XmlNodeType]::Element) { continue }
+                foreach ($diagnosticRecord in $diagnosticRoot.ChildNodes) {
+                    if ($diagnosticRecord.NodeType -eq [Xml.XmlNodeType]::Element -and
+                        [string]::Equals(
+                            [string]$diagnosticRecord.GetAttribute("S"),
+                            "Error",
+                            [StringComparison]::OrdinalIgnoreCase
+                        )) {
+                        $errorTexts.Add([string]$diagnosticRecord.InnerText)
+                    }
+                }
+            }
+            if ($errorTexts.Count -gt 0) {
+                $script:progressCliXmlErrorText = [string]::Join("`n", $errorTexts)
+            }
+        }
         $documentCount = 0
         foreach ($root in $envelopeRoot.ChildNodes) {
             if ($root.NodeType -eq [Xml.XmlNodeType]::Whitespace -or
@@ -1405,7 +1424,8 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value, [int]$Depth = 0) {
                     }
                 }
                 if (-not $isProgress) {
-                    if ([string]::Equals($recordStream, "Error", [StringComparison]::OrdinalIgnoreCase)) {
+                    if ([string]::Equals($recordStream, "Error", [StringComparison]::OrdinalIgnoreCase) -and
+                        [string]::IsNullOrEmpty([string]$script:progressCliXmlErrorText)) {
                         $script:progressCliXmlErrorText = [string]$record.InnerText
                     }
                     $script:progressCliXmlDiagnostic = if ($record.NodeType -ne [Xml.XmlNodeType]::Element) {
