@@ -1257,6 +1257,45 @@ function Test-ProgressOnlyPowerShellCliXmlDocument([string]$XmlText) {
     catch { return $false }
 }
 
+function Get-PowerShellCliXmlErrorShape([Xml.XmlElement]$Record) {
+    if ($null -eq $Record) { return "MISSING" }
+    $text = [string]$Record.InnerText
+    # PowerShell's CLI-XML string escaping can leave control characters in the
+    # `_xNNNN_` form.  Classify only a few non-sensitive startup signatures;
+    # never echo the record text, paths, or exception message.
+    $normalized = [Text.RegularExpressions.Regex]::Replace(
+        $text,
+        "(?i)_x[0-9a-f]{4}_",
+        " "
+    )
+    $kind = if ($normalized.IndexOf(
+        "Preparing modules for first use",
+        [StringComparison]::OrdinalIgnoreCase
+    ) -ge 0) {
+        "MODULE_PREPARATION"
+    }
+    elseif ($normalized.IndexOf(
+        "PSModuleAnalysisCache",
+        [StringComparison]::OrdinalIgnoreCase
+    ) -ge 0) {
+        "MODULE_CACHE"
+    }
+    elseif ($normalized.IndexOf(
+        "NativeCommandError",
+        [StringComparison]::OrdinalIgnoreCase
+    ) -ge 0) {
+        "NATIVE_COMMAND"
+    }
+    else { "OTHER" }
+    $shape = if ($Record.LocalName -ceq "S" -and $Record.ChildNodes.Count -eq 1 -and
+        $Record.FirstChild.NodeType -eq [Xml.XmlNodeType]::Text) {
+        "TEXT"
+    }
+    elseif ($Record.LocalName -ceq "Obj") { "OBJECT" }
+    else { "COMPLEX" }
+    return "${kind}_${shape}"
+}
+
 function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
     $script:progressCliXmlDiagnostic = "UNSET"
     if ([string]::IsNullOrWhiteSpace($Value)) {
@@ -1327,7 +1366,11 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
                     } elseif ([string]::IsNullOrEmpty($recordStream)) {
                         "RECORD_STREAM_MISSING"
                     } elseif ($recordStream -in @("Error", "Warning", "Verbose", "Debug", "Information")) {
-                        "RECORD_STREAM_" + $recordStream.ToUpperInvariant()
+                        $streamDiagnostic = $recordStream.ToUpperInvariant()
+                        if ($streamDiagnostic -ceq "ERROR" -and $record -is [Xml.XmlElement]) {
+                            $streamDiagnostic += "_" + (Get-PowerShellCliXmlErrorShape $record)
+                        }
+                        "RECORD_STREAM_" + $streamDiagnostic
                     } else {
                         "RECORD_STREAM_OTHER"
                     }
