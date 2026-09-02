@@ -72,7 +72,9 @@ function ReadManifest {
 if ($RecoverOnly) {
     Log "RecoverOnly"
     $stream = if ([IO.File]::Exists((Join-Path $local "emit-error-clixml"))) { "Error" } else { "progress" }
-    $cliXml = '#< CLIXML' + "`r`n" + '<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><S S="' + $stream + '">Preparing modules for first use.</S></Objs>'
+    $progressDocument = '#< CLIXML' + "`r`n" + '<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><S S="progress">Preparing modules for first use.</S></Objs>'
+    $secondDocument = '#< CLIXML' + "`r`n" + '<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><S S="' + $stream + '">Preparing modules for first use.</S></Objs>'
+    $cliXml = $progressDocument + "`r`n" + $secondDocument
     [Console]::Error.Write($cliXml)
     if ([IO.Directory]::Exists($jobops) -and -not [IO.File]::Exists((Join-Path $jobops "current.json"))) {
         [Console]::Error.WriteLine("FIXTURE_EXISTING_ROOT_INVALID"); exit 3

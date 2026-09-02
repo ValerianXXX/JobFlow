@@ -1125,21 +1125,15 @@ exit 0
     finally { $process.Dispose() }
 }
 
-function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
-    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
-    $candidate = $Value.Trim().TrimStart([char]0xFEFF)
-    $header = "#< CLIXML"
-    if (-not $candidate.StartsWith($header, [StringComparison]::Ordinal)) { return $false }
-    $xmlText = $candidate.Substring($header.Length).TrimStart()
-    if ([string]::IsNullOrWhiteSpace($xmlText)) { return $false }
-
+function Test-ProgressOnlyPowerShellCliXmlDocument([string]$XmlText) {
+    if ([string]::IsNullOrWhiteSpace($XmlText)) { return $false }
     $reader = $null
     try {
         $settings = [Xml.XmlReaderSettings]::new()
         $settings.DtdProcessing = [Xml.DtdProcessing]::Prohibit
         $settings.XmlResolver = $null
         $settings.MaxCharactersInDocument = $maxBootstrapOutputBytes
-        $stringReader = [IO.StringReader]::new($xmlText)
+        $stringReader = [IO.StringReader]::new($XmlText.Trim())
         try {
             $reader = [Xml.XmlReader]::Create($stringReader, $settings)
             $document = [Xml.XmlDocument]::new()
@@ -1170,6 +1164,28 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
         return $true
     }
     catch { return $false }
+}
+
+function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
+    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
+    $candidate = $Value.Trim().TrimStart([char]0xFEFF)
+    $header = "#< CLIXML"
+    $offset = 0
+    $documentCount = 0
+    while ($offset -lt $candidate.Length) {
+        if (-not $candidate.Substring($offset).StartsWith($header, [StringComparison]::Ordinal)) {
+            return $false
+        }
+        $xmlStart = $offset + $header.Length
+        $nextHeader = $candidate.IndexOf($header, $xmlStart, [StringComparison]::Ordinal)
+        $xmlEnd = if ($nextHeader -lt 0) { $candidate.Length } else { $nextHeader }
+        $xmlText = $candidate.Substring($xmlStart, $xmlEnd - $xmlStart).Trim()
+        if (-not (Test-ProgressOnlyPowerShellCliXmlDocument $xmlText)) { return $false }
+        $documentCount += 1
+        if ($nextHeader -lt 0) { break }
+        $offset = $nextHeader
+    }
+    return $documentCount -gt 0
 }
 
 function ConvertFrom-BootstrapJson([object]$Invocation, [string]$Code) {
