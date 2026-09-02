@@ -97,6 +97,12 @@ The project is intentionally Windows-first because secure applicant storage uses
 
 When reporting a problem, use **Privacy-safe incident history and support → Download diagnostics** in the local UI. The JSON contains only versions, states, counts, safety boundaries, and validated fixed error codes. Optional incident capture is off by default and keeps at most 32 local records when explicitly enabled. It does not include resume text, answers, Claim text, error messages, stack traces, URLs, local paths, credentials, tokens, or secure references, and JobFlow never transmits it automatically.
 
+## NeedRadar portfolio relationship
+
+JobFlow applies evidence gates, private-data controls, explicit approvals, and user-only final actions within the [NeedRadar evidence-to-execution ecosystem](https://github.com/ValerianXXX/needradar/blob/main/docs/ECOSYSTEM.md).
+
+The relationship is pattern-level and metadata-only. JobFlow has no NeedRadar runtime dependency, and private profiles, resumes, application state, secure references, and external-action records never enter NeedRadar. Product issues cannot independently validate general market demand. See [`needradar-project.json`](needradar-project.json).
+
 ## License
 
 [MIT](LICENSE)
