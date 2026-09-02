@@ -1049,6 +1049,7 @@ function Invoke-StableBootstrap(
     }
 
     $wrapper = @'
+[Console]::InputEncoding = [Text.UTF8Encoding]::new($false, $true)
 $encodedSource = [Console]::In.ReadToEnd().TrimStart([char]0xFEFF).Trim()
 $sourceBytes = [Convert]::FromBase64String($encodedSource)
 try {
@@ -1112,13 +1113,16 @@ exit 0
 
     $process = [Diagnostics.Process]::new()
     $process.StartInfo = $start
+    $stdinBytes = $null
     try {
         if (-not $process.Start()) { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
         $stdoutTask = $process.StandardOutput.ReadToEndAsync()
         $stderrTask = $process.StandardError.ReadToEndAsync()
         # Transport the verified source as ASCII Base64.  This preserves the
         # exact UTF-8 bytes across Windows PowerShell/.NET stdin encodings.
-        $process.StandardInput.Write($encodedBootstrap)
+        $stdinBytes = [Text.UTF8Encoding]::new($false, $true).GetBytes($encodedBootstrap)
+        $process.StandardInput.BaseStream.Write($stdinBytes, 0, $stdinBytes.Length)
+        $process.StandardInput.BaseStream.Flush()
         $process.StandardInput.Close()
         $process.WaitForExit()
         $stdout = $stdoutTask.GetAwaiter().GetResult()
@@ -1135,6 +1139,7 @@ exit 0
     }
     catch { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
     finally {
+        if ($null -ne $stdinBytes) { [Array]::Clear($stdinBytes, 0, $stdinBytes.Length) }
         $encodedBootstrap = $null
         $process.Dispose()
     }
