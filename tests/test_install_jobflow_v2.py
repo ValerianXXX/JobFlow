@@ -76,7 +76,12 @@ if ($RecoverOnly) {
     $secondDocument = '#< CLIXML' + "`r`n" + '<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><S S="' + $stream + '">Preparing modules for first use.</S></Objs>'
     # Hosted Windows PowerShell can emit a fresh BOM for each serialized
     # stream document.  Keep the fixture representative of that boundary.
-    $cliXml = $progressDocument + ([char]0xFEFF) + "`r`n" + $secondDocument
+    $separator = if ([IO.File]::Exists((Join-Path $local "include-second-clixml-header"))) {
+        ([char]0xFEFF) + "`r`n#< CLIXML`r`n"
+    } else {
+        ([char]0xFEFF) + "`r`n"
+    }
+    $cliXml = $progressDocument + $separator + $secondDocument.Substring($secondDocument.IndexOf("<Objs"))
     [Console]::Error.Write($cliXml)
     if ([IO.Directory]::Exists($jobops) -and -not [IO.File]::Exists((Join-Path $jobops "current.json"))) {
         [Console]::Error.WriteLine("FIXTURE_EXISTING_ROOT_INVALID"); exit 3
@@ -287,6 +292,13 @@ class ThinV2InstallerTests(unittest.TestCase):
         self.assertEqual(list(state.glob(".jfi-*")), [])
         self.assertEqual(list(state.glob(".cp-*")), [])
         self.assertEqual(list(state.glob(".cpb-*")), [])
+
+    def test_progress_clixml_accepts_repeated_document_headers(self) -> None:
+        self._prepare_release()
+        (self.local_app_data / "include-second-clixml-header").write_text("1", encoding="utf-8")
+        result = self._run()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.local_app_data / "JobOps" / "current.json").is_file())
 
     def test_preexisting_unverified_jobops_root_is_preserved_and_blocks_install(self) -> None:
         self._prepare_release()

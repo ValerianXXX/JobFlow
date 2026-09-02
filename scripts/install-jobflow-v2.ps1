@@ -1170,28 +1170,64 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
     if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
     $candidate = $Value.Trim().TrimStart([char]0xFEFF)
     $header = "#< CLIXML"
-    $offset = 0
-    $documentCount = 0
-    while ($offset -lt $candidate.Length) {
-        if (-not $candidate.Substring($offset).StartsWith($header, [StringComparison]::Ordinal)) {
+    if (-not $candidate.StartsWith($header, [StringComparison]::Ordinal)) { return $false }
+
+    # A cold hosted Windows PowerShell can serialize its startup progress and
+    # the invoked script's progress into one stderr stream.  Depending on the
+    # host, each <Objs> root may or may not receive another CLIXML header.  Parse
+    # the result as a bounded XML fragment envelope and validate every root and
+    # every stream record instead of assuming a one-header/one-document layout.
+    $fragment = $candidate.Replace($header, "").Replace([string][char]0xFEFF, "").Trim()
+    if ([string]::IsNullOrWhiteSpace($fragment)) { return $false }
+    $reader = $null
+    try {
+        $settings = [Xml.XmlReaderSettings]::new()
+        $settings.DtdProcessing = [Xml.DtdProcessing]::Prohibit
+        $settings.XmlResolver = $null
+        $settings.MaxCharactersInDocument = $maxBootstrapOutputBytes + 128
+        $envelope = "<JobFlowCliXmlEnvelope>" + $fragment + "</JobFlowCliXmlEnvelope>"
+        $stringReader = [IO.StringReader]::new($envelope)
+        try {
+            $reader = [Xml.XmlReader]::Create($stringReader, $settings)
+            $document = [Xml.XmlDocument]::new()
+            $document.XmlResolver = $null
+            $document.Load($reader)
+        }
+        finally {
+            if ($null -ne $reader) { $reader.Dispose() }
+            $stringReader.Dispose()
+        }
+        $envelopeRoot = $document.DocumentElement
+        if ($null -eq $envelopeRoot -or
+            $envelopeRoot.LocalName -cne "JobFlowCliXmlEnvelope" -or
+            -not [string]::IsNullOrEmpty($envelopeRoot.NamespaceURI)) {
             return $false
         }
-        $xmlStart = $offset + $header.Length
-        $nextHeader = $candidate.IndexOf($header, $xmlStart, [StringComparison]::Ordinal)
-        $xmlEnd = if ($nextHeader -lt 0) { $candidate.Length } else { $nextHeader }
-        # Windows PowerShell may prefix each redirected CLIXML document with
-        # its own UTF-8 BOM.  When multiple progress documents are
-        # concatenated, that BOM becomes the trailing character of the
-        # preceding slice.  Remove only surrounding whitespace/BOM markers;
-        # the XML body and its stream classification remain fully validated.
-        $xmlText = $candidate.Substring($xmlStart, $xmlEnd - $xmlStart).Trim()
-        $xmlText = $xmlText.Trim([char[]]@([char]0xFEFF)).Trim()
-        if (-not (Test-ProgressOnlyPowerShellCliXmlDocument $xmlText)) { return $false }
-        $documentCount += 1
-        if ($nextHeader -lt 0) { break }
-        $offset = $nextHeader
+        $documentCount = 0
+        foreach ($root in $envelopeRoot.ChildNodes) {
+            if ($root.NodeType -eq [Xml.XmlNodeType]::Whitespace -or
+                $root.NodeType -eq [Xml.XmlNodeType]::SignificantWhitespace) { continue }
+            if ($root.NodeType -ne [Xml.XmlNodeType]::Element -or
+                $root.LocalName -cne "Objs" -or
+                $root.NamespaceURI -cne "http://schemas.microsoft.com/powershell/2004/04") {
+                return $false
+            }
+            $recordCount = 0
+            foreach ($record in $root.ChildNodes) {
+                if ($record.NodeType -eq [Xml.XmlNodeType]::Whitespace -or
+                    $record.NodeType -eq [Xml.XmlNodeType]::SignificantWhitespace) { continue }
+                if ($record.NodeType -ne [Xml.XmlNodeType]::Element -or
+                    [string]$record.GetAttribute("S") -cne "progress") {
+                    return $false
+                }
+                $recordCount += 1
+            }
+            if ($recordCount -eq 0) { return $false }
+            $documentCount += 1
+        }
+        return $documentCount -gt 0
     }
-    return $documentCount -gt 0
+    catch { return $false }
 }
 
 function ConvertFrom-BootstrapJson([object]$Invocation, [string]$Code) {
