@@ -62,7 +62,12 @@ $stagingRoot = Join-Path $installerStateRoot (".jfi-" + $updateId)
 $acceptanceMode = $env:JOBFLOW_INSTALL_V2_ACCEPTANCE_CORE_ONLY -eq "1"
 $acceptanceFixtureRoot = $null
 if ($acceptanceMode) {
-    $qaRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot ".."))
+    # Older .NET Framework builds may preserve the trailing separator when a
+    # path ending in ".." is canonicalized.  Trim it before GetFileName so the
+    # same exact QA-root check behaves consistently on hosted Windows runners.
+    $qaRoot = ([IO.Path]::GetFullPath((Join-Path $projectRoot ".."))).TrimEnd(
+        [char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+    )
     $expectedLocalAppData = [IO.Path]::GetFullPath((Join-Path $qaRoot "LocalAppData"))
     # Windows runners may expose the same temporary directory through a long
     # path in one environment variable and an 8.3 alias after Resolve-Path.
