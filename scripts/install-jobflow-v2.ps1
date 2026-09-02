@@ -1167,10 +1167,17 @@ function Test-ProgressOnlyPowerShellCliXmlDocument([string]$XmlText) {
 }
 
 function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
-    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
+    $script:progressCliXmlDiagnostic = "UNSET"
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        $script:progressCliXmlDiagnostic = "EMPTY"
+        return $false
+    }
     $candidate = $Value.Trim().TrimStart([char]0xFEFF)
     $header = "#< CLIXML"
-    if (-not $candidate.StartsWith($header, [StringComparison]::Ordinal)) { return $false }
+    if (-not $candidate.StartsWith($header, [StringComparison]::Ordinal)) {
+        $script:progressCliXmlDiagnostic = "PREFIX"
+        return $false
+    }
 
     # A cold hosted Windows PowerShell can serialize its startup progress and
     # the invoked script's progress into one stderr stream.  Depending on the
@@ -1178,7 +1185,10 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
     # the result as a bounded XML fragment envelope and validate every root and
     # every stream record instead of assuming a one-header/one-document layout.
     $fragment = $candidate.Replace($header, "").Replace([string][char]0xFEFF, "").Trim()
-    if ([string]::IsNullOrWhiteSpace($fragment)) { return $false }
+    if ([string]::IsNullOrWhiteSpace($fragment)) {
+        $script:progressCliXmlDiagnostic = "NO_XML"
+        return $false
+    }
     $reader = $null
     try {
         $settings = [Xml.XmlReaderSettings]::new()
@@ -1201,6 +1211,7 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
         if ($null -eq $envelopeRoot -or
             $envelopeRoot.LocalName -cne "JobFlowCliXmlEnvelope" -or
             -not [string]::IsNullOrEmpty($envelopeRoot.NamespaceURI)) {
+            $script:progressCliXmlDiagnostic = "ENVELOPE"
             return $false
         }
         $documentCount = 0
@@ -1210,6 +1221,7 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
             if ($root.NodeType -ne [Xml.XmlNodeType]::Element -or
                 $root.LocalName -cne "Objs" -or
                 $root.NamespaceURI -cne "http://schemas.microsoft.com/powershell/2004/04") {
+                $script:progressCliXmlDiagnostic = "ROOT"
                 return $false
             }
             $recordCount = 0
@@ -1218,16 +1230,38 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
                     $record.NodeType -eq [Xml.XmlNodeType]::SignificantWhitespace) { continue }
                 if ($record.NodeType -ne [Xml.XmlNodeType]::Element -or
                     [string]$record.GetAttribute("S") -cne "progress") {
+                    $script:progressCliXmlDiagnostic = if ($record.NodeType -ne [Xml.XmlNodeType]::Element) {
+                        "RECORD_NODE"
+                    } elseif ([string]::IsNullOrEmpty([string]$record.GetAttribute("S"))) {
+                        "RECORD_STREAM_MISSING"
+                    } else {
+                        "RECORD_STREAM_NOT_PROGRESS"
+                    }
                     return $false
                 }
                 $recordCount += 1
             }
-            if ($recordCount -eq 0) { return $false }
+            if ($recordCount -eq 0) {
+                $script:progressCliXmlDiagnostic = "RECORD_EMPTY"
+                return $false
+            }
             $documentCount += 1
         }
-        return $documentCount -gt 0
+        if ($documentCount -eq 0) {
+            $script:progressCliXmlDiagnostic = "DOCUMENT_EMPTY"
+            return $false
+        }
+        $script:progressCliXmlDiagnostic = "OK"
+        return $true
     }
-    catch { return $false }
+    catch [Xml.XmlException] {
+        $script:progressCliXmlDiagnostic = "XML_PARSE"
+        return $false
+    }
+    catch {
+        $script:progressCliXmlDiagnostic = "VALIDATOR"
+        return $false
+    }
 }
 
 function ConvertFrom-BootstrapJson([object]$Invocation, [string]$Code) {
@@ -1293,7 +1327,14 @@ function Write-AcceptanceBootstrapDiagnostic(
     elseif ($stderr.Contains("FIXTURE_LOCALAPPDATA_MISSING")) { "FIXTURE_LOCALAPPDATA_MISSING" }
     elseif ($stderr.Contains("FIXTURE_MODE_INVALID")) { "FIXTURE_MODE_INVALID" }
     elseif ($stderr.Contains("Preparing modules for first use")) { "MODULE_PREPARATION_PROGRESS" }
-    elseif ($stderr.TrimStart().StartsWith("#< CLIXML")) { "CLIXML_STDERR" }
+    elseif ($stderr.TrimStart().StartsWith("#< CLIXML")) {
+        $shape = if ([string]::IsNullOrWhiteSpace([string]$script:progressCliXmlDiagnostic)) {
+            "UNKNOWN"
+        } else {
+            [string]$script:progressCliXmlDiagnostic
+        }
+        "CLIXML_STDERR_$shape"
+    }
     elseif ($stderr.Contains("NativeCommandError")) { "NATIVE_COMMAND_ERROR" }
     else { "UNCLASSIFIED_STDERR" }
     [Console]::Error.WriteLine(
