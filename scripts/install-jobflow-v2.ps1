@@ -1296,7 +1296,23 @@ function Get-PowerShellCliXmlErrorShape([Xml.XmlElement]$Record) {
     return "${kind}_${shape}"
 }
 
-function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
+function ConvertFrom-PowerShellCliXmlString([string]$Value) {
+    if ($null -eq $Value) { return "" }
+    # CLI-XML represents control characters as _xNNNN_. Decode exactly one
+    # serialization layer. A literal underscore that preceded such a token is
+    # itself encoded as _x005F_, so recursive decoding would be incorrect.
+    $evaluator = [Text.RegularExpressions.MatchEvaluator]{
+        param([Text.RegularExpressions.Match]$match)
+        return [string][char][Convert]::ToInt32($match.Groups[1].Value, 16)
+    }
+    return [Text.RegularExpressions.Regex]::Replace(
+        $Value,
+        "(?i)_x([0-9a-f]{4})_",
+        $evaluator
+    )
+}
+
+function Test-ProgressOnlyPowerShellCliXml([string]$Value, [int]$Depth = 0) {
     $script:progressCliXmlDiagnostic = "UNSET"
     if ([string]::IsNullOrWhiteSpace($Value)) {
         $script:progressCliXmlDiagnostic = "EMPTY"
@@ -1359,8 +1375,35 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
                 if ($record.NodeType -eq [Xml.XmlNodeType]::Whitespace -or
                     $record.NodeType -eq [Xml.XmlNodeType]::SignificantWhitespace) { continue }
                 $recordStream = [string]$record.GetAttribute("S")
-                if ($record.NodeType -ne [Xml.XmlNodeType]::Element -or
-                    -not [string]::Equals($recordStream, "progress", [StringComparison]::OrdinalIgnoreCase)) {
+                $isProgress = $record.NodeType -eq [Xml.XmlNodeType]::Element -and
+                    [string]::Equals($recordStream, "progress", [StringComparison]::OrdinalIgnoreCase)
+                if (-not $isProgress -and
+                    $Depth -eq 0 -and
+                    $record.NodeType -eq [Xml.XmlNodeType]::Element -and
+                    [string]::Equals($recordStream, "Error", [StringComparison]::OrdinalIgnoreCase) -and
+                    $record.LocalName -ceq "S") {
+                    # Windows PowerShell on some hosted runners wraps all child
+                    # stderr in an outer Error record. Accept that host wrapper
+                    # only when its decoded payload is itself bounded CLI-XML
+                    # containing progress records exclusively. Nested Error,
+                    # Warning, or arbitrary text still fails closed.
+                    $nested = ConvertFrom-PowerShellCliXmlString ([string]$record.InnerText)
+                    if ($nested.Trim().TrimStart([char]0xFEFF).StartsWith(
+                        "#< CLIXML",
+                        [StringComparison]::Ordinal
+                    )) {
+                        $nestedIsProgress = Test-ProgressOnlyPowerShellCliXml $nested ($Depth + 1)
+                        $nestedDiagnostic = [string]$script:progressCliXmlDiagnostic
+                        if ($nestedIsProgress) {
+                            $isProgress = $true
+                        }
+                        else {
+                            $script:progressCliXmlDiagnostic = "RECORD_STREAM_ERROR_NESTED_" + $nestedDiagnostic
+                            return $false
+                        }
+                    }
+                }
+                if (-not $isProgress) {
                     $script:progressCliXmlDiagnostic = if ($record.NodeType -ne [Xml.XmlNodeType]::Element) {
                         "RECORD_NODE"
                     } elseif ([string]::IsNullOrEmpty($recordStream)) {

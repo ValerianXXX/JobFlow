@@ -82,6 +82,11 @@ if ($RecoverOnly) {
         ([char]0xFEFF) + "`r`n"
     }
     $cliXml = $progressDocument + $separator + $secondDocument.Substring($secondDocument.IndexOf("<Objs"))
+    if ([IO.File]::Exists((Join-Path $local "include-outer-error-wrapper"))) {
+        $serialized = $cliXml.Replace("_", "_x005F_").Replace("`r", "_x000D_").Replace("`n", "_x000A_")
+        $serialized = [Security.SecurityElement]::Escape($serialized)
+        $cliXml = '#< CLIXML' + "`r`n" + '<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><S S="Error">' + $serialized + '</S></Objs>'
+    }
     [Console]::Error.Write($cliXml)
     if ([IO.Directory]::Exists($jobops) -and -not [IO.File]::Exists((Join-Path $jobops "current.json"))) {
         [Console]::Error.WriteLine("FIXTURE_EXISTING_ROOT_INVALID"); exit 3
@@ -304,6 +309,22 @@ class ThinV2InstallerTests(unittest.TestCase):
         result = self._run()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue((self.local_app_data / "JobOps" / "current.json").is_file())
+
+    def test_host_wrapped_progress_clixml_is_accepted(self) -> None:
+        self._prepare_release()
+        (self.local_app_data / "include-outer-error-wrapper").write_text("1", encoding="utf-8")
+        result = self._run()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.local_app_data / "JobOps" / "current.json").is_file())
+
+    def test_host_wrapped_error_clixml_is_rejected(self) -> None:
+        self._prepare_release()
+        (self.local_app_data / "include-outer-error-wrapper").write_text("1", encoding="utf-8")
+        (self.local_app_data / "emit-error-clixml").write_text("1", encoding="utf-8")
+        result = self._run()
+        self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+        self.assertIn("JOBFLOW_INSTALL_RECOVERY_REQUIRED", result.stderr)
+        self.assertFalse((self.local_app_data / "JobOps").exists())
 
     def test_preexisting_unverified_jobops_root_is_preserved_and_blocks_install(self) -> None:
         self._prepare_release()
