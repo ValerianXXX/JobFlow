@@ -47,7 +47,9 @@ $bootstrapPath = Join-Path $stableSourceRoot "jobflow-bootstrap.ps1"
 if (-not (Test-Path -LiteralPath $projectMarkerPath -PathType Leaf)) {
     throw "JOBFLOW_PROJECT_ROOT_NOT_FOUND"
 }
-$localAppDataRoot = (Resolve-Path -LiteralPath $env:LOCALAPPDATA).Path
+$pathSeparators = [char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+$requestedLocalAppDataRoot = ([IO.Path]::GetFullPath($env:LOCALAPPDATA)).TrimEnd($pathSeparators)
+$localAppDataRoot = ((Resolve-Path -LiteralPath $env:LOCALAPPDATA).Path).TrimEnd($pathSeparators)
 # Helpers are rooted at Local AppData.  The installer owns only the explicit
 # JobFlowInstaller state directory and JobOps\bin; it never enumerates or
 # recursively removes any other pre-existing directory.
@@ -65,20 +67,16 @@ if ($acceptanceMode) {
     # Older .NET Framework builds may preserve the trailing separator when a
     # path ending in ".." is canonicalized.  Trim it before GetFileName so the
     # same exact QA-root check behaves consistently on hosted Windows runners.
-    $qaRoot = ([IO.Path]::GetFullPath((Join-Path $projectRoot ".."))).TrimEnd(
-        [char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
-    )
-    $expectedLocalAppData = [IO.Path]::GetFullPath((Join-Path $qaRoot "LocalAppData"))
-    # Windows runners may expose the same temporary directory through a long
-    # path in one environment variable and an 8.3 alias after Resolve-Path.
-    # Resolve both sides before comparing so the acceptance-only guard still
-    # requires the exact fixture directory without rejecting path aliases.
-    $expectedLocalAppDataResolved = (Resolve-Path -LiteralPath $expectedLocalAppData).Path
+    $qaRoot = ([IO.Path]::GetFullPath((Join-Path $projectRoot ".."))).TrimEnd($pathSeparators)
+    $expectedLocalAppData = ([IO.Path]::GetFullPath((Join-Path $qaRoot "LocalAppData"))).TrimEnd($pathSeparators)
     if (([IO.Path]::GetFileName($qaRoot)) -notmatch '^jobflow-v2-install-qa-[0-9a-f]{8,32}$') {
         [Console]::Error.WriteLine("JOBFLOW_INSTALL_ACCEPTANCE_GUARD:ROOT_SHAPE")
         throw "JOBFLOW_INSTALL_V2_ACCEPTANCE_BYPASS_FORBIDDEN"
     }
-    if (-not $localAppDataRoot.Equals($expectedLocalAppDataResolved, [StringComparison]::OrdinalIgnoreCase)) {
+    # Compare the explicit logical request to the exact fixture path.  Hosted
+    # runners can resolve the same directory through an 8.3 physical alias;
+    # runtime I/O still uses the resolved path above.
+    if (-not $requestedLocalAppDataRoot.Equals($expectedLocalAppData, [StringComparison]::OrdinalIgnoreCase)) {
         [Console]::Error.WriteLine("JOBFLOW_INSTALL_ACCEPTANCE_GUARD:LOCALAPPDATA_IDENTITY")
         throw "JOBFLOW_INSTALL_V2_ACCEPTANCE_BYPASS_FORBIDDEN"
     }

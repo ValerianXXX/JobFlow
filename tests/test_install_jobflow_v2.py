@@ -193,11 +193,11 @@ class ThinV2InstallerTests(unittest.TestCase):
         release = {"draft": False, "prerelease": False, "tag_name": tag, "assets": assets}
         (self.fixture / "release.json").write_bytes(self._canonical(release))
 
-    def _run(self) -> subprocess.CompletedProcess[str]:
+    def _run(self, *, local_app_data: Path | None = None) -> subprocess.CompletedProcess[str]:
         env = os.environ.copy()
         env.update(
             {
-                "LOCALAPPDATA": str(self.local_app_data),
+                "LOCALAPPDATA": str(local_app_data or self.local_app_data),
                 "JOBFLOW_INSTALL_V2_ACCEPTANCE_CORE_ONLY": "1",
             }
         )
@@ -222,6 +222,14 @@ class ThinV2InstallerTests(unittest.TestCase):
             timeout=120,
             check=False,
         )
+
+    def test_acceptance_mode_rejects_a_different_local_app_data_root(self) -> None:
+        wrong_local_app_data = self.qa_root / "OtherLocalAppData"
+        wrong_local_app_data.mkdir()
+        result = self._run(local_app_data=wrong_local_app_data)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("JOBFLOW_INSTALL_V2_ACCEPTANCE_BYPASS_FORBIDDEN", result.stderr)
+        self.assertFalse((wrong_local_app_data / "JobOps").exists())
 
     def test_static_contract_is_thin_bootstrap_first(self) -> None:
         lower = self.source.casefold()
