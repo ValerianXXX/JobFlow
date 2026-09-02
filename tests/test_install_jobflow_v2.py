@@ -240,7 +240,12 @@ class ThinV2InstallerTests(unittest.TestCase):
             encoding="utf-8",
             errors="replace",
             capture_output=True,
-            timeout=120,
+            # A cold hosted Windows PowerShell 5.1 process may build its signed
+            # module-analysis cache several times across the recovery,
+            # manifest, activation, and verification phases.  The product
+            # installer has no artificial test timeout; keep the acceptance
+            # harness bounded while allowing that slow hosted-runner path.
+            timeout=300,
             check=False,
         )
 
