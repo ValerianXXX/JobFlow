@@ -76,7 +76,11 @@ if ($RecoverOnly) {
     $secondDocument = '#< CLIXML' + "`r`n" + '<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><S S="' + $stream + '">Preparing modules for first use.</S></Objs>'
     # Hosted Windows PowerShell can emit a fresh BOM for each serialized
     # stream document.  Keep the fixture representative of that boundary.
-    $separator = if ([IO.File]::Exists((Join-Path $local "include-second-clixml-header"))) {
+    $separator = if ([IO.File]::Exists((Join-Path $local "include-invalid-hosted-separator"))) {
+        "?UNEXPECTED`r`n"
+    } elseif ([IO.File]::Exists((Join-Path $local "include-hosted-question-separator"))) {
+        "?`r`n"
+    } elseif ([IO.File]::Exists((Join-Path $local "include-second-clixml-header"))) {
         ([char]0xFEFF) + "`r`n#< CLIXML`r`n"
     } else {
         ([char]0xFEFF) + "`r`n"
@@ -314,6 +318,25 @@ class ThinV2InstallerTests(unittest.TestCase):
         result = self._run()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue((self.local_app_data / "JobOps" / "current.json").is_file())
+
+    def test_progress_clixml_accepts_hosted_question_mark_root_separator(self) -> None:
+        self._prepare_release()
+        (self.local_app_data / "include-hosted-question-separator").write_text(
+            "1", encoding="utf-8"
+        )
+        result = self._run()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.local_app_data / "JobOps" / "current.json").is_file())
+
+    def test_progress_clixml_rejects_question_mark_with_arbitrary_text(self) -> None:
+        self._prepare_release()
+        (self.local_app_data / "include-invalid-hosted-separator").write_text(
+            "1", encoding="utf-8"
+        )
+        result = self._run()
+        self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+        self.assertIn("JOBFLOW_INSTALL_RECOVERY_REQUIRED", result.stderr)
+        self.assertFalse((self.local_app_data / "JobOps").exists())
 
     def test_host_wrapped_progress_clixml_is_accepted(self) -> None:
         self._prepare_release()

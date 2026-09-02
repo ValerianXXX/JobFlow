@@ -1354,6 +1354,17 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value, [int]$Depth = 0) {
     # the result as a bounded XML fragment envelope and validate every root and
     # every stream record instead of assuming a one-header/one-document layout.
     $fragment = $candidate.Replace($header, "").Replace([string][char]0xFEFF, "").Trim()
+    # Some hosted Windows PowerShell builds render the per-document BOM as a
+    # literal question mark after stderr decoding.  Remove exactly one such
+    # marker only at a complete CLIXML-root boundary.  A question mark inside a
+    # record, before an incomplete root, or next to arbitrary text still fails
+    # the strict XML and stream validation below.
+    $fragment = [Text.RegularExpressions.Regex]::Replace(
+        $fragment,
+        '(?<=</Objs>)[\s\uFEFF]*\?[\s\uFEFF]*(?=<Objs(?:\s|>))',
+        '',
+        [Text.RegularExpressions.RegexOptions]::CultureInvariant
+    )
     if ([string]::IsNullOrWhiteSpace($fragment)) {
         $script:progressCliXmlDiagnostic = "NO_XML"
         return $false
