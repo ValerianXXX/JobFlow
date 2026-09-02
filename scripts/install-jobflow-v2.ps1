@@ -64,9 +64,14 @@ $acceptanceFixtureRoot = $null
 if ($acceptanceMode) {
     $qaRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot ".."))
     $expectedLocalAppData = [IO.Path]::GetFullPath((Join-Path $qaRoot "LocalAppData"))
+    # Windows runners may expose the same temporary directory through a long
+    # path in one environment variable and an 8.3 alias after Resolve-Path.
+    # Resolve both sides before comparing so the acceptance-only guard still
+    # requires the exact fixture directory without rejecting path aliases.
+    $expectedLocalAppDataResolved = (Resolve-Path -LiteralPath $expectedLocalAppData).Path
     if (
         ([IO.Path]::GetFileName($qaRoot)) -notmatch '^jobflow-v2-install-qa-[0-9a-f]{8,32}$' -or
-        -not $localAppDataRoot.Equals($expectedLocalAppData, [StringComparison]::OrdinalIgnoreCase)
+        -not $localAppDataRoot.Equals($expectedLocalAppDataResolved, [StringComparison]::OrdinalIgnoreCase)
     ) { throw "JOBFLOW_INSTALL_V2_ACCEPTANCE_BYPASS_FORBIDDEN" }
     $acceptanceFixtureRoot = [IO.Path]::GetFullPath((Join-Path $qaRoot "fixture"))
 }
