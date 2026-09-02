@@ -1174,7 +1174,7 @@ function Write-AcceptanceBootstrapDiagnostic(
 ) {
     if (-not $acceptanceMode) { return }
     if ($null -eq $Invocation) {
-        [Console]::Error.WriteLine("JOBFLOW_INSTALL_ACCEPTANCE_BOOTSTRAP:$Phase:MISSING")
+        [Console]::Error.WriteLine("JOBFLOW_INSTALL_ACCEPTANCE_BOOTSTRAP:${Phase}:MISSING")
         return
     }
     $stderr = [string]$Invocation.Stderr
@@ -1185,9 +1185,12 @@ function Write-AcceptanceBootstrapDiagnostic(
     elseif ($stderr.Contains("FIXTURE_EXISTING_ROOT_INVALID")) { "FIXTURE_EXISTING_ROOT_INVALID" }
     elseif ($stderr.Contains("FIXTURE_LOCALAPPDATA_MISSING")) { "FIXTURE_LOCALAPPDATA_MISSING" }
     elseif ($stderr.Contains("FIXTURE_MODE_INVALID")) { "FIXTURE_MODE_INVALID" }
+    elseif ($stderr.Contains("Preparing modules for first use")) { "MODULE_PREPARATION_PROGRESS" }
+    elseif ($stderr.TrimStart().StartsWith("#< CLIXML")) { "CLIXML_STDERR" }
+    elseif ($stderr.Contains("NativeCommandError")) { "NATIVE_COMMAND_ERROR" }
     else { "UNCLASSIFIED_STDERR" }
     [Console]::Error.WriteLine(
-        "JOBFLOW_INSTALL_ACCEPTANCE_BOOTSTRAP:$Phase:EXIT_$([int]$Invocation.ExitCode):$category"
+        "JOBFLOW_INSTALL_ACCEPTANCE_BOOTSTRAP:${Phase}:EXIT_$([int]$Invocation.ExitCode):$category"
     )
 }
 
