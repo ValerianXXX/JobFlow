@@ -1179,7 +1179,13 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
         $xmlStart = $offset + $header.Length
         $nextHeader = $candidate.IndexOf($header, $xmlStart, [StringComparison]::Ordinal)
         $xmlEnd = if ($nextHeader -lt 0) { $candidate.Length } else { $nextHeader }
+        # Windows PowerShell may prefix each redirected CLIXML document with
+        # its own UTF-8 BOM.  When multiple progress documents are
+        # concatenated, that BOM becomes the trailing character of the
+        # preceding slice.  Remove only surrounding whitespace/BOM markers;
+        # the XML body and its stream classification remain fully validated.
         $xmlText = $candidate.Substring($xmlStart, $xmlEnd - $xmlStart).Trim()
+        $xmlText = $xmlText.Trim([char[]]@([char]0xFEFF)).Trim()
         if (-not (Test-ProgressOnlyPowerShellCliXmlDocument $xmlText)) { return $false }
         $documentCount += 1
         if ($nextHeader -lt 0) { break }
