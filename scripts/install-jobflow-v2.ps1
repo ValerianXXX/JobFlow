@@ -49,7 +49,12 @@ if (-not (Test-Path -LiteralPath $projectMarkerPath -PathType Leaf)) {
 }
 $pathSeparators = [char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
 $requestedLocalAppDataRoot = ([IO.Path]::GetFullPath($env:LOCALAPPDATA)).TrimEnd($pathSeparators)
-$localAppDataRoot = ((Resolve-Path -LiteralPath $env:LOCALAPPDATA).Path).TrimEnd($pathSeparators)
+# Require the directory to exist, but keep one canonical logical spelling for
+# every derived path.  Resolve-Path can return an 8.3 alias on hosted Windows
+# runners; mixing that alias with long paths makes valid descendants appear to
+# escape the trusted root.
+[void](Resolve-Path -LiteralPath $requestedLocalAppDataRoot)
+$localAppDataRoot = $requestedLocalAppDataRoot
 # Helpers are rooted at Local AppData.  The installer owns only the explicit
 # JobFlowInstaller state directory and JobOps\bin; it never enumerates or
 # recursively removes any other pre-existing directory.
