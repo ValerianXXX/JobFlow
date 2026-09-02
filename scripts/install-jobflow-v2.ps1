@@ -74,10 +74,14 @@ if ($acceptanceMode) {
     # Resolve both sides before comparing so the acceptance-only guard still
     # requires the exact fixture directory without rejecting path aliases.
     $expectedLocalAppDataResolved = (Resolve-Path -LiteralPath $expectedLocalAppData).Path
-    if (
-        ([IO.Path]::GetFileName($qaRoot)) -notmatch '^jobflow-v2-install-qa-[0-9a-f]{8,32}$' -or
-        -not $localAppDataRoot.Equals($expectedLocalAppDataResolved, [StringComparison]::OrdinalIgnoreCase)
-    ) { throw "JOBFLOW_INSTALL_V2_ACCEPTANCE_BYPASS_FORBIDDEN" }
+    if (([IO.Path]::GetFileName($qaRoot)) -notmatch '^jobflow-v2-install-qa-[0-9a-f]{8,32}$') {
+        [Console]::Error.WriteLine("JOBFLOW_INSTALL_ACCEPTANCE_GUARD:ROOT_SHAPE")
+        throw "JOBFLOW_INSTALL_V2_ACCEPTANCE_BYPASS_FORBIDDEN"
+    }
+    if (-not $localAppDataRoot.Equals($expectedLocalAppDataResolved, [StringComparison]::OrdinalIgnoreCase)) {
+        [Console]::Error.WriteLine("JOBFLOW_INSTALL_ACCEPTANCE_GUARD:LOCALAPPDATA_IDENTITY")
+        throw "JOBFLOW_INSTALL_V2_ACCEPTANCE_BYPASS_FORBIDDEN"
+    }
     $acceptanceFixtureRoot = [IO.Path]::GetFullPath((Join-Path $qaRoot "fixture"))
 }
 $archiveIdentityLock = $null
