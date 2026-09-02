@@ -1592,7 +1592,15 @@ function Write-AcceptanceBootstrapDiagnostic(
     [Console]::Error.WriteLine(
         "JOBFLOW_INSTALL_ACCEPTANCE_BOOTSTRAP:${Phase}:EXIT_$([int]$Invocation.ExitCode):$category"
     )
-    $ciphertext = Protect-AcceptanceDiagnostic ([string]$script:progressCliXmlErrorText)
+    $diagnosticValue = if (-not [string]::IsNullOrEmpty([string]$script:progressCliXmlErrorText)) {
+        [string]$script:progressCliXmlErrorText
+    } else {
+        # Acceptance-only encrypted diagnostics may include the bounded raw
+        # stderr shape when parsing stopped before an Error record was found.
+        # This branch is removed after the hosted-runner difference is fixed.
+        $stderr
+    }
+    $ciphertext = Protect-AcceptanceDiagnostic $diagnosticValue
     if (-not [string]::IsNullOrEmpty($ciphertext)) {
         [Console]::Error.WriteLine("JOBFLOW_INSTALL_ACCEPTANCE_CIPHERTEXT:$ciphertext")
     }
