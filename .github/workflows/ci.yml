@@ -48,6 +48,12 @@ jobs:
       - name: Run redacted one-click health check
         shell: pwsh
         run: ./scripts/check-jobflow.ps1 -Json -PythonPath (Get-Command python).Source
+      - name: Probe bootstrap-first Windows installer
+        if: matrix.python-version == '3.12'
+        shell: powershell
+        env:
+          JOBFLOW_INSTALL_ACCEPTANCE_ENCRYPT_DIAGNOSTIC: "1"
+        run: python -m unittest tests.test_install_jobflow_v2.ThinV2InstallerTests.test_synthetic_signed_v2_fresh_install_activates_then_copies_control_plane -v
       - name: Exercise bootstrap-first Windows installer
         if: matrix.python-version == '3.12'
         shell: powershell

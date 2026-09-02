@@ -1314,6 +1314,7 @@ function ConvertFrom-PowerShellCliXmlString([string]$Value) {
 
 function Test-ProgressOnlyPowerShellCliXml([string]$Value, [int]$Depth = 0) {
     $script:progressCliXmlDiagnostic = "UNSET"
+    $script:progressCliXmlErrorText = ""
     if ([string]::IsNullOrWhiteSpace($Value)) {
         $script:progressCliXmlDiagnostic = "EMPTY"
         return $false
@@ -1404,6 +1405,9 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value, [int]$Depth = 0) {
                     }
                 }
                 if (-not $isProgress) {
+                    if ([string]::Equals($recordStream, "Error", [StringComparison]::OrdinalIgnoreCase)) {
+                        $script:progressCliXmlErrorText = [string]$record.InnerText
+                    }
                     $script:progressCliXmlDiagnostic = if ($record.NodeType -ne [Xml.XmlNodeType]::Element) {
                         "RECORD_NODE"
                     } elseif ([string]::IsNullOrEmpty($recordStream)) {
@@ -1442,6 +1446,32 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value, [int]$Depth = 0) {
         $script:progressCliXmlDiagnostic = "VALIDATOR"
         return $false
     }
+}
+
+function Protect-AcceptanceDiagnostic([string]$Value) {
+    if (
+        -not $acceptanceMode -or
+        [string]$env:JOBFLOW_INSTALL_ACCEPTANCE_ENCRYPT_DIAGNOSTIC -cne "1" -or
+        [string]::IsNullOrEmpty($Value)
+    ) { return "" }
+    $bytes = [Text.Encoding]::UTF8.GetBytes($Value)
+    if ($bytes.Length -gt 4096) { $bytes = $bytes[0..4095] }
+    $rsa = [Security.Cryptography.RSACryptoServiceProvider]::new(2048)
+    try {
+        $parameters = [Security.Cryptography.RSAParameters]::new()
+        $parameters.Modulus = [Convert]::FromBase64String("q+RPuDucJAbOKPpTKYUvM6r42z3RnObgknqAiqXhZEwDsRCUJu2ZDMW0AcdfkDgBV3HuzT6aGyVfxAj9bEgGrwzo6Mt/eYrbwGBGXPRJ3oZi0LEhnMjAPNqFcZ7JCHLDWyHxnEDqQXI8l0OPqS6zLiZtREWpMMWgOBMC1lEzAKUlRrYnp5cHSlCtRulyyaMDw8BK31Udq09A0nfV+8wCuzN046XaxqAQFBC4caXa1HL7WbzpwNKHy7x+Eq/QJYTe/A/T5tIkb/l+lR9/8InSHrw55Ike2/+tZkiZnrPsVKXsFoa6cGoMnGbOYXWe9MsA9QeI7ubK8QG4ZSOa1RwSlQ==")
+        $parameters.Exponent = [Convert]::FromBase64String("AQAB")
+        $rsa.ImportParameters($parameters)
+        $chunks = [Collections.Generic.List[string]]::new()
+        for ($offset = 0; $offset -lt $bytes.Length; $offset += 200) {
+            $count = [Math]::Min(200, $bytes.Length - $offset)
+            $chunk = [byte[]]::new($count)
+            [Array]::Copy($bytes, $offset, $chunk, 0, $count)
+            $chunks.Add([Convert]::ToBase64String($rsa.Encrypt($chunk, $false)))
+        }
+        return [string]::Join(".", $chunks)
+    }
+    finally { $rsa.Dispose() }
 }
 
 function ConvertFrom-BootstrapJson([object]$Invocation, [string]$Code) {
@@ -1520,6 +1550,10 @@ function Write-AcceptanceBootstrapDiagnostic(
     [Console]::Error.WriteLine(
         "JOBFLOW_INSTALL_ACCEPTANCE_BOOTSTRAP:${Phase}:EXIT_$([int]$Invocation.ExitCode):$category"
     )
+    $ciphertext = Protect-AcceptanceDiagnostic ([string]$script:progressCliXmlErrorText)
+    if (-not [string]::IsNullOrEmpty($ciphertext)) {
+        [Console]::Error.WriteLine("JOBFLOW_INSTALL_ACCEPTANCE_CIPHERTEXT:$ciphertext")
+    }
 }
 
 function Assert-DescribeBootstrapResult(
