@@ -1228,14 +1228,17 @@ function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
             foreach ($record in $root.ChildNodes) {
                 if ($record.NodeType -eq [Xml.XmlNodeType]::Whitespace -or
                     $record.NodeType -eq [Xml.XmlNodeType]::SignificantWhitespace) { continue }
+                $recordStream = [string]$record.GetAttribute("S")
                 if ($record.NodeType -ne [Xml.XmlNodeType]::Element -or
-                    [string]$record.GetAttribute("S") -cne "progress") {
+                    -not [string]::Equals($recordStream, "progress", [StringComparison]::OrdinalIgnoreCase)) {
                     $script:progressCliXmlDiagnostic = if ($record.NodeType -ne [Xml.XmlNodeType]::Element) {
                         "RECORD_NODE"
-                    } elseif ([string]::IsNullOrEmpty([string]$record.GetAttribute("S"))) {
+                    } elseif ([string]::IsNullOrEmpty($recordStream)) {
                         "RECORD_STREAM_MISSING"
+                    } elseif ($recordStream -in @("Error", "Warning", "Verbose", "Debug", "Information")) {
+                        "RECORD_STREAM_" + $recordStream.ToUpperInvariant()
                     } else {
-                        "RECORD_STREAM_NOT_PROGRESS"
+                        "RECORD_STREAM_OTHER"
                     }
                     return $false
                 }
