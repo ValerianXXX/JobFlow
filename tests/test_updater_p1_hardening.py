@@ -30,6 +30,8 @@ class UpdaterP1HardeningTests(unittest.TestCase):
             'Invoke-StableBootstrap "RecoverOnly"',
             'Invoke-StableBootstrap "DescribeManifest"',
             'Invoke-StableBootstrap "Activate"',
+            "$sourceBytes = [Convert]::FromBase64String($encodedSource)",
+            "$process.StandardInput.Write($encodedBootstrap)",
             'Read-AndValidateV2CurrentPointer',
             'JOBFLOW_UPDATE_SCHEMA_V2_COMPLETE_RUNTIME_REQUIRED',
             'JOBFLOW_UPDATE_RECOVERED_RETRY_REQUIRED',
@@ -51,6 +53,7 @@ class UpdaterP1HardeningTests(unittest.TestCase):
             "IO.Compression.ZipArchive",
             "install-jobflow.ps1",
             "TrustedUpdatePayloadManifest",
+            "$process.StandardInput.Write($bootstrapSource)",
         ):
             self.assertNotIn(forbidden, updater)
 

@@ -854,7 +854,14 @@ function Invoke-StableBootstrap(
     }
 
     $wrapper = @'
-$source = [Console]::In.ReadToEnd()
+$encodedSource = [Console]::In.ReadToEnd()
+$sourceBytes = [Convert]::FromBase64String($encodedSource)
+try {
+    $source = [Text.UTF8Encoding]::new($false, $true).GetString($sourceBytes)
+}
+finally {
+    [Array]::Clear($sourceBytes, 0, $sourceBytes.Length)
+}
 $block = [ScriptBlock]::Create($source)
 switch ($env:JOBFLOW_UPDATER_BOOTSTRAP_MODE) {
     "RecoverOnly" {
@@ -878,6 +885,9 @@ if ($null -ne $LASTEXITCODE) { exit [int]$LASTEXITCODE }
 exit 0
 '@
     $encodedWrapper = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($wrapper))
+    $bootstrapBytes = [Text.UTF8Encoding]::new($false, $true).GetBytes($bootstrapSource)
+    $encodedBootstrap = [Convert]::ToBase64String($bootstrapBytes)
+    [Array]::Clear($bootstrapBytes, 0, $bootstrapBytes.Length)
     $start = [Diagnostics.ProcessStartInfo]::new()
     $start.FileName = $trustedWindowsPowerShell
     $start.Arguments = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand $encodedWrapper"
@@ -907,7 +917,9 @@ exit 0
         if (-not $process.Start()) { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
         $stdoutTask = $process.StandardOutput.ReadToEndAsync()
         $stderrTask = $process.StandardError.ReadToEndAsync()
-        $process.StandardInput.Write($bootstrapSource)
+        # Transport the verified source as ASCII Base64.  This preserves the
+        # exact UTF-8 bytes across Windows PowerShell/.NET stdin encodings.
+        $process.StandardInput.Write($encodedBootstrap)
         $process.StandardInput.Close()
         $process.WaitForExit()
         $stdout = $stdoutTask.GetAwaiter().GetResult()
@@ -923,7 +935,10 @@ exit 0
         }
     }
     catch { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
-    finally { $process.Dispose() }
+    finally {
+        $encodedBootstrap = $null
+        $process.Dispose()
+    }
 }
 
 function ConvertFrom-BootstrapJson([object]$Invocation, [string]$Code) {
