@@ -263,6 +263,7 @@ class ThinV2InstallerTests(unittest.TestCase):
         self.assertIn('Invoke-StableBootstrap "Activate"', self.source)
         self.assertIn('Invoke-StableBootstrap "VerifyInstalled"', self.source)
         self.assertIn("$sourceBytes = [Convert]::FromBase64String($encodedSource)", self.source)
+        self.assertIn(".TrimStart([char]0xFEFF).Trim()", self.source)
         self.assertIn("$process.StandardInput.Write($encodedBootstrap)", self.source)
         self.assertNotIn("$process.StandardInput.Write($bootstrapSource)", self.source)
         self.assertIn("Initialize-StableBootstrapPowerShell", self.source)

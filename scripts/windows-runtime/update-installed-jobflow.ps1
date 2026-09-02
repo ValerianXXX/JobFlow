@@ -854,13 +854,15 @@ function Invoke-StableBootstrap(
     }
 
     $wrapper = @'
-$encodedSource = [Console]::In.ReadToEnd()
+$encodedSource = [Console]::In.ReadToEnd().TrimStart([char]0xFEFF).Trim()
 $sourceBytes = [Convert]::FromBase64String($encodedSource)
 try {
     $source = [Text.UTF8Encoding]::new($false, $true).GetString($sourceBytes)
 }
 finally {
-    [Array]::Clear($sourceBytes, 0, $sourceBytes.Length)
+    if ($null -ne $sourceBytes) {
+        [Array]::Clear($sourceBytes, 0, $sourceBytes.Length)
+    }
 }
 $block = [ScriptBlock]::Create($source)
 switch ($env:JOBFLOW_UPDATER_BOOTSTRAP_MODE) {

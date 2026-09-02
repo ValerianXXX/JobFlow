@@ -31,6 +31,7 @@ class UpdaterP1HardeningTests(unittest.TestCase):
             'Invoke-StableBootstrap "DescribeManifest"',
             'Invoke-StableBootstrap "Activate"',
             "$sourceBytes = [Convert]::FromBase64String($encodedSource)",
+            ".TrimStart([char]0xFEFF).Trim()",
             "$process.StandardInput.Write($encodedBootstrap)",
             'Read-AndValidateV2CurrentPointer',
             'JOBFLOW_UPDATE_SCHEMA_V2_COMPLETE_RUNTIME_REQUIRED',
