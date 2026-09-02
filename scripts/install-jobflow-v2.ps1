@@ -1168,6 +1168,29 @@ function Assert-RecoveryBootstrapResult([object]$Invocation) {
     ) { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
 }
 
+function Write-AcceptanceBootstrapDiagnostic(
+    [string]$Phase,
+    [object]$Invocation
+) {
+    if (-not $acceptanceMode) { return }
+    if ($null -eq $Invocation) {
+        [Console]::Error.WriteLine("JOBFLOW_INSTALL_ACCEPTANCE_BOOTSTRAP:$Phase:MISSING")
+        return
+    }
+    $stderr = [string]$Invocation.Stderr
+    $category = if ([string]::IsNullOrWhiteSpace($stderr)) {
+        if ([string]::IsNullOrWhiteSpace([string]$Invocation.Stdout)) { "EMPTY_OUTPUT" }
+        else { "RESULT_SHAPE" }
+    }
+    elseif ($stderr.Contains("FIXTURE_EXISTING_ROOT_INVALID")) { "FIXTURE_EXISTING_ROOT_INVALID" }
+    elseif ($stderr.Contains("FIXTURE_LOCALAPPDATA_MISSING")) { "FIXTURE_LOCALAPPDATA_MISSING" }
+    elseif ($stderr.Contains("FIXTURE_MODE_INVALID")) { "FIXTURE_MODE_INVALID" }
+    else { "UNCLASSIFIED_STDERR" }
+    [Console]::Error.WriteLine(
+        "JOBFLOW_INSTALL_ACCEPTANCE_BOOTSTRAP:$Phase:EXIT_$([int]$Invocation.ExitCode):$category"
+    )
+}
+
 function Assert-DescribeBootstrapResult(
     [object]$Invocation,
     [IO.FileStream]$ManifestStream
@@ -1775,6 +1798,7 @@ try {
     $recoveryInvocation = Invoke-StableBootstrap "RecoverOnly" $null $null $null
     try { Assert-RecoveryBootstrapResult $recoveryInvocation }
     catch {
+        Write-AcceptanceBootstrapDiagnostic "RECOVER_ONLY" $recoveryInvocation
         if ([string]$_.Exception.Message -eq "JOBFLOW_UPDATE_RECOVERED_RETRY_REQUIRED") {
             throw "JOBFLOW_INSTALL_RECOVERED_RETRY_REQUIRED"
         }
