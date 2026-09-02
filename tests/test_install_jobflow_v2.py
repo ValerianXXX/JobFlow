@@ -71,6 +71,9 @@ function ReadManifest {
 }
 if ($RecoverOnly) {
     Log "RecoverOnly"
+    $stream = if ([IO.File]::Exists((Join-Path $local "emit-error-clixml"))) { "Error" } else { "progress" }
+    $cliXml = '#< CLIXML' + "`r`n" + '<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><S S="' + $stream + '">Preparing modules for first use.</S></Objs>'
+    [Console]::Error.Write($cliXml)
     if ([IO.Directory]::Exists($jobops) -and -not [IO.File]::Exists((Join-Path $jobops "current.json"))) {
         [Console]::Error.WriteLine("FIXTURE_EXISTING_ROOT_INVALID"); exit 3
     }
@@ -293,6 +296,14 @@ class ThinV2InstallerTests(unittest.TestCase):
         self.assertEqual(sentinel.read_bytes(), b"UNRELATED_PREEXISTING_ROOT")
         self.assertFalse((jobops / "bin").exists())
         self.assertFalse((jobops / "current.json").exists())
+
+    def test_error_clixml_is_not_treated_as_benign_progress(self) -> None:
+        self._prepare_release()
+        (self.local_app_data / "emit-error-clixml").write_text("1", encoding="utf-8")
+        result = self._run()
+        self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+        self.assertIn("JOBFLOW_INSTALL_RECOVERY_REQUIRED", result.stderr)
+        self.assertFalse((self.local_app_data / "JobOps").exists())
 
     def test_interrupted_control_plane_move_is_recovered_then_stops_for_retry(self) -> None:
         self._prepare_release()

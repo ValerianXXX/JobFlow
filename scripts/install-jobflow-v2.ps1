@@ -1125,9 +1125,58 @@ exit 0
     finally { $process.Dispose() }
 }
 
+function Test-ProgressOnlyPowerShellCliXml([string]$Value) {
+    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
+    $candidate = $Value.Trim().TrimStart([char]0xFEFF)
+    $header = "#< CLIXML"
+    if (-not $candidate.StartsWith($header, [StringComparison]::Ordinal)) { return $false }
+    $xmlText = $candidate.Substring($header.Length).TrimStart()
+    if ([string]::IsNullOrWhiteSpace($xmlText)) { return $false }
+
+    $reader = $null
+    try {
+        $settings = [Xml.XmlReaderSettings]::new()
+        $settings.DtdProcessing = [Xml.DtdProcessing]::Prohibit
+        $settings.XmlResolver = $null
+        $settings.MaxCharactersInDocument = $maxBootstrapOutputBytes
+        $stringReader = [IO.StringReader]::new($xmlText)
+        try {
+            $reader = [Xml.XmlReader]::Create($stringReader, $settings)
+            $document = [Xml.XmlDocument]::new()
+            $document.XmlResolver = $null
+            $document.Load($reader)
+        }
+        finally {
+            if ($null -ne $reader) { $reader.Dispose() }
+            $stringReader.Dispose()
+        }
+        $root = $document.DocumentElement
+        if ($null -eq $root -or
+            $root.LocalName -cne "Objs" -or
+            $root.NamespaceURI -cne "http://schemas.microsoft.com/powershell/2004/04") {
+            return $false
+        }
+        $records = @()
+        foreach ($node in $root.ChildNodes) {
+            if ($node.NodeType -eq [Xml.XmlNodeType]::Whitespace -or
+                $node.NodeType -eq [Xml.XmlNodeType]::SignificantWhitespace) { continue }
+            if ($node.NodeType -ne [Xml.XmlNodeType]::Element) { return $false }
+            $records += $node
+        }
+        if ($records.Count -eq 0) { return $false }
+        foreach ($record in $records) {
+            if ([string]$record.GetAttribute("S") -cne "progress") { return $false }
+        }
+        return $true
+    }
+    catch { return $false }
+}
+
 function ConvertFrom-BootstrapJson([object]$Invocation, [string]$Code) {
+    $stderr = if ($null -eq $Invocation) { "" } else { [string]$Invocation.Stderr }
     if ($null -eq $Invocation -or
-        -not [string]::IsNullOrWhiteSpace([string]$Invocation.Stderr) -or
+        (-not [string]::IsNullOrWhiteSpace($stderr) -and
+            -not (Test-ProgressOnlyPowerShellCliXml $stderr)) -or
         [string]::IsNullOrWhiteSpace([string]$Invocation.Stdout)) {
         throw $Code
     }
