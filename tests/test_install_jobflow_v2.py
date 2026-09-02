@@ -257,6 +257,10 @@ class ThinV2InstallerTests(unittest.TestCase):
         self.assertIn('Invoke-StableBootstrap "DescribeManifest"', self.source)
         self.assertIn('Invoke-StableBootstrap "Activate"', self.source)
         self.assertIn('Invoke-StableBootstrap "VerifyInstalled"', self.source)
+        self.assertIn("Initialize-StableBootstrapPowerShell", self.source)
+        self.assertIn('["PSModuleAnalysisCachePath"] = $moduleAnalysisCachePath', self.source)
+        self.assertIn('["PSModulePath"] = $trustedPowerShellModulePath', self.source)
+        self.assertIn('["PSDisableModuleAnalysisCacheCleanup"] = "1"', self.source)
         self.assertNotIn("JOBFLOW_INSTALL_ACCEPTANCE_DEBUG", self.source)
         self.assertNotIn("$_.Exception.GetType().Name", self.source)
         self.assertIn(
@@ -290,6 +294,7 @@ class ThinV2InstallerTests(unittest.TestCase):
         state = self.local_app_data / "JobFlowInstaller"
         self.assertFalse((state / "install-journal.json").exists())
         self.assertEqual(list(state.glob(".jfi-*")), [])
+        self.assertEqual(list(state.glob(".psmc-*")), [])
         self.assertEqual(list(state.glob(".cp-*")), [])
         self.assertEqual(list(state.glob(".cpb-*")), [])
 

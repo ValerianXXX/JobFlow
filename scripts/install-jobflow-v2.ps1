@@ -66,6 +66,8 @@ $installerJournalPath = Join-Path $installerStateRoot "install-journal.json"
 $updateCoordinatorPath = Join-Path $installerStateRoot ".install-v2.lock"
 $updateId = [Guid]::NewGuid().ToString("N").Substring(0, 12)
 $stagingRoot = Join-Path $installerStateRoot (".jfi-" + $updateId)
+$moduleCacheRoot = Join-Path $installerStateRoot (".psmc-" + $updateId)
+$moduleAnalysisCachePath = Join-Path $moduleCacheRoot "ModuleAnalysisCache"
 $acceptanceMode = $env:JOBFLOW_INSTALL_V2_ACCEPTANCE_CORE_ONLY -eq "1"
 $acceptanceFixtureRoot = $null
 if ($acceptanceMode) {
@@ -94,8 +96,10 @@ $releaseMetadataLock = $null
 $manifestMetadataLock = $null
 $signatureMetadataLock = $null
 $stagingDirectoryContext = $null
+$moduleCacheDirectoryContext = $null
 $installerStateContext = $null
 $bootstrapSource = $null
+$trustedPowerShellModulePath = $null
 $scriptExitCode = 1
 $scriptErrorCode = $null
 $stableControlPlaneInstalled = $false
@@ -1085,13 +1089,7 @@ exit 0
     $start.RedirectStandardError = $true
     $start.StandardOutputEncoding = [Text.Encoding]::UTF8
     $start.StandardErrorEncoding = [Text.Encoding]::UTF8
-    $start.EnvironmentVariables.Clear()
-    foreach ($name in @("SystemRoot", "WINDIR", "TEMP", "TMP")) {
-        $value = [Environment]::GetEnvironmentVariable($name)
-        if (-not [string]::IsNullOrWhiteSpace($value)) {
-            $start.EnvironmentVariables[$name] = $value
-        }
-    }
+    Set-StableBootstrapPowerShellEnvironment $start
     $start.EnvironmentVariables["JOBFLOW_UPDATER_BOOTSTRAP_MODE"] = $Mode
     if ($ManifestPath) { $start.EnvironmentVariables["JOBFLOW_UPDATER_MANIFEST"] = [IO.Path]::GetFullPath($ManifestPath) }
     if ($SignaturePath) { $start.EnvironmentVariables["JOBFLOW_UPDATER_SIGNATURE"] = [IO.Path]::GetFullPath($SignaturePath) }
@@ -1120,6 +1118,99 @@ exit 0
             Stdout = ([string]$stdout).Trim()
             Stderr = ([string]$stderr).Trim()
         }
+    }
+    catch { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
+    finally { $process.Dispose() }
+}
+
+function Set-StableBootstrapPowerShellEnvironment([Diagnostics.ProcessStartInfo]$Start) {
+    if (
+        $null -eq $Start -or
+        [string]::IsNullOrWhiteSpace($trustedPowerShellModulePath) -or
+        [string]::IsNullOrWhiteSpace($moduleAnalysisCachePath)
+    ) { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
+    $Start.EnvironmentVariables.Clear()
+    foreach ($name in @("SystemRoot", "WINDIR", "TEMP", "TMP")) {
+        $value = [Environment]::GetEnvironmentVariable($name)
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            $Start.EnvironmentVariables[$name] = $value
+        }
+    }
+    # Restrict module discovery to the Microsoft-signed Windows PowerShell
+    # module tree and keep its analysis cache inside this installer invocation.
+    # The cache path must be present before powershell.exe starts; setting the
+    # variables in the encoded wrapper is too late for startup analysis.
+    $Start.EnvironmentVariables["PSModulePath"] = $trustedPowerShellModulePath
+    $Start.EnvironmentVariables["PSModuleAnalysisCachePath"] = $moduleAnalysisCachePath
+    $Start.EnvironmentVariables["PSDisableModuleAnalysisCacheCleanup"] = "1"
+}
+
+function Initialize-StableBootstrapPowerShell {
+    if (
+        [string]::IsNullOrWhiteSpace($trustedWindowsPowerShell) -or
+        [string]::IsNullOrWhiteSpace($trustedPowerShellModulePath) -or
+        [string]::IsNullOrWhiteSpace($moduleAnalysisCachePath)
+    ) { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
+
+    # Windows PowerShell 5.1 can serialize its first module-cache preparation
+    # to stderr before the encoded command begins. Warm that cache in an
+    # isolated process with no bootstrap source or private input. The strict
+    # bootstrap invocation that follows still rejects every non-progress error.
+    $wrapper = @'
+$ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
+$deadline = [DateTime]::UtcNow.AddSeconds(60)
+while (-not [IO.File]::Exists($env:PSModuleAnalysisCachePath)) {
+    if ([DateTime]::UtcNow -ge $deadline) { exit 7 }
+    Start-Sleep -Milliseconds 100
+}
+exit 0
+'@
+    $encodedWrapper = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($wrapper))
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = $trustedWindowsPowerShell
+    $start.Arguments = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand $encodedWrapper"
+    $start.WorkingDirectory = $localRoot
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $start.StandardOutputEncoding = [Text.Encoding]::UTF8
+    $start.StandardErrorEncoding = [Text.Encoding]::UTF8
+    Set-StableBootstrapPowerShellEnvironment $start
+
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $start
+    try {
+        if (-not $process.Start()) { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+        $process.WaitForExit()
+        $stdout = $stdoutTask.GetAwaiter().GetResult()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
+        if (
+            [int]$process.ExitCode -ne 0 -or
+            [Text.Encoding]::UTF8.GetByteCount([string]$stdout) -gt $maxBootstrapOutputBytes -or
+            [Text.Encoding]::UTF8.GetByteCount([string]$stderr) -gt $maxBootstrapOutputBytes -or
+            -not [IO.File]::Exists($moduleAnalysisCachePath)
+        ) { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
+        $item = Get-Item -LiteralPath $moduleAnalysisCachePath -Force
+        if (
+            $item.PSIsContainer -or
+            ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or
+            [long]$item.Length -lt 1 -or
+            [long]$item.Length -gt 16MB
+        ) { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
+        Set-InstallerCurrentUserOnly $moduleAnalysisCachePath
+        Assert-NoAlternateDataStreams $moduleAnalysisCachePath "JOBFLOW_UPDATE_RECOVERY_REQUIRED"
+        $stream = [IO.File]::Open(
+            $moduleAnalysisCachePath,
+            [IO.FileMode]::Open,
+            [IO.FileAccess]::Read,
+            [IO.FileShare]::ReadWrite
+        )
+        try { Assert-OpenUpdaterFileAtPath $stream $moduleAnalysisCachePath "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
+        finally { $stream.Dispose() }
     }
     catch { throw "JOBFLOW_UPDATE_RECOVERY_REQUIRED" }
     finally { $process.Dispose() }
@@ -1691,7 +1782,7 @@ function Remove-OwnedInstallerTree([string]$Path) {
     $prefix = $installerStateRoot.TrimEnd('\') + '\'
     $leaf = [IO.Path]::GetFileName($absolute)
     if (-not $absolute.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -or
-        $leaf -notmatch '^\.(?:jfi|cp|cpb)-[0-9a-f]{12}$') {
+        $leaf -notmatch '^\.(?:jfi|psmc|cp|cpb)-[0-9a-f]{12}$') {
         throw "JOBFLOW_INSTALL_CLEANUP_PATH_FORBIDDEN"
     }
     if (-not [IO.Directory]::Exists($absolute)) { return }
@@ -1944,6 +2035,25 @@ try {
     $trustedPowerShellInfo = Get-TrustedWindowsPowerShell
     $trustedWindowsPowerShell = [string]$trustedPowerShellInfo.Path
     $powerShellExecutableLock = $trustedPowerShellInfo.Lock
+    $trustedPowerShellModulePath = [IO.Path]::GetFullPath((Join-Path (
+        [IO.Path]::GetDirectoryName($trustedWindowsPowerShell)
+    ) "Modules"))
+    $expectedPowerShellModulePath = [IO.Path]::GetFullPath((Join-Path (
+        [Environment]::SystemDirectory
+    ) "WindowsPowerShell\v1.0\Modules"))
+    if (
+        -not $trustedPowerShellModulePath.Equals(
+            $expectedPowerShellModulePath,
+            [StringComparison]::OrdinalIgnoreCase
+        ) -or
+        -not [IO.Directory]::Exists($trustedPowerShellModulePath) -or
+        ((Get-Item -LiteralPath $trustedPowerShellModulePath -Force).Attributes -band
+            [IO.FileAttributes]::ReparsePoint) -ne 0
+    ) { throw "JOBFLOW_TRUSTED_WINDOWS_POWERSHELL_REQUIRED" }
+    $moduleCacheDirectoryContext = Open-StableUpdaterDirectoryChain `
+        $moduleCacheRoot "JOBFLOW_INSTALL_MODULE_CACHE_INVALID" -CreateMissing
+    Set-InstallerCurrentUserOnly $moduleCacheRoot
+    Initialize-StableBootstrapPowerShell
 
     # The source-package bootstrap is the first component allowed to inspect an
     # existing JobOps root.  It never creates a fresh JobOps shell in
@@ -2171,6 +2281,7 @@ catch {
         "JOBFLOW_INSTALL_CONTROL_SOURCE_INVALID",
         "JOBFLOW_INSTALL_CONTROL_STAGE_INVALID",
         "JOBFLOW_INSTALL_CONTROL_PLANE_INVALID",
+        "JOBFLOW_INSTALL_MODULE_CACHE_INVALID",
         "JOBFLOW_INSTALL_COMPANION_FAILED",
         "JOBFLOW_INSTALL_COMPANION_SOURCE_INVALID",
         "JOBFLOW_INSTALL_ACCEPTANCE_BYPASS_FORBIDDEN",
@@ -2208,6 +2319,12 @@ finally {
     if (Test-Path -LiteralPath $stagingRoot -PathType Container) {
         try { Remove-OwnedInstallerTree $stagingRoot }
         catch { Write-Warning "JOBFLOW_INSTALL_STAGING_RESIDUE:$([IO.Path]::GetFileName($stagingRoot))" }
+    }
+    Close-StableUpdaterDirectoryContext $moduleCacheDirectoryContext
+    $moduleCacheDirectoryContext = $null
+    if (Test-Path -LiteralPath $moduleCacheRoot -PathType Container) {
+        try { Remove-OwnedInstallerTree $moduleCacheRoot }
+        catch { Write-Warning "JOBFLOW_INSTALL_MODULE_CACHE_RESIDUE:$([IO.Path]::GetFileName($moduleCacheRoot))" }
     }
     if ($null -ne $updateCoordinatorLock) { $updateCoordinatorLock.Dispose() }
     Close-StableUpdaterDirectoryContext $localArchiveDirectoryContext
