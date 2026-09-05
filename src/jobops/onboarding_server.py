@@ -215,7 +215,7 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         ):
             raise JobOpsError(
                 "BROWSER_COMPANION_UPDATE_REQUIRED",
-                "Reload the Browser Companion bundled with this JobFlow version.",
+                "JobFlow and Browser Companion must match. Check the official release notes and update the older component.",
                 expected_version=COMPANION_EXTENSION_VERSION,
             )
         validate_pair_request(

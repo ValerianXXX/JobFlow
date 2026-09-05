@@ -10,7 +10,11 @@ const STRINGS = {
     companionStatusTemporary: "暂时没有收到浏览器伴侣状态；本次授权仍保留，JobFlow 会稍后自动再检查，无需重新开始。",
     companionSessionActive: "另一种浏览器任务仍在进行中。请先完成或明确停止它，再开始这个任务。",
     guidedExtensionMissing: "没有收到浏览器伴侣响应。请确认扩展已启用并重新加载当前版本；无需把网站权限改成“在所有网站上”。",
-    guidedExtensionOutdated: "浏览器伴侣版本不匹配。请从浏览器扩展商店更新后刷新本页面。",
+    guidedExtensionOutdated: "浏览器伴侣版本较旧。请从浏览器扩展商店更新到桌面版要求的版本，再刷新本页面。",
+    guidedDesktopOutdated: "已安装的浏览器伴侣比此 JobFlow 桌面版更新。请查看官方发布说明，更新到匹配的桌面版本并重启；匹配前不能连接。",
+    guidedCompanionIncompatible: "JobFlow 与浏览器伴侣的版本或通信协议不兼容。请核对官方发布说明中的匹配版本；当前连接已停止。",
+    browserCompanionDesktopUpdateRequired: "JobFlow 桌面版需要更新以匹配已安装的扩展",
+    browserCompanionIncompatible: "JobFlow 与浏览器伴侣版本或协议不兼容",
     guidedBindingMissing: "浏览器伴侣没有通过本机安装验证。请重新运行 JobFlow 安装程序以修复本机安全通道，然后刷新页面。",
     browserCompanionChecking: "正在自动检测浏览器伴侣", browserCompanionReady: "浏览器伴侣已就绪，任务会自动连接", browserCompanionUnavailable: "未检测到浏览器伴侣；请从扩展商店安装并运行一次 JobFlow 安装器", browserCompanionUpdateRequired: "浏览器伴侣需要更新到当前版本",
     browserAssistRestartRequired: "扩展已重载，本次辅助已安全停止。请重新打开这份申请的起始页，再建立一次连接；JobFlow 没有自动重试 Next/Continue。",
@@ -73,7 +77,11 @@ const STRINGS = {
     companionStatusTemporary: "The companion status is temporarily unavailable. This authorization is still retained and JobFlow will check again later; do not start over.",
     companionSessionActive: "Another browser task is still active. Complete or explicitly stop it before starting this task.",
     guidedExtensionMissing: "The browser companion did not respond. Confirm the current extension is enabled and reloaded; you do not need to grant access on every website.",
-    guidedExtensionOutdated: "The Browser Companion version does not match. Update it from the browser extension store, then refresh this page.",
+    guidedExtensionOutdated: "Browser Companion is older than this desktop requires. Update it to the matching version from the browser extension store, then refresh this page.",
+    guidedDesktopOutdated: "The installed Browser Companion is newer than this JobFlow desktop. Check the official release notes, update to a matching desktop version, and restart. Connection remains blocked until the versions match.",
+    guidedCompanionIncompatible: "JobFlow and Browser Companion have incompatible versions or protocols. Check the matching versions in the official release notes. This connection has stopped.",
+    browserCompanionDesktopUpdateRequired: "Update JobFlow desktop to match the installed extension",
+    browserCompanionIncompatible: "JobFlow and Browser Companion versions or protocols are incompatible",
     guidedBindingMissing: "The Browser Companion failed this Windows installation check. Run the JobFlow installer to repair the local secure channel, then refresh this page.",
     browserCompanionChecking: "Detecting the browser companion automatically", browserCompanionReady: "Browser companion ready; tasks connect automatically", browserCompanionUnavailable: "Browser Companion not detected; install it from the extension store and run the JobFlow installer once", browserCompanionUpdateRequired: "Browser companion must be updated to the current version",
     browserAssistRestartRequired: "The extension reloaded, so this assist stopped safely. Reopen the approved application start page and connect again. JobFlow did not retry Next/Continue.",
@@ -637,6 +645,35 @@ function downloadJson(filename,value){
 }
 
 function companionVersionCurrent(result){return result?.protocol_version===2&&result?.extension_version===COMPANION_VERSION;}
+function companionCompatibility(result){
+  const parse=value=>typeof value==="string"&&/^(?:0|[1-9]\d{0,3})(?:\.(?:0|[1-9]\d{0,3})){2,3}$/.test(value)?value.split(".").map(Number):null;
+  const actual=parse(result?.extension_version), expected=parse(COMPANION_VERSION);
+  if(companionVersionCurrent(result))return {status:"AVAILABLE",extension_version:result.extension_version};
+  let update_target="BOTH";
+  // Version ordering selects guidance only. Pairing still requires the exact
+  // packaged version and protocol; a newer or malformed peer is never accepted.
+  if(result?.protocol_version===2&&actual&&expected){
+    for(let index=0;index<Math.max(actual.length,expected.length);index++){
+      const difference=(actual[index]||0)-(expected[index]||0);
+      if(difference!==0){update_target=difference>0?"DESKTOP":"EXTENSION";break;}
+    }
+  }
+  return {status:"UPDATE_REQUIRED",extension_version:actual?result.extension_version:null,update_target};
+}
+function companionUpdateNotice(target,title=false){
+  if(target==="DESKTOP")return title?"browserCompanionDesktopUpdateRequired":"guidedDesktopOutdated";
+  if(target==="EXTENSION")return title?"browserCompanionUpdateRequired":"guidedExtensionOutdated";
+  return title?"browserCompanionIncompatible":"guidedCompanionIncompatible";
+}
+function companionUpdateError(compatibility){
+  return makeUiError("BROWSER_COMPANION_UPDATE_REQUIRED",{
+    expected:COMPANION_VERSION,actual:compatibility.extension_version||"UNKNOWN",update_target:compatibility.update_target
+  });
+}
+function companionErrorNotice(error){
+  return error?.code==="BROWSER_COMPANION_UPDATE_REQUIRED"
+    ?companionUpdateNotice(error?.details?.update_target||state.companionAvailability?.update_target):null;
+}
 function pairingIdentityMatches(record,result){
   if(!record||!result)return false;
   return record.kind==="guided"
@@ -706,9 +743,7 @@ async function probeCompanionAvailability(render=true){
   let availability;
   try{
     const result=await companionExternalMessage({type:"JOBFLOW_PING"},1800);
-    availability=companionVersionCurrent(result)
-      ?{status:"AVAILABLE",extension_version:result.extension_version}
-      :{status:"UPDATE_REQUIRED",extension_version:result?.extension_version||null};
+    availability=companionCompatibility(result);
   }catch(_error){availability={status:"UNAVAILABLE",extension_version:null};}
   state.companionAvailability=availability;
   if(render){renderCompanionConnectionState();renderWorkflowNow();}
@@ -717,18 +752,21 @@ async function probeCompanionAvailability(render=true){
 function companionAvailabilityKey(){
   const status=state.companionAvailability?.status;
   if(status==="AVAILABLE")return "browserCompanionReady";
-  if(status==="UPDATE_REQUIRED")return "browserCompanionUpdateRequired";
+  if(status==="UPDATE_REQUIRED")return companionUpdateNotice(state.companionAvailability?.update_target,true);
   if(status==="UNAVAILABLE")return "browserCompanionUnavailable";
   return "browserCompanionChecking";
 }
 async function requireCurrentCompanion(){
   const availability=await probeCompanionAvailability();
   if(availability.status==="AVAILABLE")return availability;
-  if(availability.status==="UPDATE_REQUIRED")throw makeUiError("BROWSER_COMPANION_UPDATE_REQUIRED",{expected:COMPANION_VERSION,actual:availability.extension_version||"UNKNOWN"});
+  if(availability.status==="UPDATE_REQUIRED")throw companionUpdateError(availability);
   throw makeUiError("BROWSER_COMPANION_UNAVAILABLE");
 }
 function pairingError(result){
-  if(!companionVersionCurrent(result))return makeUiError("BROWSER_COMPANION_UPDATE_REQUIRED",{expected:COMPANION_VERSION,actual:result?.extension_version||"UNKNOWN"});
+  if(!companionVersionCurrent(result)){
+    state.companionAvailability=companionCompatibility(result);
+    return companionUpdateError(state.companionAvailability);
+  }
   return Object.assign(new Error(result?.message||result?.code||"BROWSER_COMPANION_UNAVAILABLE"),result||{});
 }
 function acceptCompanionPairResult(result){
@@ -772,8 +810,7 @@ async function attemptAutomaticCompanionPairing(record){
     return acceptCompanionPairResult(result);
   }catch(error){
     if(state.companionPairing!==record)return false;
-    state.companionConnectionNotice=error?.code==="BROWSER_COMPANION_UPDATE_REQUIRED"
-      ?"guidedExtensionOutdated":"companionClickToPair";
+    state.companionConnectionNotice=companionErrorNotice(error)||"companionClickToPair";
     renderCompanionConnectionState();
     showToast(t(state.companionConnectionNotice),error?.code==="BROWSER_COMPANION_UPDATE_REQUIRED",12000);
     return false;
@@ -941,7 +978,7 @@ const BLOCKING_CODES=new Set([
   "ONBOARDING_ANSWER_INVALID","CLAIM_EDIT_INVALID","CLAIM_REVIEW_INVALID","CONFLICT_REVIEW_INVALID"
 ]);
 
-function localizedErrorMessage(error) { return t(LOCAL_ERROR_KEYS[error?.code] || "localRequestFailed"); }
+function localizedErrorMessage(error) { return t(companionErrorNotice(error) || LOCAL_ERROR_KEYS[error?.code] || "localRequestFailed"); }
 function clearAttention(){document.querySelectorAll(".needs-attention").forEach(el=>el.classList.remove("needs-attention"));}
 function hideBlockingNotice(){const notice=document.querySelector("#blockingNotice");state.lastBlockingError=null;notice.classList.add("hidden");document.querySelector("#blockingNoticeTitle").textContent="";document.querySelector("#blockingNoticeBody").textContent="";}
 function showBlockingNotice(message){const notice=document.querySelector("#blockingNotice");document.querySelector("#blockingNoticeTitle").textContent=t("attentionRequired");document.querySelector("#blockingNoticeBody").textContent=message;notice.classList.remove("hidden");notice.scrollIntoView({behavior:"smooth",block:"center"});}
@@ -1757,11 +1794,9 @@ async function pollCompanionStatus(){
     // only slow the next status check; an explicit unpaired response is handled
     // above and tells the user to click the extension.
     state.companionPollFailures+=1;
-    state.companionConnectionNotice=error?.code==="BROWSER_COMPANION_UPDATE_REQUIRED"
-      ?"guidedExtensionOutdated"
-      :record.paired?"companionStatusTemporary":"companionClickToPair";
+    state.companionConnectionNotice=companionErrorNotice(error)||(record.paired?"companionStatusTemporary":"companionClickToPair");
     renderCompanionConnectionState();
-    if(error?.code==="BROWSER_COMPANION_UPDATE_REQUIRED")showToast(t("guidedExtensionOutdated"),true,10000);
+    if(companionErrorNotice(error))showToast(t(companionErrorNotice(error)),true,10000);
   }finally{
     state.companionPollInFlight=false;
     if(state.companionPairing===record)scheduleCompanionStatusPoll();

@@ -22,6 +22,7 @@ Run these checks only on the final clean commit. This checklist does not authori
 - [ ] Approve sanitized screenshots with no personal data or user paths.
 - [ ] Complete a clean supported Windows profile test.
 - [ ] Confirm both official Chrome and Edge listings are public, report the exact version required by `browser-companion/manifest.json`, and install and pair that version on clean browser profiles.
+- [ ] Before publishing a Browser Companion update, test its handshake against every supported public desktop release, including GitHub's current latest stable release. Do not ship an automatic store update that strands existing desktops behind an exact-version check; release a compatible desktop migration first or keep the extension release blocked. Never spoof the extension version or weaken authenticated pairing to conceal an incompatibility.
 - [ ] Confirm repository metadata and private vulnerability reporting.
 - [ ] Keep all public repository metadata, release notes, store copy, and support text English-only; bilingual product UI remains inside the application.
 - [ ] Create an annotated or signed release tag.

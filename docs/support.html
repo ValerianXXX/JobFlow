@@ -19,13 +19,15 @@
   <header><div class="logo">J</div><div><h1>JobFlow Support</h1><p>Local-first job application assistance</p></div></header>
   <main>
     <p class="summary">JobFlow and Browser Companion run on the user's Windows computer. Final Submit always remains a user action.</p>
+    <h2>Current version compatibility</h2>
+    <p>As of September 5, 2026, both browser stores publish Browser Companion <strong>0.9.2</strong>. The latest stable desktop, <strong>v0.6.0</strong>, accepts only <strong>0.9.1</strong> and cannot pair with the newer extension. Current v0.7.0 source targets 0.9.2, but a matching signed stable Windows update is not yet available. Reinstalling the store extension does not fix this mismatch. Preserve your existing data and check the <a href="https://github.com/ValerianXXX/JobFlow/releases">official release notes</a>; do not bypass the version check or install an unofficial downgrade.</p>
     <h2>Get help</h2>
     <p>Report a reproducible problem in the public <a href="https://github.com/ValerianXXX/JobFlow/issues">JobFlow issue tracker</a>. If GitHub is temporarily unavailable, check <a href="https://www.githubstatus.com/">GitHub Status</a> and try again later.</p>
     <p>Never include a resume, applicant name, address, phone number, email address, application answers, credentials, screenshots containing private data, or local file paths in a public issue.</p>
     <h2>Before reporting a problem</h2>
     <ol>
       <li>Confirm that JobFlow is running and its local health check passes.</li>
-      <li>Confirm that Browser Companion is enabled and updated to the version requested by JobFlow.</li>
+      <li>Confirm that the desktop and enabled Browser Companion are a matching version pair. Update the older component only when the official release notes provide a compatible release.</li>
       <li>Retry only from JobFlow. Do not retry a submission whose result is unknown.</li>
       <li>In the local JobFlow UI, find <strong>Privacy-safe incident history and support</strong> and download the redacted diagnostic JSON.</li>
       <li>Review the file, then attach it with the browser name, expected behavior, actual behavior, and the step that stopped.</li>

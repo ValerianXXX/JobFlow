@@ -1,5 +1,9 @@
 # Quick Start
 
+## Current release compatibility
+
+As of September 5, 2026, the Chrome and Edge stores publish Browser Companion 0.9.2. The latest stable desktop, v0.6.0, accepts only 0.9.1 and cannot pair with 0.9.2. Current v0.7.0 source targets 0.9.2, but its signed stable Windows distribution is still pending. Reinstalling the store extension cannot fix an older desktop's strict version check. Keep existing private data and consult the release notes before updating either component; do not disable the check or install an unofficial downgrade.
+
 ## Install once
 
 `Install JobFlow.cmd` uses Windows PowerShell 5.1 to bootstrap the exact complete runtime published on JobFlow's pinned stable GitHub release. It does not use a system Python, create a virtual environment, extract a source runtime, or execute the legacy source installer. The manifest must be schema v2, its signature must match JobFlow's pinned release key, and the complete-runtime archive must match the signed name, size, SHA-256, and runtime-closure identity. Otherwise it stops without activating a new version.
@@ -8,7 +12,7 @@
 2. Double-click `Install JobFlow.cmd` while connected to the internet.
 3. Wait for signed runtime activation and the installed health check to finish.
 4. The installer then registers JobFlow's private, user-scoped browser channel and opens the official Browser Companion listing for the detected default Chrome or Edge browser.
-5. Choose **Add to Chrome** or **Get** in Microsoft Edge. Confirm that the publisher and the published extension version exactly match the JobFlow release notes; a different version will stop safely and request an extension update.
+5. Choose **Add to Chrome** or **Get** in Microsoft Edge. Confirm that the publisher and published extension version exactly match the desktop release notes. A mismatch stops safely: an older extension needs an extension update, while a newer extension requires a matching desktop update.
 6. Pin the JobFlow J icon if you want it visible in the toolbar.
 
 The browser requires this one store-install gesture. JobFlow cannot bypass it. Developers testing source changes may use `Install JobFlow Browser Companion.cmd` and the unpacked Local AppData runtime, but ordinary users should install the signed store version.

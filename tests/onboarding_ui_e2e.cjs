@@ -45,7 +45,7 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260819-jobflow-v42-discovery-controls/);
+    assert.match(initial.scriptVersion, /20260905-jobflow-v43-companion-version-guidance/);
     assert.match(initial.styleVersion, /20260819-jobflow-v42-discovery-controls/);
     assert.equal(initial.skipHref, "#mainContent");
     assert.equal(initial.mainTabIndex, "-1");
@@ -54,6 +54,67 @@ const {chromium} = require("playwright");
     assert.equal(initial.updateButtonType, "button");
     assert.equal(initial.updateLiveRegion, "polite");
     assert.equal(initial.aiHeadingTabIndex, "-1");
+
+    const companionVersions = await page.evaluate(async () => {
+      const originalMessage = companionExternalMessage;
+      const originalAvailability = state.companionAvailability;
+      const originalLocale = state.locale;
+      const rows = [];
+      const messages = [];
+      try {
+        for (const [version, protocol] of [
+          ["0.9.2", 2], ["0.9.1", 2], ["0.9.3", 2], ["0.10.0", 2],
+          ["1.0.0", 2], ["0.9.2.0", 2], ["0.9.2", 3], ["private-version", 2],
+        ]) {
+          const response = {status: "AVAILABLE", protocol_version: protocol, extension_version: version};
+          companionExternalMessage = async message => { messages.push(message.type); return response; };
+          state.locale = "en";
+          let error = null;
+          try { await requireCurrentCompanion(); } catch (caught) { error = caught; }
+          const info = {...state.companionAvailability};
+          const en = error ? localizedErrorMessage(error) : "";
+          const title = t(companionAvailabilityKey());
+          state.companionAvailability = {status: "AVAILABLE", extension_version: COMPANION_VERSION};
+          const pairedError = companionVersionCurrent(response) ? null : pairingError(response);
+          const pairingStatus = state.companionAvailability.status;
+          state.companionAvailability = info;
+          state.locale = "zh";
+          rows.push({
+            version, protocol, ...info, code: error?.code || null, en, title,
+            zh: error ? localizedErrorMessage(error) : "",
+            pairingTarget: pairedError?.details?.update_target || null,
+            pairingStatus,
+          });
+        }
+        return {rows, messages};
+      } finally {
+        companionExternalMessage = originalMessage;
+        state.companionAvailability = originalAvailability;
+        state.locale = originalLocale;
+      }
+    });
+    assert.equal(companionVersions.rows[0].status, "AVAILABLE");
+    assert.equal(companionVersions.rows[0].code, null);
+    assert.equal(companionVersions.rows[1].update_target, "EXTENSION");
+    assert.match(companionVersions.rows[1].en, /Browser Companion is older/);
+    for (const row of companionVersions.rows.slice(2, 5)) {
+      assert.equal(row.update_target, "DESKTOP");
+      assert.equal(row.pairingTarget, "DESKTOP");
+      assert.match(row.en, /newer than this JobFlow desktop/);
+      assert.match(row.zh, /比此 JobFlow 桌面版更新/);
+      assert.match(row.title, /Update JobFlow desktop/);
+    }
+    for (const row of companionVersions.rows.slice(5)) {
+      assert.equal(row.update_target, "BOTH");
+      assert.match(row.en, /incompatible versions or protocols/);
+    }
+    for (const row of companionVersions.rows.slice(1)) {
+      assert.equal(row.status, "UPDATE_REQUIRED");
+      assert.equal(row.code, "BROWSER_COMPANION_UPDATE_REQUIRED");
+      assert.equal(row.pairingStatus, "UPDATE_REQUIRED");
+    }
+    assert.equal(companionVersions.rows.at(-1).extension_version, null);
+    assert.equal(companionVersions.messages.every(type => type === "JOBFLOW_PING"), true);
 
     const authorizedDiscovery = await page.evaluate(() => {
       state.locale = "en";
@@ -404,6 +465,8 @@ const {chromium} = require("playwright");
       persistent_failure_indicator: true,
       persistent_primary_workflow: true,
       authorized_discovery_inbox: true,
+      companion_version_update_direction: true,
+      incompatible_companion_pairing_blocked: true,
       supported_locales: ["zh", "en"],
       real_external_actions: 0,
     }));
