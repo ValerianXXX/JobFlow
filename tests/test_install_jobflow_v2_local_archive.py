@@ -111,8 +111,9 @@ class LocalArchiveV2InstallerTests(unittest.TestCase):
             encoding="utf-8",
             errors="replace",
             capture_output=True,
-            timeout=120,
+            timeout=_BASE.INSTALLER_TIMEOUT_SECONDS,
             check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
 
     def _assert_local_rejected_before_activation(self, result: subprocess.CompletedProcess[str]) -> None:

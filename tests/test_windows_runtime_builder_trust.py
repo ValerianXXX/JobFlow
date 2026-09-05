@@ -345,6 +345,11 @@ class WindowsRuntimeBuilderTrustRuntimeTests(unittest.TestCase):
 
     def test_signed_python_is_accepted_and_untrusted_policy_fails_closed(self) -> None:
         policy = json.loads(POLICY.read_text(encoding="utf-8"))
+        # CI provisions the signed project venv used by the other trust-chain
+        # integration tests; the matrix interpreter may have a different signer.
+        fixture_python = PROJECT / ".venv" / "Scripts" / "python.exe"
+        if not fixture_python.is_file():
+            fixture_python = Path(sys._base_executable)
         with tempfile.TemporaryDirectory(
             prefix="jobflow-builder-trust-", dir=TEST_ROOT
         ) as raw:
@@ -383,7 +388,7 @@ class WindowsRuntimeBuilderTrustRuntimeTests(unittest.TestCase):
             )
             completed = self._run(
                 harness,
-                Path(sys.executable).resolve(),
+                fixture_python.resolve(),
                 trusted.resolve(),
                 untrusted.resolve(),
                 root.resolve(),

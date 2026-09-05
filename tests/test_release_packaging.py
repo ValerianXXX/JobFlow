@@ -59,14 +59,25 @@ class ReleasePackagingTests(unittest.TestCase):
 
     def test_ci_exercises_the_bootstrap_first_installer_contract(self) -> None:
         workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        installer_step = workflow.split("- name: Exercise bootstrap-first Windows installer", 1)[1].split(
-            "- name: Run regression suite", 1
-        )[0]
-        self.assertIn('test_install_jobflow_v2*.py', installer_step)
-        self.assertIn("python -m unittest discover", installer_step)
-        self.assertNotIn("install-jobflow.ps1", installer_step)
-        self.assertNotIn("JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY", installer_step)
-        self.assertNotIn("jobflow-fixed-install-qa-", installer_step)
+        discovery = "run: python -m unittest discover -s tests -v"
+        self.assertEqual(workflow.count(discovery), 1)
+        self.assertNotIn("JOBFLOW_INSTALL_ACCEPTANCE_CORE_ONLY", workflow)
+        self.assertNotIn("JOBFLOW_INSTALL_ACCEPTANCE_ENCRYPT_DIAGNOSTIC", workflow)
+        for name in ("test_install_jobflow_v2.py", "test_install_jobflow_v2_local_archive.py"):
+            self.assertTrue((PROJECT / "tests" / name).is_file())
+        self.assertIn('python-version: ["3.11", "3.12", "3.13"]', workflow)
+
+    def test_ci_prepares_signed_launchers_and_javascript_before_python_tests(self) -> None:
+        workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        regression = workflow.index("- name: Run regression suite")
+        self.assertLess(workflow.index("run: npm ci"), regression)
+        self.assertLess(workflow.index("-m venv .venv"), regression)
+        self.assertIn("Get-AuthenticodeSignature -LiteralPath $env:LEGACY_TEST_PYTHON", workflow)
+        self.assertIn("JOBFLOW_CI_LEGACY_PYTHON_UNTRUSTED", workflow)
+        self.assertIn("Programs\\Python", workflow)
+        self.assertIn("Path(tempfile.gettempdir()).resolve(strict=True)", workflow)
+        self.assertIn('"TEMP=$canonicalTemp"', workflow)
+        self.assertIn('"TMP=$canonicalTemp"', workflow)
 
     def test_ci_runs_every_checked_in_javascript_e2e_suite(self) -> None:
         workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")

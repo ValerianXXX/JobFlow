@@ -4,6 +4,8 @@ JobFlow is a local-first, AI-centered job application workflow for Windows. It t
 
 > **Alpha software:** JobFlow does not claim universal ATS compatibility. Final Submit is always a trusted user action. Unknown external state is never retried automatically.
 
+Browser Companion **0.9.2** is published on [Chrome Web Store](https://chromewebstore.google.com/detail/pgcnlkfakkacphkdojdbphccjnbbefic) and [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/cebejbohadiofomfiplljnpdefjeiccp) (verified September 5, 2026). The [v0.7.0 source prerelease](https://github.com/ValerianXXX/JobFlow/releases/tag/v0.7.0) remains for evaluation: signed Windows distribution and clean-Windows acceptance are not yet complete.
+
 ![JobFlow English synthetic demo](docs/screenshots/jobflow-demo-en.png)
 
 ## What JobFlow does

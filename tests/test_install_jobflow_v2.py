@@ -21,6 +21,9 @@ POWERSHELL = (
     / "powershell.exe"
 )
 KEY_ID = "sha256:1037057f8578a60ac5b3dc030cb2d70ad945ec3b5fb51fa3944fcafa77146339"
+# A cold hosted PowerShell process may prepare signed modules on each child
+# invocation. Apply the same bounded allowance to network and offline fixtures.
+INSTALLER_TIMEOUT_SECONDS = 300
 STABLE_FILES = (
     "jobflow-bootstrap.ps1",
     "start-installed-jobflow.ps1",
@@ -245,8 +248,9 @@ class ThinV2InstallerTests(unittest.TestCase):
             # manifest, activation, and verification phases.  The product
             # installer has no artificial test timeout; keep the acceptance
             # harness bounded while allowing that slow hosted-runner path.
-            timeout=300,
+            timeout=INSTALLER_TIMEOUT_SECONDS,
             check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
 
     def test_acceptance_mode_rejects_a_different_local_app_data_root(self) -> None:

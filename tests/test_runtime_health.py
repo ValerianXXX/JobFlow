@@ -183,6 +183,11 @@ def make_runtime(parent: Path) -> Path:
             ),
             encoding="utf-8",
         )
+    else:
+        from _windows_runtime_fixture import executable_runtime_files
+
+        for relative, payload in executable_runtime_files().items():
+            (root / relative).write_bytes(payload)
 
     config_values: dict[str, object] = {name: {"schema_version": 1} for name in CONFIG_NAMES}
     config_values["policy.json"] = _policy()
@@ -296,10 +301,38 @@ def run_health(
         text=False,
         timeout=20,
         check=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
 
 
 class RuntimeHealthTests(unittest.TestCase):
+    def test_executable_stdlib_fixture_passes_without_relaxing_pth_validation(self) -> None:
+        from _windows_runtime_fixture import executable_runtime_files
+
+        with tempfile.TemporaryDirectory() as raw:
+            parent = Path(raw).resolve()
+            runtime_root = make_runtime(parent)
+            data_root = make_data(parent)
+            files = executable_runtime_files()
+            tag = f"python{sys.version_info.major}{sys.version_info.minor}"
+            self.assertEqual(files[f"runtime/{tag}._pth"], f"{tag}.zip\n.\n../app\n".encode("ascii"))
+            self.assertNotIn(str(Path(sys.base_prefix)).encode(), files[f"runtime/{tag}._pth"])
+            for relative, payload in files.items():
+                (runtime_root / relative).write_bytes(payload)
+            # Mutation of a returned mapping must not change subsequent fixtures.
+            files[f"runtime/{tag}._pth"] = b"invalid"
+            self.assertNotEqual(executable_runtime_files()[f"runtime/{tag}._pth"], b"invalid")
+            before = data_snapshot(data_root)
+            completed = run_health(runtime_root, data_root, minimal_environment=True)
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(completed.stdout, SUCCESS_BYTES)
+            self.assertEqual(completed.stderr, b"")
+            self.assertEqual(data_snapshot(data_root), before)
+            (runtime_root / "runtime" / "python313._pth").write_bytes(b"python313.zip\n.\n../app\nimport site\n")
+            failed = run_health(runtime_root, data_root, minimal_environment=True)
+            self.assertNotEqual(failed.returncode, 0)
+            self.assertEqual(failed.stderr, FAILURE_BYTES)
+
     def test_missing_database_passes_without_creating_state_or_database(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             parent = Path(raw)

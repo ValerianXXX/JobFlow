@@ -128,6 +128,10 @@ class JobFlowBootstrapActivationTests(unittest.TestCase):
             f"runtime/{runtime_dll_name}": runtime_dll,
             f"runtime/{test_pth_name}": test_pth,
         }
+        if test_pth_name == "python313._pth":
+            from _windows_runtime_fixture import executable_runtime_files
+
+            files.update(executable_runtime_files())
         if legacy_v1_predecessors is not None:
             for name in (
                 "jobflow-bootstrap.ps1",
@@ -362,6 +366,7 @@ class JobFlowBootstrapActivationTests(unittest.TestCase):
         return subprocess.run(
             command, cwd=PROJECT, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, encoding="utf-8", errors="replace", timeout=90, check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
 
     def _assert_failed(self, completed: subprocess.CompletedProcess[str]) -> None:
