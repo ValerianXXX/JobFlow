@@ -82,12 +82,12 @@ class ProductCapabilityReportTests(unittest.TestCase):
             "READ_ONLY_DISCOVERY_ONLY",
             by_id["authorized_continuous_scheduler"]["known_limit_codes"],
         )
-        self.assertEqual(by_id["desktop_manual_upgrade_rollback"]["availability"], "AVAILABLE")
+        self.assertEqual(by_id["desktop_manual_upgrade_rollback"]["availability"], "CONDITIONAL")
         self.assertEqual(
             by_id["desktop_manual_upgrade_rollback"]["safety_boundary"],
             "HEALTH_CHECKED_VERSION_SWITCH_WITH_PERSISTENT_DATA",
         )
-        self.assertEqual(by_id["desktop_self_update_rollback"]["availability"], "AVAILABLE")
+        self.assertEqual(by_id["desktop_self_update_rollback"]["availability"], "CONDITIONAL")
         self.assertEqual(by_id["desktop_self_update_rollback"]["evidence_status"], "AUTOMATED_REPRODUCIBLE")
         self.assertEqual(
             by_id["desktop_self_update_rollback"]["safety_boundary"],
@@ -109,6 +109,40 @@ class ProductCapabilityReportTests(unittest.TestCase):
             by_id["opt_in_crash_reporter"]["known_limit_codes"],
         )
         self.assertEqual(by_id["final_application_submit"]["availability"], "USER_ONLY")
+
+    def test_desktop_distribution_discloses_its_independent_acceptance_requirements(self) -> None:
+        report = product_capability_report()
+        by_id = {item["capability_id"]: item for item in report["capabilities"]}
+        for capability_id in ("windows_one_click_install", "desktop_manual_upgrade_rollback", "desktop_self_update_rollback"):
+            item = by_id[capability_id]
+            self.assertEqual(item["availability"], "CONDITIONAL")
+            self.assertEqual(item["live_acceptance"], "SIGNED_DISTRIBUTION_ACCEPTANCE_REQUIRED")
+            self.assertIn("SIGNED_COMPLETE_RUNTIME_REQUIRED", item["known_limit_codes"])
+            self.assertIn("CLEAN_WINDOWS_ACCEPTANCE_REQUIRED", item["known_limit_codes"])
+            self.assertIn("tests/test_clean_windows_evidence_import.py", item["evidence_refs"])
+        self.assertIn("tests/test_install_jobflow_v2.py", by_id["windows_one_click_install"]["evidence_refs"])
+
+    def test_rehashed_report_cannot_hide_or_promote_distribution_requirements(self) -> None:
+        from jobops.product_capabilities import _capability_hash, _report_hash
+
+        for mutation in ("promote", "clear_limits", "not_applicable", "drop"):
+            with self.subTest(mutation=mutation):
+                report = product_capability_report()
+                item = next(row for row in report["capabilities"] if row["capability_id"] == "windows_one_click_install")
+                if mutation == "promote":
+                    item["availability"] = "AVAILABLE"
+                elif mutation == "clear_limits":
+                    item["known_limit_codes"] = []
+                elif mutation == "not_applicable":
+                    item["live_acceptance"] = "NOT_APPLICABLE"
+                else:
+                    report["capabilities"].remove(item)
+                    report["capability_count"] -= 1
+                item["capability_hash"] = _capability_hash(item)
+                report["report_hash"] = _report_hash(report)
+                with self.assertRaises(JobOpsError) as caught:
+                    validate_product_capability_integrity(report)
+                self.assertEqual(caught.exception.code, "PRODUCT_CAPABILITY_DISTRIBUTION_OVERCLAIM")
 
     def test_report_hashes_and_project_local_evidence_fail_closed(self) -> None:
         report = product_capability_report()

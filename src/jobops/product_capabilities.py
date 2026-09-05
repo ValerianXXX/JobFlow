@@ -13,6 +13,13 @@ _SYNTHETIC = "SYNTHETIC_ONLY"
 _LIVE_REQUIRED = "LIVE_ACCEPTANCE_REQUIRED"
 _NOT_IMPLEMENTED = "NOT_IMPLEMENTED"
 _PERMANENT_BOUNDARY = "PERMANENT_USER_BOUNDARY"
+_SIGNED_DISTRIBUTION = "SIGNED_DISTRIBUTION_ACCEPTANCE_REQUIRED"
+_DISTRIBUTION_PREREQUISITES = frozenset({
+    "SIGNED_COMPLETE_RUNTIME_REQUIRED", "CLEAN_WINDOWS_ACCEPTANCE_REQUIRED",
+})
+_DESKTOP_DISTRIBUTION_IDS = frozenset({
+    "windows_one_click_install", "desktop_manual_upgrade_rollback", "desktop_self_update_rollback",
+})
 
 
 def _capability_hash(value: dict[str, Any]) -> str:
@@ -77,15 +84,22 @@ def product_capability_report() -> dict[str, Any]:
     }
     capabilities = [
         _item(
-            "windows_one_click_install", "distribution", "AVAILABLE", _AUTOMATED, "NOT_APPLICABLE",
+            "windows_one_click_install", "distribution", "CONDITIONAL", _AUTOMATED, _SIGNED_DISTRIBUTION,
             "USER_INITIATED", "LOCAL_USER_SCOPE_ONLY",
-            ["tests/test_runtime_paths.py", "tests/test_windows_launchers.py", "tests/test_companion_binding.py"], [],
+            [
+                "tests/test_runtime_paths.py", "tests/test_companion_binding.py",
+                "tests/test_install_jobflow_v2.py", "tests/test_install_jobflow_v2_local_archive.py",
+                "tests/test_clean_windows_runner.py", "tests/test_clean_windows_evidence_import.py",
+            ], list(_DISTRIBUTION_PREREQUISITES),
         ),
         _item(
-            "desktop_manual_upgrade_rollback", "distribution", "AVAILABLE", _AUTOMATED, "NOT_APPLICABLE",
+            "desktop_manual_upgrade_rollback", "distribution", "CONDITIONAL", _AUTOMATED, _SIGNED_DISTRIBUTION,
             "USER_INITIATED", "HEALTH_CHECKED_VERSION_SWITCH_WITH_PERSISTENT_DATA",
-            ["tests/test_runtime_paths.py", "tests/test_windows_launchers.py"],
-            ["NO_AUTOMATIC_UPDATE_DOWNLOAD"],
+            [
+                "tests/test_runtime_paths.py", "tests/test_windows_launchers.py",
+                "tests/test_jobflow_bootstrap_rollback_v2.py", "tests/test_clean_windows_evidence_import.py",
+            ],
+            [*sorted(_DISTRIBUTION_PREREQUISITES), "NO_AUTOMATIC_UPDATE_DOWNLOAD", "FIXED_INSTALL_REQUIRED"],
         ),
         _item(
             "secure_candidate_onboarding", "onboarding", "AVAILABLE", _AUTOMATED, "NOT_APPLICABLE",
@@ -178,10 +192,13 @@ def product_capability_report() -> dict[str, Any]:
             ["READ_ONLY_DISCOVERY_ONLY", "NO_BACKGROUND_APPLICATION_TASK"],
         ),
         _item(
-            "desktop_self_update_rollback", "distribution", "AVAILABLE", _AUTOMATED,
-            "NOT_APPLICABLE", "USER_INITIATED", "SIGNED_UPDATE_WITH_POST_SWITCH_HEALTH_ROLLBACK",
-            ["tests/test_signed_updates.py", "tests/test_desktop_update.py", "tests/test_windows_launchers.py"],
-            ["NO_BACKGROUND_UPDATE_CHECK", "FIXED_INSTALL_REQUIRED"],
+            "desktop_self_update_rollback", "distribution", "CONDITIONAL", _AUTOMATED,
+            _SIGNED_DISTRIBUTION, "USER_INITIATED", "SIGNED_UPDATE_WITH_POST_SWITCH_HEALTH_ROLLBACK",
+            [
+                "tests/test_signed_updates.py", "tests/test_desktop_update.py",
+                "tests/test_windows_launchers.py", "tests/test_clean_windows_evidence_import.py",
+            ],
+            [*sorted(_DISTRIBUTION_PREREQUISITES), "NO_BACKGROUND_UPDATE_CHECK", "FIXED_INSTALL_REQUIRED"],
         ),
         _item(
             "redacted_support_diagnostics", "support", "AVAILABLE", _AUTOMATED,
@@ -233,6 +250,20 @@ def validate_product_capability_integrity(value: dict[str, Any]) -> None:
         raise JobOpsError("PRODUCT_CAPABILITY_INTEGRITY_FAILED", "A product capability hash no longer matches its contents.")
     if value["report_hash"] != _report_hash(value):
         raise JobOpsError("PRODUCT_CAPABILITY_REPORT_INTEGRITY_FAILED", "The product capability report hash is invalid.")
+    # This local engineering report does not authenticate public distribution
+    # assets or a clean-machine acceptance result. Rehashing its metadata must
+    # not turn reproducible tests into unconditional installation availability.
+    distribution = {item["capability_id"]: item for item in capabilities if item["capability_id"] in _DESKTOP_DISTRIBUTION_IDS}
+    if set(distribution) != _DESKTOP_DISTRIBUTION_IDS or any(
+        item["availability"] != "CONDITIONAL"
+        or item["live_acceptance"] != _SIGNED_DISTRIBUTION
+        or not _DISTRIBUTION_PREREQUISITES.issubset(item["known_limit_codes"])
+        for item in distribution.values()
+    ):
+        raise JobOpsError(
+            "PRODUCT_CAPABILITY_DISTRIBUTION_OVERCLAIM",
+            "Desktop distribution requires signed runtime assets and separate clean-Windows acceptance.",
+        )
     for item in capabilities:
         for relative in item["evidence_refs"]:
             candidate = (project / relative).resolve()

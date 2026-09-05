@@ -4,6 +4,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Made desktop installation and update capability reports explicitly conditional on signed runtime distribution and independent clean-Windows acceptance; local tests and browser-store publication cannot imply general availability.
 - Verified Browser Companion 0.9.2 on both public browser stores on September 5, 2026. Store publication does not replace protected signing or clean-Windows acceptance.
 - Corrected Windows CI prerequisite ordering, cold-start timeouts, and interpreter-specific synthetic runtime fixtures without relaxing production trust checks.
 - Removed the temporary encrypted installer-debug output; acceptance diagnostics retain fixed, redacted categories only.

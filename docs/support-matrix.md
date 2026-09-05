@@ -21,6 +21,8 @@ The report distinguishes:
 - `NOT_AVAILABLE`: not yet part of the product; an offline mock or fake-clock test does not change that status.
 - `USER_ONLY`: a permanent human boundary, including final application submission.
 
+Windows one-click installation, manual upgrade/rollback, and signed self-update are `CONDITIONAL`. Their implemented code and local tests do not establish public distribution readiness. They require an authenticated complete-runtime release and independent clean-Windows acceptance; rollback additionally needs an existing fixed installation. The local report does not fetch or authenticate published assets and cannot promote these rows merely because the Browser Companion store version is current. Check the release notes and signed-asset verification separately.
+
 Every row is hash-bound to its status, evidence references, known limits, user-presence rule, and safety boundary. The ATS report additionally hashes the current bytes of every declared fixture, test, and Browser Companion source file. It fails closed if evidence disappears, changes without a regenerated report, or no longer matches the declared provider scope.
 
 The ATS report partitions eleven stages into `verified_stages` and `unverified_stages` for each provider. Those sets must be complete and non-overlapping. Generic Browser Companion evidence is published separately and is never promoted into provider-specific acceptance.

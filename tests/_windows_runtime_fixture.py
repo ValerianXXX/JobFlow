@@ -19,14 +19,22 @@ def _runtime_files() -> tuple[tuple[str, bytes], ...]:
     # production layout. Use the host's real stdlib, without third-party or
     # user modules, and retain the production _pth validation unchanged.
     excluded = {"site-packages", "__pycache__", "test", "tests", "idlelib", "tkinter", "turtledemo"}
-    with zipfile.ZipFile(stdlib, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for source in sorted(library.rglob("*.py")):
-            relative = source.relative_to(library)
-            if excluded.intersection(part.casefold() for part in relative.parts):
-                continue
-            entry = zipfile.ZipInfo(relative.as_posix(), (2024, 1, 1, 0, 0, 0))
-            entry.compress_type = zipfile.ZIP_DEFLATED
-            archive.writestr(entry, source.read_bytes())
+    embedded_stdlib = base / f"{tag}.zip"
+    if embedded_stdlib.is_file():
+        if not zipfile.is_zipfile(embedded_stdlib):
+            raise AssertionError("TEST_RUNTIME_STDLIB_ZIP_INVALID")
+        stdlib.write(embedded_stdlib.read_bytes())
+    else:
+        if not (library / "encodings" / "__init__.py").is_file():
+            raise AssertionError("TEST_RUNTIME_STDLIB_MISSING")
+        with zipfile.ZipFile(stdlib, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for source in sorted(library.rglob("*.py")):
+                relative = source.relative_to(library)
+                if excluded.intersection(part.casefold() for part in relative.parts):
+                    continue
+                entry = zipfile.ZipInfo(relative.as_posix(), (2024, 1, 1, 0, 0, 0))
+                entry.compress_type = zipfile.ZIP_DEFLATED
+                archive.writestr(entry, source.read_bytes())
     files = {
         "runtime/python.exe": Path(sys._base_executable).read_bytes(),
         f"runtime/{tag}.dll": (base / f"{tag}.dll").read_bytes(),
@@ -37,9 +45,11 @@ def _runtime_files() -> tuple[tuple[str, bytes], ...]:
         source = base / name
         if source.is_file():
             files[f"runtime/{name}"] = source.read_bytes()
-    for source in sorted((base / "DLLs").iterdir()):
-        if source.is_file() and source.suffix.casefold() in {".pyd", ".dll"}:
-            files[f"runtime/{source.name}"] = source.read_bytes()
+    for native_directory in (base / "DLLs", base):
+        if native_directory.is_dir():
+            for source in sorted(native_directory.iterdir()):
+                if source.is_file() and source.suffix.casefold() in {".pyd", ".dll"}:
+                    files[f"runtime/{source.name}"] = source.read_bytes()
     return tuple(sorted(files.items()))
 
 
