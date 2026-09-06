@@ -116,7 +116,10 @@ jobs:
           # https://nodejs.org/en/blog/release/v24.19.0
           $nodeRoot = Join-Path ([Environment]::GetFolderPath("UserProfile")) ".cache\codex-runtimes\codex-primary-runtime\dependencies\node"
           if (Test-Path -LiteralPath $nodeRoot) { throw "JOBFLOW_CI_NODE_DESTINATION_EXISTS" }
-          $nodeSource = (Get-Command node -CommandType Application -ErrorAction Stop).Source
+          # Application-only lookup can return every matching executable on
+          # Windows. Use the first PATH entry selected by setup-node, then
+          # authenticate that single file; never combine hashes or signers.
+          $nodeSource = Get-Command node.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1 -ExpandProperty Source
           $nodeHash = "3602F2BB1A10F2CBAB4C36886218A33C1AB3DB87290E73B033C46C77147D0237"
           if ((Get-FileHash -LiteralPath $nodeSource -Algorithm SHA256).Hash -cne $nodeHash) {
             throw "JOBFLOW_CI_NODE_EXECUTABLE_HASH_MISMATCH"

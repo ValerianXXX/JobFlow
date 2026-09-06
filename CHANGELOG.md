@@ -4,6 +4,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Fixed Windows CI when several Node executables share PATH; authenticate only the selected executable and still reject an untrusted first match.
 - Staged checksum- and signature-verified Node.js test bytes at the release wrapper's bounded Windows location, and updated packaging assertions for the pinned Git prerequisite.
 - Kept emergency stop, cancellation, and authorization-revocation controls available during busy operations; blocked duplicate keyboard activation and made scripted navigation respect reduced-motion preferences.
 - Pinned Windows CI's Git prerequisite to checksum-verified, Authenticode-validated upstream bytes and refreshed store-version assertions for published Browser Companion 0.9.2. Production signing and clean-Windows gates remain unchanged.

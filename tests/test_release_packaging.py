@@ -99,6 +99,10 @@ class ReleasePackagingTests(unittest.TestCase):
         self.assertIn('".cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node"', workflow)
         self.assertIn('if (Test-Path -LiteralPath $nodeRoot)', workflow)
         self.assertIn("JOBFLOW_CI_NODE_DESTINATION_EXISTS", workflow)
+        self.assertIn(
+            "$nodeSource = Get-Command node.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1 -ExpandProperty Source",
+            workflow,
+        )
         self.assertIn("3602F2BB1A10F2CBAB4C36886218A33C1AB3DB87290E73B033C46C77147D0237", workflow)
         self.assertIn("Get-FileHash -LiteralPath $nodeSource -Algorithm SHA256", workflow)
         self.assertIn("Get-AuthenticodeSignature -LiteralPath $nodeSource", workflow)
@@ -135,37 +139,58 @@ class ReleasePackagingTests(unittest.TestCase):
 
 @unittest.skipUnless(os.name == "nt", "Windows CI prerequisite staging")
 class WindowsCiNodeStagingTests(unittest.TestCase):
-    def _run_staging(self, root: Path, source: Path) -> subprocess.CompletedProcess[str]:
-        from jobops.release_toolchain import windows_system_directory
-
-        workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        section = workflow.split("- name: Provision the pinned signed Node test prerequisite", 1)[1]
-        section = section.split("- name: Install pinned Browser Companion test runtime", 1)[0]
-        block = textwrap.dedent(section.split("run: |\n", 1)[1]).rstrip()
-        # Override only the test input and destination, not hashes, signature
-        # policy, failure checks, copy operation, or staged-byte verification.
-        lines = block.splitlines()
-        for variable, replacement in (("$nodeRoot", "$args[0]"), ("$nodeSource", "$args[1]")):
-            matches = [index for index, line in enumerate(lines) if line.startswith(variable + " =")]
-            self.assertEqual(len(matches), 1)
-            lines[matches[0]] = f"{variable} = {replacement}"
-        harness = root / "ci-node-stage.ps1"
-        harness.write_text("$ErrorActionPreference = 'Stop'\n" + "\n".join(lines) + "\n", encoding="utf-8")
-        powershell = windows_system_directory() / "WindowsPowerShell" / "v1.0" / "powershell.exe"
-        return subprocess.run(
-            [str(powershell), "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
-             "-File", str(harness), str(root / "staged-node"), str(source)],
-            cwd=PROJECT, capture_output=True, text=True, encoding="utf-8", errors="replace",
-            timeout=45, check=False, creationflags=subprocess.CREATE_NO_WINDOW,
-        )
-
-    def test_ci_node_staging_checks_exact_bytes_and_refuses_existing_destination(self) -> None:
+    def _node_executable(self) -> Path:
         candidates = [
             Path.home() / ".cache" / "codex-runtimes" / "codex-primary-runtime" / "dependencies" / "node" / "bin" / "node.exe",
             Path(shutil.which("node") or "__missing_ci_node__"),
         ]
         source = next((path for path in candidates if path.is_file()), None)
         self.assertIsNotNone(source, "Install the checksum-pinned signed Node test prerequisite")
+        return source
+
+    def _run_staging(
+        self, root: Path, source: Path | None = None, *, search_path: list[Path] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        from jobops.release_toolchain import windows_system_directory
+
+        workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        section = workflow.split("- name: Provision the pinned signed Node test prerequisite", 1)[1]
+        section = section.split("- name: Install pinned Browser Companion test runtime", 1)[0]
+        block = textwrap.dedent(section.split("run: |\n", 1)[1]).rstrip()
+        # Byte-validation cases override only the input and destination. PATH
+        # cases retain the real application lookup and prove multiple matches
+        # are present. Hashes, signer policy, and staging guards stay unchanged.
+        lines = block.splitlines()
+        replacements = [("$nodeRoot", "$args[0]")]
+        if source is not None:
+            replacements.append(("$nodeSource", "$args[1]"))
+        for variable, replacement in replacements:
+            matches = [index for index, line in enumerate(lines) if line.startswith(variable + " =")]
+            self.assertEqual(len(matches), 1)
+            lines[matches[0]] = f"{variable} = {replacement}"
+        header = "$ErrorActionPreference = 'Stop'\n"
+        environment = os.environ.copy()
+        if search_path is not None:
+            environment["PATH"] = os.pathsep.join(str(path) for path in search_path)
+            header += (
+                "if (@(Get-Command node.exe -CommandType Application -ErrorAction Stop).Count -ne "
+                + str(len(search_path)) + ") { throw 'JOBFLOW_CI_NODE_MULTIPLE_MATCH_FIXTURE_MISSING' }\n"
+            )
+        harness = root / "ci-node-stage.ps1"
+        harness.write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
+        powershell = windows_system_directory() / "WindowsPowerShell" / "v1.0" / "powershell.exe"
+        arguments = [str(root / "staged-node")]
+        if source is not None:
+            arguments.append(str(source))
+        return subprocess.run(
+            [str(powershell), "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+             "-File", str(harness), *arguments],
+            cwd=PROJECT, env=environment, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=45, check=False, creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+
+    def test_ci_node_staging_checks_exact_bytes_and_refuses_existing_destination(self) -> None:
+        source = self._node_executable()
         with tempfile.TemporaryDirectory(prefix="jobflow-ci-node-") as temporary:
             root = Path(temporary).resolve()
             result = self._run_staging(root, source)
@@ -185,6 +210,42 @@ class WindowsCiNodeStagingTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("JOBFLOW_CI_NODE_EXECUTABLE_HASH_MISMATCH", result.stderr)
             self.assertFalse((root / "staged-node").exists())
+
+    def test_ci_node_selection_uses_one_pinned_application_before_a_different_binary(self) -> None:
+        source = self._node_executable()
+        with tempfile.TemporaryDirectory(prefix="jobflow-ci-node-selection-") as temporary:
+            root = Path(temporary).resolve()
+            shadow = root / "another-version"
+            shadow.mkdir()
+            (shadow / "node.exe").write_bytes(b"Not the checksum-pinned Node executable.\n")
+            result = self._run_staging(root, search_path=[source.parent, shadow])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            staged = root / "staged-node" / "bin" / "node.exe"
+            self.assertEqual(hashlib.sha256(staged.read_bytes()).hexdigest(), hashlib.sha256(source.read_bytes()).hexdigest())
+
+    def test_ci_node_selection_does_not_skip_an_untrusted_first_application(self) -> None:
+        source = self._node_executable()
+        with tempfile.TemporaryDirectory(prefix="jobflow-ci-node-selection-") as temporary:
+            root = Path(temporary).resolve()
+            shadow = root / "another-version"
+            shadow.mkdir()
+            (shadow / "node.exe").write_bytes(b"Not the checksum-pinned Node executable.\n")
+            result = self._run_staging(root, search_path=[shadow, source.parent])
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("JOBFLOW_CI_NODE_EXECUTABLE_HASH_MISMATCH", result.stderr)
+            self.assertFalse((root / "staged-node").exists())
+
+    def test_ci_node_selection_does_not_combine_signers_of_duplicate_valid_applications(self) -> None:
+        source = self._node_executable()
+        with tempfile.TemporaryDirectory(prefix="jobflow-ci-node-selection-") as temporary:
+            root = Path(temporary).resolve()
+            duplicate = root / "another-installation"
+            duplicate.mkdir()
+            shutil.copyfile(source, duplicate / "node.exe")
+            result = self._run_staging(root, search_path=[source.parent, duplicate])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            staged = root / "staged-node" / "bin" / "node.exe"
+            self.assertEqual(hashlib.sha256(staged.read_bytes()).hexdigest(), hashlib.sha256(source.read_bytes()).hexdigest())
 
 
 if __name__ == "__main__":
