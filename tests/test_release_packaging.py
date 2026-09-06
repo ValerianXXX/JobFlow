@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import os
+import shutil
+import subprocess
+import tempfile
+import textwrap
 import tomllib
 import unittest
+from pathlib import Path
 
 from _support import PROJECT
 
@@ -30,7 +37,12 @@ class ReleasePackagingTests(unittest.TestCase):
     def test_ci_fetches_full_history_before_public_scan_and_builds_without_publish(self) -> None:
         workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         self.assertIn("fetch-depth: 0", workflow)
-        self.assertIn('"Git\\mingw64\\bin\\git.exe"', workflow)
+        self.assertIn('".cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\git"', workflow)
+        self.assertIn('$gitPath = Join-Path $gitRoot "mingw64\\bin\\git.exe"', workflow)
+        self.assertIn("MinGit-2.53.0.3-64-bit.zip", workflow)
+        self.assertIn("JOBFLOW_CI_GIT_ARCHIVE_HASH_MISMATCH", workflow)
+        self.assertIn("JOBFLOW_CI_GIT_EXECUTABLE_HASH_MISMATCH", workflow)
+        self.assertIn("JOBFLOW_CI_GIT_UNTRUSTED", workflow)
         self.assertIn("JOBFLOW_RELEASE_GIT_PATH=$gitPath", workflow)
         self.assertIn(
             "python -m jobops.public_release --git-path $env:JOBFLOW_RELEASE_GIT_PATH",
@@ -79,6 +91,26 @@ class ReleasePackagingTests(unittest.TestCase):
         self.assertIn('"TEMP=$canonicalTemp"', workflow)
         self.assertIn('"TMP=$canonicalTemp"', workflow)
 
+    def test_ci_stages_exact_signed_node_at_the_existing_release_location(self) -> None:
+        workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        regression = workflow.index("- name: Run regression suite")
+        self.assertLess(workflow.index("- name: Provision the pinned signed Node test prerequisite"), regression)
+        self.assertIn('node-version: "24.19.0"', workflow)
+        self.assertIn('".cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node"', workflow)
+        self.assertIn('if (Test-Path -LiteralPath $nodeRoot)', workflow)
+        self.assertIn("JOBFLOW_CI_NODE_DESTINATION_EXISTS", workflow)
+        self.assertIn("3602F2BB1A10F2CBAB4C36886218A33C1AB3DB87290E73B033C46C77147D0237", workflow)
+        self.assertIn("Get-FileHash -LiteralPath $nodeSource -Algorithm SHA256", workflow)
+        self.assertIn("Get-AuthenticodeSignature -LiteralPath $nodeSource", workflow)
+        self.assertIn("$policy.tools.node.allowed_signers", workflow)
+        self.assertIn("JOBFLOW_CI_NODE_UNTRUSTED", workflow)
+        self.assertIn('Copy-Item -LiteralPath $nodeSource -Destination $nodePath', workflow)
+        self.assertIn("Get-FileHash -LiteralPath $nodePath -Algorithm SHA256", workflow)
+        self.assertIn("JOBFLOW_CI_NODE_STAGED_HASH_MISMATCH", workflow)
+        builder = (PROJECT / "scripts" / "build-signed-update-bundle.ps1").read_text(encoding="utf-8")
+        self.assertIn('Assert-NoReparsePath $absolute "JOBFLOW_RELEASE_NODE_NOT_TRUSTED"', builder)
+        self.assertIn('Enter-AuthenticatedToolLock "node" $nodeApplication', builder)
+
     def test_ci_runs_every_checked_in_javascript_e2e_suite(self) -> None:
         workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         self.assertIn(
@@ -99,6 +131,60 @@ class ReleasePackagingTests(unittest.TestCase):
         self.assertIn('name.endsWith("e2e.cjs")', runner)
         self.assertIn("spawnSync(process.execPath", runner)
         self.assertIn("JOBFLOW_JAVASCRIPT_E2E_PASS", runner)
+
+
+@unittest.skipUnless(os.name == "nt", "Windows CI prerequisite staging")
+class WindowsCiNodeStagingTests(unittest.TestCase):
+    def _run_staging(self, root: Path, source: Path) -> subprocess.CompletedProcess[str]:
+        from jobops.release_toolchain import windows_system_directory
+
+        workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        section = workflow.split("- name: Provision the pinned signed Node test prerequisite", 1)[1]
+        section = section.split("- name: Install pinned Browser Companion test runtime", 1)[0]
+        block = textwrap.dedent(section.split("run: |\n", 1)[1]).rstrip()
+        # Override only the test input and destination, not hashes, signature
+        # policy, failure checks, copy operation, or staged-byte verification.
+        lines = block.splitlines()
+        for variable, replacement in (("$nodeRoot", "$args[0]"), ("$nodeSource", "$args[1]")):
+            matches = [index for index, line in enumerate(lines) if line.startswith(variable + " =")]
+            self.assertEqual(len(matches), 1)
+            lines[matches[0]] = f"{variable} = {replacement}"
+        harness = root / "ci-node-stage.ps1"
+        harness.write_text("$ErrorActionPreference = 'Stop'\n" + "\n".join(lines) + "\n", encoding="utf-8")
+        powershell = windows_system_directory() / "WindowsPowerShell" / "v1.0" / "powershell.exe"
+        return subprocess.run(
+            [str(powershell), "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+             "-File", str(harness), str(root / "staged-node"), str(source)],
+            cwd=PROJECT, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=45, check=False, creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+
+    def test_ci_node_staging_checks_exact_bytes_and_refuses_existing_destination(self) -> None:
+        candidates = [
+            Path.home() / ".cache" / "codex-runtimes" / "codex-primary-runtime" / "dependencies" / "node" / "bin" / "node.exe",
+            Path(shutil.which("node") or "__missing_ci_node__"),
+        ]
+        source = next((path for path in candidates if path.is_file()), None)
+        self.assertIsNotNone(source, "Install the checksum-pinned signed Node test prerequisite")
+        with tempfile.TemporaryDirectory(prefix="jobflow-ci-node-") as temporary:
+            root = Path(temporary).resolve()
+            result = self._run_staging(root, source)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            staged = root / "staged-node" / "bin" / "node.exe"
+            expected = "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+            self.assertEqual(hashlib.sha256(staged.read_bytes()).hexdigest(), expected)
+            repeated = self._run_staging(root, source)
+            self.assertNotEqual(repeated.returncode, 0)
+            self.assertIn("JOBFLOW_CI_NODE_DESTINATION_EXISTS", repeated.stderr)
+            self.assertEqual(hashlib.sha256(staged.read_bytes()).hexdigest(), expected)
+
+    def test_ci_node_staging_rejects_modified_input_before_creating_destination(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-ci-node-") as temporary:
+            root = Path(temporary).resolve()
+            result = self._run_staging(root, PROJECT / "package.json")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("JOBFLOW_CI_NODE_EXECUTABLE_HASH_MISMATCH", result.stderr)
+            self.assertFalse((root / "staged-node").exists())
 
 
 if __name__ == "__main__":

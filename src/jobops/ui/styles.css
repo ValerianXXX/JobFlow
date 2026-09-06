@@ -606,6 +606,7 @@ textarea { min-height: 96px; resize: vertical; }
 body.is-busy { cursor: progress; }
 body.is-busy button, body.is-busy input, body.is-busy select, body.is-busy textarea, body.is-busy .upload-button { pointer-events: none; }
 body.is-busy button, body.is-busy .upload-button { opacity: .65; }
+body.is-busy :is(#emergencyStop,#cancelGuidedIntake,#pauseAuthorizedDiscovery,#killAuthorizedDiscovery,#pauseIntakeControl):not(:disabled):not([inert]) { pointer-events: auto; opacity: 1; cursor: pointer; }
 @keyframes activity-spin { to { transform: rotate(360deg); } }
 @keyframes activity-progress-scan { 0% { transform: translateX(-120%); } 50% { transform: translateX(85%); } 100% { transform: translateX(270%); } }
 @media (prefers-reduced-motion: reduce) {

@@ -710,7 +710,12 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v42-discovery-controls", html)
+        self.assertIn("jobflow-v44-accessible-controls", html)
+        self.assertIn("function syncActivityControls()", script)
+        self.assertIn("BUSY_INTERRUPTION_ACTIONS", script)
+        self.assertIn("event.stopImmediatePropagation()", script)
+        self.assertIn("control.inert = true", script)
+        self.assertIn("function scrollToElement(element, options={})", script)
         self.assertIn('class="skip-link"', html)
         self.assertIn('id="mainContent" tabindex="-1"', html)
         self.assertIn('id="downloadSupportDiagnostics"', html)
@@ -2874,7 +2879,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v42-discovery-controls", html)
+        self.assertIn("jobflow-v44-accessible-controls", html)
 
     def test_support_diagnostics_never_reads_or_emits_private_values(self) -> None:
         with project_temp() as root:

@@ -45,8 +45,8 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260905-jobflow-v43-companion-version-guidance/);
-    assert.match(initial.styleVersion, /20260819-jobflow-v42-discovery-controls/);
+    assert.match(initial.scriptVersion, /20260906-jobflow-v44-accessible-controls/);
+    assert.match(initial.styleVersion, /20260906-jobflow-v44-accessible-controls/);
     assert.equal(initial.skipHref, "#mainContent");
     assert.equal(initial.mainTabIndex, "-1");
     assert.equal(initial.supportButtonType, "button");
@@ -457,6 +457,117 @@ const {chromium} = require("playwright");
     assert.equal(failureEn.title, "This run stopped");
     assert.match(failureEn.detail, /Role level/);
     assert.notEqual(failureEn.display, "none");
+
+    // Exercise real keyboard and pointer dispatch, not only CSS assertions.
+    // All API effects stay in memory; no applicant data or network is used.
+    const accessPage = await browser.newPage({reducedMotion:"reduce"});
+    await accessPage.route("**/*", route => {
+      if (route.request().url().startsWith("file:")) return route.continue();
+      nonLocalRequests += 1;
+      return route.abort();
+    });
+    await accessPage.goto(pathToFileURL(html).href, {waitUntil:"load"});
+    await accessPage.waitForFunction(() => state.activities.length === 0);
+    const motionImmediate = await accessPage.evaluate(() => {
+      navigate("review");
+      return {reduce:matchMedia("(prefers-reduced-motion: reduce)").matches, scrollY};
+    });
+    await accessPage.waitForTimeout(150);
+    assert.equal(motionImmediate.reduce, true);
+    assert.ok(motionImmediate.scrollY > 0);
+    assert.equal(await accessPage.evaluate(() => scrollY), motionImmediate.scrollY,
+      "reduced-motion navigation must finish immediately, not animate after the call");
+
+    await accessPage.evaluate(() => {
+      window.accessAudit = {saveCalls:0, stopCalls:0, dynamicClicks:0};
+      state.data = {completion:{remaining:1, remaining_fields:[]}};
+      api = async requestPath => {
+        if (requestPath === "save") {
+          window.accessAudit.saveCalls += 1;
+          await new Promise(resolve => {window.accessAudit.releaseSave = resolve;});
+          return {status:"OK"};
+        }
+        if (requestPath === "external-action-kill-switch") {
+          window.accessAudit.stopCalls += 1;
+          await new Promise(resolve => {window.accessAudit.releaseStop = resolve;});
+          return {status:"OK"};
+        }
+        throw new Error("Unexpected request in isolated accessibility fixture");
+      };
+      refresh = async () => {};
+      refreshLatest = async () => {};
+      window.confirm = () => true;
+      document.querySelector("#pipelineDashboard").classList.remove("hidden");
+      for (const id of Object.keys(BUSY_INTERRUPTION_ACTIONS)) {
+        document.getElementById(id).disabled = false;
+      }
+      const preexisting = document.createElement("button");
+      preexisting.id = "preexistingInertFixture";
+      preexisting.inert = true;
+      document.body.append(preexisting);
+      navigate("questionnaire");
+      document.querySelector("#saveAnswers").focus();
+    });
+    await accessPage.keyboard.press("Enter");
+    await accessPage.waitForFunction(() => window.accessAudit.saveCalls === 1);
+    assert.equal(await accessPage.locator("#saveAnswers").evaluate(el => el.inert), true);
+    await accessPage.keyboard.press("Enter");
+    await accessPage.locator("#saveAnswers").evaluate(el => el.click());
+    assert.equal(await accessPage.evaluate(() => window.accessAudit.saveCalls), 1,
+      "busy keyboard and programmatic activation must not duplicate a save request");
+
+    await accessPage.evaluate(() => {
+      const dynamic = document.createElement("button");
+      dynamic.id = "dynamicBusyFixture";
+      dynamic.textContent = "Synthetic dynamic action";
+      dynamic.addEventListener("click", () => {window.accessAudit.dynamicClicks += 1;});
+      document.body.append(dynamic);
+    });
+    await accessPage.waitForFunction(() => document.querySelector("#dynamicBusyFixture").inert);
+    await accessPage.locator("#dynamicBusyFixture").evaluate(el => el.click());
+    assert.equal(await accessPage.evaluate(() => window.accessAudit.dynamicClicks), 0);
+    const stopControls = await accessPage.evaluate(() => Object.keys(BUSY_INTERRUPTION_ACTIONS).map(id => {
+      const control = document.getElementById(id);
+      return {id, inert:control.inert, pointer:getComputedStyle(control).pointerEvents};
+    }));
+    for (const control of stopControls) {
+      assert.equal(control.inert, false, `${control.id} must remain a reachable interruption control`);
+      assert.equal(control.pointer, "auto", `${control.id} must receive pointer input while busy`);
+    }
+    await accessPage.locator("#emergencyStop").click();
+    await accessPage.waitForFunction(() => window.accessAudit.stopCalls === 1);
+    assert.equal(await accessPage.locator("#emergencyStop").evaluate(el => el.inert), true,
+      "a pending stop request must not be sent twice");
+    await accessPage.keyboard.press("Enter");
+    await accessPage.locator("#emergencyStop").evaluate(el => el.click());
+    assert.equal(await accessPage.evaluate(() => window.accessAudit.stopCalls), 1);
+    await accessPage.evaluate(() => window.accessAudit.releaseStop());
+    await accessPage.waitForFunction(() => !state.activities.some(item => item.key === "stoppingExternalActions"));
+    assert.equal(await accessPage.locator("#emergencyStop").evaluate(el => el.inert), false);
+    assert.equal(await accessPage.locator("#saveAnswers").evaluate(el => el.inert), true);
+    await accessPage.evaluate(() => window.accessAudit.releaseSave());
+    await accessPage.waitForFunction(() => state.activities.length === 0);
+    const restored = await accessPage.evaluate(() => ({
+      saveInert:document.querySelector("#saveAnswers").inert,
+      dynamicInert:document.querySelector("#dynamicBusyFixture").inert,
+      originalInert:document.querySelector("#preexistingInertFixture").inert,
+      disabledPreserved:document.querySelector("#startGuidedIntake").disabled,
+      focus:document.activeElement?.id,
+    }));
+    assert.equal(restored.saveInert, false);
+    assert.equal(restored.dynamicInert, false);
+    assert.equal(restored.originalInert, true);
+    assert.equal(restored.disabledPreserved, true);
+    assert.equal(restored.focus, "saveAnswers");
+    await accessPage.locator("#dynamicBusyFixture").evaluate(el => el.click());
+    assert.equal(await accessPage.evaluate(() => window.accessAudit.dynamicClicks), 1);
+    await accessPage.emulateMedia({reducedMotion:"no-preference"});
+    assert.equal(await accessPage.evaluate(() => {
+      let behavior = null;
+      scrollToElement({scrollIntoView(options) {behavior = options.behavior;}}, {block:"center"});
+      return behavior;
+    }), "smooth");
+    await accessPage.close();
     assert.equal(nonLocalRequests, 0);
 
     process.stdout.write(JSON.stringify({
@@ -467,6 +578,10 @@ const {chromium} = require("playwright");
       authorized_discovery_inbox: true,
       companion_version_update_direction: true,
       incompatible_companion_pairing_blocked: true,
+      busy_keyboard_reentrancy_blocked: true,
+      busy_stop_controls_reachable: true,
+      busy_control_state_restored: true,
+      reduced_motion_navigation: true,
       supported_locales: ["zh", "en"],
       real_external_actions: 0,
     }));

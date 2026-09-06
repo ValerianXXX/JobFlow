@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Staged checksum- and signature-verified Node.js test bytes at the release wrapper's bounded Windows location, and updated packaging assertions for the pinned Git prerequisite.
+- Kept emergency stop, cancellation, and authorization-revocation controls available during busy operations; blocked duplicate keyboard activation and made scripted navigation respect reduced-motion preferences.
 - Pinned Windows CI's Git prerequisite to checksum-verified, Authenticode-validated upstream bytes and refreshed store-version assertions for published Browser Companion 0.9.2. Production signing and clean-Windows gates remain unchanged.
 - Distinguished newer-extension/older-desktop mismatches from extension updates in both UI languages while retaining exact-version and protocol checks. Documented that stable desktop v0.6.0 cannot pair with store extension 0.9.2.
 - Made desktop installation and update capability reports explicitly conditional on signed runtime distribution and independent clean-Windows acceptance; local tests and browser-store publication cannot imply general availability.
