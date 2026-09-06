@@ -376,12 +376,32 @@ class SignedUpdateTests(unittest.TestCase):
         )
         self.assertNotIn("Get-FileHash", builder)
 
-    def test_current_store_attestation_intentionally_blocks_signing_readiness(self) -> None:
+    def test_published_store_versions_match_without_claiming_desktop_acceptance(self) -> None:
         manifest = json.loads((PROJECT / "browser-companion" / "manifest.json").read_text(encoding="utf-8"))
         release = json.loads((PROJECT / "config" / "github-release.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["version"], "0.9.2")
-        self.assertEqual(release["browser_companion_chrome_published_version"], "0.9.1")
-        self.assertEqual(release["browser_companion_edge_published_version"], "0.9.1")
+        self.assertIs(release["browser_companion_store_versions_verified"], True)
+        self.assertEqual(release["browser_companion_chrome_published_version"], manifest["version"])
+        self.assertEqual(release["browser_companion_edge_published_version"], manifest["version"])
+        # Store publication is independent of signed desktop distribution and
+        # clean-Windows acceptance. Do not turn the former into the latter.
+        self.assertIs(release["clean_windows_profile_tested"], False)
+
+    def test_ci_git_prerequisite_pins_archive_executable_and_existing_signer(self) -> None:
+        workflow = (PROJECT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        step = workflow[
+            workflow.index("- name: Provision the pinned signed Git test prerequisite") :
+            workflow.index("- name: Prepare canonical Windows test paths and signed project launcher")
+        ]
+        self.assertIn("v2.53.0.windows.3/MinGit-2.53.0.3-64-bit.zip", step)
+        self.assertIn("0D7C85A26E45668B35D0D0AEB763289376CFC039E55E0938A617ED0DFA32E433", step)
+        self.assertIn("C115A66A1BEDE6694B513AF420CC90F8775BE03666A54D1ECB82D6196B929FE9", step)
+        self.assertLess(step.index("JOBFLOW_CI_GIT_ARCHIVE_HASH_MISMATCH"), step.index("Expand-Archive"))
+        self.assertLess(step.index("JOBFLOW_CI_GIT_UNTRUSTED"), step.index("JOBFLOW_RELEASE_GIT_PATH="))
+        self.assertIn("$policy.tools.git.allowed_signers", step)
+        self.assertIn('"JOBFLOW_CI_GIT_DESTINATION_EXISTS"', step)
+        self.assertNotIn("Set-Content", step)
+        self.assertNotIn("-Force", step)
 
     def test_manifest_and_signature_prewrite_hardlinks_never_truncate_the_sentinel(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-prewrite-hardlink-", dir=SIGNED_UPDATE_TEST_ROOT) as raw:

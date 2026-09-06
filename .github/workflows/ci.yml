@@ -40,12 +40,34 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - name: Bind release checks to the canonical Windows Git
+      - name: Provision the pinned signed Git test prerequisite
         shell: powershell
         run: |
-          $gitPath = [IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath("ProgramFiles")) "Git\mingw64\bin\git.exe"))
-          if (-not (Test-Path -LiteralPath $gitPath -PathType Leaf)) {
-            throw "JOBFLOW_CI_TRUSTED_GIT_MISSING"
+          # windows-latest changes its preinstalled Git independently of our
+          # pinned release toolchain. Use verified upstream ZIP bytes in the
+          # existing canonical tool location; do not relax production trust.
+          # https://github.com/git-for-windows/git/releases/tag/v2.53.0.windows.3
+          $gitRoot = Join-Path ([Environment]::GetFolderPath("UserProfile")) ".cache\codex-runtimes\codex-primary-runtime\dependencies\native\git"
+          if (Test-Path -LiteralPath $gitRoot) { throw "JOBFLOW_CI_GIT_DESTINATION_EXISTS" }
+          $gitArchive = Join-Path $env:RUNNER_TEMP "jobflow-ci-MinGit-2.53.0.3-64-bit.zip"
+          if (Test-Path -LiteralPath $gitArchive) { throw "JOBFLOW_CI_GIT_ARCHIVE_EXISTS" }
+          Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/git-for-windows/git/releases/download/v2.53.0.windows.3/MinGit-2.53.0.3-64-bit.zip" -OutFile $gitArchive
+          if ((Get-FileHash -LiteralPath $gitArchive -Algorithm SHA256).Hash -cne "0D7C85A26E45668B35D0D0AEB763289376CFC039E55E0938A617ED0DFA32E433") {
+            throw "JOBFLOW_CI_GIT_ARCHIVE_HASH_MISMATCH"
+          }
+          Expand-Archive -LiteralPath $gitArchive -DestinationPath $gitRoot
+          $gitPath = Join-Path $gitRoot "mingw64\bin\git.exe"
+          if ((Get-FileHash -LiteralPath $gitPath -Algorithm SHA256).Hash -cne "C115A66A1BEDE6694B513AF420CC90F8775BE03666A54D1ECB82D6196B929FE9") {
+            throw "JOBFLOW_CI_GIT_EXECUTABLE_HASH_MISMATCH"
+          }
+          $signature = Microsoft.PowerShell.Security\Get-AuthenticodeSignature -LiteralPath $gitPath
+          $policy = Get-Content -LiteralPath config/release-toolchain.json -Raw | ConvertFrom-Json
+          $trusted = @($policy.tools.git.allowed_signers | Where-Object {
+            $_.subject -ceq $signature.SignerCertificate.Subject -and
+            $_.thumbprint -ceq $signature.SignerCertificate.Thumbprint
+          })
+          if ($signature.Status -ne "Valid" -or $trusted.Count -ne 1) {
+            throw "JOBFLOW_CI_GIT_UNTRUSTED"
           }
           "JOBFLOW_RELEASE_GIT_PATH=$gitPath" | Out-File -LiteralPath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Prepare canonical Windows test paths and signed project launcher
