@@ -26,7 +26,7 @@ See the [compatibility and recovery matrix](docs/compatibility.md) and [October 
 
 ## Quick start on Windows
 
-`Install JobFlow.cmd` is a stock-Windows, bootstrap-first installer. It does not use a system Python, create a virtual environment, or build from source. It accepts only the exact complete Windows runtime named by a signed schema-v2 manifest on JobFlow's pinned stable GitHub release. If that release is not yet available, installation stops clearly and activates nothing.
+`Install JobFlow.cmd` calls `scripts/install-jobflow-v2.ps1`, the stock-Windows, bootstrap-first installer. It does not use a system Python, create a virtual environment, or build from source. It accepts only the exact complete Windows runtime named by a signed schema-v2 manifest on JobFlow's pinned stable GitHub release. If that release is not yet available, installation stops clearly and activates nothing.
 
 1. Download and extract the latest JobFlow source ZIP.
 2. Double-click `Install JobFlow.cmd` once while connected to the internet.

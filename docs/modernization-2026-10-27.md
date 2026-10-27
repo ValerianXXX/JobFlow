@@ -42,8 +42,13 @@ No extension version was changed.
   75 passed; the subsequently added HTTP mismatch regression brings compatibility
   coverage to 4 passing tests. All 10 public-release identity-policy tests pass.
 - JavaScript/browser suites: 8/8 passed on baseline and candidate checkouts.
-- Full Python baseline/candidate suites are running in separate frozen checkouts.
-  Final totals will be recorded after completion; running is not passing.
+- Full Python baseline: 1,144 tests, 4 skipped, no failures (3,683 seconds).
+  The frozen release candidate ran 1,149 tests, 4 skipped, with two failures
+  (3,747 seconds): a README installer-link regression and Windows ACL handling
+  of a deep source-archive path. Both are repaired. All six focused documentation
+  and deep-path regressions pass after repair; a second full run has not been
+  claimed. ACL handling now uses the existing extended-path conversion without
+  weakening owner-only permissions or reparse-point checks.
 - The synthetic Windows demo started, switched Chinese/English and displayed a
   source-backed claim conflict for review. No real profile was used.
 - Existing WSL Hermes completed a real synthetic zero-tool handshake with configured

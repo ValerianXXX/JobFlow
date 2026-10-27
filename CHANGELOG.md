@@ -4,6 +4,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Fixed release-signing ACL setup for deep Windows archive paths while retaining the existing owner-only and reparse-point checks.
 - Added an executable desktop/extension compatibility matrix and CI checks across shipped version surfaces, with bounded server-side recovery guidance and strict protocol types.
 - Fixed source-demo setup instructions: the signed bootstrap installer does not create a development environment.
 - Corrected identity-review counts and added an explicit email-hash approval policy so a real authorization can be recorded without adding the email to public source. The checked-in noreply-only policy remains in force.
