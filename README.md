@@ -10,6 +10,8 @@ Browser Companion **0.9.2** is published on [Chrome Web Store](https://chromeweb
 
 See the [compatibility and recovery matrix](docs/compatibility.md) and [October 27 release verification](docs/modernization-2026-10-27.md). CI now detects version drift across Python, JavaScript, lockfiles, the extension and its UI. The source demo is available through the Development setup below while signed installation remains blocked.
 
+The optional [visual materials and status-tracking preview](docs/visual-materials-and-status-tracking.md) adds scanned PDF/image transcription with page evidence and a separate original-source confirmation. Existing Hermes and loopback paths remain available. A read-only mail adapter can match supplied status messages to applications and retain encrypted, reversible review history; no real mailbox connector or automatic application-state update is shipped.
+
 ![JobFlow English synthetic demo](docs/screenshots/jobflow-demo-en.png)
 
 ## What JobFlow does

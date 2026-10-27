@@ -4,6 +4,9 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Added opt-in PDF/image transcription through existing Hermes or OpenAI-compatible loopback models, bounded page/region validation and mandatory original-source verification before including a visual Claim.
+- Added a read-only application-mail adapter contract, conservative status proposals and encrypted evidence/review history; no mailbox access or protected application-state writes.
+- Preserved a failed and a successful real Hermes synthetic visual run and a real Windows DPAPI status-inbox check.
 - Fixed release-signing ACL setup for deep Windows archive paths while retaining the existing owner-only and reparse-point checks.
 - Added an executable desktop/extension compatibility matrix and CI checks across shipped version surfaces, with bounded server-side recovery guidance and strict protocol types.
 - Fixed source-demo setup instructions: the signed bootstrap installer does not create a development environment.

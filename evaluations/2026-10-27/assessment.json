@@ -1,0 +1,18 @@
+{
+  "scope": "synthetic transcription, not claim extraction or user completion",
+  "method": "Exact per-line comparison against all original fixture lines, including dates and team/applicant attribution",
+  "all_lines_exact": true,
+  "lines": 13,
+  "omitted_numeric_facts": 0,
+  "numeric_errors": 0,
+  "misattributions": 0,
+  "date_errors": 0,
+  "coordinate_accuracy": "Not calibrated; model-proposed regions require original-page review",
+  "baseline_omitted_numeric_facts": 6,
+  "baseline_ms": 157,
+  "candidate_ms": 15703,
+  "cost_usd": null,
+  "attempts": 2,
+  "failed_attempts": 1,
+  "automatically_approved_claims": 0
+}

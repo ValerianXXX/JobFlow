@@ -1,0 +1,237 @@
+{
+  "verified_on": "2026-10-27",
+  "fixture": "Original synthetic raster PDF; scanned, two-column and screenshot layouts",
+  "cases": [
+    {
+      "id": "scanned_resume",
+      "lines": [
+        "SYNTHETIC RESUME",
+        "North Star Lab | Analyst | 2023-2025",
+        "Built a dashboard covering 12 stores.",
+        "Reduced reporting time by 18%."
+      ],
+      "facts": [
+        "12 stores",
+        "18%"
+      ],
+      "owner": "North Star Lab"
+    },
+    {
+      "id": "two_column_resume",
+      "lines": [
+        "SYNTHETIC TWO-COLUMN RESUME",
+        "Cedar Studio | Analyst | 2024",
+        "Processed 1,200 synthetic records.",
+        "Bay Project | Team result | 2025",
+        "Team managed a $12,500 budget."
+      ],
+      "facts": [
+        "1,200",
+        "$12,500"
+      ],
+      "owner": "Team"
+    },
+    {
+      "id": "portfolio_screenshot",
+      "lines": [
+        "SYNTHETIC PORTFOLIO SCREENSHOT",
+        "Harbor Project | Team | 2026",
+        "Team tested 24 synthetic scenarios.",
+        "Applicant prepared 6 review reports."
+      ],
+      "facts": [
+        "24",
+        "6 review"
+      ],
+      "owner": "Applicant"
+    }
+  ],
+  "baseline": {
+    "method": "existing_local_text_extraction",
+    "elapsed_ms": 157,
+    "omitted_numeric_facts": 6,
+    "misattribution": null,
+    "numeric_errors": null,
+    "cost_usd": 0
+  },
+  "candidate": {
+    "status": "REAL_HERMES_SYNTHETIC_TRANSCRIPTION",
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "transcription": "SYNTHETIC RESUME\nNorth Star Lab | Analyst | 2023-2025\nBuilt a dashboard covering 12 stores.\nReduced reporting time by 18%.\nSYNTHETIC TWO-COLUMN RESUME\nCedar Studio | Analyst | 2024\nProcessed 1,200 synthetic records.\nBay Project | Team result | 2025\nTeam managed a $12,500 budget.\nSYNTHETIC PORTFOLIO SCREENSHOT\nHarbor Project | Team | 2026\nTeam tested 24 synthetic scenarios.\nApplicant prepared 6 review reports.",
+    "evidence": {
+      "visual_verification_required": true,
+      "visual_regions": [
+        {
+          "page": 1,
+          "bbox": [
+            0.05,
+            0.089,
+            0.274,
+            0.122
+          ],
+          "line_start": 1,
+          "line_end": 1,
+          "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d"
+        },
+        {
+          "page": 1,
+          "bbox": [
+            0.05,
+            0.219,
+            0.402,
+            0.252
+          ],
+          "line_start": 2,
+          "line_end": 2,
+          "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d"
+        },
+        {
+          "page": 1,
+          "bbox": [
+            0.05,
+            0.35,
+            0.406,
+            0.383
+          ],
+          "line_start": 3,
+          "line_end": 3,
+          "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d"
+        },
+        {
+          "page": 1,
+          "bbox": [
+            0.05,
+            0.479,
+            0.36,
+            0.513
+          ],
+          "line_start": 4,
+          "line_end": 4,
+          "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d"
+        },
+        {
+          "page": 2,
+          "bbox": [
+            0.05,
+            0.089,
+            0.432,
+            0.122
+          ],
+          "line_start": 5,
+          "line_end": 5,
+          "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f"
+        },
+        {
+          "page": 2,
+          "bbox": [
+            0.05,
+            0.219,
+            0.332,
+            0.252
+          ],
+          "line_start": 6,
+          "line_end": 6,
+          "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f"
+        },
+        {
+          "page": 2,
+          "bbox": [
+            0.05,
+            0.35,
+            0.39,
+            0.383
+          ],
+          "line_start": 7,
+          "line_end": 7,
+          "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f"
+        },
+        {
+          "page": 2,
+          "bbox": [
+            0.518,
+            0.219,
+            0.833,
+            0.252
+          ],
+          "line_start": 8,
+          "line_end": 8,
+          "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f"
+        },
+        {
+          "page": 2,
+          "bbox": [
+            0.518,
+            0.35,
+            0.837,
+            0.383
+          ],
+          "line_start": 9,
+          "line_end": 9,
+          "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f"
+        },
+        {
+          "page": 3,
+          "bbox": [
+            0.05,
+            0.089,
+            0.467,
+            0.122
+          ],
+          "line_start": 10,
+          "line_end": 10,
+          "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b"
+        },
+        {
+          "page": 3,
+          "bbox": [
+            0.05,
+            0.219,
+            0.327,
+            0.252
+          ],
+          "line_start": 11,
+          "line_end": 11,
+          "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b"
+        },
+        {
+          "page": 3,
+          "bbox": [
+            0.05,
+            0.35,
+            0.406,
+            0.383
+          ],
+          "line_start": 12,
+          "line_end": 12,
+          "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b"
+        },
+        {
+          "page": 3,
+          "bbox": [
+            0.05,
+            0.479,
+            0.415,
+            0.513
+          ],
+          "line_start": 13,
+          "line_end": 13,
+          "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b"
+        }
+      ],
+      "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+      "document_page_count": 3,
+      "visual_elapsed_ms": 15703,
+      "visual_cost_usd": null,
+      "visual_mode": "MODEL_TRANSCRIPTION_UNVERIFIED",
+      "automatic_claim_selection": false
+    },
+    "omitted_numeric_facts": 0,
+    "misattribution": null,
+    "numeric_errors": null,
+    "tool_calls": 0,
+    "review_note": "Inspect the retained synthetic source and text before assigning attribution/number error counts."
+  },
+  "claim_approval": false,
+  "quality_scope": "transcription only; downstream claim approval remains separate"
+}

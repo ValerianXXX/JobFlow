@@ -1,0 +1,64 @@
+{
+  "verified_on": "2026-10-27",
+  "fixture": "Original synthetic raster PDF; scanned, two-column and screenshot layouts",
+  "cases": [
+    {
+      "id": "scanned_resume",
+      "lines": [
+        "SYNTHETIC RESUME",
+        "North Star Lab | Analyst | 2023-2025",
+        "Built a dashboard covering 12 stores.",
+        "Reduced reporting time by 18%."
+      ],
+      "facts": [
+        "12 stores",
+        "18%"
+      ],
+      "owner": "North Star Lab"
+    },
+    {
+      "id": "two_column_resume",
+      "lines": [
+        "SYNTHETIC TWO-COLUMN RESUME",
+        "Cedar Studio | Analyst | 2024",
+        "Processed 1,200 synthetic records.",
+        "Bay Project | Team result | 2025",
+        "Team managed a $12,500 budget."
+      ],
+      "facts": [
+        "1,200",
+        "$12,500"
+      ],
+      "owner": "Team"
+    },
+    {
+      "id": "portfolio_screenshot",
+      "lines": [
+        "SYNTHETIC PORTFOLIO SCREENSHOT",
+        "Harbor Project | Team | 2026",
+        "Team tested 24 synthetic scenarios.",
+        "Applicant prepared 6 review reports."
+      ],
+      "facts": [
+        "24",
+        "6 review"
+      ],
+      "owner": "Applicant"
+    }
+  ],
+  "baseline": {
+    "method": "existing_local_text_extraction",
+    "elapsed_ms": 157,
+    "omitted_numeric_facts": 6,
+    "misattribution": null,
+    "numeric_errors": null,
+    "cost_usd": 0
+  },
+  "candidate": {
+    "status": "FAILED",
+    "error_type": "JobOpsError",
+    "error_code": "VISUAL_RESPONSE_INVALID"
+  },
+  "claim_approval": false,
+  "quality_scope": "transcription only; downstream claim approval remains separate"
+}

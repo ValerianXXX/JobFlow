@@ -568,6 +568,21 @@ const {chromium} = require("playwright");
       return behavior;
     }), "smooth");
     await accessPage.close();
+    const visualReview = await page.evaluate(() => {
+      state.locale = "en";
+      state.data.pending_sources = [{source_id:"SRC-VISUAL-SYNTHETIC", metadata:{safe_display_name:"Synthetic image"},
+        extraction_summary:{visual_verification_required:true, visual_regions:[{page:1,line_start:1,bbox:[0,0,1,1]}]},
+        candidates:[{candidate_id:"VISUAL-C1",statement:"Built a synthetic dashboard for 12 stores.",category:"project",selected:false}]}];
+      renderSourcePreviews();
+      const initial = previewSelections("SRC-VISUAL-SYNTHETIC", true)[0];
+      document.querySelector(".visual-source-confirm").checked = true;
+      const confirmed = previewSelections("SRC-VISUAL-SYNTHETIC")[0];
+      return {initial, confirmed, visible:document.querySelector("#sourcePreviewList").textContent.includes("page 1, line 1")};
+    });
+    assert.equal(visualReview.initial.selected, true);
+    assert.equal(visualReview.initial.visual_source_verified, false);
+    assert.equal(visualReview.confirmed.visual_source_verified, true);
+    assert.equal(visualReview.visible, true);
     assert.equal(nonLocalRequests, 0);
 
     process.stdout.write(JSON.stringify({
