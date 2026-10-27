@@ -2,7 +2,7 @@
 
 This file contains the canonical English listing copy and review notes for Chrome Web Store and Microsoft Edge Add-ons.
 
-> **Unreleased submission draft:** version `0.9.2` is the source-tree candidate. This document does not claim that either browser store has published it.
+> **Verified October 27, 2026:** both stores publish `0.9.2`. The Chrome overview incorrectly contains submission form instructions and an old package name. [store-description.txt](store-description.txt) is the prepared replacement for the public description field only; it has not been submitted. Permission explanations and reviewer instructions below belong in their separate dashboard fields. A signed compatible desktop is still pending; see [compatibility.md](compatibility.md).
 
 ## Product identity
 

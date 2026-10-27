@@ -11,7 +11,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $projectRoot ".jobops-root") -PathTy
     throw "未找到 JobFlow 项目根目录。 / JOBFLOW_PROJECT_ROOT_NOT_FOUND"
 }
 if (-not (Test-Path -LiteralPath $venvPython -PathType Leaf)) {
-    throw "JobFlow 尚未安装。请先双击 Install JobFlow.cmd。 / JobFlow is not installed yet; run Install JobFlow.cmd first."
+    throw "演示需要本地开发环境；请按 README 的 Development 步骤创建 .venv。正式安装器不会创建 .venv。 / The source demo needs the Development setup in README. The signed desktop installer does not create .venv."
 }
 
 Push-Location $projectRoot

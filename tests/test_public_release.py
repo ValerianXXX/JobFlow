@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import shutil
 import subprocess
@@ -21,6 +22,26 @@ from jobops.release_toolchain import sanitized_command_environment
 
 
 class PublicReleaseBoundaryTests(unittest.TestCase):
+    def test_hash_policy_requires_explicit_allowlist_without_republishing_identity(self) -> None:
+        email = "maintainer@example.test"
+        digest = "sha256:" + hashlib.sha256(email.encode("utf-8")).hexdigest()
+        policy = {"schema_version": 1, "author_identity_policy": "PUBLIC_EMAIL_HASHES_APPROVED",
+                  "approved_public_email_sha256": [digest]}
+        raw = b"Synthetic\x1fMAINTAINER@example.test\x1fGitHub\x1fnoreply@github.com\x1e"
+        with project_temp() as root:
+            result = self._author_result(root, policy, raw)
+            self.assertEqual(result["status"], "PASS")
+            self.assertEqual(result["unapproved_identity_count"], 0)
+            self.assertNotIn(email, json.dumps(result).casefold())
+            self.assertEqual(validate_public_text("config/public-release.json", json.dumps(policy)), [])
+            unknown = raw.replace(b"MAINTAINER", b"another")
+            self.assertEqual(self._author_result(root, policy, unknown)["status"], "REVIEW_REQUIRED")
+            malformed = raw + b"invalid\x1e"
+            self.assertEqual(self._author_result(root, policy, malformed)["status"], "REVIEW_REQUIRED")
+            for hashes in ([], [digest, digest], ["*"], [True], ["sha256:" + "A" * 64]):
+                with self.subTest(hashes=hashes):
+                    self.assertEqual(self._author_result(root, {**policy, "approved_public_email_sha256": hashes}, raw)["status"], "REVIEW_REQUIRED")
+
     def _author_result(self, root: Path, policy: dict[str, object], raw: bytes) -> dict[str, object]:
         config = root / "config"
         config.mkdir(exist_ok=True)
@@ -111,6 +132,7 @@ class PublicReleaseBoundaryTests(unittest.TestCase):
                 b"Synthetic\x1f182967849+maintainer@users.noreply.github.com\x1fSynthetic\x1fmaintainer@users.noreply.github.com\x1e",
             )
             self.assertEqual(valid["status"], "PASS")
+            self.assertEqual(valid["unapproved_identity_count"], 0)
             service_noreply = b"noreply" + bytes([64]) + b"github.com"
             service = self._author_result(
                 root,
@@ -133,6 +155,7 @@ class PublicReleaseBoundaryTests(unittest.TestCase):
             )
             self.assertEqual(evil["status"], "REVIEW_REQUIRED")
             self.assertEqual(evil["non_noreply_identity_count"], 1)
+            self.assertEqual(evil["unapproved_identity_count"], 1)
             malformed = self._author_result(root, policy, b"not-a-four-field-record\x1e")
             self.assertEqual(malformed["status"], "REVIEW_REQUIRED")
             self.assertEqual(malformed["malformed_record_count"], 1)

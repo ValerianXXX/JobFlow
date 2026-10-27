@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-10-27",
+  "current_source": "0.7.0",
+  "latest_stable": "0.6.0",
+  "bootstrap_manifest_schema": 2,
+  "desktops": [
+    {
+      "version": "0.6.0",
+      "companion_version": "0.9.1",
+      "companion_protocol": 2,
+      "distribution": "legacy_source_release",
+      "manifest_schema": 1
+    },
+    {
+      "version": "0.7.0",
+      "companion_version": "0.9.2",
+      "companion_protocol": 2,
+      "distribution": "source_prerelease",
+      "manifest_schema": null
+    }
+  ]
+}

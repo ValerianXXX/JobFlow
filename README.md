@@ -4,9 +4,11 @@ JobFlow is a local-first, AI-centered job application workflow for Windows. It t
 
 > **Alpha software:** JobFlow does not claim universal ATS compatibility. Final Submit is always a trusted user action. Unknown external state is never retried automatically.
 
-Browser Companion **0.9.2** is published on [Chrome Web Store](https://chromewebstore.google.com/detail/pgcnlkfakkacphkdojdbphccjnbbefic) and [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/cebejbohadiofomfiplljnpdefjeiccp) (verified September 5, 2026). The [v0.7.0 source prerelease](https://github.com/ValerianXXX/JobFlow/releases/tag/v0.7.0) remains for evaluation: signed Windows distribution and clean-Windows acceptance are not yet complete.
+Browser Companion **0.9.2** is published on [Chrome Web Store](https://chromewebstore.google.com/detail/pgcnlkfakkacphkdojdbphccjnbbefic) and [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/cebejbohadiofomfiplljnpdefjeiccp) (verified October 27, 2026). The [v0.7.0 source prerelease](https://github.com/ValerianXXX/JobFlow/releases/tag/v0.7.0) remains for evaluation: signed Windows distribution and clean-Windows acceptance are not yet complete.
 
 > **Version compatibility:** the latest stable desktop release, v0.6.0, requires Browser Companion 0.9.1 and rejects the store's 0.9.2 update. Current v0.7.0 source targets 0.9.2, but a matching signed stable desktop update is not yet available. Reinstalling the extension will not resolve this mismatch; do not bypass the version check.
+
+See the [compatibility and recovery matrix](docs/compatibility.md) and [October 27 release verification](docs/modernization-2026-10-27.md). CI now detects version drift across Python, JavaScript, lockfiles, the extension and its UI. The source demo is available through the Development setup below while signed installation remains blocked.
 
 ![JobFlow English synthetic demo](docs/screenshots/jobflow-demo-en.png)
 
@@ -80,10 +82,14 @@ Synthetic and saved-page tests are engineering evidence, not proof that every li
 ## Development
 
 ```powershell
-.\scripts\install-jobflow-v2.ps1 -NoLaunch
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[build]"
+.\.venv\Scripts\python.exe -m jobops.compatibility
+.\.venv\Scripts\python.exe -m jobops.cli demo
 .\.venv\Scripts\python.exe -m unittest discover -s tests
-.\.venv\Scripts\python.exe -m jobops.public_release
 ```
+
+Python 3.11-3.13 is supported for source development. `npm ci`, `npx playwright install chromium`, and `npm run test:e2e` run the browser checks. Release scanning additionally requires the explicitly selected, trusted Git described in [the release checklist](docs/release-checklist.md). Source setup is not a signed installation and does not authorize production release.
 
 The project is intentionally Windows-first because secure applicant storage uses DPAPI. Runtime state, databases, review packets, encrypted private files, and local release reports are excluded from the public repository.
 

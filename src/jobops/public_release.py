@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import json
 import re
@@ -74,7 +75,7 @@ SAFE_PUBLIC_EMAIL_SUFFIXES = ("@example.test", "@jobops.local", "@users.noreply.
 # Public certificate identities are provenance, not applicant or maintainer data.
 # Keep this allowlist exact so ordinary addresses at the same domain still fail.
 SAFE_PUBLIC_EMAILS = frozenset({"noreply@github.com", "thomas@python.org"})
-AUTHOR_POLICIES = {"NOREPLY_ONLY", "PUBLIC_EMAIL_APPROVED"}
+AUTHOR_POLICIES = {"NOREPLY_ONLY", "PUBLIC_EMAIL_APPROVED", "PUBLIC_EMAIL_HASHES_APPROVED"}
 GITHUB_NOREPLY_DOMAIN = "users.noreply.github.com"
 
 
@@ -448,6 +449,15 @@ def _author_identity_policy(project: Path) -> tuple[str, frozenset[str]]:
     author_policy = str(policy.get("author_identity_policy"))
     if author_policy == "NOREPLY_ONLY" and set(policy) == {"schema_version", "author_identity_policy"}:
         return author_policy, frozenset()
+    if author_policy == "PUBLIC_EMAIL_HASHES_APPROVED" and set(policy) == {
+        "schema_version", "author_identity_policy", "approved_public_email_sha256",
+    }:
+        hashes = policy.get("approved_public_email_sha256")
+        if (not isinstance(hashes, list) or not hashes
+                or any(not isinstance(value, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None for value in hashes)
+                or len(set(hashes)) != len(hashes)):
+            return "INVALID_OR_MISSING", frozenset()
+        return author_policy, frozenset(hashes)
     if author_policy != "PUBLIC_EMAIL_APPROVED" or set(policy) != {
         "schema_version",
         "author_identity_policy",
@@ -512,13 +522,23 @@ def verify_author_identity(project: Path, *, git_path: Path | None = None) -> di
         identities.add((author_name, author_email))
         identities.add((committer_name, committer_email))
     non_noreply = sum(1 for _, email in identities if not _is_github_noreply_email(email))
-    unapproved = sum(1 for _, email in identities if email.casefold() not in approved_public_emails)
+    if author_policy == "NOREPLY_ONLY":
+        unapproved = non_noreply
+    elif author_policy == "PUBLIC_EMAIL_HASHES_APPROVED":
+        unapproved = sum(
+            1 for _, email in identities
+            if not _is_github_noreply_email(email)
+            and "sha256:" + hashlib.sha256(email.casefold().encode("utf-8")).hexdigest() not in approved_public_emails
+        )
+    else:
+        unapproved = sum(1 for _, email in identities if email.casefold() not in approved_public_emails)
     approved = bool(
         identities
         and malformed_records == 0
         and (
             (author_policy == "NOREPLY_ONLY" and non_noreply == 0)
             or (author_policy == "PUBLIC_EMAIL_APPROVED" and unapproved == 0)
+            or (author_policy == "PUBLIC_EMAIL_HASHES_APPROVED" and unapproved == 0)
         )
     )
     return {
