@@ -57,6 +57,21 @@ Bundle SHA-256: `fed48832aeb52ea0f80b653374ed3bbd3350a3edd569db0ba02e08b94ef9fff
 Tree SHA-256: `96e42c679abf929cbec71b4947a3321c226a858387fa713c05860de6afe20e74`.
 The ignored local bundle contains no publisher key.
 
+Complete runtime built from checkpoint `a7af3e57835e771df4d7d163471751fc00f07d34`
+using the official CI-pinned MinGit 2.53.0.3, whose archive/executable digest and
+Authenticode publisher match the existing trust policy. The host-bundled Git
+executable passed its own signature check but its runtime-file closure did not;
+the first attempt correctly stopped with `JOBFLOW_RUNTIME_SOURCE_GIT_CLOSURE_UNTRUSTED`.
+No trust allowlist was weakened. The isolated pinned Git resolved that mismatch.
+
+`JobFlow-v0.7.0-windows-x64-complete.zip` SHA-256:
+`33bf83c1f69ef825fe75deaa81ffe0672ddbad0ca2f04ee7a885e178d3c54a03`.
+Two deterministic rebuilds matched, including offline smoke checks. Build evidence
+SHA-256: `1547df7ca1707f19b748a6e5b4b77209c3d1bb514864a72e05ff71dc500110b1`.
+The builder reports `BUILT_UNATTESTED`, `psf_sigstore_verified=false`,
+`outer_signing_ready=false`, and `public_release_blocked=true`. This local artifact
+is **not** a production-signed installer and was not uploaded as a release.
+
 The GitHub `jobflow-protected-release` environment exists with reviewer and branch
 policy. No environment secret or protected signing workflow was available in the
 inspected configuration. Use the existing [release checklist](release-checklist.md),
