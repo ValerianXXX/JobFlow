@@ -94,6 +94,15 @@ trust requirement was changed. The complete suite was not repeated or relabelled
 as an all-green run. The release-branch merge changes history/documentation only;
 the tested implementation is unchanged. [Recorded counts](../evaluations/2026-10-27/regression-summary.json).
 
+Subsequent frozen GitHub [run 40612023771](https://github.com/ValerianXXX/JobFlow/actions/runs/40612023771)
+at `279dd1d0cfc5f65eab51806cbbfb69a7fbc07fec` completed all **1,157 tests with zero
+failures or skips** on both Python 3.11 (6,348.954 s) and 3.12 (6,397.693 s),
+followed by all eight browser suites on each interpreter. Those jobs then failed
+the public-tree/history scanner on the escaped separator in
+`tests/test_public_release.py`; that separate false positive is repaired in
+release-branch commit `118761e6`. Historical-author authorization and protected
+signing remain separate gates, regardless of regression results.
+
 Mailbox authorization, real provider adapters, actual mailbox delivery semantics
 and a user-facing status inbox remain external/product follow-up. This checkpoint
 delivers the reusable matching/persistence layer and synthetic validation, not live
