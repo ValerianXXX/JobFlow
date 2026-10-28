@@ -80,7 +80,19 @@ Eight targeted tests cover malformed visual output, provider consent, source
 confirmation, reference collisions, sender spoofing, uncertain matches and review
 history. The wider AI/onboarding regression ran 118 tests before the additional
 envelope case; all passed. The browser regression checks that bulk selection does
-not silently check source verification. The complete combined suite is pending.
+not silently check source verification.
+
+The frozen combined suite at `ec210453c4006a67de32286a423a26e2eaa17bbd`
+ran 1,157 tests in 3,669.686 seconds: 1,148 passed, one failed, one errored and
+seven skipped. The two failures were preparation gaps in this isolated worktree:
+the exact JavaScript dependency tree and its local signed `.venv` launcher had
+not been installed. After creating the local venv, installing `.[build]` and
+running the committed `npm ci`, all 27 toolchain/wrapper/PowerShell checks passed,
+including both failures and three formerly skipped launcher checks. Four symlink
+privilege checks remain unavailable on this Windows host. No test or production
+trust requirement was changed. The complete suite was not repeated or relabelled
+as an all-green run. The release-branch merge changes history/documentation only;
+the tested implementation is unchanged. [Recorded counts](../evaluations/2026-10-27/regression-summary.json).
 
 Mailbox authorization, real provider adapters, actual mailbox delivery semantics
 and a user-facing status inbox remain external/product follow-up. This checkpoint
