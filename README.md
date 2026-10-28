@@ -10,6 +10,8 @@ Browser Companion **0.9.2** is published on [Chrome Web Store](https://chromeweb
 
 See the [compatibility and recovery matrix](docs/compatibility.md) and [October 27 release verification](docs/modernization-2026-10-27.md). CI now detects version drift across Python, JavaScript, lockfiles, the extension and its UI. The source demo is available through the Development setup below while signed installation remains blocked.
 
+The [October 28 author correction](docs/modernization-2026-10-27.md#owner-identity-correction---28-october-2026) records the owner's choice of account-linked GitHub noreply commits. A different historical identity still requires resolution; the correction does not authorize a release.
+
 ![JobFlow English synthetic demo](docs/screenshots/jobflow-demo-en.png)
 
 ## What JobFlow does
