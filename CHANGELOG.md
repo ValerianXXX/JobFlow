@@ -4,6 +4,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Fixed Windows launcher-test timeouts leaving descendant processes holding capture files; terminate the owned process tree before cleanup and preserve the original timeout and partial output. Give the full-history readiness audit a bounded five-minute integration allowance without changing release assertions.
 - Added opt-in PDF/image transcription through existing Hermes or OpenAI-compatible loopback models, bounded page/region validation and mandatory original-source verification before including a visual Claim.
 - Added a read-only application-mail adapter contract, conservative status proposals and encrypted evidence/review history; no mailbox access or protected application-state writes.
 - Preserved a failed and a successful real Hermes synthetic visual run and a real Windows DPAPI status-inbox check.

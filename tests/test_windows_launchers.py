@@ -9,8 +9,9 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
-from subprocess import DEVNULL, PIPE, CompletedProcess, Popen as RealPopen, TimeoutExpired
+from subprocess import CREATE_NO_WINDOW, DEVNULL, PIPE, CompletedProcess, Popen as RealPopen, TimeoutExpired
 
+from _launcher_process import terminate_process_tree
 from _support import PROJECT
 from jobops import __version__
 from jobops.runtime_schema import validate_named
@@ -50,27 +51,7 @@ def run_process(
     command: list[str], *, timeout: int, env: dict[str, str] | None = None,
 ) -> CompletedProcess[str]:
     """Run a launcher with clean process state and file-backed output capture."""
-    helper = (
-        "import json, subprocess, sys\n"
-        "from pathlib import Path\n"
-        "result_path = Path(sys.argv[1])\n"
-        "timeout_seconds = float(sys.argv[2])\n"
-        "stdout_path = result_path.with_suffix('.stdout')\n"
-        "stderr_path = result_path.with_suffix('.stderr')\n"
-        "with stdout_path.open('wb') as stdout_file, stderr_path.open('wb') as stderr_file:\n"
-        "    try:\n"
-        "        completed = subprocess.run(sys.argv[3:], stdout=stdout_file, stderr=stderr_file, check=False, timeout=timeout_seconds)\n"
-        "        returncode = completed.returncode\n"
-        "        timed_out = False\n"
-        "    except subprocess.TimeoutExpired:\n"
-        "        returncode = 124\n"
-        "        timed_out = True\n"
-        "result_path.write_text(json.dumps({"
-        "'returncode': returncode, "
-        "'timed_out': timed_out, "
-        "'stdout': stdout_path.read_bytes().decode('utf-8-sig'), "
-        "'stderr': stderr_path.read_bytes().decode('utf-8-sig')}), encoding='utf-8')\n"
-    )
+    helper = PROJECT / "tests" / "_launcher_process.py"
     temporary_root = PROJECT / "tests" / ".tmp"
     temporary_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="launcher-", dir=temporary_root) as raw:
@@ -79,24 +60,28 @@ def run_process(
         if env is not None:
             process_environment.update(env)
         process = RealPopen(
-            [sys.executable, "-I", "-c", helper, str(result_path), str(timeout), *command],
+            [sys.executable, "-I", str(helper), str(result_path), str(timeout), *command],
             cwd=PROJECT,
             env=process_environment,
             stdin=DEVNULL,
             stdout=DEVNULL,
             stderr=DEVNULL,
+            creationflags=CREATE_NO_WINDOW,
         )
         try:
-            process.wait(timeout=timeout + 10)
+            # Allow the helper's bounded 30-second tree termination and handle
+            # cleanup to finish before enforcing the outer watchdog.
+            process.wait(timeout=timeout + 45)
         except TimeoutExpired:
-            process.kill()
-            process.wait()
+            terminate_process_tree(process)
             raise
         if process.returncode != 0 or not result_path.is_file():
             raise AssertionError("The isolated launcher test helper did not return a result.")
         value = json.loads(result_path.read_text(encoding="utf-8"))
         if value.get("timed_out") is True:
-            raise TimeoutExpired(command, timeout)
+            raise TimeoutExpired(
+                command, timeout, output=value.get("stdout"), stderr=value.get("stderr")
+            )
     return CompletedProcess(
         command,
         int(value["returncode"]),
@@ -323,6 +308,45 @@ def build_installed_rollback_fixture(raw: str, *, rollback_mutator=None) -> dict
         "environment": environment,
         "rollback_command": rollback_command,
     }
+
+
+class LauncherProcessCaptureTests(unittest.TestCase):
+    def test_timeout_closes_descendant_capture_handles(self) -> None:
+        from test_skill_release_verification_timeout import process_is_running
+
+        temporary_root = PROJECT / "tests" / ".tmp"
+        temporary_root.mkdir(parents=True, exist_ok=True)
+        child_pid = None
+        with tempfile.TemporaryDirectory(prefix="capture-regression-", dir=temporary_root) as raw:
+            pid_path = Path(raw) / "child.pid"
+            existing_captures = set(temporary_root.glob("launcher-*"))
+            parent_script = (
+                "import pathlib,subprocess,sys,time;"
+                "child=subprocess.Popen([sys.executable,'-c',"
+                "'import time;time.sleep(120)']);"
+                "pathlib.Path(sys.argv[1]).write_text(str(child.pid),encoding='utf-8');"
+                "print('capture-ready',flush=True);"
+                "print('capture-stderr',file=sys.stderr,flush=True);"
+                "time.sleep(120)"
+            )
+            try:
+                with self.assertRaises(TimeoutExpired) as raised:
+                    run_process([sys.executable, "-c", parent_script, str(pid_path)], timeout=5)
+                self.assertTrue(pid_path.is_file())
+                child_pid = int(pid_path.read_text(encoding="utf-8"))
+                self.assertIn("capture-ready", raised.exception.output)
+                self.assertIn("capture-stderr", raised.exception.stderr)
+                deadline = time.monotonic() + 5
+                while process_is_running(child_pid) and time.monotonic() < deadline:
+                    time.sleep(0.05)
+                self.assertFalse(process_is_running(child_pid))
+                self.assertEqual(set(temporary_root.glob("launcher-*")), existing_captures)
+            finally:
+                # Also clean up the owned child if this regression fails.
+                if child_pid is None and pid_path.is_file():
+                    child_pid = int(pid_path.read_text(encoding="utf-8"))
+                if child_pid is not None and process_is_running(child_pid):
+                    os.kill(child_pid, 9)
 
 
 class WindowsLauncherTests(unittest.TestCase):
@@ -2303,7 +2327,10 @@ class WindowsLauncherTests(unittest.TestCase):
                 "-File", str(PROJECT / "scripts" / "check-release-readiness.ps1"), "-Json",
                 "-PythonPath", str(HEALTH_PYTHON),
             ],
-            timeout=120,
+            # This performs a full historical source/document audit. The old
+            # two-minute integration limit was not a product latency contract;
+            # a cold Windows runner exceeded it as repository history grew.
+            timeout=300,
         )
         self.assertEqual(completed.returncode, 2, completed.stderr)
         result = json.loads(completed.stdout.lstrip("\ufeff"))

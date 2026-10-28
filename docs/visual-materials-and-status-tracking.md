@@ -113,6 +113,26 @@ blobs found zero content findings. The report still requires review for one
 historical author identity; `public_release_ready` remains false. The next CI
 uses the unchanged test matrix with 180 minutes of headroom.
 
+The October 28 [run 40624159819](https://github.com/ValerianXXX/JobFlow/actions/runs/40624159819)
+at `8a5f0af1` passed all **1,158 regression tests and eight browser suites** on
+Python 3.11 and 3.12. The 3.11 job passed completely; the 3.12 candidate build
+remained blocked by `PUBLIC_REPOSITORY_IDENTITY_REVIEW_REQUIRED`. Python 3.13
+completed 1,158 tests with one error: the real history/readiness scan exceeded
+the launcher's old 120-second integration limit, and a surviving child process
+kept its capture file open during temporary-directory cleanup. This is a failed
+matrix checkpoint, separate from author approval.
+
+The follow-up kills the owned process tree before closing capture files, retains
+the timeout and partial output, and allows this whole-history check up to five
+minutes. Its status, privacy, zero-network and release-blocker assertions are
+unchanged. A real parent/child regression confirms that both processes stop and
+capture files are removed. All **11 affected launcher/timeout/process-hygiene
+checks pass locally on Windows Python 3.11.3 and 3.13.15**. The latter uses the
+existing pinned runtime in an isolated test extraction, not a signed installation.
+The new full CI result is recorded on the draft PR when available; these focused
+passes do not relabel the failed 8a5f0af1 matrix as green.
+[Follow-up receipt](../evaluations/2026-10-27/ci-regression-followup-2026-10-28.json).
+
 Mailbox authorization, real provider adapters, actual mailbox delivery semantics
 and a user-facing status inbox remain external/product follow-up. This checkpoint
 delivers the reusable matching/persistence layer and synthetic validation, not live
