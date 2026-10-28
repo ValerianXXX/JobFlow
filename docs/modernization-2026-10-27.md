@@ -28,8 +28,9 @@ The identity-policy diagnostic counts only unapproved historical identities.
 Explicit `PUBLIC_EMAIL_HASHES_APPROVED` can represent an owner's specific approval
 without adding a plaintext personal address to source. Its unique canonical hash
 allowlist rejects unknown identities, malformed logs and invalid policies.
-**The repository policy remains `NOREPLY_ONLY`; no identity approval was invented.**
-Changing the current author cannot authorize an existing author/committer.
+At the original checkpoint the repository policy remained `NOREPLY_ONLY`.
+The owner's subsequent correction is recorded below; it does not approve any
+other historical author or committer.
 
 Chrome's consumer listing contains old submission/reviewer material. A
 [replacement description](store-description.txt) is prepared, not published.
@@ -75,6 +76,38 @@ one unapproved non-noreply identity under the unchanged `NOREPLY_ONLY` policy.
 These results do not approve that identity or a production release. The next CI
 run must separately confirm the scanner fix and complete Python 3.13.
 
+## Owner identity correction - 28 October 2026
+
+The owner confirmed authorship for all eight projects and explicitly chose to
+keep the personal email private. Public Git author and committer metadata uses
+the account-linked address `182967849+ValerianXXX@users.noreply.github.com`.
+The authenticated GitHub profile was checked on October 28: login
+`ValerianXXX`, account ID `182967849`. Repository-local Git configuration now
+uses that identity; global configuration and account privacy settings are unchanged.
+The source policy remains `NOREPLY_ONLY`, with no personal-email allowlist.
+
+GitHub rejected the earlier private-email commits with `GH007`. Only those two
+unpublished commits were reconstructed under the approved noreply identity, with
+a verified local backup of the rejected versions. Previously pushed history is
+unchanged, and the task branches can advance by ordinary fast-forward pushes.
+
+Historical commit `fecd168` records a different author name and email. That record
+must not be presented as the owner's confirmed email. It is not covered by this
+correction, and the raw-history identity gate must continue to report
+`REVIEW_REQUIRED` until the discrepancy has an authorized resolution. No public
+history was rewritten, no mailmap was used to mask the record, and no personal
+email was approved for publication. Existing noreply commits remain unchanged.
+
+Validation: all 11 focused public-release identity/content tests pass. The new
+commits use the account-linked noreply address for author and committer, changed
+tracked files contain no private-address findings, and the raw-history audit
+still reports one unresolved identity rather than a false release pass.
+
+Runtime and CI receipts elsewhere in this document describe their named source
+commits. This documentation and commit-identity correction does not transfer those receipts to a new
+HEAD: a future release needs fresh exact-commit evidence, a matching protected
+publisher handoff and the existing signing and clean-Windows acceptance gates.
+
 ## Runtime preparation and remaining gates
 
 Governed acquisition from pinned official sources produced 21 runtime-input files.
@@ -103,7 +136,7 @@ inspected configuration. Use the existing [release checklist](release-checklist.
 exact-commit builder, protected-publisher request/response validation and clean
 Windows receipt. Do not substitute a developer signature for the production key.
 
-Publication still needs actual historical-identity authorization, protected signing
+Publication still needs an authorized resolution of the historical-identity discrepancy, protected signing
 availability and clean signed-install/upgrade/rollback acceptance. This workstation
 can validate source and synthetic integration tests, but is not a clean Windows
 signed-install acceptance machine. The actual v0.6.0 retained-data layout must be

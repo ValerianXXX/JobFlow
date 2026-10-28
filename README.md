@@ -12,6 +12,8 @@ See the [compatibility and recovery matrix](docs/compatibility.md) and [October 
 
 The optional [visual materials and status-tracking preview](docs/visual-materials-and-status-tracking.md) adds scanned PDF/image transcription with page evidence and a separate original-source confirmation. Existing Hermes and loopback paths remain available. A read-only mail adapter can match supplied status messages to applications and retain encrypted, reversible review history; no real mailbox connector or automatic application-state update is shipped.
 
+The [October 28 author correction](docs/modernization-2026-10-27.md#owner-identity-correction---28-october-2026) records the owner's choice of account-linked GitHub noreply commits. A different historical identity still requires resolution; the correction does not authorize a release.
+
 ![JobFlow English synthetic demo](docs/screenshots/jobflow-demo-en.png)
 
 ## What JobFlow does
