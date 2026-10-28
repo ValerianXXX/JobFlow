@@ -84,7 +84,7 @@ the account-linked address `182967849+ValerianXXX@users.noreply.github.com`.
 The authenticated GitHub profile was checked on October 28: login
 `ValerianXXX`, account ID `182967849`. Repository-local Git configuration now
 uses that identity; global configuration and account privacy settings are unchanged.
-The source policy remains `NOREPLY_ONLY`, with no personal-email allowlist.
+At this correction checkpoint the source policy remained `NOREPLY_ONLY`.
 
 GitHub rejected the earlier private-email commits with `GH007`. Only those two
 unpublished commits were reconstructed under the approved noreply identity, with
@@ -92,11 +92,31 @@ a verified local backup of the rejected versions. Previously pushed history is
 unchanged, and the task branches can advance by ordinary fast-forward pushes.
 
 Historical commit `fecd168` records a different author name and email. That record
-must not be presented as the owner's confirmed email. It is not covered by this
-correction, and the raw-history identity gate must continue to report
-`REVIEW_REQUIRED` until the discrepancy has an authorized resolution. No public
-history was rewritten, no mailmap was used to mask the record, and no personal
-email was approved for publication. Existing noreply commits remain unchanged.
+must not be presented as the owner's confirmed email. It was not covered by the
+initial correction. Existing noreply commits and the original history remain unchanged.
+
+## Specific historical identity approval - 28 October 2026
+
+After reviewing the exact proposal, the owner explicitly approved only the
+historical identity recorded on commit
+`fecd1682e6769dfd6bbcfbfedf153562e1304697` (2026-08-27, author `JiehangYu`).
+`config/public-release.json` now uses `PUBLIC_EMAIL_HASHES_APPROVED` with one
+canonical SHA-256 entry. The plaintext historical address is not reproduced in
+this document or configuration; it remains in the pre-existing Git history.
+Other non-noreply identities still require review. All new task commits continue
+to use the owner's account-linked noreply address.
+
+This approval neither changes attribution nor rewrites history. It authorizes
+the existing identity check's single exception, not signing, tagging, uploading,
+store publication, deployment or clean-Windows acceptance. Revert the policy
+change to restore `NOREPLY_ONLY` and require review of this historical identity again.
+
+Local validation after applying the approved entry: all 11 public-release policy
+tests pass. The authenticated full tree/history scan passes with zero content
+findings (561 tracked files, 287 commits, 2,471 unique blobs); author identity is
+`PASS`, one approved non-noreply identity, zero unapproved identities, zero private
+identity values emitted. `public_release_ready` remains false: repository-boundary
+success alone does not certify a signed release.
 
 Validation: all 11 focused public-release identity/content tests pass. The new
 commits use the account-linked noreply address for author and committer, changed

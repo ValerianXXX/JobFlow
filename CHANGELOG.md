@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Applied the owner's explicit approval for one historical identity as a single email-hash exception. New commits retain the account-linked noreply address; other identities and all signing/release gates remain subject to review.
+
 - Revalidate stored source-region coordinates before SVG display and escape legacy provenance text; malformed metadata cannot add HTML elements. Keep optional parser/MCP extras out of the legacy launcher test environment.
 
 - Fixed Windows JD snapshot writes so stored bytes match their canonical content hash; the new viewer verifies legacy CRLF snapshots without rewriting originals or accepting changed text.
@@ -23,7 +25,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 - Fixed release-signing ACL setup for deep Windows archive paths while retaining the existing owner-only and reparse-point checks.
 - Added an executable desktop/extension compatibility matrix and CI checks across shipped version surfaces, with bounded server-side recovery guidance and strict protocol types.
 - Fixed source-demo setup instructions: the signed bootstrap installer does not create a development environment.
-- Corrected identity-review counts and added support for an explicit email-hash approval policy. On October 28, the owner chose account-linked GitHub noreply commits to preserve personal-email privacy; the checked-in policy remains noreply-only. A different historical identity remains unresolved, and public history and release gates are preserved.
+- Corrected identity-review counts and added support for an explicit email-hash approval policy. On October 28, the owner chose account-linked GitHub noreply commits to preserve personal-email privacy; the initial policy remained noreply-only pending the specific historical approval recorded above. Public history and release gates are preserved.
 - Reverified both official store versions on October 27, 2026; prepared corrected Chrome description copy and documented signing and Windows acceptance blockers.
 
 - Fixed Windows CI when several Node executables share PATH; authenticate only the selected executable and still reject an untrusted first match.

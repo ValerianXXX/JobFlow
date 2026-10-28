@@ -1,4 +1,7 @@
 {
   "schema_version": 1,
-  "author_identity_policy": "NOREPLY_ONLY"
+  "author_identity_policy": "PUBLIC_EMAIL_HASHES_APPROVED",
+  "approved_public_email_sha256": [
+    "sha256:243e29051c9acf480ad8a1035e118612f102673b83d6b1c6af2ea8e83f40c8c5"
+  ]
 }
