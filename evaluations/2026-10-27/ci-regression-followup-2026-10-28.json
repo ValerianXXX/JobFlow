@@ -1,0 +1,22 @@
+{
+  "verificationDateLocal": "2026-10-28",
+  "runUrl": "https://github.com/ValerianXXX/JobFlow/actions/runs/40624159819",
+  "sourceCommit": "8a5f0af1f6b7a2b3ac18bc314c4fb42e96e812dc",
+  "runner": "windows-latest",
+  "matrix": [
+    {"python": "3.11", "testsRun": 1158, "passed": 1158, "errors": 0, "skipped": 0, "seconds": 6400.233, "browserSuitesPassed": 8, "jobConclusion": "success"},
+    {"python": "3.12", "testsRun": 1158, "passed": 1158, "errors": 0, "skipped": 0, "seconds": 6475.919, "browserSuitesPassed": 8, "jobConclusion": "failure", "laterFailure": "PUBLIC_REPOSITORY_IDENTITY_REVIEW_REQUIRED"},
+    {"python": "3.13", "testsRun": 1158, "passed": 1157, "errors": 1, "skipped": 0, "seconds": 7175.149, "browserSuitesPassed": null, "jobConclusion": "failure", "failure": "READINESS_TIMEOUT_WITH_DESCENDANT_CAPTURE_HANDLE_LEFT_OPEN"}
+  ],
+  "repair": {
+    "scope": "Windows launcher test harness; production release policy unchanged",
+    "treeCleanup": "Native system taskkill targets only the helper-owned process tree before parent termination",
+    "readinessIntegrationTimeoutSeconds": 300,
+    "focusedWindowsChecks": [
+      {"python": "3.11.3", "testsRun": 11, "passed": 11, "skipped": 0},
+      {"python": "3.13.15", "testsRun": 11, "passed": 11, "skipped": 0, "seconds": 41.421}
+    ],
+    "fullMatrixFollowup": "See draft PR 6 for the next exact-commit CI receipt"
+  },
+  "productionReleaseAccepted": false
+}

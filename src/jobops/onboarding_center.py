@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import heapq
 import json
+import os
 import re
 import secrets
 import threading
@@ -149,7 +150,7 @@ GUIDED_INTAKE_CANCELLABLE_STATUSES = {
 MAX_GUIDED_JOB_TEXT_CHARS = 750_000
 MAX_GUIDED_FORM_HTML_CHARS = 1_750_000
 ALLOWED_SOURCE_TYPES = {"resume", "project_case", "supporting_material", "portfolio", "ai_summary", "chatgpt_export"}
-ALLOWED_EXTENSIONS = {".docx", ".pdf", ".txt", ".md", ".json", ".zip"}
+ALLOWED_EXTENSIONS = {".docx", ".pdf", ".txt", ".md", ".json", ".zip", ".png", ".jpg", ".jpeg"}
 AI_SOURCE_TYPES = {"ai_summary", "chatgpt_export"}
 STRICT_AI_ANALYSIS_MODE = "AI_CORE_ENTITY_ANALYSIS"
 HARD_CONTINUITY_FIELDS = {
@@ -4044,6 +4045,13 @@ class OnboardingCenterService:
         return {"status": "SUGGESTION_ACCEPTED", "field_id": field_id, "private_values_emitted": 0}
 
     def _extract_text(self, data: bytes, extension: str, source_type: str) -> tuple[str, int, dict[str, Any]]:
+        from .multimodal import enabled as visual_enabled, read_visual
+        if extension in {".png", ".jpg", ".jpeg"} or (extension == ".pdf" and visual_enabled()):
+            if not visual_enabled():
+                raise JobOpsError("VISUAL_ANALYSIS_DISABLED", "Enable optional visual analysis and its data route before importing images.")
+            text, metadata = read_visual(data, extension, self.ai_engine,
+                allow_configured_provider=os.getenv("JOBFLOW_VISUAL_ALLOW_CONFIGURED_PROVIDER") == "true")
+            return text, 0, metadata
         if source_type == "chatgpt_export":
             if extension != ".zip":
                 raise JobOpsError("CHATGPT_EXPORT_FORMAT_INVALID", "The official ChatGPT export must be uploaded as ZIP.")
@@ -4157,6 +4165,14 @@ class OnboardingCenterService:
                 ai_covered_characters=extraction_summary.get("ai_covered_characters"),
                 ai_input_truncated=extraction_summary.get("ai_input_truncated"),
             )
+        if (source_selection or {}).get("visual_verification_required"):
+            for candidate in candidates:
+                candidate["selected"] = False
+                provenance = candidate.setdefault("provenance", {})
+                provenance["visual_regions"] = [region for region in source_selection["visual_regions"]
+                    if region["line_end"] >= provenance.get("line_start", 0) and region["line_start"] <= provenance.get("line_end", 0)]
+                provenance["visual_source_sha256"] = source_hash
+                provenance["visual_verified"] = False
         if source_type == "chatgpt_export":
             derived = {
                 "schema_version": 2, "source_id": source_id, "source_type": source_type,
@@ -4308,6 +4324,8 @@ class OnboardingCenterService:
                 raise JobOpsError("SOURCE_PREVIEW_SELECTION_INVALID", "A source preview selection is invalid.")
             if choice.get("selected") is not True:
                 continue
+            if pending.get("extraction_summary", {}).get("visual_verification_required") and choice.get("visual_source_verified") is not True:
+                raise JobOpsError("VISUAL_SOURCE_VERIFICATION_REQUIRED", "Compare the claim, dates, numbers and ownership with the original page before including a visual claim.")
             original = by_id[str(choice["candidate_id"])]
             statement = _clean_text(str(choice.get("statement", original["statement"])), limit=2_000)
             category = _clean_text(str(choice.get("category", original["category"])), limit=80).casefold()
@@ -4318,6 +4336,8 @@ class OnboardingCenterService:
             if not original.get("entity") and category in ENTITY_CATEGORIES:
                 raise JobOpsError("SOURCE_PREVIEW_SELECTION_INVALID", "A standalone Claim cannot be converted into an ungrounded experience entity.")
             selected_item = {**original, "statement": statement, "category": category}
+            if pending.get("extraction_summary", {}).get("visual_verification_required"):
+                selected_item["provenance"] = {**original.get("provenance", {}), "visual_verified": True}
             if original.get("entity") and category != original["entity"].get("entity_type"):
                 revised_entity = {**original["entity"], "entity_type": category}
                 identity = "|".join(str(revised_entity.get(key) or "").casefold() for key in ("entity_type", "organization", "role", "start_date", "end_date"))

@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-27",
+  "frozenSourceCommit": "ec210453c4006a67de32286a423a26e2eaa17bbd",
+  "fullSuite": {
+    "total": 1157,
+    "passed": 1148,
+    "failures": 1,
+    "errors": 1,
+    "skipped": 7,
+    "seconds": 3669.686,
+    "status": "FAILED_ENVIRONMENT_PREPARATION"
+  },
+  "resolvedPreparation": ["Installed committed JavaScript dependencies", "Created and installed project-local signed Python venv"],
+  "focusedFollowup": {"total": 27, "passed": 27, "failures": 0, "errors": 0, "skipped": 0, "previouslySkippedNowExecuted": 3},
+  "remainingHostLimit": "Four symlink-privilege tests cannot run on this Windows host",
+  "fullSuiteRepeated": false,
+  "productionReleaseAccepted": false
+}

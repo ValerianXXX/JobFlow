@@ -76,12 +76,8 @@ def main() -> None:
         project = root / "project"
         (project / "schemas").mkdir(parents=True)
         (project / "state").mkdir()
-        for name in (
-            "candidate-profile", "onboarding-answer-bank", "onboarding-completion",
-            "external-claim-set", "application-readiness", "resume-tailoring-manifest",
-            "user-present-intake-control",
-        ):
-            shutil.copy2(PROJECT / "schemas" / f"{name}.schema.json", project / "schemas")
+        for schema in (PROJECT / "schemas").glob("*.schema.json"):
+            shutil.copy2(schema, project / "schemas")
         database = JobOpsDB(project / "state" / "jobops.db")
         database.initialize()
         script = PROJECT / ".agents" / "skills" / "job-application-operator" / "scripts" / "secure-store.ps1"
@@ -110,6 +106,19 @@ def main() -> None:
             "project_case", ".txt",
             b"Built a synthetic governed workflow and improved review accuracy by 20%.",
         )
+        if "--visual" in sys.argv[1:]:
+            import io
+            import os
+            from PIL import Image, ImageDraw
+            statement = "Built a synthetic governed workflow and improved review accuracy by 20%."
+            image = Image.new("RGB", (1200, 160), "white")
+            ImageDraw.Draw(image).text((20, 40), statement, fill="black", font_size=22)
+            output = io.BytesIO(); image.save(output, format="PNG")
+            original_execute = engine.execute_structured_task
+            engine.execute_structured_task = lambda request: {"pages": [{"page": 1, "blank": False, "blocks": [{"text": statement, "bbox": [0.01, 0.2, 0.99, 0.5]}]}]} if request.get("task") == "JOBOPS_VISUAL_TRANSCRIPTION_V1" else original_execute(request)
+            os.environ["JOBFLOW_VISUAL_ENABLE"] = "true"
+            os.environ["JOBFLOW_VISUAL_ALLOW_CONFIGURED_PROVIDER"] = "true"
+            service.preview_source("project_case", ".png", output.getvalue())
         if "--completed" in sys.argv[1:]:
             complete_synthetic_onboarding(service)
         server = create_server(service, token="synthetic-visual-session")

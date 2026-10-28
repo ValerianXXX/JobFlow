@@ -221,7 +221,16 @@ try:
         )
         if agent.tools:
             raise RuntimeError("Hermes exposed tools to the JobOps adapter")
-        response = agent.chat(json.dumps(request, ensure_ascii=False, separators=(",", ":")))
+        message = json.dumps(request, ensure_ascii=False, separators=(",", ":"))
+        if request.get("task") == "JOBOPS_VISUAL_TRANSCRIPTION_V1":
+            header = {key: value for key, value in request.items() if key != "pages"}
+            message = [{"type": "text", "text": json.dumps(header, ensure_ascii=False)}]
+            for page in request.get("pages", []):
+                if not isinstance(page, dict) or not str(page.get("data_url", "")).startswith("data:image/png;base64,"):
+                    raise ValueError("Invalid visual page")
+                message.extend([{"type": "text", "text": "Source page " + str(page["page"])},
+                                {"type": "image_url", "image_url": {"url": page["data_url"]}}])
+        response = agent.chat(message)
 
     if tool_calls:
         emit({"ok": False, "status": "error", "toolSummary": {"calls": len(tool_calls), "tools": ["blocked"]}}, 3)
@@ -1139,13 +1148,19 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
             "You are the JobOps private document analysis engine. Follow every rule and output_contract in the user JSON. "
             "Return only the requested JSON object. Never call tools, browse, or add unsupported facts."
         )
+        content: Any = prompt
+        if request.get("task") == "JOBOPS_VISUAL_TRANSCRIPTION_V1":
+            if self.api_style != "openai":
+                raise JobOpsError("VISUAL_PROVIDER_UNSUPPORTED", "Use the configured Hermes adapter or a loopback OpenAI-compatible vision model.")
+            from .multimodal import visual_messages
+            content = visual_messages(request)
         if self.api_style == "ollama":
             response = self.http_json(
                 self.base_url + "/api/chat",
                 method="POST",
                 payload={
                     "model": self.model,
-                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": content}],
                     "stream": False,
                     "format": "json",
                     "options": {"temperature": 0},
@@ -1160,7 +1175,7 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
                 method="POST",
                 payload={
                     "model": self.model,
-                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": content}],
                     "temperature": 0,
                     "stream": False,
                     "response_format": {"type": "json_object"},
