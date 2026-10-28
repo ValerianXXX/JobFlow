@@ -22,6 +22,12 @@ from jobops.release_toolchain import sanitized_command_environment
 
 
 class PublicReleaseBoundaryTests(unittest.TestCase):
+    def test_source_control_separators_do_not_become_email_prefixes(self) -> None:
+        safe = r"GitHub\x1f" + "noreply@github.com" + r"\x1e"
+        self.assertEqual(validate_public_text("fixture.py", safe), [])
+        private = r"Applicant\x1f" + "applicant" + "@" + "private.invalid" + r"\x1e"
+        self.assertEqual(validate_public_text("fixture.py", private), [{"kind": "email", "path": "fixture.py"}])
+
     def test_hash_policy_requires_explicit_allowlist_without_republishing_identity(self) -> None:
         email = "maintainer@example.test"
         digest = "sha256:" + hashlib.sha256(email.encode("utf-8")).hexdigest()

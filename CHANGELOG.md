@@ -4,6 +4,7 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Fix a public-source scan false positive where an escaped control separator became part of an otherwise allowed noreply address; private addresses still fail. Allow the full Windows CI matrix 180 minutes after a progressing Python 3.13 run exceeded the old two-hour cap.
 - Fixed release-signing ACL setup for deep Windows archive paths while retaining the existing owner-only and reparse-point checks.
 - Added an executable desktop/extension compatibility matrix and CI checks across shipped version surfaces, with bounded server-side recovery guidance and strict protocol types.
 - Fixed source-demo setup instructions: the signed bootstrap installer does not create a development environment.

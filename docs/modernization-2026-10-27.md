@@ -55,6 +55,26 @@ No extension version was changed.
   `gpt-5.6-sol` / `openai-codex`. This does not establish direct API access,
   document-understanding gains or mailbox integration.
 
+## CI follow-up
+
+[Run 40603996127](https://github.com/ValerianXXX/JobFlow/actions/runs/40603996127)
+tested commit `6ec383627a942dd4e9c9e06b36b3c88247f8d871`. Python 3.11 and 3.12
+each passed all 1,149 regression tests and all eight browser tests. The 3.13 job
+was still advancing through launcher tests when its 120-minute job cap expired;
+its full result is **incomplete**, not passed. The cap is now 180 minutes, with
+the full interpreter matrix and all assertions retained.
+
+The completed jobs exposed a separate public-tree scanner false positive:
+an escaped control-byte separator in a test fixture was consumed as part of a
+GitHub noreply address. Normalize only escaped control separators before the
+existing email rule; do not allow additional addresses. All 11 focused public
+boundary tests pass, including a real private-address rejection case. A local
+full tree/history check found zero findings across 526 tracked files, 277
+commits and 2,403 unique historical blobs. Author review remains required for
+one unapproved non-noreply identity under the unchanged `NOREPLY_ONLY` policy.
+These results do not approve that identity or a production release. The next CI
+run must separately confirm the scanner fix and complete Python 3.13.
+
 ## Runtime preparation and remaining gates
 
 Governed acquisition from pinned official sources produced 21 runtime-input files.

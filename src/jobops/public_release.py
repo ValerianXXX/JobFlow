@@ -71,6 +71,10 @@ REQUIRED_PUBLIC_FILES = {
     "pyproject.toml",
 }
 PUBLIC_EMAIL = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")
+# Source fixtures can spell Git's field separators as escaped control bytes.
+# Keep a separator distinct from the following mailbox; address approval itself
+# still uses the exact same policy below.
+ESCAPED_CONTROL_BYTE = re.compile(r"\\x(?:0[0-9a-fA-F]|1[0-9a-fA-F]|7[fF])")
 SAFE_PUBLIC_EMAIL_SUFFIXES = ("@example.test", "@jobops.local", "@users.noreply.github.com")
 # Public certificate identities are provenance, not applicant or maintainer data.
 # Keep this allowlist exact so ordinary addresses at the same domain still fail.
@@ -164,7 +168,7 @@ def validate_public_text(label: str, text: str) -> list[dict[str, str]]:
     for kind, pattern in SECRET_PATTERNS.items():
         if pattern.search(text):
             findings.append({"kind": kind, "path": label})
-    for email in PUBLIC_EMAIL.findall(text):
+    for email in PUBLIC_EMAIL.findall(ESCAPED_CONTROL_BYTE.sub("\x00", text)):
         normalized = email.casefold()
         if normalized not in SAFE_PUBLIC_EMAILS and not normalized.endswith(SAFE_PUBLIC_EMAIL_SUFFIXES):
             findings.append({"kind": "email", "path": label})
