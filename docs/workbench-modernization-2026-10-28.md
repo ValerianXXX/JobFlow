@@ -1,84 +1,91 @@
-# JobFlow：申请工作区与证据审阅预览
+# JobFlow application workspace and evidence review preview
 
-核验日期：**2026-10-28**。这是源码预览，基于发布修复 PR #5 和材料理解 PR #6；不是已发布的 Windows 安装包。仅使用本地合成资料、虚构邮件和隔离数据库验证，没有读取真实邮箱或简历。
+Verified **2026-10-28**. This source preview builds on release-repair PR #5 and material-understanding PR #6. It is not a published Windows installer. Verification used synthetic documents, fictional messages and isolated databases; no real mailbox or resume was accessed.
 
-## 本次改变
+## Delivered behavior
 
-- **职位详情**：从待审批或最近申请进入，查看已保存的 JD、完整性校验、材料哈希与版本、审阅包版本、流程记录和下一步。新快照按规范 UTF-8/LF 字节保存；旧 Windows CRLF 快照仅在换行规范化后哈希完全相同时通过，并标明校验方式。文件缺失或正文改动时明确显示不可用，不重新抓取替代原证据。材料已准备不等于雇主已收到；`SUBMISSION_UNKNOWN` 仍提示核对雇主端结果，不能自动重试。
-- **原始页面对照**：在材料审阅中查看已加密保留的 PDF/PNG/JPEG，支持翻页和区域框。只在当前本地会话中解密、渲染，不写明文图片到项目。框只是解析建议，不能证明事实或本人贡献；原有逐条 Claim 和原文核对门槛继续适用。
-- **状态收件箱**：用户主动选择一个 EML 文件，保存加密原件、规范化内容和审阅历史。区分收到申请、拒绝、面试邀请、无法确定；人工选择申请并确认关联，可忽略、撤销。重新打开可恢复记录；旧页面的过期审阅提交会被拒绝。若导入中途保存失败，只回滚本次新建的证据，不删除已有或去重复用的资料；查看时还会重新核对消息与审阅记录的内容哈希。没有邮箱 OAuth、自动读信、发信或申请执行状态修改。
-- **Hermes 只读入口**：三个 stdio MCP 工具提供汇总、待核对申请 ID 和单个申请状态。实现使用只读 SQLite 连接，不初始化私人资料服务，不返回简历、姓名、公司、邮件、路径或 secure-ref。没有审批、填写、上传或提交工具。
-- **可选本地解析**：Docling Native PDF Pipeline 提供文本与页面坐标，保留原有默认提取器。明确选择后失败即停止，不自动切换云端。它不是 OCR，也不是完整 Docling 布局模型。
+- **Job details:** open an application from the pending or recent list to see retained job descriptions, integrity checks, material hashes and versions, review versions, workflow history and the next action. New snapshots preserve their canonical UTF-8/LF bytes. Historical Windows CRLF snapshots pass only when line-ending normalization reproduces the exact registered hash; the viewer labels that verification basis and never rewrites the original. Missing or altered content remains unavailable. Prepared materials do not prove employer receipt, and `SUBMISSION_UNKNOWN` never enables automatic retry.
+- **Original-page comparison:** view a retained encrypted PDF/PNG/JPEG beside candidate Claims, with pagination and proposed source regions. Decryption and rendering stay in memory for the authenticated local page. Coordinates are independently validated on each response; legacy provenance containing HTML is displayed as text. Region boxes do not establish factual accuracy or individual responsibility. Existing Claim approval and original-source confirmation remain required.
+- **Status inbox:** explicitly choose one EML file, retaining the encrypted original, normalized evidence and review history. Proposals distinguish receipt, rejection, interview invitation and uncertainty. Select an application and confirm a manual association, dismiss it, or undo the review. Reload restores committed records; stale review submissions are rejected. Partial import failures remove only newly created evidence, preserving prior or deduplicated records. Reading also rechecks the evidence hash against the review journal. There is no mailbox OAuth, automatic mail reading, outbound email or application execution-state mutation.
+- **Read-only Hermes entry point:** three stdio MCP tools expose aggregate readiness, pending application IDs and one application's state. They use read-only SQLite connections and never initialize the private-data service. Results exclude resumes, names, companies, messages, paths and secure references. There are no approval, fill, upload or submit tools.
+- **Optional local parsing:** Docling Native PDF Pipeline supplies text and page coordinates while the existing extractor remains the default. Explicit selection fails closed without cloud fallback. This is neither OCR nor the full Docling layout-model pipeline.
 
-本轮没有添加新的浏览器 Agent 框架，没有更换生产模型，没有重装 OpenClaw。还修正了原有窄屏刷新按钮溢出、切换语言后的收件箱提示，以及操作 Skill 中已失效的 CLI 路径。
+This iteration adds no browser-agent framework, changes no production model, and does not reinstall OpenClaw. It also fixes an existing narrow-screen refresh-control overflow, localized inbox feedback after language switching, and an obsolete CLI path in the operating Skill.
 
-## 参考的产品源码与取舍
+## Source-code references and decisions
 
-以下均在核验日读取官方仓库源码与许可证，记录不可变提交；**未复制上游产品源代码**。
+Official source was inspected on the verification date. Relevant adoption/reuse licenses were checked, and source revisions are pinned below. **No upstream product source code was copied.**
 
-| 来源 | 读取内容 | 用于 JobFlow 的设计判断 |
+| Source | Inspected implementation | Decision for JobFlow |
 |---|---|---|
-| [Reactive Resume，MIT](https://github.com/reactive-resume/reactive-resume/tree/d644b9963290ae71cd8cbc50f36063ef2036fcc4) | `packages/api/src/features/resume/service.ts`、`version-history.ts`：更新冲突检查和独立版本历史 | 复用已有材料/审阅包版本；邮件关联使用最新 review-ref 拒绝过期页面覆盖，不重建编辑器或简历存储 |
-| [Docling 2.144.0，MIT](https://github.com/docling-project/docling/tree/a857fd208ccd61fb4a5d230384554ce778f216df) | `docling/document_converter.py`、Native PDF 选项与 provenance | 独立可选适配器、页数完整性验证、位置证据；评测未显示提取质量收益，保持默认路径 |
-| [Stagehand，MIT](https://github.com/browserbase/stagehand/tree/737480022acbf5ec3450885f120fc33ee561a9b4) | `packages/extension/services/observeService.ts`：观察页面、生成候选、解析真实元素、丢弃无法定位的结果 | JobFlow 已有观察/执行分离、当前页面重绑定、逐次授权与禁止最终提交的机制；保留并回归验证，不引入重复执行器 |
-| [Hermes 源码](https://github.com/NousResearch/hermes-agent/tree/bf0203a794a07aac3ff764972ab9087baa4e4f4e) | 调研版本 v0.22.5 的 MCP 安全实现与[官方 MCP 文档](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp) | 使用显式 stdio 命令和仅三个只读工具；实测使用本机已有 v0.16.0，不把新版文档当成本机能力证明 |
-| [OpenResume](https://github.com/xitanggg/open-resume/blob/main/LICENSE) | 当前许可证为 AGPL-3.0 | 不按 MIT 项目处理，也不把源码复制到本项目 |
+| [Reactive Resume, MIT](https://github.com/reactive-resume/reactive-resume/tree/d644b9963290ae71cd8cbc50f36063ef2036fcc4) | `packages/api/src/features/resume/service.ts` and `version-history.ts`: conflict checks and independent version history | Reuse existing material/review versions; reject stale mail decisions using the latest review reference, without replacing the editor or storage model |
+| [Docling 2.144.0, MIT](https://github.com/docling-project/docling/tree/a857fd208ccd61fb4a5d230384554ce778f216df) | `docling/document_converter.py`, Native PDF options and provenance | Keep an isolated optional adapter, independent page-coverage checks and source locations; no measured text-quality gain justifies changing the default |
+| [Stagehand, MIT](https://github.com/browserbase/stagehand/tree/737480022acbf5ec3450885f120fc33ee561a9b4) | `packages/extension/services/observeService.ts`: observation, candidates, real-element resolution and unresolved-result rejection | Preserve JobFlow's existing observation/execution separation, page rebinding, scoped authorization and user-only final Submit; regress these rather than add a duplicate executor |
+| [Hermes source](https://github.com/NousResearch/hermes-agent/tree/bf0203a794a07aac3ff764972ab9087baa4e4f4e) | The researched v0.22.5 MCP security implementation and [official MCP documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp) | Use an explicit stdio command and only three read-only tools; test the installed v0.16.0 instead of treating newer documentation as proof of local capability |
+| [OpenResume](https://github.com/xitanggg/open-resume/blob/main/LICENSE) | Current license is AGPL-3.0 | Do not treat it as MIT or copy its implementation into this project |
 
-MCP 使用[官方 Python SDK 2.3.0](https://pypi.org/project/mcp/2.3.0/)实际的协商与结构化工具结果实现；本轮验证 [2026-07-28 规范](https://modelcontextprotocol.io/specification/2026-07-28)及旧版客户端路径。Docling Native 的边界依据[官方选项文档](https://docling-project.github.io/docling/reference/pipeline_options/)：没有 OCR、布局或表格模型，不能将它宣传成扫描件理解升级。
+MCP uses the actual negotiation and structured-result implementation in [official Python SDK 2.3.0](https://pypi.org/project/mcp/2.3.0/), with both the [2026-07-28 specification](https://modelcontextprotocol.io/specification/2026-07-28) and legacy-client paths exercised. The [Docling options reference](https://docling-project.github.io/docling/reference/pipeline_options/) documents Native PDF's lack of OCR, layout and table models; it must not be advertised as a scanned-document understanding upgrade.
 
-## 可复现对照结果
+## Reproducible comparison
 
-完整逐项记录见 [evaluation-workbench-2026-10-28.json](evaluation-workbench-2026-10-28.json)，生成器为 `tests/workbench_fixtures.py`，采集器为 `scripts/evaluate-workbench.py`。原始素材全部由代码合成；没有外部用户样本。
+Per-case results are in [evaluation-workbench-2026-10-28.json](evaluation-workbench-2026-10-28.json). Original synthetic inputs come from `tests/workbench_fixtures.py`; `scripts/evaluate-workbench.py` collects results. No customer or applicant samples were used.
 
-材料样本：10 份单栏文本 PDF、10 份内容流交错的双栏文本 PDF、5 份扫描 PDF、5 张作品集图片。既有路径关闭视觉功能；两组都通过相同的文档质量预检。比较覆盖“提取文本”这一阶段，没有运行后续模型实体归并和 Claim 生成。
+The materials contain English synthetic text and do not establish Chinese-resume parsing quality: 10 single-column text PDFs, 10 two-column text PDFs with interleaved content streams, five scanned PDFs and five portfolio images. Visual analysis was disabled in the existing-text condition. Both conditions used the same document-quality preflight. This comparison stops at text extraction; downstream model entity reconstruction and Claim generation were not run.
 
-| 指标 | 原有文本路径 | Docling Native 候选 |
+| Measure | Existing text path | Docling Native candidate |
 |---|---:|---:|
-| 材料数 | 30 | 30 |
-| 未能提取、明确停止 | 10 | 10 |
-| 指定数字未出现 | 20 | 20 |
-| 完整事实文本未出现 | 30 | 30 |
-| 返回的来源区域 | 0 | 120 |
-| 全部样本中位耗时（单机一次测量） | 18 ms | 2,963 ms |
-| 模型调用 / 模型费用 | 0 / $0 | 0 / $0 |
+| Materials | 30 | 30 |
+| Explicitly blocked extraction | 10 | 10 |
+| Specified numbers absent | 20 | 20 |
+| Whole fact strings absent | 30 | 30 |
+| Source regions returned | 0 | 120 |
+| Median across all cases, one local measurement | 18 ms | 2,963 ms |
+| Model calls / model cost | 0 / $0 | 0 / $0 |
 
-缺失的数字和事实文本均来自未提取的扫描件/图片。其余 20 份文本 PDF 两条路径都保留了指定文本与数字，**没有证明候选降低遗漏或数字错误**。完整事实字符串出现不证明实体归属、双栏阅读顺序、团队/个人贡献或生成 Claim 正确；这些语义指标未测。120 个位置框也未做人工标注定位精度评测。费用只计模型调用，不包含计算设备、电力或维护成本。更早的小规模真实视觉模型试验仍保留在[原记录](visual-materials-and-status-tracking.md)，不能与本轮当作同一实验比较。
+All missing numbers and fact strings came from the blocked scans/images. Both paths preserved the specified strings and numbers in the 20 text PDFs. **No reduction in omission or numeric-error rates was demonstrated.** String presence does not establish entity attribution, column reading order, team/individual ownership or generated-Claim correctness; those semantic measures were not evaluated. Region-location accuracy was not compared with human annotations. Timings were collected while other local regression work was active and are not an isolated performance benchmark. Costs count model calls only, excluding hardware, electricity and maintenance. Earlier small real-model visual trials remain in the [original record](visual-materials-and-status-tracking.md), not as directly comparable observations from this experiment.
 
-邮件样本：60 个 EML，来自 10 种中英文模板的变体，覆盖普通文本、HTML、伪造认证头、冲突状态与无关内容。这不是 60 种独立业务场景，也不能代表生产分布。
+The 60 EML cases vary 10 Chinese/English templates across plain text, HTML, forged authentication headers, conflicting statuses and unrelated content. They are not 60 independent business scenarios or a representative production distribution.
 
-| 指标 | 本轮结果 |
+| Mail measure | Result |
 |---|---|
-| 状态提议与模板标签不符 | 0 / 60 |
-| 错误自动关联 | 0 / 60 |
-| 必须人工核对 | 60 / 60 |
-| 已认证邮箱的匹配召回率 | 未测；没有邮箱连接器 |
-| 真正申请状态回收 / 雇主确认 | 未测；本轮只实现文件证据与人工关联 |
+| Proposed status disagreed with the template label | 0 / 60 |
+| Incorrect automatic association | 0 / 60 |
+| Human review required | 60 / 60 |
+| Authenticated-mailbox matching recall | Not measured; no mailbox connector |
+| Actual employer status recovery or confirmation | Not measured; file evidence and manual association only |
 
-“零错误自动关联”来自所有本地 EML 都不被认证，而不是自动匹配准确率已达标。`Authentication-Results`、发件人和邮件 Date 均可伪造；日期显示为未验证文件头时间。否定句、转发/引用上下文、多线程邮件及更广泛语言尚需扩充标注数据，用户应核对状态提议。
+Zero incorrect automatic associations follows from treating every local EML as unauthenticated, not from proven automatic-matching accuracy. Sender, `Authentication-Results` and Date headers can be forged; the UI labels the date as an unverified file-header timestamp. Negation, quoted/forwarded content, threads and broader language coverage need additional labeled cases. Users must review proposed statuses.
 
-## 验证分层
+## Verification levels
 
-| 层级 | 已验证范围 |
+| Level | Evidence and limits |
 |---|---|
-| 合成/单元 | 快照哈希/路径拒绝、私密事件载荷不展示、EML 限额与 HTML 不执行、重复导入、关联/撤销、过期审阅、页图哈希/页数、会话/Origin 防护；本地解析实际子进程及失败不得云端回退 |
-| SDK 合同与真实传输 | 官方 MCP SDK 2.3.0 通过真实 stdio 子进程调用三个工具；auto 协商 2026-07-28，legacy 协商 2025-11-25；不存在提交工具，SQL 写入被拒绝 |
-| 现有 Hermes 客户端 | 本机 Hermes v0.16.0（报告 upstream `afe53708`）、Python 3.11.15、客户端 MCP SDK 1.26.0；真实 Hermes MCP 连接器协商 2025-11-25 并调用三个工具成功；使用临时 HERMES_HOME 与合成数据库，0 模型调用、0 用户配置修改 |
-| 实际本地 UI | Windows DPAPI + 真实 loopback HTTP + Edge；中英文、1365×900 桌面与 390×844 窄屏、原图显示/关闭、快照可用/缺失、未勾选拦截、关联后刷新、撤销、关闭清除、演示禁用导入、外部请求为 0 |
-| 尚未覆盖 | Hermes 对话中由模型自主选用工具；真实邮箱授权/收信/身份验证；真实雇主闭环；更多材料的语义与定位评测；签名安装包及干净 Windows 安装/升级/回滚 |
+| Synthetic/unit | Snapshot hashes and rejected paths; legacy CRLF compatibility; no event-payload exposure; EML limits and inactive HTML; duplicate import; association/undo; stale review; evidence replacement and partial-write rollback; source-page limits and hash checks; invalid-region rejection; session/Origin protection; actual native-parser subprocess and no cloud fallback on failure |
+| SDK contract and real transport | Official SDK 2.3.0 calls all three tools through real stdio child processes; auto negotiates 2026-07-28 and legacy negotiates 2025-11-25. No submit tool exists; SQLite writes are rejected |
+| Installed Hermes client | Hermes v0.16.0 (reported upstream `afe53708`), Python 3.11.15, MCP SDK 1.26.0. Its real MCP connector negotiated 2025-11-25 and successfully called all three tools, using temporary HERMES_HOME and synthetic state. Zero model calls and no user-config changes |
+| Actual local UI | Windows DPAPI, real loopback HTTP and Edge; both UI languages; 1365x900 desktop and 390x844 narrow screen; source open/close; verified/missing snapshots; confirmation required; association/reload/undo/clear; demo import disabled; untrusted-region HTML inert; zero external requests |
+| Still unverified | Model-selected tools inside a Hermes conversation; authenticated mailbox access and employer outcomes; broad semantic/location evaluation; signed installation and clean-Windows installation, upgrade and rollback |
 
-浏览器自动化在 `tests/workbench_ui_e2e.cjs`；合成候选刻意没有 AI 完整性证明，所以界面中的确认材料按钮仍被禁用。截图不是一次成功的模型分析。
+The browser suite is `tests/workbench_ui_e2e.cjs`. Its synthetic candidate deliberately lacks an AI completeness proof, so material-confirmation controls stay disabled. Screenshots are not evidence of successful model analysis.
 
-![合成原图与候选对照](screenshots/workbench-source-synthetic.png)
+Local verification receipt (2026-10-28):
 
-![合成申请记录](screenshots/workbench-application-synthetic.png)
+- One full Windows/Python 3.11.3 discovery run during development completed 1,169 tests in 3,628 seconds: 1,163 passed, two documentation checks failed, and four existing symbolic-link checks were skipped because this Windows user cannot create those links. The failures were this preview document's original language (introduced here) and a missing explicit `author identity` phrase in the inherited release checklist. Both documents were corrected; all five public-documentation and 33 release-readiness checks then passed without changing the tests or authorization policy.
+- The final focused suites contain 13 new tests: eight workspace/mail/source tests, two MCP tests and three native-parser tests. These passed, including three added after full discovery started. The source-region hardening was checked separately in the workspace tests and real-browser suite. Existing workflow-gate and visual/mail checks also passed.
+- All nine JavaScript suites passed during this iteration; affected UI suites were rerun after related changes. Dependency consistency, compatibility metadata, CLI startup, wheel-content inspection and public tree/history content scans passed. Content scans do not approve historical author identities.
+- This development run is **not** a frozen final-commit full-suite attestation. The GitHub Python 3.11/3.12/3.13 matrix must still finish on the submitted head; its current result is visible in [PR #7 checks](https://github.com/ValerianXXX/JobFlow/pull/7/checks). The four skipped platform checks also remain an environment-specific validation gap.
 
-![英文窄屏收件箱](screenshots/workbench-inbox-mobile-synthetic.png)
+![Synthetic original-page comparison in the Chinese UI](screenshots/workbench-source-synthetic.png)
+
+![Synthetic application records in the Chinese UI](screenshots/workbench-application-synthetic.png)
+
+![English narrow-screen status inbox](screenshots/workbench-inbox-mobile-synthetic.png)
 
 ## Run and configure
 
-完整开发检查安装 `.[build,mcp,document]`；普通源码使用仍可只安装 `.[build]`。从已准备的源码环境启动 `python -m jobops.cli onboarding-center`，打开待审批申请的“职位详情”，或“申请记录与后续消息 → 查看状态收件箱”。演示入口仍是 `python -m jobops.cli demo`，演示禁止用户文件导入。
+Install `.[build,mcp,document]` for all development checks; normal source use can still install `.[build]`. Start `python -m jobops.cli onboarding-center`, open **Job details** on an application, or **Application records and updates > Open status inbox**. The demo remains `python -m jobops.cli demo` and rejects user-file imports.
 
-可选本地文本解析：
+Optional native text parsing:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -e ".[document]"
@@ -86,18 +93,18 @@ $env:JOBFLOW_DOCUMENT_PARSER = "docling_native"
 .\.venv\Scripts\python.exe -m jobops.cli onboarding-center
 ```
 
-限制为 16 MiB、6 页、有文本层的 PDF，60 秒子进程上限；关闭远程服务、外部插件和图片模型。取消该进程环境变量即恢复默认提取。`.env.example` 不会自动加载。此解析步骤本身不调用模型，但随后的 Claim 分析仍进入用户已配置的 AI 路径，可能使用云端；不能宣称整个流程都在本地。
+Limits: 16 MiB, six PDF pages with text layers, and a 60-second worker timeout. Remote services, external plugins and picture models are disabled. Unset that process environment variable to restore the default extractor; `.env.example` is not loaded automatically. The parser itself makes no model calls, but subsequent Claim analysis still uses the configured AI route and may use a cloud provider. This is not a claim that the whole workflow runs locally.
 
-原图查看支持不超过 16 MiB/60 页的 PDF，或单帧 PNG/JPEG；单页像素和返回数据量也有限制。超限时停止内嵌预览，用户应使用原文件核对，不跳过事实确认。EML 上限为 2 MiB、50 个 MIME 部分、50,000 字符；收件箱最多 1,000 条，不加载远程图片、附件、脚本或链接。
+Original-page display supports PDFs up to 16 MiB/60 pages or single-frame PNG/JPEG, with additional pixel and response-size limits. Oversized sources require original-file review instead of inline preview; factual confirmation is not bypassed. EML limits are 2 MiB, 50 MIME parts and 50,000 characters; the inbox holds at most 1,000 messages. It does not load remote images, attachments, scripts or links.
 
-只读 MCP：
+Read-only MCP:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -e ".[mcp]"
 .\.venv\Scripts\python.exe -m jobops.mcp_server --project 'C:\path\to\JobFlow'
 ```
 
-该进程等待客户端在 stdin/stdout 上发送 MCP 消息，没有 HTTP 地址。先通过本地 UI 初始化项目。需在 Hermes 中使用时，用户可以将以下配置合入自己的配置；本轮没有替用户修改该文件：
+The process waits for MCP messages on stdin/stdout and has no HTTP address. Initialize the project in the local UI first. Users may add this example to their own Hermes configuration; this work did not modify that configuration:
 
 ```yaml
 mcp_servers:
@@ -108,9 +115,9 @@ mcp_servers:
       include: [get_readiness, list_pending_reviews, get_application_summary]
 ```
 
-WSL Hermes 应把 command 改为相应 `/mnt/c/.../python.exe`；传给 Windows Python 的 `--project` 仍使用 Windows 路径。MCP 环境不需要模型密钥。工具结果只含流程元数据，但仍会进入调用它的 Agent 上下文；是否发送给模型由该 Agent 的配置决定。
+For WSL Hermes, use the corresponding `/mnt/c/.../python.exe` command while retaining the Windows `--project` path passed to Windows Python. MCP needs no model key. Its redacted workflow metadata enters the calling Agent's context; that Agent's configuration determines whether it is then sent to a model provider.
 
-重现采集和重点验证：
+Reproduce collection and focused checks:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/evaluate-workbench.py
@@ -120,12 +127,12 @@ WSL Hermes 应把 command 改为相应 `/mnt/c/.../python.exe`；传给 Windows 
 node tests/workbench_ui_e2e.cjs
 ```
 
-报告写入忽略的 `reports/`，完整测试仍用 `python -m unittest discover -s tests -v` 和 `npm run test:e2e`。`scripts/probe-hermes-mcp.py` 是单独的开发探针：使用已安装 Hermes 的 Python，通过 `--hermes-root` 指向其源目录，stdin 传入合成 JobFlow stdio 配置（`command`、`args`、`env`）。它创建临时 Hermes 配置目录，并要求数据库只有一条 `SUBMISSION_UNKNOWN` 合成申请；不会连接现有账户。它依赖 Hermes 内部客户端接口，不是应用运行依赖或通用版本兼容承诺。
+Reports go to ignored `reports/`. Full checks remain `python -m unittest discover -s tests -v` and `npm run test:e2e`. `scripts/probe-hermes-mcp.py` is a separate developer probe: run it with an installed Hermes interpreter, point `--hermes-root` to its source, and supply a synthetic JobFlow stdio configuration (`command`, `args`, `env`) on stdin. It creates disposable Hermes configuration and requires exactly one synthetic `SUBMISSION_UNKNOWN` application. It does not connect to an existing account. The probe uses Hermes internal client interfaces, not a runtime dependency or a promise of compatibility with every Hermes release.
 
-## 发布、数据与回滚
+## Publication, data and rollback
 
-没有数据库迁移、生产部署、正式 Release 或扩展商店更新。新增邮件原件使用已有私密引用表与 DPAPI，审阅变更追加新加密版本；未改写申请状态机、审批状态或历史事实。当前容量上限不会自动删除旧证据。
+There is no database migration, production deployment, formal Release or store update. Mail originals use existing private-reference storage and DPAPI; reviews append encrypted versions. Application transitions, approval states and historical facts are not rewritten. Capacity limits never automatically delete older evidence.
 
-回滚时关闭本地程序，保留原有加密资料目录及数据库备份，再切回上一个已审阅源码版本；不要将真实资料复制进 Git。旧版本可能不显示新收件箱/来源坐标，保留数据待重新升级。仅关闭 `JOBFLOW_DOCUMENT_PARSER` 就能停止候选解析；移除自己添加的 Hermes MCP 条目并重启客户端即可停止工具接入，不需要重装任何 Agent。没有生产迁移回退脚本要执行。
+For source rollback, close JobFlow, preserve the encrypted data directory and database backup, then return to the previous reviewed source version. Never copy real data into Git. An older version may not display the new inbox/coordinates; retain that data for a later upgrade. Unset `JOBFLOW_DOCUMENT_PARSER` to disable the candidate independently, or remove the MCP entry you added and restart the client. No Agent reinstall or production migration rollback is required.
 
-原发布阻塞继续保留：源版本 0.7.0 对应扩展 0.9.2，稳定桌面 0.6.0 仍不兼容该商店扩展；历史还有一项不同作者身份待处理，NOREPLY_ONLY 未被放宽；可信生产签名和干净 Windows 现场验收未完成。原文内容边界检查通过不等于身份或发布授权通过。详见[兼容矩阵](compatibility.md)和[发布整改记录](modernization-2026-10-27.md)。
+Release blockers remain: source 0.7.0 targets Companion 0.9.2, while stable desktop 0.6.0 is incompatible with the store extension; a different historical author identity still needs resolution under unchanged NOREPLY_ONLY policy; trusted production signing and clean-Windows acceptance are incomplete. Passing a content-boundary scan does not satisfy identity or release authorization. See the [compatibility matrix](compatibility.md) and [release-repair record](modernization-2026-10-27.md).

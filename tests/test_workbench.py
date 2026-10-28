@@ -345,6 +345,14 @@ class WorkbenchTests(unittest.TestCase):
                         "extension": ".png",
                         "sha256": sha256_bytes(raw),
                         "raw_retained": True,
+                        "extraction_summary": {
+                            "visual_regions": [
+                                {"page": 1, "bbox": [0, 0, 1, 1]},
+                                {"page": 1, "bbox": ['"><img id=unsafe>', 0, 1, 1]},
+                                {"page": 1, "bbox": [0, 0, 2, 1]},
+                                {"page": True, "bbox": [0, 0, 1, 1]},
+                            ]
+                        },
                     },
                 }
             ]
@@ -354,6 +362,12 @@ class WorkbenchTests(unittest.TestCase):
                     "page_count"
                 ],
                 1,
+            )
+            self.assertEqual(
+                service.source_review_page({"source_id": "SRC-SYN", "page": 1})[
+                    "regions"
+                ],
+                [{"page": 1, "bbox": [0, 0, 1, 1]}],
             )
             with self.assertRaises(JobOpsError):
                 service.source_review_page(

@@ -801,6 +801,7 @@ class OnboardingCenterService:
 
     @_synchronized
     def source_review_page(self, payload: dict[str, Any]) -> dict[str, Any]:
+        import math
         from .source_review import source_page
         _, state = self.ensure_state()
         sources = list(state.get("sources", [])) + [item["metadata"] for item in state.get("pending_sources", [])]
@@ -809,9 +810,21 @@ class OnboardingCenterService:
             raise JobOpsError("SOURCE_REVIEW_UNAVAILABLE", "Choose a retained source from the current review.")
         result = source_page(self.onboarding.read_bytes(source["secure_ref"]), source["extension"],
                              expected_hash=source["sha256"], page=payload.get("page", 1))
-        return {**result, "source_id": source["source_id"],
-                "regions": [item for item in source.get("extraction_summary", {}).get("visual_regions", [])
-                            if item.get("page") == result["page"]]}
+        # Persisted model metadata is untrusted even when the image itself
+        # passes its hash. Only finite, normalized coordinates enter the SVG.
+        regions = []
+        summary = source.get("extraction_summary", {})
+        proposed = summary.get("visual_regions", []) if isinstance(summary, dict) else []
+        for item in proposed[:1000] if isinstance(proposed, list) else []:
+            if not isinstance(item, dict) or type(item.get("page")) is not int or item["page"] != result["page"]:
+                continue
+            box = item.get("bbox")
+            if (not isinstance(box, list) or len(box) != 4
+                    or any(type(v) not in (int, float) or not math.isfinite(v) or not 0 <= v <= 1 for v in box)
+                    or box[0] >= box[2] or box[1] >= box[3]):
+                continue
+            regions.append({"page": result["page"], "bbox": box})
+        return {**result, "source_id": source["source_id"], "regions": regions}
 
     def _status_inbox(self):
         from .mail_tracking import ApplicationStatusInbox

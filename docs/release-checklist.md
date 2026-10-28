@@ -17,7 +17,7 @@ Run these checks only on the final clean commit. This checklist does not authori
 
 ## Human gates
 
-- [ ] Use the owner's account-linked GitHub noreply address, as explicitly chosen on October 28 to preserve personal-email privacy. Keep `NOREPLY_ONLY` in `config/public-release.json` and resolve any different raw historical identity separately. This choice does not approve another email or rewrite public history.
+- [ ] Review author identity for the release: use the owner's account-linked GitHub noreply address, as explicitly chosen on October 28 to preserve personal-email privacy. Keep `NOREPLY_ONLY` in `config/public-release.json` and resolve any different raw historical identity separately. This choice does not approve another email or rewrite public history.
 - [ ] Freeze the exact commit and run fresh independent QA whose report names that commit and the deterministic source ZIP SHA-256.
 - [ ] Approve sanitized screenshots with no personal data or user paths.
 - [ ] Complete a clean supported Windows profile test.

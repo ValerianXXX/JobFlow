@@ -98,7 +98,7 @@ jobs:
           Copy-Item -LiteralPath (Split-Path -Parent $env:LEGACY_TEST_PYTHON) -Destination $canonicalPython -Recurse
           & $env:LEGACY_TEST_PYTHON -m venv .venv
           if ($LASTEXITCODE -ne 0) { throw "JOBFLOW_CI_SIGNED_VENV_FAILED" }
-          & ./.venv/Scripts/python.exe -m pip install -e ".[build,mcp,document]"
+          & ./.venv/Scripts/python.exe -m pip install -e ".[build]"
           if ($LASTEXITCODE -ne 0) { throw "JOBFLOW_CI_SIGNED_VENV_DEPENDENCIES_FAILED" }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:

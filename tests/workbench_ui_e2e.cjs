@@ -38,6 +38,19 @@ const root = path.resolve(__dirname, "..");
     const artifacts = path.join(root, "reports", "workbench-ui");
     mkdirSync(artifacts,{recursive:true});
     await page.goto(url);
+    await page.locator(".source-preview").waitFor();
+    const regionInjectionEscaped = await page.evaluate(() => {
+      const summary = state.data.pending_sources[0].extraction_summary;
+      const original = summary.visual_regions;
+      try {
+        summary.visual_regions = {invalid: "legacy metadata"};
+        renderSourcePreviews();
+        summary.visual_regions = [null, {page:1,line_start:1,bbox:['<img id="untrusted-region">',0,1,1]}];
+        renderSourcePreviews();
+        return !document.querySelector("#untrusted-region") && document.querySelector(".source-preview").textContent.includes('<img id="untrusted-region">');
+      } finally {summary.visual_regions=original; renderSourcePreviews();}
+    });
+    assert.equal(regionInjectionEscaped,true);
     await page.getByRole("button",{name:"职位详情",exact:true}).click();
     const workspace = page.locator("#applicationWorkspacePanel");
     await workspace.getByRole("heading",{name:"Workflow Quality Analyst · Synthetic Demo Studio"}).waitFor();

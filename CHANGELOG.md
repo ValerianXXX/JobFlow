@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Revalidate stored source-region coordinates before SVG display and escape legacy provenance text; malformed metadata cannot add HTML elements. Keep optional parser/MCP extras out of the legacy launcher test environment.
+
 - Fixed Windows JD snapshot writes so stored bytes match their canonical content hash; the new viewer verifies legacy CRLF snapshots without rewriting originals or accepting changed text.
 
 - Added a bilingual application workspace with hash-checked saved job descriptions, prepared-material and review versions, next actions and state history. Preparation never implies employer receipt.
