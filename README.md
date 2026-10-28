@@ -14,6 +14,8 @@ The optional [visual materials and status-tracking preview](docs/visual-material
 
 The [October 28 application-workspace preview](docs/workbench-modernization-2026-10-28.md) adds per-application snapshots and material history, original-page comparison, an encrypted local EML inbox with reversible manual links, and three optional read-only MCP tools. The installed Hermes client has called those tools against synthetic state. An experimental Docling native parser adds page coordinates, but the 30-material comparison found no extraction-quality gain; it stays opt-in and does not provide OCR.
 
+The [tested source checkpoint](evaluations/2026-10-28/workbench-ci-matrix.json) passed 1,172 regression tests and nine browser suites on Python 3.11, 3.12 and 3.13. Its overall CI still fails at the candidate-package author-identity gate; those engineering checks do not authorize a release.
+
 The [October 28 author correction](docs/modernization-2026-10-27.md#owner-identity-correction---28-october-2026) records the owner's choice of account-linked GitHub noreply commits. A different historical identity still requires resolution; the correction does not authorize a release.
 
 ![JobFlow English synthetic demo](docs/screenshots/jobflow-demo-en.png)
