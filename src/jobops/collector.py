@@ -107,7 +107,8 @@ class JobCollector:
                 descriptor, temporary_name = tempfile.mkstemp(prefix=f".{snapshot_id}-", suffix=".tmp", dir=job_dir)
                 os.close(descriptor)
                 temporary = Path(temporary_name)
-                temporary.write_text(normalized, encoding="utf-8")
+                # Preserve the exact canonical UTF-8/LF bytes used by the hash.
+                temporary.write_bytes(normalized.encode("utf-8"))
                 os.replace(temporary, snapshot_path)
                 temporary = None
                 created = True

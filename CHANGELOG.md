@@ -4,6 +4,15 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Fixed Windows JD snapshot writes so stored bytes match their canonical content hash; the new viewer verifies legacy CRLF snapshots without rewriting originals or accepting changed text.
+
+- Added a bilingual application workspace with hash-checked saved job descriptions, prepared-material and review versions, next actions and state history. Preparation never implies employer receipt.
+- Added original PDF/image page comparison with proposed source regions, bounded in-memory rendering and existing Claim confirmation gates.
+- Added explicit local EML import, encrypted original/evidence/history, stale-review rejection, manual application association and undo. File headers are not trusted mailbox authentication; application execution state is unchanged.
+- Added optional stdio MCP tools for redacted readiness, pending reviews and one application summary. Verified official SDK modern/legacy modes and the installed Hermes client with synthetic data; no user configuration or model changed.
+- Added an opt-in model-free Docling native adapter and reproducible 30-material/60-message comparison. It adds source coordinates without demonstrated text-quality gain; scans still require another path. Fixed narrow-screen controls and language-switch feedback.
+- Documented pinned upstream architecture references and licenses; no third-party product source was copied. New optional integration tests run in the existing Windows CI matrix.
+
 - Fixed Windows launcher-test timeouts leaving descendant processes holding capture files; terminate the owned process tree before cleanup and preserve the original timeout and partial output. Give the full-history readiness audit a bounded five-minute integration allowance without changing release assertions.
 - Added opt-in PDF/image transcription through existing Hermes or OpenAI-compatible loopback models, bounded page/region validation and mandatory original-source verification before including a visual Claim.
 - Added a read-only application-mail adapter contract, conservative status proposals and encrypted evidence/review history; no mailbox access or protected application-state writes.

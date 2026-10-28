@@ -109,7 +109,7 @@ const STRINGS = {
     packetFieldTitle: "Confirm job-specific questions first", packetFieldBody: "These answers apply only to this job and are immediately stored as a local DPAPI-encrypted reference. No plaintext is written to the review packet, project files, or ordinary database fields.", packetFieldSeparateHelp: "Uploads, navigation, account actions, and final submission use their own authorization gates and are not mislabelled as unanswered questions.", packetFieldRequired: "Required", packetFieldOptional: "Optional", packetFieldDecision: "Decision", packetFieldValue: "Answer for this job", packetFieldConfirmValue: "Enter and confirm", packetFieldUseGeneratedNarrative: "Use the reviewed job-specific Cover Letter", packetFieldPreviewNarrative: "Preview generated draft", packetFieldClosePreview: "Close and clear preview", packetFieldNarrativePreviewTitle: "Visible only in this local session", loadingNarrativePreview: "Decrypting and validating this application's generated draft…", packetFieldPreferNot: "Prefer not to answer", packetFieldNotApplicable: "Not applicable", packetFieldValuePlaceholder: "Enter the exact answer requested by this job", packetFieldConsent: "I confirm these answers are accurate for this job and agree to store them encrypted on this device only.", savePacketFields: "Encrypt answers and create a new packet", savingApplicationFields: "Encrypting job-specific answers and rebinding the review packet…", packetFieldsSaved: "Job-specific answers encrypted; review the new packet.", packetFieldsRequired: "Complete every highlighted job-specific question before approving the packet.", packetFieldInvalid: "A job-specific answer is incomplete or does not belong to the current form. Check it and retry.", packetFieldUnknowns: "This condition is not stated on the job page. You may acknowledge the uncertainty; JobFlow will not turn it into a fact.", packetFieldAcknowledgeUnknown: "Acknowledge and keep unknown",
     sourceTitle: "Bring your existing information into JobFlow", sourceBody: "A source must pass AI entity consolidation, classification, and completeness checks before anything can enter Claim review. Rule-split output is no longer shown.",
     sourceIntakeDemoTitle: "Synthetic demo mode does not accept real files", sourceIntakeDemoBody: "Close the demo launch window, then double-click Start JobFlow.cmd to open the real local workspace with file intake enabled.", sourceIntakeReadonlyTitle: "File intake is locked because this profile revision is complete", sourceIntakeReadonlyBody: "Historical revisions are preserved. Create an editable revision to add, delete, or re-analyze sources.", sourceIntakeAiTitle: "Connect AI before analyzing files", sourceIntakeAiBody: "Use Connect AI at the top right and choose a prepared Agent or local model. File selection opens automatically after a successful connection.",
-    docsTitle: "Resume & project materials", docsBody: "DOCX, PDF, TXT, MD, or JSON for resumes, cases, certificates, portfolios, and supporting material.", materialType: "Material type", resume: "Resume", projectCase: "Project case", supporting: "Supporting material", portfolioFile: "Portfolio file",
+    docsTitle: "Resume & project materials", docsBody: "DOCX, PDF, TXT, MD, or JSON; PNG/JPEG with optional visual analysis enabled. For resumes, cases, certificates, portfolios, and supporting material.", materialType: "Material type", resume: "Resume", projectCase: "Project case", supporting: "Supporting material", portfolioFile: "Portfolio file",
     aiTitle: "AI sources", aiBody: "Use an official ChatGPT export ZIP or a curated AI summary. For exports over 200 MB, pick ZIPzilla Express. The raw ZIP is never retained.", aiType: "AI source type", chatgptExport: "Official ChatGPT export (up to 200 MB)", chatgptExportLarge: "ZIPzilla Express (over 200 MB — unleash the beast)", aiSummary: "AI summary", chooseFile: "Choose local file", uploadAndAnalyze: "Choose & analyze with AI",
     directTitle: "Fill only the missing details", directBody: "Names, contact details, and public links already present in the resume are carried forward. This section highlights only missing eligibility, preference, and policy answers.", startQuestions: "Review missing details", importedSources: "Securely imported", noSources: "No source added from this page yet; the existing secure resume remains available.",
     suggestions: "Autofill suggestions awaiting confirmation", continueQuestions: "Review missing details", questionsTitle: "Confirm only missing or changed information", questionsBody: "Facts recognized from the resume stay available in a collapsed review section instead of being requested again. Eligibility gates must be explicit; legal and signature items still require per-application confirmation.", resolvedProfileFacts: "{count} items already filled from your sources (expand to review or edit)", optionalProfileFacts: "{count} optional profile items (fill only when useful)", saveHint: "Answers never enter CLI arguments or plaintext JSON", saveEncrypted: "Encrypt, save & continue",
@@ -1405,6 +1405,7 @@ function applyLocale() {
   if(state.data)renderDashboard();
   if(state.reviewPacket)renderReviewPacket();
   if(state.tailoringProposal)renderTailoringProposal(true);
+  window.JobFlowWorkbench?.locale();
   renderActivity();
 }
 
@@ -2127,6 +2128,7 @@ function renderDashboard(){
     return `<article class="ats-capability-item"><strong>${escapeHtml(item.provider)}</strong><small>${escapeHtml(atsEvidenceLabel(item.offline_evidence_level))}</small><b>${escapeHtml(t("atsVerifiedStages").replace("{stages}",verified||"—"))}</b><small>${escapeHtml(unverified?t("atsUnverifiedStages").replace("{stages}",unverified):t("atsNoUnverifiedStages"))}</small><small>${escapeHtml(t("atsUserPresentAssist"))}</small><small>${escapeHtml(liveEvidence)}</small><small>${escapeHtml(t("atsActionsBlocked"))}</small></article>`;
   }).join("");
   renderApplicationReadiness();
+  window.JobFlowWorkbench?.decorate();
 }
 
 function packetValue(value){
@@ -2464,6 +2466,7 @@ function renderSourcePreviews(){
     </article>`;
   }).join("");
   const candidateById=new Map(previews.flatMap(preview=>(preview.candidates||[]).map(item=>[item.candidate_id,item])));
+  window.JobFlowWorkbench?.decorate();
   target.querySelectorAll(".preview-select").forEach(input=>{
     const item=candidateById.get(input.dataset.candidate);
     if(item?.provenance?.classification_review_required!==true)return;

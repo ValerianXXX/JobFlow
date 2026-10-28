@@ -98,7 +98,7 @@ jobs:
           Copy-Item -LiteralPath (Split-Path -Parent $env:LEGACY_TEST_PYTHON) -Destination $canonicalPython -Recurse
           & $env:LEGACY_TEST_PYTHON -m venv .venv
           if ($LASTEXITCODE -ne 0) { throw "JOBFLOW_CI_SIGNED_VENV_FAILED" }
-          & ./.venv/Scripts/python.exe -m pip install -e ".[build]"
+          & ./.venv/Scripts/python.exe -m pip install -e ".[build,mcp,document]"
           if ($LASTEXITCODE -ne 0) { throw "JOBFLOW_CI_SIGNED_VENV_DEPENDENCIES_FAILED" }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -144,7 +144,7 @@ jobs:
       - name: Install pinned Browser Companion test runtime
         run: npm ci
       - name: Install JobFlow
-        run: python -m pip install -e ".[build]"
+        run: python -m pip install -e ".[build,mcp,document]"
       - name: Check installed dependencies
         run: python -m pip check
       - name: Check desktop and companion compatibility metadata

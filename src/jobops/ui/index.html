@@ -297,6 +297,12 @@
         </div>
       </section>
       </details>
+      <section class="workflow-workbench" aria-labelledby="workbenchTitle">
+        <header class="subheading"><h3 id="workbenchTitle" data-workbench-label="workbench">申请记录与后续消息</h3><button id="statusInboxOpen" type="button" class="secondary" data-workbench-label="openInbox">查看状态收件箱</button></header>
+        <section id="applicationWorkspacePanel" class="hidden" aria-live="polite"></section>
+        <section id="statusInboxPanel" class="hidden" aria-live="polite"></section>
+        <p id="workbenchNotice" role="status"></p>
+      </section>
       <section id="reviewPacketPanel" class="review-packet-panel hidden" aria-live="polite">
         <header><div><p class="eyebrow" data-i18n="reviewPacketEyebrow">LOCAL REVIEW PACKET</p><h3 id="reviewPacketTitle" data-i18n="reviewPacketTitlePlaceholder">本地审阅包</h3><small id="reviewPacketMeta"></small></div><button id="closeReviewPacket" class="text-action" type="button" data-i18n="closePacket">关闭审阅包</button></header>
         <div id="reviewPacketBody" class="review-packet-body"></div>
@@ -534,5 +540,6 @@
     </span>
   </div>
   <script src="app.js?v=20260906-jobflow-v44-accessible-controls"></script>
+  <script src="workbench.js?v=20261028-workspace-inbox"></script>
 </body>
 </html>

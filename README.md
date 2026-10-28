@@ -12,6 +12,8 @@ See the [compatibility and recovery matrix](docs/compatibility.md) and [October 
 
 The optional [visual materials and status-tracking preview](docs/visual-materials-and-status-tracking.md) adds scanned PDF/image transcription with page evidence and a separate original-source confirmation. Existing Hermes and loopback paths remain available. A read-only mail adapter can match supplied status messages to applications and retain encrypted, reversible review history; no real mailbox connector or automatic application-state update is shipped.
 
+The [October 28 application-workspace preview](docs/workbench-modernization-2026-10-28.md) adds per-application snapshots and material history, original-page comparison, an encrypted local EML inbox with reversible manual links, and three optional read-only MCP tools. The installed Hermes client has called those tools against synthetic state. An experimental Docling native parser adds page coordinates, but the 30-material comparison found no extraction-quality gain; it stays opt-in and does not provide OCR.
+
 The [October 28 author correction](docs/modernization-2026-10-27.md#owner-identity-correction---28-october-2026) records the owner's choice of account-linked GitHub noreply commits. A different historical identity still requires resolution; the correction does not authorize a release.
 
 ![JobFlow English synthetic demo](docs/screenshots/jobflow-demo-en.png)
@@ -73,6 +75,9 @@ An AI connection is accepted only after a structured capability test. Agent requ
 | Public signed updates | Blocked until protected publisher runtime closure is attested |
 | Encrypted onboarding, Candidate Profile, Answer Bank, and Claim review | Available |
 | Existing Agent or loopback-model connection | Available with capability gate |
+| Application workspace and original PDF/image comparison | Available in this source preview; missing or modified snapshots are shown explicitly |
+| Local EML status inbox | Explicit file import, encrypted evidence, manual association and undo; no mailbox connection or execution-state changes |
+| Read-only MCP for Hermes and compatible clients | Optional extra; three redacted tools, actual stdio client checks with synthetic data |
 | Visible official-company job discovery and verified Apply routing | Available with user authorization |
 | Expiring read-only background discovery to a local candidate inbox | Available for exact approved HTTPS sources; maximum seven-day authorization |
 | User-present company, Greenhouse, Lever, Workday, Ashby, and SmartRecruiters assistance | Bound routes only; live compatibility varies |
@@ -87,13 +92,15 @@ Synthetic and saved-page tests are engineering evidence, not proof that every li
 
 ```powershell
 py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[build]"
+.\.venv\Scripts\python.exe -m pip install -e ".[build,mcp,document]"
 .\.venv\Scripts\python.exe -m jobops.compatibility
 .\.venv\Scripts\python.exe -m jobops.cli demo
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 ```
 
 Python 3.11-3.13 is supported for source development. `npm ci`, `npx playwright install chromium`, and `npm run test:e2e` run the browser checks. Release scanning additionally requires the explicitly selected, trusted Git described in [the release checklist](docs/release-checklist.md). Source setup is not a signed installation and does not authorize production release.
+
+`mcp` and `document` are optional runtime extras, included above to run their integration tests. Ordinary use can install `.[build]`. See [configuration and reproduction](docs/workbench-modernization-2026-10-28.md#run-and-configure) for MCP, Docling, and the synthetic comparison.
 
 The project is intentionally Windows-first because secure applicant storage uses DPAPI. Runtime state, databases, review packets, encrypted private files, and local release reports are excluded from the public repository.
 
@@ -103,6 +110,7 @@ The project is intentionally Windows-first because secure applicant storage uses
 - [Support](https://valerianxxx.github.io/JobFlow/support.html)
 - [Browser Companion privacy](PRIVACY.md)
 - [Architecture](docs/architecture.md)
+- [Application workspace, source references, evaluation and rollback](docs/workbench-modernization-2026-10-28.md)
 - [Roadmap](docs/roadmap.md)
 - [Release checklist](docs/release-checklist.md)
 - [Security policy](SECURITY.md)

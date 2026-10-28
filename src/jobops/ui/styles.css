@@ -91,7 +91,7 @@ h1 { margin: 0 0 16px; max-width: 720px; font: 600 clamp(38px, 5vw, 68px)/1.06 G
 .pipeline-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 28px; }
 .pipeline-heading h2 { margin: 0; font: 600 30px/1.18 Georgia, "Songti SC", serif; }
 .pipeline-heading p:not(.eyebrow) { max-width: 680px; margin: 7px 0 0; color: var(--muted); font-size: 13px; }
-.pipeline-heading-actions { display: flex; align-items: center; gap: 10px; }
+.pipeline-heading-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
 .guard-badge { padding: 7px 10px; color: var(--green-dark); background: #dcece6; font-size: 10px; font-weight: 800; letter-spacing: .05em; white-space: nowrap; }
 .guard-badge.unsafe { color: #fff; background: #8d3e34; }
 .pipeline-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin: 24px 0 18px; }
@@ -701,3 +701,28 @@ body.is-busy :is(#emergencyStop,#cancelGuidedIntake,#pauseAuthorizedDiscovery,#k
   .header-actions { gap: 6px; }
   .locale-switch button { min-width: 35px; padding: 6px 8px; }
 }
+/* Per-application history and private evidence review. */
+.workflow-workbench{margin:24px 0;padding:20px;border:1px solid #c6d6db;border-radius:16px;background:#f8fbfa;min-width:0}
+.workbench-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.workbench-grid>section,.source-comparison>*{min-width:0}
+.workflow-workbench pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;max-height:420px;overflow:auto;padding:12px;background:white;border:1px solid #d7e1e4;border-radius:8px}
+.workflow-workbench p,.workflow-workbench small,.workflow-workbench code{overflow-wrap:anywhere}
+.workbench-next{padding:14px;background:#e6f0eb;border-radius:10px}
+.workflow-workbench details{margin:12px 0}
+.mail-import,.mail-actions,.source-page-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.mail-import label{display:grid;gap:8px;flex:1;min-width:180px}
+.mail-import input{max-width:100%}
+.mail-event{border-top:1px solid #bdced4;padding:18px 0}
+.mail-event>label{display:block;margin:12px 0}
+.mail-event select{width:100%;max-width:100%;padding:10px}
+.mail-confirm-label input{margin-right:8px}
+.mail-event>small{display:block;margin-top:12px}
+.source-review-controls{margin:12px 0}
+.source-comparison.show-original{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.source-original{position:sticky;top:12px}
+.source-page-image{position:relative;background:white}
+.source-page-image img{display:block;width:100%;height:auto}
+.source-page-image svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.source-page-image rect{fill:rgba(33,116,148,.08);stroke:#217494;stroke-width:.002}
+.source-original p{font-size:.85rem;line-height:1.5}
+@media(max-width:720px){.workbench-grid,.source-comparison.show-original{grid-template-columns:1fr}.source-original{position:static}.workflow-workbench{padding:12px}.workflow-workbench .subheading{align-items:flex-start;gap:10px;flex-wrap:wrap}.mail-actions button{flex:1}}

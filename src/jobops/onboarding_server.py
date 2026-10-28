@@ -497,6 +497,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             asset, content_type = "index.html", "text/html; charset=utf-8"
         elif relative == "app.js":
             asset, content_type = "app.js", "text/javascript; charset=utf-8"
+        elif relative == "workbench.js":
+            asset, content_type = "workbench.js", "text/javascript; charset=utf-8"
         elif relative == "styles.css":
             asset, content_type = "styles.css", "text/css; charset=utf-8"
         elif relative == "api/bootstrap":
@@ -628,7 +630,19 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             return
         route = parsed.path.split("/api/", 1)[-1] if "/api/" in parsed.path else ""
         try:
-            if route == "save":
+            if route == "application-workspace":
+                result = self.server.service.application_workspace(self._json_body())
+            elif route == "source-review-page":
+                result = self.server.service.source_review_page(self._json_body())
+            elif route == "status-inbox":
+                result = self.server.service.status_inbox(self._json_body())
+            elif route == "review-status-message":
+                result = self.server.service.review_status_message(self._json_body())
+            elif route == "import-status-eml":
+                from .mail_tracking import MAX_EML_BYTES
+                length = self._binary_body_length(maximum=MAX_EML_BYTES, size_code="MAIL_FILE_LIMIT", size_message="Select one EML file of at most 2 MiB.")
+                result = self.server.service.import_status_eml(self._read_exact_body(length))
+            elif route == "save":
                 result = self.server.service.save_answers(self._json_body())
             elif route == "connect-ai":
                 result = self.server.service.connect_ai(self._json_body())
