@@ -1,0 +1,16 @@
+{
+  "verificationDateLocal": "2026-10-27",
+  "runUrl": "https://github.com/ValerianXXX/JobFlow/actions/runs/40612023771",
+  "sourceCommit": "279dd1d0cfc5f65eab51806cbbfb69a7fbc07fec",
+  "runner": "windows-latest",
+  "matrix": [
+    {"python": "3.11", "testsRun": 1157, "passed": 1157, "skipped": 0, "seconds": 6348.954, "browserSuitesPassed": 8, "jobConclusion": "failure", "laterFailure": "PUBLIC_TREE_HISTORY_SCANNER_FALSE_POSITIVE"},
+    {"python": "3.12", "testsRun": 1157, "passed": 1157, "skipped": 0, "seconds": 6397.693, "browserSuitesPassed": 8, "jobConclusion": "failure", "laterFailure": "PUBLIC_TREE_HISTORY_SCANNER_FALSE_POSITIVE"},
+    {"python": "3.13", "testsRun": 1157, "passed": 1157, "skipped": 0, "seconds": 6932.343, "browserSuitesPassed": 8, "jobConclusion": "cancelled", "laterFailure": "120_MINUTE_JOB_LIMIT_DURING_PUBLIC_SCANNER"}
+  ],
+  "followupCheckpoint": "c10d3da",
+  "boundaryTestsPassed": 11,
+  "publicContentScan": {"trackedFiles": 538, "commits": 280, "historicalBlobs": 2410, "findings": 0},
+  "unapprovedHistoricalAuthorIdentities": 1,
+  "productionReleaseAccepted": false
+}

@@ -96,12 +96,22 @@ the tested implementation is unchanged. [Recorded counts](../evaluations/2026-10
 
 Subsequent frozen GitHub [run 40612023771](https://github.com/ValerianXXX/JobFlow/actions/runs/40612023771)
 at `279dd1d0cfc5f65eab51806cbbfb69a7fbc07fec` completed all **1,157 tests with zero
-failures or skips** on both Python 3.11 (6,348.954 s) and 3.12 (6,397.693 s),
-followed by all eight browser suites on each interpreter. Those jobs then failed
+failures or skips** on Python 3.11 (6,348.954 s), 3.12 (6,397.693 s) and 3.13
+(6,932.343 s), followed by all eight browser suites on each interpreter.
+The 3.11/3.12 jobs then failed
 the public-tree/history scanner on the escaped separator in
 `tests/test_public_release.py`; that separate false positive is repaired in
 release-branch commit `118761e6`. Historical-author authorization and protected
-signing remain separate gates, regardless of regression results.
+signing remain separate gates, regardless of regression results. Python 3.13
+reached the old 120-minute limit during that subsequent scanner step; its
+regression/browser results are complete, but the remaining package steps are not.
+[Matrix receipt](../evaluations/2026-10-27/ci-regression-matrix.json).
+
+After merging the scanner repair at checkpoint `c10d3da`, all 11 boundary tests
+passed. A full local scan of 538 tracked files, 280 commits and 2,410 historical
+blobs found zero content findings. The report still requires review for one
+historical author identity; `public_release_ready` remains false. The next CI
+uses the unchanged test matrix with 180 minutes of headroom.
 
 Mailbox authorization, real provider adapters, actual mailbox delivery semantics
 and a user-facing status inbox remain external/product follow-up. This checkpoint
