@@ -1,0 +1,13 @@
+JobFlow Browser Companion connects a compatible local JobFlow desktop to the company careers or application page you choose.
+
+It reads the visible job page and application form after you authorize that task. Once you review and approve an application packet in JobFlow, it can fill approved fields, attach approved files, and continue through verified non-final steps while you are present.
+
+You always inspect the final application and click Submit yourself. Login, passwords, CAPTCHA, MFA, account creation, signatures, and unknown answers stay under your control. Unknown submission outcomes are never retried automatically.
+
+The extension exchanges page content and approved application data only with the local JobFlow service. JobFlow's separately configured AI connection may process material locally or through its selected provider; review the desktop's data-sending disclosure before enabling AI.
+
+Compatibility notice: Browser Companion 0.9.2 requires the matching JobFlow desktop. The currently published stable desktop v0.6.0 accepts only 0.9.1. The v0.7.0 source targets 0.9.2, but its signed Windows distribution is still pending. Reinstalling this extension does not fix an older desktop. See the project compatibility matrix before installation.
+
+Project and compatibility: https://github.com/ValerianXXX/JobFlow
+Support: https://valerianxxx.github.io/JobFlow/support.html
+Privacy: https://valerianxxx.github.io/JobFlow/privacy.html

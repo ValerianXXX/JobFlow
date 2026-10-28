@@ -80,7 +80,8 @@ function Set-CurrentUserOnly([string]$Path) {
     $grant = "*$($identity.User.Value):(OI)(CI)F"
     $icacls = Join-Path ([Environment]::SystemDirectory) "icacls.exe"
     if (-not [IO.File]::Exists($icacls)) { throw "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_ACL_FAILED" }
-    & $icacls $Path "/inheritance:r" "/grant:r" $grant | Out-Null
+    $aclPath = ConvertTo-ExtendedFileSystemPath $Path
+    & $icacls $aclPath "/inheritance:r" "/grant:r" $grant | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "JOBFLOW_DEVELOPMENT_FIXTURE_KEY_ACL_FAILED" }
 }
 

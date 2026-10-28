@@ -2,7 +2,7 @@
 
 ## Current release compatibility
 
-As of September 5, 2026, the Chrome and Edge stores publish Browser Companion 0.9.2. The latest stable desktop, v0.6.0, accepts only 0.9.1 and cannot pair with 0.9.2. Current v0.7.0 source targets 0.9.2, but its signed stable Windows distribution is still pending. Reinstalling the store extension cannot fix an older desktop's strict version check. Keep existing private data and consult the release notes before updating either component; do not disable the check or install an unofficial downgrade.
+As of October 27, 2026, the Chrome and Edge stores publish Browser Companion 0.9.2. The latest stable desktop, v0.6.0, accepts only 0.9.1 and cannot pair with 0.9.2. Current v0.7.0 source targets 0.9.2, but its signed stable Windows distribution is still pending. Reinstalling the store extension cannot fix an older desktop's strict version check. Keep existing private data and consult the release notes before updating either component; do not disable the check or install an unofficial downgrade.
 
 ## Install once
 

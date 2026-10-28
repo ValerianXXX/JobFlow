@@ -21,6 +21,8 @@ if not "%JOBFLOW_INSTALL_EXIT%"=="0" (
   echo.
   if "%JOBFLOW_INSTALL_EXIT%"=="2" (
     echo JobFlow requires a signed schema-v2 complete-runtime release. Nothing was activated.
+    echo Keep your existing JobFlow data. Reinstalling the browser extension cannot fix a missing desktop release.
+    echo Review docs\compatibility.md for the supported desktop and extension pairs.
   ) else if "%JOBFLOW_INSTALL_EXIT%"=="6" (
     echo JobFlow safely recovered an interrupted install. Run Install JobFlow.cmd again.
   ) else (

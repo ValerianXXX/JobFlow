@@ -4,6 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Fix a public-source scan false positive where an escaped control separator became part of an otherwise allowed noreply address; private addresses still fail. Allow the full Windows CI matrix 180 minutes after a progressing Python 3.13 run exceeded the old two-hour cap.
+- Fixed release-signing ACL setup for deep Windows archive paths while retaining the existing owner-only and reparse-point checks.
+- Added an executable desktop/extension compatibility matrix and CI checks across shipped version surfaces, with bounded server-side recovery guidance and strict protocol types.
+- Fixed source-demo setup instructions: the signed bootstrap installer does not create a development environment.
+- Corrected identity-review counts and added support for an explicit email-hash approval policy. On October 28, the owner chose account-linked GitHub noreply commits to preserve personal-email privacy; the checked-in policy remains noreply-only. A different historical identity remains unresolved, and public history and release gates are preserved.
+- Reverified both official store versions on October 27, 2026; prepared corrected Chrome description copy and documented signing and Windows acceptance blockers.
+
 - Fixed Windows CI when several Node executables share PATH; authenticate only the selected executable and still reject an untrusted first match.
 - Staged checksum- and signature-verified Node.js test bytes at the release wrapper's bounded Windows location, and updated packaging assertions for the pinned Git prerequisite.
 - Kept emergency stop, cancellation, and authorization-revocation controls available during busy operations; blocked duplicate keyboard activation and made scripted navigation respect reduced-motion preferences.

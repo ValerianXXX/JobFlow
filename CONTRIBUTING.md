@@ -11,7 +11,9 @@ JobFlow accepts focused, testable changes that preserve its privacy and external
 ## Development setup
 
 ```powershell
-.\scripts\install-jobflow-v2.ps1 -NoLaunch
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[build]"
+.\.venv\Scripts\python.exe -m jobops.compatibility
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 ```
 

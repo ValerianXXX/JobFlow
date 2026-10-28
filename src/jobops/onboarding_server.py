@@ -18,6 +18,7 @@ from urllib.parse import parse_qs, urlparse
 from .errors import JobOpsError
 from .browser_assist import BrowserAssistManager, COMPANION_EXTENSION_VERSION, COMPANION_PROTOCOL_VERSION
 from .companion_binding import sign_pair_response, validate_pair_request
+from .compatibility import companion_compatibility
 from .instance_lock import local_instance_lock
 from .onboarding_center import (
     MAX_LARGE_EXPORT_BYTES,
@@ -207,16 +208,18 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
 
     def _companion_pair_body(self) -> dict[str, Any]:
         payload = self._optional_json_body()
+        compatibility = companion_compatibility(payload.get("protocol_version"), payload.get("extension_version"))
         if (
             set(payload) != {"protocol_version", "extension_version", "companion_binding"}
-            or payload.get("protocol_version") != COMPANION_PROTOCOL_VERSION
-            or payload.get("extension_version") != COMPANION_EXTENSION_VERSION
+            or compatibility["status"] != "AVAILABLE"
             or not isinstance(payload.get("companion_binding"), dict)
         ):
             raise JobOpsError(
                 "BROWSER_COMPANION_UPDATE_REQUIRED",
                 "JobFlow and Browser Companion must match. Check the official release notes and update the older component.",
                 expected_version=COMPANION_EXTENSION_VERSION,
+                observed_version=compatibility["observed_version"],
+                update_target=compatibility["update_target"],
             )
         validate_pair_request(
             payload["companion_binding"],
