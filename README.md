@@ -12,6 +12,11 @@ See the [compatibility and recovery matrix](docs/compatibility.md) and [October 
 
 The source branch includes these reviewable capabilities. They are not a new signed desktop release.
 
+The [full-regression follow-up](docs/test-isolation-2026-10-29.md) retains an initial
+local run with seven failures and two errors, explains its environment and PDF-test
+isolation defects, and records the focused repairs. It does not replace the missing
+full-material semantic acceptance or clean-Windows release acceptance.
+
 | Capability | Available source behavior | Verification and limits |
 | --- | --- | --- |
 | Materials and facts | Optional PDF/image transcription, entity-linked candidates, encrypted originals and separate source/Claim review | [Complete-material follow-up](docs/complete-claims-2026-10-29.md) fixes date/column filtering, retains more bilingual statements and rejects direct ownership substitutions. Three fresh real visual samples reach preview; full semantic accuracy and independent acceptance remain unestablished. |
@@ -115,12 +120,15 @@ Synthetic and saved-page tests are engineering evidence, not proof that every li
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[build,mcp,document]"
+npm ci --ignore-scripts
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -I -m jobops.cli --version
 .\.venv\Scripts\python.exe -m jobops.compatibility
 .\.venv\Scripts\python.exe -m jobops.cli demo
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 ```
 
-Python 3.11-3.13 is supported for source development. `npm ci`, `npx playwright install chromium`, and `npm run test:e2e` run the browser checks. Release scanning additionally requires the explicitly selected, trusted Git described in [the release checklist](docs/release-checklist.md). Source setup is not a signed installation and does not authorize production release.
+Python 3.11-3.13 is supported for source development. Install the locked Node dependencies before full Python discovery: that suite also verifies their exact tree. Each worktree needs its own populated `.venv` and `node_modules`; setting `PYTHONPATH` or borrowing another checkout's interpreter does not prepare the isolated launcher tests. `npx playwright install chromium` and `npm run test:e2e` run the browser checks. Release scanning additionally requires the explicitly selected, trusted Git described in [the release checklist](docs/release-checklist.md). Source setup is not a signed installation and does not authorize production release.
 
 `mcp` and `document` are optional runtime extras, included above to run their integration tests. Ordinary use can install `.[build]`. See [configuration and reproduction](docs/workbench-modernization-2026-10-28.md#run-and-configure) for MCP, Docling, and the synthetic comparison.
 

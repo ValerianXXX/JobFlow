@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 import io
 import json
+import os
 import textwrap
 import unittest
 from unittest.mock import patch
@@ -141,6 +142,7 @@ class StandardResumeTests(unittest.TestCase):
             with self.assertRaises(JobOpsError):
                 generate(service)
 
+    @patch.dict(os.environ, {"JOBFLOW_PDF_EXPORT_PROVIDER": "word"})
     def test_pdf_failure_keeps_docx_and_redacts_converter_errors(self):
         with project_temp() as root:
             service, _, _, _ = approved_pdf_service(root)
@@ -158,6 +160,7 @@ class StandardResumeTests(unittest.TestCase):
             self.assertNotIn("sensitive", json.dumps(caught.exception.as_dict()))
             self.assertEqual(sha256_bytes(service.standard_resume_file(result)), result["docx_sha256"])
 
+    @patch.dict(os.environ, {"JOBFLOW_PDF_EXPORT_PROVIDER": "word"})
     def test_pdf_commit_failure_rolls_back_new_encrypted_output(self):
         with project_temp() as root:
             service, onboarding, _, _ = approved_pdf_service(root)
@@ -199,9 +202,11 @@ class StandardResumeTests(unittest.TestCase):
                 build_standard_resume(root / "bad.docx", profile={"candidate_display_name": "Synthetic"}, claim_set=tampered, locale="en")
             self.assertFalse((root / "bad.docx").exists())
 
+    @patch.dict(os.environ, {"JOBFLOW_PDF_EXPORT_PROVIDER": "word"})
     def test_capability_discovery_does_not_claim_real_conversion_or_launch_programs(self):
         with patch("jobops.document_capabilities.word_registered", return_value=True), patch("subprocess.run") as run:
             status = document_capabilities()
+            self.assertEqual(status["pdf_export_provider"], "WORD")
             self.assertEqual(status["pdf_export"], "DETECTED_NOT_VERIFIED")
             run.assert_not_called()
         self.assertNotIn("path", json.dumps(status))

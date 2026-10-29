@@ -1,0 +1,124 @@
+{
+  "observed_at": "2026-10-29T22:24:36.781090+00:00",
+  "status": "FOCUSED_RECOVERY_VERIFIED_FULL_FOLLOWUP_PENDING",
+  "base_commit": "3024fb15cb65d94529a7ca71bbfffcbc0f97b7b1",
+  "source_lf_sha256": {
+    "tests/test_materials.py": "2b2636dbb2698369ed05734021c49c26e3f32d89dc90c6ba297063d550bf2a39",
+    "tests/test_standard_resume.py": "c891bc0480a7491ac1b97d54d54410b0946d983699de2d03151ee6affd468523",
+    "tests/test_windows_subprocess_hygiene.py": "c815894b484951d902c4b10bb1f0a5b01ecbed585a93d48a3a2ccd9286580ff0"
+  },
+  "initial_full_run": {
+    "tests": 1293,
+    "seconds": 5971.07,
+    "failedTestIds": [
+      "test_policy_and_installed_javascript_tree_match_committed_digest (test_release_toolchain.ReleaseToolchainTests.test_policy_and_installed_javascript_tree_match_committed_digest)",
+      "test_word_export_helper_has_no_console_window (test_windows_subprocess_hygiene.WindowsSubprocessHygieneTests.test_word_export_helper_has_no_console_window)",
+      "test_pdf_export_failure_does_not_expose_private_stderr (test_materials.MaterialTests.test_pdf_export_failure_does_not_expose_private_stderr)",
+      "test_pdf_export_never_accepts_or_overwrites_a_stale_target (test_materials.MaterialTests.test_pdf_export_never_accepts_or_overwrites_a_stale_target)",
+      "test_pdf_helper_finishes_while_parent_control_input_remains_open (test_materials.MaterialTests.test_pdf_helper_finishes_while_parent_control_input_remains_open)",
+      "test_default_launcher_is_authenticated_before_a_redacted_verify_failure (test_runtime_inputs_wrapper.RuntimeInputWrapperTests.test_default_launcher_is_authenticated_before_a_redacted_verify_failure)",
+      "test_pdf_failure_keeps_docx_and_redacts_converter_errors (test_standard_resume.StandardResumeTests.test_pdf_failure_keeps_docx_and_redacts_converter_errors)",
+      "test_one_click_health_check_is_redacted_local_only_and_passing (test_windows_launchers.WindowsLauncherTests.test_one_click_health_check_is_redacted_local_only_and_passing)",
+      "test_public_cli_reports_a_safe_version (test_windows_launchers.WindowsLauncherTests.test_public_cli_reports_a_safe_version)"
+    ],
+    "status": "FAIL",
+    "logLFHash": "0c25c6c87d4f2070037fec77cfcd42902b9996ead47d27e57a75ad97787dbb50",
+    "failures": 7,
+    "errors": 2,
+    "skipped": 4,
+    "provider": "libreoffice",
+    "own_launcher_package_installed": false,
+    "own_locked_javascript_tree_present": false
+  },
+  "before_code_edit_word_selection": {
+    "tests": 5,
+    "seconds": 2.116,
+    "failedTestIds": [],
+    "status": "PASS",
+    "logLFHash": "ba5d25b1dd8d6874902bfbd1d259abb0edeec8bf747da9071ecad0b99e41e93f"
+  },
+  "first_focused_failure_retained": {
+    "tests": 37,
+    "seconds": 24.181,
+    "failedTestIds": [
+      "test_pdf_commit_failure_rolls_back_new_encrypted_output (test_standard_resume.StandardResumeTests.test_pdf_commit_failure_rolls_back_new_encrypted_output)",
+      "test_capability_discovery_does_not_claim_real_conversion_or_launch_programs (test_standard_resume.StandardResumeTests.test_capability_discovery_does_not_claim_real_conversion_or_launch_programs)"
+    ],
+    "status": "FAIL",
+    "logLFHash": "55746d56cae2e900ecd60b85a6504745621078b5dd7ffd90787eba77e433b803"
+  },
+  "final_focused": {
+    "tests": 37,
+    "seconds": 22.144,
+    "failedTestIds": [],
+    "status": "PASS",
+    "logLFHash": "d6911b5b568bf993c25dfda24fed3ea8bb4209e63cff6f79375d9130e39997f6",
+    "outer_provider": "libreoffice",
+    "original_nine_failures_pass": true
+  },
+  "invalid_parent_provider": {
+    "tests": 7,
+    "seconds": 3.85,
+    "failedTestIds": [],
+    "status": "PASS",
+    "logLFHash": "97d8e238ea07f6f83c6e8f089cd7c95580f99d53d2857ba6756482b0c8c95e9c",
+    "overlap_with_focused_tests": true,
+    "caller_environment_restored": true
+  },
+  "environment": {
+    "platform": "Windows",
+    "python": "3.11.3",
+    "runner_packages": {
+      "python-docx": "1.2.0",
+      "lxml": "6.1.3",
+      "Pillow": "11.3.0",
+      "pdfplumber": "0.11.9",
+      "pypdf": "5.9.0",
+      "pypdfium2": "5.14.0",
+      "pdfminer.six": "20251230",
+      "setuptools": "80.10.2",
+      "wheel": "0.48.0"
+    },
+    "own_launcher_packages": {
+      "python-docx": "1.2.0",
+      "lxml": "6.1.3",
+      "Pillow": "11.3.0",
+      "pdfplumber": "0.11.9",
+      "pypdf": "5.9.0",
+      "pypdfium2": "5.14.0",
+      "pdfminer.six": "20251230",
+      "setuptools": "80.10.2",
+      "wheel": "0.48.0"
+    },
+    "own_launcher_pip_check": "PASS",
+    "locked_javascript_tree": {
+      "status": "PASS",
+      "files": 173,
+      "bytes": 18516238,
+      "sha256": "df85481a30bcbc0f7276548d245eba0980d136c8085ca4a3662cb6f3c568302f"
+    }
+  },
+  "hosted_base_observation": {
+    "run_id": 40951607759,
+    "source_candidate": "PASS",
+    "windows_3_11": "PASS",
+    "windows_3_12": "IN_PROGRESS",
+    "windows_3_13": "IN_PROGRESS",
+    "applies_to_base_commit_only": true
+  },
+  "production_source_changes": 0,
+  "assertions_removed": 0,
+  "tests_deleted": 0,
+  "dependency_or_trust_policy_changes": 0,
+  "real_external_actions": 0,
+  "live_model_requests": 0,
+  "new_browser_acceptance": false,
+  "full_followup_regression": "NOT_YET_COMPLETED",
+  "full_material_semantic_acceptance": "UNMEASURED",
+  "independent_human_acceptance": "NOT_PERFORMED",
+  "owner_confirmed_external_blockers": [
+    "Trusted production signing",
+    "Independent clean Windows environment"
+  ],
+  "rollback": "Test/documentation-only revert; no runtime data migration or production approval change."
+}
