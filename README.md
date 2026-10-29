@@ -119,6 +119,7 @@ The project is intentionally Windows-first because secure applicant storage uses
 - [Application workspace, source references, evaluation and rollback](docs/workbench-modernization-2026-10-28.md)
 - [User acceptance review, actual capabilities and remaining gaps](docs/user-acceptance-2026-10-29.md)
 - [Roadmap](docs/roadmap.md)
+- [Next upgrade plan and verified reference implementations](docs/next-upgrade-plan-2026-10-29.md)
 - [Release checklist](docs/release-checklist.md)
 - [Security policy](SECURITY.md)
 - [Contributing](CONTRIBUTING.md)

@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Documented the next upgrade milestones and checked upstream references, distinguishing proposed acceptance targets from implemented features and external release prerequisites.
+
 - Repair the synthetic demo's review approval so it reaches its local rehearsal without demanding a real Browser Companion. Keep normal application approval and user-only final Submit unchanged. Add actual HTTP/DPAPI UI coverage through the fake receipt.
 - Direct completed material previews to original-source review instead of asking for another upload; restore keyboard access and visible focus to both upload controls.
 - Record a fresh browser-operated synthetic acceptance run with the existing real Hermes route, exact evidence and explicit limits. Update the now-completed hosted baseline matrices; signed distribution, clean-Windows and live-employer acceptance remain separate.
