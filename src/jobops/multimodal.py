@@ -13,36 +13,71 @@ from .util import sha256_bytes
 
 VISUAL_TASK = "JOBOPS_VISUAL_TRANSCRIPTION_V1"
 MAX_PAGES = 6
+DEFAULT_PDF_DPI = 220
+MAX_PAGE_PIXELS = 25_000_000
+MAX_DOCUMENT_PIXELS = 60_000_000
+MAX_PAYLOAD_CHARACTERS = 6 * 1024 * 1024
+
+
+def _pdf_resolution() -> int:
+    value = os.getenv("JOBFLOW_VISUAL_PDF_DPI", str(DEFAULT_PDF_DPI))
+    if len(value) != 3 or not value.isascii() or not value.isdecimal() or not 110 <= int(value) <= 300:
+        raise JobOpsError("VISUAL_RESOLUTION_INVALID", "Set JOBFLOW_VISUAL_PDF_DPI to an integer from 110 to 300; no pages were sent.")
+    return int(value)
 
 
 def render_pages(data: bytes, extension: str) -> list[dict[str, Any]]:
     if not data or len(data) > 16 * 1024 * 1024:
         raise JobOpsError("VISUAL_INPUT_LIMIT", "Visual analysis accepts at most 16 MiB and six pages.")
-    images = []
+    pages = []
+    payload_characters = 0
+    rendered_pixels = 0
+
+    def append_page(image, *, pdf_dpi=None):
+        # Encode and release each bitmap before rendering the next page. Keep
+        # only the bounded model payload, never all six uncompressed bitmaps.
+        nonlocal payload_characters, rendered_pixels
+        pixels = image.width * image.height
+        rendered_pixels += pixels
+        if pixels > MAX_PAGE_PIXELS or rendered_pixels > MAX_DOCUMENT_PIXELS:
+            raise JobOpsError("VISUAL_IMAGE_LIMIT", "Rendered images exceed the page or document pixel limit; no pages were sent.")
+        output = io.BytesIO()
+        with image.convert("RGB") as rgb:
+            rgb.save(output, format="PNG")
+        raw = output.getvalue()
+        url_size = len("data:image/png;base64,") + 4 * ((len(raw) + 2) // 3)
+        payload_characters += url_size
+        if payload_characters > MAX_PAYLOAD_CHARACTERS:
+            raise JobOpsError("VISUAL_PAYLOAD_LIMIT", "Rendered pages exceed the bounded model input; no pages were sent. Split the source into smaller evidence units.")
+        pages.append({"page": len(pages) + 1, "width": image.width, "height": image.height,
+                      "sha256": sha256_bytes(raw), "pdf_dpi": pdf_dpi,
+                      "data_url": "data:image/png;base64," + base64.b64encode(raw).decode("ascii")})
+
     try:
         if extension == ".pdf":
+            dpi = _pdf_resolution()
             import pdfplumber
             with pdfplumber.open(io.BytesIO(data)) as document:
                 if not 1 <= len(document.pages) <= MAX_PAGES:
                     raise JobOpsError("VISUAL_PAGE_LIMIT", "Split the document into at most six-page evidence units; no partial document was sent.")
-                if any(page.width * page.height * (110 / 72) ** 2 > 25_000_000 for page in document.pages):
-                    raise JobOpsError("VISUAL_IMAGE_LIMIT", "A rendered PDF page exceeds 25 megapixels; no pages were sent.")
-                images = [page.to_image(resolution=110).original.copy() for page in document.pages]
+                pixels = []
+                for page in document.pages:
+                    if any(not math.isfinite(size) or size <= 0 for size in (page.width, page.height)):
+                        raise JobOpsError("VISUAL_IMAGE_LIMIT", "A PDF page has invalid dimensions; no pages were sent.")
+                    scale = dpi / 72
+                    pixels.append(math.ceil(page.width * scale) * math.ceil(page.height * scale))
+                if max(pixels) > MAX_PAGE_PIXELS or sum(pixels) > MAX_DOCUMENT_PIXELS:
+                    raise JobOpsError("VISUAL_IMAGE_LIMIT", "Rendered PDF exceeds 25 megapixels per page or 60 megapixels per document; no pages were sent. Split the source or select a lower resolution explicitly.")
+                for page in document.pages:
+                    with page.to_image(resolution=dpi).original as image:
+                        append_page(image, pdf_dpi=dpi)
         elif extension in {".png", ".jpg", ".jpeg"}:
             with Image.open(io.BytesIO(data)) as image:
-                if image.width * image.height > 25_000_000 or getattr(image, "n_frames", 1) != 1:
+                if image.width * image.height > MAX_PAGE_PIXELS or getattr(image, "n_frames", 1) != 1:
                     raise JobOpsError("VISUAL_IMAGE_LIMIT", "Supply one still image of at most 25 megapixels.")
-                images = [image.convert("RGB")]
+                append_page(image)
         else:
             raise JobOpsError("VISUAL_FORMAT_UNSUPPORTED", "Visual analysis accepts PDF, PNG or JPEG.")
-        pages = []
-        for number, image in enumerate(images, 1):
-            output = io.BytesIO(); image.convert("RGB").save(output, format="PNG")
-            raw = output.getvalue()
-            pages.append({"page": number, "width": image.width, "height": image.height,
-                          "sha256": sha256_bytes(raw), "data_url": "data:image/png;base64," + base64.b64encode(raw).decode("ascii")})
-        if sum(len(page["data_url"]) for page in pages) > 6 * 1024 * 1024:
-            raise JobOpsError("VISUAL_PAYLOAD_LIMIT", "Rendered pages exceed the bounded model input; no pages were sent.")
         return pages
     except JobOpsError:
         raise
@@ -109,6 +144,9 @@ def read_visual(data: bytes, extension: str, engine, *, allow_configured_provide
             regions.append({"page": page["page"], "bbox": box, "line_start": len(lines), "line_end": len(lines), "image_sha256": original["sha256"]})
     return "\n".join(lines), {"visual_verification_required": True, "visual_regions": regions,
         "visual_source_sha256": sha256_bytes(data), "document_page_count": len(pages),
+        "visual_render": {"pdf_dpi": pages[0]["pdf_dpi"],
+            "payload_characters": sum(len(page["data_url"]) for page in pages),
+            "pages": [{key: page[key] for key in ("page", "width", "height", "sha256")} for page in pages]},
         "visual_elapsed_ms": round((time.monotonic() - started) * 1000), "visual_cost_usd": None,
         "visual_mode": "MODEL_TRANSCRIPTION_UNVERIFIED", "automatic_claim_selection": False}
 

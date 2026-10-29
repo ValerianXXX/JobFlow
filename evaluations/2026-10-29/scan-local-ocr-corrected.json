@@ -1,0 +1,437 @@
+{
+  "observed_at": "2026-10-29T18:35:13.566231Z",
+  "synthetic_only": true,
+  "manifest_lf_sha256": "b7a4945984b49e5fc5e73e2ef8469bd07dbc51e92d41b7340675a165e1f36454",
+  "base_commit": "3d89942756c729a02fa6b8a4ce64f8bb107bf894",
+  "working_tree_observation": true,
+  "model_route_before": null,
+  "adapter_request_limit": 4,
+  "source_lf_sha256": {
+    "src/jobops/multimodal.py": "6c9d6b81a189dc26bc6afaea1fc199d0f44ede4035476049ccb9762b3419729d",
+    "scripts/evaluate-scan-resolution.py": "8e2af63b3269c2f3765003e1473919dc94cfa8d536c1346abfc8dce48b11e96e",
+    "scripts/tesseract-probe-adapter.py": "d130b8062649cde920235160c903b0a31e5ef0a3a259144a323c55df704a476b"
+  },
+  "cost_usd": null,
+  "usage_tokens": null,
+  "provider_api_calls": null,
+  "business_completion": "NOT_ATTEMPTED",
+  "original_bytes_unchanged": true,
+  "arms": [
+    {
+      "case": "zh-scan",
+      "pdf_dpi": 110,
+      "source_sha256": "4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+      "render": {
+        "elapsed_ms": 1672,
+        "payload_characters": 79570,
+        "pages": [
+          {
+            "page": 1,
+            "width": 935,
+            "height": 1210,
+            "sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          }
+        ]
+      },
+      "local_ocr": {
+        "status": "TRANSCRIBED_UNVERIFIED",
+        "text": "CTIC MATIRIAL- SOT ARLAL APPLICANT\n片 Syma 12506\nSAT T Bae.",
+        "lines": [
+          {
+            "text": "CTIC MATIRIAL- SOT ARLAL APPLICANT",
+            "bbox_pixels": [
+              105,
+              53,
+              369,
+              77
+            ]
+          },
+          {
+            "text": "片 Syma 12506",
+            "bbox_pixels": [
+              69,
+              489,
+              209,
+              504
+            ]
+          },
+          {
+            "text": "SAT T Bae.",
+            "bbox_pixels": [
+              69,
+              528,
+              240,
+              556
+            ]
+          }
+        ],
+        "image_sha256": "0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+        "elapsed_ms": 3800,
+        "engine": "Tesseract",
+        "language": "chi_sim+eng",
+        "oem": 1,
+        "psm": 3,
+        "cloud_calls": 0,
+        "factual_accuracy_verified": false,
+        "assessment": {
+          "expected_facts": 4,
+          "verbatim_facts_retained": 0,
+          "expected_entities": 2,
+          "entity_contexts_retained": 0,
+          "expected_source_lines": 8,
+          "exact_normalized_lines_retained": 0,
+          "missing_or_changed_lines": [
+            "合成青杉实验室09",
+            "分析员 | 2023-2024",
+            "团队核验了21家门店。",
+            "申请人编写了15份报告。",
+            "合成海港研究所09",
+            "研究员 | 2021-2022",
+            "团队管理预算12509美元。",
+            "申请人测试了33个场景。"
+          ],
+          "scope": "Verbatim text/adjacent-context retention; not full Claim accuracy or calibrated visual geometry",
+          "manual_adjudication_required": true
+        }
+      }
+    },
+    {
+      "case": "zh-scan",
+      "pdf_dpi": 220,
+      "source_sha256": "4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+      "render": {
+        "elapsed_ms": 703,
+        "payload_characters": 158550,
+        "pages": [
+          {
+            "page": 1,
+            "width": 1870,
+            "height": 2420,
+            "sha256": "sha256:bd37b11401395325078b5155883fcfbf8d342086fc03164a5f8df2d7452bb5ec"
+          }
+        ]
+      },
+      "local_ocr": {
+        "status": "TRANSCRIBED_UNVERIFIED",
+        "text": "SYNTHETIC MATERIAL-NOTAREALAPPLICANT\n分 析 员 | 2023-2024\n团队 核验 了 21 家 门店 。\n申请 人 编写 了 15 份 报告 。\n合成 海港 研究 所 09\n研究 员 | 2021-2022\n团队 管理 预算 12509 美 元 。\n申请 人 测试 了 33 个 场景 。",
+        "lines": [
+          {
+            "text": "SYNTHETIC MATERIAL-NOTAREALAPPLICANT",
+            "bbox_pixels": [
+              119,
+              115,
+              738,
+              137
+            ]
+          },
+          {
+            "text": "分 析 员 | 2023-2024",
+            "bbox_pixels": [
+              137,
+              427,
+              402,
+              476
+            ]
+          },
+          {
+            "text": "团队 核验 了 21 家 门店 。",
+            "bbox_pixels": [
+              137,
+              515,
+              454,
+              562
+            ]
+          },
+          {
+            "text": "申请 人 编写 了 15 份 报告 。",
+            "bbox_pixels": [
+              137,
+              598,
+              483,
+              645
+            ]
+          },
+          {
+            "text": "合成 海港 研究 所 09",
+            "bbox_pixels": [
+              137,
+              807,
+              402,
+              837
+            ]
+          },
+          {
+            "text": "研究 员 | 2021-2022",
+            "bbox_pixels": [
+              136,
+              888,
+              402,
+              933
+            ]
+          },
+          {
+            "text": "团队 管理 预算 12509 美 元 。",
+            "bbox_pixels": [
+              137,
+              974,
+              500,
+              1021
+            ]
+          },
+          {
+            "text": "申请 人 测试 了 33 个 场景 。",
+            "bbox_pixels": [
+              137,
+              1058,
+              483,
+              1108
+            ]
+          }
+        ],
+        "image_sha256": "bd37b11401395325078b5155883fcfbf8d342086fc03164a5f8df2d7452bb5ec",
+        "elapsed_ms": 4447,
+        "engine": "Tesseract",
+        "language": "chi_sim+eng",
+        "oem": 1,
+        "psm": 3,
+        "cloud_calls": 0,
+        "factual_accuracy_verified": false,
+        "assessment": {
+          "expected_facts": 4,
+          "verbatim_facts_retained": 4,
+          "expected_entities": 2,
+          "entity_contexts_retained": 1,
+          "expected_source_lines": 8,
+          "exact_normalized_lines_retained": 7,
+          "missing_or_changed_lines": [
+            "合成青杉实验室09"
+          ],
+          "scope": "Verbatim text/adjacent-context retention; not full Claim accuracy or calibrated visual geometry",
+          "manual_adjudication_required": true
+        }
+      }
+    },
+    {
+      "case": "en-scanned_columns",
+      "pdf_dpi": 220,
+      "source_sha256": "f1222d7777a9efcf8cf68a1ebed4381d7fb3a8494ea24df4ac080dec94e2976a",
+      "render": {
+        "elapsed_ms": 453,
+        "payload_characters": 142882,
+        "pages": [
+          {
+            "page": 1,
+            "width": 1870,
+            "height": 2420,
+            "sha256": "sha256:43df23977f899c347104c478c6c6e42341a551687320666959084fe55a8af7b7"
+          }
+        ]
+      },
+      "local_ocr": {
+        "status": "TRANSCRIBED_UNVERIFIED",
+        "text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT\nSynthetic Cedar 10\nAnalyst | 2023-2024\nTeam reviewed 2? stores.\nApplicant prepared 16 reports.\nSynthetic Harbor 10\nResearcher | 2021-2022\nTeam managed a $12510 budget.\nApplicant tested 34 scenarios.",
+        "lines": [
+          {
+            "text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT",
+            "bbox_pixels": [
+              119,
+              115,
+              738,
+              137
+            ]
+          },
+          {
+            "text": "Synthetic Cedar 10",
+            "bbox_pixels": [
+              118,
+              348,
+              391,
+              383
+            ]
+          },
+          {
+            "text": "Analyst | 2023-2024",
+            "bbox_pixels": [
+              116,
+              445,
+              390,
+              483
+            ]
+          },
+          {
+            "text": "Team reviewed 2? stores.",
+            "bbox_pixels": [
+              118,
+              544,
+              487,
+              571
+            ]
+          },
+          {
+            "text": "Applicant prepared 16 reports.",
+            "bbox_pixels": [
+              116,
+              642,
+              561,
+              677
+            ]
+          },
+          {
+            "text": "Synthetic Harbor 10",
+            "bbox_pixels": [
+              1034,
+              348,
+              1322,
+              383
+            ]
+          },
+          {
+            "text": "Researcher | 2021-2022",
+            "bbox_pixels": [
+              1036,
+              445,
+              1366,
+              483
+            ]
+          },
+          {
+            "text": "Team managed a $12510 budget.",
+            "bbox_pixels": [
+              1034,
+              542,
+              1519,
+              579
+            ]
+          },
+          {
+            "text": "Applicant tested 34 scenarios.",
+            "bbox_pixels": [
+              1033,
+              642,
+              1473,
+              677
+            ]
+          }
+        ],
+        "image_sha256": "43df23977f899c347104c478c6c6e42341a551687320666959084fe55a8af7b7",
+        "elapsed_ms": 3549,
+        "engine": "Tesseract",
+        "language": "eng",
+        "oem": 1,
+        "psm": 3,
+        "cloud_calls": 0,
+        "factual_accuracy_verified": false,
+        "assessment": {
+          "expected_facts": 4,
+          "verbatim_facts_retained": 3,
+          "expected_entities": 2,
+          "entity_contexts_retained": 1,
+          "expected_source_lines": 8,
+          "exact_normalized_lines_retained": 7,
+          "missing_or_changed_lines": [
+            "Team reviewed 22 stores."
+          ],
+          "scope": "Verbatim text/adjacent-context retention; not full Claim accuracy or calibrated visual geometry",
+          "manual_adjudication_required": true
+        }
+      }
+    },
+    {
+      "case": "en-scanned_columns",
+      "pdf_dpi": 110,
+      "source_sha256": "f1222d7777a9efcf8cf68a1ebed4381d7fb3a8494ea24df4ac080dec94e2976a",
+      "render": {
+        "elapsed_ms": 62,
+        "payload_characters": 71690,
+        "pages": [
+          {
+            "page": 1,
+            "width": 935,
+            "height": 1210,
+            "sha256": "sha256:7ad096483019f8e95536d11dbd89d571e38fd5a4176d029fc3ee25d51df7fada"
+          }
+        ]
+      },
+      "local_ocr": {
+        "status": "TRANSCRIBED_UNVERIFIED",
+        "text": "SYNT CTIC MATIRIAL- SOT ARCAL APPLICANT\nSyrthetic Farbor 10\n21-2022\nTear nanaged a $12510 budget\nrorts, App.’cat-testec 3 scenarios.",
+        "lines": [
+          {
+            "text": "SYNT CTIC MATIRIAL- SOT ARCAL APPLICANT",
+            "bbox_pixels": [
+              60,
+              53,
+              369,
+              78
+            ]
+          },
+          {
+            "text": "Syrthetic Farbor 10",
+            "bbox_pixels": [
+              518,
+              174,
+              661,
+              192
+            ]
+          },
+          {
+            "text": "21-2022",
+            "bbox_pixels": [
+              629,
+              225,
+              683,
+              237
+            ]
+          },
+          {
+            "text": "Tear nanaged a $12510 budget",
+            "bbox_pixels": [
+              517,
+              271,
+              755,
+              290
+            ]
+          },
+          {
+            "text": "rorts, App.’cat-testec 3 scenarios.",
+            "bbox_pixels": [
+              247,
+              318,
+              733,
+              342
+            ]
+          }
+        ],
+        "image_sha256": "7ad096483019f8e95536d11dbd89d571e38fd5a4176d029fc3ee25d51df7fada",
+        "elapsed_ms": 1359,
+        "engine": "Tesseract",
+        "language": "eng",
+        "oem": 1,
+        "psm": 3,
+        "cloud_calls": 0,
+        "factual_accuracy_verified": false,
+        "assessment": {
+          "expected_facts": 4,
+          "verbatim_facts_retained": 0,
+          "expected_entities": 2,
+          "entity_contexts_retained": 0,
+          "expected_source_lines": 8,
+          "exact_normalized_lines_retained": 0,
+          "missing_or_changed_lines": [
+            "Synthetic Cedar 10",
+            "Analyst | 2023-2024",
+            "Team reviewed 22 stores.",
+            "Applicant prepared 16 reports.",
+            "Synthetic Harbor 10",
+            "Researcher | 2021-2022",
+            "Team managed a $12510 budget.",
+            "Applicant tested 34 scenarios."
+          ],
+          "scope": "Verbatim text/adjacent-context retention; not full Claim accuracy or calibrated visual geometry",
+          "manual_adjudication_required": true
+        }
+      }
+    }
+  ],
+  "adapter_requests": []
+}

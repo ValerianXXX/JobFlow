@@ -12,7 +12,7 @@ const root = path.resolve(__dirname,"..");
   const python=process.env.JOBFLOW_TEST_PYTHON||path.join(root,".venv","Scripts","python.exe");
   const child=spawn(python,[path.join(__dirname,"standard_resume_ui_server.py"),"--stdio-control"],
     {cwd:root,windowsHide:true,stdio:["pipe","pipe","pipe"]});
-  let browser,output="",stderr="";
+  let browser,page,artifacts,output="",stderr="";
   const exited=new Promise(resolve=>child.once("exit",resolve));
   child.stderr.on("data",chunk=>{stderr+=chunk;});
   child.stdout.on("data",chunk=>{output+=chunk;});
@@ -25,7 +25,7 @@ const root = path.resolve(__dirname,"..");
       child.stdout.on("data",()=>{if(output.includes("\n")){clearTimeout(timer);resolve(JSON.parse(output.split("\n")[0]).url);}});
     });
     browser=await chromium.launch({channel:"msedge",headless:true});
-    const page=await browser.newPage({viewport:{width:1365,height:900}});
+    page=await browser.newPage({viewport:{width:1365,height:900}});
     page.setDefaultTimeout(60000);
     const origin=new URL(url).origin, errors=[], external=[];
     page.on("pageerror",error=>errors.push(error.message));
@@ -33,7 +33,7 @@ const root = path.resolve(__dirname,"..");
       if(route.request().url().startsWith(origin+"/"))return route.continue();
       external.push(route.request().url());return route.abort();
     });
-    const artifacts=path.join(root,"reports",process.env.JOBFLOW_TEST_LIBREOFFICE==="1"?"libreoffice-resume-ui":"standard-resume-ui");mkdirSync(artifacts,{recursive:true});
+    artifacts=path.join(root,"reports",process.env.JOBFLOW_TEST_LIBREOFFICE==="1"?"libreoffice-resume-ui":"standard-resume-ui",String(Date.now()));mkdirSync(artifacts,{recursive:true});
     await page.goto(url);
     await page.locator("#createStandardResume:not([disabled])").waitFor();
     await page.locator('[data-locale="zh"]').click();
@@ -110,6 +110,20 @@ const root = path.resolve(__dirname,"..");
     report.session_and_origin_checks=true;report.browser_errors=errors;report.external_requests=external;
     writeFileSync(path.join(artifacts,"result.json"),JSON.stringify(report,null,2)+"\n");
     console.log("Standard resume UI: PASS (synthetic PDF profile, actual DPAPI, bilingual, download, adoption, reload)");
+  }catch(error){
+    if(page&&artifacts){
+      await page.screenshot({path:path.join(artifacts,"failure.png")}).catch(()=>{});
+      const diagnostic=await page.evaluate(()=>({
+        status:state.data?.status,standard_resume:state.data?.standard_resume,
+        serviceCompatible:state.serviceCompatible,
+        elements:["standardResumePanel","applicationConsole","applicationReadiness","createStandardResume"].map(id=>{
+          const el=document.getElementById(id);return {id,present:!!el,hidden:el?getComputedStyle(el).display==="none":null};
+        })
+      })).catch(()=>({diagnostic_unavailable:true}));
+      writeFileSync(path.join(artifacts,"failure.json"),JSON.stringify(diagnostic,null,2)+"\n");
+      console.error("Synthetic standard-resume failure state:",JSON.stringify(diagnostic));
+    }
+    throw error;
   }finally{
     if(browser)await browser.close();
     if(child.exitCode===null)child.stdin.end("stop\n");

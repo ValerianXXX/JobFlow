@@ -15,6 +15,17 @@ resolution and independent local OCR on those retained failures before claiming
 broader material understanding. Original-source review now supports zoom/fit and
 collapsible position details; approval boundaries remain unchanged.
 
+The expanded product-quality goal is now active. Its first [scan-resolution and
+upload-recovery follow-up](scan-resolution-2026-10-29.md) retains all earlier
+failures, compares the same scan bytes with four real Hermes requests and an
+independent local OCR probe, and raises the opt-in visual PDF default to 220 DPI.
+Both higher-resolution transcripts retained eight designated lines; downstream
+Claim correctness and complete-material acceptance remain open. Continue with
+independent-template full materials and provenance/contradiction handling before
+calling M1 complete. The scope also includes gradual domain/interface refactoring,
+recoverable workflows and separate human acceptance; it is not just dependency
+or model-version replacement.
+
 The next product milestone is a usable assisted application: import materials,
 review reusable facts, produce a checked resume, prepare one chosen job,
 review and fill its supported form, let the user submit, and retain verifiable
