@@ -48,6 +48,34 @@ observation, not a hosted measurement or established timeout cause. No model
 calls, mailbox access, installed-product changes or real application actions
 were performed. Further hosted diagnostic results must determine the fix.
 
+## Encrypted-store follow-up
+
+The independent [diagnostic run 40849236142](https://github.com/ValerianXXX/JobFlow/actions/runs/40849236142)
+at `8a9e4a7` failed in source job `123364274644`: the request reached 5,000 ms
+while the active labels were `bootstrap` and `encrypted_store`. Total smoke
+time was 5,672 ms. This reproduces the timeout without the preceding long
+regression job and identifies the waiting helper, but not its exact internal
+PowerShell operation.
+
+The helper previously relied on module autoloading for `Add-Type`, filesystem
+commands and JSON output. Microsoft documents [automatic module loading](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_modules?view=powershell-5.1)
+and a [module-analysis cache under LOCALAPPDATA](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_windows_powershell_5.1).
+These were checked October 29, 2026. Each release smoke intentionally uses a
+fresh private directory, so it cannot rely on the user's existing module cache.
+
+The follow-up explicitly imports only Windows' built-in Utility and Management
+modules from the system directory and disables automatic module discovery in
+that disposable helper process. The DPAPI algorithm, CurrentUser scope,
+ciphertext format, atomic replacement, private-reference checks and all
+timeouts remain unchanged. It neither changes the user's module settings nor
+introduces a persistent PowerShell host.
+
+A regression supplying a synthetic ambient Utility module failed on the old
+helper, then passed the real Put/Get/Test/Delete DPAPI roundtrip with explicit
+system imports. This demonstrates a module-resolution defect and its repair.
+Whether it resolves the hosted timing failure still requires the updated
+source job; it must not be inferred from that synthetic regression alone.
+
 ## Verification and recovery
 
 Run `test_release_smoke_process.py` and `test_release_candidate.py` for the
