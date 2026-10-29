@@ -145,7 +145,7 @@ Bundle SHA-256: `fed48832aeb52ea0f80b653374ed3bbd3350a3edd569db0ba02e08b94ef9fff
 Tree SHA-256: `96e42c679abf929cbec71b4947a3321c226a858387fa713c05860de6afe20e74`.
 The ignored local bundle contains no publisher key.
 
-Complete runtime built from checkpoint `a7af3e57835e771df4d7d163471751fc00f07d34`
+The earlier complete runtime was built from checkpoint `a7af3e57835e771df4d7d163471751fc00f07d34`
 using the official CI-pinned MinGit 2.53.0.3, whose archive/executable digest and
 Authenticode publisher match the existing trust policy. The host-bundled Git
 executable passed its own signature check but its runtime-file closure did not;
@@ -159,6 +159,36 @@ SHA-256: `1547df7ca1707f19b748a6e5b4b77209c3d1bb514864a72e05ff71dc500110b1`.
 The builder reports `BUILT_UNATTESTED`, `psf_sigstore_verified=false`,
 `outer_signing_ready=false`, and `public_release_blocked=true`. This local artifact
 is **not** a production-signed installer and was not uploaded as a release.
+
+### Refreshed complete-runtime preparation - October 28
+
+Checkpoint `987e8c58826a63cf629a3c84075cf95f725efe28` includes the approved identity
+policy and corrected release documentation. Using the same verified cached
+inputs and pinned MinGit, the existing builder produced the complete Windows
+runtime twice with identical archive and tree hashes. The independent archive
+verifier and offline startup smoke passed with zero external actions.
+
+- Archive: `JobFlow-v0.7.0-windows-x64-complete.zip`, 38,628,522 bytes.
+- SHA-256: `707238221eb22e49eda62c5b4d7bb4221738b7c833ac7fe7fa4e9e6de80345a2`.
+- [Canonical build evidence](../evaluations/2026-10-28/runtime-987e8c5/JobFlow-runtime-build-evidence.json),
+  SHA-256 `8d29f62761e04d692b6ef006bfd4c54793d4334d75484e4dc088175fb9ddd7fa`.
+- [Pathless publisher request](../evaluations/2026-10-28/runtime-987e8c5/JobFlow-protected-publisher-request.json),
+  SHA-256 `4d832d6111c39a29df4033f894978a6847c681ba3ad92489da24e79b1d6e27a2`.
+
+The archive remains local in ignored `dist/runtime-candidate-987e8c5/`; only the
+pathless evidence/request are included for review. The builder still reports
+`BUILT_UNATTESTED`, `psf_sigstore_verified=false`, `outer_signing_ready=false`
+and `public_release_blocked=true`. The request is preparation for an independent
+trusted publisher, not that publisher's approval or signature. No Release,
+extension-store update, installation into the user's fixed app or deployment occurred.
+
+The evidence was issued at `2026-10-29T00:52:13Z` and expires at
+`2026-10-29T23:52:13Z`. This is October 28 locally in America/New_York. The files
+remain historical receipts after expiry; do not refresh timestamps or reuse them
+for a different source commit. A later approved release commit needs a fresh build
+and protected publisher/clean-Windows evidence. This local build does not transfer
+the running `7b2fbf7` Windows CI result to `987e8c5`; the latter changed documentation
+and evidence only, and its public-documentation checks passed independently.
 
 The GitHub `jobflow-protected-release` environment exists with reviewer and branch
 policy. No environment secret or protected signing workflow was available in the

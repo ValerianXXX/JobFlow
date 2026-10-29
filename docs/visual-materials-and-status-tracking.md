@@ -136,8 +136,12 @@ passes do not relabel the failed 8a5f0af1 matrix as green.
 The [October 28 workspace preview](workbench-modernization-2026-10-28.md) now adds
 the user-facing local EML inbox, original-page comparison and read-only MCP tools.
 Its subsequent source checkpoint passed 1,172 regression tests and nine browser
-suites on all three supported Python versions; the candidate build still stops at
-historical-author authorization. Mailbox authorization, authenticated provider
+suites on all three supported Python versions; that checkpoint's candidate build
+stopped at the then-unapproved historical-author gate. The owner subsequently
+approved only the specific historical identity hash, applied in `7b2fbf7`; its
+reproducible source-candidate build passed. Trusted signing and clean-Windows
+acceptance remain separate gates. See the [dated release record](modernization-2026-10-27.md).
+Mailbox authorization, authenticated provider
 adapters and real delivery semantics remain external follow-up. Local message
 import and manual association are not live email tracking. Final application
 submission remains a user action.
