@@ -6,6 +6,15 @@ Status: engineering scope and acceptance targets. The [first implementation batc
 
 Implementation follow-up: [local LibreOffice export and reading-order QA](local-pdf-export-2026-10-29.md) now cover the optional Word-free conversion part of M1 on the existing Windows workstation. Six paired synthetic layouts and actual browser adoption were checked. This is not the planned 36-material extraction study, independent clean Windows acceptance or full M1 completion.
 
+Further M1 work: [local PDF regions and CJK validation](pdf-regions-and-cjk-2026-10-29.md)
+fix an uncased-script rejection and improve text-column entity context on 36
+short diagnostic probes. These probes do not replace the full-material corpus
+below. A real scanned-Chinese follow-up still misread dates, numbers, organization
+and responsibility, so scan accuracy and the 95% fact target remain open. Compare
+resolution and independent local OCR on those retained failures before claiming
+broader material understanding. Original-source review now supports zoom/fit and
+collapsible position details; approval boundaries remain unchanged.
+
 The next product milestone is a usable assisted application: import materials,
 review reusable facts, produce a checked resume, prepare one chosen job,
 review and fill its supported form, let the user submit, and retain verifiable

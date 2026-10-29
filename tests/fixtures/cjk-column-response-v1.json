@@ -1,0 +1,110 @@
+{
+  "synthetic_only": true,
+  "case": "zh-columns",
+  "source_sha256": "fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+  "observation": "evaluations/2026-10-29/cjk-validator-followup.json",
+  "model_response": {
+    "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+    "adapter_request_index": 1,
+    "line_number_start": 1,
+    "source_lines": [
+      "SYNTHETIC MATERIAL - NOT A REAL APPLICANT",
+      "合成青杉实验室02",
+      "分析员 | 2023-2024",
+      "团队核验了14家门店。",
+      "申请人编写了8份报告。",
+      "Original synthetic fixture | Page 1",
+      "合成海港研究所02",
+      "研究员 | 2021-2022",
+      "团队管理预算12502美元。",
+      "申请人测试了26个场景。"
+    ],
+    "payload": {
+      "schema_version": 2,
+      "entities": [
+        {
+          "entity_key": "work-1",
+          "entity_type": "work",
+          "organization": "合成青杉实验室02",
+          "role": "分析员",
+          "start_date": "2023",
+          "end_date": "2024",
+          "line_start": 2,
+          "line_end": 3
+        },
+        {
+          "entity_key": "work-2",
+          "entity_type": "work",
+          "organization": "合成海港研究所02",
+          "role": "研究员",
+          "start_date": "2021",
+          "end_date": "2022",
+          "line_start": 7,
+          "line_end": 8
+        }
+      ],
+      "candidates": [
+        {
+          "statement": "合成青杉实验室02的分析员任职日期为2023-2024。",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "entity_key": "work-1",
+          "confidence": "HIGH",
+          "line_start": 2,
+          "line_end": 3,
+          "reason": "组织、职位和日期均由相邻行明确给出。"
+        },
+        {
+          "statement": "在合成青杉实验室02担任分析员期间，团队核验了14家门店。",
+          "category": "work",
+          "claim_kind": "achievement",
+          "entity_key": "work-1",
+          "confidence": "HIGH",
+          "line_start": 2,
+          "line_end": 4,
+          "reason": "明确保留团队归属及门店数量。"
+        },
+        {
+          "statement": "在合成青杉实验室02担任分析员期间，申请人编写了8份报告。",
+          "category": "work",
+          "claim_kind": "achievement",
+          "entity_key": "work-1",
+          "confidence": "HIGH",
+          "line_start": 2,
+          "line_end": 5,
+          "reason": "明确陈述申请人的工作及报告数量。"
+        },
+        {
+          "statement": "合成海港研究所02的研究员任职日期为2021-2022。",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "entity_key": "work-2",
+          "confidence": "HIGH",
+          "line_start": 7,
+          "line_end": 8,
+          "reason": "组织、职位和日期均由相邻行明确给出。"
+        },
+        {
+          "statement": "在合成海港研究所02担任研究员期间，团队管理预算12502美元。",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "entity_key": "work-2",
+          "confidence": "HIGH",
+          "line_start": 7,
+          "line_end": 9,
+          "reason": "明确保留团队归属、预算金额和币种。"
+        },
+        {
+          "statement": "在合成海港研究所02担任研究员期间，申请人测试了26个场景。",
+          "category": "work",
+          "claim_kind": "achievement",
+          "entity_key": "work-2",
+          "confidence": "HIGH",
+          "line_start": 7,
+          "line_end": 10,
+          "reason": "明确陈述申请人的测试工作及场景数量。"
+        }
+      ]
+    }
+  }
+}

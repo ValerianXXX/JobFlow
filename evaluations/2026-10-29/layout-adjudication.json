@@ -1,0 +1,75 @@
+{
+  "recorded_at": "2026-10-29T17:51:09.429609+00:00",
+  "reviewer": "CODING_ASSISTANT",
+  "synthetic_only": true,
+  "first_observation": [
+    {
+      "case": "en-columns",
+      "mode": "existing_text",
+      "designated_facts_correct": 4,
+      "of": 4
+    },
+    {
+      "case": "en-columns",
+      "mode": "pdf_regions",
+      "designated_facts_correct": 4,
+      "of": 4
+    },
+    {
+      "case": "mixed-staggered_columns",
+      "mode": "pdf_regions",
+      "designated_facts_correct": 4,
+      "of": 4
+    }
+  ],
+  "followup": [
+    {
+      "case": "zh-columns",
+      "designated_facts_correct": 4,
+      "of": 4,
+      "candidates_retained": 5,
+      "unflagged_designated_number_or_ownership_errors_observed": 0
+    },
+    {
+      "case": "zh-scan",
+      "designated_facts_correct": 0,
+      "of": 4,
+      "candidates_retained": 5,
+      "observed_errors": [
+        {
+          "field": "first_entity.end_date",
+          "expected": "2024",
+          "observed": "2022"
+        },
+        {
+          "field": "applicant_report_count",
+          "expected": "15",
+          "observed": "5"
+        },
+        {
+          "field": "second_entity.organization",
+          "expected": "合成海港研究所09",
+          "observed": "合成深海研究所09"
+        },
+        {
+          "field": "team_budget",
+          "expected": "12509",
+          "observed": "250S"
+        },
+        {
+          "field": "budget_responsibility",
+          "expected": "team",
+          "observed": "applicant"
+        }
+      ],
+      "note": "Two other numeric values survive, but parent date/organization context is wrong. No claim approval or business action occurred."
+    }
+  ],
+  "limitations": [
+    "Only designated facts and parent contexts were adjudicated; not a whole-material benchmark.",
+    "The first observation has no captured raw provider responses; its zero-candidate causes cannot all be reconstructed.",
+    "Same-output replay isolates validator retention, not visual accuracy.",
+    "No independent user acceptance or calibrated source-region accuracy."
+  ],
+  "full_material_acceptance": "NOT_ACHIEVED"
+}

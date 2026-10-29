@@ -1,0 +1,2419 @@
+{
+  "observed_at": "2026-10-29T17:06:17.551503Z",
+  "synthetic_only": true,
+  "model_route_before": {
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "hermes_commit": "afe53708ee7400919ae3e17a6dde9b02629e5c87"
+  },
+  "adapter_request_limit": 12,
+  "base_commit": "756b0eed99cf281a1f624788ce0cb494af0d30c9",
+  "working_tree_observation": true,
+  "manifest_lf_sha256": "b7a4945984b49e5fc5e73e2ef8469bd07dbc51e92d41b7340675a165e1f36454",
+  "collector_lf_sha256": "9606af21bd472d55bf801e860b2a1cd630eeea655509e4ec5d5fba405cec6c75",
+  "cost_usd": null,
+  "usage_tokens": null,
+  "provider_api_calls": null,
+  "billing_note": "Adapter requests exclude unknown provider-internal retries; no billing receipt is available.",
+  "business_completion": "NOT_ATTEMPTED",
+  "arms": [
+    {
+      "case": "en-columns",
+      "mode": "existing_text",
+      "source_sha256": "3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidates": [
+        {
+          "ai_reason": "The organization, role, and date range are explicitly stated.",
+          "candidate_id": "EXT-46600D9F0BF9",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-44DC15645D67",
+            "entity_id": "ENT-D4756B2902AC",
+            "entity_key": "work_synthetic_cedar_02_analyst_2023_2024",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar 02",
+            "role": "Analyst",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-D4756B2902AC",
+          "provenance": {
+            "ai_line_end": 3,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 3,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant was an Analyst at Synthetic Cedar 02 from 2023-2024."
+        },
+        {
+          "ai_reason": "The reconstructed first-column entry explicitly attributes the review to the team.",
+          "candidate_id": "EXT-C06C999A5EF3",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-44DC15645D67",
+            "entity_id": "ENT-D4756B2902AC",
+            "entity_key": "work_synthetic_cedar_02_analyst_2023_2024",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar 02",
+            "role": "Analyst",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-D4756B2902AC",
+          "provenance": {
+            "ai_line_end": 4,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 4,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "For the Analyst role at Synthetic Cedar 02, the team reviewed 14 stores."
+        },
+        {
+          "ai_reason": "The reconstructed first-column entry explicitly attributes preparation of 8 reports to the applicant.",
+          "candidate_id": "EXT-BBDDD6BA916F",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-44DC15645D67",
+            "entity_id": "ENT-D4756B2902AC",
+            "entity_key": "work_synthetic_cedar_02_analyst_2023_2024",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar 02",
+            "role": "Analyst",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-D4756B2902AC",
+          "provenance": {
+            "ai_line_end": 5,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 5,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "For the Analyst role at Synthetic Cedar 02, the applicant prepared 8 reports."
+        },
+        {
+          "ai_reason": "The organization, role, and date range are explicitly stated.",
+          "candidate_id": "EXT-1BA16C121CAA",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-81597BD584FB",
+            "entity_id": "ENT-4E4D25B30A70",
+            "entity_key": "work_synthetic_harbor_02_researcher_2021_2022",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor 02",
+            "role": "Researcher",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-4E4D25B30A70",
+          "provenance": {
+            "ai_line_end": 3,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 3,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant was a Researcher at Synthetic Harbor 02 from 2021-2022."
+        },
+        {
+          "ai_reason": "The reconstructed second-column entry explicitly attributes budget management to the team.",
+          "candidate_id": "EXT-850CB39FE54C",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-81597BD584FB",
+            "entity_id": "ENT-4E4D25B30A70",
+            "entity_key": "work_synthetic_harbor_02_researcher_2021_2022",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor 02",
+            "role": "Researcher",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-4E4D25B30A70",
+          "provenance": {
+            "ai_line_end": 4,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 4,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "For the Researcher role at Synthetic Harbor 02, the team managed a $12502 budget."
+        },
+        {
+          "ai_reason": "The reconstructed second-column entry explicitly attributes testing 26 scenarios to the applicant.",
+          "candidate_id": "EXT-B68D235DDE7B",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-81597BD584FB",
+            "entity_id": "ENT-4E4D25B30A70",
+            "entity_key": "work_synthetic_harbor_02_researcher_2021_2022",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor 02",
+            "role": "Researcher",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-4E4D25B30A70",
+          "provenance": {
+            "ai_line_end": 5,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 5,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "For the Researcher role at Synthetic Harbor 02, the applicant tested 26 scenarios."
+        }
+      ],
+      "analyzed_text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT\nSynthetic Cedar 02 Synthetic Harbor 02\nAnalyst | 2023-2024 Researcher | 2021-2022\nTeam reviewed 14 stores. Team managed a $12502 budget.\nApplicant prepared 8 reports. Applicant tested 26 scenarios.\nOriginal synthetic fixture | Page 1",
+      "assessment": {
+        "expected_facts": 4,
+        "matched_facts": 4,
+        "facts": [
+          {
+            "organization": "Synthetic Cedar 02",
+            "number": "14",
+            "owner": "team",
+            "matched_candidate_ids": [
+              "EXT-C06C999A5EF3"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Cedar 02",
+            "number": "8",
+            "owner": "applicant",
+            "matched_candidate_ids": [
+              "EXT-BBDDD6BA916F"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Harbor 02",
+            "number": "12502",
+            "owner": "team",
+            "matched_candidate_ids": [
+              "EXT-850CB39FE54C"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Harbor 02",
+            "number": "26",
+            "owner": "applicant",
+            "matched_candidate_ids": [
+              "EXT-B68D235DDE7B"
+            ],
+            "issues": []
+          }
+        ],
+        "numeric_errors": null,
+        "misattributions": null,
+        "manual_adjudication_required": true
+      },
+      "extraction_summary": {
+        "raw_lines": 6,
+        "reconstructed_blocks": 2,
+        "filtered_noise_lines": 0,
+        "claim_candidates": 6,
+        "non_claim_blocks": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "document_page_count": 1,
+        "pdf_extraction_strategy": "LOGICAL_READING_ORDER",
+        "pdf_extraction_candidates_compared": 2,
+        "document_quality": {
+          "schema_version": 1,
+          "status": "PASS",
+          "extension": ".pdf",
+          "page_count": 1,
+          "character_count": 275,
+          "nonempty_line_count": 6,
+          "wordish_character_count": 223,
+          "replacement_character_count": 0,
+          "private_use_glyph_count": 0,
+          "control_character_count": 0,
+          "short_line_ratio": 0.0,
+          "long_line_count": 0,
+          "unique_line_ratio": 1.0,
+          "characters_per_page": 275.0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "contains_document_text": false
+        },
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "ai_candidates": 6,
+        "ai_entities": 2,
+        "ai_chunks": 1,
+        "ai_chunking_applied": false,
+        "ai_input_characters": 275,
+        "ai_covered_characters": 275,
+        "ai_input_truncated": false,
+        "segmented_oversize_lines": 0,
+        "ai_repair_attempted": false,
+        "ai_repair_succeeded": false,
+        "ai_repair_count": 0,
+        "quality_gate_version": 5,
+        "filtered_candidate_count": 0,
+        "filtered_candidate_reasons": {},
+        "candidate_filter_applied": false,
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0,
+        "classification_review_candidate_count": 0,
+        "automatic_claim_selection": false,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6"
+      },
+      "retained_original_matches": true,
+      "material_claims": 0,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 22344,
+      "adapter_requests": 1
+    },
+    {
+      "case": "en-columns",
+      "mode": "pdf_regions",
+      "source_sha256": "3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidates": [
+        {
+          "ai_reason": "The organization, role, and date range are explicitly stated.",
+          "candidate_id": "EXT-D880CFC4B916",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-44DC15645D67",
+            "entity_id": "ENT-D4756B2902AC",
+            "entity_key": "work-synthetic-cedar-02-analyst-2023-2024",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar 02",
+            "role": "Analyst",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-D4756B2902AC",
+          "provenance": {
+            "ai_line_end": 3,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 3,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.1314015151515152,
+                  0.20104575163398694,
+                  0.14402777777777784
+                ],
+                "line_end": 2,
+                "line_start": 2,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.17180555555555563,
+                  0.20712418300653598,
+                  0.18443181818181825
+                ],
+                "line_end": 3,
+                "line_start": 3,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The role at Synthetic Cedar 02 was Analyst from 2023-2024."
+        },
+        {
+          "ai_reason": "The team activity and exact number are explicitly stated.",
+          "candidate_id": "EXT-C6426101B8F4",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-44DC15645D67",
+            "entity_id": "ENT-D4756B2902AC",
+            "entity_key": "work-synthetic-cedar-02-analyst-2023-2024",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar 02",
+            "role": "Analyst",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-D4756B2902AC",
+          "provenance": {
+            "ai_line_end": 4,
+            "ai_line_start": 4,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 4,
+            "line_start": 4,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.21220959595959601,
+                  0.2500653594771242,
+                  0.22483585858585864
+                ],
+                "line_end": 4,
+                "line_start": 4,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The team reviewed 14 stores."
+        },
+        {
+          "ai_reason": "The applicant activity and exact number are explicitly stated.",
+          "candidate_id": "EXT-A1AEC6FAFD3F",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-44DC15645D67",
+            "entity_id": "ENT-D4756B2902AC",
+            "entity_key": "work-synthetic-cedar-02-analyst-2023-2024",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar 02",
+            "role": "Analyst",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-D4756B2902AC",
+          "provenance": {
+            "ai_line_end": 5,
+            "ai_line_start": 5,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 5,
+            "line_start": 5,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.25261363636363643,
+                  0.27279411764705885,
+                  0.265239898989899
+                ],
+                "line_end": 5,
+                "line_start": 5,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant prepared 8 reports."
+        },
+        {
+          "ai_reason": "The organization, role, and date range are explicitly stated.",
+          "candidate_id": "EXT-27FD7A07D31A",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-81597BD584FB",
+            "entity_id": "ENT-4E4D25B30A70",
+            "entity_key": "work-synthetic-harbor-02-researcher-2021-2022",
+            "entity_type": "work",
+            "line_end": 8,
+            "line_start": 7,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor 02",
+            "role": "Researcher",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-4E4D25B30A70",
+          "provenance": {
+            "ai_line_end": 8,
+            "ai_line_start": 7,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 8,
+            "line_start": 7,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.1314015151515152,
+                  0.6966830065359477,
+                  0.14402777777777784
+                ],
+                "line_end": 7,
+                "line_start": 7,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.17180555555555563,
+                  0.728186274509804,
+                  0.18443181818181825
+                ],
+                "line_end": 8,
+                "line_start": 8,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The role at Synthetic Harbor 02 was Researcher from 2021-2022."
+        },
+        {
+          "ai_reason": "The team activity and exact budget value are explicitly stated.",
+          "candidate_id": "EXT-A01AB1AF2455",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-81597BD584FB",
+            "entity_id": "ENT-4E4D25B30A70",
+            "entity_key": "work-synthetic-harbor-02-researcher-2021-2022",
+            "entity_type": "work",
+            "line_end": 8,
+            "line_start": 7,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor 02",
+            "role": "Researcher",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-4E4D25B30A70",
+          "provenance": {
+            "ai_line_end": 9,
+            "ai_line_start": 9,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 9,
+            "line_start": 9,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.21220959595959601,
+                  0.7984477124183006,
+                  0.22483585858585864
+                ],
+                "line_end": 9,
+                "line_start": 9,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The team managed a $12502 budget."
+        },
+        {
+          "ai_reason": "The applicant activity and exact number are explicitly stated.",
+          "candidate_id": "EXT-E8DB49EB844B",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-81597BD584FB",
+            "entity_id": "ENT-4E4D25B30A70",
+            "entity_key": "work-synthetic-harbor-02-researcher-2021-2022",
+            "entity_type": "work",
+            "line_end": 8,
+            "line_start": 7,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor 02",
+            "role": "Researcher",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-4E4D25B30A70",
+          "provenance": {
+            "ai_line_end": 10,
+            "ai_line_start": 10,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 10,
+            "line_start": 10,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.25261363636363643,
+                  0.7702614379084967,
+                  0.265239898989899
+                ],
+                "line_end": 10,
+                "line_start": 10,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant tested 26 scenarios."
+        }
+      ],
+      "analyzed_text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT\nSynthetic Cedar 02\nAnalyst | 2023-2024\nTeam reviewed 14 stores.\nApplicant prepared 8 reports.\nOriginal synthetic fixture | Page 1\nSynthetic Harbor 02\nResearcher | 2021-2022\nTeam managed a $12502 budget.\nApplicant tested 26 scenarios.",
+      "assessment": {
+        "expected_facts": 4,
+        "matched_facts": 4,
+        "facts": [
+          {
+            "organization": "Synthetic Cedar 02",
+            "number": "14",
+            "owner": "team",
+            "matched_candidate_ids": [
+              "EXT-C6426101B8F4"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Cedar 02",
+            "number": "8",
+            "owner": "applicant",
+            "matched_candidate_ids": [
+              "EXT-A1AEC6FAFD3F"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Harbor 02",
+            "number": "12502",
+            "owner": "team",
+            "matched_candidate_ids": [
+              "EXT-A01AB1AF2455"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Harbor 02",
+            "number": "26",
+            "owner": "applicant",
+            "matched_candidate_ids": [
+              "EXT-E8DB49EB844B"
+            ],
+            "issues": []
+          }
+        ],
+        "numeric_errors": null,
+        "misattributions": null,
+        "manual_adjudication_required": true
+      },
+      "extraction_summary": {
+        "raw_lines": 10,
+        "reconstructed_blocks": 2,
+        "filtered_noise_lines": 0,
+        "claim_candidates": 6,
+        "non_claim_blocks": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "document_page_count": 1,
+        "visual_regions": [
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.044018939393939464,
+              0.4093856209150326,
+              0.05538257575757583
+            ],
+            "line_start": 1,
+            "line_end": 1
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.1314015151515152,
+              0.20104575163398694,
+              0.14402777777777784
+            ],
+            "line_start": 2,
+            "line_end": 2
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.17180555555555563,
+              0.20712418300653598,
+              0.18443181818181825
+            ],
+            "line_start": 3,
+            "line_end": 3
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.21220959595959601,
+              0.2500653594771242,
+              0.22483585858585864
+            ],
+            "line_start": 4,
+            "line_end": 4
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.25261363636363643,
+              0.27279411764705885,
+              0.265239898989899
+            ],
+            "line_start": 5,
+            "line_end": 5
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.9467967171717172,
+              0.2776062091503268,
+              0.9581603535353536
+            ],
+            "line_start": 6,
+            "line_end": 6
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.1314015151515152,
+              0.6966830065359477,
+              0.14402777777777784
+            ],
+            "line_start": 7,
+            "line_end": 7
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.17180555555555563,
+              0.728186274509804,
+              0.18443181818181825
+            ],
+            "line_start": 8,
+            "line_end": 8
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.21220959595959601,
+              0.7984477124183006,
+              0.22483585858585864
+            ],
+            "line_start": 9,
+            "line_end": 9
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.25261363636363643,
+              0.7702614379084967,
+              0.265239898989899
+            ],
+            "line_start": 10,
+            "line_end": 10
+          }
+        ],
+        "visual_source_sha256": "sha256:3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+        "visual_verification_required": true,
+        "visual_mode": "LOCAL_PDF_REGIONS_UNVERIFIED",
+        "automatic_claim_selection": false,
+        "local_parser_version": "pdf-regions-1",
+        "local_parser_backend_version": "0.11.9",
+        "model_calls": 0,
+        "visual_cost_usd": 0.0,
+        "local_parser_column_pages": 1,
+        "local_parser_table_pages": 0,
+        "visual_elapsed_ms": 469,
+        "pdf_extraction_strategy": "LOCAL_PDF_REGIONS",
+        "document_quality": {
+          "schema_version": 1,
+          "status": "PASS",
+          "extension": ".pdf",
+          "page_count": 1,
+          "character_count": 275,
+          "nonempty_line_count": 10,
+          "wordish_character_count": 223,
+          "replacement_character_count": 0,
+          "private_use_glyph_count": 0,
+          "control_character_count": 0,
+          "short_line_ratio": 0.0,
+          "long_line_count": 0,
+          "unique_line_ratio": 1.0,
+          "characters_per_page": 275.0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "contains_document_text": false
+        },
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "ai_candidates": 6,
+        "ai_entities": 2,
+        "ai_chunks": 1,
+        "ai_chunking_applied": false,
+        "ai_input_characters": 275,
+        "ai_covered_characters": 275,
+        "ai_input_truncated": false,
+        "segmented_oversize_lines": 0,
+        "ai_repair_attempted": false,
+        "ai_repair_succeeded": false,
+        "ai_repair_count": 0,
+        "quality_gate_version": 5,
+        "filtered_candidate_count": 0,
+        "filtered_candidate_reasons": {},
+        "candidate_filter_applied": false,
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0,
+        "classification_review_candidate_count": 0,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6"
+      },
+      "retained_original_matches": true,
+      "unconfirmed_selection": "VISUAL_SOURCE_VERIFICATION_REQUIRED",
+      "material_claims": 0,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 18109,
+      "adapter_requests": 1
+    },
+    {
+      "case": "zh-columns",
+      "mode": "existing_text",
+      "source_sha256": "fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidates": [],
+      "analyzed_text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT\n合成青杉实验室02 合成海港研究所02\n分析员 | 2023-2024 研究员 | 2021-2022\n团队核验了14家门店。 团队管理预算12502美元。\n申请人编写了8份报告。 申请人测试了26个场景。\nOriginal synthetic fixture | Page 1",
+      "assessment": {
+        "expected_facts": 4,
+        "matched_facts": 0,
+        "facts": [
+          {
+            "organization": "合成青杉实验室02",
+            "number": "14",
+            "owner": "team",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成青杉实验室02",
+            "number": "8",
+            "owner": "applicant",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成海港研究所02",
+            "number": "12502",
+            "owner": "team",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成海港研究所02",
+            "number": "26",
+            "owner": "applicant",
+            "matched_candidate_ids": [],
+            "issues": []
+          }
+        ],
+        "numeric_errors": null,
+        "misattributions": null,
+        "manual_adjudication_required": true
+      },
+      "extraction_summary": {
+        "raw_lines": 6,
+        "reconstructed_blocks": 0,
+        "filtered_noise_lines": 0,
+        "claim_candidates": 0,
+        "non_claim_blocks": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "document_page_count": 1,
+        "pdf_extraction_strategy": "LOGICAL_READING_ORDER",
+        "pdf_extraction_candidates_compared": 2,
+        "document_quality": {
+          "schema_version": 1,
+          "status": "PASS",
+          "extension": ".pdf",
+          "page_count": 1,
+          "character_count": 181,
+          "nonempty_line_count": 6,
+          "wordish_character_count": 147,
+          "replacement_character_count": 0,
+          "private_use_glyph_count": 0,
+          "control_character_count": 0,
+          "short_line_ratio": 0.0,
+          "long_line_count": 0,
+          "unique_line_ratio": 1.0,
+          "characters_per_page": 181.0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "contains_document_text": false
+        },
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "ai_candidates": 0,
+        "ai_entities": 0,
+        "ai_chunks": 1,
+        "ai_chunking_applied": false,
+        "ai_input_characters": 181,
+        "ai_covered_characters": 181,
+        "ai_input_truncated": false,
+        "segmented_oversize_lines": 0,
+        "ai_repair_attempted": true,
+        "ai_repair_succeeded": true,
+        "ai_repair_count": 1,
+        "quality_gate_version": 5,
+        "filtered_candidate_count": 0,
+        "filtered_candidate_reasons": {},
+        "candidate_filter_applied": false,
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0,
+        "classification_review_candidate_count": 0,
+        "automatic_claim_selection": false,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6"
+      },
+      "retained_original_matches": true,
+      "material_claims": 0,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 27188,
+      "adapter_requests": 2
+    },
+    {
+      "case": "zh-columns",
+      "mode": "pdf_regions",
+      "source_sha256": "fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidates": [],
+      "analyzed_text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT\n合成青杉实验室02\n分析员 | 2023-2024\n团队核验了14家门店。\n申请人编写了8份报告。\nOriginal synthetic fixture | Page 1\n合成海港研究所02\n研究员 | 2021-2022\n团队管理预算12502美元。\n申请人测试了26个场景。",
+      "assessment": {
+        "expected_facts": 4,
+        "matched_facts": 0,
+        "facts": [
+          {
+            "organization": "合成青杉实验室02",
+            "number": "14",
+            "owner": "team",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成青杉实验室02",
+            "number": "8",
+            "owner": "applicant",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成海港研究所02",
+            "number": "12502",
+            "owner": "team",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成海港研究所02",
+            "number": "26",
+            "owner": "applicant",
+            "matched_candidate_ids": [],
+            "issues": []
+          }
+        ],
+        "numeric_errors": null,
+        "misattributions": null,
+        "manual_adjudication_required": true
+      },
+      "extraction_summary": {
+        "raw_lines": 10,
+        "reconstructed_blocks": 0,
+        "filtered_noise_lines": 0,
+        "claim_candidates": 0,
+        "non_claim_blocks": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "document_page_count": 1,
+        "visual_regions": [
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.044018939393939464,
+              0.4093856209150326,
+              0.05538257575757583
+            ],
+            "line_start": 1,
+            "line_end": 1
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.1314015151515152,
+              0.194640522875817,
+              0.14483585858585862
+            ],
+            "line_start": 2,
+            "line_end": 2
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.17180555555555563,
+              0.2025653594771242,
+              0.18523989898989904
+            ],
+            "line_start": 3,
+            "line_end": 3
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.21220959595959601,
+              0.2273202614379085,
+              0.22564393939393945
+            ],
+            "line_start": 4,
+            "line_end": 4
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.25261363636363643,
+              0.2345751633986928,
+              0.26604797979797984
+            ],
+            "line_start": 5,
+            "line_end": 5
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.9467967171717172,
+              0.2776062091503268,
+              0.9581603535353536
+            ],
+            "line_start": 6,
+            "line_end": 6
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.1314015151515152,
+              0.6848366013071896,
+              0.14483585858585862
+            ],
+            "line_start": 7,
+            "line_end": 7
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.17180555555555563,
+              0.6927614379084968,
+              0.18523989898989904
+            ],
+            "line_start": 8,
+            "line_end": 8
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.21220959595959601,
+              0.7447712418300654,
+              0.22564393939393945
+            ],
+            "line_start": 9,
+            "line_end": 9
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.25261363636363643,
+              0.7338562091503268,
+              0.26604797979797984
+            ],
+            "line_start": 10,
+            "line_end": 10
+          }
+        ],
+        "visual_source_sha256": "sha256:fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+        "visual_verification_required": true,
+        "visual_mode": "LOCAL_PDF_REGIONS_UNVERIFIED",
+        "automatic_claim_selection": false,
+        "local_parser_version": "pdf-regions-1",
+        "local_parser_backend_version": "0.11.9",
+        "model_calls": 0,
+        "visual_cost_usd": 0.0,
+        "local_parser_column_pages": 1,
+        "local_parser_table_pages": 0,
+        "visual_elapsed_ms": 438,
+        "pdf_extraction_strategy": "LOCAL_PDF_REGIONS",
+        "document_quality": {
+          "schema_version": 1,
+          "status": "PASS",
+          "extension": ".pdf",
+          "page_count": 1,
+          "character_count": 181,
+          "nonempty_line_count": 10,
+          "wordish_character_count": 147,
+          "replacement_character_count": 0,
+          "private_use_glyph_count": 0,
+          "control_character_count": 0,
+          "short_line_ratio": 0.0,
+          "long_line_count": 0,
+          "unique_line_ratio": 1.0,
+          "characters_per_page": 181.0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "contains_document_text": false
+        },
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "ai_candidates": 0,
+        "ai_entities": 0,
+        "ai_chunks": 1,
+        "ai_chunking_applied": false,
+        "ai_input_characters": 181,
+        "ai_covered_characters": 181,
+        "ai_input_truncated": false,
+        "segmented_oversize_lines": 0,
+        "ai_repair_attempted": true,
+        "ai_repair_succeeded": true,
+        "ai_repair_count": 1,
+        "quality_gate_version": 5,
+        "filtered_candidate_count": 0,
+        "filtered_candidate_reasons": {},
+        "candidate_filter_applied": false,
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0,
+        "classification_review_candidate_count": 0,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6"
+      },
+      "retained_original_matches": true,
+      "material_claims": 0,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 26719,
+      "adapter_requests": 2
+    },
+    {
+      "case": "mixed-staggered_columns",
+      "mode": "existing_text",
+      "source_sha256": "72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidates": [],
+      "analyzed_text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT\nSynthetic Cedar 合成03\nSynthetic Harbor 合成03\n分析员 Analyst | 2023-2024\n研究员 Researcher | 2021-2022\n团队 reviewed 15 家门店。\n团队 managed $12503 budget.\n申请人 prepared 9 reports.\n申请人 tested 27 scenarios.\nOriginal synthetic fixture | Page 1",
+      "assessment": {
+        "expected_facts": 4,
+        "matched_facts": 0,
+        "facts": [
+          {
+            "organization": "Synthetic Cedar 合成03",
+            "number": "15",
+            "owner": "team",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Cedar 合成03",
+            "number": "9",
+            "owner": "applicant",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Harbor 合成03",
+            "number": "12503",
+            "owner": "team",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Harbor 合成03",
+            "number": "27",
+            "owner": "applicant",
+            "matched_candidate_ids": [],
+            "issues": []
+          }
+        ],
+        "numeric_errors": null,
+        "misattributions": null,
+        "manual_adjudication_required": true
+      },
+      "extraction_summary": {
+        "raw_lines": 10,
+        "reconstructed_blocks": 0,
+        "filtered_noise_lines": 0,
+        "claim_candidates": 0,
+        "non_claim_blocks": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "document_page_count": 1,
+        "pdf_extraction_strategy": "LOGICAL_READING_ORDER",
+        "pdf_extraction_candidates_compared": 2,
+        "document_quality": {
+          "schema_version": 1,
+          "status": "PASS",
+          "extension": ".pdf",
+          "page_count": 1,
+          "character_count": 266,
+          "nonempty_line_count": 10,
+          "wordish_character_count": 213,
+          "replacement_character_count": 0,
+          "private_use_glyph_count": 0,
+          "control_character_count": 0,
+          "short_line_ratio": 0.0,
+          "long_line_count": 0,
+          "unique_line_ratio": 1.0,
+          "characters_per_page": 266.0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "contains_document_text": false
+        },
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "ai_candidates": 0,
+        "ai_entities": 0,
+        "ai_chunks": 1,
+        "ai_chunking_applied": false,
+        "ai_input_characters": 266,
+        "ai_covered_characters": 266,
+        "ai_input_truncated": false,
+        "segmented_oversize_lines": 0,
+        "ai_repair_attempted": true,
+        "ai_repair_succeeded": true,
+        "ai_repair_count": 1,
+        "quality_gate_version": 5,
+        "filtered_candidate_count": 0,
+        "filtered_candidate_reasons": {},
+        "candidate_filter_applied": false,
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0,
+        "classification_review_candidate_count": 0,
+        "automatic_claim_selection": false,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6"
+      },
+      "retained_original_matches": true,
+      "material_claims": 0,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 38843,
+      "adapter_requests": 2
+    },
+    {
+      "case": "mixed-staggered_columns",
+      "mode": "pdf_regions",
+      "source_sha256": "72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidates": [
+        {
+          "ai_reason": "The organization, role, and date range are explicitly stated.",
+          "candidate_id": "EXT-67BC0A7699B8",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-F450A189EC9F",
+            "entity_id": "ENT-B27D59A76065",
+            "entity_key": "work-synthetic-cedar-analyst-2023-2024",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar 合成03",
+            "role": "分析员 Analyst",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-B27D59A76065",
+          "provenance": {
+            "ai_line_end": 3,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 3,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.1314015151515152,
+                  0.2337254901960784,
+                  0.14483585858585862
+                ],
+                "line_end": 2,
+                "line_start": 2,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.17180555555555563,
+                  0.260686274509804,
+                  0.18523989898989904
+                ],
+                "line_end": 3,
+                "line_start": 3,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The role was 分析员 Analyst at Synthetic Cedar 合成03 from 2023-2024."
+        },
+        {
+          "ai_reason": "The source explicitly attributes the review of 15 stores to the team.",
+          "candidate_id": "EXT-996C3913FDCB",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-F450A189EC9F",
+            "entity_id": "ENT-B27D59A76065",
+            "entity_key": "work-synthetic-cedar-analyst-2023-2024",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar 合成03",
+            "role": "分析员 Analyst",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-B27D59A76065",
+          "provenance": {
+            "ai_line_end": 4,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 4,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.1314015151515152,
+                  0.2337254901960784,
+                  0.14483585858585862
+                ],
+                "line_end": 2,
+                "line_start": 2,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.17180555555555563,
+                  0.260686274509804,
+                  0.18523989898989904
+                ],
+                "line_end": 3,
+                "line_start": 3,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.21220959595959601,
+                  0.25730392156862747,
+                  0.22564393939393945
+                ],
+                "line_end": 4,
+                "line_start": 4,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "At Synthetic Cedar 合成03, the 团队 reviewed 15 家门店。"
+        },
+        {
+          "ai_reason": "The source explicitly attributes preparation of 9 reports to the applicant.",
+          "candidate_id": "EXT-F981C6DF74DD",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-F450A189EC9F",
+            "entity_id": "ENT-B27D59A76065",
+            "entity_key": "work-synthetic-cedar-analyst-2023-2024",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar 合成03",
+            "role": "分析员 Analyst",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-B27D59A76065",
+          "provenance": {
+            "ai_line_end": 5,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 5,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.1314015151515152,
+                  0.2337254901960784,
+                  0.14483585858585862
+                ],
+                "line_end": 2,
+                "line_start": 2,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.17180555555555563,
+                  0.260686274509804,
+                  0.18523989898989904
+                ],
+                "line_end": 3,
+                "line_start": 3,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.21220959595959601,
+                  0.25730392156862747,
+                  0.22564393939393945
+                ],
+                "line_end": 4,
+                "line_start": 4,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.25261363636363643,
+                  0.25460784313725493,
+                  0.26604797979797984
+                ],
+                "line_end": 5,
+                "line_start": 5,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "At Synthetic Cedar 合成03, 申请人 prepared 9 reports."
+        },
+        {
+          "ai_reason": "The organization, role, and date range are explicitly stated.",
+          "candidate_id": "EXT-22AAA589010C",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-7A92DB641DC7",
+            "entity_id": "ENT-566A1163B077",
+            "entity_key": "work-synthetic-harbor-researcher-2021-2022",
+            "entity_type": "work",
+            "line_end": 8,
+            "line_start": 7,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor 合成03",
+            "role": "研究员 Researcher",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-566A1163B077",
+          "provenance": {
+            "ai_line_end": 8,
+            "ai_line_start": 7,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 8,
+            "line_start": 7,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.14402777777777784,
+                  0.7293627450980392,
+                  0.15746212121212125
+                ],
+                "line_end": 7,
+                "line_start": 7,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.18443181818181825,
+                  0.781748366013072,
+                  0.19786616161616166
+                ],
+                "line_end": 8,
+                "line_start": 8,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The role was 研究员 Researcher at Synthetic Harbor 合成03 from 2021-2022."
+        },
+        {
+          "ai_reason": "The source explicitly attributes management of the $12503 budget to the team.",
+          "candidate_id": "EXT-6C8BDACB463E",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-7A92DB641DC7",
+            "entity_id": "ENT-566A1163B077",
+            "entity_key": "work-synthetic-harbor-researcher-2021-2022",
+            "entity_type": "work",
+            "line_end": 8,
+            "line_start": 7,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor 合成03",
+            "role": "研究员 Researcher",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-566A1163B077",
+          "provenance": {
+            "ai_line_end": 9,
+            "ai_line_start": 7,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 9,
+            "line_start": 7,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.14402777777777784,
+                  0.7293627450980392,
+                  0.15746212121212125
+                ],
+                "line_end": 7,
+                "line_start": 7,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.18443181818181825,
+                  0.781748366013072,
+                  0.19786616161616166
+                ],
+                "line_end": 8,
+                "line_start": 8,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.22483585858585864,
+                  0.7757352941176471,
+                  0.23827020202020208
+                ],
+                "line_end": 9,
+                "line_start": 9,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "At Synthetic Harbor 合成03, the 团队 managed a $12503 budget."
+        },
+        {
+          "ai_reason": "The source explicitly attributes testing of 27 scenarios to the applicant.",
+          "candidate_id": "EXT-1A69A68870B5",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-7A92DB641DC7",
+            "entity_id": "ENT-566A1163B077",
+            "entity_key": "work-synthetic-harbor-researcher-2021-2022",
+            "entity_type": "work",
+            "line_end": 8,
+            "line_start": 7,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor 合成03",
+            "role": "研究员 Researcher",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-566A1163B077",
+          "provenance": {
+            "ai_line_end": 10,
+            "ai_line_start": 7,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 10,
+            "line_start": 7,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.14402777777777784,
+                  0.7293627450980392,
+                  0.15746212121212125
+                ],
+                "line_end": 7,
+                "line_start": 7,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.18443181818181825,
+                  0.781748366013072,
+                  0.19786616161616166
+                ],
+                "line_end": 8,
+                "line_start": 8,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.22483585858585864,
+                  0.7757352941176471,
+                  0.23827020202020208
+                ],
+                "line_end": 9,
+                "line_start": 9,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.265239898989899,
+                  0.7520751633986927,
+                  0.2786742424242425
+                ],
+                "line_end": 10,
+                "line_start": 10,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "At Synthetic Harbor 合成03, 申请人 tested 27 scenarios."
+        }
+      ],
+      "analyzed_text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT\nSynthetic Cedar 合成03\n分析员 Analyst | 2023-2024\n团队 reviewed 15 家门店。\n申请人 prepared 9 reports.\nOriginal synthetic fixture | Page 1\nSynthetic Harbor 合成03\n研究员 Researcher | 2021-2022\n团队 managed $12503 budget.\n申请人 tested 27 scenarios.",
+      "assessment": {
+        "expected_facts": 4,
+        "matched_facts": 4,
+        "facts": [
+          {
+            "organization": "Synthetic Cedar 合成03",
+            "number": "15",
+            "owner": "team",
+            "matched_candidate_ids": [
+              "EXT-996C3913FDCB"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Cedar 合成03",
+            "number": "9",
+            "owner": "applicant",
+            "matched_candidate_ids": [
+              "EXT-F981C6DF74DD"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Harbor 合成03",
+            "number": "12503",
+            "owner": "team",
+            "matched_candidate_ids": [
+              "EXT-6C8BDACB463E"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "Synthetic Harbor 合成03",
+            "number": "27",
+            "owner": "applicant",
+            "matched_candidate_ids": [
+              "EXT-1A69A68870B5"
+            ],
+            "issues": []
+          }
+        ],
+        "numeric_errors": null,
+        "misattributions": null,
+        "manual_adjudication_required": true
+      },
+      "extraction_summary": {
+        "raw_lines": 10,
+        "reconstructed_blocks": 2,
+        "filtered_noise_lines": 0,
+        "claim_candidates": 6,
+        "non_claim_blocks": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "document_page_count": 1,
+        "visual_regions": [
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.044018939393939464,
+              0.4093856209150326,
+              0.05538257575757583
+            ],
+            "line_start": 1,
+            "line_end": 1
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.1314015151515152,
+              0.2337254901960784,
+              0.14483585858585862
+            ],
+            "line_start": 2,
+            "line_end": 2
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.17180555555555563,
+              0.260686274509804,
+              0.18523989898989904
+            ],
+            "line_start": 3,
+            "line_end": 3
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.21220959595959601,
+              0.25730392156862747,
+              0.22564393939393945
+            ],
+            "line_start": 4,
+            "line_end": 4
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.25261363636363643,
+              0.25460784313725493,
+              0.26604797979797984
+            ],
+            "line_start": 5,
+            "line_end": 5
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.9467967171717172,
+              0.2776062091503268,
+              0.9581603535353536
+            ],
+            "line_start": 6,
+            "line_end": 6
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.14402777777777784,
+              0.7293627450980392,
+              0.15746212121212125
+            ],
+            "line_start": 7,
+            "line_end": 7
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.18443181818181825,
+              0.781748366013072,
+              0.19786616161616166
+            ],
+            "line_start": 8,
+            "line_end": 8
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.22483585858585864,
+              0.7757352941176471,
+              0.23827020202020208
+            ],
+            "line_start": 9,
+            "line_end": 9
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.265239898989899,
+              0.7520751633986927,
+              0.2786742424242425
+            ],
+            "line_start": 10,
+            "line_end": 10
+          }
+        ],
+        "visual_source_sha256": "sha256:72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+        "visual_verification_required": true,
+        "visual_mode": "LOCAL_PDF_REGIONS_UNVERIFIED",
+        "automatic_claim_selection": false,
+        "local_parser_version": "pdf-regions-1",
+        "local_parser_backend_version": "0.11.9",
+        "model_calls": 0,
+        "visual_cost_usd": 0.0,
+        "local_parser_column_pages": 1,
+        "local_parser_table_pages": 0,
+        "visual_elapsed_ms": 453,
+        "pdf_extraction_strategy": "LOCAL_PDF_REGIONS",
+        "document_quality": {
+          "schema_version": 1,
+          "status": "PASS",
+          "extension": ".pdf",
+          "page_count": 1,
+          "character_count": 266,
+          "nonempty_line_count": 10,
+          "wordish_character_count": 213,
+          "replacement_character_count": 0,
+          "private_use_glyph_count": 0,
+          "control_character_count": 0,
+          "short_line_ratio": 0.0,
+          "long_line_count": 0,
+          "unique_line_ratio": 1.0,
+          "characters_per_page": 266.0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "contains_document_text": false
+        },
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "ai_candidates": 6,
+        "ai_entities": 2,
+        "ai_chunks": 1,
+        "ai_chunking_applied": false,
+        "ai_input_characters": 266,
+        "ai_covered_characters": 266,
+        "ai_input_truncated": false,
+        "segmented_oversize_lines": 0,
+        "ai_repair_attempted": false,
+        "ai_repair_succeeded": false,
+        "ai_repair_count": 0,
+        "quality_gate_version": 5,
+        "filtered_candidate_count": 0,
+        "filtered_candidate_reasons": {},
+        "candidate_filter_applied": false,
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0,
+        "classification_review_candidate_count": 0,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6"
+      },
+      "retained_original_matches": true,
+      "unconfirmed_selection": "VISUAL_SOURCE_VERIFICATION_REQUIRED",
+      "material_claims": 0,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 21266,
+      "adapter_requests": 1
+    },
+    {
+      "case": "zh-scan",
+      "mode": "existing_text",
+      "source_sha256": "4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+      "status": "BLOCKED",
+      "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED",
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 672,
+      "adapter_requests": 0
+    },
+    {
+      "case": "zh-scan",
+      "mode": "visual",
+      "source_sha256": "4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidates": [],
+      "analyzed_text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT\n合成青杉实验室09\n分析员 | 2023-2022\n团队,实验了21家门店。\n申请人编写了5份报告。\n合成深港研究所09\n研究员 | 2021-2022\n个人管理预算=250S美元。\n申请人测试了33个场景。",
+      "assessment": {
+        "expected_facts": 4,
+        "matched_facts": 0,
+        "facts": [
+          {
+            "organization": "合成青杉实验室09",
+            "number": "21",
+            "owner": "team",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成青杉实验室09",
+            "number": "15",
+            "owner": "applicant",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成海港研究所09",
+            "number": "12509",
+            "owner": "team",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成海港研究所09",
+            "number": "33",
+            "owner": "applicant",
+            "matched_candidate_ids": [],
+            "issues": []
+          }
+        ],
+        "numeric_errors": null,
+        "misattributions": null,
+        "manual_adjudication_required": true
+      },
+      "extraction_summary": {
+        "raw_lines": 9,
+        "reconstructed_blocks": 0,
+        "filtered_noise_lines": 0,
+        "claim_candidates": 0,
+        "non_claim_blocks": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "visual_verification_required": true,
+        "visual_regions": [
+          {
+            "page": 1,
+            "bbox": [
+              0.061,
+              0.046,
+              0.397,
+              0.059
+            ],
+            "line_start": 1,
+            "line_end": 1,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.072,
+              0.144,
+              0.218,
+              0.158
+            ],
+            "line_start": 2,
+            "line_end": 2,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.072,
+              0.179,
+              0.216,
+              0.193
+            ],
+            "line_start": 3,
+            "line_end": 3,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.072,
+              0.214,
+              0.266,
+              0.228
+            ],
+            "line_start": 4,
+            "line_end": 4,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.072,
+              0.249,
+              0.26,
+              0.263
+            ],
+            "line_start": 5,
+            "line_end": 5,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.072,
+              0.333,
+              0.218,
+              0.347
+            ],
+            "line_start": 6,
+            "line_end": 6,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.072,
+              0.368,
+              0.216,
+              0.382
+            ],
+            "line_start": 7,
+            "line_end": 7,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.072,
+              0.403,
+              0.304,
+              0.417
+            ],
+            "line_start": 8,
+            "line_end": 8,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.072,
+              0.438,
+              0.27,
+              0.452
+            ],
+            "line_start": 9,
+            "line_end": 9,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          }
+        ],
+        "visual_source_sha256": "sha256:4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+        "document_page_count": 1,
+        "visual_elapsed_ms": 33641,
+        "visual_cost_usd": null,
+        "visual_mode": "MODEL_TRANSCRIPTION_UNVERIFIED",
+        "automatic_claim_selection": false,
+        "document_quality": {
+          "schema_version": 1,
+          "status": "PASS",
+          "extension": ".pdf",
+          "page_count": 1,
+          "character_count": 146,
+          "nonempty_line_count": 9,
+          "wordish_character_count": 117,
+          "replacement_character_count": 0,
+          "private_use_glyph_count": 0,
+          "control_character_count": 0,
+          "short_line_ratio": 0.0,
+          "long_line_count": 0,
+          "unique_line_ratio": 1.0,
+          "characters_per_page": 146.0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "contains_document_text": false
+        },
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "ai_candidates": 0,
+        "ai_entities": 0,
+        "ai_chunks": 1,
+        "ai_chunking_applied": false,
+        "ai_input_characters": 146,
+        "ai_covered_characters": 146,
+        "ai_input_truncated": false,
+        "segmented_oversize_lines": 0,
+        "ai_repair_attempted": true,
+        "ai_repair_succeeded": true,
+        "ai_repair_count": 1,
+        "quality_gate_version": 5,
+        "filtered_candidate_count": 2,
+        "filtered_candidate_reasons": {
+          "STATEMENT_FRAGMENT": 2
+        },
+        "candidate_filter_applied": true,
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0,
+        "classification_review_candidate_count": 0,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6"
+      },
+      "retained_original_matches": true,
+      "material_claims": 0,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 79703,
+      "adapter_requests": 3
+    },
+    {
+      "case": "en-scanned_columns",
+      "mode": "existing_text",
+      "source_sha256": "f1222d7777a9efcf8cf68a1ebed4381d7fb3a8494ea24df4ac080dec94e2976a",
+      "status": "BLOCKED",
+      "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED",
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 656,
+      "adapter_requests": 0
+    },
+    {
+      "case": "en-scanned_columns",
+      "mode": "visual",
+      "source_sha256": "f1222d7777a9efcf8cf68a1ebed4381d7fb3a8494ea24df4ac080dec94e2976a",
+      "status": "BLOCKED",
+      "code": "EVALUATION_CALL_LIMIT",
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 672,
+      "adapter_requests": 0
+    },
+    {
+      "case": "mixed-portfolio",
+      "mode": "existing_text",
+      "source_sha256": "c17346b9572c9b37a9b7f974c2beffb0b2e310131a2eefa5ac977dcee5bd48d4",
+      "status": "BLOCKED",
+      "code": "VISUAL_ANALYSIS_DISABLED",
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 688,
+      "adapter_requests": 0
+    },
+    {
+      "case": "mixed-portfolio",
+      "mode": "visual",
+      "source_sha256": "c17346b9572c9b37a9b7f974c2beffb0b2e310131a2eefa5ac977dcee5bd48d4",
+      "status": "BLOCKED",
+      "code": "EVALUATION_CALL_LIMIT",
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 687,
+      "adapter_requests": 0
+    }
+  ],
+  "model_route_after": {
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "hermes_commit": "afe53708ee7400919ae3e17a6dde9b02629e5c87"
+  },
+  "model_route_unchanged": true,
+  "adapter_requests": [
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 18891
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 14109
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 16297
+    },
+    {
+      "task": "JOBOPS_REPAIR_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 7594
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 15875
+    },
+    {
+      "task": "JOBOPS_REPAIR_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 7219
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 19094
+    },
+    {
+      "task": "JOBOPS_REPAIR_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 16469
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 17188
+    },
+    {
+      "task": "JOBOPS_VISUAL_TRANSCRIPTION_V1",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 33641
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 18406
+    },
+    {
+      "task": "JOBOPS_REPAIR_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 24312
+    }
+  ]
+}

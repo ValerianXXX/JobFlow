@@ -10,21 +10,32 @@ Browser Companion **0.9.2** is published on [Chrome Web Store](https://chromeweb
 
 See the [compatibility and recovery matrix](docs/compatibility.md) and [October 27 release verification](docs/modernization-2026-10-27.md). CI now detects version drift across Python, JavaScript, lockfiles, the extension and its UI. The source demo is available through the Development setup below while signed installation remains blocked.
 
-The optional [visual materials and status-tracking preview](docs/visual-materials-and-status-tracking.md) adds scanned PDF/image transcription with page evidence and a separate original-source confirmation. Existing Hermes and loopback paths remain available. A read-only mail adapter can match supplied status messages to applications and retain encrypted, reversible review history; no real mailbox connector or automatic application-state update is shipped.
+The source branch includes these reviewable capabilities. They are not a new signed desktop release.
 
-The [material-preview evaluation](docs/material-preview-evaluation-2026-10-28.md) also exercised the actual entity/Claim preview and DPAPI retention path: one three-page synthetic PDF produced ten unselected candidates, preserving all six designated numeric facts and their source evidence. The unconfirmed-selection attempt was rejected. This limited result is not a general accuracy estimate; billing and token usage remain unknown. The reproducible runner defaults to no model calls.
+| Capability | Available source behavior | Verification and limits |
+| --- | --- | --- |
+| Materials and facts | Optional PDF/image transcription, entity-linked candidates, encrypted originals and separate source/Claim review | [Live synthetic comparisons](docs/pdf-regions-and-cjk-2026-10-29.md) repaired Chinese rejection and improved text-column context. A scanned-Chinese case still misread facts; full-material accuracy remains unproven. |
+| Original-source review | Side-by-side original pages, source regions, zoom/fit and keyboard scrolling | [Browser acceptance](docs/pdf-regions-and-cjk-2026-10-29.md) covers actual upload/parser/render/DPAPI with a recorded model response; it is separate from live model observations. |
+| Editable resume | Preserve an approved DOCX master, or create a new standard DOCX from approved PDF-source facts | [Standard-resume workflow](docs/standard-resume-2026-10-29.md); new layouts require review and renewed material/position approval. |
+| Local PDF output | Default Word or explicitly selected LibreOffice with isolated conversion and document QA | [Paired output checks](docs/local-pdf-export-2026-10-29.md); unsafe two-column output remains rejected. No office software is installed automatically. |
+| Application workspace and tracking | Saved job/material versions, review history and local EML evidence with reversible manual association | [Workspace verification](docs/workbench-modernization-2026-10-28.md); no authenticated mailbox connector or automatic protected-state update. |
+| Hermes and local models | Existing configured Agent/local-model analysis, plus optional read-only MCP metadata tools | [Setup and boundaries](docs/visual-materials-and-status-tracking.md); cloud routes can receive supplied content. No new Agent installation is required. |
 
-The [October 28 application-workspace preview](docs/workbench-modernization-2026-10-28.md) adds per-application snapshots and material history, original-page comparison, an encrypted local EML inbox with reversible manual links, and three optional read-only MCP tools. The installed Hermes client has called those tools against synthetic state. An experimental Docling native parser adds page coordinates, but the 30-material comparison found no extraction-quality gain; it stays opt-in and does not provide OCR.
+The [browser-operated acceptance review](docs/user-acceptance-2026-10-29.md)
+retained pending evidence and exercised a separate synthetic application rehearsal.
+It is coding-assistant simulation, not an independent user study or a live
+employer submission. The [next development plan](docs/next-upgrade-plan-2026-10-29.md)
+retains the missing full-material, route-specific ATS, mailbox and user acceptance.
+An optional Docling parser also remains available; its earlier comparison found
+no extraction-quality gain. The new `pdf_regions` option requires no new package.
 
-The [October 29 user acceptance review](docs/user-acceptance-2026-10-29.md) exercised the visible UI with an empty synthetic workspace and the existing real Hermes connection. It retained ten pending, source-linked candidates, rejected missing confirmation, and separately completed the seeded synthetic application rehearsal. It also repaired demo approval, misleading next-step guidance and keyboard upload access. At that review, PDF-only users still had to provide a DOCX. This was coding-assistant simulation, not an independent human study or live employer submission; local EML review remains separate from authenticated mailbox access.
-
-The subsequent [standard-resume upgrade](docs/standard-resume-2026-10-29.md) lets PDF-master users format their approved facts into a new editable DOCX, preview/download it and explicitly adopt it through a new profile revision. It preserves original evidence and requires renewed material and editing-position approval. It adds document-tool discovery and optional local Word/PDF preview; it does not reconstruct original PDF styling or claim that a text preview completes document QA.
-
-The [local PDF converter option](docs/local-pdf-export-2026-10-29.md) adds explicitly selected LibreOffice for machines without Word. It reuses the existing resume/application export and QA path, isolates office profiles/processes, and preserves drafts on failure. Conversion still requires page and text review; a two-column test exposed mixed linear text order in both converters. Word remains the default, and no office software is installed automatically.
-
-The owner approved [one historical identity exception](docs/modernization-2026-10-27.md#specific-historical-identity-approval---28-october-2026). The [source bootstrap correction](docs/source-bootstrap-2026-10-29.md) is now followed by a complete green baseline: draft #8 at `3e232d7` passed 1,192 regressions and nine browser suites on each of Python 3.11, 3.12 and 3.13, plus its separate source-candidate job. The subsequent UI repairs have focused local validation documented in the acceptance review; the baseline matrix is not a claim about those later changes. On October 29 the owner confirmed that trusted production signing and an independent clean Windows machine/VM are unavailable; signed distribution and installation/upgrade/data-preservation/rollback acceptance remain blocked. Local unsigned packages do not authorize a release.
-
-The [October 28 author correction](docs/modernization-2026-10-27.md#owner-identity-correction---28-october-2026) records the owner's choice of account-linked GitHub noreply commits. Only the specifically reviewed historical identity is excepted; other identity and release requirements remain in force.
+The owner approved [one historical identity exception](docs/modernization-2026-10-27.md#specific-historical-identity-approval---28-october-2026)
+and chose account-linked noreply commits. These decisions do not authorize
+signing or publication. On October 29 the owner confirmed that trusted production
+signing and an independent clean Windows machine/VM are unavailable. Installation,
+upgrade, data-preservation and rollback acceptance remain blocked. Hosted checks
+and older passing matrices apply only to their recorded commits; unsigned local
+packages do not authorize a release.
 
 ![JobFlow English synthetic demo](docs/screenshots/jobflow-demo-en.png)
 

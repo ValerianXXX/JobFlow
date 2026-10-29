@@ -471,7 +471,13 @@ def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str
     format_complete = bool(20 <= len(statement) <= 2_000 and statement[-1:] in ".?!。！？")
     if statement.endswith((",", ";", ":", "-", "–", "—")) or "|" in statement or "http://" in statement.casefold() or "https://" in statement.casefold():
         format_complete = False
-    letters = "".join(character for character in statement if character.isalpha())
+    # Uncased scripts (including Chinese) are unchanged by upper(), but are
+    # not uppercase headings. Count only letters that actually have case;
+    # a short acronym within a grounded CJK sentence must not trip this gate.
+    letters = "".join(
+        character for character in statement
+        if character.isalpha() and character.lower() != character.upper()
+    )
     if len(letters) >= 8 and letters == letters.upper():
         format_complete = False
     statement_numbers = _numbers(statement)
