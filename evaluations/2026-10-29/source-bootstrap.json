@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-29",
+  "scope": "SOURCE_BUILD_AND_ISOLATED_SYNTHETIC_STARTUP_NOT_SIGNED_INSTALL_ACCEPTANCE",
+  "owner_confirmed_external_blockers": {
+    "trusted_production_signing": "UNAVAILABLE",
+    "independent_clean_windows_machine_or_vm": "UNAVAILABLE",
+    "production_authorization": false
+  },
+  "diagnostic_baseline": {
+    "source_head": "8a9e4a763d12016b77fee57b2a7f0123929a711b",
+    "run_id": 40849236142,
+    "job_id": 123364274644,
+    "status": "FAIL",
+    "bootstrap_ms": 5000,
+    "elapsed_ms": 5672,
+    "active_components": [
+      "bootstrap",
+      "encrypted_store"
+    ],
+    "specific_internal_powershell_operation": "NOT_CAPTURED"
+  },
+  "correction": {
+    "source_head": "78525548c291010f2f36cc5cc99483449096f60b",
+    "code_change": "Explicit system Utility/Management imports; no automatic module discovery in the disposable encrypted-store helper",
+    "ciphertext_format_changed": false,
+    "timeout_budgets_changed": false,
+    "ambient_module_regression_before": "SECURE_STORE_FAILED",
+    "ambient_module_regression_after": "REAL_DPAPI_PUT_GET_TEST_DELETE_PASS",
+    "focused_tests": 27,
+    "focused_failures": 0,
+    "focused_skips": 0
+  },
+  "hosted": {
+    "run_id": 40850508434,
+    "job_id": 123368789521,
+    "conclusion": "success",
+    "tested_tree": "1ac921587dd84526fd501e8b1ac6217d72c84e03",
+    "matches_branch_head_tree": true,
+    "python": "3.12.10",
+    "observed_at_utc": "2026-10-29T09:37:32Z",
+    "candidate": {
+      "schema_version": 1,
+      "status": "RELEASE_CANDIDATE_BUILT",
+      "version": "0.7.0",
+      "commit": "76a1d59022c8638410b01edddf5b2ea5bde56d6f",
+      "artifact_name": "JobFlow-v0.7.0-76a1d59022c8-source.zip",
+      "artifact_sha256": "sha256:d6ab43abc7e18d923ed44224ac9b0302d397cf30aee152aec0baf95fe3170c92",
+      "artifact_bytes": 3106251,
+      "reproducible_builds": 2,
+      "archive": {
+        "status": "PASS",
+        "file_count": 575,
+        "finding_count": 0,
+        "findings": []
+      },
+      "source_smoke": {
+        "status": "PASS",
+        "binding": "127.0.0.1",
+        "supported_locales": [
+          "zh",
+          "en"
+        ],
+        "offline_discovery": "PASS",
+        "offline_candidates": 2,
+        "snapshot_persisted": false,
+        "candidate_queue_mutations": 0,
+        "private_values_emitted": 0,
+        "external_network_actions": 0,
+        "real_external_actions": 0,
+        "private_store_health": "PASS",
+        "private_ciphertext_files": 0,
+        "loopback_requests": 5,
+        "security_headers": "PASS",
+        "project_state_isolated": true,
+        "local_app_data_isolated": true,
+        "bootstrap_ms": 813
+      },
+      "repository_content_status": "PASS",
+      "author_identity_status": "PASS",
+      "uploaded": false,
+      "external_network_actions": 0,
+      "real_external_actions": 0
+    },
+    "full_regression_matrix": "NOT_COMPLETE_AT_RECEIPT_TIME"
+  },
+  "local": {
+    "receipt": "source-system-modules-build.json (local state, not public path)",
+    "source_commit": "78525548c291010f2f36cc5cc99483449096f60b",
+    "python": "3.11.3",
+    "archive_sha256": "61232c2752103b8a829a139a9836b20f4ade8253185f7c3805eb733c3e034b82",
+    "archive_bytes": 3106251,
+    "reproducible_builds": 2,
+    "bootstrap_ms": 781
+  },
+  "interpretation": {
+    "hosted_source_gate_regression_resolved_in_this_run": true,
+    "universal_performance_claim": false,
+    "no_model_calls": true,
+    "no_real_email_or_application_actions": true,
+    "production_signing_complete": false,
+    "clean_windows_install_upgrade_preservation_rollback_complete": false
+  }
+}

@@ -73,8 +73,37 @@ introduces a persistent PowerShell host.
 A regression supplying a synthetic ambient Utility module failed on the old
 helper, then passed the real Put/Get/Test/Delete DPAPI roundtrip with explicit
 system imports. This demonstrates a module-resolution defect and its repair.
-Whether it resolves the hosted timing failure still requires the updated
-source job; it must not be inferred from that synthetic regression alone.
+The subsequent real hosted source job also passed, as recorded below.
+
+## Hosted retest
+
+Source job `123368789521` in [run 40850508434](https://github.com/ValerianXXX/JobFlow/actions/runs/40850508434)
+passed on Windows/Python 3.12.10 at 09:37 UTC on October 29. It tested source
+head `78525548c291010f2f36cc5cc99483449096f60b` through merge checkout
+`76a1d59022c8638410b01edddf5b2ea5bde56d6f`. Bootstrap completed in 813 ms;
+the diagnostic baseline stopped at 5,000 ms. These are different hosted
+processes, not a repeated latency benchmark or universal performance claim.
+The exact internal PowerShell operation was not traced; explicit system-module
+loading is the behavior change associated with this successful retest.
+
+The hosted candidate built twice identically: 3,106,251 bytes, SHA-256
+`d6ab43abc7e18d923ed44224ac9b0302d397cf30aee152aec0baf95fe3170c92`.
+All 575 source files and identity checks passed. Actual DPAPI health and HTTP
+startup passed both locales, five loopback requests, two offline candidates,
+security headers, isolated state and cleanup, with zero queue mutations,
+private output or external actions. No artifact was uploaded.
+
+The local branch-head archive has a different commit identity and hash,
+`61232c2752103b8a829a139a9836b20f4ade8253185f7c3805eb733c3e034b82`;
+its separate two-build result passed with a 781 ms bootstrap. The
+[pathless receipt](../evaluations/2026-10-29/source-bootstrap.json) preserves
+both identities instead of treating their ZIP hashes as interchangeable.
+
+Local follow-up checks passed 27 cases: one ambient-module isolation test,
+18 private-data/evidence tests, three subprocess-hygiene tests and five public
+documentation tests. The new complete three-version regression matrix is
+still pending at this checkpoint. Source-gate success does not replace the
+owner-confirmed signing and independent clean-Windows acceptance blockers.
 
 ## Verification and recovery
 
