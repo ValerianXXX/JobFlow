@@ -15,7 +15,7 @@ from unittest.mock import patch
 from _support import PROJECT
 from jobops.errors import JobOpsError
 from jobops.release_candidate import _python_smoke_environment, _smoke_failure_details
-from jobops.release_smoke_process import _WindowsJob, run_release_python
+from jobops.release_smoke_process import _WindowsJob, _WindowsProcess, run_release_python
 
 
 def _is_running(pid: int) -> bool:
@@ -43,14 +43,14 @@ def _is_running(pid: int) -> bool:
 
 
 class ReleaseSmokeProcessTests(unittest.TestCase):
-    def _script(self, root: Path, *, exit_code: int | None) -> Path:
+    def _script(self, root: Path, *, exit_code: int | None, child_lifetime: int = 120) -> Path:
         child = root / "child.py"
         child.write_text(
             "import os, time\nfrom pathlib import Path\n"
             "held = open('held.txt', 'w')\n"
             "Path('child-pid.txt').write_text(str(os.getpid()))\n"
             "print('synthetic child inherited output', flush=True)\n"
-            "time.sleep(120)\n",
+            f"time.sleep({child_lifetime})\n",
             encoding="utf-8",
         )
         script = root / "parent.py"
@@ -92,6 +92,38 @@ class ReleaseSmokeProcessTests(unittest.TestCase):
             self.assertFalse(_is_running(int((root / "child-pid.txt").read_text())))
         self.assertFalse(root.exists())
 
+    @unittest.skipUnless(os.name == "nt", "Windows launcher containment")
+    def test_delayed_assignment_contains_the_venv_launcher_descendants(self) -> None:
+        # CI already provisions this signed legacy venv. Its native redirector
+        # can spawn Python before a Python-level stdin handshake is reached.
+        launcher = PROJECT / ".venv/Scripts/python.exe"
+        self.assertTrue(launcher.is_file(), "Create the documented development venv first.")
+        assign = _WindowsJob.assign
+
+        def delayed_assign(job, process) -> None:
+            time.sleep(0.3)
+            assign(job, process)
+
+        with tempfile.TemporaryDirectory(prefix="jobflow-owned-launcher-") as raw:
+            root = Path(raw)
+            script = self._script(root, exit_code=0, child_lifetime=5)
+            try:
+                with patch("jobops.release_smoke_process.sys.executable", str(launcher)), patch.object(
+                    _WindowsJob, "assign", delayed_assign,
+                ):
+                    result = run_release_python(script, cwd=root, env=_python_smoke_environment(root), timeout=15)
+                self.assertEqual(result.returncode, 0)
+                self.assertFalse(_is_running(int((root / "child-pid.txt").read_text())))
+                (root / "held.txt").unlink()
+            finally:
+                # If the regression returns, let only this short-lived fixture
+                # expire before removing its directory; keep the assertion failed.
+                deadline = time.monotonic() + 6
+                while (root / "child-pid.txt").exists() and time.monotonic() < deadline:
+                    if not _is_running(int((root / "child-pid.txt").read_text())):
+                        break
+                    time.sleep(0.02)
+
     @unittest.skipUnless(os.name == "nt", "Windows job assignment")
     def test_target_never_runs_if_job_assignment_fails(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jobflow-owned-refusal-") as raw:
@@ -103,6 +135,43 @@ class ReleaseSmokeProcessTests(unittest.TestCase):
                 run_release_python(script, cwd=root, env=_python_smoke_environment(root), timeout=3)
             self.assertIs(blocked.exception, failure)
             self.assertFalse((root / "ran.txt").exists())
+
+    @unittest.skipUnless(os.name == "nt", "Windows suspended process")
+    def test_resume_failure_reclaims_suspended_process_without_running_target(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-owned-resume-refusal-") as raw:
+            root = Path(raw)
+            script = root / "target.py"
+            script.write_text("from pathlib import Path\nPath('ran.txt').touch()\n", encoding="utf-8")
+            failure = JobOpsError("RELEASE_SMOKE_CONTAINMENT_FAILED", "synthetic refusal")
+            created = []
+
+            def refuse_resume(process) -> None:
+                created.append(process.pid)
+                raise failure
+
+            with patch.object(_WindowsProcess, "resume", refuse_resume), self.assertRaises(JobOpsError) as blocked:
+                run_release_python(script, cwd=root, env=_python_smoke_environment(root), timeout=3)
+            self.assertIs(blocked.exception, failure)
+            self.assertEqual(len(created), 1)
+            self.assertFalse(_is_running(created[0]))
+            self.assertFalse((root / "ran.txt").exists())
+
+    def test_preserves_unicode_arguments_environment_and_separate_output(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="jobflow-owned-中文 space-") as raw:
+            root = Path(raw)
+            script = root / "target 中文.py"
+            script.write_text(
+                "import json,os,sys\n"
+                "print(json.dumps({'args':sys.argv[1:],'value':os.environ['JOBFLOW_SYNTHETIC']}))\n"
+                "print('synthetic diagnostic',file=sys.stderr)\n",
+                encoding="utf-8",
+            )
+            arguments = ['中文 spaced value', 'literal "quote"', 'trailing\\']
+            environment = {**_python_smoke_environment(root), "JOBFLOW_SYNTHETIC": "合成 value"}
+            result = run_release_python(script, *arguments, cwd=root, env=environment, timeout=15)
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(json.loads(result.stdout), {"args": arguments, "value": "合成 value"})
+            self.assertEqual(result.stderr.strip(), "synthetic diagnostic")
 
     def test_diagnostics_retain_only_bounded_public_fields(self) -> None:
         result = _smoke_failure_details(json.dumps({
