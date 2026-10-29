@@ -5,7 +5,9 @@ import json
 import os
 import sys
 import threading
+import time
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -17,7 +19,7 @@ def find_project_root() -> Path:
     raise SystemExit("JOBFLOW_PROJECT_ROOT_NOT_FOUND")
 
 
-def main() -> int:
+def _run_smoke(progress: dict[str, object]) -> dict[str, object]:
     project = find_project_root()
     sys.path.insert(0, str(project / "src"))
 
@@ -38,13 +40,16 @@ def main() -> int:
     worker.start()
     loopback_requests = 0
     try:
+        progress["stage"] = "health"
         with urlopen(f"http://127.0.0.1:{server.server_port}/health", timeout=5) as response:
             health = json.loads(response.read().decode("utf-8"))
             loopback_requests += 1
+        progress["stage"] = "index"
         with urlopen(server.url, timeout=5) as response:
             index = response.read().decode("utf-8")
             headers = response.headers
             loopback_requests += 1
+        progress["stage"] = "bootstrap"
         with urlopen(server.url + "api/bootstrap", timeout=5) as response:
             bootstrap = json.loads(response.read().decode("utf-8"))
             loopback_requests += 1
@@ -60,19 +65,23 @@ def main() -> int:
             headers={"Content-Type": "application/octet-stream"},
             method="POST",
         )
+        progress["stage"] = "discovery"
         with urlopen(discovery_request, timeout=5) as response:
             discovery = json.loads(response.read().decode("utf-8"))
             loopback_requests += 1
+        progress["stage"] = "queue"
         with database.connect() as connection:
             discovery_did_not_mutate_queue = (
                 connection.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 0
                 and connection.execute("SELECT COUNT(*) FROM intake_queue").fetchone()[0] == 0
             )
+        progress["stage"] = "shutdown"
         shutdown = Request(server.url + "api/shutdown", data=b"", method="POST")
         with urlopen(shutdown, timeout=5) as response:
             closing = json.loads(response.read().decode("utf-8"))
             loopback_requests += 1
         worker.join(timeout=5)
+        progress["stage"] = "assertions"
         safe_headers = all(headers.get(name) for name in (
             "Content-Security-Policy", "Cache-Control", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy",
         ))
@@ -107,13 +116,35 @@ def main() -> int:
             "external_network_actions": 0,
             "real_external_actions": 0,
         }
-        sys.stdout.write(json.dumps(result, ensure_ascii=False))
-        return 0 if passed else 2
+        return result
     finally:
         if worker.is_alive():
             server.shutdown()
             worker.join(timeout=5)
         server.server_close()
+
+
+def main() -> int:
+    progress: dict[str, object] = {"stage": "initialization"}
+    started = time.monotonic()
+    try:
+        result = _run_smoke(progress)
+    except Exception as error:
+        if isinstance(error, TimeoutError):
+            failure_kind = "timeout"
+        elif isinstance(error, HTTPError):
+            failure_kind = "http_error"
+        elif isinstance(error, URLError):
+            failure_kind = "connection_error"
+        else:
+            failure_kind = "unexpected_error"
+        result = {"status": "FAIL", "stage": progress["stage"], "failure_kind": failure_kind}
+    if result["status"] != "PASS":
+        result.setdefault("stage", progress["stage"])
+        result.setdefault("failure_kind", "boundary_error")
+    result["elapsed_ms"] = round((time.monotonic() - started) * 1000)
+    sys.stdout.write(json.dumps(result, ensure_ascii=False))
+    return 0 if result["status"] == "PASS" else 2
 
 
 if __name__ == "__main__":

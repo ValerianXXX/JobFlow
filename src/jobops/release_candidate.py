@@ -30,6 +30,7 @@ from .release_toolchain import (
     resolve_configured_release_git,
     sanitized_command_environment,
 )
+from .release_smoke_process import run_release_python
 from .util import sha256_file, write_json
 
 
@@ -251,6 +252,56 @@ def verify_candidate_archive(project: Path, archive_path: Path, *, prefix: str) 
     }
 
 
+def _smoke_failure_details(stdout: str) -> dict[str, object]:
+    """Expose only fixed diagnostic labels, never child stderr or exception text."""
+    try:
+        result = json.loads(stdout)
+    except (ValueError, TypeError):
+        return {}
+    if not isinstance(result, dict) or result.get("status") != "FAIL":
+        return {}
+    details: dict[str, object] = {}
+    if isinstance(result.get("stage"), str) and result["stage"] in {
+        "initialization", "health", "index", "bootstrap", "discovery",
+        "queue", "shutdown", "assertions", "cleanup",
+    }:
+        details["stage"] = result["stage"]
+    if isinstance(result.get("failure_kind"), str) and result["failure_kind"] in {
+        "timeout", "http_error", "connection_error", "boundary_error", "unexpected_error",
+    }:
+        details["failure_kind"] = result["failure_kind"]
+    elapsed = result.get("elapsed_ms")
+    if type(elapsed) is int and 0 <= elapsed <= 600000:
+        details["elapsed_ms"] = elapsed
+    return details
+
+
+@contextmanager
+def _candidate_workspace() -> Iterator[Path]:
+    temporary = tempfile.TemporaryDirectory(prefix="jobflow-release-")
+    try:
+        yield Path(temporary.name)
+    except BaseException as error:
+        try:
+            temporary.cleanup()
+        except OSError:
+            # Keep the original failing gate visible even if an unrelated file
+            # lock prevents cleanup. Cleanup failure never turns a build green.
+            if isinstance(error, JobOpsError):
+                error.details["temporary_cleanup"] = "FAILED"
+            else:
+                error.add_note("RELEASE_TEMPORARY_CLEANUP_FAILED")
+        raise
+    else:
+        try:
+            temporary.cleanup()
+        except OSError:
+            raise JobOpsError(
+                "RELEASE_TEMPORARY_CLEANUP_FAILED",
+                "The source-candidate temporary workspace could not be removed.",
+            ) from None
+
+
 def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Path) -> dict[str, Any]:
     extracted = temporary / "extracted"
     with zipfile.ZipFile(archive_path) as archive:
@@ -261,20 +312,10 @@ def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Pa
     if not entry.is_file() or not smoke.is_file():
         raise JobOpsError("RELEASE_SMOKE_ENTRY_MISSING", "The extracted source candidate is missing its local startup smoke entry.")
     environment = _python_smoke_environment(temporary)
-    python = str(Path(sys.executable).resolve(strict=True))
-    isolated = ["-I", "-P", "-B", "-X", "utf8"]
-    help_result = subprocess.run(
-        [python, *isolated, str(entry), "--help"], cwd=candidate, env=environment,
-        capture_output=True, text=True, timeout=30, check=False,
-        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-    )
+    help_result = run_release_python(entry, "--help", cwd=candidate, env=environment, timeout=30)
     if help_result.returncode != 0 or not all(command in help_result.stdout for command in ("onboarding-center", "demo", "check-private-store")):
         raise JobOpsError("RELEASE_SMOKE_CLI_FAILED", "The extracted source candidate public CLI did not start correctly.")
-    private_check = subprocess.run(
-        [python, *isolated, str(entry), "check-private-store"], cwd=candidate, env=environment,
-        capture_output=True, text=True, timeout=30, check=False,
-        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-    )
+    private_check = run_release_python(entry, "check-private-store", cwd=candidate, env=environment, timeout=30)
     try:
         private_result = json.loads(private_check.stdout)
     except json.JSONDecodeError as error:
@@ -290,13 +331,12 @@ def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Pa
         or private_result.get("real_external_actions") != 0
     ):
         raise JobOpsError("RELEASE_SMOKE_PRIVATE_CHECK_FAILED", "The extracted source candidate private-store boundary failed.")
-    service_result = subprocess.run(
-        [python, *isolated, str(smoke)], cwd=candidate, env=environment,
-        capture_output=True, text=True, timeout=45, check=False,
-        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-    )
+    service_result = run_release_python(smoke, cwd=candidate, env=environment, timeout=45)
     if service_result.returncode != 0:
-        raise JobOpsError("RELEASE_SMOKE_UI_FAILED", "The extracted source candidate local UI smoke failed.")
+        raise JobOpsError(
+            "RELEASE_SMOKE_UI_FAILED", "The extracted source candidate local UI smoke failed.",
+            **_smoke_failure_details(service_result.stdout),
+        )
     try:
         result = json.loads(service_result.stdout)
     except json.JSONDecodeError as error:
@@ -351,8 +391,7 @@ def _build_release_candidate(project: Path, *, git_path: Path) -> dict[str, Any]
     artifact_name = f"JobFlow-v{version}-{commit[:12]}-source.zip"
     destination = project / "dist" / artifact_name
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="jobflow-release-") as raw_temp:
-        temporary = Path(raw_temp)
+    with _candidate_workspace() as temporary:
         first = temporary / "first.zip"
         second = temporary / "second.zip"
         for output in (first, second):
