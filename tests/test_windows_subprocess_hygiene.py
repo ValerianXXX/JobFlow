@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import unittest
 from pathlib import Path
@@ -34,6 +35,7 @@ class WindowsSubprocessHygieneTests(unittest.TestCase):
         self.assertIn("-NonInteractive", command)
         self.assertEqual(kwargs["creationflags"], NO_WINDOW)
 
+    @mock.patch.dict(os.environ, {"JOBFLOW_PDF_EXPORT_PROVIDER": "word"})
     def test_word_export_helper_has_no_console_window(self) -> None:
         with project_temp() as temp:
             docx = temp / "resume.docx"

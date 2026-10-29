@@ -45,6 +45,7 @@ def approved_claim(claim_id: str, wording: str, fact: str):
 
 
 class MaterialTests(unittest.TestCase):
+    @mock.patch.dict(os.environ, {"JOBFLOW_PDF_EXPORT_PROVIDER": "word"})
     def test_pdf_export_failure_does_not_expose_private_stderr(self) -> None:
         with project_temp() as temp:
             result = subprocess.CompletedProcess([], 1, stdout="", stderr="sensitive applicant name and local file")
@@ -55,6 +56,7 @@ class MaterialTests(unittest.TestCase):
             self.assertNotIn("sensitive", str(caught.exception.as_dict()))
 
     @unittest.skipUnless(os.name == "nt", "Windows PowerShell export contract")
+    @mock.patch.dict(os.environ, {"JOBFLOW_PDF_EXPORT_PROVIDER": "word"})
     def test_pdf_helper_finishes_while_parent_control_input_remains_open(self) -> None:
         # Model the long-lived server's open control pipe. This helper deliberately
         # reads stdin before writing; it must see EOF without closing the server.
@@ -108,6 +110,7 @@ class MaterialTests(unittest.TestCase):
             self.assertEqual(pages[0].read_bytes(), b"fresh page")
             self.assertNotEqual(pages[0], stale)
 
+    @mock.patch.dict(os.environ, {"JOBFLOW_PDF_EXPORT_PROVIDER": "word"})
     def test_pdf_export_never_accepts_or_overwrites_a_stale_target(self) -> None:
         with project_temp() as temp:
             docx = temp / "resume.docx"
