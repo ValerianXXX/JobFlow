@@ -57,6 +57,13 @@ response envelope. Its failed record is retained and a regression covers the fix
 This is one tiny synthetic transcription comparison, not a general quality estimate
 or an end-to-end resume/Claim success claim. Region accuracy is not calibrated.
 
+The [October 28 preview follow-up](material-preview-evaluation-2026-10-28.md)
+uses the same frozen PDF through the actual strict entity/Claim preview and real
+DPAPI retention path. It separately records six retained numeric facts, ten
+unselected candidates and a rejected unconfirmed selection. This adds evidence
+for that bounded preview flow without relabelling the original transcription-only
+experiment or claiming a completed job application.
+
 ## Read-only mail status layer
 
 `ReadOnlyStatusAdapter.read_messages(after, limit)` accepts only messages supplied

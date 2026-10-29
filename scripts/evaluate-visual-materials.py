@@ -1,6 +1,7 @@
 """Three synthetic material layouts; optionally one real existing-Hermes vision call."""
 from __future__ import annotations
 import argparse
+from datetime import datetime, timezone
 import io
 import json
 from pathlib import Path
@@ -41,7 +42,7 @@ def main():
     fixture = args.output.with_suffix(".synthetic.pdf"); fixture.write_bytes(data)
     started = time.monotonic(); old, _ = extract_pdf_text(fixture)
     baseline_ms = round((time.monotonic() - started) * 1000)
-    result = {"verified_on": "2026-10-27", "fixture": "Original synthetic raster PDF; scanned, two-column and screenshot layouts", "cases": CASES,
+    result = {"verified_on": datetime.now(timezone.utc).date().isoformat(), "fixture": "Original synthetic raster PDF; scanned, two-column and screenshot layouts", "cases": CASES,
               "baseline": {"method": "existing_local_text_extraction", "elapsed_ms": baseline_ms,
                            "omitted_numeric_facts": sum(fact not in old for case in CASES for fact in case["facts"]),
                            "misattribution": None, "numeric_errors": None, "cost_usd": 0},

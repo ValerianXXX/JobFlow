@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Added an opt-in, fixed-input material-preview evaluation covering the production visual/Claim pipeline, DPAPI original retention and mandatory source confirmation. Preserved unknown cost/usage fields rather than treating missing receipts as zero. Fresh transcription runs now record their actual UTC date instead of a hardcoded historical date.
+
 - Load the encrypted-store helper's two built-in PowerShell modules by system path, preventing ambient command shadowing and avoiding unrelated module discovery on a cold private directory. Preserve the DPAPI format, atomic writes and existing timeout budgets; hosted startup verification remains separately recorded.
 
 - Preserve fixed-label diagnostics for the five-second source UI bootstrap timeout and run the unchanged source-candidate gate independently of the long Windows regression matrix. Record the passing regressions/browser suites and owner-confirmed signing and clean-Windows blockers without treating the failed source build as passed.
