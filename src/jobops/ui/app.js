@@ -531,7 +531,43 @@ Object.assign(STRINGS.en,{
   updatingDiscoveryCandidate:"Updating the candidate role…"
 });
 
-const UI_PROTOCOL_VERSION = 37;
+Object.assign(STRINGS.zh,{
+  standardResumeTitle:"只有 PDF？生成可编辑的标准简历", standardResumeBody:"用已批准的事实生成新的单栏版式，原始 PDF 和证据保留。先预览，再决定是否采用为新母版。",
+  createStandardResume:"生成标准简历预览", standardResumeReady:"已具备生成条件。只排版已批准的原句，不调用模型。",
+  standardResumeNeedsApproval:"先完成资料确认，并批准事实用于简历，再生成标准版式。",
+  standardResumeQa:"文字预览不等于版面验收。用于申请前仍须检查实际导出的每一页，并完成现有材料审核。",
+  downloadStandardResume:"保存 DOCX 副本", previewStandardResumePdf:"转换并检查 PDF 页面",
+  standardResumeConsent:"我已核对内容，同意采用新标准版式并开始资料修订；之后重新确认资料、材料授权和改写位置。",
+  adoptStandardResume:"采用母版并开始修订", standardResumeAdopted:"新母版已保存。原始 PDF 保留，请重新确认资料与材料授权。",
+  standardResumeConfirmFirst:"请先核对草稿内容并勾选采用确认。", standardResumeStale:"资料或授权已变更，请重新生成预览。",
+  standardResumeSources:"{count} 项原始来源", standardResumePageAlt:"标准简历的实际 PDF 页面",
+  standardResumePrevious:"上一页", standardResumeNext:"下一页", standardResumePageNumber:"第 {page} / {count} 页",
+  documentWordDetected:"检测到 Word，但尚未验证转换。可用合成或当前草稿实际转换后检查。",
+  documentWordMissing:"未检测到 Word 导出功能：可以生成 DOCX，PDF 转换尚不可用。",
+  documentRendererMissing:"申请材料的 PDF 页面渲染工具未就绪，请先按安装说明补齐。",
+  documentDocxMissing:"DOCX 生成依赖未安装，请按运行说明补齐。",
+  documentPdfFailed:"PDF 转换未完成；DOCX 草稿仍可保存。请检查 Word 是否可用后重试。",
+  generatingStandardResume:"正在生成标准简历…", exportingStandardResume:"正在转换 PDF 并渲染页面…", adoptingStandardResume:"正在创建新的资料修订…"
+});
+Object.assign(STRINGS.en,{
+  standardResumeTitle:"Only a PDF? Create an editable standard resume", standardResumeBody:"Create a new single-column layout from approved facts. Your original PDF and evidence stay intact. Preview it before choosing it as a new master.",
+  createStandardResume:"Preview a standard resume", standardResumeReady:"Ready to format the exact approved wording. No model call is needed.",
+  standardResumeNeedsApproval:"Complete your profile review and approve facts for resume use first.",
+  standardResumeQa:"Text preview is not layout validation. Before using it in an application, inspect every exported page and complete the existing material review.",
+  downloadStandardResume:"Save a DOCX copy", previewStandardResumePdf:"Convert and inspect PDF pages",
+  standardResumeConsent:"I reviewed the content and choose this new standard layout. Start a profile revision so I can reconfirm my profile, material approval and editing positions.",
+  adoptStandardResume:"Use as master and start revision", standardResumeAdopted:"New master saved. The original PDF remains intact. Reconfirm your profile and material approval.",
+  standardResumeConfirmFirst:"Review the draft and check the adoption confirmation first.", standardResumeStale:"Your profile or approval changed. Generate a fresh preview.",
+  standardResumeSources:"{count} original sources", standardResumePageAlt:"Actual exported PDF page of the standard resume",
+  standardResumePrevious:"Previous page", standardResumeNext:"Next page", standardResumePageNumber:"Page {page} of {count}",
+  documentWordDetected:"Word detected; conversion has not been verified. Test it by converting a synthetic or current draft and inspecting the result.",
+  documentWordMissing:"Word export was not detected. DOCX generation is available; PDF conversion is unavailable.",
+  documentRendererMissing:"The application PDF page renderer is missing. Complete the documented installation first.",
+  documentDocxMissing:"DOCX generation dependencies are missing. Complete the documented installation first.",
+  documentPdfFailed:"PDF conversion did not finish. Your DOCX draft remains available. Check Word and retry.",
+  generatingStandardResume:"Generating the standard resume…", exportingStandardResume:"Converting PDF and rendering its page…", adoptingStandardResume:"Creating a new profile revision…"
+});
+const UI_PROTOCOL_VERSION = 38;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",
@@ -1041,6 +1077,10 @@ Object.assign(STRINGS.en, {
   visualInvalid: "Visual transcription failed complete page, text or region validation. Nothing was imported. Use a clear original or the existing text path."
 });
 Object.assign(LOCAL_ERROR_KEYS, {
+  STANDARD_RESUME_CONFIRMATION_REQUIRED:"standardResumeConfirmFirst",
+  STANDARD_RESUME_DRAFT_STALE:"standardResumeStale", STANDARD_RESUME_DRAFT_INVALID:"standardResumeStale",
+  STANDARD_RESUME_SOURCE_CHANGED:"standardResumeStale", STANDARD_RESUME_PDF_REQUIRED:"standardResumeStale",
+  DOCUMENT_PDF_EXPORT_UNAVAILABLE:"documentWordMissing", DOCUMENT_PDF_EXPORT_FAILED:"documentPdfFailed",
   VISUAL_SOURCE_VERIFICATION_REQUIRED:"visualReviewRequired",
   VISUAL_ANALYSIS_DISABLED:"visualSetupRequired", VISUAL_PROVIDER_CONSENT_REQUIRED:"visualSetupRequired",
   VISUAL_RESPONSE_INVALID:"visualInvalid", VISUAL_COVERAGE_INCOMPLETE:"visualInvalid"
@@ -1271,6 +1311,7 @@ async function api(path, options={}) {
   if(path.split("?",1)[0]!=="bootstrap"&&!state.serviceCompatible) throw makeUiError("SERVICE_RESTART_REQUIRED");
   const headers = Object.assign({"X-JobOps-Session": sessionToken}, options.headers || {});
   const response = await fetch(base + "api/" + path, Object.assign({cache:"no-store", credentials:"same-origin"}, options, {headers}));
+  if(options.binary&&response.ok)return response.blob();
   const raw = await response.text();
   let body;
   try { body = raw ? JSON.parse(raw) : {}; }
@@ -1520,6 +1561,7 @@ function executionNextActionLabel(action){
 }
 
 function renderApplicationReadiness(){
+  renderStandardResume();
   const readiness=state.data?.application_readiness||{}, approval=state.data?.external_claim_approval||{};
   const status=document.querySelector("#applicationReadinessStatus"), blockers=document.querySelector("#applicationReadinessBlockers");
   const ready=readiness.status==="READY_FOR_OFFLINE_APPLICATION_PREPARATION";
@@ -1557,6 +1599,39 @@ function renderApplicationReadiness(){
     prepareStatus.textContent=t(ready?"offlineApplicationReady":"offlineApplicationNeedsReadiness");
   }
   renderGuidedIntake();
+}
+
+function renderStandardResume(){
+  const capability=state.data?.document_capabilities||{}, standard=state.data?.standard_resume||{};
+  const messages=[t(capability.pdf_export==="DETECTED_NOT_VERIFIED"?"documentWordDetected":"documentWordMissing")];
+  if(capability.docx_generation===false)messages.push(t("documentDocxMissing"));
+  if(capability.application_pdf_renderer===false)messages.push(t("documentRendererMissing"));
+  document.querySelector("#documentCapabilities").textContent=messages.join(" ");
+  document.querySelector("#standardResumePanel").classList.toggle("hidden",!standard.offered||state.data?.demo_mode===true);
+  document.querySelector("#standardResumeStatus").textContent=t(standard.available?"standardResumeReady":"standardResumeNeedsApproval");
+  document.querySelector("#createStandardResume").disabled=!standard.available||capability.docx_generation===false;
+  if(!standard.available||(state.standardResume&&state.standardResume.claim_set_hash!==standard.claim_set_hash)){
+    state.standardResume=null;state.standardResumePage=null;
+    document.querySelector("#standardResumeText").replaceChildren();
+    document.querySelector("#standardResumePageImage").removeAttribute("src");
+    document.querySelector("#standardResumeConfirm").checked=false;
+  }
+  const draft=state.standardResume;
+  document.querySelector("#standardResumeDraft").classList.toggle("hidden",!draft);
+  if(!draft)return;
+  const preview=draft.preview;
+  document.querySelector("#standardResumeText").innerHTML=`<h3>${escapeHtml(preview.name)}</h3><p>${escapeHtml(preview.contacts.join(" | "))}</p>`+
+    preview.sections.map(section=>`<h4>${escapeHtml(section.title)}</h4><ul>${section.items.map(item=>`<li>${escapeHtml(item.text)}<small>${escapeHtml(t("standardResumeSources").replace("{count}",String(item.source_count)))}</small></li>`).join("")}</ul>`).join("");
+  document.querySelector("#previewStandardResumePdf").disabled=capability.pdf_export==="UNAVAILABLE"||capability.page_preview===false;
+  document.querySelector("#adoptStandardResume").disabled=!document.querySelector("#standardResumeConfirm").checked;
+  const page=state.standardResumePage;
+  document.querySelector("#standardResumePages").classList.toggle("hidden",!page);
+  if(page){
+    const img=document.querySelector("#standardResumePageImage");img.src=page.image_data_url;img.alt=t("standardResumePageAlt");
+    document.querySelector("#standardResumePageNumber").textContent=t("standardResumePageNumber").replace("{page}",String(page.page)).replace("{count}",String(page.page_count));
+    document.querySelector("#standardResumePrevious").disabled=page.page<=1;
+    document.querySelector("#standardResumeNext").disabled=page.page>=page.page_count;
+  }
 }
 
 function guidedIntakeMessage(status){
@@ -3086,6 +3161,39 @@ document.addEventListener("click", async event => {
     }catch(error){handleUiError(error);}
     return;
   }
+  const standardAction=event.target.closest("#createStandardResume,#downloadStandardResume,#previewStandardResumePdf,#standardResumePrevious,#standardResumeNext,#adoptStandardResume");
+  if(standardAction){
+    const post=body=>({method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    try{
+      if(standardAction.id==="createStandardResume"){
+        await withActivity("generatingStandardResume",async()=>{
+          state.standardResume=await api("standard-resume-draft",post({expected_review_hash:state.data?.standard_resume?.review_hash,locale:state.locale}));
+          state.standardResumePage=null;document.querySelector("#standardResumeConfirm").checked=false;
+        });
+        renderStandardResume();scrollToElement(document.querySelector("#standardResumeDraft"),{block:"start"});
+      }else if(standardAction.id==="downloadStandardResume"){
+        const blob=await api("standard-resume-file",{...post({draft_ref:state.standardResume?.draft_ref}),binary:true});
+        const url=URL.createObjectURL(blob),link=document.createElement("a");
+        link.href=url;link.download="jobflow-standard-resume.docx";document.body.append(link);link.click();link.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+      }else if(standardAction.id==="adoptStandardResume"){
+        if(!document.querySelector("#standardResumeConfirm").checked){showToast(t("standardResumeConfirmFirst"),true);return;}
+        await withActivity("adoptingStandardResume",async()=>{
+          await api("adopt-standard-resume",post({draft_ref:state.standardResume?.draft_ref,expected_docx_sha256:state.standardResume?.docx_sha256,user_confirmed:true}));
+          state.standardResume=null;state.standardResumePage=null;await refreshLatest();
+        });
+        showToast(t("standardResumeAdopted"));
+      }else{
+        const page=standardAction.id==="standardResumePrevious"?state.standardResumePage.page-1:standardAction.id==="standardResumeNext"?state.standardResumePage.page+1:1;
+        await withActivity("exportingStandardResume",async()=>{
+          const result=await api("standard-resume-pdf",post({draft_ref:state.standardResume?.draft_ref,page}));
+          state.standardResume=result;state.standardResumePage=result.page;
+        });
+        renderStandardResume();scrollToElement(document.querySelector("#standardResumePages"),{block:"start"});
+      }
+    }catch(error){handleUiError(error);}
+    return;
+  }
   const openTailoring=event.target.closest("#openTailoringManifest");
   if(openTailoring){
     try{
@@ -3440,6 +3548,7 @@ document.addEventListener("change",event=>{
   if(event.target.matches(".application-field-decision")){clearApplicationNarrativePreviews(event.target.closest(".application-field-row")||document);updateApplicationFieldResolutionButton();}
   else if(event.target.matches("#applicationFieldResolutionConfirm,.application-field-value")){updateApplicationFieldResolutionButton();}
   if(event.target.matches("#externalClaimConfirm")){renderApplicationReadiness();}
+  if(event.target.matches("#standardResumeConfirm")){renderStandardResume();}
   if(event.target.matches("#browserAssistConfirm")){
     const selected=state.browserAssistSelection;
     const canRepeatPairingHelp=state.companionPairing?.kind==="assist"&&state.companionPairing.paired!==true&&state.companionPairing.session?.application_id===selected?.application_id;

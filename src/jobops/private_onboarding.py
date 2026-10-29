@@ -21,6 +21,7 @@ PRIVATE_KINDS = {
     "resume_analysis", "claim_candidates", "onboarding_review_packet",
     "onboarding_center_state", "onboarding_source_document", "onboarding_ai_derived",
     "onboarding_completion_packet", "external_claim_set", "resume_tailoring_manifest",
+    "standard_resume_draft",
     "application_answer_bundle", "application_execution_bundle", "application_narrative", "continuous_evidence_bundle",
     "authorized_discovery_config",
     "application_mail_evidence", "application_mail_review", "application_mail_source",

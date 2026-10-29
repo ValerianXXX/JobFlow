@@ -127,9 +127,19 @@ def read_local_pdf(raw: bytes) -> tuple[str, dict]:
             env=environment,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
-        if completed.returncode or len(completed.stdout) > 4 * 1024 * 1024:
-            raise ValueError()
+        if completed.returncode:
+            raise JobOpsError(
+                "LOCAL_PARSER_FAILED", "The isolated local parser exited before producing a result.",
+                failure_stage="WORKER_EXIT", worker_exit_code=completed.returncode,
+            )
+        if len(completed.stdout) > 4 * 1024 * 1024:
+            raise JobOpsError(
+                "LOCAL_PARSER_FAILED", "The isolated local parser exceeded its output limit.",
+                failure_stage="OUTPUT_LIMIT",
+            )
         response = json.loads(completed.stdout)
+        if not isinstance(response, dict):
+            raise ValueError()
         if response.get("ok") is not True:
             code = response.get("code")
             if code not in {
@@ -149,10 +159,12 @@ def read_local_pdf(raw: bytes) -> tuple[str, dict]:
         raise
     except subprocess.TimeoutExpired as exc:
         raise JobOpsError(
-            "LOCAL_PARSER_TIMEOUT", "The local parser exceeded its one-minute limit."
+            "LOCAL_PARSER_TIMEOUT", "The local parser exceeded its one-minute limit.",
+            failure_stage="WORKER_TIMEOUT",
         ) from exc
     except Exception as exc:
         raise JobOpsError(
             "LOCAL_PARSER_FAILED",
             "The optional local PDF parser failed; no source was imported.",
+            failure_stage="INVALID_RESULT",
         ) from exc

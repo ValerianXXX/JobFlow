@@ -9,7 +9,7 @@ remaining work from the user-acceptance findings: stable diagnostics,
 PDF-only users' editable resume path, optional Word-free conversion,
 route-specific live application evidence, read-only status recovery,
 Hermes/novice completion and external signing/Windows acceptance. Its targets
-are proposed acceptance criteria, not completed features.
+are acceptance criteria, not completion claims. The [first implementation batch](standard-resume-2026-10-29.md) now adds native-parser isolation, document-tool discovery and the PDF-master standard-layout entry; Word-free conversion and the later milestones remain open.
 
 ## Available in the alpha
 
@@ -17,6 +17,7 @@ are proposed acceptance criteria, not completed features.
 - [x] DPAPI Candidate Profile, Answer Bank, source management, and versioned Claim review.
 - [x] AI-required entity reconstruction, source grounding, metric preservation, and Claim quality gates.
 - [x] Immutable Master Resume with applicant-approved tailoring positions and material-use authorization.
+- [x] PDF-master users can create a new standard DOCX from approved wording, inspect/download it and adopt it in a new revision while retaining original evidence. This is not layout-preserving PDF conversion.
 - [x] Visible official-company job discovery and verified company-published Apply routing.
 - [x] One application-specific confirmation for approved answers, materials, and user-present assistance.
 - [x] Transactional review queue with a user-selected pending limit.

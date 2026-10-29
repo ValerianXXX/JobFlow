@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import unittest
 import subprocess
+import os
+import sys
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -9,7 +11,7 @@ from unittest import mock
 
 from docx import Document
 
-from _support import project_temp
+from _support import project_temp, SRC
 from jobops.application_narrative import MAX_APPLICATION_NARRATIVE_CHARACTERS
 from jobops.document_builder import (
     _save_document_atomic,
@@ -43,6 +45,44 @@ def approved_claim(claim_id: str, wording: str, fact: str):
 
 
 class MaterialTests(unittest.TestCase):
+    def test_pdf_export_failure_does_not_expose_private_stderr(self) -> None:
+        with project_temp() as temp:
+            result = subprocess.CompletedProcess([], 1, stdout="", stderr="sensitive applicant name and local file")
+            with mock.patch("jobops.document_builder.subprocess.run", return_value=result):
+                with self.assertRaises(JobOpsError) as caught:
+                    export_docx_to_pdf(temp / "input.docx", temp / "output.pdf", temp / "export.ps1")
+            self.assertEqual(caught.exception.details, {"returncode": 1, "failure_stage": "PROCESS_EXIT"})
+            self.assertNotIn("sensitive", str(caught.exception.as_dict()))
+
+    @unittest.skipUnless(os.name == "nt", "Windows PowerShell export contract")
+    def test_pdf_helper_finishes_while_parent_control_input_remains_open(self) -> None:
+        # Model the long-lived server's open control pipe. This helper deliberately
+        # reads stdin before writing; it must see EOF without closing the server.
+        with project_temp() as temp:
+            script = temp / "synthetic-export.ps1"
+            script.write_text(
+                "param([string]$InputPath,[string]$OutputPath)\n"
+                "[Console]::In.ReadToEnd() | Out-Null\n"
+                "[IO.File]::WriteAllBytes($OutputPath,[Text.Encoding]::ASCII.GetBytes('synthetic pdf'))\n",
+                encoding="utf-8",
+            )
+            output = temp / "synthetic.pdf"
+            code = ("import sys; from pathlib import Path; from jobops.document_builder import export_docx_to_pdf; "
+                    "export_docx_to_pdf(Path(sys.argv[1]),Path(sys.argv[2]),Path(sys.argv[3]))")
+            process = subprocess.Popen(
+                [sys.executable, "-c", code, str(temp / "input.docx"), str(output), str(script)],
+                stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                env={**os.environ, "PYTHONPATH": str(SRC)}, creationflags=subprocess.CREATE_NO_WINDOW,
+            )
+            try:
+                self.assertEqual(process.wait(timeout=15), 0)
+                self.assertFalse(process.stdin.closed)
+                self.assertEqual(output.read_bytes(), b"synthetic pdf")
+            finally:
+                # EOF also releases the helper if this regression ever recurs.
+                process.stdin.close()
+                process.wait(timeout=30)
+
     def test_pdf_render_requires_fresh_pages_from_the_current_invocation(self) -> None:
         with project_temp() as temp:
             pdf = temp / "resume.pdf"

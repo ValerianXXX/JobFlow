@@ -80,6 +80,27 @@
           <button id="approveExternalClaims" class="primary" type="button" data-i18n="approveExternalClaims">批准材料使用</button>
           <small id="externalClaimApprovalMeta"></small>
         </div>
+        <div id="documentCapabilities" class="document-capabilities" aria-live="polite"></div>
+        <div id="standardResumePanel" class="tailoring-manifest-panel hidden">
+          <strong data-i18n="standardResumeTitle">只有 PDF？生成可编辑的标准简历</strong>
+          <p data-i18n="standardResumeBody">用已批准的事实生成新的单栏版式，原始 PDF 和证据保留。先预览，再决定是否采用为新母版。</p>
+          <p id="standardResumeStatus"></p>
+          <button id="createStandardResume" class="primary" type="button" data-i18n="createStandardResume">生成标准简历预览</button>
+          <section id="standardResumeDraft" class="hidden" aria-live="polite">
+            <div id="standardResumeText" class="standard-resume-text"></div>
+            <div class="standard-resume-actions">
+              <button id="downloadStandardResume" class="secondary" type="button" data-i18n="downloadStandardResume">保存 DOCX 副本</button>
+              <button id="previewStandardResumePdf" class="secondary" type="button" data-i18n="previewStandardResumePdf">转换并检查 PDF 页面</button>
+            </div>
+            <p data-i18n="standardResumeQa">文字预览不等于版面验收。用于申请前仍须检查实际导出的每一页，并完成现有材料审核。</p>
+            <div id="standardResumePages" class="hidden">
+              <div class="standard-resume-actions"><button id="standardResumePrevious" class="secondary" type="button" data-i18n="standardResumePrevious">上一页</button><span id="standardResumePageNumber"></span><button id="standardResumeNext" class="secondary" type="button" data-i18n="standardResumeNext">下一页</button></div>
+              <img id="standardResumePageImage" alt="" data-i18n-alt="standardResumePageAlt">
+            </div>
+            <label><input id="standardResumeConfirm" type="checkbox"><span data-i18n="standardResumeConsent">我已核对内容，同意采用新标准版式并开始资料修订；之后重新确认资料、材料授权和改写位置。</span></label>
+            <button id="adoptStandardResume" class="primary" type="button" disabled data-i18n="adoptStandardResume">采用母版并开始修订</button>
+          </section>
+        </div>
         <div id="tailoringManifestPanel" class="tailoring-manifest-panel hidden">
           <strong data-i18n="tailoringManifestTitle">建立安全简历改写位置</strong>
           <p data-i18n="tailoringManifestBody">AI 只会提出与已确认 Claim 对应的原简历段落；你一次确认后，岗位副本才能在这些位置改写，母版不会变化。</p>

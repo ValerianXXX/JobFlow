@@ -727,3 +727,12 @@ body.is-busy :is(#emergencyStop,#cancelGuidedIntake,#pauseAuthorizedDiscovery,#k
 .source-page-image rect{fill:rgba(33,116,148,.08);stroke:#217494;stroke-width:.002}
 .source-original p{font-size:.85rem;line-height:1.5}
 @media(max-width:720px){.workbench-grid,.source-comparison.show-original{grid-template-columns:1fr}.source-original{position:static}.workflow-workbench{padding:12px}.workflow-workbench .subheading{align-items:flex-start;gap:10px;flex-wrap:wrap}.mail-actions button{flex:1}}
+.document-capabilities{margin:1rem 0;padding:.75rem 1rem;border-left:3px solid #718096;background:#f3f6fa;color:#334155;line-height:1.6}
+.standard-resume-text{background:#fff;color:#17283b;border:1px solid #cbd5e1;border-radius:.5rem;padding:clamp(.8rem,3vw,1.5rem);margin:1rem 0;overflow-wrap:anywhere}
+.standard-resume-text h3{text-align:center}.standard-resume-text h4{margin:1rem 0 .4rem}
+.standard-resume-text li{margin:.6rem 0}.standard-resume-text small{display:block;color:#526477;font-size:.8rem}
+.standard-resume-actions{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem;margin:.8rem 0}
+#standardResumePages img{display:block;max-width:100%;height:auto;margin:.6rem auto;border:1px solid #cbd5e1}
+#standardResumeDraft>label{display:flex;align-items:flex-start;gap:.6rem;margin:1rem 0;line-height:1.6}
+#standardResumeDraft>label input{flex:0 0 auto;margin-top:.35rem}
+#standardResumeDraft,#standardResumePages{scroll-margin-top:110px}
