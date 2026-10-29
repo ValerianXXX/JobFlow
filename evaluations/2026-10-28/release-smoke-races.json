@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "record_kind": "DEVELOPMENT_OBSERVATION_NOT_RELEASE_ATTESTATION",
+  "review_date": "2026-10-28",
+  "review_timezone": "America/New_York",
+  "failed_ci": {
+    "run_id": 40802559245,
+    "head_commit": "928b8127ff3af7eac5ff358e5e3c02a6f458cc95",
+    "merge_checkout": "22adcfdba7cee999f3c6132688874f5ce27a4a50",
+    "head_tree": "92f605230075a070f9bc531e0b303812076deb85",
+    "conclusion": "failure",
+    "assertions": ["descendant stopped after parent exit 0", "descendant stopped after parent exit 17", "descendant stopped after timeout"],
+    "jobs": [
+      {"python_matrix": "3.11", "job_id": 123213833931, "tests": 1179, "failures": 3, "seconds": 5332.744},
+      {"python_matrix": "3.12", "job_id": 123213834022, "tests": 1179, "failures": 3, "seconds": 6539.216},
+      {"python_matrix": "3.13", "job_id": 123213833789, "tests": 1179, "failures": 3, "seconds": 6496.919}
+    ],
+    "later_gates": "SKIPPED_AFTER_REGRESSION_FAILURE"
+  },
+  "baseline_implementation_lf_sha256": "90f3dbf872e69e505aa6faa49a2eeedf9ef2ae193c002478a87d93050042e185",
+  "repaired_implementation_lf_sha256": "ced13f42966976c7965e2fe33931fcd0d593691db1efda37337f247fecabd4bf",
+  "standalone_interpreter_probe": {
+    "python": "3.11.3",
+    "platform": "Windows development host",
+    "probe": "probe-process-cleanup.py",
+    "probe_lf_sha256": "beb3c5acc4b2988391528ee05294a51aabfc58d082af28da5c44e01ac35a6e4f",
+    "scope": "Synthetic child self-expires after one second; inspect its process signal immediately on runner return",
+    "baseline": {
+      "iterations": 50,
+      "failure_count": 6,
+      "failures": [
+        {"iteration": 0, "post_return_liveness_ms": 15},
+        {"iteration": 1, "post_return_liveness_ms": 16},
+        {"iteration": 14, "post_return_liveness_ms": 16},
+        {"iteration": 18, "post_return_liveness_ms": 0},
+        {"iteration": 36, "post_return_liveness_ms": 15},
+        {"iteration": 45, "post_return_liveness_ms": 0}
+      ],
+      "elapsed_ms": 9172,
+      "capture": "Retained tool stdout from original pre-edit probe"
+    },
+    "first_repaired_run": {"iterations": 50, "failure_count": 0, "failures": [], "elapsed_ms": 9234, "scope": "Intermediate local repair before narrowing wait-handle access"},
+    "final_repaired_run": {"iterations": 50, "failure_count": 0, "failures": [], "elapsed_ms": 9281, "bound_to_repaired_implementation_lf_sha256": true},
+    "limits": "One host and small timing samples; zero observed failures is not a universal reliability claim. Post-return latency rounds to whole milliseconds."
+  },
+  "delayed_venv_assignment": {
+    "python": "3.11.3",
+    "assignment_delay_ms": 300,
+    "child_self_expiry_seconds": 5,
+    "baseline": {"total_job_processes": 1, "active_before_termination": 0, "return_code": 0, "child_running_on_return": true},
+    "repaired": {"total_job_processes": 5, "active_before_termination": 3, "return_code": 0, "child_running_on_return": false},
+    "regression_test": "test_delayed_assignment_contains_the_venv_launcher_descendants",
+    "regression_failed_before_repair": true,
+    "regression_passed_after_repair": true
+  },
+  "focused_checks": {
+    "python_3_11_3_process_tests": 8,
+    "python_3_13_15_process_tests": 8,
+    "release_candidate_tests": 16,
+    "release_readiness_tests": 33,
+    "public_documentation_tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "hosts": 1,
+    "python_3_13_source": "Cached complete runtime for 928b812; extracted interpreter ran current working-tree tests and implementation",
+    "temporary_extracted_runtime_removed": true
+  },
+  "historical_complete_runtime": {
+    "source_commit": "928b8127ff3af7eac5ff358e5e3c02a6f458cc95",
+    "archive_bytes": 39509593,
+    "archive_sha256": "f74c2983dabab5e3a03a3f5d395133cc3d1a2999f0529fb3b4d16520a36a4fa2",
+    "build_evidence_sha256": "983ee91e79dac395485b74d4729b74b906cfda5875746961dd14db4c106e7dd2",
+    "publisher_request_sha256": "06c10c5570e190ea4f0cfafc0a775908cef37b2a2f13337b24f08873470ad0c3",
+    "double_build_match": true,
+    "offline_import_and_closure_smoke": "PASS",
+    "status": "BUILT_UNATTESTED_SOURCE_CI_FAILED",
+    "contains_followup_repair": false,
+    "signed": false,
+    "uploaded": false
+  },
+  "replacement_full_ci": "PENDING_SEPARATE_EXACT_COMMIT_RUN",
+  "original_http_startup_failure_cause": "NOT_ESTABLISHED",
+  "clean_windows_signed_install_acceptance": false,
+  "new_model_calls": 0,
+  "real_external_actions": 0,
+  "release_authorized": false
+}

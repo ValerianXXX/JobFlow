@@ -1,5 +1,12 @@
 # Source-candidate smoke recovery — October 28, 2026
 
+**Historical first repair.** Its replacement CI subsequently failed three
+descendant-exit assertions on every Python version. The stdin handshake did not
+contain a native venv launcher, and an empty job counter did not always mean
+process handles were signaled. See the [follow-up repair and evidence](release-smoke-races-2026-10-28.md).
+The receipts below remain observations for their original commits, not proof
+that the later CI or signed distribution passed.
+
 ## Observed failure
 
 [CI run 40787970518](https://github.com/ValerianXXX/JobFlow/actions/runs/40787970518)
