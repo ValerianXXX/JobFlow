@@ -1136,6 +1136,14 @@ function workflowActivityDetail(activity){
   const estimate=Math.max(0,Number(activity.estimatedSeconds)||0),remaining=estimate&&elapsed<estimate?Math.max(1,Math.ceil(estimate-elapsed)):null;
   return t(remaining===null?"workflowWorkingDetail":"workflowWorkingEstimate").replace("{elapsed}",String(elapsed)).replace("{remaining}",String(remaining||0));
 }
+Object.assign(STRINGS.zh,{
+  workflowPreviewTitle:"先审阅已完成的材料分析", workflowPreviewDetail:"AI 结果已在下方。对照原件，选择要保留的事实并确认；不需要重新上传。", workflowPreviewAction:"审阅待确认材料",
+  demoPacketTitle:"批准本机合成演练", demoPacketBody:"这份虚构申请只用于本机演练。批准不会连接浏览器扩展，也不会填写或上传到真实网站。", demoPacketApprove:"批准合成审阅包", demoPacketApproveHelp:"保存本机演练决定；接下来另行确认运行合成步骤。", demoPacketConfirm:"点击下方按钮只批准当前虚构审阅包，不授权任何真实外部动作。", demoPacketApproved:"合成审阅包已批准。请在合成演练区域确认下一步。"
+});
+Object.assign(STRINGS.en,{
+  workflowPreviewTitle:"Review the material analysis already prepared", workflowPreviewDetail:"The AI result is below. Compare the original, select the facts to keep, and confirm; no new upload is needed.", workflowPreviewAction:"Review pending materials",
+  demoPacketTitle:"Approve the local synthetic rehearsal", demoPacketBody:"This fictional application is only a local rehearsal. Approval does not connect to an extension, fill a real site, or upload materials.", demoPacketApprove:"Approve synthetic review packet", demoPacketApproveHelp:"Save the local rehearsal decision; confirm the synthetic steps separately next.", demoPacketConfirm:"This button approves only the current fictional packet and authorizes no real external actions.", demoPacketApproved:"Synthetic packet approved. Confirm the next step in the rehearsal panel."
+});
 function workflowNowModel(){
   const activity=state.activities[state.activities.length-1];
   if(activity)return {tone:"working",title:t(activity.key),detail:workflowActivityDetail(activity),target:WORKFLOW_ACTIVITY_TARGETS[activity.key]||""};
@@ -1157,7 +1165,8 @@ function workflowNowModel(){
   if(!isAiReady(data.ai_engine)&&data.demo_mode!==true)return {tone:"blocked",title:t("workflowConnectAiTitle"),detail:t("workflowConnectAiDetail"),target:"aiConnectionPanel",action:t("workflowConnectAiAction")};
   if(data.status!=="ONBOARDING_COMPLETE"){
     const sources=Array.isArray(data.sources)?data.sources:[],pending=Array.isArray(data.pending_sources)?data.pending_sources:[];
-    if(!sources.length||pending.length||sources.some(item=>item.analysis_mode!=="AI_CORE_ENTITY_ANALYSIS"))return {tone:"neutral",title:t("workflowSourcesTitle"),detail:t("workflowSourcesDetail"),target:"sources",action:t("workflowSourcesAction")};
+    if(pending.length)return {tone:"neutral",title:t("workflowPreviewTitle"),detail:t("workflowPreviewDetail"),target:"sources",action:t("workflowPreviewAction")};
+    if(!sources.length||sources.some(item=>item.analysis_mode!=="AI_CORE_ENTITY_ANALYSIS"))return {tone:"neutral",title:t("workflowSourcesTitle"),detail:t("workflowSourcesDetail"),target:"sources",action:t("workflowSourcesAction")};
     if(Number(data.completion?.remaining||0)>0)return {tone:"neutral",title:t("workflowQuestionsTitle"),detail:t("workflowQuestionsDetail"),target:"questionnaire",action:t("workflowQuestionsAction")};
     const claims=Array.isArray(data.claims)?data.claims:[],conflicts=Array.isArray(data.conflicts)?data.conflicts:[];
     if(data.profile_review!=="CONFIRMED"||claims.some(item=>item.decision==="PENDING")||conflicts.some(item=>!item.resolution))return {tone:"neutral",title:t("workflowReviewTitle"),detail:t("workflowReviewDetail"),target:"review",action:t("workflowReviewAction")};
@@ -2225,13 +2234,21 @@ function applicationFieldResolutionReady(){
   if(!panel||panel.classList.contains("hidden"))return true;
   return collectApplicationFieldResolutions()!==null;
 }
+function isSyntheticPacketReview(){
+  return state.data?.demo_mode===true && state.data?.demo_constraints?.synthetic_only===true
+    && state.reviewPacket?.application_id===state.data?.demo_constraints?.application_id;
+}
 function updatePacketDecisionButton(){
   const button=document.querySelector("#confirmPacketDecision");
   if(!button)return;
   const fieldsReady=state.reviewDecision!=="APPROVE"||applicationFieldResolutionReady();
   button.disabled=!state.reviewDecision||!fieldsReady;
-  const key=state.reviewDecision==="APPROVE"?"confirmApproveAndStart":state.reviewDecision==="REVISE"?"confirmReviseDecision":"confirmRejectDecision";
+  const key=state.reviewDecision==="APPROVE"?(isSyntheticPacketReview()?"demoPacketApprove":"confirmApproveAndStart"):state.reviewDecision==="REVISE"?"confirmReviseDecision":"confirmRejectDecision";
   button.textContent=t(key);
+  const demoKeys={packetDecisionTitle:"demoPacketTitle",packetDecisionBody:"demoPacketBody",decisionApprove:"demoPacketApprove",decisionApproveHelp:"demoPacketApproveHelp",decisionConfirm:"demoPacketConfirm"};
+  document.querySelectorAll("#packetDecisionPanel [data-i18n]").forEach(element=>{
+    const key=element.dataset.i18n;if(demoKeys[key])element.textContent=t(isSyntheticPacketReview()?demoKeys[key]:key);
+  });
 }
 function renderApplicationFieldResolution(result){
   const summary=result?.field_resolution||{},fields=summary.unresolved_fields||[],unknowns=summary.remaining_non_form_unknowns||[];
@@ -3241,13 +3258,13 @@ document.addEventListener("click", async event => {
   const confirmPacketDecision=event.target.closest("#confirmPacketDecision");
   if(confirmPacketDecision){
     if(!state.reviewDecision){showToast(t("chooseDecision"),true);return;}
-    const decision=state.reviewDecision,packet=state.reviewPacket?.packet;
+    const decision=state.reviewDecision,packet=state.reviewPacket?.packet,syntheticReview=isSyntheticPacketReview();
     if(!packet){showToast(t("reviewPacketUnavailable"),true);return;}
     try{
       let decisionResult;
       const waitingCount=Number(state.data?.dashboard?.queue?.deferred_intake||0);
       await withActivity("savingQueueDecision",async()=>{
-        if(decision==="APPROVE"){
+        if(decision==="APPROVE"&&!syntheticReview){
           await requireCurrentCompanion();
           const job=packet.job||{};
           const resolutionDraft=collectApplicationFieldResolutions();
@@ -3273,8 +3290,8 @@ document.addEventListener("click", async event => {
         document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#reviewPacketPanel").classList.add("hidden");
         await refreshLatest();
       },{estimatedSeconds:waitingCount>0?180:7});
-      const baseMessage=t(decision==="APPROVE"?"decisionApprovedAndStarted":decision==="REVISE"?"decisionRevised":"decisionRejected");
-      const queueDecision=decision==="APPROVE"?decisionResult?.decision:decisionResult;
+      const baseMessage=t(decision==="APPROVE"?(syntheticReview?"demoPacketApproved":"decisionApprovedAndStarted"):decision==="REVISE"?"decisionRevised":"decisionRejected");
+      const queueDecision=decision==="APPROVE"&&!syntheticReview?decisionResult?.decision:decisionResult;
       const continued=Number(queueDecision?.continued_intake?.prepared_count||0)>0
         ?` ${t("nextApplicationPrepared")}`
         :Number(queueDecision?.continued_intake?.failed_count||0)>0?` ${t("nextApplicationNeedsRepair")}`:"";
