@@ -4,6 +4,13 @@ Checked items describe implemented engineering scope, not a claim of live compat
 
 The current machine-readable status is available through `jobflow product-capabilities`; see [support-matrix.md](support-matrix.md).
 
+The [October 29 upgrade plan](next-upgrade-plan-2026-10-29.md) sequences the
+remaining work from the user-acceptance findings: stable diagnostics,
+PDF-only users' editable resume path, optional Word-free conversion,
+route-specific live application evidence, read-only status recovery,
+Hermes/novice completion and external signing/Windows acceptance. Its targets
+are proposed acceptance criteria, not completed features.
+
 ## Available in the alpha
 
 - [x] Bootstrap-first Windows installer, health check, and bilingual local UI. The public entry point does not use a system Python, create a virtual environment, or build the runtime from source; the legacy source installer remains regression-only.
