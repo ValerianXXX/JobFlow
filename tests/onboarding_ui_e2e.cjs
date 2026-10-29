@@ -391,6 +391,26 @@ const {chromium} = require("playwright");
     assert.equal(linearWorkflow.action, "继续补充资料");
     assert.equal(linearWorkflow.target, "questionnaire");
     assert.equal(linearWorkflow.hidden, false);
+    const pendingWorkflow = await page.evaluate(() => {
+      state.data.pending_sources=[{source_id:"SRC-SYNTHETIC-PENDING"}];
+      state.data.sources=[];
+      const results=[];
+      for(const locale of ["zh","en"]){state.locale=locale;renderWorkflowNow();results.push({title:document.querySelector("#workflowNowTitle").textContent,detail:document.querySelector("#workflowNowDetail").textContent,target:document.querySelector("#workflowNowAction").dataset.target});}
+      state.locale="zh";state.data.pending_sources=[];
+      state.data.sources=[{analysis_mode:"AI_CORE_ENTITY_ANALYSIS"}];
+      renderWorkflowNow();renderStateMode();navigate("sources");
+      return results;
+    });
+    assert.match(pendingWorkflow[0].title,/先审阅/);
+    assert.match(pendingWorkflow[0].detail,/不需要重新上传/);
+    assert.match(pendingWorkflow[1].title,/Review the material analysis/);
+    assert.equal(pendingWorkflow[1].target,"sources");
+    await page.locator("#documentType").focus();
+    await page.keyboard.press("Tab");
+    assert.equal(await page.evaluate(() => document.activeElement.id),"documentFile");
+    await page.locator("#aiType").focus();
+    await page.keyboard.press("Tab");
+    assert.equal(await page.evaluate(() => document.activeElement.id),"aiFile");
     const workflowNavigation = await page.evaluate(() => {
       document.querySelector("#workflowNowAction").click();
       return {

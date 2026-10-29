@@ -1,0 +1,497 @@
+{
+  "schema_version": 1,
+  "observed_date": "2026-10-29",
+  "synthetic_only": true,
+  "operator": "coding_assistant_browser_interaction",
+  "independent_human_participant_study": false,
+  "baseline_source_commit": "3e232d73275ee81e45ec8e81eb0bff708e6cf324",
+  "source_scope": "Baseline backend plus the UI changes in this PR; no signed package.",
+  "live_session_started_at": "2026-10-29T08:42:42.017904-04:00",
+  "final_tested_files_lf_sha256": {
+    "src/jobops/ui/app.js": "da336a27ed389183ef80b30ad419cff4bfae21306a5a13245ea2277f26e2ffee",
+    "src/jobops/ui/styles.css": "f1f1266cdbcd39fe3b2a91f732e76727cc4d3ac6b0799734fea25183a90397e1",
+    "tests/onboarding_ui_e2e.cjs": "4eadd9eb727361717b66952529c65a2b617d671cb248663d56c297555038d5b4",
+    "tests/workbench_ui_e2e.cjs": "5db4847f11cedefa8ac0fab8bbf208e5d467eac7947060f5f6319988c618c734",
+    "scripts/user-acceptance-server.py": "78a4cf1879238bc9aafa62568db940aab81c849b9914c906e193e27e20be5558"
+  },
+  "fixture": "evaluations/2026-10-27/visual-hermes-repaired-2026-10-27.synthetic.pdf",
+  "fixture_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+  "model_route": {
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "hermes_commit": "afe53708ee7400919ae3e17a6dde9b02629e5c87"
+  },
+  "adapter_requests": [
+    {
+      "task": "JOBOPS_AI_CONNECTION_TEST",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 4453
+    },
+    {
+      "task": "JOBOPS_STRUCTURED_CAPABILITY_TEST_V1",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 10625
+    },
+    {
+      "task": "JOBOPS_VISUAL_TRANSCRIPTION_V1",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 12407
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 16593
+    }
+  ],
+  "material_adapter_elapsed_ms_sum": 29000,
+  "connection_and_capability_elapsed_ms_sum": 15078,
+  "complete_user_journey_elapsed_ms": null,
+  "usage_tokens": null,
+  "cost_usd": null,
+  "result": {
+    "transcribed_lines": 13,
+    "entities": 4,
+    "initially_unselected_candidates": 10,
+    "retained_pending_material_claims": 10,
+    "source_pages_visually_checked": 3,
+    "designated_numeric_facts": 6,
+    "designated_numeric_facts_preserved": 6,
+    "observed_designated_fact_omissions": 0,
+    "observed_designated_fact_numeric_errors": 0,
+    "observed_designated_fact_date_or_ownership_errors": 0,
+    "review_method": "Coding assistant compared all original pages and ten statements; limited to this fixed synthetic material.",
+    "claims": [
+      {
+        "statement": "The role at North Star Lab was Analyst from 2023-2025.",
+        "decision": "PENDING",
+        "approved_for_external": false,
+        "line_start": 2,
+        "line_end": 2,
+        "source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+        "visual_regions": [
+          {
+            "bbox": [
+              0.05,
+              0.219,
+              0.402,
+              0.254
+            ],
+            "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+            "line_end": 2,
+            "line_start": 2,
+            "page": 1
+          }
+        ],
+        "original_pages_checked_by_coding_assistant": true
+      },
+      {
+        "statement": "Work at North Star Lab included building a dashboard covering 12 stores.",
+        "decision": "PENDING",
+        "approved_for_external": false,
+        "line_start": 2,
+        "line_end": 3,
+        "source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+        "visual_regions": [
+          {
+            "bbox": [
+              0.05,
+              0.219,
+              0.402,
+              0.254
+            ],
+            "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+            "line_end": 2,
+            "line_start": 2,
+            "page": 1
+          },
+          {
+            "bbox": [
+              0.05,
+              0.349,
+              0.408,
+              0.384
+            ],
+            "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+            "line_end": 3,
+            "line_start": 3,
+            "page": 1
+          }
+        ],
+        "original_pages_checked_by_coding_assistant": true
+      },
+      {
+        "statement": "Work at North Star Lab reduced reporting time by 18%.",
+        "decision": "PENDING",
+        "approved_for_external": false,
+        "line_start": 2,
+        "line_end": 4,
+        "source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+        "visual_regions": [
+          {
+            "bbox": [
+              0.05,
+              0.219,
+              0.402,
+              0.254
+            ],
+            "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+            "line_end": 2,
+            "line_start": 2,
+            "page": 1
+          },
+          {
+            "bbox": [
+              0.05,
+              0.349,
+              0.408,
+              0.384
+            ],
+            "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+            "line_end": 3,
+            "line_start": 3,
+            "page": 1
+          },
+          {
+            "bbox": [
+              0.05,
+              0.479,
+              0.361,
+              0.514
+            ],
+            "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+            "line_end": 4,
+            "line_start": 4,
+            "page": 1
+          }
+        ],
+        "original_pages_checked_by_coding_assistant": true
+      },
+      {
+        "statement": "The role at Cedar Studio was Analyst in 2024.",
+        "decision": "PENDING",
+        "approved_for_external": false,
+        "line_start": 6,
+        "line_end": 6,
+        "source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+        "visual_regions": [
+          {
+            "bbox": [
+              0.05,
+              0.219,
+              0.328,
+              0.254
+            ],
+            "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+            "line_end": 6,
+            "line_start": 6,
+            "page": 2
+          }
+        ],
+        "original_pages_checked_by_coding_assistant": true
+      },
+      {
+        "statement": "Work at Cedar Studio included processing 1,200 synthetic records.",
+        "decision": "PENDING",
+        "approved_for_external": false,
+        "line_start": 6,
+        "line_end": 7,
+        "source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+        "visual_regions": [
+          {
+            "bbox": [
+              0.05,
+              0.219,
+              0.328,
+              0.254
+            ],
+            "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+            "line_end": 6,
+            "line_start": 6,
+            "page": 2
+          },
+          {
+            "bbox": [
+              0.05,
+              0.349,
+              0.403,
+              0.384
+            ],
+            "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+            "line_end": 7,
+            "line_start": 7,
+            "page": 2
+          }
+        ],
+        "original_pages_checked_by_coding_assistant": true
+      },
+      {
+        "statement": "Bay Project was identified as a team result in 2025.",
+        "decision": "PENDING",
+        "approved_for_external": false,
+        "line_start": 8,
+        "line_end": 8,
+        "source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+        "visual_regions": [
+          {
+            "bbox": [
+              0.518,
+              0.219,
+              0.83,
+              0.254
+            ],
+            "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+            "line_end": 8,
+            "line_start": 8,
+            "page": 2
+          }
+        ],
+        "original_pages_checked_by_coding_assistant": true
+      },
+      {
+        "statement": "The Bay Project team managed a $12,500 budget.",
+        "decision": "PENDING",
+        "approved_for_external": false,
+        "line_start": 8,
+        "line_end": 9,
+        "source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+        "visual_regions": [
+          {
+            "bbox": [
+              0.518,
+              0.219,
+              0.83,
+              0.254
+            ],
+            "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+            "line_end": 8,
+            "line_start": 8,
+            "page": 2
+          },
+          {
+            "bbox": [
+              0.518,
+              0.349,
+              0.833,
+              0.384
+            ],
+            "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+            "line_end": 9,
+            "line_start": 9,
+            "page": 2
+          }
+        ],
+        "original_pages_checked_by_coding_assistant": true
+      },
+      {
+        "statement": "Harbor Project involved a team in 2026.",
+        "decision": "PENDING",
+        "approved_for_external": false,
+        "line_start": 11,
+        "line_end": 11,
+        "source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+        "visual_regions": [
+          {
+            "bbox": [
+              0.05,
+              0.219,
+              0.322,
+              0.254
+            ],
+            "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+            "line_end": 11,
+            "line_start": 11,
+            "page": 3
+          }
+        ],
+        "original_pages_checked_by_coding_assistant": true
+      },
+      {
+        "statement": "The Harbor Project team tested 24 synthetic scenarios.",
+        "decision": "PENDING",
+        "approved_for_external": false,
+        "line_start": 11,
+        "line_end": 12,
+        "source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+        "visual_regions": [
+          {
+            "bbox": [
+              0.05,
+              0.219,
+              0.322,
+              0.254
+            ],
+            "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+            "line_end": 11,
+            "line_start": 11,
+            "page": 3
+          },
+          {
+            "bbox": [
+              0.05,
+              0.349,
+              0.407,
+              0.384
+            ],
+            "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+            "line_end": 12,
+            "line_start": 12,
+            "page": 3
+          }
+        ],
+        "original_pages_checked_by_coding_assistant": true
+      },
+      {
+        "statement": "For Harbor Project, the applicant prepared 6 review reports.",
+        "decision": "PENDING",
+        "approved_for_external": false,
+        "line_start": 11,
+        "line_end": 13,
+        "source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+        "visual_regions": [
+          {
+            "bbox": [
+              0.05,
+              0.219,
+              0.322,
+              0.254
+            ],
+            "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+            "line_end": 11,
+            "line_start": 11,
+            "page": 3
+          },
+          {
+            "bbox": [
+              0.05,
+              0.349,
+              0.407,
+              0.384
+            ],
+            "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+            "line_end": 12,
+            "line_start": 12,
+            "page": 3
+          },
+          {
+            "bbox": [
+              0.05,
+              0.479,
+              0.413,
+              0.514
+            ],
+            "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+            "line_end": 13,
+            "line_start": 13,
+            "page": 3
+          }
+        ],
+        "original_pages_checked_by_coding_assistant": true
+      }
+    ],
+    "source_confirmation_without_visual_check": "BLOCKED",
+    "onboarding_completion_with_unanswered_questions_and_pending_reviews": "BLOCKED",
+    "state_after_browser_reload": "Source and ten pending candidates retained",
+    "final_onboarding_status": "IN_PROGRESS",
+    "database_counts": {
+      "applications": 0,
+      "claims": 0,
+      "approvals": 0,
+      "external_action_attempts": 0
+    },
+    "temporary_state_removed": true,
+    "business_completion": "NOT_ATTEMPTED"
+  },
+  "isolated_workbench_session": {
+    "real_http_and_dpapi": true,
+    "ai": "FAKE_FIXTURE",
+    "source_integrity": "Verified saved JD displayed; absent legacy snapshot explicitly missing",
+    "eml": "Local synthetic file; no authenticated mailbox",
+    "association": "Manual confirmation, reload persistence and undo passed; not a matching-accuracy experiment",
+    "rehearsal": "UI review approval, synthetic prefill, user confirmation and fake receipt passed after fix",
+    "real_site_visits": 0,
+    "real_external_actions": 0
+  },
+  "local_validation": [
+    {
+      "seconds": 594.594,
+      "suite": "test_real_profile_offline_application",
+      "passed": 33,
+      "level": "offline production pipeline with synthetic profiles and saved-page fixtures"
+    },
+    {
+      "seconds": 5.118,
+      "suite": "test_demo + test_workflow_gates + test_public_docs",
+      "passed": 20,
+      "level": "local regression"
+    },
+    {
+      "suite": "onboarding_ui_e2e.cjs",
+      "result": "PASS",
+      "level": "fixture UI, bilingual guidance and keyboard navigation"
+    },
+    {
+      "suite": "workbench_ui_e2e.cjs",
+      "result": "PASS",
+      "level": "real local HTTP and DPAPI, synthetic data and fake AI"
+    },
+    {
+      "suite": "browser_companion_e2e.cjs",
+      "result": "PASS",
+      "level": "five ATS families on local fixtures; not live ATS acceptance"
+    },
+    {
+      "suite": "browser_companion_one_confirmation_e2e.cjs",
+      "result": "PASS",
+      "level": "synthetic approved assistance; programmatic final submit remains zero"
+    }
+  ],
+  "hosted_baseline": [
+    {
+      "browser_suites_per_python": 9,
+      "tests_per_python": 1184,
+      "run_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40851600301",
+      "pr": 7,
+      "head": "bf48283ce1632a0d4bc51fc80f72cebd454ec6b2",
+      "workflow_result": "FAILURE",
+      "source_candidate": "SUCCESS",
+      "passing_python": [
+        "3.11",
+        "3.12"
+      ],
+      "python_3_13": {
+        "result": "FAILURE",
+        "job_id": 123372715234,
+        "last_test": "test_scan_and_missing_page_never_become_successful_empty_text",
+        "process_exit_code": 1,
+        "failure_summary_or_traceback_present": false,
+        "root_cause": "UNRESOLVED",
+        "later_browser_suites": "SKIPPED"
+      }
+    },
+    {
+      "browser_suites_per_python": 9,
+      "tests_per_python": 1192,
+      "python": [
+        "3.11",
+        "3.12",
+        "3.13"
+      ],
+      "run_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40851805710",
+      "pr": 8,
+      "head": "3e232d73275ee81e45ec8e81eb0bff708e6cf324",
+      "all_four_jobs": "SUCCESS"
+    }
+  ],
+  "external_blockers": [
+    "Trusted production signing unavailable",
+    "Independent clean Windows installation/upgrade/data-retention/rollback acceptance unavailable",
+    "Live ATS user-present workflow not tested in this round",
+    "No real mailbox connector or authenticated mailbox acceptance",
+    "No independent human study or general accuracy/cost benefit established",
+    "Earlier upstream Python 3.13 optional-parser test process exited abruptly; cause unresolved despite later unchanged-code pass"
+  ]
+}

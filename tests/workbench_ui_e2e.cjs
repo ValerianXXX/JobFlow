@@ -96,8 +96,26 @@ const root = path.resolve(__dirname, "..");
       headers:{"X-JobOps-Session":"synthetic-workbench-ui"},data:{application_id:"APP-DEFACED00001"}});
     assert.equal(response.status(),200);
     assert.equal((await response.json()).status,"AWAITING_APPROVAL");
+    // Exercise the actual UI route: service-only approval tests missed a demo
+    // button that incorrectly tried to pair with a real Browser Companion.
+    await page.getByRole("button",{name:"View review packet",exact:true}).click();
+    await page.getByRole("button",{name:"Approve synthetic review packet",exact:true}).waitFor();
+    assert.match(await page.locator("#packetDecisionPanel").innerText(), /authorizes no real external actions/);
+    await page.getByRole("button",{name:"Approve synthetic review packet",exact:true}).click();
+    await page.locator("#demoRehearsalControls").waitFor({state:"visible"});
+    await page.locator("#demoRehearsalConfirm").check();
+    await page.getByRole("button",{name:"Run to final confirmation",exact:true}).click();
+    await page.locator("#demoFinalControls").waitFor({state:"visible"});
+    assert.match(await page.locator("#demoExecutionPanel").innerText(), /temporary files were removed/);
+    await page.locator("#demoFinalConfirm").check();
+    await page.getByRole("button",{name:"Confirm fake final submission",exact:true}).click();
+    await page.waitForFunction(() => document.querySelector("#demoExecutionStatus")?.textContent.includes("full synthetic loop is confirmed"));
+    assert.equal(await page.locator("#demoFinalControls").isVisible(),false);
+    assert.equal(await page.locator("#demoRehearsalControls").isVisible(),false);
+    await page.waitForFunction(() => getComputedStyle(document.querySelector("#toast")).opacity === "0");
+    await page.screenshot({path:path.join(artifacts,"mobile-rehearsal.png")});
     assert.deepEqual(pageErrors,[]); assert.deepEqual(externalRequests,[]);
-    process.stdout.write("Workbench HTTP/DPAPI UI PASS: bilingual, desktop/mobile, source review, snapshot integrity, mail link/reload/undo/clear; no external requests.\n");
+    process.stdout.write("Workbench HTTP/DPAPI UI PASS: bilingual, desktop/mobile, source review, snapshot integrity, mail link/reload/undo/clear, UI approval through synthetic receipt; no external requests.\n");
   } finally {
     if (browser) await browser.close();
     child.stdin.end("stop\n");

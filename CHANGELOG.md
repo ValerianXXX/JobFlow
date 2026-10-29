@@ -4,6 +4,10 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Repair the synthetic demo's review approval so it reaches its local rehearsal without demanding a real Browser Companion. Keep normal application approval and user-only final Submit unchanged. Add actual HTTP/DPAPI UI coverage through the fake receipt.
+- Direct completed material previews to original-source review instead of asking for another upload; restore keyboard access and visible focus to both upload controls.
+- Record a fresh browser-operated synthetic acceptance run with the existing real Hermes route, exact evidence and explicit limits. Update the now-completed hosted baseline matrices; signed distribution, clean-Windows and live-employer acceptance remain separate.
+
 - Added an opt-in, fixed-input material-preview evaluation covering the production visual/Claim pipeline, DPAPI original retention and mandatory source confirmation. Preserved unknown cost/usage fields rather than treating missing receipts as zero. Fresh transcription runs now record their actual UTC date instead of a hardcoded historical date.
 
 - Load the encrypted-store helper's two built-in PowerShell modules by system path, preventing ambient command shadowing and avoiding unrelated module discovery on a cold private directory. Preserve the DPAPI format, atomic writes and existing timeout budgets; hosted startup verification remains separately recorded.

@@ -1,5 +1,14 @@
 # Source startup verification — October 29, 2026
 
+**Later verification on October 29:** [run 40851805710](https://github.com/ValerianXXX/JobFlow/actions/runs/40851805710)
+at #8 `3e232d7` passed 1,192 regressions and nine browser suites per Python
+version, plus its source job. [Run 40851600301](https://github.com/ValerianXXX/JobFlow/actions/runs/40851600301)
+at #7 `bf48283` passed its source job and 3.11/3.12 matrices (1,184 and nine
+each), but 3.13 exited during an optional-parser test without a traceback;
+its cause is unresolved. See the [acceptance ledger](user-acceptance-2026-10-29.md#validation-ledger).
+The failed runs remain failures; signing and independent clean-Windows
+acceptance remain blocked.
+
 The owner confirmed on October 29 that no trusted production signing workflow
 or independent clean Windows machine/VM is currently available. These are
 confirmed external blockers, not unanswered approval requests. Continue source
