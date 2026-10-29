@@ -84,7 +84,7 @@ the account-linked address `182967849+ValerianXXX@users.noreply.github.com`.
 The authenticated GitHub profile was checked on October 28: login
 `ValerianXXX`, account ID `182967849`. Repository-local Git configuration now
 uses that identity; global configuration and account privacy settings are unchanged.
-The source policy remains `NOREPLY_ONLY`, with no personal-email allowlist.
+At this correction checkpoint the source policy remained `NOREPLY_ONLY`.
 
 GitHub rejected the earlier private-email commits with `GH007`. Only those two
 unpublished commits were reconstructed under the approved noreply identity, with
@@ -92,16 +92,46 @@ a verified local backup of the rejected versions. Previously pushed history is
 unchanged, and the task branches can advance by ordinary fast-forward pushes.
 
 Historical commit `fecd168` records a different author name and email. That record
-must not be presented as the owner's confirmed email. It is not covered by this
-correction, and the raw-history identity gate must continue to report
-`REVIEW_REQUIRED` until the discrepancy has an authorized resolution. No public
-history was rewritten, no mailmap was used to mask the record, and no personal
-email was approved for publication. Existing noreply commits remain unchanged.
+must not be presented as the owner's confirmed email. It was not covered by the
+initial correction. Existing noreply commits and the original history remain unchanged.
 
-Validation: all 11 focused public-release identity/content tests pass. The new
-commits use the account-linked noreply address for author and committer, changed
-tracked files contain no private-address findings, and the raw-history audit
-still reports one unresolved identity rather than a false release pass.
+## Specific historical identity approval - 28 October 2026
+
+After reviewing the exact proposal, the owner explicitly approved only the
+historical identity recorded on commit
+`fecd1682e6769dfd6bbcfbfedf153562e1304697` (2026-08-27, author `JiehangYu`).
+`config/public-release.json` now uses `PUBLIC_EMAIL_HASHES_APPROVED` with one
+canonical SHA-256 entry. The plaintext historical address is not reproduced in
+this document or configuration; it remains in the pre-existing Git history.
+Other non-noreply identities still require review. All new task commits continue
+to use the owner's account-linked noreply address.
+
+This approval neither changes attribution nor rewrites history. It authorizes
+the existing identity check's single exception, not signing, tagging, uploading,
+store publication, deployment or clean-Windows acceptance. Revert the policy
+change to restore `NOREPLY_ONLY` and require review of this historical identity again.
+
+Local validation after applying the approved entry: all 11 public-release policy
+tests pass. The authenticated full tree/history scan passes with zero content
+findings (561 tracked files, 287 commits, 2,471 unique blobs); author identity is
+`PASS`, one approved non-noreply identity, zero unapproved identities, zero private
+identity values emitted. `public_release_ready` remains false: repository-boundary
+success alone does not certify a signed release.
+
+Source commit `7b2fbf7d2249829610b4e7a5e4f2c68c8263f3ef` then produced
+`JobFlow-v0.7.0-7b2fbf7d2249-source.zip` twice with identical SHA-256
+`05e7dc5949313b5ed88a005e725ddb4b854d581ce7e69766dd11719f096cdd44`
+(3,071,999 bytes). Its 561-file archive scan and isolated bilingual loopback
+source smoke passed, with zero private values emitted or external actions.
+The [source-candidate receipt](../evaluations/2026-10-28/approved-identity-source-candidate.json)
+binds these results to that commit. This artifact has not been uploaded or
+production-signed; it is separate from the complete Windows runtime below.
+
+Before the historical exception was approved, all 11 focused public-release
+identity/content tests passed, but the raw-history audit still reported one
+unresolved identity. The approved full-history result above supersedes that
+identity finding; it does not replace the remaining release gates. New commits
+continue to use the account-linked noreply address for author and committer.
 
 Runtime and CI receipts elsewhere in this document describe their named source
 commits. This documentation and commit-identity correction does not transfer those receipts to a new
@@ -115,7 +145,7 @@ Bundle SHA-256: `fed48832aeb52ea0f80b653374ed3bbd3350a3edd569db0ba02e08b94ef9fff
 Tree SHA-256: `96e42c679abf929cbec71b4947a3321c226a858387fa713c05860de6afe20e74`.
 The ignored local bundle contains no publisher key.
 
-Complete runtime built from checkpoint `a7af3e57835e771df4d7d163471751fc00f07d34`
+The earlier complete runtime was built from checkpoint `a7af3e57835e771df4d7d163471751fc00f07d34`
 using the official CI-pinned MinGit 2.53.0.3, whose archive/executable digest and
 Authenticode publisher match the existing trust policy. The host-bundled Git
 executable passed its own signature check but its runtime-file closure did not;
@@ -130,14 +160,44 @@ The builder reports `BUILT_UNATTESTED`, `psf_sigstore_verified=false`,
 `outer_signing_ready=false`, and `public_release_blocked=true`. This local artifact
 is **not** a production-signed installer and was not uploaded as a release.
 
+### Refreshed complete-runtime preparation - October 28
+
+Checkpoint `987e8c58826a63cf629a3c84075cf95f725efe28` includes the approved identity
+policy and corrected release documentation. Using the same verified cached
+inputs and pinned MinGit, the existing builder produced the complete Windows
+runtime twice with identical archive and tree hashes. The independent archive
+verifier and offline startup smoke passed with zero external actions.
+
+- Archive: `JobFlow-v0.7.0-windows-x64-complete.zip`, 38,628,522 bytes.
+- SHA-256: `707238221eb22e49eda62c5b4d7bb4221738b7c833ac7fe7fa4e9e6de80345a2`.
+- [Canonical build evidence](../evaluations/2026-10-28/runtime-987e8c5/JobFlow-runtime-build-evidence.json),
+  SHA-256 `8d29f62761e04d692b6ef006bfd4c54793d4334d75484e4dc088175fb9ddd7fa`.
+- [Pathless publisher request](../evaluations/2026-10-28/runtime-987e8c5/JobFlow-protected-publisher-request.json),
+  SHA-256 `4d832d6111c39a29df4033f894978a6847c681ba3ad92489da24e79b1d6e27a2`.
+
+The archive remains local in ignored `dist/runtime-candidate-987e8c5/`; only the
+pathless evidence/request are included for review. The builder still reports
+`BUILT_UNATTESTED`, `psf_sigstore_verified=false`, `outer_signing_ready=false`
+and `public_release_blocked=true`. The request is preparation for an independent
+trusted publisher, not that publisher's approval or signature. No Release,
+extension-store update, installation into the user's fixed app or deployment occurred.
+
+The evidence was issued at `2026-10-29T00:52:13Z` and expires at
+`2026-10-29T23:52:13Z`. This is October 28 locally in America/New_York. The files
+remain historical receipts after expiry; do not refresh timestamps or reuse them
+for a different source commit. A later approved release commit needs a fresh build
+and protected publisher/clean-Windows evidence. This local build does not transfer
+the running `7b2fbf7` Windows CI result to `987e8c5`; the latter changed documentation
+and evidence only, and its public-documentation checks passed independently.
+
 The GitHub `jobflow-protected-release` environment exists with reviewer and branch
 policy. No environment secret or protected signing workflow was available in the
 inspected configuration. Use the existing [release checklist](release-checklist.md),
 exact-commit builder, protected-publisher request/response validation and clean
 Windows receipt. Do not substitute a developer signature for the production key.
 
-Publication still needs an authorized resolution of the historical-identity discrepancy, protected signing
-availability and clean signed-install/upgrade/rollback acceptance. This workstation
+The specified historical-identity exception is now approved and applied.
+Publication still needs protected signing availability and clean signed-install/upgrade/rollback acceptance. This workstation
 can validate source and synthetic integration tests, but is not a clean Windows
 signed-install acceptance machine. The actual v0.6.0 retained-data layout must be
 checked in an isolated Windows profile. Keep the prior health-checked runtime and

@@ -794,6 +794,85 @@ class OnboardingCenterService:
         # project files or the ordinary database and disappear on restart.
         self._application_browser_tabs: dict[str, int] = {}
 
+    @_synchronized
+    def application_workspace(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from .application_workspace import application_workspace
+        return application_workspace(self.database, self.project, payload.get("application_id"))
+
+    @_synchronized
+    def source_review_page(self, payload: dict[str, Any]) -> dict[str, Any]:
+        import math
+        from .source_review import source_page
+        _, state = self.ensure_state()
+        sources = list(state.get("sources", [])) + [item["metadata"] for item in state.get("pending_sources", [])]
+        source = next((item for item in sources if item.get("source_id") == payload.get("source_id")), None)
+        if source is None or source.get("raw_retained") is not True:
+            raise JobOpsError("SOURCE_REVIEW_UNAVAILABLE", "Choose a retained source from the current review.")
+        result = source_page(self.onboarding.read_bytes(source["secure_ref"]), source["extension"],
+                             expected_hash=source["sha256"], page=payload.get("page", 1))
+        # Persisted model metadata is untrusted even when the image itself
+        # passes its hash. Only finite, normalized coordinates enter the SVG.
+        regions = []
+        summary = source.get("extraction_summary", {})
+        proposed = summary.get("visual_regions", []) if isinstance(summary, dict) else []
+        for item in proposed[:1000] if isinstance(proposed, list) else []:
+            if not isinstance(item, dict) or type(item.get("page")) is not int or item["page"] != result["page"]:
+                continue
+            box = item.get("bbox")
+            if (not isinstance(box, list) or len(box) != 4
+                    or any(type(v) not in (int, float) or not math.isfinite(v) or not 0 <= v <= 1 for v in box)
+                    or box[0] >= box[2] or box[1] >= box[3]):
+                continue
+            regions.append({"page": result["page"], "bbox": box})
+        return {**result, "source_id": source["source_id"], "regions": regions}
+
+    def _status_inbox(self):
+        from .mail_tracking import ApplicationStatusInbox
+        reference = self._latest_ref("application_mail_review")
+        return reference, ApplicationStatusInbox(self.onboarding, prior_review_ref=reference)
+
+    def _mail_application_choices(self) -> list[dict]:
+        with self.database.connect() as connection:
+            rows = connection.execute("""SELECT a.application_id,j.company,j.title FROM applications a
+                JOIN jobs j ON j.job_id=a.job_id ORDER BY a.updated_at DESC LIMIT 1000""").fetchall()
+        return [dict(row) for row in rows]
+
+    @_synchronized
+    def status_inbox(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+        reference, inbox = self._status_inbox()
+        # Private message bodies are decrypted only for an explicit local UI request.
+        # Bootstrap, diagnostics and MCP never call this private read model.
+        rows = []
+        for event in reversed(inbox.events):
+            evidence = self._read_json_ref(event["evidence_ref"])
+            if sha256_bytes(canonical_json(evidence)) != event["evidence_sha256"]:
+                raise JobOpsError("MAIL_EVIDENCE_MISMATCH", "The saved mail evidence no longer matches its review record.")
+            rows.append({key: event.get(key) for key in ("event_id", "received_at", "status_proposal", "application_id",
+                "review_status", "source_kind", "timestamp_kind", "review_history", "evidence_sha256")})
+            rows[-1].update(subject=evidence.get("subject", ""), body=evidence.get("body", ""),
+                            authenticated_sender=evidence.get("authenticated_sender") is True)
+        return {"review_ref": reference, "events": rows, "applications": self._mail_application_choices(),
+                "application_state_changed": False}
+
+    @_synchronized
+    def import_status_eml(self, data: bytes) -> dict[str, Any]:
+        from .mail_tracking import LocalEmlAdapter
+        _, inbox = self._status_inbox()
+        return inbox.collect(LocalEmlAdapter(data), [])
+
+    @_synchronized
+    def review_status_message(self, payload: dict[str, Any]) -> dict[str, Any]:
+        reference, inbox = self._status_inbox()
+        if not reference or payload.get("expected_review_ref") != reference:
+            raise JobOpsError("MAIL_REVIEW_STALE", "The inbox changed. Reload it before confirming a link.")
+        decision = payload.get("decision")
+        if decision in {"MANUAL_LINK", "CLEAR_REVIEW"}:
+            return inbox.manual_review(str(payload.get("event_id", "")), application_id=payload.get("application_id"),
+                decision=decision, allowed_application_ids={item["application_id"] for item in self._mail_application_choices()},
+                confirmed=payload.get("user_confirmed") is True)
+        return inbox.review(str(payload.get("event_id", "")), application_id=payload.get("application_id"),
+                            decision=decision, confirmed=payload.get("user_confirmed") is True)
+
     def _latest_ref(self, kind: str) -> str | None:
         with self.database.connect() as connection:
             row = connection.execute(
@@ -4045,6 +4124,10 @@ class OnboardingCenterService:
         return {"status": "SUGGESTION_ACCEPTED", "field_id": field_id, "private_values_emitted": 0}
 
     def _extract_text(self, data: bytes, extension: str, source_type: str) -> tuple[str, int, dict[str, Any]]:
+        if extension == ".pdf" and os.getenv("JOBFLOW_DOCUMENT_PARSER") == "docling_native":
+            from .local_document_parser import read_local_pdf
+            text, metadata = read_local_pdf(data)
+            return text, 0, metadata
         from .multimodal import enabled as visual_enabled, read_visual
         if extension in {".png", ".jpg", ".jpeg"} or (extension == ".pdf" and visual_enabled()):
             if not visual_enabled():

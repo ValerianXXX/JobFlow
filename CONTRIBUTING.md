@@ -12,7 +12,7 @@ JobFlow accepts focused, testable changes that preserve its privacy and external
 
 ```powershell
 py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[build]"
+.\.venv\Scripts\python.exe -m pip install -e ".[build,mcp,document]"
 .\.venv\Scripts\python.exe -m jobops.compatibility
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 ```
@@ -28,4 +28,4 @@ Use the synthetic demo and repository fixtures for browser work. A test must nev
 - Run the relevant tests and `python -m jobops.public_release`.
 - Confirm knowledge writes, plaintext leakage, staging residue, and unapproved real external actions are zero.
 
-Final Submit, automatic retry, credential handling, account creation, email, recruiter contact, and unattended scheduling are outside the current product boundary.
+Final Submit, automatic retry, credential handling, account creation, outbound email, recruiter contact, and unattended application scheduling are outside the current product boundary. Explicit local EML evidence import does not connect to a mailbox or change application execution state.

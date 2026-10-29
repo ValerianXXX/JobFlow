@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-10-28T22:52:06Z",
+  "source_commit": "5d1ef2c2517736fb143c442703141e3cc1fefff4",
+  "source_commit_role": "pull_request_head",
+  "tested_checkout_commit": "12b72115e4b944646b9acfa3df5e7af2c0d3841e",
+  "tested_checkout_tree": "0db3ce9cbd4e299cd467d2f5af3edb81dbb3c829",
+  "pull_request_head_tree_matches_checkout": true,
+  "provenance_clarified_at": "2026-10-29",
+  "provenance_note": "GitHub tested its pull-request merge checkout. The commit differs from the PR head; their trees match. This clarification does not change the historical test or gate results and does not identify a PR-head archive as CI-tested.",
+  "pull_request": 7,
+  "workflow_run": 40710106182,
+  "workflow_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40710106182",
+  "workflow_event": "pull_request",
+  "workflow_conclusion": "failure",
+  "jobs": [
+    {
+      "job_id": 122893354166,
+      "python": "3.11",
+      "job_conclusion": "success",
+      "unit_tests": {
+        "run": 1172,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_seconds": 5301.854
+      },
+      "browser_suites": {
+        "count": 9,
+        "status": "passed"
+      },
+      "public_content_boundary": "passed",
+      "wheel_build": "passed",
+      "cli_help": "passed",
+      "candidate_package": "NOT_SCHEDULED_IN_THIS_MATRIX_JOB",
+      "source_log_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40710106182/job/122893354166"
+    },
+    {
+      "job_id": 122893354810,
+      "python": "3.12",
+      "job_conclusion": "failure",
+      "unit_tests": {
+        "run": 1172,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_seconds": 3122.147
+      },
+      "browser_suites": {
+        "count": 9,
+        "status": "passed"
+      },
+      "public_content_boundary": "passed",
+      "wheel_build": "passed",
+      "cli_help": "passed",
+      "candidate_package": "BLOCKED_AUTHOR_IDENTITY_REVIEW",
+      "source_log_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40710106182/job/122893354810"
+    },
+    {
+      "job_id": 122893354666,
+      "python": "3.13",
+      "job_conclusion": "success",
+      "unit_tests": {
+        "run": 1172,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_seconds": 7065.92
+      },
+      "browser_suites": {
+        "count": 9,
+        "status": "passed"
+      },
+      "public_content_boundary": "passed",
+      "wheel_build": "passed",
+      "cli_help": "passed",
+      "candidate_package": "NOT_SCHEDULED_IN_THIS_MATRIX_JOB",
+      "source_log_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40710106182/job/122893354666"
+    }
+  ],
+  "local_symlink_gap": "The four checks skipped on the development host passed on each GitHub Windows runner.",
+  "candidate_blocker": "PUBLIC_REPOSITORY_IDENTITY_REVIEW_REQUIRED",
+  "public_release_ready": false,
+  "interpretation": "Regression, browser and content-boundary results passed. The candidate build did not proceed past author-identity authorization. This is not signed Windows installation or release acceptance."
+}

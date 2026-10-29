@@ -133,10 +133,18 @@ The new full CI result is recorded on the draft PR when available; these focused
 passes do not relabel the failed 8a5f0af1 matrix as green.
 [Follow-up receipt](../evaluations/2026-10-27/ci-regression-followup-2026-10-28.json).
 
-Mailbox authorization, real provider adapters, actual mailbox delivery semantics
-and a user-facing status inbox remain external/product follow-up. This checkpoint
-delivers the reusable matching/persistence layer and synthetic validation, not live
-email tracking. Final application submission remains a user action.
+The [October 28 workspace preview](workbench-modernization-2026-10-28.md) now adds
+the user-facing local EML inbox, original-page comparison and read-only MCP tools.
+Its subsequent source checkpoint passed 1,172 regression tests and nine browser
+suites on all three supported Python versions; that checkpoint's candidate build
+stopped at the then-unapproved historical-author gate. The owner subsequently
+approved only the specific historical identity hash, applied in `7b2fbf7`; its
+reproducible source-candidate build passed. Trusted signing and clean-Windows
+acceptance remain separate gates. See the [dated release record](modernization-2026-10-27.md).
+Mailbox authorization, authenticated provider
+adapters and real delivery semantics remain external follow-up. Local message
+import and manual association are not live email tracking. Final application
+submission remains a user action.
 
 ## Rollback and release
 

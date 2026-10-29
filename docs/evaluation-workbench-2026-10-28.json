@@ -1,0 +1,1267 @@
+{
+  "verified_at": "2026-10-28T14:06:29.574560Z",
+  "environment": {
+    "python": "3.11.3",
+    "platform": "Windows",
+    "packages": {
+      "docling-slim": "2.144.0",
+      "docling-parse": "7.24.0",
+      "pypdf": "5.9.0",
+      "pdfplumber": "0.11.9",
+      "Pillow": "11.3.0"
+    }
+  },
+  "synthetic_only": true,
+  "model_calls": 0,
+  "model_cost_usd": 0,
+  "claim_attribution_evaluation": "NOT_RUN",
+  "document_summary": {
+    "existing_text": {
+      "cases": 30,
+      "blocked": 10,
+      "numeric_omissions": 20,
+      "missing_whole_fact_spans": 30,
+      "median_ms": 18,
+      "located_regions": 0
+    },
+    "docling_native": {
+      "cases": 30,
+      "blocked": 10,
+      "numeric_omissions": 20,
+      "missing_whole_fact_spans": 30,
+      "median_ms": 2963,
+      "located_regions": 120
+    }
+  },
+  "documents": [
+    {
+      "id": "single-00",
+      "kind": "single_column",
+      "extension": ".pdf",
+      "source_sha256": "sha256:0e9847446b97b6a22872105575d6745f5d9d19e012fdbd6cdf76456dfd59be95",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 114,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 4,
+        "elapsed_ms": 2970,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "columns-00",
+      "kind": "two_columns",
+      "extension": ".pdf",
+      "source_sha256": "sha256:9cec90b71444b4533f2e37d1457f9661304b724e01b7d37a586f45a2c7201b5c",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 17,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 8,
+        "elapsed_ms": 2917,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "single-01",
+      "kind": "single_column",
+      "extension": ".pdf",
+      "source_sha256": "sha256:cd25f9d65797baf3ccb30da23a44ffcb702b9178fce0dda6590786600b2641fc",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 21,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 4,
+        "elapsed_ms": 2966,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "columns-01",
+      "kind": "two_columns",
+      "extension": ".pdf",
+      "source_sha256": "sha256:64c20c957a86eb3bce4247e531e9f7de068effea2c98dc9f34ce0a15a83ac1ef",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 25,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 8,
+        "elapsed_ms": 3030,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "single-02",
+      "kind": "single_column",
+      "extension": ".pdf",
+      "source_sha256": "sha256:f85bc2126fea12b8847421c8632074d0956da517717c53d5f5891aec5f9f7da7",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 22,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 4,
+        "elapsed_ms": 3130,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "columns-02",
+      "kind": "two_columns",
+      "extension": ".pdf",
+      "source_sha256": "sha256:c8210139e0f012434164da13b286d5d142ba6e33cf0bdcef02e7b7ba14fcf273",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 27,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 8,
+        "elapsed_ms": 3338,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "single-03",
+      "kind": "single_column",
+      "extension": ".pdf",
+      "source_sha256": "sha256:241af65fe47dc7db97acca772757403cae1b5d4f76c254cbf79111a3b230255a",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 34,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 4,
+        "elapsed_ms": 3178,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "columns-03",
+      "kind": "two_columns",
+      "extension": ".pdf",
+      "source_sha256": "sha256:fcd9502fa52a25a66cc775a644ab52d2355ba2c5f6199299e9a91db27c1986e9",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 17,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 8,
+        "elapsed_ms": 3195,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "single-04",
+      "kind": "single_column",
+      "extension": ".pdf",
+      "source_sha256": "sha256:28a20f492b0881b185f65832438e260c95e0a01e47ebb099a9b9cfe8e3d21eb5",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 21,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 4,
+        "elapsed_ms": 2976,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "columns-04",
+      "kind": "two_columns",
+      "extension": ".pdf",
+      "source_sha256": "sha256:2159636db58c45c9d74c3d3d7dffd908049fc1c233f75d2d2dd18fb46cdaa63e",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 25,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 8,
+        "elapsed_ms": 2960,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "single-05",
+      "kind": "single_column",
+      "extension": ".pdf",
+      "source_sha256": "sha256:99537fbe7edb2ceb113e7866d003abbcd00165c42f5419d62450baac59ca0d01",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 22,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 4,
+        "elapsed_ms": 2917,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "columns-05",
+      "kind": "two_columns",
+      "extension": ".pdf",
+      "source_sha256": "sha256:aa3bfa996ae752805b4ccbc602ead3f09da3f41a4ae0c0ed49fad78eb525d9eb",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 17,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 8,
+        "elapsed_ms": 2884,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "single-06",
+      "kind": "single_column",
+      "extension": ".pdf",
+      "source_sha256": "sha256:9eccda0414c9235292fff144ea23fd458561f6211b16d71da7b35489080c1f89",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 64,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 4,
+        "elapsed_ms": 2891,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "columns-06",
+      "kind": "two_columns",
+      "extension": ".pdf",
+      "source_sha256": "sha256:a8a92ee49351c9a37f823b8806359be0259482eda2aa528f9b80f3d2ebf790fc",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 25,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 8,
+        "elapsed_ms": 2944,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "single-07",
+      "kind": "single_column",
+      "extension": ".pdf",
+      "source_sha256": "sha256:7a3e110f3c471434a4bd542cdeb7dd081670b2a92d374f0d2dfab70f73d80782",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 12,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 4,
+        "elapsed_ms": 2903,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "columns-07",
+      "kind": "two_columns",
+      "extension": ".pdf",
+      "source_sha256": "sha256:48aebad48bb54290c024a30b8887154d5fac0bf3025ae8b00d3436ec761a9117",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 25,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 8,
+        "elapsed_ms": 2954,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "single-08",
+      "kind": "single_column",
+      "extension": ".pdf",
+      "source_sha256": "sha256:cee4685e020e05942718ec390ac4ca66b1d0dae5ef5c5b282b7e9bd6593d2e02",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 12,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 4,
+        "elapsed_ms": 2989,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "columns-08",
+      "kind": "two_columns",
+      "extension": ".pdf",
+      "source_sha256": "sha256:517713022e770531bbd6c01beefdf4a65ca82444ca0a38ead198d958bdeb06f7",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 18,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 8,
+        "elapsed_ms": 2975,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "single-09",
+      "kind": "single_column",
+      "extension": ".pdf",
+      "source_sha256": "sha256:8c1923e7e25fd86c691ff6c647674c3d7f299fa646fcdcc0a2e163c3c5d36972",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 23,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 4,
+        "elapsed_ms": 2880,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "columns-09",
+      "kind": "two_columns",
+      "extension": ".pdf",
+      "source_sha256": "sha256:a4a72879fdd4b3df4f2f5c364effe631dd11364334dea4996dfa29e42ab0effd",
+      "existing_text": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 0,
+        "elapsed_ms": 18,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "TEXT_EXTRACTED",
+        "numeric_omissions": 0,
+        "missing_whole_fact_spans": 0,
+        "located_regions": 8,
+        "elapsed_ms": 2917,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "scanned_pdf-00",
+      "kind": "scanned_pdf",
+      "extension": ".pdf",
+      "source_sha256": "sha256:e20673623dc074e4297dd59a3cf1dd6694d559bd4d773094141d40be38ae0a2b",
+      "existing_text": {
+        "status": "BLOCKED",
+        "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 13,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "BLOCKED",
+        "code": "LOCAL_PARSER_NEEDS_OCR",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 2970,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "portfolio_image-00",
+      "kind": "portfolio_image",
+      "extension": ".png",
+      "source_sha256": "sha256:222afcc3f7c0934667c8305a2bbc8d0e8e12513a233ca7cb11158bb584e31b06",
+      "existing_text": {
+        "status": "BLOCKED",
+        "code": "VISUAL_ANALYSIS_DISABLED",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 0,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "BLOCKED",
+        "code": "LOCAL_PARSER_PDF_ONLY",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 0,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "scanned_pdf-01",
+      "kind": "scanned_pdf",
+      "extension": ".pdf",
+      "source_sha256": "sha256:2a67c8a76fbb7f00318d78fa232bfabb28361b04589f0e9e5fd89f341e63f316",
+      "existing_text": {
+        "status": "BLOCKED",
+        "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 14,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "BLOCKED",
+        "code": "LOCAL_PARSER_NEEDS_OCR",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 3052,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "portfolio_image-01",
+      "kind": "portfolio_image",
+      "extension": ".png",
+      "source_sha256": "sha256:877bc58818a9dae94692d5531bccfb0133f52fa28fdf93100b79d56590d6c8e4",
+      "existing_text": {
+        "status": "BLOCKED",
+        "code": "VISUAL_ANALYSIS_DISABLED",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 0,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "BLOCKED",
+        "code": "LOCAL_PARSER_PDF_ONLY",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 0,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "scanned_pdf-02",
+      "kind": "scanned_pdf",
+      "extension": ".pdf",
+      "source_sha256": "sha256:f4c4176e8ee0928b837f730206c65e55a5f7f66836d336a4cd8d7e17c46d41eb",
+      "existing_text": {
+        "status": "BLOCKED",
+        "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 13,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "BLOCKED",
+        "code": "LOCAL_PARSER_NEEDS_OCR",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 2973,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "portfolio_image-02",
+      "kind": "portfolio_image",
+      "extension": ".png",
+      "source_sha256": "sha256:19fee383b2b4579b0cfe88090c3bffbb518b2401d39bc675f1efa026a55326ca",
+      "existing_text": {
+        "status": "BLOCKED",
+        "code": "VISUAL_ANALYSIS_DISABLED",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 0,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "BLOCKED",
+        "code": "LOCAL_PARSER_PDF_ONLY",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 0,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "scanned_pdf-03",
+      "kind": "scanned_pdf",
+      "extension": ".pdf",
+      "source_sha256": "sha256:b2c2047d78a8e2e6f4702b2f38b99da183ffc9b4a17646b763f346aa6cc2339d",
+      "existing_text": {
+        "status": "BLOCKED",
+        "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 13,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "BLOCKED",
+        "code": "LOCAL_PARSER_NEEDS_OCR",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 3004,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "portfolio_image-03",
+      "kind": "portfolio_image",
+      "extension": ".png",
+      "source_sha256": "sha256:056270e67e0e41be5b8d5ea54f766b11d049a402be7c3578b1bb9f599ca7b732",
+      "existing_text": {
+        "status": "BLOCKED",
+        "code": "VISUAL_ANALYSIS_DISABLED",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 0,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "BLOCKED",
+        "code": "LOCAL_PARSER_PDF_ONLY",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 0,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "scanned_pdf-04",
+      "kind": "scanned_pdf",
+      "extension": ".pdf",
+      "source_sha256": "sha256:136a892b5d4fa007ccb0d996beaa70be0de5b330d7a5401480dc6b70f1c55feb",
+      "existing_text": {
+        "status": "BLOCKED",
+        "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 13,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "BLOCKED",
+        "code": "LOCAL_PARSER_NEEDS_OCR",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 2988,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    },
+    {
+      "id": "portfolio_image-04",
+      "kind": "portfolio_image",
+      "extension": ".png",
+      "source_sha256": "sha256:a1956cfd3f3b42f59f70b090709c8f062ed74eaaf4c82d03e73097e7d5637269",
+      "existing_text": {
+        "status": "BLOCKED",
+        "code": "VISUAL_ANALYSIS_DISABLED",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 0,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      },
+      "docling_native": {
+        "status": "BLOCKED",
+        "code": "LOCAL_PARSER_PDF_ONLY",
+        "numeric_omissions": 2,
+        "missing_whole_fact_spans": 3,
+        "located_regions": 0,
+        "elapsed_ms": 0,
+        "model_calls": 0,
+        "model_cost_usd": 0
+      }
+    }
+  ],
+  "mail_summary": {
+    "cases": 60,
+    "wrong_status_proposals": 0,
+    "incorrect_automatic_links": 0,
+    "manual_review_required": 60,
+    "authenticated_connector_recall": "NOT_MEASURED_NO_MAILBOX_CONNECTOR"
+  },
+  "messages": [
+    {
+      "id": "mail-00",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 2
+    },
+    {
+      "id": "mail-01",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 8
+    },
+    {
+      "id": "mail-02",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-03",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 2
+    },
+    {
+      "id": "mail-04",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-05",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-06",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 2
+    },
+    {
+      "id": "mail-07",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-08",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-09",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-10",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-11",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-12",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-13",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-14",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-15",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-16",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-17",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-18",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 2
+    },
+    {
+      "id": "mail-19",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-20",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-21",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-22",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-23",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-24",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-25",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-26",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-27",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-28",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-29",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-30",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-31",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-32",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-33",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 2
+    },
+    {
+      "id": "mail-34",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-35",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-36",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-37",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-38",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-39",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-40",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-41",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-42",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 3
+    },
+    {
+      "id": "mail-43",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 2
+    },
+    {
+      "id": "mail-44",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 2
+    },
+    {
+      "id": "mail-45",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 2
+    },
+    {
+      "id": "mail-46",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-47",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-48",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 2
+    },
+    {
+      "id": "mail-49",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-50",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-51",
+      "expected_status": "APPLICATION_RECEIVED",
+      "actual_status": "APPLICATION_RECEIVED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-52",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-53",
+      "expected_status": "REJECTED",
+      "actual_status": "REJECTED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-54",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-55",
+      "expected_status": "INTERVIEW_INVITED",
+      "actual_status": "INTERVIEW_INVITED",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-56",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-57",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-58",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    },
+    {
+      "id": "mail-59",
+      "expected_status": "UNKNOWN",
+      "actual_status": "UNKNOWN",
+      "incorrect_automatic_link": false,
+      "manual_review_required": true,
+      "elapsed_ms": 1
+    }
+  ]
+}

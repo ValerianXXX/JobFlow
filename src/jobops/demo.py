@@ -126,6 +126,9 @@ class SyntheticDemoService(OnboardingCenterService):
     def preview_source(self, source_type: str, extension: str, data: bytes) -> dict[str, Any]:
         raise JobOpsError("DEMO_FILE_INTAKE_DISABLED", "Synthetic demo mode cannot ingest user files.")
 
+    def import_status_eml(self, data: bytes) -> dict[str, Any]:
+        raise JobOpsError("DEMO_FILE_INTAKE_DISABLED", "Synthetic demo mode cannot ingest user mail files.")
+
     def import_source(self, source_type: str, extension: str, data: bytes) -> dict[str, Any]:
         raise JobOpsError("DEMO_FILE_INTAKE_DISABLED", "Synthetic demo mode cannot ingest user files.")
 

@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-10-29T01:41:42Z",
+  "pull_request": 7,
+  "source_commit": "7b2fbf7d2249829610b4e7a5e4f2c68c8263f3ef",
+  "source_commit_role": "pull_request_head",
+  "tested_checkout_commit": "7dfb42e86ecaf1f1df4ad48ec65afef4152667dc",
+  "tested_checkout_tree": "f6316aa8f36dbe4fd4fddc9d705817971edda67f",
+  "pull_request_head_tree_matches_checkout": true,
+  "base_commit": "b679a11d5b712a1777b378b65a21b02950b7db2d",
+  "workflow_run": 40787970518,
+  "workflow_event": "pull_request",
+  "workflow_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40787970518",
+  "workflow_conclusion": "failure",
+  "jobs": [
+    {
+      "job_id": 123166044248,
+      "python": "3.11",
+      "job_conclusion": "success",
+      "unit_tests": {
+        "run": 1172,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_seconds": 6529.921
+      },
+      "browser_suites": {
+        "count": 9,
+        "status": "passed"
+      },
+      "public_content_boundary": "passed",
+      "author_identity": "passed",
+      "wheel_build": "passed",
+      "cli_help": "passed",
+      "candidate_package": "NOT_SCHEDULED_IN_THIS_MATRIX_JOB",
+      "source_log_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40787970518/job/123166044248"
+    },
+    {
+      "job_id": 123166044206,
+      "python": "3.12",
+      "job_conclusion": "failure",
+      "unit_tests": {
+        "run": 1172,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_seconds": 5668.498
+      },
+      "browser_suites": {
+        "count": 9,
+        "status": "passed"
+      },
+      "public_content_boundary": "passed",
+      "author_identity": "passed",
+      "wheel_build": "passed",
+      "cli_help": "passed",
+      "candidate_package": "FAILED_UI_SMOKE_AND_TEMPORARY_CLEANUP",
+      "source_log_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40787970518/job/123166044206"
+    },
+    {
+      "job_id": 123166043905,
+      "python": "3.13",
+      "job_conclusion": "success",
+      "unit_tests": {
+        "run": 1172,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_seconds": 7214.223
+      },
+      "browser_suites": {
+        "count": 9,
+        "status": "passed"
+      },
+      "public_content_boundary": "passed",
+      "author_identity": "passed",
+      "wheel_build": "passed",
+      "cli_help": "passed",
+      "candidate_package": "NOT_SCHEDULED_IN_THIS_MATRIX_JOB",
+      "source_log_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40787970518/job/123166043905"
+    }
+  ],
+  "candidate_failure": {
+    "original_code": "RELEASE_SMOKE_UI_FAILED",
+    "original_http_stage": "UNKNOWN",
+    "cleanup_errors": [
+      "WinError 32",
+      "WinError 5"
+    ],
+    "diagnostic_limitation": "The old parent discarded child stdout/stderr; the original HTTP failure cannot be recovered from this job log.",
+    "identity_blocked": false
+  },
+  "public_release_ready": false,
+  "interpretation": "The three regression/browser matrices passed. The source UI smoke failed and its cleanup error masked the original gate. Identity approval is applied. Local candidates and focused cleanup tests do not replace a successful new exact-commit CI candidate or signed clean-Windows acceptance."
+}

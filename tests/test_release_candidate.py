@@ -9,12 +9,13 @@ import zipfile
 from contextlib import nullcontext
 from os import replace as real_replace
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from _support import PROJECT
 from jobops.errors import JobOpsError
 from jobops.release_candidate import (
     _archive_identity,
+    _candidate_workspace,
     build_release_candidate,
     _commit_candidate_archive,
     _configured_git_path,
@@ -26,6 +27,30 @@ from jobops.release_candidate import (
 
 
 class ReleaseCandidateTests(unittest.TestCase):
+    def test_cleanup_failure_preserves_the_original_release_blocker(self) -> None:
+        temporary = Mock(name="synthetic workspace")
+        temporary.name = str(PROJECT / "synthetic-unused-workspace")
+        temporary.cleanup.side_effect = PermissionError("synthetic private path")
+        original = JobOpsError("RELEASE_SMOKE_UI_FAILED", "Synthetic UI failure", stage="bootstrap")
+        with patch("jobops.release_candidate.tempfile.TemporaryDirectory", return_value=temporary):
+            with self.assertRaises(JobOpsError) as blocked:
+                with _candidate_workspace():
+                    raise original
+        self.assertIs(blocked.exception, original)
+        self.assertEqual(original.details, {"stage": "bootstrap", "temporary_cleanup": "FAILED"})
+        self.assertNotIn("private", str(original.as_dict()))
+
+    def test_cleanup_failure_alone_still_fails_the_build(self) -> None:
+        temporary = Mock(name="synthetic workspace")
+        temporary.name = str(PROJECT / "synthetic-unused-workspace")
+        temporary.cleanup.side_effect = PermissionError("synthetic private path")
+        with patch("jobops.release_candidate.tempfile.TemporaryDirectory", return_value=temporary):
+            with self.assertRaises(JobOpsError) as blocked:
+                with _candidate_workspace():
+                    pass
+        self.assertEqual(blocked.exception.code, "RELEASE_TEMPORARY_CLEANUP_FAILED")
+        self.assertNotIn("private", str(blocked.exception.as_dict()))
+
     def test_candidate_build_requires_repository_identity_approval(self) -> None:
         repository = {
             "status": "PASS",

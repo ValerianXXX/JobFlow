@@ -23,7 +23,7 @@ PRIVATE_KINDS = {
     "onboarding_completion_packet", "external_claim_set", "resume_tailoring_manifest",
     "application_answer_bundle", "application_execution_bundle", "application_narrative", "continuous_evidence_bundle",
     "authorized_discovery_config",
-    "application_mail_evidence", "application_mail_review",
+    "application_mail_evidence", "application_mail_review", "application_mail_source",
 }
 MAX_PRIVATE_IMPORT_FILE_BYTES = 64 * 1024 * 1024
 

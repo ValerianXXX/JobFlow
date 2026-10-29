@@ -32,6 +32,8 @@ dependencies = [
 
 [project.optional-dependencies]
 build = ["setuptools>=77,<81", "wheel>=0.43,<1"]
+mcp = ["mcp==2.3.0"]
+document = ["docling-slim==2.144.0", "docling-parse==7.24.0"]
 
 [project.scripts]
 jobflow = "jobops.cli:main"
