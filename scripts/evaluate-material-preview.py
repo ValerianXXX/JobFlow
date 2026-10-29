@@ -162,8 +162,13 @@ class ObservedHermes(WSLHermesCLIEngine):
             result = super()._invoke(request)
             record.update(status="RETURNED", tool_calls=result["toolSummary"]["calls"])
             if request.get("task") == "JOBOPS_VISUAL_TRANSCRIPTION_V1":
-                value = json.loads(result["result"]["content"])
-                self.transcript = "\n".join(block["text"] for page in value["pages"] for block in page["blocks"])
+                try:
+                    value = json.loads(result["result"]["content"])
+                    self.transcript = "\n".join(block["text"] for page in value["pages"] for block in page["blocks"])
+                except (ValueError, TypeError, KeyError):
+                    # Observation must not replace the production validator's
+                    # error or discard a failed model attempt.
+                    record["transcription_observation"] = "INVALID"
             return result
         finally:
             record["elapsed_ms"] = round((time.monotonic() - started) * 1000)
@@ -182,7 +187,7 @@ def run_evaluation(*, live: bool) -> dict:
                "packages": {name:version(name) for name in ("pdfplumber", "Pillow", "pypdf")},
                "cost_usd": None, "usage_tokens": None, "usage_note": "The production document adapter does not expose usage or billing receipts; unknown is not zero.",
                "model_api_calls": None,
-               "external_application_actions": 0, "claim_approval": False}
+               "external_application_actions": None, "claim_approval": False}
     route = public_hermes_route() if live else None
     engine = ObservedHermes(route) if route else None
     with tempfile.TemporaryDirectory(prefix="jobflow-material-preview-eval-") as raw:
@@ -229,11 +234,22 @@ def run_evaluation(*, live: bool) -> dict:
                             "unconfirmed_selection_result":refusal, "committed_material_claims":len(after["material_claims"])}
                     except JobOpsError as error:
                         receipt["candidate"] = {"status":"FAILED", "code":error.code, "details":error.details}
+                    except Exception as error:
+                        receipt["candidate"] = {"status":"FAILED", "code":"EVALUATION_UNEXPECTED_ERROR", "error_type":type(error).__name__}
                 receipt["candidate"]["elapsed_ms"] = round((time.monotonic() - started) * 1000)
                 receipt["model_route_before"] = route
-                receipt["model_route_after"] = public_hermes_route()
+                try:
+                    receipt["model_route_after"] = public_hermes_route()
+                except (JobOpsError, OSError, ValueError, subprocess.SubprocessError):
+                    receipt["model_route_after"] = {"status":"UNAVAILABLE"}
                 receipt["model_route_unchanged"] = receipt["model_route_after"] == route
                 receipt["adapter_requests"] = engine.calls
+            with database.connect() as connection:
+                receipt["database_counts"] = {
+                    table:connection.execute("SELECT COUNT(*) FROM " + table).fetchone()[0]
+                    for table in ("applications", "claims", "approvals", "external_action_attempts")
+                }
+            receipt["external_application_actions"] = receipt["database_counts"]["external_action_attempts"]
         finally:
             service.close()
     receipt["temporary_state_removed"] = not Path(raw).exists()
@@ -247,6 +263,7 @@ def run_evaluation(*, live: bool) -> dict:
         and candidate.get("committed_material_claims") == 0
         and receipt.get("model_route_unchanged") is True
         and all(call.get("tool_calls") == 0 for call in engine.calls)
+        and all(count == 0 for count in receipt["database_counts"].values())
         and receipt["temporary_state_removed"]
     ) else "FAIL")
     receipt["business_completion"] = "NOT_ATTEMPTED_USER_APPROVAL_REQUIRED"

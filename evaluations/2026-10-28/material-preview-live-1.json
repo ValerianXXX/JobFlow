@@ -1,0 +1,951 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-10-29T02:09:05.155882+00:00",
+  "evaluation_commit": "ad926e2f2550e59d80d0223a33fb35a3d7683c87",
+  "evaluation_script_lf_sha256": "354fd846bcf918d201a0878b5683f29eebf35f5253739a00744ac7568b7144c0",
+  "fixture_sha256": "bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+  "synthetic_only": true,
+  "python": "3.11.3",
+  "baseline": {
+    "status": "BLOCKED",
+    "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED",
+    "elapsed_ms": 515,
+    "adapter_requests": 0
+  },
+  "candidate": {
+    "status": "SOURCE_PREVIEW_READY",
+    "candidate_count": 10,
+    "candidates": [
+      {
+        "ai_reason": "The organization, role, and date range are explicitly stated.",
+        "candidate_id": "EXT-117CE27B2017",
+        "category": "work",
+        "claim_kind": "entity_summary",
+        "confidence": "HIGH",
+        "entity": {
+          "classification_review_required": false,
+          "end_date": "2025",
+          "entity_fingerprint": "ENTKEY-AB6908F1662A",
+          "entity_id": "ENT-2A5890017102",
+          "entity_key": "work_north_star_lab_analyst_2023_2025",
+          "entity_type": "work",
+          "line_end": 2,
+          "line_start": 2,
+          "normalization_codes": [],
+          "organization": "North Star Lab",
+          "role": "Analyst",
+          "start_date": "2023"
+        },
+        "entity_id": "ENT-2A5890017102",
+        "provenance": {
+          "ai_line_end": 2,
+          "ai_line_start": 2,
+          "citation_adjustment": null,
+          "classification_review_required": false,
+          "human_confirmation_required": true,
+          "line_end": 2,
+          "line_start": 2,
+          "numeric_format_normalizations": 0,
+          "structural_normalizations": [],
+          "visual_regions": [
+            {
+              "bbox": [
+                0.05,
+                0.221,
+                0.419,
+                0.251
+              ],
+              "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+              "line_end": 2,
+              "line_start": 2,
+              "page": 1
+            }
+          ],
+          "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+          "visual_verified": false
+        },
+        "selected": false,
+        "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+        "statement": "The Analyst worked at North Star Lab from 2023-2025."
+      },
+      {
+        "ai_reason": "The role and organization are stated on the preceding identity line, and the dashboard scope is explicit.",
+        "candidate_id": "EXT-09E61C7BD929",
+        "category": "work",
+        "claim_kind": "responsibility",
+        "confidence": "HIGH",
+        "entity": {
+          "classification_review_required": false,
+          "end_date": "2025",
+          "entity_fingerprint": "ENTKEY-AB6908F1662A",
+          "entity_id": "ENT-2A5890017102",
+          "entity_key": "work_north_star_lab_analyst_2023_2025",
+          "entity_type": "work",
+          "line_end": 2,
+          "line_start": 2,
+          "normalization_codes": [],
+          "organization": "North Star Lab",
+          "role": "Analyst",
+          "start_date": "2023"
+        },
+        "entity_id": "ENT-2A5890017102",
+        "provenance": {
+          "ai_line_end": 3,
+          "ai_line_start": 2,
+          "citation_adjustment": null,
+          "classification_review_required": false,
+          "human_confirmation_required": true,
+          "line_end": 3,
+          "line_start": 2,
+          "numeric_format_normalizations": 0,
+          "structural_normalizations": [],
+          "visual_regions": [
+            {
+              "bbox": [
+                0.05,
+                0.221,
+                0.419,
+                0.251
+              ],
+              "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+              "line_end": 2,
+              "line_start": 2,
+              "page": 1
+            },
+            {
+              "bbox": [
+                0.05,
+                0.352,
+                0.371,
+                0.382
+              ],
+              "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+              "line_end": 3,
+              "line_start": 3,
+              "page": 1
+            }
+          ],
+          "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+          "visual_verified": false
+        },
+        "selected": false,
+        "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+        "statement": "The Analyst built a dashboard covering 12 stores at North Star Lab."
+      },
+      {
+        "ai_reason": "The role and organization are stated on the identity line, and the outcome is explicit.",
+        "candidate_id": "EXT-5B0DD122D11B",
+        "category": "work",
+        "claim_kind": "achievement",
+        "confidence": "HIGH",
+        "entity": {
+          "classification_review_required": false,
+          "end_date": "2025",
+          "entity_fingerprint": "ENTKEY-AB6908F1662A",
+          "entity_id": "ENT-2A5890017102",
+          "entity_key": "work_north_star_lab_analyst_2023_2025",
+          "entity_type": "work",
+          "line_end": 2,
+          "line_start": 2,
+          "normalization_codes": [],
+          "organization": "North Star Lab",
+          "role": "Analyst",
+          "start_date": "2023"
+        },
+        "entity_id": "ENT-2A5890017102",
+        "provenance": {
+          "ai_line_end": 4,
+          "ai_line_start": 2,
+          "citation_adjustment": null,
+          "classification_review_required": false,
+          "human_confirmation_required": true,
+          "line_end": 4,
+          "line_start": 2,
+          "numeric_format_normalizations": 0,
+          "structural_normalizations": [],
+          "visual_regions": [
+            {
+              "bbox": [
+                0.05,
+                0.221,
+                0.419,
+                0.251
+              ],
+              "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+              "line_end": 2,
+              "line_start": 2,
+              "page": 1
+            },
+            {
+              "bbox": [
+                0.05,
+                0.352,
+                0.371,
+                0.382
+              ],
+              "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+              "line_end": 3,
+              "line_start": 3,
+              "page": 1
+            },
+            {
+              "bbox": [
+                0.05,
+                0.482,
+                0.361,
+                0.513
+              ],
+              "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d",
+              "line_end": 4,
+              "line_start": 4,
+              "page": 1
+            }
+          ],
+          "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+          "visual_verified": false
+        },
+        "selected": false,
+        "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+        "statement": "The Analyst reduced reporting time by 18% at North Star Lab."
+      },
+      {
+        "ai_reason": "The organization, role, and year are explicitly stated.",
+        "candidate_id": "EXT-7C42AC693984",
+        "category": "work",
+        "claim_kind": "entity_summary",
+        "confidence": "HIGH",
+        "entity": {
+          "classification_review_required": false,
+          "end_date": "2024",
+          "entity_fingerprint": "ENTKEY-9648E27C3CA8",
+          "entity_id": "ENT-B43CB7D8D021",
+          "entity_key": "work_cedar_studio_analyst_2024",
+          "entity_type": "work",
+          "line_end": 6,
+          "line_start": 6,
+          "normalization_codes": [],
+          "organization": "Cedar Studio",
+          "role": "Analyst",
+          "start_date": "2024"
+        },
+        "entity_id": "ENT-B43CB7D8D021",
+        "provenance": {
+          "ai_line_end": 6,
+          "ai_line_start": 6,
+          "citation_adjustment": null,
+          "classification_review_required": false,
+          "human_confirmation_required": true,
+          "line_end": 6,
+          "line_start": 6,
+          "numeric_format_normalizations": 0,
+          "structural_normalizations": [],
+          "visual_regions": [
+            {
+              "bbox": [
+                0.05,
+                0.221,
+                0.33,
+                0.251
+              ],
+              "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+              "line_end": 6,
+              "line_start": 6,
+              "page": 2
+            }
+          ],
+          "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+          "visual_verified": false
+        },
+        "selected": false,
+        "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+        "statement": "The Analyst worked at Cedar Studio in 2024."
+      },
+      {
+        "ai_reason": "The role and organization are stated on the identity line, and the record count is explicit.",
+        "candidate_id": "EXT-09A1134E3720",
+        "category": "work",
+        "claim_kind": "responsibility",
+        "confidence": "HIGH",
+        "entity": {
+          "classification_review_required": false,
+          "end_date": "2024",
+          "entity_fingerprint": "ENTKEY-9648E27C3CA8",
+          "entity_id": "ENT-B43CB7D8D021",
+          "entity_key": "work_cedar_studio_analyst_2024",
+          "entity_type": "work",
+          "line_end": 6,
+          "line_start": 6,
+          "normalization_codes": [],
+          "organization": "Cedar Studio",
+          "role": "Analyst",
+          "start_date": "2024"
+        },
+        "entity_id": "ENT-B43CB7D8D021",
+        "provenance": {
+          "ai_line_end": 7,
+          "ai_line_start": 6,
+          "citation_adjustment": null,
+          "classification_review_required": false,
+          "human_confirmation_required": true,
+          "line_end": 7,
+          "line_start": 6,
+          "numeric_format_normalizations": 0,
+          "structural_normalizations": [],
+          "visual_regions": [
+            {
+              "bbox": [
+                0.05,
+                0.221,
+                0.33,
+                0.251
+              ],
+              "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+              "line_end": 6,
+              "line_start": 6,
+              "page": 2
+            },
+            {
+              "bbox": [
+                0.05,
+                0.352,
+                0.388,
+                0.382
+              ],
+              "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+              "line_end": 7,
+              "line_start": 7,
+              "page": 2
+            }
+          ],
+          "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+          "visual_verified": false
+        },
+        "selected": false,
+        "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+        "statement": "The Analyst processed 1,200 synthetic records at Cedar Studio."
+      },
+      {
+        "ai_reason": "The project name, team-result designation, and year are explicitly stated.",
+        "candidate_id": "EXT-54D92F27E897",
+        "category": "project",
+        "claim_kind": "entity_summary",
+        "confidence": "HIGH",
+        "entity": {
+          "classification_review_required": false,
+          "end_date": "2025",
+          "entity_fingerprint": "ENTKEY-9D6042200841",
+          "entity_id": "ENT-FA30F42A254A",
+          "entity_key": "project_bay_project_2025",
+          "entity_type": "project",
+          "line_end": 8,
+          "line_start": 8,
+          "normalization_codes": [],
+          "organization": "Bay Project",
+          "role": "Team result",
+          "start_date": "2025"
+        },
+        "entity_id": "ENT-FA30F42A254A",
+        "provenance": {
+          "ai_line_end": 8,
+          "ai_line_start": 8,
+          "citation_adjustment": null,
+          "classification_review_required": false,
+          "human_confirmation_required": true,
+          "line_end": 8,
+          "line_start": 8,
+          "numeric_format_normalizations": 0,
+          "structural_normalizations": [],
+          "visual_regions": [
+            {
+              "bbox": [
+                0.518,
+                0.221,
+                0.831,
+                0.251
+              ],
+              "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+              "line_end": 8,
+              "line_start": 8,
+              "page": 2
+            }
+          ],
+          "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+          "visual_verified": false
+        },
+        "selected": false,
+        "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+        "statement": "Bay Project recorded a team result in 2025."
+      },
+      {
+        "ai_reason": "The project identity and year are stated on the preceding line, and the team-owned budget responsibility is explicit.",
+        "candidate_id": "EXT-1C541E4767A8",
+        "category": "project",
+        "claim_kind": "responsibility",
+        "confidence": "HIGH",
+        "entity": {
+          "classification_review_required": false,
+          "end_date": "2025",
+          "entity_fingerprint": "ENTKEY-9D6042200841",
+          "entity_id": "ENT-FA30F42A254A",
+          "entity_key": "project_bay_project_2025",
+          "entity_type": "project",
+          "line_end": 8,
+          "line_start": 8,
+          "normalization_codes": [],
+          "organization": "Bay Project",
+          "role": "Team result",
+          "start_date": "2025"
+        },
+        "entity_id": "ENT-FA30F42A254A",
+        "provenance": {
+          "ai_line_end": 9,
+          "ai_line_start": 8,
+          "citation_adjustment": null,
+          "classification_review_required": false,
+          "human_confirmation_required": true,
+          "line_end": 9,
+          "line_start": 8,
+          "numeric_format_normalizations": 0,
+          "structural_normalizations": [],
+          "visual_regions": [
+            {
+              "bbox": [
+                0.518,
+                0.221,
+                0.831,
+                0.251
+              ],
+              "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+              "line_end": 8,
+              "line_start": 8,
+              "page": 2
+            },
+            {
+              "bbox": [
+                0.518,
+                0.352,
+                0.849,
+                0.382
+              ],
+              "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f",
+              "line_end": 9,
+              "line_start": 9,
+              "page": 2
+            }
+          ],
+          "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+          "visual_verified": false
+        },
+        "selected": false,
+        "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+        "statement": "The Bay Project team managed a $12,500 budget in 2025."
+      },
+      {
+        "ai_reason": "The project name, team designation, and year are explicitly stated.",
+        "candidate_id": "EXT-B7FDEC0135EF",
+        "category": "project",
+        "claim_kind": "entity_summary",
+        "confidence": "HIGH",
+        "entity": {
+          "classification_review_required": false,
+          "end_date": "2026",
+          "entity_fingerprint": "ENTKEY-93B6FAC37421",
+          "entity_id": "ENT-143624E2894E",
+          "entity_key": "project_harbor_project_2026",
+          "entity_type": "project",
+          "line_end": 11,
+          "line_start": 11,
+          "normalization_codes": [],
+          "organization": "Harbor Project",
+          "role": "Team",
+          "start_date": "2026"
+        },
+        "entity_id": "ENT-143624E2894E",
+        "provenance": {
+          "ai_line_end": 11,
+          "ai_line_start": 11,
+          "citation_adjustment": null,
+          "classification_review_required": false,
+          "human_confirmation_required": true,
+          "line_end": 11,
+          "line_start": 11,
+          "numeric_format_normalizations": 0,
+          "structural_normalizations": [],
+          "visual_regions": [
+            {
+              "bbox": [
+                0.05,
+                0.221,
+                0.329,
+                0.251
+              ],
+              "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+              "line_end": 11,
+              "line_start": 11,
+              "page": 3
+            }
+          ],
+          "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+          "visual_verified": false
+        },
+        "selected": false,
+        "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+        "statement": "Harbor Project was a team project in 2026."
+      },
+      {
+        "ai_reason": "The project identity and year are stated on the preceding line, and the testing is explicitly attributed to the team.",
+        "candidate_id": "EXT-087506E6799C",
+        "category": "project",
+        "claim_kind": "responsibility",
+        "confidence": "HIGH",
+        "entity": {
+          "classification_review_required": false,
+          "end_date": "2026",
+          "entity_fingerprint": "ENTKEY-93B6FAC37421",
+          "entity_id": "ENT-143624E2894E",
+          "entity_key": "project_harbor_project_2026",
+          "entity_type": "project",
+          "line_end": 11,
+          "line_start": 11,
+          "normalization_codes": [],
+          "organization": "Harbor Project",
+          "role": "Team",
+          "start_date": "2026"
+        },
+        "entity_id": "ENT-143624E2894E",
+        "provenance": {
+          "ai_line_end": 12,
+          "ai_line_start": 11,
+          "citation_adjustment": null,
+          "classification_review_required": false,
+          "human_confirmation_required": true,
+          "line_end": 12,
+          "line_start": 11,
+          "numeric_format_normalizations": 0,
+          "structural_normalizations": [],
+          "visual_regions": [
+            {
+              "bbox": [
+                0.05,
+                0.221,
+                0.329,
+                0.251
+              ],
+              "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+              "line_end": 11,
+              "line_start": 11,
+              "page": 3
+            },
+            {
+              "bbox": [
+                0.05,
+                0.352,
+                0.389,
+                0.382
+              ],
+              "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+              "line_end": 12,
+              "line_start": 12,
+              "page": 3
+            }
+          ],
+          "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+          "visual_verified": false
+        },
+        "selected": false,
+        "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+        "statement": "The Harbor Project team tested 24 synthetic scenarios in 2026."
+      },
+      {
+        "ai_reason": "The project identity and year are stated on the project line, and preparation of 6 reports is explicitly attributed to the applicant.",
+        "candidate_id": "EXT-5A25D9F93683",
+        "category": "project",
+        "claim_kind": "responsibility",
+        "confidence": "HIGH",
+        "entity": {
+          "classification_review_required": false,
+          "end_date": "2026",
+          "entity_fingerprint": "ENTKEY-93B6FAC37421",
+          "entity_id": "ENT-143624E2894E",
+          "entity_key": "project_harbor_project_2026",
+          "entity_type": "project",
+          "line_end": 11,
+          "line_start": 11,
+          "normalization_codes": [],
+          "organization": "Harbor Project",
+          "role": "Team",
+          "start_date": "2026"
+        },
+        "entity_id": "ENT-143624E2894E",
+        "provenance": {
+          "ai_line_end": 13,
+          "ai_line_start": 11,
+          "citation_adjustment": null,
+          "classification_review_required": false,
+          "human_confirmation_required": true,
+          "line_end": 13,
+          "line_start": 11,
+          "numeric_format_normalizations": 0,
+          "structural_normalizations": [],
+          "visual_regions": [
+            {
+              "bbox": [
+                0.05,
+                0.221,
+                0.329,
+                0.251
+              ],
+              "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+              "line_end": 11,
+              "line_start": 11,
+              "page": 3
+            },
+            {
+              "bbox": [
+                0.05,
+                0.352,
+                0.389,
+                0.382
+              ],
+              "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+              "line_end": 12,
+              "line_start": 12,
+              "page": 3
+            },
+            {
+              "bbox": [
+                0.05,
+                0.482,
+                0.403,
+                0.513
+              ],
+              "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b",
+              "line_end": 13,
+              "line_start": 13,
+              "page": 3
+            }
+          ],
+          "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+          "visual_verified": false
+        },
+        "selected": false,
+        "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+        "statement": "The applicant prepared 6 review reports for Harbor Project in 2026."
+      }
+    ],
+    "transcript": "SYNTHETIC RESUME\nNorth Star Lab | Analyst | 2023-2025\nBuilt a dashboard covering 12 stores.\nReduced reporting time by 18%.\nSYNTHETIC TWO-COLUMN RESUME\nCedar Studio | Analyst | 2024\nProcessed 1,200 synthetic records.\nBay Project | Team result | 2025\nTeam managed a $12,500 budget.\nSYNTHETIC PORTFOLIO SCREENSHOT\nHarbor Project | Team | 2026\nTeam tested 24 synthetic scenarios.\nApplicant prepared 6 review reports.",
+    "extraction_summary": {
+      "raw_lines": 13,
+      "reconstructed_blocks": 4,
+      "filtered_noise_lines": 0,
+      "claim_candidates": 10,
+      "non_claim_blocks": 0,
+      "intake_mode": "STANDARD_MEMORY",
+      "visual_verification_required": true,
+      "visual_regions": [
+        {
+          "page": 1,
+          "bbox": [
+            0.05,
+            0.09,
+            0.273,
+            0.12
+          ],
+          "line_start": 1,
+          "line_end": 1,
+          "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d"
+        },
+        {
+          "page": 1,
+          "bbox": [
+            0.05,
+            0.221,
+            0.419,
+            0.251
+          ],
+          "line_start": 2,
+          "line_end": 2,
+          "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d"
+        },
+        {
+          "page": 1,
+          "bbox": [
+            0.05,
+            0.352,
+            0.371,
+            0.382
+          ],
+          "line_start": 3,
+          "line_end": 3,
+          "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d"
+        },
+        {
+          "page": 1,
+          "bbox": [
+            0.05,
+            0.482,
+            0.361,
+            0.513
+          ],
+          "line_start": 4,
+          "line_end": 4,
+          "image_sha256": "sha256:c9139760426b0a64d95a14dbdfb699f0c29722f262dcbc61e2585d35d1187a3d"
+        },
+        {
+          "page": 2,
+          "bbox": [
+            0.05,
+            0.09,
+            0.433,
+            0.12
+          ],
+          "line_start": 5,
+          "line_end": 5,
+          "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f"
+        },
+        {
+          "page": 2,
+          "bbox": [
+            0.05,
+            0.221,
+            0.33,
+            0.251
+          ],
+          "line_start": 6,
+          "line_end": 6,
+          "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f"
+        },
+        {
+          "page": 2,
+          "bbox": [
+            0.05,
+            0.352,
+            0.388,
+            0.382
+          ],
+          "line_start": 7,
+          "line_end": 7,
+          "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f"
+        },
+        {
+          "page": 2,
+          "bbox": [
+            0.518,
+            0.221,
+            0.831,
+            0.251
+          ],
+          "line_start": 8,
+          "line_end": 8,
+          "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f"
+        },
+        {
+          "page": 2,
+          "bbox": [
+            0.518,
+            0.352,
+            0.849,
+            0.382
+          ],
+          "line_start": 9,
+          "line_end": 9,
+          "image_sha256": "sha256:3ed6c40078957af10916ef8564e04bec7c00e25dd8c34282cab8678b6fcb511f"
+        },
+        {
+          "page": 3,
+          "bbox": [
+            0.05,
+            0.09,
+            0.466,
+            0.12
+          ],
+          "line_start": 10,
+          "line_end": 10,
+          "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b"
+        },
+        {
+          "page": 3,
+          "bbox": [
+            0.05,
+            0.221,
+            0.329,
+            0.251
+          ],
+          "line_start": 11,
+          "line_end": 11,
+          "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b"
+        },
+        {
+          "page": 3,
+          "bbox": [
+            0.05,
+            0.352,
+            0.389,
+            0.382
+          ],
+          "line_start": 12,
+          "line_end": 12,
+          "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b"
+        },
+        {
+          "page": 3,
+          "bbox": [
+            0.05,
+            0.482,
+            0.403,
+            0.513
+          ],
+          "line_start": 13,
+          "line_end": 13,
+          "image_sha256": "sha256:ab0cd71220e25ca7750a1b5cf6892347be8019bb3b1bb99e7278ca83502a6e4b"
+        }
+      ],
+      "visual_source_sha256": "sha256:bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+      "document_page_count": 3,
+      "visual_elapsed_ms": 12968,
+      "visual_cost_usd": null,
+      "visual_mode": "MODEL_TRANSCRIPTION_UNVERIFIED",
+      "automatic_claim_selection": false,
+      "document_quality": {
+        "schema_version": 1,
+        "status": "PASS",
+        "extension": ".pdf",
+        "page_count": 3,
+        "character_count": 412,
+        "nonempty_line_count": 13,
+        "wordish_character_count": 329,
+        "replacement_character_count": 0,
+        "private_use_glyph_count": 0,
+        "control_character_count": 0,
+        "short_line_ratio": 0.0,
+        "long_line_count": 0,
+        "unique_line_ratio": 1.0,
+        "characters_per_page": 137.3,
+        "reason_codes": [],
+        "recommendation": "READY_FOR_STRUCTURED_AI",
+        "contains_document_text": false
+      },
+      "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+      "ai_candidates": 10,
+      "ai_entities": 4,
+      "ai_chunks": 1,
+      "ai_chunking_applied": false,
+      "ai_input_characters": 412,
+      "ai_covered_characters": 412,
+      "ai_input_truncated": false,
+      "segmented_oversize_lines": 0,
+      "ai_repair_attempted": false,
+      "ai_repair_succeeded": false,
+      "ai_repair_count": 0,
+      "quality_gate_version": 5,
+      "filtered_candidate_count": 0,
+      "filtered_candidate_reasons": {},
+      "candidate_filter_applied": false,
+      "structural_normalization_codes": [],
+      "structural_normalization_count": 0,
+      "classification_review_candidate_count": 0,
+      "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6"
+    },
+    "assessment": {
+      "expected_facts": 6,
+      "matched_facts": 6,
+      "facts": [
+        {
+          "fact_id": "stores",
+          "matched_candidate_ids": [
+            "EXT-09E61C7BD929"
+          ],
+          "observed_issues": [],
+          "status": "MATCHED_WITH_EVIDENCE"
+        },
+        {
+          "fact_id": "reporting_time",
+          "matched_candidate_ids": [
+            "EXT-5B0DD122D11B"
+          ],
+          "observed_issues": [],
+          "status": "MATCHED_WITH_EVIDENCE"
+        },
+        {
+          "fact_id": "records",
+          "matched_candidate_ids": [
+            "EXT-09A1134E3720"
+          ],
+          "observed_issues": [],
+          "status": "MATCHED_WITH_EVIDENCE"
+        },
+        {
+          "fact_id": "budget",
+          "matched_candidate_ids": [
+            "EXT-1C541E4767A8"
+          ],
+          "observed_issues": [],
+          "status": "MATCHED_WITH_EVIDENCE"
+        },
+        {
+          "fact_id": "scenarios",
+          "matched_candidate_ids": [
+            "EXT-087506E6799C"
+          ],
+          "observed_issues": [],
+          "status": "MATCHED_WITH_EVIDENCE"
+        },
+        {
+          "fact_id": "reports",
+          "matched_candidate_ids": [
+            "EXT-5A25D9F93683"
+          ],
+          "observed_issues": [],
+          "status": "MATCHED_WITH_EVIDENCE"
+        }
+      ],
+      "numeric_errors": null,
+      "misattributions": null,
+      "manual_adjudication_required": true,
+      "scope": "Fixed numeric facts, entity/date ownership and line/page/hash evidence; unmatched paraphrases are not automatically errors."
+    },
+    "retained_original_matches": true,
+    "unconfirmed_selection_result": "VISUAL_SOURCE_VERIFICATION_REQUIRED",
+    "committed_material_claims": 0,
+    "elapsed_ms": 34360
+  },
+  "packages": {
+    "pdfplumber": "0.11.9",
+    "Pillow": "11.3.0",
+    "pypdf": "5.9.0"
+  },
+  "cost_usd": null,
+  "usage_tokens": null,
+  "usage_note": "The production document adapter does not expose usage or billing receipts; unknown is not zero.",
+  "model_api_calls": null,
+  "external_application_actions": 0,
+  "claim_approval": false,
+  "model_route_before": {
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "hermes_commit": "afe53708ee7400919ae3e17a6dde9b02629e5c87"
+  },
+  "model_route_after": {
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "hermes_commit": "afe53708ee7400919ae3e17a6dde9b02629e5c87"
+  },
+  "model_route_unchanged": true,
+  "adapter_requests": [
+    {
+      "task": "JOBOPS_VISUAL_TRANSCRIPTION_V1",
+      "status": "RETURNED",
+      "elapsed_ms": 12968,
+      "tool_calls": 0
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "elapsed_ms": 18047,
+      "tool_calls": 0
+    }
+  ],
+  "temporary_state_removed": true,
+  "fixed_fixture_checks": "PASS",
+  "business_completion": "NOT_ATTEMPTED_USER_APPROVAL_REQUIRED"
+}

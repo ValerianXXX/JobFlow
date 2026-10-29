@@ -60,7 +60,50 @@ must fail with `VISUAL_SOURCE_VERIFICATION_REQUIRED`. The sandbox is removed on
 exit. Application submission, email, browser actions and scheduling are outside
 this evaluation.
 
-Six offline grading regressions cover an empty result, altered numbers/years,
+Eight offline regressions cover an empty result, altered numbers/years,
 wrong entity ownership, team-to-person attribution, incorrect evidence binding
-and automatic selection. These test the grader; they are not model observations.
+and automatic selection, malformed observation envelopes and the request limit.
+These test the collector/grader; they are not model observations.
 Live results must be recorded separately with their exact script/source revision.
+
+## Observed preview result
+
+The [unaltered live receipt](../evaluations/2026-10-28/material-preview-live-1.json)
+was collected with script/source checkpoint
+`ad926e2f2550e59d80d0223a33fb35a3d7683c87` at `2026-10-29T02:09:05Z`
+(October 28 in America/New_York). The configured route remained
+`gpt-5.6-sol` / `openai-codex`; Hermes revision was
+`afe53708ee7400919ae3e17a6dde9b02629e5c87` before and after. No model or
+provider was changed. Two adapter requests returned zero tool calls: one visual
+transcription and one structured document analysis; no replacement was needed.
+
+| Observed measure | Existing text preview | Optional visual preview |
+| --- | --- | --- |
+| Result | `ONBOARDING_DOCUMENT_QUALITY_FAILED` | `SOURCE_PREVIEW_READY` |
+| Designated numeric facts retained | 0 / 6 | 6 / 6 |
+| Claim candidates | No preview | 10, covering four entities |
+| Elapsed whole preview | 515 ms | 34,360 ms |
+| Adapter requests | 0 | 2 |
+| Model billing / tokens | No model request | Unknown / unknown |
+
+All 13 transcription lines match the fixed original. The coding assistant then
+reviewed the original pages and all ten statements: the six designated values,
+their organizations, source years and explicit team/applicant ownership were
+preserved, with zero observed omissions, changed numbers or wrong attribution in
+that declared scope. [Separate assistant review](../evaluations/2026-10-28/material-preview-assistant-review.json)
+records these counts without changing the raw collector's null adjudication
+fields. This is not an independent human review or the owner's confirmation.
+
+The source bytes survived a real Windows DPAPI round trip unchanged. Every
+candidate remained unselected and `visual_verified=false`. Selecting a candidate
+without original-source confirmation failed with
+`VISUAL_SOURCE_VERIFICATION_REQUIRED`; zero material Claims were committed. The
+temporary project and private store were removed. This proves a bounded synthetic
+source-preview flow, not application completion or production resume accuracy.
+
+After collection, the runner was hardened to retain malformed observation
+envelopes and route-recheck failures, and to report explicit database table
+counters. Eight offline tests, five public-document checks and a baseline-only
+DPAPI run passed. No additional live request was made for those collector-only
+changes, and no new counter was backfilled into the original observation. The
+receipt's script hash and commit identify exactly which collector ran.

@@ -4,6 +4,7 @@ from copy import deepcopy
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from _support import PROJECT
 
@@ -13,6 +14,24 @@ spec.loader.exec_module(evaluation)
 
 
 class MaterialPreviewEvaluationTests(unittest.TestCase):
+    def test_observer_preserves_malformed_model_output_for_production_validation(self):
+        engine = evaluation.ObservedHermes({"model":"synthetic", "provider":"synthetic"})
+        envelope = {"toolSummary":{"calls":0}, "result":{"content":"invalid synthetic JSON"}}
+        with patch.object(evaluation.WSLHermesCLIEngine, "_invoke", return_value=envelope):
+            self.assertIs(engine._invoke({"task":"JOBOPS_VISUAL_TRANSCRIPTION_V1"}), envelope)
+        self.assertEqual(engine.calls[0]["transcription_observation"], "INVALID")
+        self.assertEqual(engine.calls[0]["status"], "RETURNED")
+        self.assertEqual(engine.transcript, "")
+
+    def test_request_budget_stops_before_a_fourth_adapter_invocation(self):
+        engine = evaluation.ObservedHermes({"model":"synthetic", "provider":"synthetic"})
+        engine.calls = [{}, {}, {}]
+        with patch.object(evaluation.WSLHermesCLIEngine, "_invoke") as invoke:
+            with self.assertRaises(evaluation.JobOpsError) as blocked:
+                engine._invoke({"task":"SYNTHETIC"})
+        self.assertEqual(blocked.exception.code, "EVALUATION_CALL_LIMIT")
+        invoke.assert_not_called()
+
     def fixture(self):
         statements = [
             "Built a dashboard covering 12 stores.",

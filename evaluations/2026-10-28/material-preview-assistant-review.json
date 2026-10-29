@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-10-29T02:15:50.193267+00:00",
+  "reviewer_type": "CODING_ASSISTANT_VISUAL_AND_STATEMENT_REVIEW",
+  "independent_reviewer": false,
+  "owner_approval": false,
+  "raw_receipt": "material-preview-live-1.json",
+  "raw_receipt_lf_sha256": "505eb41ec83c11268db36cbe27b90e678709d470cf1006e63f3d1fdb9faddf3b",
+  "fixture_sha256": "bbdc34d94ec92aaf277e11bbc4f8acd4a74cc2998c4f5d9c48083bd21d738e25",
+  "method": "Viewed all three original pages rendered with Poppler, compared all 13 transcribed lines and all 10 candidate statements, and checked six predeclared numeric facts against entity/date and line/page/hash evidence.",
+  "transcription_lines": 13,
+  "all_transcription_lines_exact": true,
+  "candidate_statements_reviewed": 10,
+  "designated_numeric_facts": 6,
+  "baseline": {
+    "preview_ready": false,
+    "designated_numeric_facts_retained": 0,
+    "designated_numeric_omissions": 6,
+    "numeric_errors": null,
+    "misattributions": null,
+    "elapsed_ms": 515,
+    "adapter_requests": 0
+  },
+  "candidate": {
+    "preview_ready": true,
+    "designated_numeric_facts_retained": 6,
+    "designated_numeric_omissions": 0,
+    "designated_numeric_errors": 0,
+    "designated_fact_entity_misassignments": 0,
+    "designated_fact_ownership_changes": 0,
+    "source_year_errors": 0,
+    "elapsed_ms": 34360,
+    "adapter_requests": 2,
+    "claim_candidates": 10,
+    "committed_material_claims": 0,
+    "owner_approved_claims": 0
+  },
+  "fact_reviews": [
+    {
+      "fact_id": "stores",
+      "candidate_ids": [
+        "EXT-09E61C7BD929"
+      ],
+      "numeric_value": "PRESERVED",
+      "entity_and_years": "PRESERVED",
+      "source_evidence": "PRESENT",
+      "attribution": "PRESERVED_FOR_DECLARED_SCOPE"
+    },
+    {
+      "fact_id": "reporting_time",
+      "candidate_ids": [
+        "EXT-5B0DD122D11B"
+      ],
+      "numeric_value": "PRESERVED",
+      "entity_and_years": "PRESERVED",
+      "source_evidence": "PRESENT",
+      "attribution": "PRESERVED_FOR_DECLARED_SCOPE"
+    },
+    {
+      "fact_id": "records",
+      "candidate_ids": [
+        "EXT-09A1134E3720"
+      ],
+      "numeric_value": "PRESERVED",
+      "entity_and_years": "PRESERVED",
+      "source_evidence": "PRESENT",
+      "attribution": "PRESERVED_FOR_DECLARED_SCOPE"
+    },
+    {
+      "fact_id": "budget",
+      "candidate_ids": [
+        "EXT-1C541E4767A8"
+      ],
+      "numeric_value": "PRESERVED",
+      "entity_and_years": "PRESERVED",
+      "source_evidence": "PRESENT",
+      "attribution": "PRESERVED_FOR_DECLARED_SCOPE"
+    },
+    {
+      "fact_id": "scenarios",
+      "candidate_ids": [
+        "EXT-087506E6799C"
+      ],
+      "numeric_value": "PRESERVED",
+      "entity_and_years": "PRESERVED",
+      "source_evidence": "PRESENT",
+      "attribution": "PRESERVED_FOR_DECLARED_SCOPE"
+    },
+    {
+      "fact_id": "reports",
+      "candidate_ids": [
+        "EXT-5A25D9F93683"
+      ],
+      "numeric_value": "PRESERVED",
+      "entity_and_years": "PRESERVED",
+      "source_evidence": "PRESENT",
+      "attribution": "PRESERVED_FOR_DECLARED_SCOPE"
+    }
+  ],
+  "confirmation_gate": "VISUAL_SOURCE_VERIFICATION_REQUIRED",
+  "original_retention": "REAL_WINDOWS_DPAPI_BYTES_MATCH",
+  "cost_usd": null,
+  "usage_tokens": null,
+  "model_api_calls": null,
+  "limits": [
+    "One PDF with three simple synthetic layouts and six designated numeric facts; not a representative accuracy estimate.",
+    "Employment/project category interpretations from resume headers and bounding-box geometry are not independently calibrated.",
+    "Assistant review is not user confirmation or independent adjudication; every candidate remains unselected and unverified.",
+    "No application preparation, submission, mailbox activity or customer business outcome was attempted.",
+    "The original run did not collect separate database table counters. Its zero application-action field describes the invoked preview-only scope, not a network-wide audit.",
+    "Post-run collector hardening adds database counters and stronger failure retention. It was tested offline and with a baseline-only run; no extra live request was made or backfilled into this observation."
+  ]
+}
