@@ -2,6 +2,8 @@
 
 Checked October 29, 2026. This follows the [scan-resolution stage](scan-resolution-2026-10-29.md). The expanded product goal remains active. Parser measurements are not model accuracy, approved Claims, job applications or independent human acceptance.
 
+The measurements below record this original parser stage. The later [complete-Claim follow-up](complete-claims-2026-10-29.md) repairs decorative-rule ordering, exposes the compact-matrix family for regression, and adds a six-material pilot with retained failures. Its repaired parser result is not a fresh blind holdout result.
+
 ## Frozen inputs
 
 `tests/fixtures/complete-materials-v1` contains 36 complete synthetic materials: English, Chinese and mixed language each have 12. Each has profile/contact context, two employments, a project, education, tools/language and portfolio limitations. There are 1,716 authored factual statements, including missing information, negative evidence and team/applicant/AI responsibility. Three longer materials have 55 statements; the others have 47. Formats include native PDF, DOCX, image-only PDF, a tall portfolio image and mixed text/scan PDF.

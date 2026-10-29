@@ -53,6 +53,20 @@ class PdfRegionTests(unittest.TestCase):
         self.assertFalse(page["column_reordered"])
         self.assertTrue(any("Cedar" in b["text"] and "Harbor" in b["text"] for b in page["blocks"]))
 
+    def test_underlined_column_headings_preserve_complete_sentences(self):
+        complete = PROJECT / "tests/fixtures/complete-materials-v1"
+        manifest = json.loads((complete / "manifest.json").read_text(encoding="utf-8"))
+        # These previously held-out inputs are now explicitly exposed regression
+        # cases. Do not describe subsequent scores as untouched holdout results.
+        for identity in ("en-compact_matrix", "mixed-compact_matrix"):
+            case = next(c for c in manifest["cases"] if c["id"] == identity)
+            result = parse_region_pdf((complete / case["file"]).read_bytes())
+            text = "\n".join(b["text"] for p in result["pages"] for b in p["blocks"])
+            with self.subTest(case=identity):
+                for fact in case["facts"]:
+                    self.assertIn(compact(fact["text"]), compact(text), fact["id"])
+                self.assertTrue(any(p["column_reordered"] for p in result["pages"]))
+
     def test_mixed_text_scan_rejects_whole_source_without_dropping_page(self):
         writer = PdfWriter()
         for name in ("en-single.pdf", "en-scan.pdf"):

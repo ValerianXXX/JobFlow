@@ -61,7 +61,7 @@ class DocumentCoverageTests(unittest.TestCase):
         compact = lambda value: ''.join(value.split()).casefold()
         for fact in case['facts']:
             self.assertIn(compact(fact['text']), compact(text), fact['id'])
-        self.assertEqual(meta['local_parser_version'], 'pdf-regions-2')
+        self.assertEqual(meta['local_parser_version'], 'pdf-regions-3')
         self.assertTrue(meta['visual_verification_required'])
 
     def test_fallback_helper_exposes_the_actual_empty_page_instead_of_aggregate_only(self):

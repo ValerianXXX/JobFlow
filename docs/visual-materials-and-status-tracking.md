@@ -3,6 +3,8 @@
 Verified October 27, 2026. This work builds on the release/compatibility checkpoint;
 it does not make the unsigned source candidate a production Windows release.
 
+The [October 29 complete-material follow-up](complete-claims-2026-10-29.md) adds physical-page instructions and at most one optional fresh transcription after invalid response structure. `JOBFLOW_VISUAL_MAX_REPAIR=0` disables that extra request. The historical observations below remain unchanged; full semantic acceptance is still outstanding.
+
 ## Material path and configuration
 
 The default local text extractor is unchanged. Set process environment variables

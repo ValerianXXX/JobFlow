@@ -45,13 +45,16 @@ CALL_LIMIT = 12
 
 
 class ObservedHermes(WSLHermesCLIEngine):
-    def __init__(self, route):
+    def __init__(self, route, *, request_limit=CALL_LIMIT):
+        if type(request_limit) is not int or not 1 <= request_limit <= 18:
+            raise ValueError("Synthetic evaluation request limit must be between 1 and 18")
         super().__init__("wsl.exe", "Ubuntu", model=route["model"], provider_id=route["provider"])
+        self.request_limit = request_limit
         self.calls = []
         self.analyzed_text = ""
 
     def _invoke(self, request):
-        if len(self.calls) >= CALL_LIMIT:
+        if len(self.calls) >= self.request_limit:
             raise JobOpsError("EVALUATION_CALL_LIMIT", "The fixed synthetic adapter request budget is exhausted.")
         record = {"task": request.get("task"), "status": "FAILED", "tool_calls": None}
         self.calls.append(record)
@@ -125,10 +128,10 @@ def assess(case, candidates, text):
             "manual_adjudication_required": True}
 
 
-def run_arm(case, mode, engine):
+def run_arm(case, mode, engine, *, corpus_dir=corpus.CORPUS, assessor=assess):
     started, calls_before = time.monotonic(), len(engine.calls)
     engine.analyzed_text = ""
-    data = (corpus.CORPUS / case["file"]).read_bytes()
+    data = (corpus_dir / case["file"]).read_bytes()
     receipt = {"case": case["id"], "mode": mode, "source_sha256": case["sha256"], "status": "NOT_RUN"}
     with tempfile.TemporaryDirectory(prefix="jobflow-layout-claims-") as raw:
         temporary = Path(raw)
@@ -148,7 +151,7 @@ def run_arm(case, mode, engine):
                     pending = next(row for row in state["pending_sources"] if row["source_id"] == preview["source_id"])
                     candidates = pending["candidates"]
                     receipt.update(status=preview["status"], candidates=candidates, analyzed_text=engine.analyzed_text,
-                                   assessment=assess(case, candidates, engine.analyzed_text), extraction_summary=preview["extraction_summary"],
+                                   assessment=assessor(case, candidates, engine.analyzed_text), extraction_summary=preview["extraction_summary"],
                                    retained_original_matches=store.get_bytes(pending["metadata"]["secure_ref"]) == data)
                     if mode != "existing_text" and candidates:
                         try:
