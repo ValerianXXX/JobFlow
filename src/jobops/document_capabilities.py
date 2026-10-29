@@ -18,11 +18,20 @@ def word_registered() -> bool:
 
 
 def document_capabilities() -> dict:
-    word = word_registered()
+    from .errors import JobOpsError
+    from .local_pdf_export import libreoffice_binary, selected_pdf_provider
+
+    try:
+        provider = selected_pdf_provider()
+        available = word_registered() if provider == "word" else libreoffice_binary() is not None
+        configuration = "VALID"
+    except JobOpsError:
+        provider, available, configuration = None, False, "INVALID"
     return {
         "docx_generation": importlib.util.find_spec("docx") is not None,
-        "pdf_export": "DETECTED_NOT_VERIFIED" if word else "UNAVAILABLE",
-        "pdf_export_provider": "WORD" if word else None,
+        "pdf_export": "DETECTED_NOT_VERIFIED" if available else "UNAVAILABLE",
+        "pdf_export_provider": provider.upper() if provider else None,
+        "pdf_export_configuration": configuration,
         "page_preview": all(importlib.util.find_spec(name) is not None for name in ("pdfplumber", "pypdfium2")),
         "application_pdf_renderer": shutil.which("pdftoppm") is not None,
         "automatic_installation": False,

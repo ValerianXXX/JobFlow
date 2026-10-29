@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "rendered_at": "2026-10-29T16:05:27.618191Z",
+  "reviewed_at": "2026-10-29T16:05:27.618191Z",
+  "reviewer_type": "automated_render_probe",
+  "pages": [
+    {
+      "page": 1,
+      "filename": "readable-resume-page-1.png",
+      "render_sha256": "sha256:d1f0f51b866e1725d218c2bdfc97ec039d5a3cabc21caea2ff1f51872d75bb93",
+      "result": "PASS",
+      "reasons": [
+        "Readable raster detected at 1275x1650; blank-page and corruption probes passed."
+      ]
+    }
+  ]
+}

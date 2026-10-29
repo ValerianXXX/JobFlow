@@ -4,6 +4,8 @@ Status: engineering scope and acceptance targets. The [first implementation batc
 [browser-operated acceptance review](user-acceptance-2026-10-29.md) at
 `911f8c1ebbe48787c6ef191ab0563a9cf3b9f4ae` (draft #9).
 
+Implementation follow-up: [local LibreOffice export and reading-order QA](local-pdf-export-2026-10-29.md) now cover the optional Word-free conversion part of M1 on the existing Windows workstation. Six paired synthetic layouts and actual browser adoption were checked. This is not the planned 36-material extraction study, independent clean Windows acceptance or full M1 completion.
+
 The next product milestone is a usable assisted application: import materials,
 review reusable facts, produce a checked resume, prepare one chosen job,
 review and fill its supported form, let the user submit, and retain verifiable

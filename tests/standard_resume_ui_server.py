@@ -41,6 +41,7 @@ def main():
                 print(json.dumps({"operation": "SYNTHETIC_PDF_CONVERSION", "code": getattr(exc, "code", None),
                                   "stage": getattr(exc, "details", {}).get("failure_stage"),
                                   "cause_type": type(cause).__name__, "cause_code": getattr(cause, "code", None),
+                                  "cause_stage": getattr(cause, "details", {}).get("failure_stage"),
                                   "returncode": getattr(cause, "details", {}).get("returncode")}), file=sys.stderr, flush=True)
                 raise
         service.standard_resume_pdf = conversion_diagnostic

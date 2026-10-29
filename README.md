@@ -20,6 +20,8 @@ The [October 29 user acceptance review](docs/user-acceptance-2026-10-29.md) exer
 
 The subsequent [standard-resume upgrade](docs/standard-resume-2026-10-29.md) lets PDF-master users format their approved facts into a new editable DOCX, preview/download it and explicitly adopt it through a new profile revision. It preserves original evidence and requires renewed material and editing-position approval. It adds document-tool discovery and optional local Word/PDF preview; it does not reconstruct original PDF styling or claim that a text preview completes document QA.
 
+The [local PDF converter option](docs/local-pdf-export-2026-10-29.md) adds explicitly selected LibreOffice for machines without Word. It reuses the existing resume/application export and QA path, isolates office profiles/processes, and preserves drafts on failure. Conversion still requires page and text review; a two-column test exposed mixed linear text order in both converters. Word remains the default, and no office software is installed automatically.
+
 The owner approved [one historical identity exception](docs/modernization-2026-10-27.md#specific-historical-identity-approval---28-october-2026). The [source bootstrap correction](docs/source-bootstrap-2026-10-29.md) is now followed by a complete green baseline: draft #8 at `3e232d7` passed 1,192 regressions and nine browser suites on each of Python 3.11, 3.12 and 3.13, plus its separate source-candidate job. The subsequent UI repairs have focused local validation documented in the acceptance review; the baseline matrix is not a claim about those later changes. On October 29 the owner confirmed that trusted production signing and an independent clean Windows machine/VM are unavailable; signed distribution and installation/upgrade/data-preservation/rollback acceptance remain blocked. Local unsigned packages do not authorize a release.
 
 The [October 28 author correction](docs/modernization-2026-10-27.md#owner-identity-correction---28-october-2026) records the owner's choice of account-linked GitHub noreply commits. Only the specifically reviewed historical identity is excepted; other identity and release requirements remain in force.
@@ -83,7 +85,7 @@ An AI connection is accepted only after a structured capability test. Agent requ
 | Public signed updates | Blocked until protected publisher runtime closure is attested |
 | Encrypted onboarding, Candidate Profile, Answer Bank, and Claim review | Available |
 | Existing Agent or loopback-model connection | Available with capability gate |
-| PDF master to standard editable resume | New source preview: approved wording → DOCX → optional local Word/PDF preview → user-approved new revision; original styling is not reconstructed |
+| PDF master to standard editable resume | New source preview: approved wording → DOCX → optional local Word or explicitly selected LibreOffice PDF preview → user-approved new revision; original styling is not reconstructed |
 | Application workspace and original PDF/image comparison | Available in this source preview; missing or modified snapshots are shown explicitly |
 | Local EML status inbox | Explicit file import, encrypted evidence, manual association and undo; no mailbox connection or execution-state changes |
 | Read-only MCP for Hermes and compatible clients | Optional extra; three redacted tools, actual stdio client checks with synthetic data |

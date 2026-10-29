@@ -543,10 +543,12 @@ Object.assign(STRINGS.zh,{
   standardResumeSources:"{count} 项原始来源", standardResumePageAlt:"标准简历的实际 PDF 页面",
   standardResumePrevious:"上一页", standardResumeNext:"下一页", standardResumePageNumber:"第 {page} / {count} 页",
   documentWordDetected:"检测到 Word，但尚未验证转换。可用合成或当前草稿实际转换后检查。",
-  documentWordMissing:"未检测到 Word 导出功能：可以生成 DOCX，PDF 转换尚不可用。",
+  documentWordMissing:"所选本地 PDF 转换器未就绪：DOCX 仍可保存，请检查本地转换器配置。",
+  documentLibreOfficeDetected:"检测到所选 LibreOffice，但尚未验证转换。请转换并检查实际页面；版式可能与 Word 不同。",
+  documentPdfConfigurationInvalid:"本地 PDF 转换器配置无效，请按运行说明选择 Word 或 LibreOffice。",
   documentRendererMissing:"申请材料的 PDF 页面渲染工具未就绪，请先按安装说明补齐。",
   documentDocxMissing:"DOCX 生成依赖未安装，请按运行说明补齐。",
-  documentPdfFailed:"PDF 转换未完成；DOCX 草稿仍可保存。请检查 Word 是否可用后重试。",
+  documentPdfFailed:"PDF 转换未完成；DOCX 草稿仍可保存。请检查所选本地转换器与文件兼容性后重试。",
   generatingStandardResume:"正在生成标准简历…", exportingStandardResume:"正在转换 PDF 并渲染页面…", adoptingStandardResume:"正在创建新的资料修订…"
 });
 Object.assign(STRINGS.en,{
@@ -561,13 +563,15 @@ Object.assign(STRINGS.en,{
   standardResumeSources:"{count} original sources", standardResumePageAlt:"Actual exported PDF page of the standard resume",
   standardResumePrevious:"Previous page", standardResumeNext:"Next page", standardResumePageNumber:"Page {page} of {count}",
   documentWordDetected:"Word detected; conversion has not been verified. Test it by converting a synthetic or current draft and inspecting the result.",
-  documentWordMissing:"Word export was not detected. DOCX generation is available; PDF conversion is unavailable.",
+  documentWordMissing:"The selected local PDF exporter is unavailable. Your DOCX remains available; check the local converter configuration.",
+  documentLibreOfficeDetected:"Selected LibreOffice detected; conversion is not verified. Convert and inspect every page; layout may differ from Word.",
+  documentPdfConfigurationInvalid:"Local PDF exporter configuration is invalid. Follow the setup guide to select Word or LibreOffice.",
   documentRendererMissing:"The application PDF page renderer is missing. Complete the documented installation first.",
   documentDocxMissing:"DOCX generation dependencies are missing. Complete the documented installation first.",
-  documentPdfFailed:"PDF conversion did not finish. Your DOCX draft remains available. Check Word and retry.",
+  documentPdfFailed:"PDF conversion did not finish. Your DOCX draft remains available. Check the selected local converter and document compatibility before retrying.",
   generatingStandardResume:"Generating the standard resume…", exportingStandardResume:"Converting PDF and rendering its page…", adoptingStandardResume:"Creating a new profile revision…"
 });
-const UI_PROTOCOL_VERSION = 38;
+const UI_PROTOCOL_VERSION = 39;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",
@@ -1603,7 +1607,10 @@ function renderApplicationReadiness(){
 
 function renderStandardResume(){
   const capability=state.data?.document_capabilities||{}, standard=state.data?.standard_resume||{};
-  const messages=[t(capability.pdf_export==="DETECTED_NOT_VERIFIED"?"documentWordDetected":"documentWordMissing")];
+  const message=capability.pdf_export_configuration==="INVALID"?"documentPdfConfigurationInvalid":
+    capability.pdf_export!=="DETECTED_NOT_VERIFIED"?"documentWordMissing":
+    capability.pdf_export_provider==="LIBREOFFICE"?"documentLibreOfficeDetected":"documentWordDetected";
+  const messages=[t(message)];
   if(capability.docx_generation===false)messages.push(t("documentDocxMissing"));
   if(capability.application_pdf_renderer===false)messages.push(t("documentRendererMissing"));
   document.querySelector("#documentCapabilities").textContent=messages.join(" ");
@@ -1628,7 +1635,8 @@ function renderStandardResume(){
   document.querySelector("#standardResumePages").classList.toggle("hidden",!page);
   if(page){
     const img=document.querySelector("#standardResumePageImage");img.src=page.image_data_url;img.alt=t("standardResumePageAlt");
-    document.querySelector("#standardResumePageNumber").textContent=t("standardResumePageNumber").replace("{page}",String(page.page)).replace("{count}",String(page.page_count));
+    document.querySelector("#standardResumePageNumber").textContent=t("standardResumePageNumber").replace("{page}",String(page.page)).replace("{count}",String(page.page_count))+
+      (draft.pdf_provider==="LIBREOFFICE"?" · LibreOffice":draft.pdf_provider==="WORD"?" · Word":"");
     document.querySelector("#standardResumePrevious").disabled=page.page<=1;
     document.querySelector("#standardResumeNext").disabled=page.page>=page.page_count;
   }

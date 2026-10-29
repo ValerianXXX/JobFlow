@@ -2,6 +2,8 @@
 
 This is the first implementation batch of the [upgrade plan](next-upgrade-plan-2026-10-29.md): parser diagnostics, early document-tool discovery, and the PDF-only resume entry. Later OCR, live ATS, mailbox, Hermes task-execution and independent user-study milestones remain open.
 
+Follow-up: [explicit local LibreOffice export and stronger reading-order QA](local-pdf-export-2026-10-29.md) are now available in a later source branch, using UI protocol 39. The Word-only behavior, protocol 38 and results below describe this original batch; they are retained as its observation record.
+
 ## Applicant flow
 
 Previously a retained PDF could supply confirmed facts but could not become an editable master. This entry builds a **new single-column DOCX** from exact wording already approved for resume use. It does not reconstruct the original typography, translate facts, infer missing dates/employers or call another model. Sections without approved facts are omitted. Completed profile contact fields supply the header; salary, work authorization and street address are excluded.

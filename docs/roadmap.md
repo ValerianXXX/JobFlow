@@ -9,7 +9,7 @@ remaining work from the user-acceptance findings: stable diagnostics,
 PDF-only users' editable resume path, optional Word-free conversion,
 route-specific live application evidence, read-only status recovery,
 Hermes/novice completion and external signing/Windows acceptance. Its targets
-are acceptance criteria, not completion claims. The [first implementation batch](standard-resume-2026-10-29.md) now adds native-parser isolation, document-tool discovery and the PDF-master standard-layout entry; Word-free conversion and the later milestones remain open.
+are acceptance criteria, not completion claims. The [first implementation batch](standard-resume-2026-10-29.md) adds native-parser isolation, document-tool discovery and the PDF-master standard-layout entry. The [local PDF follow-up](local-pdf-export-2026-10-29.md) adds explicit LibreOffice export and reading-order QA with bounded Windows verification. Broader material, live workflow and release milestones remain open.
 
 ## Available in the alpha
 

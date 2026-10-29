@@ -50,9 +50,9 @@ def _release_document_visual_review(project: Path) -> dict[str, Any]:
     """Validate tracked synthetic document evidence without using local residue."""
 
     project = project.resolve()
-    root = (project / "tests" / "fixtures" / "release-document-qa").resolve()
-    docx_path = root / "complex-master-resume.docx"
-    pdf_path = root / "complex-master-resume.pdf"
+    root = (project / "tests" / "fixtures" / "release-readable-document-qa").resolve()
+    docx_path = root / "readable-resume.docx"
+    pdf_path = root / "readable-resume.pdf"
     review_path = root / "visual-review.json"
     required = (docx_path, pdf_path, review_path)
     if any(not path.is_file() or path.is_symlink() for path in required):
@@ -68,7 +68,7 @@ def _release_document_visual_review(project: Path) -> dict[str, Any]:
     page_paths = sorted(
         (
             path
-            for path in root.glob("complex-master-resume-page-*.png")
+            for path in root.glob("readable-resume-page-*.png")
             if path.is_file() and not path.is_symlink()
         ),
         key=lambda path: int(path.stem.rsplit("-", 1)[-1])

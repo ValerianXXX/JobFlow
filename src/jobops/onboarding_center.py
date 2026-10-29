@@ -4890,6 +4890,7 @@ class OnboardingCenterService:
                 "docx_sha256": draft["docx_sha256"], "preview": draft["preview"],
                 "claim_set_hash": draft["claim_set_hash"],
                 "pdf_available": bool(draft.get("pdf_ref")), "materials_validated": False,
+                "pdf_provider": draft.get("pdf_provider"),
                 "real_external_actions": 0}
 
     @_synchronized
@@ -4940,8 +4941,9 @@ class OnboardingCenterService:
         reference = str(payload.get("draft_ref", ""))
         draft, _ = self._read_standard_resume(reference)
         if not draft.get("pdf_ref"):
-            if document_capabilities()["pdf_export"] == "UNAVAILABLE":
-                raise JobOpsError("DOCUMENT_PDF_EXPORT_UNAVAILABLE", "Word export is unavailable; the DOCX draft remains available.")
+            capability = document_capabilities()
+            if capability["pdf_export"] == "UNAVAILABLE":
+                raise JobOpsError("DOCUMENT_PDF_EXPORT_UNAVAILABLE", "The selected local PDF exporter is unavailable; the DOCX draft remains available.")
             failure_stage = "EXPORT"
             created: list[str] = []
             try:
@@ -4958,7 +4960,8 @@ class OnboardingCenterService:
                     record = self.onboarding.import_bytes("generated_resume_pdf", raw, synthetic=False)
                     if not record.get("deduplicated"):
                         created.append(str(record["secure_ref"]))
-                updated = {**draft, "pdf_ref": record["secure_ref"], "pdf_sha256": record["content_sha256"]}
+                updated = {**draft, "pdf_ref": record["secure_ref"], "pdf_sha256": record["content_sha256"],
+                           "pdf_provider": capability["pdf_export_provider"]}
                 failure_stage = "COMMIT"
                 self.onboarding.rotate(reference, canonical_json(updated))
                 draft = updated

@@ -4,6 +4,9 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Add an explicit local LibreOffice PDF exporter with isolated profile/cache/process ownership, bounded execution, active-document rejection and retained DOCX on failure. Keep Word as the default and existing visual/text/approval gates. Fix long Windows office-cache cleanup and native path handling; compare six synthetic layouts without hiding the two-column linear-text failure.
+- Show the selected PDF provider in both UI languages and retain the actual provider with generated previews. Bump the local UI protocol to 39; Companion remains 0.9.2/protocol 2.
+- Reject interleaved substantive paragraphs and swapped numeric/ownership wording even when word counts match. Account for uniform repeated DOCX headers/footers and simple page counters without raising the existing token threshold. Retain the former complex release sample as a negative regression and add a separately reviewed single-column acceptance sample with the same synthetic facts.
 - Add a PDF-master path to a new editable standard resume using exact resume-approved wording, with bilingual preview, explicit DOCX download, optional local Word/PDF preview and adoption through a new onboarding revision. Preserve original evidence and require renewed material/position approval.
 - Discover document prerequisites without claiming conversion; retain the draft on export failure. Bump the local UI protocol to 38 without changing Browser Companion 0.9.2/protocol 2.
 - Prevent Word's PowerShell helper from inheriting the long-lived server input pipe, which blocked actual browser export until timeout. Keep the existing deadline and add an open-parent-input regression.

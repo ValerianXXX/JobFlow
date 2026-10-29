@@ -42,6 +42,8 @@ For a fictional, auto-cleaned tour, run `Start JobFlow Demo.cmd` instead.
 
 If your retained master is a PDF, first approve its confirmed wording for resume use, then choose **Preview a standard resume**. Review the new layout, optionally inspect a real local Word/PDF export, and explicitly adopt the DOCX through a new profile revision. Reconfirm the profile, material use and editing positions. See the [standard-resume guide](standard-resume-2026-10-29.md); this does not preserve the original PDF's styling or replace final document QA.
 
+If Word is unavailable, the [optional local LibreOffice exporter](local-pdf-export-2026-10-29.md) can be explicitly selected before starting JobFlow. Install it separately from its official source, confirm the displayed provider and inspect the converted pages. Merely detecting an executable does not verify conversion, layout or application readiness.
+
 Private values are stored with DPAPI and are never written into the public project tree.
 
 ## Process one job
