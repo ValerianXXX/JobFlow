@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Preserve fixed-label diagnostics for the five-second source UI bootstrap timeout and run the unchanged source-candidate gate independently of the long Windows regression matrix. Record the passing regressions/browser suites and owner-confirmed signing and clean-Windows blockers without treating the failed source build as passed.
+
 - Fix two remaining Windows smoke-runner races: create the native Python launcher suspended until job assignment, and wait for captured descendant process handles after termination. A Python stdin handshake and a zero active-process count alone were insufficient. Preserve the failing CI evidence, add delayed-launcher/resume-failure/Unicode regressions, and keep all original deadlines and release gates.
 
 - Contain source-candidate smoke scripts and their descendants in a Windows job before running target code. Reclaim descendants after success, failure or timeout so a dead parent cannot leave the extracted candidate locked. Preserve bounded failure-stage diagnostics without child stderr, private paths or exception text. The original CI UI startup failure still requires revalidation; no timeout or release assertion was relaxed.

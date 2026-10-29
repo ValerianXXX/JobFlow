@@ -19,6 +19,26 @@ def find_project_root() -> Path:
     raise SystemExit("JOBFLOW_PROJECT_ROOT_NOT_FOUND")
 
 
+def _active_bootstrap_components() -> list[str]:
+    """Fixed labels only: no stack text, locals, paths or exception content."""
+    labels = {
+        ("secure_store.py", "_run"): "encrypted_store",
+        ("ats_capabilities.py", "_evidence_bundle_hash"): "ats_evidence",
+        ("runtime_schema.py", "validate_named"): "schema_validation",
+        ("onboarding_center.py", "bootstrap"): "bootstrap",
+    }
+    active = set()
+    for frame in list(sys._current_frames().values())[:64]:
+        for _ in range(64):
+            if frame is None:
+                break
+            label = labels.get((Path(frame.f_code.co_filename).name, frame.f_code.co_name))
+            if label:
+                active.add(label)
+            frame = frame.f_back
+    return sorted(active)
+
+
 def _run_smoke(progress: dict[str, object]) -> dict[str, object]:
     project = find_project_root()
     sys.path.insert(0, str(project / "src"))
@@ -50,9 +70,16 @@ def _run_smoke(progress: dict[str, object]) -> dict[str, object]:
             headers = response.headers
             loopback_requests += 1
         progress["stage"] = "bootstrap"
-        with urlopen(server.url + "api/bootstrap", timeout=5) as response:
-            bootstrap = json.loads(response.read().decode("utf-8"))
-            loopback_requests += 1
+        started = time.monotonic()
+        try:
+            with urlopen(server.url + "api/bootstrap", timeout=5) as response:
+                bootstrap = json.loads(response.read().decode("utf-8"))
+                loopback_requests += 1
+        except Exception:
+            progress["active_components"] = _active_bootstrap_components()
+            raise
+        finally:
+            progress["bootstrap_ms"] = round((time.monotonic() - started) * 1000)
         snapshot = (project / "tests" / "fixtures" / "synthetic-official-job-list.html").read_bytes()
         discovery_query = urlencode({
             "official_url": "https://example.com/careers",
@@ -115,6 +142,7 @@ def _run_smoke(progress: dict[str, object]) -> dict[str, object]:
             "private_values_emitted": 0,
             "external_network_actions": 0,
             "real_external_actions": 0,
+            "bootstrap_ms": progress["bootstrap_ms"],
         }
         return result
     finally:
@@ -139,6 +167,10 @@ def main() -> int:
         else:
             failure_kind = "unexpected_error"
         result = {"status": "FAIL", "stage": progress["stage"], "failure_kind": failure_kind}
+        if "bootstrap_ms" in progress:
+            result["bootstrap_ms"] = progress["bootstrap_ms"]
+        if "active_components" in progress:
+            result["active_components"] = progress["active_components"]
     if result["status"] != "PASS":
         result.setdefault("stage", progress["stage"])
         result.setdefault("failure_kind", "boundary_error")

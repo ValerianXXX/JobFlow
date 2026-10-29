@@ -188,6 +188,29 @@ class ReleaseSmokeProcessTests(unittest.TestCase):
         self.assertEqual(_smoke_failure_details(json.dumps({
             "status": "FAIL", "stage": [], "failure_kind": {}, "elapsed_ms": -1,
         })), {})
+        self.assertEqual(_smoke_failure_details(json.dumps({
+            "status": "FAIL", "bootstrap_ms": 5001,
+            "active_components": ["encrypted_store", str(PROJECT), {}, "encrypted_store", "ats_evidence"],
+        })), {"bootstrap_ms": 5001, "active_components": ["ats_evidence", "encrypted_store"]})
+        self.assertEqual(_smoke_failure_details(json.dumps({
+            "status": "FAIL", "bootstrap_ms": True, "active_components": {"bootstrap": "private"},
+        })), {})
+
+    def test_source_smoke_active_component_labels_never_include_frame_content(self) -> None:
+        import types
+
+        script = PROJECT / ".agents/skills/job-application-operator/scripts/smoke-source-candidate.py"
+        observe = runpy.run_path(str(script))["_active_bootstrap_components"]
+        private = types.SimpleNamespace(
+            f_code=types.SimpleNamespace(co_filename="synthetic-private/path/ats_capabilities.py", co_name="_evidence_bundle_hash"),
+            f_back=None, f_locals={"value": "synthetic private content"},
+        )
+        unrelated = types.SimpleNamespace(
+            f_code=types.SimpleNamespace(co_filename="synthetic-private.py", co_name="private"),
+            f_back=private,
+        )
+        with patch("sys._current_frames", return_value={1: unrelated}):
+            self.assertEqual(observe(), ["ats_evidence"])
 
     def test_source_smoke_reports_failed_stage_without_exception_content(self) -> None:
         script = PROJECT / ".agents/skills/job-application-operator/scripts/smoke-source-candidate.py"
