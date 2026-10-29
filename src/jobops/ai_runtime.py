@@ -65,11 +65,14 @@ ENTITY_VERB_RE = re.compile(
     r"\b(?:am|is|are|was|were|be|been|being|worked|served|led|built|ran|drove|grew|founded|"
     r"managed|created|developed|delivered|conducted|analyzed|analysed|launched|completed|earned|"
     r"studied|graduated|supported|designed|implemented|improved|increased|reduced|produced|owned|"
-    r"coordinated|advised|consulted|researched|mapped|converted|translated|oversaw|performed|"
+    r"coordinated|advised|consulted|researched|mapped|converted|translated|oversaw|performed|coded|used|"
     r"[a-z]{4,}(?:ed|ing|ized|ised|ated|ened))\b",
     re.IGNORECASE,
 )
-CHINESE_ENTITY_VERBS = ("担任", "负责", "完成", "建立", "领导", "参与", "开发", "管理", "分析", "提升", "创建", "就读", "获得", "交付", "推动", "设计", "实施")
+CHINESE_ENTITY_VERBS = (
+    "担任", "负责", "完成", "建立", "领导", "参与", "开发", "管理", "分析", "提升", "创建", "就读", "获得", "交付", "推动", "设计", "实施",
+    "使用", "核验", "核对", "编写", "检查", "测量", "处理", "保留", "标为", "产出", "测试", "实现", "起草", "观察", "包括", "列出", "降到", "降至", "全部为",
+)
 BULLET_PREFIX_RE = re.compile(
     r"^\s*(?:[\u2022\u2023\u25e6\u2043\u2219\uf0de\uf0b7▪▫●○◦‣·*]|[-–—]\s+|\d{1,3}[.)]\s+)"
 )
@@ -77,6 +80,7 @@ SENTENCE_END_RE = re.compile(r"[.?!。！？][\"'’)）\]]*\s*$")
 NUMBER_TOKEN_RE = re.compile(
     r"(?<![A-Za-z0-9])(?:[$£€¥]\s*)?"
     r"(?:\d{1,3}(?:(?:,[ \t]*|[ '\u00a0\u2009\u202f])\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
+    r"(?!\d)"
 )
 
 
@@ -373,8 +377,11 @@ def _grounded_entity_range(
             _field_is_grounded(str(entity.get("organization", "")), excerpt)
             and _field_is_grounded(str(entity.get("role", "")), excerpt)
         )
-        dates_grounded = not (
-            _numbers(f"{entity.get('start_date', '')} {entity.get('end_date', '')}") - _numbers(excerpt)
+        # Date fields are independent values, never digit-grouping neighbors.
+        # Joining them let a month and a following year become one number.
+        dates_grounded = all(
+            not (_numbers(str(entity.get(key, ""))) - _numbers(excerpt))
+            for key in ("start_date", "end_date")
         )
         if identity_grounded and dates_grounded:
             adjustment = "ADJACENT_ENTITY_HEADER_LINES" if (start, end) != (original_start, original_end) else None
@@ -467,8 +474,45 @@ def _merge_candidate_filter_diagnostics(
             _record_candidate_filter(target, str(reason))
 
 
+def _explicit_actor_actions(text: str) -> list[tuple[str, str]]:
+    """Recognize direct subject substitutions, not general semantic entailment.
+
+    Requiring the same complete action clause avoids assigning every number in
+    a broad citation to its first named actor. Synonyms, implicit subjects and
+    differently worded actions remain outside this conservative check.
+    """
+    actors = {"applicant": "applicant", "candidate": "applicant", "i": "applicant",
+              "申请人": "applicant", "本人": "applicant", "team": "team", "团队": "team", "ai": "ai"}
+    result = []
+    for clause in re.split(r"[;；。！？!?\n]|\.(?=\s|$)", unicodedata.normalize("NFKC", text).casefold()):
+        clause = " ".join(clause.strip().split())
+        match = re.match(r"^(?:the )?(applicant|candidate|team|ai|i)\s+(.+)$", clause)
+        if match is None:
+            match = re.match(r"^(申请人|本人|团队|ai)(?=[\u4e00-\u9fff]|\s)\s*(.+)$", clause)
+        if match is not None:
+            result.append((actors[match[1]], match[2]))
+    return result
+
+
+def _explicit_attribution_conflict_count(statement: str, source_excerpt: str) -> int:
+    source_actors: dict[str, set[str]] = {}
+    for actor, action in _explicit_actor_actions(source_excerpt):
+        source_actors.setdefault(action, set()).add(actor)
+    return sum(action in source_actors and actor not in source_actors[action]
+               for actor, action in _explicit_actor_actions(statement))
+
+
 def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str, Any]:
-    format_complete = bool(20 <= len(statement) <= 2_000 and statement[-1:] in ".?!。！？")
+    # A Chinese sentence can express a complete fact in fewer than 20 code
+    # points. For this narrow exception require a predicate AND an unchanged
+    # whole source sentence, never a substring that could drop its negation.
+    short_cjk_source_sentence = bool(
+        12 <= len(statement) < 20
+        and len(re.findall(r"[\u4e00-\u9fff]", statement)) >= 8
+        and _has_entity_predicate(statement)
+        and statement in [part.strip() for part in re.split(r"(?<=[。！？])|\n", source_excerpt)]
+    )
+    format_complete = bool((20 <= len(statement) <= 2_000 or short_cjk_source_sentence) and statement[-1:] in ".?!。！？")
     if statement.endswith((",", ";", ":", "-", "–", "—")) or "|" in statement or "http://" in statement.casefold() or "https://" in statement.casefold():
         format_complete = False
     # Uncased scripts (including Chinese) are unchanged by upper(), but are
@@ -486,8 +530,10 @@ def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str
     source_tokens = _tokens(source_excerpt)
     required = max(1 if len(claim_tokens) == 1 else 2, math.ceil(len(claim_tokens) * GROUNDING_RATIO))
     shared_tokens = len(claim_tokens & source_tokens)
+    attribution_conflicts = _explicit_attribution_conflict_count(statement, source_excerpt)
     return {
-        "valid": bool(format_complete and not unsupported_numbers and (not claim_tokens or shared_tokens >= required)),
+        "valid": bool(format_complete and not unsupported_numbers and not attribution_conflicts and (not claim_tokens or shared_tokens >= required)),
+        "explicit_attribution_conflict_count": attribution_conflicts,
         "statement_format_complete": format_complete,
         "unsupported_number_count": len(unsupported_numbers),
         "shared_grounding_token_count": shared_tokens,
@@ -526,7 +572,7 @@ def _bounded_statement_grounding(
         "citation_adjustment": None,
         "adjacent_line_expansion_attempted": False,
     })
-    if original["valid"] or not original["statement_format_complete"]:
+    if original["valid"] or not original["statement_format_complete"] or original["explicit_attribution_conflict_count"]:
         return original
 
     expanded_start, expanded_end = start_index, end_index
@@ -559,6 +605,7 @@ def _bounded_statement_grounding(
         "expanded_line_start": line_number_start + expanded_start,
         "expanded_line_end": line_number_start + expanded_end,
         "unsupported_number_count": expanded["unsupported_number_count"],
+        "explicit_attribution_conflict_count": expanded["explicit_attribution_conflict_count"],
         "shared_grounding_token_count": expanded["shared_grounding_token_count"],
     }}
 
@@ -1055,6 +1102,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             if not grounding["valid"]:
                 failure_category = (
                     "UNSUPPORTED_NUMBER" if grounding["unsupported_number_count"]
+                    else "ATTRIBUTION_CONFLICT" if grounding["explicit_attribution_conflict_count"]
                     else "STATEMENT_FRAGMENT" if not grounding["statement_format_complete"]
                     else "CITED_LINE_GROUNDING"
                 )

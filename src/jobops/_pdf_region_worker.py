@@ -42,8 +42,8 @@ def _support(parts: list[tuple[list[dict], list[dict], bool]]) -> int:
     return min(len(left), len(right))
 
 
-def _ordered_rows(rows: list[list[dict]], width: float, ruled: bool) -> tuple[list[list[dict]], bool]:
-    if ruled or len(rows) < 3:
+def _ordered_rows(rows: list[list[dict]], width: float, rules: list[tuple[float, float]]) -> tuple[list[list[dict]], bool]:
+    if len(rows) < 3:
         return rows, False
     # A repeated empty gutter is required. One aligned date or wide word gap
     # cannot alone turn a page into columns. Full-width lines partition bands.
@@ -83,6 +83,12 @@ def _ordered_rows(rows: list[list[dict]], width: float, ruled: bool) -> tuple[li
                 gaps.append(x)
     best = None
     for x in sorted(set(round(gap, 1) for gap in gaps)):
+        # A rule crossing this particular gutter may connect table cells.
+        # Keep those rows together. Short heading underlines within a column
+        # do not connect its prose to the other column. Vertical/frame edges
+        # at the candidate gutter remain conservative table boundaries.
+        if any(left - 2 <= x <= right + 2 for left, right in rules):
+            continue
         parts = [_split(row, x) for row in rows]
         support = _support(parts)
         score = support - 2 * sum(crossing for _, _, crossing in parts)
@@ -145,14 +151,21 @@ def parse_region_pdf(raw: bytes) -> dict:
                     if not math.isfinite(value) or not 0 <= value <= limit:
                         raise ValueError("LOCAL_PARSER_PROVENANCE_INVALID")
                     word[key] = value
-            # Conservative table policy. Even decorative rules may retain row
-            # order; unruled tables remain an explicit unsupported ambiguity.
-            ruled = bool(page.lines or page.rects)
+            # Reuse the installed pdfplumber edge representation (lines plus
+            # rectangle/curve edges); do not guess table semantics from text.
+            if len(page.edges) > 10000:
+                raise ValueError("LOCAL_PARSER_LIMIT")
+            rules = []
+            for edge in page.edges:
+                left, right = float(edge["x0"]) - origin_x, float(edge["x1"]) - origin_x
+                if not math.isfinite(left) or not math.isfinite(right):
+                    raise ValueError("LOCAL_PARSER_PROVENANCE_INVALID")
+                rules.append((min(left, right), max(left, right)))
             physical_rows = _rows(words)
             physical_page_text.append("\n".join(" ".join(w["text"] for w in row) for row in physical_rows))
             if len(physical_rows) > 500:
                 raise ValueError("LOCAL_PARSER_LIMIT")
-            rows, reordered = _ordered_rows(physical_rows, float(page.width), ruled)
+            rows, reordered = _ordered_rows(physical_rows, float(page.width), rules)
             blocks = []
             for row in rows:
                 text = " ".join(w["text"] for w in row)
@@ -167,14 +180,14 @@ def parse_region_pdf(raw: bytes) -> dict:
             if not 1 <= len(blocks) <= 500 or total_characters > 200000:
                 raise ValueError("LOCAL_PARSER_LIMIT")
             pages.append({"page": number, "blank": False, "blocks": blocks,
-                          "column_reordered": reordered, "table_order_retained": ruled})
+                          "column_reordered": reordered, "table_order_retained": bool(rules) and not reordered})
     from .document_coverage import require_complete_page_text
     from .errors import JobOpsError
     try:
         require_complete_page_text(physical_page_text)
     except JobOpsError as error:
         raise ValueError("LOCAL_PARSER_INCOMPLETE_PAGINATION") from error
-    return {"pages": pages, "parser_version": "pdf-regions-2", "backend_version": version("pdfplumber")}
+    return {"pages": pages, "parser_version": "pdf-regions-3", "backend_version": version("pdfplumber")}
 
 
 def main() -> int:

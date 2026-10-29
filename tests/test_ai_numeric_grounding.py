@@ -65,6 +65,25 @@ class AINumericGroundingTests(unittest.TestCase):
     def test_decimal_trailing_zero_is_format_equivalent(self) -> None:
         self.assertEqual(_numbers("Measured 1.20 seconds."), _numbers("Measured 1.2 seconds."))
 
+    def test_grouped_numeric_prefix_cannot_consume_part_of_a_longer_number(self) -> None:
+        self.assertEqual(_numbers("02 2025"), {"2", "2025"})
+        self.assertEqual(_numbers("12 3456"), {"12", "3456"})
+        self.assertEqual(_numbers("2023-02 2025-06"), {"2023", "2", "2025", "6"})
+        self.assertEqual(_numbers("USD 12 345"), {"12345"})
+
+    def test_complete_cited_month_year_entity_does_not_combine_separate_fields(self) -> None:
+        lines = ["Organization: Synthetic Market Lab.", "Role: Project Analyst.",
+                 "Employment: 2023-02 through 2025-06; full time.",
+                 "The team managed a USD 12637 budget; the applicant had no spending authority."]
+        value = _payload(lines[-1], line_start=4, line_end=4)
+        value["entities"][0].update(start_date="2023-02", end_date="2025-06", line_end=3)
+        candidates = LocalSubprocessAIEngine._validated_candidates(
+            value, source_id="SRC-MONTH-YEAR-SYNTHETIC", source_lines=lines,
+        )
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0]["entity"]["start_date"], "2023-02")
+        self.assertFalse(candidates[0]["selected"])
+
     def test_pdf_numeric_wrap_expands_only_the_adjacent_sentence_lines(self) -> None:
         statement = (
             "At Synthetic Market Lab, a Project Analyst built a 4,000+ merchant database "

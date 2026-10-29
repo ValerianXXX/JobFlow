@@ -1091,7 +1091,8 @@ Object.assign(LOCAL_ERROR_KEYS, {
   DOCUMENT_PDF_EXPORT_UNAVAILABLE:"documentWordMissing", DOCUMENT_PDF_EXPORT_FAILED:"documentPdfFailed",
   VISUAL_SOURCE_VERIFICATION_REQUIRED:"visualReviewRequired",
   VISUAL_ANALYSIS_DISABLED:"visualSetupRequired", VISUAL_PROVIDER_CONSENT_REQUIRED:"visualSetupRequired",
-  VISUAL_RESPONSE_INVALID:"visualInvalid", VISUAL_COVERAGE_INCOMPLETE:"visualInvalid"
+  VISUAL_RESPONSE_INVALID:"visualInvalid", VISUAL_COVERAGE_INCOMPLETE:"visualInvalid",
+  VISUAL_RESPONSE_REPAIR_FAILED:"visualInvalid", VISUAL_REPAIR_CONFIGURATION_INVALID:"visualSetupRequired"
 });
 function localizedErrorMessage(error) { return t(companionErrorNotice(error) || LOCAL_ERROR_KEYS[error?.code] || "localRequestFailed"); }
 function clearAttention(){document.querySelectorAll(".needs-attention").forEach(el=>el.classList.remove("needs-attention"));}

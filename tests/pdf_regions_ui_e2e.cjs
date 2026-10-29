@@ -66,6 +66,20 @@ const root = path.resolve(__dirname, "..");
     await page.waitForFunction(()=>document.querySelector("#toast").textContent.includes("pagination is incomplete"));
     await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector("#toast")).opacity)>=.99);
     await page.screenshot({path:path.join(artifacts,"incomplete-en.png")});
+    for (const [language, message] of [["中文","图片转录未完整"],["EN","Visual transcription failed"]]) {
+      await page.getByText(language,{exact:true}).click();
+      const count=await page.evaluate(()=>window.syntheticImportReceipts.length);
+      await page.locator("#documentFile").setInputFiles([]);
+      await page.locator("#documentFile").setInputFiles(path.join(root,"tests","fixtures","complete-materials-v1","mixed-portfolio_capture.png"));
+      await page.waitForFunction(expected=>window.syntheticImportReceipts.length===expected,count+1);
+      const receipt=await page.evaluate(()=>window.syntheticImportReceipts.at(-1));
+      assert.equal(receipt.status,400,JSON.stringify(receipt));
+      assert.equal(JSON.parse(receipt.body).code,"VISUAL_RESPONSE_REPAIR_FAILED");
+      await page.waitForFunction(text=>document.querySelector("#toast").textContent.includes(text),message);
+      await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector("#toast")).opacity)>=.99);
+      assert.equal(await page.locator(".source-preview").count(),0);
+      await page.screenshot({path:path.join(artifacts,language==="EN"?"visual-rejected-en.png":"visual-rejected-zh.png")});
+    }
     await page.getByText("中文",{exact:true}).click();
     const uploaded=page.waitForResponse(response=>response.request().method()==="POST" && response.url().includes("/api/import?"));
     await page.locator("#documentFile").setInputFiles(path.join(root,"tests","fixtures","material-layout-probes-v1","zh-columns.pdf"));
@@ -126,6 +140,7 @@ const root = path.resolve(__dirname, "..");
     assert.equal(result,0,error);
     const receipt=JSON.parse(output.trim().split(/\r?\n/).at(-1));
     assert.equal(receipt.temporary_state_removed,true);
+    assert.equal(receipt.invalid_visual_responses,4);
     for(const count of Object.values(receipt.database_counts))assert.equal(count,0);
     writeFileSync(path.join(artifacts,"server.json"),JSON.stringify(receipt,null,2)+"\n");
   }

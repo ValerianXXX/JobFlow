@@ -14,6 +14,7 @@ import shutil
 import sys
 import tempfile
 import threading
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -29,11 +30,13 @@ from jobops.secure_store import WindowsDPAPIStore
 FIXTURE = json.loads((ROOT / "tests/fixtures/cjk-column-response-v1.json").read_text(encoding="utf-8"))
 COMPLETE_CORPUS = json.loads((ROOT / "tests/fixtures/complete-materials-v1/manifest.json").read_text(encoding="utf-8"))
 INCOMPLETE_SOURCE_HASH = next(case["sha256"] for case in COMPLETE_CORPUS["challenges"] if case["id"] == "challenge-en-missing_middle")
+VISUAL_SOURCE_HASH = next(case["sha256"] for case in COMPLETE_CORPUS["cases"] if case["id"] == "mixed-portfolio_capture")
 
 
 class RecordedSyntheticEngine(AIAnalysisEngine):
     ready = True
     replays = 0
+    invalid_visual_responses = 0
 
     def public_status(self):
         return {"status": "READY", "mode": "AI_CORE_STRUCTURED_ANALYSIS", "provider": "SYNTHETIC_RESPONSE_REPLAY",
@@ -48,6 +51,12 @@ class RecordedSyntheticEngine(AIAnalysisEngine):
         self.replays += 1
         return deepcopy(response["payload"])
 
+    def execute_structured_task(self, request):
+        if request.get("task") != "JOBOPS_VISUAL_TRANSCRIPTION_V1" or request.get("source_sha256") != "sha256:" + VISUAL_SOURCE_HASH:
+            raise JobOpsError("SYNTHETIC_FIXTURE_MISMATCH", "Only the pinned synthetic image may exercise invalid visual output.")
+        self.invalid_visual_responses += 1
+        return '{"pages": ['
+
     def analyze_document(self, text, *, source_id, source_type):
         candidates, details = _analyze_all_chunks(self._invoke, text, source_id=source_id, source_type=source_type)
         return candidates, {"analysis_mode": "AI_CORE_ENTITY_ANALYSIS", **details,
@@ -56,6 +65,10 @@ class RecordedSyntheticEngine(AIAnalysisEngine):
 
 class FixedInputService(OnboardingCenterService):
     def preview_source(self, source_type, extension, data, **kwargs):
+        if source_type == "resume" and extension == ".png" and hashlib.sha256(data).hexdigest() == VISUAL_SOURCE_HASH:
+            with patch.dict(os.environ, {"JOBFLOW_DOCUMENT_PARSER": "", "JOBFLOW_VISUAL_ENABLE": "true",
+                                         "JOBFLOW_VISUAL_ALLOW_CONFIGURED_PROVIDER": "true", "JOBFLOW_VISUAL_MAX_REPAIR": "1"}):
+                return super().preview_source(source_type, extension, data, **kwargs)
         if source_type != "resume" or extension != ".pdf" or hashlib.sha256(data).hexdigest() not in {FIXTURE["source_sha256"], INCOMPLETE_SOURCE_HASH}:
             raise JobOpsError("SYNTHETIC_FIXTURE_ONLY", "Upload only a pinned synthetic columns or incomplete-source PDF.")
         return super().preview_source(source_type, extension, data, **kwargs)
@@ -98,6 +111,7 @@ def main():
                 counts = {name: connection.execute("SELECT COUNT(*) FROM " + name).fetchone()[0]
                           for name in ("applications", "claims", "approvals", "external_action_attempts")}
             receipt = {"synthetic_only": True, "real_model_calls": 0, "recorded_response_replays": engine.replays,
+                       "invalid_visual_responses": engine.invalid_visual_responses,
                        "source_count": len(state.get("sources", [])), "material_claim_count": len(state.get("material_claims", [])),
                        "claim_decisions": [c.get("decision") for c in state.get("material_claims", [])], "database_counts": counts}
             service.close()
