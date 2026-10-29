@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "rendered_at": "2026-10-29T16:05:27.618191Z",
+  "reviewed_at": "2026-10-29T16:07:54.268739Z",
+  "reviewer_type": "codex_visual",
+  "pages": [
+    {
+      "page": 1,
+      "filename": "readable-resume-page-1.png",
+      "render_sha256": "sha256:d1f0f51b866e1725d218c2bdfc97ec039d5a3cabc21caea2ff1f51872d75bb93",
+      "result": "PASS",
+      "reasons": [
+        "Inspected the complete 1275x1650 raster: title, each source fact, dates, section labels and footer are readable without clipping, overlap or an extra blank page.",
+        "Verified that the skill statement is under SKILLS and the synthetic university statement under EDUCATION. This is a new single-column layout, not a reconstruction of the retained complex source."
+      ]
+    }
+  ]
+}

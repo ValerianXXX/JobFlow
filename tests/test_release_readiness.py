@@ -215,11 +215,11 @@ class ReleaseReadinessContractTests(unittest.TestCase):
 
     def test_release_document_visual_evidence_rejects_a_changed_render(self) -> None:
         with project_temp() as root:
-            source = PROJECT / "tests" / "fixtures" / "release-document-qa"
-            target = root / "tests" / "fixtures" / "release-document-qa"
+            source = PROJECT / "tests" / "fixtures" / "release-readable-document-qa"
+            target = root / "tests" / "fixtures" / "release-readable-document-qa"
             target.parent.mkdir(parents=True)
             shutil.copytree(source, target)
-            page = next(target.glob("complex-master-resume-page-*.png"))
+            page = next(target.glob("readable-resume-page-*.png"))
             page.write_bytes(page.read_bytes() + b"changed")
             with self.assertRaises(JobOpsError) as raised:
                 _release_document_visual_review(root)
@@ -227,8 +227,8 @@ class ReleaseReadinessContractTests(unittest.TestCase):
 
     def test_release_document_visual_evidence_rejects_an_automated_pass(self) -> None:
         with project_temp() as root:
-            source = PROJECT / "tests" / "fixtures" / "release-document-qa"
-            target = root / "tests" / "fixtures" / "release-document-qa"
+            source = PROJECT / "tests" / "fixtures" / "release-readable-document-qa"
+            target = root / "tests" / "fixtures" / "release-readable-document-qa"
             target.parent.mkdir(parents=True)
             shutil.copytree(source, target)
             shutil.copy2(target / "automated-render-probe.json", target / "visual-review.json")

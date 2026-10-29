@@ -1,0 +1,1438 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-29T16:14:44.044451Z",
+  "base_commit": "319915d491973a4936cb933551b1ccb35aa903dd",
+  "working_tree_at_observation": true,
+  "source_file_hashes": {
+    "src/jobops/local_pdf_export.py": "sha256:79f30b657e3f16e11fe6cb2217c9b4993cad9f154032fd4a1639e0c359682fd7",
+    "src/jobops/document_qa.py": "sha256:ca40b32b3cf66ab764f1ba0c570b15b9e9ef593eff68fb1f5c43a4a99ac2fcf7",
+    "src/jobops/document_capabilities.py": "sha256:dca054a3c22ae19eaaabc7c581d5c5eba519a238a7bf519982c52e64dc797234",
+    "scripts/evaluate-local-pdf.py": "sha256:9e8a0bcc93c9f17e2f78b7caeea507fe474b1c00a6f645332027d03627dc25f7",
+    "tests/standard_resume_ui_e2e.cjs": "sha256:a525624e425d109d0c50d3f7e5c52de0cdb95fee9abee8a6ba89744383bfeb1d"
+  },
+  "environment": {
+    "platform": "Windows",
+    "python": "3.11.3",
+    "libreoffice": "26.8.2.2",
+    "libreoffice_build": "9dea406ab7695df6325b11b0e19fdca8db4b7276",
+    "official_msi_bytes": 375934976,
+    "official_msi_sha256": "ff4b911403b67ee9e6249f820f9782c44bb32c94fdaa45b0da53a8e419e5307a",
+    "authenticode": "VALID_DOCUMENT_FOUNDATION",
+    "installation_mode": "ISOLATED_ADMINISTRATIVE_EXTRACTION",
+    "clean_windows": false
+  },
+  "synthetic_only": true,
+  "model_calls": 0,
+  "model_call_cost_usd": 0,
+  "software_cost_measured": false,
+  "conversion_comparison": {
+    "schema_version": 1,
+    "observed_at": "2026-10-29T15:49:56.041058Z",
+    "python": "3.11.3",
+    "platform": "Windows",
+    "synthetic_only": true,
+    "model_calls": 0,
+    "model_call_cost_usd": 0,
+    "software_licensing_cost_measured": false,
+    "fixture_definition_sha256": "sha256:2e63e962577629d98edfbe4eb5df81a2d11c1ac58064a21a84c3e5efc5263420",
+    "visual_review": "PENDING_SEPARATE_REVIEW",
+    "materials_validated": false,
+    "results": [
+      {
+        "case": "english",
+        "language": "en",
+        "layout": "paragraphs",
+        "provider": "word",
+        "input_sha256": "sha256:fd08b10ff1120464a27c7bce4f71eae0f5eb9de6d2c2a1d93eb7e453396f617e",
+        "expected_pages": 1,
+        "conversion_ms": 4937,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:26951f14041ad3b0794ead18a1966de9dd13cbca7fd34d89ae7727cbd095c4c8",
+        "render_sha256": [
+          "sha256:c7db29f9b274720c91d2c4d7b9688e53d3e1be09d8f8e413e42043ebeb1f95a3"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "english",
+        "language": "en",
+        "layout": "paragraphs",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:fd08b10ff1120464a27c7bce4f71eae0f5eb9de6d2c2a1d93eb7e453396f617e",
+        "expected_pages": 1,
+        "conversion_ms": 12375,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:5132de67363589c926f30dabae8629b9233545cac79272aab4569990738b0fb2",
+        "render_sha256": [
+          "sha256:3345f928e0f36c9a5123b43f0896ea63c3aca4a6d4354a4dc24dc22d5078d3a7"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "chinese",
+        "language": "zh",
+        "layout": "paragraphs",
+        "provider": "word",
+        "input_sha256": "sha256:52788ec42a4540bc5946a93dfc0becd3d7182746793141a2dc1f153704129f15",
+        "expected_pages": 1,
+        "conversion_ms": 4937,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:af269e53bbb7a5cfe90962de08cb79ccc416cf090cb87d8bc120dc89895f555c",
+        "render_sha256": [
+          "sha256:19a9226dac0d2e1bbe2b4365560db759e37a082027c7d977257a1af9e3fd6d72"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "chinese",
+        "language": "zh",
+        "layout": "paragraphs",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:52788ec42a4540bc5946a93dfc0becd3d7182746793141a2dc1f153704129f15",
+        "expected_pages": 1,
+        "conversion_ms": 12171,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:b96a366d8c6911ac4e31dd5e330dcd4dec9327dbfd2186660311a24ade7400b8",
+        "render_sha256": [
+          "sha256:26d25b850f011c7671ecf3524aaff1c8701354b28624166c13ebe29e4161b07d"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "mixed",
+        "language": "mixed",
+        "layout": "paragraphs",
+        "provider": "word",
+        "input_sha256": "sha256:f47ea3d475d43658df819826594396ad0b4901d89df33636b425192e2540578c",
+        "expected_pages": 1,
+        "conversion_ms": 4609,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:8d4d6ab712c0a59a31232ee2584fd7b941b3e82a77f35a5f75f38fb8fac4074d",
+        "render_sha256": [
+          "sha256:7f2cb93d1e5d09b0cf48fa9d30057f5e5df1c5e1a410e5d0c80aa1c9ea4f3287"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "mixed",
+        "language": "mixed",
+        "layout": "paragraphs",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:f47ea3d475d43658df819826594396ad0b4901d89df33636b425192e2540578c",
+        "expected_pages": 1,
+        "conversion_ms": 12140,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:f8c3f65cf73cf20c1ce75642e205328748bcdafcb6ba1928d293ba3187c92096",
+        "render_sha256": [
+          "sha256:f1e95f22919e866b690a2e82db7fa2d31950f7e56fd03e6a109bf2771991dd29"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "table",
+        "language": "mixed",
+        "layout": "table",
+        "provider": "word",
+        "input_sha256": "sha256:94f2205e41ac23f3987789b3778bfa5dcac0a4e1b5f867d99ff8d8ff6f488809",
+        "expected_pages": 1,
+        "conversion_ms": 4609,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:2097389a4943773959925e24de592117722ee6567e8d251d935d68b7bcca6207",
+        "render_sha256": [
+          "sha256:b7c7f2930dd08570736b3d5a2c43c31a21adc5251e1ace25774c3a8bcd0ed48d"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "table",
+        "language": "mixed",
+        "layout": "table",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:94f2205e41ac23f3987789b3778bfa5dcac0a4e1b5f867d99ff8d8ff6f488809",
+        "expected_pages": 1,
+        "conversion_ms": 12204,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:40121859813ea38bfdd5fc9d119df2488b4425d2fd561c15297ffb531b603a77",
+        "render_sha256": [
+          "sha256:c102054562d0ff60a63b9f044e625172b6c2ff7afc992dc56b03dedecb760bdf"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "columns",
+        "language": "en",
+        "layout": "columns",
+        "provider": "word",
+        "input_sha256": "sha256:44b4cf2bf8545e97d3e84c518bbdac27926a38af464c01e9a85e68510a6b7fc7",
+        "expected_pages": 1,
+        "conversion_ms": 4516,
+        "missing_facts": [
+          1,
+          2
+        ],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:89961764fbfdca1e478c3add1662b80fd5cf9aa2cb5f8284e8e1a81954c56b0a",
+        "render_sha256": [
+          "sha256:3367376dfd66ca460cae1dd85ec04380e017202493a3fa7b304ddba73b2bfa2b"
+        ],
+        "checks_passed": false
+      },
+      {
+        "case": "columns",
+        "language": "en",
+        "layout": "columns",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:44b4cf2bf8545e97d3e84c518bbdac27926a38af464c01e9a85e68510a6b7fc7",
+        "expected_pages": 1,
+        "conversion_ms": 12094,
+        "missing_facts": [
+          1,
+          2
+        ],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:b88a5a200159b9058034cca1671936206d2209ec1e9bdc711fa27361f7c17a6a",
+        "render_sha256": [
+          "sha256:d9764e9dad4961e928ca17de56d607763f64c0b36ffacc06c855347994246563"
+        ],
+        "checks_passed": false
+      },
+      {
+        "case": "two-pages",
+        "language": "mixed",
+        "layout": "page_break",
+        "provider": "word",
+        "input_sha256": "sha256:c0bb6c26b156e5097e7c72bac1896ebe4b6eeaadc9b6a67c94165d1af931568e",
+        "expected_pages": 2,
+        "conversion_ms": 4672,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 2,
+        "pdf_sha256": "sha256:06458fd461f153d4bb34025b9f6f014637fb554efaf0c4d805854b5a2a8064c4",
+        "render_sha256": [
+          "sha256:22234465c8375ab4aff32c08b76e2ccbd7f620f0647e0c6a66a39a7d955b8f13",
+          "sha256:26082abcc066308f311e6d92eddd1a6f536fac55427632b48fe887669862d1d7"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "two-pages",
+        "language": "mixed",
+        "layout": "page_break",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:c0bb6c26b156e5097e7c72bac1896ebe4b6eeaadc9b6a67c94165d1af931568e",
+        "expected_pages": 2,
+        "conversion_ms": 12344,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 2,
+        "pdf_sha256": "sha256:9d7712bec35b9fa108021d0a7973d964fc58cd11bad4ad8b9e1cf5587fa1c8fe",
+        "render_sha256": [
+          "sha256:895aa5302b588f53caffb6c514c29f442aa29fd279697c773d57e90fdf7771ad",
+          "sha256:199f7b3e894db8431e9dcbf53b626d6df417b9e5161e659f81adb4aee8b48c23"
+        ],
+        "checks_passed": true
+      }
+    ]
+  },
+  "final_structural_qa": {
+    "synthetic_only": true,
+    "materials_validated": false,
+    "rows": [
+      {
+        "case": "english",
+        "provider": "word",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "english.docx",
+          "pdf_name": "english.pdf",
+          "docx_hash": "sha256:fd08b10ff1120464a27c7bce4f71eae0f5eb9de6d2c2a1d93eb7e453396f617e",
+          "pdf_hash": "sha256:26951f14041ad3b0794ead18a1966de9dd13cbca7fd34d89ae7727cbd095c4c8",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:4a3a365a4dbb8659a764ce8fe4cec53141a3fe31fbae5045b2767fe57ff8dcde",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.453324Z",
+          "reviewed_at": "2026-10-29T15:56:10.453324Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "english-1.png",
+              "render_sha256": "sha256:c7db29f9b274720c91d2c4d7b9688e53d3e1be09d8f8e413e42043ebeb1f95a3",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "english",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "english.docx",
+          "pdf_name": "english.pdf",
+          "docx_hash": "sha256:fd08b10ff1120464a27c7bce4f71eae0f5eb9de6d2c2a1d93eb7e453396f617e",
+          "pdf_hash": "sha256:5132de67363589c926f30dabae8629b9233545cac79272aab4569990738b0fb2",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:f5ee28765e9210c65f63751ea9855079597113055887320e6dece92ed8152be7",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.654992Z",
+          "reviewed_at": "2026-10-29T15:56:10.654992Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "english-1.png",
+              "render_sha256": "sha256:3345f928e0f36c9a5123b43f0896ea63c3aca4a6d4354a4dc24dc22d5078d3a7",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "chinese",
+        "provider": "word",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "chinese.docx",
+          "pdf_name": "chinese.pdf",
+          "docx_hash": "sha256:52788ec42a4540bc5946a93dfc0becd3d7182746793141a2dc1f153704129f15",
+          "pdf_hash": "sha256:af269e53bbb7a5cfe90962de08cb79ccc416cf090cb87d8bc120dc89895f555c",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:d561040fed9cb3b281a61345c5e539782e282fd236ca386943c8d580c2d6cf1e",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.671994Z",
+          "reviewed_at": "2026-10-29T15:56:10.671994Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "chinese-1.png",
+              "render_sha256": "sha256:19a9226dac0d2e1bbe2b4365560db759e37a082027c7d977257a1af9e3fd6d72",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "chinese",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "chinese.docx",
+          "pdf_name": "chinese.pdf",
+          "docx_hash": "sha256:52788ec42a4540bc5946a93dfc0becd3d7182746793141a2dc1f153704129f15",
+          "pdf_hash": "sha256:b96a366d8c6911ac4e31dd5e330dcd4dec9327dbfd2186660311a24ade7400b8",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:ec4d80ca0eefd7e62874d60de6a1b219e480f944d1c6252eb0894f5047e6babc",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.700995Z",
+          "reviewed_at": "2026-10-29T15:56:10.700995Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "chinese-1.png",
+              "render_sha256": "sha256:26d25b850f011c7671ecf3524aaff1c8701354b28624166c13ebe29e4161b07d",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "mixed",
+        "provider": "word",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "mixed.docx",
+          "pdf_name": "mixed.pdf",
+          "docx_hash": "sha256:f47ea3d475d43658df819826594396ad0b4901d89df33636b425192e2540578c",
+          "pdf_hash": "sha256:8d4d6ab712c0a59a31232ee2584fd7b941b3e82a77f35a5f75f38fb8fac4074d",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:4404f5aad704af4e92b27bde1a71bdd662705f856edfdfb726da7ab154bb11df",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.720996Z",
+          "reviewed_at": "2026-10-29T15:56:10.720996Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "mixed-1.png",
+              "render_sha256": "sha256:7f2cb93d1e5d09b0cf48fa9d30057f5e5df1c5e1a410e5d0c80aa1c9ea4f3287",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "mixed",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "mixed.docx",
+          "pdf_name": "mixed.pdf",
+          "docx_hash": "sha256:f47ea3d475d43658df819826594396ad0b4901d89df33636b425192e2540578c",
+          "pdf_hash": "sha256:f8c3f65cf73cf20c1ce75642e205328748bcdafcb6ba1928d293ba3187c92096",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:58cb35be6083ce363e666d9b29bd0db21b4539e1c23e9288d1e31ee329dfc919",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.750997Z",
+          "reviewed_at": "2026-10-29T15:56:10.750997Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "mixed-1.png",
+              "render_sha256": "sha256:f1e95f22919e866b690a2e82db7fa2d31950f7e56fd03e6a109bf2771991dd29",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "table",
+        "provider": "word",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "table.docx",
+          "pdf_name": "table.pdf",
+          "docx_hash": "sha256:94f2205e41ac23f3987789b3778bfa5dcac0a4e1b5f867d99ff8d8ff6f488809",
+          "pdf_hash": "sha256:2097389a4943773959925e24de592117722ee6567e8d251d935d68b7bcca6207",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:814a57e9aeb803753fb4bd1746b4d703a068284760628cf780aee3e159b5eb18",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.769997Z",
+          "reviewed_at": "2026-10-29T15:56:10.769997Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "table-1.png",
+              "render_sha256": "sha256:b7c7f2930dd08570736b3d5a2c43c31a21adc5251e1ace25774c3a8bcd0ed48d",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "table",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "table.docx",
+          "pdf_name": "table.pdf",
+          "docx_hash": "sha256:94f2205e41ac23f3987789b3778bfa5dcac0a4e1b5f867d99ff8d8ff6f488809",
+          "pdf_hash": "sha256:40121859813ea38bfdd5fc9d119df2488b4425d2fd561c15297ffb531b603a77",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:b1be65eef8728cfc3503bb720ad92da0c9d03a49d6205f048eec1ca0beadeb32",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.800998Z",
+          "reviewed_at": "2026-10-29T15:56:10.800998Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "table-1.png",
+              "render_sha256": "sha256:c102054562d0ff60a63b9f044e625172b6c2ff7afc992dc56b03dedecb760bdf",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "columns",
+        "provider": "word",
+        "qa": {
+          "status": "FAIL",
+          "docx_name": "columns.docx",
+          "pdf_name": "columns.pdf",
+          "docx_hash": "sha256:44b4cf2bf8545e97d3e84c518bbdac27926a38af464c01e9a85e68510a6b7fc7",
+          "pdf_hash": "sha256:89961764fbfdca1e478c3add1662b80fd5cf9aa2cb5f8284e8e1a81954c56b0a",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:ab50a2ba4229fc1b756f307517fab814c9fc12df0832c19d8ea827f678233477",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 2
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.819999Z",
+          "reviewed_at": "2026-10-29T15:56:10.819999Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "columns-1.png",
+              "render_sha256": "sha256:3367376dfd66ca460cae1dd85ec04380e017202493a3fa7b304ddba73b2bfa2b",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "columns",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "FAIL",
+          "docx_name": "columns.docx",
+          "pdf_name": "columns.pdf",
+          "docx_hash": "sha256:44b4cf2bf8545e97d3e84c518bbdac27926a38af464c01e9a85e68510a6b7fc7",
+          "pdf_hash": "sha256:b88a5a200159b9058034cca1671936206d2209ec1e9bdc711fa27361f7c17a6a",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:7386885cc4c11d70460286c558db3aa36116e78579b7341d09e2e5b30c83670a",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 2
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.841999Z",
+          "reviewed_at": "2026-10-29T15:56:10.841999Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "columns-1.png",
+              "render_sha256": "sha256:d9764e9dad4961e928ca17de56d607763f64c0b36ffacc06c855347994246563",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "two-pages",
+        "provider": "word",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "two-pages.docx",
+          "pdf_name": "two-pages.pdf",
+          "docx_hash": "sha256:c0bb6c26b156e5097e7c72bac1896ebe4b6eeaadc9b6a67c94165d1af931568e",
+          "pdf_hash": "sha256:06458fd461f153d4bb34025b9f6f014637fb554efaf0c4d805854b5a2a8064c4",
+          "page_count": 2,
+          "page_limit": 2,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:451b1f64acad0f6bccc7308094f34e57425a0aa49474d787e8471f8fdfe17dbf",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.859000Z",
+          "reviewed_at": "2026-10-29T15:56:10.859000Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "two-pages-1.png",
+              "render_sha256": "sha256:22234465c8375ab4aff32c08b76e2ccbd7f620f0647e0c6a66a39a7d955b8f13",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            },
+            {
+              "page": 2,
+              "filename": "two-pages-2.png",
+              "render_sha256": "sha256:26082abcc066308f311e6d92eddd1a6f536fac55427632b48fe887669862d1d7",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "two-pages",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "two-pages.docx",
+          "pdf_name": "two-pages.pdf",
+          "docx_hash": "sha256:c0bb6c26b156e5097e7c72bac1896ebe4b6eeaadc9b6a67c94165d1af931568e",
+          "pdf_hash": "sha256:9d7712bec35b9fa108021d0a7973d964fc58cd11bad4ad8b9e1cf5587fa1c8fe",
+          "page_count": 2,
+          "page_limit": 2,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0,
+          "visual_record_hash": "sha256:6d566d6ceec8e1464c535f38a4548e34d35e74510d3005666cb8572a256e4396",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.888001Z",
+          "reviewed_at": "2026-10-29T15:56:10.888001Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "two-pages-1.png",
+              "render_sha256": "sha256:895aa5302b588f53caffb6c514c29f442aa29fd279697c773d57e90fdf7771ad",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            },
+            {
+              "page": 2,
+              "filename": "two-pages-2.png",
+              "render_sha256": "sha256:199f7b3e894db8431e9dcbf53b626d6df417b9e5161e659f81adb4aee8b48c23",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "pre_footer_accounting_qa": {
+    "synthetic_only": true,
+    "materials_validated": false,
+    "rows": [
+      {
+        "case": "english",
+        "provider": "word",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "english.docx",
+          "pdf_name": "english.pdf",
+          "docx_hash": "sha256:fd08b10ff1120464a27c7bce4f71eae0f5eb9de6d2c2a1d93eb7e453396f617e",
+          "pdf_hash": "sha256:26951f14041ad3b0794ead18a1966de9dd13cbca7fd34d89ae7727cbd095c4c8",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0182,
+          "visual_record_hash": "sha256:4a3a365a4dbb8659a764ce8fe4cec53141a3fe31fbae5045b2767fe57ff8dcde",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.453324Z",
+          "reviewed_at": "2026-10-29T15:56:10.453324Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "english-1.png",
+              "render_sha256": "sha256:c7db29f9b274720c91d2c4d7b9688e53d3e1be09d8f8e413e42043ebeb1f95a3",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "english",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "english.docx",
+          "pdf_name": "english.pdf",
+          "docx_hash": "sha256:fd08b10ff1120464a27c7bce4f71eae0f5eb9de6d2c2a1d93eb7e453396f617e",
+          "pdf_hash": "sha256:5132de67363589c926f30dabae8629b9233545cac79272aab4569990738b0fb2",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0182,
+          "visual_record_hash": "sha256:f5ee28765e9210c65f63751ea9855079597113055887320e6dece92ed8152be7",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.654992Z",
+          "reviewed_at": "2026-10-29T15:56:10.654992Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "english-1.png",
+              "render_sha256": "sha256:3345f928e0f36c9a5123b43f0896ea63c3aca4a6d4354a4dc24dc22d5078d3a7",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "chinese",
+        "provider": "word",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "chinese.docx",
+          "pdf_name": "chinese.pdf",
+          "docx_hash": "sha256:52788ec42a4540bc5946a93dfc0becd3d7182746793141a2dc1f153704129f15",
+          "pdf_hash": "sha256:af269e53bbb7a5cfe90962de08cb79ccc416cf090cb87d8bc120dc89895f555c",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0139,
+          "visual_record_hash": "sha256:d561040fed9cb3b281a61345c5e539782e282fd236ca386943c8d580c2d6cf1e",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.671994Z",
+          "reviewed_at": "2026-10-29T15:56:10.671994Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "chinese-1.png",
+              "render_sha256": "sha256:19a9226dac0d2e1bbe2b4365560db759e37a082027c7d977257a1af9e3fd6d72",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "chinese",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "chinese.docx",
+          "pdf_name": "chinese.pdf",
+          "docx_hash": "sha256:52788ec42a4540bc5946a93dfc0becd3d7182746793141a2dc1f153704129f15",
+          "pdf_hash": "sha256:b96a366d8c6911ac4e31dd5e330dcd4dec9327dbfd2186660311a24ade7400b8",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0139,
+          "visual_record_hash": "sha256:ec4d80ca0eefd7e62874d60de6a1b219e480f944d1c6252eb0894f5047e6babc",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.700995Z",
+          "reviewed_at": "2026-10-29T15:56:10.700995Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "chinese-1.png",
+              "render_sha256": "sha256:26d25b850f011c7671ecf3524aaff1c8701354b28624166c13ebe29e4161b07d",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "mixed",
+        "provider": "word",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "mixed.docx",
+          "pdf_name": "mixed.pdf",
+          "docx_hash": "sha256:f47ea3d475d43658df819826594396ad0b4901d89df33636b425192e2540578c",
+          "pdf_hash": "sha256:8d4d6ab712c0a59a31232ee2584fd7b941b3e82a77f35a5f75f38fb8fac4074d",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0208,
+          "visual_record_hash": "sha256:4404f5aad704af4e92b27bde1a71bdd662705f856edfdfb726da7ab154bb11df",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.720996Z",
+          "reviewed_at": "2026-10-29T15:56:10.720996Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "mixed-1.png",
+              "render_sha256": "sha256:7f2cb93d1e5d09b0cf48fa9d30057f5e5df1c5e1a410e5d0c80aa1c9ea4f3287",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "mixed",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "mixed.docx",
+          "pdf_name": "mixed.pdf",
+          "docx_hash": "sha256:f47ea3d475d43658df819826594396ad0b4901d89df33636b425192e2540578c",
+          "pdf_hash": "sha256:f8c3f65cf73cf20c1ce75642e205328748bcdafcb6ba1928d293ba3187c92096",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0208,
+          "visual_record_hash": "sha256:58cb35be6083ce363e666d9b29bd0db21b4539e1c23e9288d1e31ee329dfc919",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.750997Z",
+          "reviewed_at": "2026-10-29T15:56:10.750997Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "mixed-1.png",
+              "render_sha256": "sha256:f1e95f22919e866b690a2e82db7fa2d31950f7e56fd03e6a109bf2771991dd29",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "table",
+        "provider": "word",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "table.docx",
+          "pdf_name": "table.pdf",
+          "docx_hash": "sha256:94f2205e41ac23f3987789b3778bfa5dcac0a4e1b5f867d99ff8d8ff6f488809",
+          "pdf_hash": "sha256:2097389a4943773959925e24de592117722ee6567e8d251d935d68b7bcca6207",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0192,
+          "visual_record_hash": "sha256:814a57e9aeb803753fb4bd1746b4d703a068284760628cf780aee3e159b5eb18",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.769997Z",
+          "reviewed_at": "2026-10-29T15:56:10.769997Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "table-1.png",
+              "render_sha256": "sha256:b7c7f2930dd08570736b3d5a2c43c31a21adc5251e1ace25774c3a8bcd0ed48d",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "table",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "PASS",
+          "docx_name": "table.docx",
+          "pdf_name": "table.pdf",
+          "docx_hash": "sha256:94f2205e41ac23f3987789b3778bfa5dcac0a4e1b5f867d99ff8d8ff6f488809",
+          "pdf_hash": "sha256:40121859813ea38bfdd5fc9d119df2488b4425d2fd561c15297ffb531b603a77",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0192,
+          "visual_record_hash": "sha256:b1be65eef8728cfc3503bb720ad92da0c9d03a49d6205f048eec1ca0beadeb32",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.800998Z",
+          "reviewed_at": "2026-10-29T15:56:10.800998Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "table-1.png",
+              "render_sha256": "sha256:c102054562d0ff60a63b9f044e625172b6c2ff7afc992dc56b03dedecb760bdf",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "columns",
+        "provider": "word",
+        "qa": {
+          "status": "FAIL",
+          "docx_name": "columns.docx",
+          "pdf_name": "columns.pdf",
+          "docx_hash": "sha256:44b4cf2bf8545e97d3e84c518bbdac27926a38af464c01e9a85e68510a6b7fc7",
+          "pdf_hash": "sha256:89961764fbfdca1e478c3add1662b80fd5cf9aa2cb5f8284e8e1a81954c56b0a",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0227,
+          "visual_record_hash": "sha256:ab50a2ba4229fc1b756f307517fab814c9fc12df0832c19d8ea827f678233477",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 2
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.819999Z",
+          "reviewed_at": "2026-10-29T15:56:10.819999Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "columns-1.png",
+              "render_sha256": "sha256:3367376dfd66ca460cae1dd85ec04380e017202493a3fa7b304ddba73b2bfa2b",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "columns",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "FAIL",
+          "docx_name": "columns.docx",
+          "pdf_name": "columns.pdf",
+          "docx_hash": "sha256:44b4cf2bf8545e97d3e84c518bbdac27926a38af464c01e9a85e68510a6b7fc7",
+          "pdf_hash": "sha256:b88a5a200159b9058034cca1671936206d2209ec1e9bdc711fa27361f7c17a6a",
+          "page_count": 1,
+          "page_limit": 1,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0227,
+          "visual_record_hash": "sha256:7386885cc4c11d70460286c558db3aa36116e78579b7341d09e2e5b30c83670a",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 2
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.841999Z",
+          "reviewed_at": "2026-10-29T15:56:10.841999Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "columns-1.png",
+              "render_sha256": "sha256:d9764e9dad4961e928ca17de56d607763f64c0b36ffacc06c855347994246563",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "two-pages",
+        "provider": "word",
+        "qa": {
+          "status": "FAIL",
+          "docx_name": "two-pages.docx",
+          "pdf_name": "two-pages.pdf",
+          "docx_hash": "sha256:c0bb6c26b156e5097e7c72bac1896ebe4b6eeaadc9b6a67c94165d1af931568e",
+          "pdf_hash": "sha256:06458fd461f153d4bb34025b9f6f014637fb554efaf0c4d805854b5a2a8064c4",
+          "page_count": 2,
+          "page_limit": 2,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0952,
+          "visual_record_hash": "sha256:451b1f64acad0f6bccc7308094f34e57425a0aa49474d787e8471f8fdfe17dbf",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.859000Z",
+          "reviewed_at": "2026-10-29T15:56:10.859000Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "two-pages-1.png",
+              "render_sha256": "sha256:22234465c8375ab4aff32c08b76e2ccbd7f620f0647e0c6a66a39a7d955b8f13",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            },
+            {
+              "page": 2,
+              "filename": "two-pages-2.png",
+              "render_sha256": "sha256:26082abcc066308f311e6d92eddd1a6f536fac55427632b48fe887669862d1d7",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "case": "two-pages",
+        "provider": "libreoffice",
+        "qa": {
+          "status": "FAIL",
+          "docx_name": "two-pages.docx",
+          "pdf_name": "two-pages.pdf",
+          "docx_hash": "sha256:c0bb6c26b156e5097e7c72bac1896ebe4b6eeaadc9b6a67c94165d1af931568e",
+          "pdf_hash": "sha256:9d7712bec35b9fa108021d0a7973d964fc58cd11bad4ad8b9e1cf5587fa1c8fe",
+          "page_count": 2,
+          "page_limit": 2,
+          "ats_text_present": true,
+          "placeholders": [],
+          "text_difference_ratio": 0.0952,
+          "visual_record_hash": "sha256:6d566d6ceec8e1464c535f38a4548e34d35e74510d3005666cb8572a256e4396",
+          "visual_inspection": "PASS",
+          "reading_order_issue_count": 0
+        },
+        "visual_review": {
+          "schema_version": 1,
+          "rendered_at": "2026-10-29T15:56:10.888001Z",
+          "reviewed_at": "2026-10-29T15:56:10.888001Z",
+          "reviewer_type": "codex_visual",
+          "pages": [
+            {
+              "page": 1,
+              "filename": "two-pages-1.png",
+              "render_sha256": "sha256:895aa5302b588f53caffb6c514c29f442aa29fd279697c773d57e90fdf7771ad",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            },
+            {
+              "page": 2,
+              "filename": "two-pages-2.png",
+              "render_sha256": "sha256:199f7b3e894db8431e9dcbf53b626d6df417b9e5161e659f81adb4aee8b48c23",
+              "result": "PASS",
+              "reasons": [
+                "Coding assistant inspected this synthetic raster; no clipping, overlap, unreadable glyphs or extra blank page observed. Linear text order is graded separately."
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "retained_first_ui_failure": {
+    "synthetic_only": true,
+    "pdf_created": true,
+    "pdf_sha256": "76c5ae3f8210acb71f500e394bcaa848962c02de26429ced76079308302ffd72",
+    "temporary_fixture_cleanup": "BLOCKED_BY_AUTOMATIC_POLICY_DO_NOT_RETRY",
+    "status": "FAILED_CLEANUP",
+    "explanation": "PDF was produced but cleanup failed on an over-MAX_PATH profile cache; no encrypted output was committed.",
+    "workflow_passed": false,
+    "remaining_owned_soffice_processes": 0,
+    "observed_longest_cache_path": 317
+  },
+  "retained_first_matrix": {
+    "schema_version": 1,
+    "observed_at": "2026-10-29T15:46:15.475594Z",
+    "python": "3.11.3",
+    "platform": "Windows",
+    "synthetic_only": true,
+    "model_calls": 0,
+    "model_call_cost_usd": 0,
+    "software_licensing_cost_measured": false,
+    "fixture_definition_sha256": "sha256:2e63e962577629d98edfbe4eb5df81a2d11c1ac58064a21a84c3e5efc5263420",
+    "visual_review": "PENDING_SEPARATE_REVIEW",
+    "materials_validated": false,
+    "results": [
+      {
+        "case": "english",
+        "language": "en",
+        "layout": "paragraphs",
+        "provider": "word",
+        "input_sha256": "sha256:174ae5215ca2c502b1b657877941b5ab7210e540b9040ddd2383b846dcd6e66c",
+        "expected_pages": 1,
+        "conversion_ms": 5250,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:fff8e4d49e2bf45146986b28c2ac7441a88345f56e2380555e88de144d7af603",
+        "render_sha256": [
+          "sha256:c7db29f9b274720c91d2c4d7b9688e53d3e1be09d8f8e413e42043ebeb1f95a3"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "english",
+        "language": "en",
+        "layout": "paragraphs",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:174ae5215ca2c502b1b657877941b5ab7210e540b9040ddd2383b846dcd6e66c",
+        "expected_pages": 1,
+        "checks_passed": false,
+        "error_code": "DOCX_PDF_EXPORT_FAILED",
+        "failure_stage": "OUTPUT",
+        "conversion_ms": 5172
+      },
+      {
+        "case": "chinese",
+        "language": "zh",
+        "layout": "paragraphs",
+        "provider": "word",
+        "input_sha256": "sha256:77bb253c6e4625c9b41154280addd34237972b5252d8f05152be31fd64a7f7db",
+        "expected_pages": 1,
+        "conversion_ms": 5188,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:8b17e06473fe15c02958b88365aedcd0a7aed54b7458589e6922d872f08b4451",
+        "render_sha256": [
+          "sha256:19a9226dac0d2e1bbe2b4365560db759e37a082027c7d977257a1af9e3fd6d72"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "chinese",
+        "language": "zh",
+        "layout": "paragraphs",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:77bb253c6e4625c9b41154280addd34237972b5252d8f05152be31fd64a7f7db",
+        "expected_pages": 1,
+        "checks_passed": false,
+        "error_code": "DOCX_PDF_EXPORT_FAILED",
+        "failure_stage": "OUTPUT",
+        "conversion_ms": 4625
+      },
+      {
+        "case": "mixed",
+        "language": "mixed",
+        "layout": "paragraphs",
+        "provider": "word",
+        "input_sha256": "sha256:c0f45db967e116458166baa2f3b456d792a0bee38410a1b8c136ab38a4a1c37d",
+        "expected_pages": 1,
+        "conversion_ms": 4688,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:96a580ada530cac345507e42ae618e0fa8d056e9f0c70a63eca2556749572119",
+        "render_sha256": [
+          "sha256:7f2cb93d1e5d09b0cf48fa9d30057f5e5df1c5e1a410e5d0c80aa1c9ea4f3287"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "mixed",
+        "language": "mixed",
+        "layout": "paragraphs",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:c0f45db967e116458166baa2f3b456d792a0bee38410a1b8c136ab38a4a1c37d",
+        "expected_pages": 1,
+        "checks_passed": false,
+        "error_code": "DOCX_PDF_EXPORT_FAILED",
+        "failure_stage": "OUTPUT",
+        "conversion_ms": 5484
+      },
+      {
+        "case": "table",
+        "language": "mixed",
+        "layout": "table",
+        "provider": "word",
+        "input_sha256": "sha256:29966201c3508030775a0ce100619d3f6a4c751714bc166e59f4902605b6b9bf",
+        "expected_pages": 1,
+        "conversion_ms": 6078,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:9370ed7790aeb5d7091d9d0640a2c8595bddd55494615bc233d4c2e6ce56a2db",
+        "render_sha256": [
+          "sha256:b7c7f2930dd08570736b3d5a2c43c31a21adc5251e1ace25774c3a8bcd0ed48d"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "table",
+        "language": "mixed",
+        "layout": "table",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:29966201c3508030775a0ce100619d3f6a4c751714bc166e59f4902605b6b9bf",
+        "expected_pages": 1,
+        "checks_passed": false,
+        "error_code": "DOCX_PDF_EXPORT_FAILED",
+        "failure_stage": "OUTPUT",
+        "conversion_ms": 5219
+      },
+      {
+        "case": "columns",
+        "language": "en",
+        "layout": "columns",
+        "provider": "word",
+        "input_sha256": "sha256:c76c278a8d3f43fe79ca0e5ee4edd704d64c4bcd7cf7e6c8a45bb7eb11790e3f",
+        "expected_pages": 1,
+        "conversion_ms": 4766,
+        "missing_facts": [
+          1,
+          2
+        ],
+        "blank_text_pages": [],
+        "pages": 1,
+        "pdf_sha256": "sha256:71a14a29c78dda1613d065fcb143e750aa4cea99ab51a0dabafb5225b17db844",
+        "render_sha256": [
+          "sha256:3367376dfd66ca460cae1dd85ec04380e017202493a3fa7b304ddba73b2bfa2b"
+        ],
+        "checks_passed": false
+      },
+      {
+        "case": "columns",
+        "language": "en",
+        "layout": "columns",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:c76c278a8d3f43fe79ca0e5ee4edd704d64c4bcd7cf7e6c8a45bb7eb11790e3f",
+        "expected_pages": 1,
+        "checks_passed": false,
+        "error_code": "DOCX_PDF_EXPORT_FAILED",
+        "failure_stage": "OUTPUT",
+        "conversion_ms": 4625
+      },
+      {
+        "case": "two-pages",
+        "language": "mixed",
+        "layout": "page_break",
+        "provider": "word",
+        "input_sha256": "sha256:47cf218bcda651bc9a8a7bed2a4f85620ec293421fb9531bc0476bbe5b8f88b4",
+        "expected_pages": 2,
+        "conversion_ms": 4750,
+        "missing_facts": [],
+        "blank_text_pages": [],
+        "pages": 2,
+        "pdf_sha256": "sha256:52e9056b115e25c60c97852f3140cc60aabc5ec419deb92c3dbf76d4abd03ade",
+        "render_sha256": [
+          "sha256:22234465c8375ab4aff32c08b76e2ccbd7f620f0647e0c6a66a39a7d955b8f13",
+          "sha256:26082abcc066308f311e6d92eddd1a6f536fac55427632b48fe887669862d1d7"
+        ],
+        "checks_passed": true
+      },
+      {
+        "case": "two-pages",
+        "language": "mixed",
+        "layout": "page_break",
+        "provider": "libreoffice",
+        "input_sha256": "sha256:47cf218bcda651bc9a8a7bed2a4f85620ec293421fb9531bc0476bbe5b8f88b4",
+        "expected_pages": 2,
+        "checks_passed": false,
+        "error_code": "DOCX_PDF_EXPORT_FAILED",
+        "failure_stage": "OUTPUT",
+        "conversion_ms": 4969
+      }
+    ]
+  },
+  "actual_browser": {
+    "synthetic_only": true,
+    "seeded_completed_profile": true,
+    "ai_extraction_tested": false,
+    "live_submission": false,
+    "word_conversion": "NOT_RUN",
+    "docx_sha256": "sha256:1efd02c7f0ba0f28698771f756de0ccf919a09c07ee322df701d9a76b47e571a",
+    "capabilities": {
+      "docx_generation": true,
+      "pdf_export": "DETECTED_NOT_VERIFIED",
+      "pdf_export_provider": "LIBREOFFICE",
+      "pdf_export_configuration": "VALID",
+      "page_preview": true,
+      "application_pdf_renderer": true,
+      "automatic_installation": false,
+      "real_external_actions": 0
+    },
+    "pdf_sha256": "sha256:5a30bb1885947347d25d51350cd647b6b61269bdb78583de4b40923f42177338",
+    "render_sha256": "sha256:f7e695db99a7b9b00aa216a765a66691086cb022baa2f76669183b7b16ff19f5",
+    "pdf_conversion": "REAL_LOCAL_LIBREOFFICE_PASSED",
+    "page_indicator": "第 1 / 1 页 · LibreOffice",
+    "desktop_zh": true,
+    "mobile_en": true,
+    "download_verified": true,
+    "adoption_persisted": true,
+    "session_and_origin_checks": true,
+    "browser_errors": [],
+    "external_requests": []
+  },
+  "visual_review": {
+    "reviewer_type": "codex_visual",
+    "comparison_pages": 14,
+    "standard_resume_pages": 1,
+    "readable_release_pages": 1,
+    "page_hashes_bound": true,
+    "comparison_observation": "No clipping, overlap, missing glyphs or extra blank page observed; two-column linear text remains a failure.",
+    "rejected_readable_draft": "A first flattened draft put the skill fact under EDUCATION; visual review rejected it and the exact synthetic cell association was restored before the committed review."
+  },
+  "validation": {
+    "focused_python_tests": 183,
+    "public_document_tests": 5,
+    "javascript_suites": 10,
+    "real_libreoffice_browser": "PASS_SYNTHETIC",
+    "current_head_hosted_ci": "NOT_YET_DISPATCHED",
+    "full_installer_matrix_local": "NOT_RERUN",
+    "structural_case_passes": {
+      "word": 5,
+      "libreoffice": 5
+    },
+    "structural_case_failures": {
+      "word": 1,
+      "libreoffice": 1
+    }
+  },
+  "materials_validated": false,
+  "production_signing": false,
+  "clean_installation": false,
+  "published": false,
+  "limits": [
+    "Only six fixed formatting cases, not the proposed 36-case OCR/Claim corpus.",
+    "Existing workstation has Word installed; explicit LibreOffice execution is not clean-host acceptance.",
+    "A short alias fixed the observed deep native path; filesystems without aliases were not separately tested.",
+    "Eight-token paragraph continuity plus expected-story checks are conservative, not universal semantic validation.",
+    "The original complex release sample remains unchanged and now fails linear reading order.",
+    "One earlier failed synthetic workspace cleanup was rejected by automatic policy; do not retry that deletion.",
+    "No live ATS, mailbox, independent users, publication or production deployment."
+  ]
+}

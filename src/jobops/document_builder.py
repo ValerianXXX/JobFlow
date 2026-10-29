@@ -884,6 +884,11 @@ def build_cover_letter(
 
 
 def export_docx_to_pdf(docx_path: Path, pdf_path: Path, powershell_script: Path) -> None:
+    from .local_pdf_export import export_with_libreoffice, selected_pdf_provider
+
+    if selected_pdf_provider() == "libreoffice":
+        export_with_libreoffice(docx_path, pdf_path)
+        return
     pdf_path.parent.mkdir(parents=True, exist_ok=True)
     temporary_pdf = pdf_path.with_name(f".{pdf_path.stem}.jobflow-{uuid.uuid4().hex}.tmp.pdf")
     command = [

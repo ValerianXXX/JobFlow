@@ -7,6 +7,7 @@ import subprocess
 import sys
 import zipfile
 from collections import Counter
+from copy import deepcopy
 from xml.etree import ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,6 +31,7 @@ class DocumentQAResult:
     text_difference_ratio: float
     visual_record_hash: str
     visual_inspection: str
+    reading_order_issue_count: int = 0
 
     def as_dict(self) -> dict[str, object]:
         return {**self.__dict__, "placeholders": list(self.placeholders)}
@@ -52,6 +54,56 @@ def extract_docx_text(path: Path) -> str:
                 if text.strip():
                     parts.append(text)
     return "\n".join(parts)
+
+
+def expected_pdf_text(path: Path, page_count: int) -> tuple[str, list[str]]:
+    """Account for uniform repeated headers/footers and simple page fields.
+
+    Only the unambiguous single-section case is expanded. Other section/field
+    arrangements retain the conservative original comparison. No body text is
+    removed and no observed PDF value is used to invent an expected value.
+    """
+    ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+    w = "{" + ns["w"] + "}"
+    original = extract_docx_text(path)
+    with zipfile.ZipFile(path) as archive:
+        body = ET.fromstring(archive.read("word/document.xml"))
+        headers = [name for name in archive.namelist() if re.fullmatch(r"word/header\d+\.xml", name)]
+        footers = [name for name in archive.namelist() if re.fullmatch(r"word/footer\d+\.xml", name)]
+        if len(body.findall(".//w:sectPr", ns)) != 1 or body.find(".//w:titlePg", ns) is not None or len(headers) > 1 or len(footers) > 1:
+            return original, []
+        if "word/settings.xml" in archive.namelist():
+            settings = ET.fromstring(archive.read("word/settings.xml"))
+            if settings.find("w:evenAndOddHeaders", ns) is not None:
+                return original, []
+        stories = [ET.fromstring(archive.read(name)) for name in headers + footers]
+        for story in stories:
+            if story.find(".//w:instrText", ns) is not None:
+                return original, []
+            if any(field.get(w + "instr", "").strip() not in {"PAGE", "NUMPAGES"} for field in story.findall(".//w:fldSimple", ns)):
+                return original, []
+        body_text = ["".join(node.text or "" for node in paragraph.findall(".//w:t", ns)) for paragraph in body.findall(".//w:p", ns)]
+        expected_stories = []
+        for page in range(1, page_count + 1):
+            for original_story in stories:
+                story = deepcopy(original_story)
+                for parent in story.iter():
+                    for field in list(parent):
+                        if field.tag == w + "fldSimple":
+                            value = str(page if field.get(w + "instr", "").strip() == "PAGE" else page_count)
+                            replacement = ET.Element(w + "r")
+                            ET.SubElement(replacement, w + "t").text = value
+                            parent.insert(list(parent).index(field), replacement)
+                            parent.remove(field)
+                expected_stories.extend("".join(node.text or "" for node in p.findall(".//w:t", ns)) for p in story.findall(".//w:p", ns))
+        return "\n".join(body_text + expected_stories), [text for text in expected_stories if text.strip()]
+
+
+def repeated_story_issues(stories: list[str], pdf_text: str) -> int:
+    separator = "\x1f"
+    stream = separator + separator.join(normalized_tokens(pdf_text)) + separator
+    needed = Counter(separator + separator.join(normalized_tokens(text)) + separator for text in stories)
+    return sum(max(0, count - stream.count(story)) for story, count in needed.items())
 
 
 def _bounded_pdf_result(
@@ -172,6 +224,25 @@ def compare_text(docx_text: str, pdf_text: str) -> float:
     return round(1.0 - common / denominator, 4)
 
 
+def reading_order_issues(docx_text: str, pdf_text: str) -> int:
+    """Count substantive paragraphs broken in the PDF's linear text stream.
+
+    Word counts alone accept swapped ownership or interleaved columns. Require
+    each paragraph of eight or more tokens to remain contiguous, ignoring line
+    wrapping and the same punctuation differences as the existing token check.
+    Short headings/contact labels still use the existing checks. Return counts
+    only: private paragraphs must not become diagnostic text.
+    """
+    separator = "\x1f"
+    stream = separator + separator.join(normalized_tokens(pdf_text)) + separator
+    issues = 0
+    for paragraph in docx_text.splitlines():
+        tokens = normalized_tokens(paragraph)
+        if len(tokens) >= 8 and separator + separator.join(tokens) + separator not in stream:
+            issues += 1
+    return issues
+
+
 def find_placeholders(text: str) -> tuple[str, ...]:
     patterns = r"\{\{[^{}]+\}\}|\bUNKNOWN\b|secure-ref:[A-Za-z0-9_-]+|\[\[[^\]]+\]\]|JobOps|evidence-gated"
     return tuple(sorted(set(re.findall(patterns, text, flags=re.IGNORECASE))))
@@ -257,13 +328,17 @@ def structural_qa(docx_path: Path, pdf_path: Path, page_pngs: list[Path], *, vis
     docx_text = extract_docx_text(docx_path)
     pdf_text, page_count = extract_pdf_text(pdf_path)
     placeholders = find_placeholders(docx_text + "\n" + pdf_text)
-    difference = compare_text(docx_text, pdf_text)
+    expected_text, stories = expected_pdf_text(docx_path, page_count)
+    difference = compare_text(expected_text, pdf_text)
+    order_issues = reading_order_issues(docx_text, pdf_text)
+    order_issues += repeated_story_issues(stories, pdf_text)
     visual = validate_visual_record(visual_record, page_pngs)
-    status = "PASS" if docx_text.strip() and pdf_text.strip() and not placeholders and difference <= 0.08 and len(page_pngs) == page_count and page_count <= page_limit and visual == "PASS" else "FAIL"
+    status = "PASS" if docx_text.strip() and pdf_text.strip() and not placeholders and difference <= 0.08 and not order_issues and len(page_pngs) == page_count and page_count <= page_limit and visual == "PASS" else "FAIL"
     return DocumentQAResult(
         status=status, docx_name=docx_path.name, pdf_name=pdf_path.name,
         docx_hash=sha256_file(docx_path), pdf_hash=sha256_file(pdf_path), page_count=page_count,
         page_limit=page_limit, ats_text_present=bool(docx_text.strip() and pdf_text.strip()),
         placeholders=placeholders, text_difference_ratio=difference,
         visual_record_hash=sha256_bytes(canonical_json(visual_record)), visual_inspection=visual,
+        reading_order_issue_count=order_issues,
     )
