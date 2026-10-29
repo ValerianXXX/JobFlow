@@ -1,0 +1,320 @@
+{
+  "recorded_at": "2026-10-29T17:51:09.429609+00:00",
+  "reviewer": "CODING_ASSISTANT",
+  "synthetic_only": true,
+  "scope": "39 rendered pages inspected earlier in this task; current file hashes rechecked. Chinese scan re-inspected against the failed transcription. Not an independent human or calibrated region-alignment assessment.",
+  "pages": [
+    {
+      "case": "en-single",
+      "page": 1,
+      "source_sha256": "6f85d4b53f24758f8088c3205fb7fc25315182fccad4e90c30812a623fa6573e",
+      "render_sha256": "7a6f3711f362612d465c41e5e061483b02bbb46039884ad6a216a32496c254c2",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-columns",
+      "page": 1,
+      "source_sha256": "3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+      "render_sha256": "7e447f0bd4a24bcc1414b76c43a90457a1c52af29eaadf156c12be20d782621b",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-staggered_columns",
+      "page": 1,
+      "source_sha256": "67f8484e7a71e9142d0624ada8133305ad9905c1d14d1f157dd0c38810fadc3b",
+      "render_sha256": "cef3869c357ed2fa385638ee546f18c9fa1d9a87098f2b41f66d47619915bf3c",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-wrapped",
+      "page": 1,
+      "source_sha256": "8a3c9cdbfbb8fac760d5e43a8913c6df7a0dd42d32a31c2fb20200e33f03a575",
+      "render_sha256": "381784e6b5400e20cf181e7e931b51cd27f06c92f657f49e3eb72a12b23a21b5",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-ruled_table",
+      "page": 1,
+      "source_sha256": "70f1465e9ba03375914283db0819aebf44819589284f52e686cec4eda07a7781",
+      "render_sha256": "164200d88349d7ba346276ce82647b202891e004747d1101713bc5737bdd7528",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-two_pages",
+      "page": 1,
+      "source_sha256": "ab2bd141224c293fa4e247ef23602c5c173cdf5f7812fcc8761759a7fbed7421",
+      "render_sha256": "83722b8bc79879b5b56d1dde35197d827e9c3742b9c8cc0afd438c361eaffa18",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-two_pages",
+      "page": 2,
+      "source_sha256": "ab2bd141224c293fa4e247ef23602c5c173cdf5f7812fcc8761759a7fbed7421",
+      "render_sha256": "c6f17f99b419822940b6cfeb041fbcf3f41f445bd439dca88257a3bf270bdc86",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-docx",
+      "page": 1,
+      "source_sha256": "3f08d5b3a3c9a359c161a4f0f63d7cefcd1e31e64e93f79fdf29ef843a3f668d",
+      "render_sha256": "6f7117f1dbee50c3d7b2c0856300947855e3654dc0aaa111afa534cbd4ce95c3",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-same_organization_roles",
+      "page": 1,
+      "source_sha256": "d5b1d2de5b59275996891b4c1f89765638853e40dbb7b9165e265e6832a3a368",
+      "render_sha256": "af174359893e937d08759ab8796fa1788a3bed7e1aea5dfc83946a778300eecb",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-scan",
+      "page": 1,
+      "source_sha256": "e569b2a32a2d208698ed07eaacc04e73b541256c9ccc016a977179401c96ea60",
+      "render_sha256": "6d8995176286f7b987ec5b553cbc232a3d615ebf839665233692d93c1cf2bd91",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-scanned_columns",
+      "page": 1,
+      "source_sha256": "f1222d7777a9efcf8cf68a1ebed4381d7fb3a8494ea24df4ac080dec94e2976a",
+      "render_sha256": "2e57240dafdb8e718beb47d2ef71008bfeb06ac4fd918dd166d447f6e682f342",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-portfolio",
+      "page": 1,
+      "source_sha256": "0c2981023224975931677c691bc4c8e25d00f367714b786aa4f5813bfd8683e4",
+      "render_sha256": "0c2981023224975931677c691bc4c8e25d00f367714b786aa4f5813bfd8683e4",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "en-weak_image",
+      "page": 1,
+      "source_sha256": "66476ff4922945460561c64526dd36577e23d4881ea8d20653f6a66d4dd86af2",
+      "render_sha256": "66476ff4922945460561c64526dd36577e23d4881ea8d20653f6a66d4dd86af2",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-single",
+      "page": 1,
+      "source_sha256": "3ec347fbf050fb582cb5639bb6d7b6bcb6acd83dc83ea847d00ad06aae1d6f7f",
+      "render_sha256": "0e7ac30f5d777ee0042b61063989a1c6a2f03ecc8149fa6777e7b77dcf9c870f",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-columns",
+      "page": 1,
+      "source_sha256": "fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+      "render_sha256": "26b1a7c16e10b0376157b1bdc10940bb771199340a001a28e4da6273553ca346",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-staggered_columns",
+      "page": 1,
+      "source_sha256": "2daef9d2d58e60ffdfc84a866f4281a99c9a25c3f18a685107a5c1e09c4f39ed",
+      "render_sha256": "85fbdf9ca1589ed8a8c1e25783a15fb344418fec66561e97295ae26f84aa9dc2",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-wrapped",
+      "page": 1,
+      "source_sha256": "5dea94cbbe58c7f3e9cc91b31c52d6bcd633cdeb51f9f3ee851751e04cb03cc9",
+      "render_sha256": "8c8594247b296f4833f7061ebc9fe6eac5adae4de9e8083418efe62acd937425",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-ruled_table",
+      "page": 1,
+      "source_sha256": "3a3ebb2f25882e54ce3c8ebab0da867e33081f797ba06feb608e3fea7ba7f976",
+      "render_sha256": "9f85ffef068e2cbc04a107518d72b1cad1cf5f3e82855e0087bb2de8a4d34056",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-two_pages",
+      "page": 1,
+      "source_sha256": "8d1b29801c7ce29d25a4574cfeda63f29a5d3bf877944683ae0c191595eab6f8",
+      "render_sha256": "72682964c4e23eb02649dddbc8a1502214ecf3b59a75d28e81802a2fcf2fc50f",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-two_pages",
+      "page": 2,
+      "source_sha256": "8d1b29801c7ce29d25a4574cfeda63f29a5d3bf877944683ae0c191595eab6f8",
+      "render_sha256": "c8748cf74bc880a5a7bf7ee353f28013eff9fe8b983f18dfc71a6c521a21a058",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-docx",
+      "page": 1,
+      "source_sha256": "f7b2253be42cb75bb26e2f750657b0a155b2954447f2f314c5b214dccb8187fa",
+      "render_sha256": "1b93c4350f749b1bad8ad618af3a8d68cd4df243b20bce8a662d32c517afb7a7",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-same_organization_roles",
+      "page": 1,
+      "source_sha256": "af57653c9f2b9393de98dbdecf452d18d76157642c1062309a871f95569d57b0",
+      "render_sha256": "a0f4e3c80a40f011e9f9aea28d3c5e01b19277876caf2abd3e3397f30f2bc70f",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-scan",
+      "page": 1,
+      "source_sha256": "4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+      "render_sha256": "feac0b5004eaddc3cbcf10c437d35069c2a20e03f884dda4f3a56e911caf088d",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-scanned_columns",
+      "page": 1,
+      "source_sha256": "9d57a84c236606adbaffae0e57e5f77e6d6727f32f8abf6788dc34ae4af5e98b",
+      "render_sha256": "ed98a46032c09049129c04d823ffbc71e4f1ffa0fd7a1258eab901d9c8cc2ddc",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-portfolio",
+      "page": 1,
+      "source_sha256": "591c0707f9cc103f2cd2e145ac15b73bbaefb6592f2e9d273e67400094c58155",
+      "render_sha256": "591c0707f9cc103f2cd2e145ac15b73bbaefb6592f2e9d273e67400094c58155",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "zh-weak_image",
+      "page": 1,
+      "source_sha256": "7da41813cb7e21dd1dacf89325f7e95f2e99844780fdd481ec887653878bd0cd",
+      "render_sha256": "7da41813cb7e21dd1dacf89325f7e95f2e99844780fdd481ec887653878bd0cd",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-single",
+      "page": 1,
+      "source_sha256": "21f66c2fab54d5d8ddcb906b04cf5536a5ca0b4481514db0e538964f486fac8c",
+      "render_sha256": "1980488ce226f159729c954e82a1b92d2184cf0a012ac00d2931b2708277c4be",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-columns",
+      "page": 1,
+      "source_sha256": "984979340af548abd57ce40b53c3de200a8d343ae2653d9ea84fd63cbd35d75c",
+      "render_sha256": "a82297b787aa4a51190c18f3b7f0623ccca95ab588d9d2c3e9ce26ec7250f703",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-staggered_columns",
+      "page": 1,
+      "source_sha256": "72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+      "render_sha256": "cc183daa93c3cf581ea55520526ecd573bb446cd109ba18f1a5f946baadec102",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-wrapped",
+      "page": 1,
+      "source_sha256": "2112a81aaa0ec787f16260cfa5c58b1bc1f19e43d550d2efb6bccd06cf8fe984",
+      "render_sha256": "d3edc663d0cabd43f2c7256aa51f731b62149422939c0d69620b3c22e3a0e84b",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-ruled_table",
+      "page": 1,
+      "source_sha256": "34e20e630d84ea7998e1ecca3a07b4975234e12a6809fac173605945f7d2fc1a",
+      "render_sha256": "6d6af2958860213b1c6a00d8ecb8ecd4f77b7062e4776cc9fc745e30e3ebc21a",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-two_pages",
+      "page": 1,
+      "source_sha256": "dca4bb9ef76ca704dd3c19cb05291a1b75fa80c444dad2ea9dcf8503cc8652b8",
+      "render_sha256": "6f8848a3bd2d3cdd788aef9ce28c9d274a51eee7d2dc673f04043f83aae4fdcb",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-two_pages",
+      "page": 2,
+      "source_sha256": "dca4bb9ef76ca704dd3c19cb05291a1b75fa80c444dad2ea9dcf8503cc8652b8",
+      "render_sha256": "f786a139f3627e88b53c769234024e61abad7f6dc3c8578a5b0bd49bec77d409",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-docx",
+      "page": 1,
+      "source_sha256": "5565c65a8ca2d14b85c81e9322eb8ec40146539e50c06fc4316b5b811c45a1ba",
+      "render_sha256": "9ca7d85c5ae982f84ff2da5e0daced38434fde6a89508e10a0a8eb8ee93f877e",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-same_organization_roles",
+      "page": 1,
+      "source_sha256": "6d7f9150509b8be511b6adfd0c463af67ba17c8cabd830764b74ff70bd0aeb67",
+      "render_sha256": "a40c08ea3c2964d7dba1365b1ef1133b990819e2efdc6b6674647e5119714135",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-scan",
+      "page": 1,
+      "source_sha256": "a7aa5b595261e63d2e1a3f7145c4b4d38ba357b77d3f7b253ea97cb0764d6a91",
+      "render_sha256": "99266fd7e71d6478a2c092b7b85f8af5f9c97063bc245d2b26f7fc3190a30baa",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-scanned_columns",
+      "page": 1,
+      "source_sha256": "dac7102c7f7aa0120984a82fd383b6f136371969fc3c16e2d7c88bc51b1fe025",
+      "render_sha256": "dc745cc5e9aafe5264387f11435a0e67c8bc677f6aa43e1595582ca9c5add3e6",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-portfolio",
+      "page": 1,
+      "source_sha256": "c17346b9572c9b37a9b7f974c2beffb0b2e310131a2eefa5ac977dcee5bd48d4",
+      "render_sha256": "c17346b9572c9b37a9b7f974c2beffb0b2e310131a2eefa5ac977dcee5bd48d4",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    },
+    {
+      "case": "mixed-weak_image",
+      "page": 1,
+      "source_sha256": "331bdf6697aea17fc7be36e1316af16ed635436c9797b2aaa8798dc7b53c0627",
+      "render_sha256": "331bdf6697aea17fc7be36e1316af16ed635436c9797b2aaa8798dc7b53c0627",
+      "review": "VISUALLY_INSPECTED",
+      "finding": "No clipping, overlap, missing glyphs or unintended blank page observed; weak-image degradation is intentional."
+    }
+  ]
+}

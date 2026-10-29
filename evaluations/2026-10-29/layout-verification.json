@@ -1,0 +1,83 @@
+{
+  "recorded_at": "2026-10-29T17:55:31.581291+00:00",
+  "base_commit": "756b0eed99cf281a1f624788ce0cb494af0d30c9",
+  "branch": "codex/jobflow-evidence-layout-20261029",
+  "working_tree_verification": true,
+  "source_lf_sha256": {
+    "src/jobops/__init__.py": "e7d4578e5f448b146cef26b75d3b1d45c14004138b9ccccb46aa1c1d1112f4e3",
+    "src/jobops/ai_runtime.py": "7ee84bcc8bc66cb4d074810ebc7db23345659db986953f2df2f77db0d4222626",
+    "src/jobops/_pdf_region_worker.py": "acefe34325c958b599ca8315006feb2c0386f4ce5bc9245740c7a1185b8c0d92",
+    "src/jobops/local_document_parser.py": "c68099ac3a91cdec03f1eedc96ba2fd69d823f8219df703d1fbc0b2df210e104",
+    "src/jobops/onboarding_center.py": "cf61f3dea5c8b933a5d2bc038c8374e9208e76147b0163a477eedeb41e785de9",
+    "src/jobops/ui/app.js": "68e24f9dac2ab43f0b7a1e1b8cc16c8e5934396147427e12ddb3958b2dd49083",
+    "src/jobops/ui/workbench.js": "646cb1db9b6cbfced05f77cb089e5d94b53ef9fc9df68ae147571466a02b814b",
+    "src/jobops/ui/styles.css": "f49dc51fc6fb09f9a7e001be52a13226a06a62c8cc8e09dad91ea7d30a38dd6d"
+  },
+  "environment": {
+    "os": "Windows",
+    "python": "3.11.3",
+    "node": "24.19.0",
+    "browser": "installed Edge",
+    "storage": "real Windows DPAPI"
+  },
+  "tests": [
+    {
+      "command": "python -m unittest discover -s tests -p test_ai*.py",
+      "passed": 57
+    },
+    {
+      "suite_patterns": [
+        "test_pdf_regions.py",
+        "test_local_document_parser.py",
+        "test_material_corpus.py",
+        "test_layout_claim_evaluation.py",
+        "test_onboarding_center.py"
+      ],
+      "passed": 94
+    },
+    {
+      "command": "python -m unittest discover -s tests -p test_cjk_validator_evaluation.py",
+      "passed": 3
+    },
+    {
+      "command": "python -m unittest discover -s tests -p test_public_docs.py",
+      "passed": 5
+    },
+    {
+      "command": "node scripts/run-javascript-e2e.cjs",
+      "passed_suites": 11
+    },
+    {
+      "command": "python -m jobops.compatibility",
+      "status": "PASS",
+      "scope": "OFFLINE_SOURCE_CONSISTENCY_ONLY"
+    }
+  ],
+  "targeted_before_fix": {
+    "test_count": 6,
+    "failures": 3
+  },
+  "unique_related_python_tests": 159,
+  "full_local_installer_suite": "NOT_RERUN",
+  "hosted_current_head": "NOT_YET_DISPATCHED_AT_RECORDING",
+  "wheel": {
+    "sha256": "5139247ecee573c7906feec389e36df5b60ac70d640198e6fbd6b15b23bb60c5",
+    "contains_region_worker": true,
+    "matching_ui_protocol": 40,
+    "production_signed": false
+  },
+  "screenshots": {
+    "docs/screenshots/pdf-regions-desktop-source.png": "8c7acce54e79c76b150c61be9fb14f004e4660632c7445d40121ec73f0b2419a",
+    "docs/screenshots/pdf-regions-mobile-source.png": "142453ccce2a45d33f3aebf4387c2182180d8349ef52770d055d06d9581c78c6"
+  },
+  "limits": [
+    "Short correlated layout probes are not 36 complete materials.",
+    "Scanned-Chinese live transcription failed factual accuracy.",
+    "Browser test uses a recorded synthetic model response; no real applicant, mailbox or employer action.",
+    "Bounded knowledge lookup found no configured root in this isolated worktree; no personal vault was used.",
+    "Trusted production signing and independent clean Windows acceptance remain unavailable."
+  ],
+  "live_followup_adapter_requests": 3,
+  "live_followup_limit": 4,
+  "full_goal_completion_proven": false
+}

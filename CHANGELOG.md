@@ -4,6 +4,10 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Fix uncased Chinese sentences being rejected as all-uppercase headings. Preserve factual grounding, numeric, punctuation, length and approval checks. Same-output replay isolates this validator repair; the separate scanned-Chinese observation still contains transcription errors and is not accepted as accurate.
+- Add opt-in `pdf_regions` text extraction through the existing bounded local worker/review boundary. Reorder supported column layouts, retain ruled-table rows, reject missing text pages without partial success or cloud fallback, and keep the existing parser as default. Record 36 short diagnostic probes separately from full-material acceptance.
+- Collapse long source-coordinate details and add keyboard-scrollable original-page zoom/fit controls in both UI languages. Advance the local UI protocol to 40; Companion remains 0.9.2/protocol 2. Verify actual synthetic upload, parsing, original rendering and pending-Claim retention with a recorded model response, separately from live Hermes observations.
+
 - Add an explicit local LibreOffice PDF exporter with isolated profile/cache/process ownership, bounded execution, active-document rejection and retained DOCX on failure. Keep Word as the default and existing visual/text/approval gates. Fix long Windows office-cache cleanup and native path handling; compare six synthetic layouts without hiding the two-column linear-text failure.
 - Show the selected PDF provider in both UI languages and retain the actual provider with generated previews. Bump the local UI protocol to 39; Companion remains 0.9.2/protocol 2.
 - Reject interleaved substantive paragraphs and swapped numeric/ownership wording even when word counts match. Account for uniform repeated DOCX headers/footers and simple page counters without raising the existing token threshold. Retain the former complex release sample as a negative regression and add a separately reviewed single-column acceptance sample with the same synthetic facts.

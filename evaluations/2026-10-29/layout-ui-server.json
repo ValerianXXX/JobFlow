@@ -1,0 +1,21 @@
+{
+  "synthetic_only": true,
+  "real_model_calls": 0,
+  "recorded_response_replays": 1,
+  "source_count": 1,
+  "material_claim_count": 5,
+  "claim_decisions": [
+    "PENDING",
+    "PENDING",
+    "PENDING",
+    "PENDING",
+    "PENDING"
+  ],
+  "database_counts": {
+    "applications": 0,
+    "claims": 0,
+    "approvals": 0,
+    "external_action_attempts": 0
+  },
+  "temporary_state_removed": true
+}

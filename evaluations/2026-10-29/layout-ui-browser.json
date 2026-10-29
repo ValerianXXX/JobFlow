@@ -1,0 +1,21 @@
+{
+  "synthetic_only": true,
+  "model": "RECORDED_RESPONSE_REPLAY",
+  "desktop": "zh",
+  "mobile": "en",
+  "source_hash_bound": true,
+  "unconfirmed_selection": "BLOCKED",
+  "candidate_count": 5,
+  "after_reload": {
+    "decisions": [
+      "PENDING",
+      "PENDING",
+      "PENDING",
+      "PENDING",
+      "PENDING"
+    ],
+    "sources": 1
+  },
+  "page_errors": [],
+  "external_requests": []
+}

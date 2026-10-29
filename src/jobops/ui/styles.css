@@ -722,6 +722,11 @@ body.is-busy :is(#emergencyStop,#cancelGuidedIntake,#pauseAuthorizedDiscovery,#k
 .source-comparison.show-original{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 .source-original{position:sticky;top:12px}
 .source-page-image{position:relative;background:white}
+.source-image-viewport{max-width:100%;max-height:65vh;overflow:auto;margin-top:8px}
+.source-image-viewport:focus-visible{outline:2px solid #217494;outline-offset:2px}
+.source-page-image.source-zoomed{width:1100px;max-width:none}
+.source-region-details{margin:12px 0;overflow-wrap:anywhere;font-size:.85rem}
+.source-region-details summary{cursor:pointer}
 .source-page-image img{display:block;width:100%;height:auto}
 .source-page-image svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .source-page-image rect{fill:rgba(33,116,148,.08);stroke:#217494;stroke-width:.002}

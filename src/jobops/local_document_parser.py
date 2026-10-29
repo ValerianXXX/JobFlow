@@ -1,4 +1,4 @@
-"""Opt-in native Docling adapter; no OCR weights, remote services or Claim approval."""
+"""Opt-in local PDF adapters; no OCR weights, remote services or Claim approval."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import base64
 import json
 import math
 import os
+from pathlib import Path
 import subprocess
 import sys
 import time
@@ -101,7 +102,7 @@ def validate_native_result(raw: bytes, result: dict) -> tuple[str, dict]:
     }
 
 
-def read_local_pdf(raw: bytes) -> tuple[str, dict]:
+def _read_pdf_worker(raw: bytes, worker_module: str) -> tuple[str, dict]:
     if not raw or len(raw) > 16 * 1024 * 1024:
         raise JobOpsError(
             "LOCAL_PARSER_LIMIT",
@@ -113,10 +114,11 @@ def read_local_pdf(raw: bytes) -> tuple[str, dict]:
         "HF_HUB_OFFLINE": "1",
         "TRANSFORMERS_OFFLINE": "1",
         "PYTHONUTF8": "1",
+        "PYTHONPATH": str(Path(__file__).resolve().parents[1]),
     }
     try:
         completed = subprocess.run(
-            [sys.executable, "-m", "jobops._docling_worker"],
+            [sys.executable, "-m", worker_module],
             input=json.dumps(
                 {"pdf_base64": base64.b64encode(raw).decode("ascii")}
             ).encode("utf-8"),
@@ -153,6 +155,12 @@ def read_local_pdf(raw: bytes) -> tuple[str, dict]:
                 "The optional local parser could not read this PDF. Use the existing text/vision path or check the original.",
             )
         text, metadata = validate_native_result(raw, response["result"])
+        metadata["local_parser_column_pages"] = sum(
+            page.get("column_reordered") is True for page in response["result"]["pages"]
+        )
+        metadata["local_parser_table_pages"] = sum(
+            page.get("table_order_retained") is True for page in response["result"]["pages"]
+        )
         metadata["visual_elapsed_ms"] = round((time.monotonic() - started) * 1000)
         return text, metadata
     except JobOpsError:
@@ -168,3 +176,15 @@ def read_local_pdf(raw: bytes) -> tuple[str, dict]:
             "The optional local PDF parser failed; no source was imported.",
             failure_stage="INVALID_RESULT",
         ) from exc
+
+
+def read_local_pdf(raw: bytes) -> tuple[str, dict]:
+    return _read_pdf_worker(raw, "jobops._docling_worker")
+
+
+def read_region_pdf(raw: bytes) -> tuple[str, dict]:
+    """Opt-in local geometry extraction; the original still requires review."""
+    text, metadata = _read_pdf_worker(raw, "jobops._pdf_region_worker")
+    metadata["visual_mode"] = "LOCAL_PDF_REGIONS_UNVERIFIED"
+    metadata["pdf_extraction_strategy"] = "LOCAL_PDF_REGIONS"
+    return text, metadata

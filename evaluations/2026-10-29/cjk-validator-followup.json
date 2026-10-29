@@ -1,0 +1,1904 @@
+{
+  "observed_at": "2026-10-29T17:31:37.367988Z",
+  "synthetic_only": true,
+  "adapter_request_limit": 4,
+  "before_commit": "756b0eed99cf281a1f624788ce0cb494af0d30c9",
+  "working_tree_observation": true,
+  "manifest_lf_sha256": "b7a4945984b49e5fc5e73e2ef8469bd07dbc51e92d41b7340675a165e1f36454",
+  "before_validator_lf_sha256": "bee216c4e0596e0fefa2c35356eacf7153e1091e46e23c302c7cfb19e6a6870b",
+  "source_lf_sha256": {
+    "src/jobops/ai_runtime.py": "7ee84bcc8bc66cb4d074810ebc7db23345659db986953f2df2f77db0d4222626",
+    "src/jobops/local_document_parser.py": "c68099ac3a91cdec03f1eedc96ba2fd69d823f8219df703d1fbc0b2df210e104",
+    "src/jobops/_pdf_region_worker.py": "acefe34325c958b599ca8315006feb2c0386f4ce5bc9245740c7a1185b8c0d92",
+    "src/jobops/onboarding_center.py": "cf61f3dea5c8b933a5d2bc038c8374e9208e76147b0163a477eedeb41e785de9",
+    "scripts/evaluate-layout-claims.py": "9606af21bd472d55bf801e860b2a1cd630eeea655509e4ec5d5fba405cec6c75",
+    "scripts/evaluate-cjk-validator.py": "5ede07136ab9e4d412388e933b21b810cab3c69c17b30cc394c3df937aaa8bb0"
+  },
+  "model_route_before": {
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "hermes_commit": "afe53708ee7400919ae3e17a6dde9b02629e5c87"
+  },
+  "arms": [
+    {
+      "case": "zh-columns",
+      "mode": "pdf_regions",
+      "source_sha256": "fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidates": [
+        {
+          "ai_reason": "组织、职位和日期均由相邻行明确给出。",
+          "candidate_id": "EXT-27FB3C4A2F3C",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-4D7ADF322A2E",
+            "entity_id": "ENT-8EEE136FA019",
+            "entity_key": "work-1",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "合成青杉实验室02",
+            "role": "分析员",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-8EEE136FA019",
+          "provenance": {
+            "ai_line_end": 3,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 3,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.1314015151515152,
+                  0.194640522875817,
+                  0.14483585858585862
+                ],
+                "line_end": 2,
+                "line_start": 2,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.17180555555555563,
+                  0.2025653594771242,
+                  0.18523989898989904
+                ],
+                "line_end": 3,
+                "line_start": 3,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "合成青杉实验室02的分析员任职日期为2023-2024。"
+        },
+        {
+          "ai_reason": "明确保留团队归属及门店数量。",
+          "candidate_id": "EXT-73F952BA0E11",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-4D7ADF322A2E",
+            "entity_id": "ENT-8EEE136FA019",
+            "entity_key": "work-1",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "合成青杉实验室02",
+            "role": "分析员",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-8EEE136FA019",
+          "provenance": {
+            "ai_line_end": 4,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 4,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.1314015151515152,
+                  0.194640522875817,
+                  0.14483585858585862
+                ],
+                "line_end": 2,
+                "line_start": 2,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.17180555555555563,
+                  0.2025653594771242,
+                  0.18523989898989904
+                ],
+                "line_end": 3,
+                "line_start": 3,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.21220959595959601,
+                  0.2273202614379085,
+                  0.22564393939393945
+                ],
+                "line_end": 4,
+                "line_start": 4,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "在合成青杉实验室02担任分析员期间，团队核验了14家门店。"
+        },
+        {
+          "ai_reason": "明确陈述申请人的工作及报告数量。",
+          "candidate_id": "EXT-1F57A211CA8B",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2024",
+            "entity_fingerprint": "ENTKEY-4D7ADF322A2E",
+            "entity_id": "ENT-8EEE136FA019",
+            "entity_key": "work-1",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "合成青杉实验室02",
+            "role": "分析员",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-8EEE136FA019",
+          "provenance": {
+            "ai_line_end": 5,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 5,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.1314015151515152,
+                  0.194640522875817,
+                  0.14483585858585862
+                ],
+                "line_end": 2,
+                "line_start": 2,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.17180555555555563,
+                  0.2025653594771242,
+                  0.18523989898989904
+                ],
+                "line_end": 3,
+                "line_start": 3,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.21220959595959601,
+                  0.2273202614379085,
+                  0.22564393939393945
+                ],
+                "line_end": 4,
+                "line_start": 4,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.06209150326797386,
+                  0.25261363636363643,
+                  0.2345751633986928,
+                  0.26604797979797984
+                ],
+                "line_end": 5,
+                "line_start": 5,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "在合成青杉实验室02担任分析员期间，申请人编写了8份报告。"
+        },
+        {
+          "ai_reason": "明确保留团队归属、预算金额和币种。",
+          "candidate_id": "EXT-D2353959C390",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-D1971B0D3BF4",
+            "entity_id": "ENT-FEE190848268",
+            "entity_key": "work-2",
+            "entity_type": "work",
+            "line_end": 8,
+            "line_start": 7,
+            "normalization_codes": [],
+            "organization": "合成海港研究所02",
+            "role": "研究员",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-FEE190848268",
+          "provenance": {
+            "ai_line_end": 9,
+            "ai_line_start": 7,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 9,
+            "line_start": 7,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.1314015151515152,
+                  0.6848366013071896,
+                  0.14483585858585862
+                ],
+                "line_end": 7,
+                "line_start": 7,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.17180555555555563,
+                  0.6927614379084968,
+                  0.18523989898989904
+                ],
+                "line_end": 8,
+                "line_start": 8,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.21220959595959601,
+                  0.7447712418300654,
+                  0.22564393939393945
+                ],
+                "line_end": 9,
+                "line_start": 9,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "在合成海港研究所02担任研究员期间，团队管理预算12502美元。"
+        },
+        {
+          "ai_reason": "明确陈述申请人的测试工作及场景数量。",
+          "candidate_id": "EXT-B9A40F053276",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-D1971B0D3BF4",
+            "entity_id": "ENT-FEE190848268",
+            "entity_key": "work-2",
+            "entity_type": "work",
+            "line_end": 8,
+            "line_start": 7,
+            "normalization_codes": [],
+            "organization": "合成海港研究所02",
+            "role": "研究员",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-FEE190848268",
+          "provenance": {
+            "ai_line_end": 10,
+            "ai_line_start": 7,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 10,
+            "line_start": 7,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.1314015151515152,
+                  0.6848366013071896,
+                  0.14483585858585862
+                ],
+                "line_end": 7,
+                "line_start": 7,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.17180555555555563,
+                  0.6927614379084968,
+                  0.18523989898989904
+                ],
+                "line_end": 8,
+                "line_start": 8,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.21220959595959601,
+                  0.7447712418300654,
+                  0.22564393939393945
+                ],
+                "line_end": 9,
+                "line_start": 9,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.5522875816993464,
+                  0.25261363636363643,
+                  0.7338562091503268,
+                  0.26604797979797984
+                ],
+                "line_end": 10,
+                "line_start": 10,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "在合成海港研究所02担任研究员期间，申请人测试了26个场景。"
+        }
+      ],
+      "analyzed_text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT\n合成青杉实验室02\n分析员 | 2023-2024\n团队核验了14家门店。\n申请人编写了8份报告。\nOriginal synthetic fixture | Page 1\n合成海港研究所02\n研究员 | 2021-2022\n团队管理预算12502美元。\n申请人测试了26个场景。",
+      "assessment": {
+        "expected_facts": 4,
+        "matched_facts": 4,
+        "facts": [
+          {
+            "organization": "合成青杉实验室02",
+            "number": "14",
+            "owner": "team",
+            "matched_candidate_ids": [
+              "EXT-73F952BA0E11"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "合成青杉实验室02",
+            "number": "8",
+            "owner": "applicant",
+            "matched_candidate_ids": [
+              "EXT-1F57A211CA8B"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "合成海港研究所02",
+            "number": "12502",
+            "owner": "team",
+            "matched_candidate_ids": [
+              "EXT-D2353959C390"
+            ],
+            "issues": []
+          },
+          {
+            "organization": "合成海港研究所02",
+            "number": "26",
+            "owner": "applicant",
+            "matched_candidate_ids": [
+              "EXT-B9A40F053276"
+            ],
+            "issues": []
+          }
+        ],
+        "numeric_errors": null,
+        "misattributions": null,
+        "manual_adjudication_required": true
+      },
+      "extraction_summary": {
+        "raw_lines": 10,
+        "reconstructed_blocks": 2,
+        "filtered_noise_lines": 0,
+        "claim_candidates": 5,
+        "non_claim_blocks": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "document_page_count": 1,
+        "visual_regions": [
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.044018939393939464,
+              0.4093856209150326,
+              0.05538257575757583
+            ],
+            "line_start": 1,
+            "line_end": 1
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.1314015151515152,
+              0.194640522875817,
+              0.14483585858585862
+            ],
+            "line_start": 2,
+            "line_end": 2
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.17180555555555563,
+              0.2025653594771242,
+              0.18523989898989904
+            ],
+            "line_start": 3,
+            "line_end": 3
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.21220959595959601,
+              0.2273202614379085,
+              0.22564393939393945
+            ],
+            "line_start": 4,
+            "line_end": 4
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.25261363636363643,
+              0.2345751633986928,
+              0.26604797979797984
+            ],
+            "line_start": 5,
+            "line_end": 5
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.06209150326797386,
+              0.9467967171717172,
+              0.2776062091503268,
+              0.9581603535353536
+            ],
+            "line_start": 6,
+            "line_end": 6
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.1314015151515152,
+              0.6848366013071896,
+              0.14483585858585862
+            ],
+            "line_start": 7,
+            "line_end": 7
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.17180555555555563,
+              0.6927614379084968,
+              0.18523989898989904
+            ],
+            "line_start": 8,
+            "line_end": 8
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.21220959595959601,
+              0.7447712418300654,
+              0.22564393939393945
+            ],
+            "line_start": 9,
+            "line_end": 9
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.5522875816993464,
+              0.25261363636363643,
+              0.7338562091503268,
+              0.26604797979797984
+            ],
+            "line_start": 10,
+            "line_end": 10
+          }
+        ],
+        "visual_source_sha256": "sha256:fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+        "visual_verification_required": true,
+        "visual_mode": "LOCAL_PDF_REGIONS_UNVERIFIED",
+        "automatic_claim_selection": false,
+        "local_parser_version": "pdf-regions-1",
+        "local_parser_backend_version": "0.11.9",
+        "model_calls": 0,
+        "visual_cost_usd": 0.0,
+        "local_parser_column_pages": 1,
+        "local_parser_table_pages": 0,
+        "visual_elapsed_ms": 578,
+        "pdf_extraction_strategy": "LOCAL_PDF_REGIONS",
+        "document_quality": {
+          "schema_version": 1,
+          "status": "PASS",
+          "extension": ".pdf",
+          "page_count": 1,
+          "character_count": 181,
+          "nonempty_line_count": 10,
+          "wordish_character_count": 147,
+          "replacement_character_count": 0,
+          "private_use_glyph_count": 0,
+          "control_character_count": 0,
+          "short_line_ratio": 0.0,
+          "long_line_count": 0,
+          "unique_line_ratio": 1.0,
+          "characters_per_page": 181.0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "contains_document_text": false
+        },
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "ai_candidates": 5,
+        "ai_entities": 2,
+        "ai_chunks": 1,
+        "ai_chunking_applied": false,
+        "ai_input_characters": 181,
+        "ai_covered_characters": 181,
+        "ai_input_truncated": false,
+        "segmented_oversize_lines": 0,
+        "ai_repair_attempted": false,
+        "ai_repair_succeeded": false,
+        "ai_repair_count": 0,
+        "quality_gate_version": 5,
+        "filtered_candidate_count": 1,
+        "filtered_candidate_reasons": {
+          "STATEMENT_FRAGMENT": 1
+        },
+        "candidate_filter_applied": true,
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0,
+        "classification_review_candidate_count": 0,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6"
+      },
+      "retained_original_matches": true,
+      "unconfirmed_selection": "VISUAL_SOURCE_VERIFICATION_REQUIRED",
+      "material_claims": 0,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 18250,
+      "adapter_requests": 1
+    },
+    {
+      "case": "zh-scan",
+      "mode": "visual",
+      "source_sha256": "4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidates": [
+        {
+          "ai_reason": "组织、职位及日期均由相邻原文直接陈述。",
+          "candidate_id": "EXT-DD91CC11EBD3",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-56E41A813E6D",
+            "entity_id": "ENT-C39A26165269",
+            "entity_key": "work-1",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "合成青杉实验室09",
+            "role": "分析员",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-C39A26165269",
+          "provenance": {
+            "ai_line_end": 3,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 3,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.073,
+                  0.143,
+                  0.217,
+                  0.159
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 2,
+                "line_start": 2,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.178,
+                  0.216,
+                  0.194
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 3,
+                "line_start": 3,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "合成青杉实验室09的分析员任职日期为2023-2022。"
+        },
+        {
+          "ai_reason": "原文明确将核验工作归于团队并给出门店数量。",
+          "candidate_id": "EXT-2ED6CA79544D",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-56E41A813E6D",
+            "entity_id": "ENT-C39A26165269",
+            "entity_key": "work-1",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "合成青杉实验室09",
+            "role": "分析员",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-C39A26165269",
+          "provenance": {
+            "ai_line_end": 4,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 4,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.073,
+                  0.143,
+                  0.217,
+                  0.159
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 2,
+                "line_start": 2,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.178,
+                  0.216,
+                  0.194
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 3,
+                "line_start": 3,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.214,
+                  0.245,
+                  0.229
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 4,
+                "line_start": 4,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "在合成青杉实验室09担任分析员期间，团队核验了21家门店。"
+        },
+        {
+          "ai_reason": "原文明确陈述申请人编写报告及其数量。",
+          "candidate_id": "EXT-02D170F69595",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-56E41A813E6D",
+            "entity_id": "ENT-C39A26165269",
+            "entity_key": "work-1",
+            "entity_type": "work",
+            "line_end": 3,
+            "line_start": 2,
+            "normalization_codes": [],
+            "organization": "合成青杉实验室09",
+            "role": "分析员",
+            "start_date": "2023"
+          },
+          "entity_id": "ENT-C39A26165269",
+          "provenance": {
+            "ai_line_end": 5,
+            "ai_line_start": 2,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 5,
+            "line_start": 2,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.073,
+                  0.143,
+                  0.217,
+                  0.159
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 2,
+                "line_start": 2,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.178,
+                  0.216,
+                  0.194
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 3,
+                "line_start": 3,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.214,
+                  0.245,
+                  0.229
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 4,
+                "line_start": 4,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.25,
+                  0.248,
+                  0.266
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 5,
+                "line_start": 5,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "在合成青杉实验室09担任分析员期间，申请人编写了5份报告。"
+        },
+        {
+          "ai_reason": "原文明确陈述预算管理责任及预算原始数值。",
+          "candidate_id": "EXT-D4798328F892",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-BC4BFF10A76D",
+            "entity_id": "ENT-D10DE35457F7",
+            "entity_key": "work-2",
+            "entity_type": "work",
+            "line_end": 7,
+            "line_start": 6,
+            "normalization_codes": [],
+            "organization": "合成深海研究所09",
+            "role": "研究员",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-D10DE35457F7",
+          "provenance": {
+            "ai_line_end": 8,
+            "ai_line_start": 6,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 8,
+            "line_start": 6,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.073,
+                  0.333,
+                  0.218,
+                  0.349
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 6,
+                "line_start": 6,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.368,
+                  0.217,
+                  0.384
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 7,
+                "line_start": 7,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.404,
+                  0.268,
+                  0.42
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 8,
+                "line_start": 8,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "在合成深海研究所09担任研究员期间，本人管理预算250S美元。"
+        },
+        {
+          "ai_reason": "原文明确陈述申请人测试场景及其数量。",
+          "candidate_id": "EXT-C17EE2FE893B",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022",
+            "entity_fingerprint": "ENTKEY-BC4BFF10A76D",
+            "entity_id": "ENT-D10DE35457F7",
+            "entity_key": "work-2",
+            "entity_type": "work",
+            "line_end": 7,
+            "line_start": 6,
+            "normalization_codes": [],
+            "organization": "合成深海研究所09",
+            "role": "研究员",
+            "start_date": "2021"
+          },
+          "entity_id": "ENT-D10DE35457F7",
+          "provenance": {
+            "ai_line_end": 9,
+            "ai_line_start": 6,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 9,
+            "line_start": 6,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": [],
+            "visual_regions": [
+              {
+                "bbox": [
+                  0.073,
+                  0.333,
+                  0.218,
+                  0.349
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 6,
+                "line_start": 6,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.368,
+                  0.217,
+                  0.384
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 7,
+                "line_start": 7,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.404,
+                  0.268,
+                  0.42
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 8,
+                "line_start": 8,
+                "page": 1
+              },
+              {
+                "bbox": [
+                  0.073,
+                  0.44,
+                  0.263,
+                  0.456
+                ],
+                "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e",
+                "line_end": 9,
+                "line_start": 9,
+                "page": 1
+              }
+            ],
+            "visual_source_sha256": "sha256:4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+            "visual_verified": false
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "在合成深海研究所09担任研究员期间，申请人测试了33个场景。"
+        }
+      ],
+      "analyzed_text": "SYNTHETIC MATERIAL - NOT A REAL APPLICANT\n合成青杉实验室09\n分析员 | 2023-2022\n团队核验了21家门店。\n申请人编写了5份报告。\n合成深海研究所09\n研究员 | 2021-2022\n本人管理预算250S美元。\n申请人测试了33个场景。",
+      "assessment": {
+        "expected_facts": 4,
+        "matched_facts": 0,
+        "facts": [
+          {
+            "organization": "合成青杉实验室09",
+            "number": "21",
+            "owner": "team",
+            "matched_candidate_ids": [],
+            "issues": [
+              "ENTITY_DATES_MISSING_OR_CHANGED"
+            ]
+          },
+          {
+            "organization": "合成青杉实验室09",
+            "number": "15",
+            "owner": "applicant",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成海港研究所09",
+            "number": "12509",
+            "owner": "team",
+            "matched_candidate_ids": [],
+            "issues": []
+          },
+          {
+            "organization": "合成海港研究所09",
+            "number": "33",
+            "owner": "applicant",
+            "matched_candidate_ids": [],
+            "issues": [
+              "ENTITY_MISMATCH"
+            ]
+          }
+        ],
+        "numeric_errors": null,
+        "misattributions": null,
+        "manual_adjudication_required": true
+      },
+      "extraction_summary": {
+        "raw_lines": 9,
+        "reconstructed_blocks": 2,
+        "filtered_noise_lines": 0,
+        "claim_candidates": 5,
+        "non_claim_blocks": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "visual_verification_required": true,
+        "visual_regions": [
+          {
+            "page": 1,
+            "bbox": [
+              0.061,
+              0.046,
+              0.395,
+              0.058
+            ],
+            "line_start": 1,
+            "line_end": 1,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.073,
+              0.143,
+              0.217,
+              0.159
+            ],
+            "line_start": 2,
+            "line_end": 2,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.073,
+              0.178,
+              0.216,
+              0.194
+            ],
+            "line_start": 3,
+            "line_end": 3,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.073,
+              0.214,
+              0.245,
+              0.229
+            ],
+            "line_start": 4,
+            "line_end": 4,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.073,
+              0.25,
+              0.248,
+              0.266
+            ],
+            "line_start": 5,
+            "line_end": 5,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.073,
+              0.333,
+              0.218,
+              0.349
+            ],
+            "line_start": 6,
+            "line_end": 6,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.073,
+              0.368,
+              0.217,
+              0.384
+            ],
+            "line_start": 7,
+            "line_end": 7,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.073,
+              0.404,
+              0.268,
+              0.42
+            ],
+            "line_start": 8,
+            "line_end": 8,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          },
+          {
+            "page": 1,
+            "bbox": [
+              0.073,
+              0.44,
+              0.263,
+              0.456
+            ],
+            "line_start": 9,
+            "line_end": 9,
+            "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+          }
+        ],
+        "visual_source_sha256": "sha256:4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+        "document_page_count": 1,
+        "visual_elapsed_ms": 14906,
+        "visual_cost_usd": null,
+        "visual_mode": "MODEL_TRANSCRIPTION_UNVERIFIED",
+        "automatic_claim_selection": false,
+        "document_quality": {
+          "schema_version": 1,
+          "status": "PASS",
+          "extension": ".pdf",
+          "page_count": 1,
+          "character_count": 144,
+          "nonempty_line_count": 9,
+          "wordish_character_count": 117,
+          "replacement_character_count": 0,
+          "private_use_glyph_count": 0,
+          "control_character_count": 0,
+          "short_line_ratio": 0.0,
+          "long_line_count": 0,
+          "unique_line_ratio": 1.0,
+          "characters_per_page": 144.0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "contains_document_text": false
+        },
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "ai_candidates": 5,
+        "ai_entities": 2,
+        "ai_chunks": 1,
+        "ai_chunking_applied": false,
+        "ai_input_characters": 144,
+        "ai_covered_characters": 144,
+        "ai_input_truncated": false,
+        "segmented_oversize_lines": 0,
+        "ai_repair_attempted": false,
+        "ai_repair_succeeded": false,
+        "ai_repair_count": 0,
+        "quality_gate_version": 5,
+        "filtered_candidate_count": 1,
+        "filtered_candidate_reasons": {
+          "STATEMENT_FRAGMENT": 1
+        },
+        "candidate_filter_applied": true,
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0,
+        "classification_review_candidate_count": 0,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6"
+      },
+      "retained_original_matches": true,
+      "unconfirmed_selection": "VISUAL_SOURCE_VERIFICATION_REQUIRED",
+      "material_claims": 0,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 32750,
+      "adapter_requests": 2
+    }
+  ],
+  "replays": [
+    {
+      "case": "zh-columns",
+      "response": {
+        "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+        "adapter_request_index": 1,
+        "line_number_start": 1,
+        "source_lines": [
+          "SYNTHETIC MATERIAL - NOT A REAL APPLICANT",
+          "合成青杉实验室02",
+          "分析员 | 2023-2024",
+          "团队核验了14家门店。",
+          "申请人编写了8份报告。",
+          "Original synthetic fixture | Page 1",
+          "合成海港研究所02",
+          "研究员 | 2021-2022",
+          "团队管理预算12502美元。",
+          "申请人测试了26个场景。"
+        ],
+        "payload": {
+          "schema_version": 2,
+          "entities": [
+            {
+              "entity_key": "work-1",
+              "entity_type": "work",
+              "organization": "合成青杉实验室02",
+              "role": "分析员",
+              "start_date": "2023",
+              "end_date": "2024",
+              "line_start": 2,
+              "line_end": 3
+            },
+            {
+              "entity_key": "work-2",
+              "entity_type": "work",
+              "organization": "合成海港研究所02",
+              "role": "研究员",
+              "start_date": "2021",
+              "end_date": "2022",
+              "line_start": 7,
+              "line_end": 8
+            }
+          ],
+          "candidates": [
+            {
+              "statement": "合成青杉实验室02的分析员任职日期为2023-2024。",
+              "category": "work",
+              "claim_kind": "entity_summary",
+              "entity_key": "work-1",
+              "confidence": "HIGH",
+              "line_start": 2,
+              "line_end": 3,
+              "reason": "组织、职位和日期均由相邻行明确给出。"
+            },
+            {
+              "statement": "在合成青杉实验室02担任分析员期间，团队核验了14家门店。",
+              "category": "work",
+              "claim_kind": "achievement",
+              "entity_key": "work-1",
+              "confidence": "HIGH",
+              "line_start": 2,
+              "line_end": 4,
+              "reason": "明确保留团队归属及门店数量。"
+            },
+            {
+              "statement": "在合成青杉实验室02担任分析员期间，申请人编写了8份报告。",
+              "category": "work",
+              "claim_kind": "achievement",
+              "entity_key": "work-1",
+              "confidence": "HIGH",
+              "line_start": 2,
+              "line_end": 5,
+              "reason": "明确陈述申请人的工作及报告数量。"
+            },
+            {
+              "statement": "合成海港研究所02的研究员任职日期为2021-2022。",
+              "category": "work",
+              "claim_kind": "entity_summary",
+              "entity_key": "work-2",
+              "confidence": "HIGH",
+              "line_start": 7,
+              "line_end": 8,
+              "reason": "组织、职位和日期均由相邻行明确给出。"
+            },
+            {
+              "statement": "在合成海港研究所02担任研究员期间，团队管理预算12502美元。",
+              "category": "work",
+              "claim_kind": "responsibility",
+              "entity_key": "work-2",
+              "confidence": "HIGH",
+              "line_start": 7,
+              "line_end": 9,
+              "reason": "明确保留团队归属、预算金额和币种。"
+            },
+            {
+              "statement": "在合成海港研究所02担任研究员期间，申请人测试了26个场景。",
+              "category": "work",
+              "claim_kind": "achievement",
+              "entity_key": "work-2",
+              "confidence": "HIGH",
+              "line_start": 7,
+              "line_end": 10,
+              "reason": "明确陈述申请人的测试工作及场景数量。"
+            }
+          ]
+        }
+      },
+      "before": {
+        "status": "VALIDATED",
+        "candidates": [],
+        "diagnostics": {
+          "filtered_candidate_reasons": {
+            "STATEMENT_FRAGMENT": 6
+          }
+        }
+      },
+      "after": {
+        "status": "VALIDATED",
+        "candidates": [
+          {
+            "candidate_id": "EXT-CD45D60206CC",
+            "statement": "合成青杉实验室02的分析员任职日期为2023-2024。",
+            "category": "work",
+            "claim_kind": "entity_summary",
+            "confidence": "HIGH",
+            "selected": false,
+            "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+            "ai_reason": "组织、职位和日期均由相邻行明确给出。",
+            "provenance": {
+              "line_start": 2,
+              "line_end": 3,
+              "ai_line_start": 2,
+              "ai_line_end": 3,
+              "citation_adjustment": null,
+              "numeric_format_normalizations": 0,
+              "structural_normalizations": [],
+              "classification_review_required": false,
+              "human_confirmation_required": true
+            },
+            "entity_id": "ENT-C9F43AAB8B4A",
+            "entity": {
+              "entity_key": "work-1",
+              "entity_type": "work",
+              "organization": "合成青杉实验室02",
+              "role": "分析员",
+              "start_date": "2023",
+              "end_date": "2024",
+              "line_start": 2,
+              "line_end": 3,
+              "normalization_codes": [],
+              "classification_review_required": false,
+              "entity_fingerprint": "ENTKEY-4D7ADF322A2E",
+              "entity_id": "ENT-C9F43AAB8B4A"
+            }
+          },
+          {
+            "candidate_id": "EXT-4226D90C529D",
+            "statement": "在合成青杉实验室02担任分析员期间，团队核验了14家门店。",
+            "category": "work",
+            "claim_kind": "achievement",
+            "confidence": "HIGH",
+            "selected": false,
+            "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+            "ai_reason": "明确保留团队归属及门店数量。",
+            "provenance": {
+              "line_start": 2,
+              "line_end": 4,
+              "ai_line_start": 2,
+              "ai_line_end": 4,
+              "citation_adjustment": null,
+              "numeric_format_normalizations": 0,
+              "structural_normalizations": [],
+              "classification_review_required": false,
+              "human_confirmation_required": true
+            },
+            "entity_id": "ENT-C9F43AAB8B4A",
+            "entity": {
+              "entity_key": "work-1",
+              "entity_type": "work",
+              "organization": "合成青杉实验室02",
+              "role": "分析员",
+              "start_date": "2023",
+              "end_date": "2024",
+              "line_start": 2,
+              "line_end": 3,
+              "normalization_codes": [],
+              "classification_review_required": false,
+              "entity_fingerprint": "ENTKEY-4D7ADF322A2E",
+              "entity_id": "ENT-C9F43AAB8B4A"
+            }
+          },
+          {
+            "candidate_id": "EXT-B147EDE26974",
+            "statement": "在合成青杉实验室02担任分析员期间，申请人编写了8份报告。",
+            "category": "work",
+            "claim_kind": "achievement",
+            "confidence": "HIGH",
+            "selected": false,
+            "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+            "ai_reason": "明确陈述申请人的工作及报告数量。",
+            "provenance": {
+              "line_start": 2,
+              "line_end": 5,
+              "ai_line_start": 2,
+              "ai_line_end": 5,
+              "citation_adjustment": null,
+              "numeric_format_normalizations": 0,
+              "structural_normalizations": [],
+              "classification_review_required": false,
+              "human_confirmation_required": true
+            },
+            "entity_id": "ENT-C9F43AAB8B4A",
+            "entity": {
+              "entity_key": "work-1",
+              "entity_type": "work",
+              "organization": "合成青杉实验室02",
+              "role": "分析员",
+              "start_date": "2023",
+              "end_date": "2024",
+              "line_start": 2,
+              "line_end": 3,
+              "normalization_codes": [],
+              "classification_review_required": false,
+              "entity_fingerprint": "ENTKEY-4D7ADF322A2E",
+              "entity_id": "ENT-C9F43AAB8B4A"
+            }
+          },
+          {
+            "candidate_id": "EXT-82162B817AA2",
+            "statement": "在合成海港研究所02担任研究员期间，团队管理预算12502美元。",
+            "category": "work",
+            "claim_kind": "responsibility",
+            "confidence": "HIGH",
+            "selected": false,
+            "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+            "ai_reason": "明确保留团队归属、预算金额和币种。",
+            "provenance": {
+              "line_start": 7,
+              "line_end": 9,
+              "ai_line_start": 7,
+              "ai_line_end": 9,
+              "citation_adjustment": null,
+              "numeric_format_normalizations": 0,
+              "structural_normalizations": [],
+              "classification_review_required": false,
+              "human_confirmation_required": true
+            },
+            "entity_id": "ENT-B9095C5D4736",
+            "entity": {
+              "entity_key": "work-2",
+              "entity_type": "work",
+              "organization": "合成海港研究所02",
+              "role": "研究员",
+              "start_date": "2021",
+              "end_date": "2022",
+              "line_start": 7,
+              "line_end": 8,
+              "normalization_codes": [],
+              "classification_review_required": false,
+              "entity_fingerprint": "ENTKEY-D1971B0D3BF4",
+              "entity_id": "ENT-B9095C5D4736"
+            }
+          },
+          {
+            "candidate_id": "EXT-9E3349EDED15",
+            "statement": "在合成海港研究所02担任研究员期间，申请人测试了26个场景。",
+            "category": "work",
+            "claim_kind": "achievement",
+            "confidence": "HIGH",
+            "selected": false,
+            "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+            "ai_reason": "明确陈述申请人的测试工作及场景数量。",
+            "provenance": {
+              "line_start": 7,
+              "line_end": 10,
+              "ai_line_start": 7,
+              "ai_line_end": 10,
+              "citation_adjustment": null,
+              "numeric_format_normalizations": 0,
+              "structural_normalizations": [],
+              "classification_review_required": false,
+              "human_confirmation_required": true
+            },
+            "entity_id": "ENT-B9095C5D4736",
+            "entity": {
+              "entity_key": "work-2",
+              "entity_type": "work",
+              "organization": "合成海港研究所02",
+              "role": "研究员",
+              "start_date": "2021",
+              "end_date": "2022",
+              "line_start": 7,
+              "line_end": 8,
+              "normalization_codes": [],
+              "classification_review_required": false,
+              "entity_fingerprint": "ENTKEY-D1971B0D3BF4",
+              "entity_id": "ENT-B9095C5D4736"
+            }
+          }
+        ],
+        "diagnostics": {
+          "filtered_candidate_reasons": {
+            "STATEMENT_FRAGMENT": 1
+          }
+        }
+      }
+    },
+    {
+      "case": "zh-scan",
+      "response": {
+        "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+        "adapter_request_index": 3,
+        "line_number_start": 1,
+        "source_lines": [
+          "SYNTHETIC MATERIAL - NOT A REAL APPLICANT",
+          "合成青杉实验室09",
+          "分析员 | 2023-2022",
+          "团队核验了21家门店。",
+          "申请人编写了5份报告。",
+          "合成深海研究所09",
+          "研究员 | 2021-2022",
+          "本人管理预算250S美元。",
+          "申请人测试了33个场景。"
+        ],
+        "payload": {
+          "schema_version": 2,
+          "entities": [
+            {
+              "entity_key": "work-1",
+              "entity_type": "work",
+              "organization": "合成青杉实验室09",
+              "role": "分析员",
+              "start_date": "2023",
+              "end_date": "2022",
+              "line_start": 2,
+              "line_end": 3
+            },
+            {
+              "entity_key": "work-2",
+              "entity_type": "work",
+              "organization": "合成深海研究所09",
+              "role": "研究员",
+              "start_date": "2021",
+              "end_date": "2022",
+              "line_start": 6,
+              "line_end": 7
+            }
+          ],
+          "candidates": [
+            {
+              "statement": "合成青杉实验室09的分析员任职日期为2023-2022。",
+              "category": "work",
+              "claim_kind": "entity_summary",
+              "entity_key": "work-1",
+              "confidence": "HIGH",
+              "line_start": 2,
+              "line_end": 3,
+              "reason": "组织、职位及日期均由相邻原文直接陈述。"
+            },
+            {
+              "statement": "在合成青杉实验室09担任分析员期间，团队核验了21家门店。",
+              "category": "work",
+              "claim_kind": "achievement",
+              "entity_key": "work-1",
+              "confidence": "HIGH",
+              "line_start": 2,
+              "line_end": 4,
+              "reason": "原文明确将核验工作归于团队并给出门店数量。"
+            },
+            {
+              "statement": "在合成青杉实验室09担任分析员期间，申请人编写了5份报告。",
+              "category": "work",
+              "claim_kind": "achievement",
+              "entity_key": "work-1",
+              "confidence": "HIGH",
+              "line_start": 2,
+              "line_end": 5,
+              "reason": "原文明确陈述申请人编写报告及其数量。"
+            },
+            {
+              "statement": "合成深海研究所09的研究员任职日期为2021-2022。",
+              "category": "work",
+              "claim_kind": "entity_summary",
+              "entity_key": "work-2",
+              "confidence": "HIGH",
+              "line_start": 6,
+              "line_end": 7,
+              "reason": "组织、职位及日期均由相邻原文直接陈述。"
+            },
+            {
+              "statement": "在合成深海研究所09担任研究员期间，本人管理预算250S美元。",
+              "category": "work",
+              "claim_kind": "responsibility",
+              "entity_key": "work-2",
+              "confidence": "HIGH",
+              "line_start": 6,
+              "line_end": 8,
+              "reason": "原文明确陈述预算管理责任及预算原始数值。"
+            },
+            {
+              "statement": "在合成深海研究所09担任研究员期间，申请人测试了33个场景。",
+              "category": "work",
+              "claim_kind": "achievement",
+              "entity_key": "work-2",
+              "confidence": "HIGH",
+              "line_start": 6,
+              "line_end": 9,
+              "reason": "原文明确陈述申请人测试场景及其数量。"
+            }
+          ]
+        }
+      },
+      "before": {
+        "status": "VALIDATED",
+        "candidates": [],
+        "diagnostics": {
+          "filtered_candidate_reasons": {
+            "STATEMENT_FRAGMENT": 6
+          }
+        }
+      },
+      "after": {
+        "status": "VALIDATED",
+        "candidates": [
+          {
+            "candidate_id": "EXT-54FF7F39ECFA",
+            "statement": "合成青杉实验室09的分析员任职日期为2023-2022。",
+            "category": "work",
+            "claim_kind": "entity_summary",
+            "confidence": "HIGH",
+            "selected": false,
+            "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+            "ai_reason": "组织、职位及日期均由相邻原文直接陈述。",
+            "provenance": {
+              "line_start": 2,
+              "line_end": 3,
+              "ai_line_start": 2,
+              "ai_line_end": 3,
+              "citation_adjustment": null,
+              "numeric_format_normalizations": 0,
+              "structural_normalizations": [],
+              "classification_review_required": false,
+              "human_confirmation_required": true
+            },
+            "entity_id": "ENT-1AA820C536DD",
+            "entity": {
+              "entity_key": "work-1",
+              "entity_type": "work",
+              "organization": "合成青杉实验室09",
+              "role": "分析员",
+              "start_date": "2023",
+              "end_date": "2022",
+              "line_start": 2,
+              "line_end": 3,
+              "normalization_codes": [],
+              "classification_review_required": false,
+              "entity_fingerprint": "ENTKEY-56E41A813E6D",
+              "entity_id": "ENT-1AA820C536DD"
+            }
+          },
+          {
+            "candidate_id": "EXT-DB4DEEB6F65B",
+            "statement": "在合成青杉实验室09担任分析员期间，团队核验了21家门店。",
+            "category": "work",
+            "claim_kind": "achievement",
+            "confidence": "HIGH",
+            "selected": false,
+            "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+            "ai_reason": "原文明确将核验工作归于团队并给出门店数量。",
+            "provenance": {
+              "line_start": 2,
+              "line_end": 4,
+              "ai_line_start": 2,
+              "ai_line_end": 4,
+              "citation_adjustment": null,
+              "numeric_format_normalizations": 0,
+              "structural_normalizations": [],
+              "classification_review_required": false,
+              "human_confirmation_required": true
+            },
+            "entity_id": "ENT-1AA820C536DD",
+            "entity": {
+              "entity_key": "work-1",
+              "entity_type": "work",
+              "organization": "合成青杉实验室09",
+              "role": "分析员",
+              "start_date": "2023",
+              "end_date": "2022",
+              "line_start": 2,
+              "line_end": 3,
+              "normalization_codes": [],
+              "classification_review_required": false,
+              "entity_fingerprint": "ENTKEY-56E41A813E6D",
+              "entity_id": "ENT-1AA820C536DD"
+            }
+          },
+          {
+            "candidate_id": "EXT-282B5F4EC658",
+            "statement": "在合成青杉实验室09担任分析员期间，申请人编写了5份报告。",
+            "category": "work",
+            "claim_kind": "achievement",
+            "confidence": "HIGH",
+            "selected": false,
+            "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+            "ai_reason": "原文明确陈述申请人编写报告及其数量。",
+            "provenance": {
+              "line_start": 2,
+              "line_end": 5,
+              "ai_line_start": 2,
+              "ai_line_end": 5,
+              "citation_adjustment": null,
+              "numeric_format_normalizations": 0,
+              "structural_normalizations": [],
+              "classification_review_required": false,
+              "human_confirmation_required": true
+            },
+            "entity_id": "ENT-1AA820C536DD",
+            "entity": {
+              "entity_key": "work-1",
+              "entity_type": "work",
+              "organization": "合成青杉实验室09",
+              "role": "分析员",
+              "start_date": "2023",
+              "end_date": "2022",
+              "line_start": 2,
+              "line_end": 3,
+              "normalization_codes": [],
+              "classification_review_required": false,
+              "entity_fingerprint": "ENTKEY-56E41A813E6D",
+              "entity_id": "ENT-1AA820C536DD"
+            }
+          },
+          {
+            "candidate_id": "EXT-FD9B543980F9",
+            "statement": "在合成深海研究所09担任研究员期间，本人管理预算250S美元。",
+            "category": "work",
+            "claim_kind": "responsibility",
+            "confidence": "HIGH",
+            "selected": false,
+            "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+            "ai_reason": "原文明确陈述预算管理责任及预算原始数值。",
+            "provenance": {
+              "line_start": 6,
+              "line_end": 8,
+              "ai_line_start": 6,
+              "ai_line_end": 8,
+              "citation_adjustment": null,
+              "numeric_format_normalizations": 0,
+              "structural_normalizations": [],
+              "classification_review_required": false,
+              "human_confirmation_required": true
+            },
+            "entity_id": "ENT-0AB741D33909",
+            "entity": {
+              "entity_key": "work-2",
+              "entity_type": "work",
+              "organization": "合成深海研究所09",
+              "role": "研究员",
+              "start_date": "2021",
+              "end_date": "2022",
+              "line_start": 6,
+              "line_end": 7,
+              "normalization_codes": [],
+              "classification_review_required": false,
+              "entity_fingerprint": "ENTKEY-BC4BFF10A76D",
+              "entity_id": "ENT-0AB741D33909"
+            }
+          },
+          {
+            "candidate_id": "EXT-1BFFEBF71FFF",
+            "statement": "在合成深海研究所09担任研究员期间，申请人测试了33个场景。",
+            "category": "work",
+            "claim_kind": "achievement",
+            "confidence": "HIGH",
+            "selected": false,
+            "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+            "ai_reason": "原文明确陈述申请人测试场景及其数量。",
+            "provenance": {
+              "line_start": 6,
+              "line_end": 9,
+              "ai_line_start": 6,
+              "ai_line_end": 9,
+              "citation_adjustment": null,
+              "numeric_format_normalizations": 0,
+              "structural_normalizations": [],
+              "classification_review_required": false,
+              "human_confirmation_required": true
+            },
+            "entity_id": "ENT-0AB741D33909",
+            "entity": {
+              "entity_key": "work-2",
+              "entity_type": "work",
+              "organization": "合成深海研究所09",
+              "role": "研究员",
+              "start_date": "2021",
+              "end_date": "2022",
+              "line_start": 6,
+              "line_end": 7,
+              "normalization_codes": [],
+              "classification_review_required": false,
+              "entity_fingerprint": "ENTKEY-BC4BFF10A76D",
+              "entity_id": "ENT-0AB741D33909"
+            }
+          }
+        ],
+        "diagnostics": {
+          "filtered_candidate_reasons": {
+            "STATEMENT_FRAGMENT": 1
+          }
+        }
+      }
+    }
+  ],
+  "cost_usd": null,
+  "usage_tokens": null,
+  "provider_api_calls": null,
+  "business_completion": "NOT_ATTEMPTED",
+  "scope": "Two fixed short synthetic probes; one new model sample each, same-output validator comparison; not a full-material acceptance study.",
+  "model_route_after": {
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "hermes_commit": "afe53708ee7400919ae3e17a6dde9b02629e5c87"
+  },
+  "model_route_unchanged": true,
+  "adapter_requests": [
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 14078
+    },
+    {
+      "task": "JOBOPS_VISUAL_TRANSCRIPTION_V1",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 14906
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "status": "RETURNED",
+      "tool_calls": 0,
+      "elapsed_ms": 14032
+    }
+  ]
+}

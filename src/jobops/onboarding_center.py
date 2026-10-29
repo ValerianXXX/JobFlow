@@ -4140,6 +4140,12 @@ class OnboardingCenterService:
         return {"status": "SUGGESTION_ACCEPTED", "field_id": field_id, "private_values_emitted": 0}
 
     def _extract_text(self, data: bytes, extension: str, source_type: str) -> tuple[str, int, dict[str, Any]]:
+        if extension == ".pdf" and os.getenv("JOBFLOW_DOCUMENT_PARSER", "") not in {"", "pdf_regions", "docling_native"}:
+            raise JobOpsError("LOCAL_PARSER_SELECTION_INVALID", "Choose a supported local PDF parser or clear the explicit setting; no fallback was used.")
+        if extension == ".pdf" and os.getenv("JOBFLOW_DOCUMENT_PARSER") == "pdf_regions":
+            from .local_document_parser import read_region_pdf
+            text, metadata = read_region_pdf(data)
+            return text, 0, metadata
         if extension == ".pdf" and os.getenv("JOBFLOW_DOCUMENT_PARSER") == "docling_native":
             from .local_document_parser import read_local_pdf
             text, metadata = read_local_pdf(data)

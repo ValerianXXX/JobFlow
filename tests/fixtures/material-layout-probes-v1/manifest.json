@@ -1,0 +1,2389 @@
+{
+  "schema_version": 1,
+  "synthetic_only": true,
+  "purpose": "Short layout probes; not the complete resume/portfolio acceptance corpus or a Claim accuracy benchmark",
+  "split_rule": "(layout_index + language_index) % 3 == 2; 24 development / 12 held-out",
+  "raster_font": {
+    "name": "NotoSansSC-VF.ttf",
+    "sha256": "763146584cf0710223441356b4395e279021b0806c196614377a7a0174ae074a"
+  },
+  "pdf_font": "Helvetica ASCII runs plus standard CID STSong-Light; renderer supplies a CJK font; neither font binary is distributed",
+  "cases": [
+    {
+      "id": "en-single",
+      "language": "en",
+      "layout": "single",
+      "split": "development",
+      "file": "en-single.pdf",
+      "sha256": "6f85d4b53f24758f8088c3205fb7fc25315182fccad4e90c30812a623fa6573e",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 01",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 01",
+            "Analyst | 2023-2024",
+            "Team reviewed 13 stores.",
+            "Applicant prepared 7 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 13 stores.",
+              "number": "13",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 7 reports.",
+              "number": "7",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 01",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 01",
+            "Researcher | 2021-2022",
+            "Team managed a $12501 budget.",
+            "Applicant tested 25 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12501 budget.",
+              "number": "12501",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 25 scenarios.",
+              "number": "25",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "en-columns",
+      "language": "en",
+      "layout": "columns",
+      "split": "development",
+      "file": "en-columns.pdf",
+      "sha256": "3bf7b4732f517b1f3cf1187fe3be9dc35f899b7a5e26a6230fbb0db0ca3e5682",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 02",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 02",
+            "Analyst | 2023-2024",
+            "Team reviewed 14 stores.",
+            "Applicant prepared 8 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 14 stores.",
+              "number": "14",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 8 reports.",
+              "number": "8",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 02",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 02",
+            "Researcher | 2021-2022",
+            "Team managed a $12502 budget.",
+            "Applicant tested 26 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12502 budget.",
+              "number": "12502",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 26 scenarios.",
+              "number": "26",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "en-staggered_columns",
+      "language": "en",
+      "layout": "staggered_columns",
+      "split": "held_out",
+      "file": "en-staggered_columns.pdf",
+      "sha256": "67f8484e7a71e9142d0624ada8133305ad9905c1d14d1f157dd0c38810fadc3b",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 03",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 03",
+            "Analyst | 2023-2024",
+            "Team reviewed 15 stores.",
+            "Applicant prepared 9 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 15 stores.",
+              "number": "15",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 9 reports.",
+              "number": "9",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 03",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 03",
+            "Researcher | 2021-2022",
+            "Team managed a $12503 budget.",
+            "Applicant tested 27 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12503 budget.",
+              "number": "12503",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 27 scenarios.",
+              "number": "27",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "en-wrapped",
+      "language": "en",
+      "layout": "wrapped",
+      "split": "development",
+      "file": "en-wrapped.pdf",
+      "sha256": "8a3c9cdbfbb8fac760d5e43a8913c6df7a0dd42d32a31c2fb20200e33f03a575",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 04",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 04",
+            "Analyst | 2023-2024",
+            "Team reviewed 16 stores.",
+            "Applicant prepared 10 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 16 stores.",
+              "number": "16",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 10 reports.",
+              "number": "10",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 04",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 04",
+            "Researcher | 2021-2022",
+            "Team managed a $12504 budget.",
+            "Applicant tested 28 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12504 budget.",
+              "number": "12504",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 28 scenarios.",
+              "number": "28",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "en-ruled_table",
+      "language": "en",
+      "layout": "ruled_table",
+      "split": "development",
+      "file": "en-ruled_table.pdf",
+      "sha256": "70f1465e9ba03375914283db0819aebf44819589284f52e686cec4eda07a7781",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 05",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 05",
+            "Analyst | 2023-2024",
+            "Team reviewed 17 stores.",
+            "Applicant prepared 11 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 17 stores.",
+              "number": "17",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 11 reports.",
+              "number": "11",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 05",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 05",
+            "Researcher | 2021-2022",
+            "Team managed a $12505 budget.",
+            "Applicant tested 29 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12505 budget.",
+              "number": "12505",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 29 scenarios.",
+              "number": "29",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "en-two_pages",
+      "language": "en",
+      "layout": "two_pages",
+      "split": "held_out",
+      "file": "en-two_pages.pdf",
+      "sha256": "ab2bd141224c293fa4e247ef23602c5c173cdf5f7812fcc8761759a7fbed7421",
+      "page_count": 2,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 06",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 06",
+            "Analyst | 2023-2024",
+            "Team reviewed 18 stores.",
+            "Applicant prepared 12 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 18 stores.",
+              "number": "18",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 12 reports.",
+              "number": "12",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 06",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 06",
+            "Researcher | 2021-2022",
+            "Team managed a $12506 budget.",
+            "Applicant tested 30 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12506 budget.",
+              "number": "12506",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 30 scenarios.",
+              "number": "30",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "en-docx",
+      "language": "en",
+      "layout": "docx",
+      "split": "development",
+      "file": "en-docx.docx",
+      "sha256": "3f08d5b3a3c9a359c161a4f0f63d7cefcd1e31e64e93f79fdf29ef843a3f668d",
+      "page_count": null,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 07",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 07",
+            "Analyst | 2023-2024",
+            "Team reviewed 19 stores.",
+            "Applicant prepared 13 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 19 stores.",
+              "number": "19",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 13 reports.",
+              "number": "13",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 07",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 07",
+            "Researcher | 2021-2022",
+            "Team managed a $12507 budget.",
+            "Applicant tested 31 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12507 budget.",
+              "number": "12507",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 31 scenarios.",
+              "number": "31",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "en-same_organization_roles",
+      "language": "en",
+      "layout": "same_organization_roles",
+      "split": "development",
+      "file": "en-same_organization_roles.docx",
+      "sha256": "d5b1d2de5b59275996891b4c1f89765638853e40dbb7b9165e265e6832a3a368",
+      "page_count": null,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 08",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 08",
+            "Analyst | 2023-2024",
+            "Team reviewed 20 stores.",
+            "Applicant prepared 14 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 20 stores.",
+              "number": "20",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 14 reports.",
+              "number": "14",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Cedar 08",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Cedar 08",
+            "Researcher | 2021-2022",
+            "Team managed a $12508 budget.",
+            "Applicant tested 32 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12508 budget.",
+              "number": "12508",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 32 scenarios.",
+              "number": "32",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": true,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "en-scan",
+      "language": "en",
+      "layout": "scan",
+      "split": "held_out",
+      "file": "en-scan.pdf",
+      "sha256": "e569b2a32a2d208698ed07eaacc04e73b541256c9ccc016a977179401c96ea60",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 09",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 09",
+            "Analyst | 2023-2024",
+            "Team reviewed 21 stores.",
+            "Applicant prepared 15 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 21 stores.",
+              "number": "21",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 15 reports.",
+              "number": "15",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 09",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 09",
+            "Researcher | 2021-2022",
+            "Team managed a $12509 budget.",
+            "Applicant tested 33 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12509 budget.",
+              "number": "12509",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 33 scenarios.",
+              "number": "33",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "en-scanned_columns",
+      "language": "en",
+      "layout": "scanned_columns",
+      "split": "development",
+      "file": "en-scanned_columns.pdf",
+      "sha256": "f1222d7777a9efcf8cf68a1ebed4381d7fb3a8494ea24df4ac080dec94e2976a",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 10",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 10",
+            "Analyst | 2023-2024",
+            "Team reviewed 22 stores.",
+            "Applicant prepared 16 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 22 stores.",
+              "number": "22",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 16 reports.",
+              "number": "16",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 10",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 10",
+            "Researcher | 2021-2022",
+            "Team managed a $12510 budget.",
+            "Applicant tested 34 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12510 budget.",
+              "number": "12510",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 34 scenarios.",
+              "number": "34",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "en-portfolio",
+      "language": "en",
+      "layout": "portfolio",
+      "split": "development",
+      "file": "en-portfolio.png",
+      "sha256": "0c2981023224975931677c691bc4c8e25d00f367714b786aa4f5813bfd8683e4",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 11",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 11",
+            "Analyst | 2023-2024",
+            "Team reviewed 23 stores.",
+            "Applicant prepared 17 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 23 stores.",
+              "number": "23",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 17 reports.",
+              "number": "17",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 11",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 11",
+            "Researcher | 2021-2022",
+            "Team managed a $12511 budget.",
+            "Applicant tested 35 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12511 budget.",
+              "number": "12511",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 35 scenarios.",
+              "number": "35",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "en-weak_image",
+      "language": "en",
+      "layout": "weak_image",
+      "split": "held_out",
+      "file": "en-weak_image.png",
+      "sha256": "66476ff4922945460561c64526dd36577e23d4881ea8d20653f6a66d4dd86af2",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 12",
+          "role_dates": "Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 12",
+            "Analyst | 2023-2024",
+            "Team reviewed 24 stores.",
+            "Applicant prepared 18 reports."
+          ],
+          "facts": [
+            {
+              "statement": "Team reviewed 24 stores.",
+              "number": "24",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant prepared 18 reports.",
+              "number": "18",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 12",
+          "role_dates": "Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 12",
+            "Researcher | 2021-2022",
+            "Team managed a $12512 budget.",
+            "Applicant tested 36 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "Team managed a $12512 budget.",
+              "number": "12512",
+              "owner": "team"
+            },
+            {
+              "statement": "Applicant tested 36 scenarios.",
+              "number": "36",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "zh-single",
+      "language": "zh",
+      "layout": "single",
+      "split": "development",
+      "file": "zh-single.pdf",
+      "sha256": "3ec347fbf050fb582cb5639bb6d7b6bcb6acd83dc83ea847d00ad06aae1d6f7f",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "合成青杉实验室01",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室01",
+            "分析员 | 2023-2024",
+            "团队核验了13家门店。",
+            "申请人编写了7份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了13家门店。",
+              "number": "13",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了7份报告。",
+              "number": "7",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所01",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所01",
+            "研究员 | 2021-2022",
+            "团队管理预算12501美元。",
+            "申请人测试了25个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12501美元。",
+              "number": "12501",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了25个场景。",
+              "number": "25",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "zh-columns",
+      "language": "zh",
+      "layout": "columns",
+      "split": "held_out",
+      "file": "zh-columns.pdf",
+      "sha256": "fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "合成青杉实验室02",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室02",
+            "分析员 | 2023-2024",
+            "团队核验了14家门店。",
+            "申请人编写了8份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了14家门店。",
+              "number": "14",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了8份报告。",
+              "number": "8",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所02",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所02",
+            "研究员 | 2021-2022",
+            "团队管理预算12502美元。",
+            "申请人测试了26个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12502美元。",
+              "number": "12502",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了26个场景。",
+              "number": "26",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "zh-staggered_columns",
+      "language": "zh",
+      "layout": "staggered_columns",
+      "split": "development",
+      "file": "zh-staggered_columns.pdf",
+      "sha256": "2daef9d2d58e60ffdfc84a866f4281a99c9a25c3f18a685107a5c1e09c4f39ed",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "合成青杉实验室03",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室03",
+            "分析员 | 2023-2024",
+            "团队核验了15家门店。",
+            "申请人编写了9份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了15家门店。",
+              "number": "15",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了9份报告。",
+              "number": "9",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所03",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所03",
+            "研究员 | 2021-2022",
+            "团队管理预算12503美元。",
+            "申请人测试了27个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12503美元。",
+              "number": "12503",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了27个场景。",
+              "number": "27",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "zh-wrapped",
+      "language": "zh",
+      "layout": "wrapped",
+      "split": "development",
+      "file": "zh-wrapped.pdf",
+      "sha256": "5dea94cbbe58c7f3e9cc91b31c52d6bcd633cdeb51f9f3ee851751e04cb03cc9",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "合成青杉实验室04",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室04",
+            "分析员 | 2023-2024",
+            "团队核验了16家门店。",
+            "申请人编写了10份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了16家门店。",
+              "number": "16",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了10份报告。",
+              "number": "10",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所04",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所04",
+            "研究员 | 2021-2022",
+            "团队管理预算12504美元。",
+            "申请人测试了28个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12504美元。",
+              "number": "12504",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了28个场景。",
+              "number": "28",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "zh-ruled_table",
+      "language": "zh",
+      "layout": "ruled_table",
+      "split": "held_out",
+      "file": "zh-ruled_table.pdf",
+      "sha256": "3a3ebb2f25882e54ce3c8ebab0da867e33081f797ba06feb608e3fea7ba7f976",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "合成青杉实验室05",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室05",
+            "分析员 | 2023-2024",
+            "团队核验了17家门店。",
+            "申请人编写了11份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了17家门店。",
+              "number": "17",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了11份报告。",
+              "number": "11",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所05",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所05",
+            "研究员 | 2021-2022",
+            "团队管理预算12505美元。",
+            "申请人测试了29个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12505美元。",
+              "number": "12505",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了29个场景。",
+              "number": "29",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "zh-two_pages",
+      "language": "zh",
+      "layout": "two_pages",
+      "split": "development",
+      "file": "zh-two_pages.pdf",
+      "sha256": "8d1b29801c7ce29d25a4574cfeda63f29a5d3bf877944683ae0c191595eab6f8",
+      "page_count": 2,
+      "entities": [
+        {
+          "organization": "合成青杉实验室06",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室06",
+            "分析员 | 2023-2024",
+            "团队核验了18家门店。",
+            "申请人编写了12份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了18家门店。",
+              "number": "18",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了12份报告。",
+              "number": "12",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所06",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所06",
+            "研究员 | 2021-2022",
+            "团队管理预算12506美元。",
+            "申请人测试了30个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12506美元。",
+              "number": "12506",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了30个场景。",
+              "number": "30",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "zh-docx",
+      "language": "zh",
+      "layout": "docx",
+      "split": "development",
+      "file": "zh-docx.docx",
+      "sha256": "f7b2253be42cb75bb26e2f750657b0a155b2954447f2f314c5b214dccb8187fa",
+      "page_count": null,
+      "entities": [
+        {
+          "organization": "合成青杉实验室07",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室07",
+            "分析员 | 2023-2024",
+            "团队核验了19家门店。",
+            "申请人编写了13份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了19家门店。",
+              "number": "19",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了13份报告。",
+              "number": "13",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所07",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所07",
+            "研究员 | 2021-2022",
+            "团队管理预算12507美元。",
+            "申请人测试了31个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12507美元。",
+              "number": "12507",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了31个场景。",
+              "number": "31",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "zh-same_organization_roles",
+      "language": "zh",
+      "layout": "same_organization_roles",
+      "split": "held_out",
+      "file": "zh-same_organization_roles.docx",
+      "sha256": "af57653c9f2b9393de98dbdecf452d18d76157642c1062309a871f95569d57b0",
+      "page_count": null,
+      "entities": [
+        {
+          "organization": "合成青杉实验室08",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室08",
+            "分析员 | 2023-2024",
+            "团队核验了20家门店。",
+            "申请人编写了14份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了20家门店。",
+              "number": "20",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了14份报告。",
+              "number": "14",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成青杉实验室08",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成青杉实验室08",
+            "研究员 | 2021-2022",
+            "团队管理预算12508美元。",
+            "申请人测试了32个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12508美元。",
+              "number": "12508",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了32个场景。",
+              "number": "32",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": true,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "zh-scan",
+      "language": "zh",
+      "layout": "scan",
+      "split": "development",
+      "file": "zh-scan.pdf",
+      "sha256": "4f071d07f5cea04d88f3b0470a83a238f251219c260b710d7de3412f520f55ae",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "合成青杉实验室09",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室09",
+            "分析员 | 2023-2024",
+            "团队核验了21家门店。",
+            "申请人编写了15份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了21家门店。",
+              "number": "21",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了15份报告。",
+              "number": "15",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所09",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所09",
+            "研究员 | 2021-2022",
+            "团队管理预算12509美元。",
+            "申请人测试了33个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12509美元。",
+              "number": "12509",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了33个场景。",
+              "number": "33",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "zh-scanned_columns",
+      "language": "zh",
+      "layout": "scanned_columns",
+      "split": "development",
+      "file": "zh-scanned_columns.pdf",
+      "sha256": "9d57a84c236606adbaffae0e57e5f77e6d6727f32f8abf6788dc34ae4af5e98b",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "合成青杉实验室10",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室10",
+            "分析员 | 2023-2024",
+            "团队核验了22家门店。",
+            "申请人编写了16份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了22家门店。",
+              "number": "22",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了16份报告。",
+              "number": "16",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所10",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所10",
+            "研究员 | 2021-2022",
+            "团队管理预算12510美元。",
+            "申请人测试了34个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12510美元。",
+              "number": "12510",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了34个场景。",
+              "number": "34",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "zh-portfolio",
+      "language": "zh",
+      "layout": "portfolio",
+      "split": "held_out",
+      "file": "zh-portfolio.png",
+      "sha256": "591c0707f9cc103f2cd2e145ac15b73bbaefb6592f2e9d273e67400094c58155",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "合成青杉实验室11",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室11",
+            "分析员 | 2023-2024",
+            "团队核验了23家门店。",
+            "申请人编写了17份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了23家门店。",
+              "number": "23",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了17份报告。",
+              "number": "17",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所11",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所11",
+            "研究员 | 2021-2022",
+            "团队管理预算12511美元。",
+            "申请人测试了35个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12511美元。",
+              "number": "12511",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了35个场景。",
+              "number": "35",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "zh-weak_image",
+      "language": "zh",
+      "layout": "weak_image",
+      "split": "development",
+      "file": "zh-weak_image.png",
+      "sha256": "7da41813cb7e21dd1dacf89325f7e95f2e99844780fdd481ec887653878bd0cd",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "合成青杉实验室12",
+          "role_dates": "分析员 | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "合成青杉实验室12",
+            "分析员 | 2023-2024",
+            "团队核验了24家门店。",
+            "申请人编写了18份报告。"
+          ],
+          "facts": [
+            {
+              "statement": "团队核验了24家门店。",
+              "number": "24",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人编写了18份报告。",
+              "number": "18",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "合成海港研究所12",
+          "role_dates": "研究员 | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "合成海港研究所12",
+            "研究员 | 2021-2022",
+            "团队管理预算12512美元。",
+            "申请人测试了36个场景。"
+          ],
+          "facts": [
+            {
+              "statement": "团队管理预算12512美元。",
+              "number": "12512",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人测试了36个场景。",
+              "number": "36",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "mixed-single",
+      "language": "mixed",
+      "layout": "single",
+      "split": "held_out",
+      "file": "mixed-single.pdf",
+      "sha256": "21f66c2fab54d5d8ddcb906b04cf5536a5ca0b4481514db0e538964f486fac8c",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成01",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成01",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 13 家门店。",
+            "申请人 prepared 7 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 13 家门店。",
+              "number": "13",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 7 reports.",
+              "number": "7",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成01",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成01",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12501 budget.",
+            "申请人 tested 25 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12501 budget.",
+              "number": "12501",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 25 scenarios.",
+              "number": "25",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "mixed-columns",
+      "language": "mixed",
+      "layout": "columns",
+      "split": "development",
+      "file": "mixed-columns.pdf",
+      "sha256": "984979340af548abd57ce40b53c3de200a8d343ae2653d9ea84fd63cbd35d75c",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成02",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成02",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 14 家门店。",
+            "申请人 prepared 8 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 14 家门店。",
+              "number": "14",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 8 reports.",
+              "number": "8",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成02",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成02",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12502 budget.",
+            "申请人 tested 26 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12502 budget.",
+              "number": "12502",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 26 scenarios.",
+              "number": "26",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "mixed-staggered_columns",
+      "language": "mixed",
+      "layout": "staggered_columns",
+      "split": "development",
+      "file": "mixed-staggered_columns.pdf",
+      "sha256": "72586f5f5bae689c8a7f6ae785fbe460f68d0b089bb8ad8a38b48d3ed92af9cc",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成03",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成03",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 15 家门店。",
+            "申请人 prepared 9 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 15 家门店。",
+              "number": "15",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 9 reports.",
+              "number": "9",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成03",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成03",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12503 budget.",
+            "申请人 tested 27 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12503 budget.",
+              "number": "12503",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 27 scenarios.",
+              "number": "27",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "mixed-wrapped",
+      "language": "mixed",
+      "layout": "wrapped",
+      "split": "held_out",
+      "file": "mixed-wrapped.pdf",
+      "sha256": "2112a81aaa0ec787f16260cfa5c58b1bc1f19e43d550d2efb6bccd06cf8fe984",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成04",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成04",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 16 家门店。",
+            "申请人 prepared 10 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 16 家门店。",
+              "number": "16",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 10 reports.",
+              "number": "10",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成04",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成04",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12504 budget.",
+            "申请人 tested 28 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12504 budget.",
+              "number": "12504",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 28 scenarios.",
+              "number": "28",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "mixed-ruled_table",
+      "language": "mixed",
+      "layout": "ruled_table",
+      "split": "development",
+      "file": "mixed-ruled_table.pdf",
+      "sha256": "34e20e630d84ea7998e1ecca3a07b4975234e12a6809fac173605945f7d2fc1a",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成05",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成05",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 17 家门店。",
+            "申请人 prepared 11 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 17 家门店。",
+              "number": "17",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 11 reports.",
+              "number": "11",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成05",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成05",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12505 budget.",
+            "申请人 tested 29 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12505 budget.",
+              "number": "12505",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 29 scenarios.",
+              "number": "29",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "mixed-two_pages",
+      "language": "mixed",
+      "layout": "two_pages",
+      "split": "development",
+      "file": "mixed-two_pages.pdf",
+      "sha256": "dca4bb9ef76ca704dd3c19cb05291a1b75fa80c444dad2ea9dcf8503cc8652b8",
+      "page_count": 2,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成06",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成06",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 18 家门店。",
+            "申请人 prepared 12 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 18 家门店。",
+              "number": "18",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 12 reports.",
+              "number": "12",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成06",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成06",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12506 budget.",
+            "申请人 tested 30 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12506 budget.",
+              "number": "12506",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 30 scenarios.",
+              "number": "30",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "mixed-docx",
+      "language": "mixed",
+      "layout": "docx",
+      "split": "held_out",
+      "file": "mixed-docx.docx",
+      "sha256": "5565c65a8ca2d14b85c81e9322eb8ec40146539e50c06fc4316b5b811c45a1ba",
+      "page_count": null,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成07",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成07",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 19 家门店。",
+            "申请人 prepared 13 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 19 家门店。",
+              "number": "19",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 13 reports.",
+              "number": "13",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成07",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成07",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12507 budget.",
+            "申请人 tested 31 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12507 budget.",
+              "number": "12507",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 31 scenarios.",
+              "number": "31",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "mixed-same_organization_roles",
+      "language": "mixed",
+      "layout": "same_organization_roles",
+      "split": "development",
+      "file": "mixed-same_organization_roles.docx",
+      "sha256": "6d7f9150509b8be511b6adfd0c463af67ba17c8cabd830764b74ff70bd0aeb67",
+      "page_count": null,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成08",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成08",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 20 家门店。",
+            "申请人 prepared 14 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 20 家门店。",
+              "number": "20",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 14 reports.",
+              "number": "14",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Cedar 合成08",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成08",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12508 budget.",
+            "申请人 tested 32 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12508 budget.",
+              "number": "12508",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 32 scenarios.",
+              "number": "32",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": true,
+      "text_only_expected": "READABLE"
+    },
+    {
+      "id": "mixed-scan",
+      "language": "mixed",
+      "layout": "scan",
+      "split": "development",
+      "file": "mixed-scan.pdf",
+      "sha256": "a7aa5b595261e63d2e1a3f7145c4b4d38ba357b77d3f7b253ea97cb0764d6a91",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成09",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成09",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 21 家门店。",
+            "申请人 prepared 15 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 21 家门店。",
+              "number": "21",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 15 reports.",
+              "number": "15",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成09",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成09",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12509 budget.",
+            "申请人 tested 33 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12509 budget.",
+              "number": "12509",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 33 scenarios.",
+              "number": "33",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "mixed-scanned_columns",
+      "language": "mixed",
+      "layout": "scanned_columns",
+      "split": "held_out",
+      "file": "mixed-scanned_columns.pdf",
+      "sha256": "dac7102c7f7aa0120984a82fd383b6f136371969fc3c16e2d7c88bc51b1fe025",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成10",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成10",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 22 家门店。",
+            "申请人 prepared 16 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 22 家门店。",
+              "number": "22",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 16 reports.",
+              "number": "16",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成10",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成10",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12510 budget.",
+            "申请人 tested 34 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12510 budget.",
+              "number": "12510",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 34 scenarios.",
+              "number": "34",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "mixed-portfolio",
+      "language": "mixed",
+      "layout": "portfolio",
+      "split": "development",
+      "file": "mixed-portfolio.png",
+      "sha256": "c17346b9572c9b37a9b7f974c2beffb0b2e310131a2eefa5ac977dcee5bd48d4",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成11",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成11",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 23 家门店。",
+            "申请人 prepared 17 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 23 家门店。",
+              "number": "23",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 17 reports.",
+              "number": "17",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成11",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成11",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12511 budget.",
+            "申请人 tested 35 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12511 budget.",
+              "number": "12511",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 35 scenarios.",
+              "number": "35",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    },
+    {
+      "id": "mixed-weak_image",
+      "language": "mixed",
+      "layout": "weak_image",
+      "split": "development",
+      "file": "mixed-weak_image.png",
+      "sha256": "331bdf6697aea17fc7be36e1316af16ed635436c9797b2aaa8798dc7b53c0627",
+      "page_count": 1,
+      "entities": [
+        {
+          "organization": "Synthetic Cedar 合成12",
+          "role_dates": "分析员 Analyst | 2023-2024",
+          "years": [
+            "2023",
+            "2024"
+          ],
+          "lines": [
+            "Synthetic Cedar 合成12",
+            "分析员 Analyst | 2023-2024",
+            "团队 reviewed 24 家门店。",
+            "申请人 prepared 18 reports."
+          ],
+          "facts": [
+            {
+              "statement": "团队 reviewed 24 家门店。",
+              "number": "24",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 prepared 18 reports.",
+              "number": "18",
+              "owner": "applicant"
+            }
+          ]
+        },
+        {
+          "organization": "Synthetic Harbor 合成12",
+          "role_dates": "研究员 Researcher | 2021-2022",
+          "years": [
+            "2021",
+            "2022"
+          ],
+          "lines": [
+            "Synthetic Harbor 合成12",
+            "研究员 Researcher | 2021-2022",
+            "团队 managed $12512 budget.",
+            "申请人 tested 36 scenarios."
+          ],
+          "facts": [
+            {
+              "statement": "团队 managed $12512 budget.",
+              "number": "12512",
+              "owner": "team"
+            },
+            {
+              "statement": "申请人 tested 36 scenarios.",
+              "number": "36",
+              "owner": "applicant"
+            }
+          ]
+        }
+      ],
+      "conflicting_dates_require_review": false,
+      "same_organization_different_roles": false,
+      "text_only_expected": "OCR_OR_VISION_REQUIRED"
+    }
+  ]
+}
