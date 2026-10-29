@@ -54,6 +54,18 @@ They include actual descendants and file handles, delayed assignment, refusal
 to assign/resume, Unicode paths/arguments/environment, and separate output.
 The temporary extracted runtime was removed after the test.
 
+The clean repair commit `9bef886ed948dbe0395dea6276aabc052e59cb8a`
+then produced two identical source archives: 3,099,169 bytes, SHA-256
+`4adf6b9c8a198dc45656056ea9706c0ebdf62168c831022ed5001a8d98478058`.
+All 572 archive files and the approved identity check passed. Its real isolated
+source startup passed under Python 3.11.3 and 3.13.15: both locales, five
+loopback requests, two offline candidates, zero queue mutations, no private
+values emitted and no external actions. Source/runtime temporary directories
+were removed. The [exact source-candidate receipt](../evaluations/2026-10-28/release-smoke-races-source-candidate.json)
+binds this result to `9bef886`, not a later documentation or CI merge commit.
+These checks use one development host and do not establish clean-Windows
+installation, a production signature or live ATS/mailbox compatibility.
+
 The old complete runtime for `928b812` was built twice identically and passed its
 limited offline import/closure smoke: 39,509,593 bytes, SHA-256
 `f74c2983dabab5e3a03a3f5d395133cc3d1a2999f0529fb3b4d16520a36a4fa2`.

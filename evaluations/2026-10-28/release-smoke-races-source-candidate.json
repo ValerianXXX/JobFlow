@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "record_kind": "LOCAL_SOURCE_CANDIDATE_NOT_SIGNED_RELEASE",
+  "recorded_at_utc": "2026-10-29T03:59:58.390753+00:00",
+  "source_commit": "9bef886ed948dbe0395dea6276aabc052e59cb8a",
+  "source_candidate": {
+    "schema_version": 1,
+    "status": "RELEASE_CANDIDATE_BUILT",
+    "version": "0.7.0",
+    "commit": "9bef886ed948dbe0395dea6276aabc052e59cb8a",
+    "artifact_name": "JobFlow-v0.7.0-9bef886ed948-source.zip",
+    "artifact_sha256": "sha256:4adf6b9c8a198dc45656056ea9706c0ebdf62168c831022ed5001a8d98478058",
+    "artifact_bytes": 3099169,
+    "reproducible_builds": 2,
+    "archive": {
+      "status": "PASS",
+      "file_count": 572,
+      "finding_count": 0,
+      "findings": []
+    },
+    "source_smoke": {
+      "status": "PASS",
+      "binding": "127.0.0.1",
+      "supported_locales": [
+        "zh",
+        "en"
+      ],
+      "offline_discovery": "PASS",
+      "offline_candidates": 2,
+      "snapshot_persisted": false,
+      "candidate_queue_mutations": 0,
+      "private_values_emitted": 0,
+      "external_network_actions": 0,
+      "real_external_actions": 0,
+      "private_store_health": "PASS",
+      "private_ciphertext_files": 0,
+      "loopback_requests": 5,
+      "security_headers": "PASS",
+      "project_state_isolated": true,
+      "local_app_data_isolated": true
+    },
+    "repository_content_status": "PASS",
+    "author_identity_status": "PASS",
+    "uploaded": false,
+    "external_network_actions": 0,
+    "real_external_actions": 0
+  },
+  "local_python": "3.11.3",
+  "second_interpreter": {
+    "source_commit": "9bef886ed948dbe0395dea6276aabc052e59cb8a",
+    "python": "3.13.15",
+    "source_smoke": {
+      "status": "PASS",
+      "binding": "127.0.0.1",
+      "supported_locales": [
+        "zh",
+        "en"
+      ],
+      "offline_discovery": "PASS",
+      "offline_candidates": 2,
+      "snapshot_persisted": false,
+      "candidate_queue_mutations": 0,
+      "private_values_emitted": 0,
+      "external_network_actions": 0,
+      "real_external_actions": 0,
+      "private_store_health": "PASS",
+      "private_ciphertext_files": 0,
+      "loopback_requests": 5,
+      "security_headers": "PASS",
+      "project_state_isolated": true,
+      "local_app_data_isolated": true
+    },
+    "elapsed_ms": 11765,
+    "temporary_directories_removed": true,
+    "clean_windows_acceptance": false
+  },
+  "hosts": 1,
+  "hosted_ci": "PENDING_REPLACEMENT_RUN",
+  "production_signed": false,
+  "clean_windows_acceptance": false,
+  "new_model_calls": 0,
+  "uploaded": false
+}
