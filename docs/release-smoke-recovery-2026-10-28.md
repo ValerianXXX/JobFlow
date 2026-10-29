@@ -58,6 +58,19 @@ blocker resolved based on these focused checks alone. The complete runtime and
 publisher request for `987e8c5` remain historical preparation for that commit,
 not attestations for this code change.
 
+The [local recovery receipt](../evaluations/2026-10-28/release-smoke-recovery.json)
+binds the clean source build to `d7a2f01348a5ab20f2ebdc3b092f928fa686f350`.
+Two builds produced the same 3,088,332-byte source archive, SHA-256
+`64dd6454e4f52b57108373ba3e3ffb56b1166ea2879defbe5f5ec2c84998ee7e`.
+All 568 archived files passed the boundary scan. Its real isolated loopback smoke
+passed under Python 3.11.3 and 3.13.15, including both locales, two offline
+candidates, zero queue mutations, zero external actions and no private values
+emitted. The 3.13.15 executable came from the previously verified cached complete
+runtime; all five lifecycle/diagnostic tests also passed under that interpreter.
+Both temporary runtime/source directories were removed. This is two interpreter
+versions on one development host, not independent clean-Windows acceptance.
+The new hosted CI remains separate evidence.
+
 ## Run and rollback
 
 ```powershell
