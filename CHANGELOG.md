@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Added an opt-in, fixed-input material-preview evaluation covering the production visual/Claim pipeline, DPAPI original retention and mandatory source confirmation. Preserved unknown cost/usage fields rather than treating missing receipts as zero. Fresh transcription runs now record their actual UTC date instead of a hardcoded historical date.
+
 - Contain source-candidate smoke scripts and their descendants in a Windows job before running target code. Reclaim descendants after success, failure or timeout so a dead parent cannot leave the extracted candidate locked. Preserve bounded failure-stage diagnostics without child stderr, private paths or exception text. The original CI UI startup failure still requires revalidation; no timeout or release assertion was relaxed.
 
 - Applied the owner's explicit approval for one historical identity as a single email-hash exception. New commits retain the account-linked noreply address; other identities and all signing/release gates remain subject to review.
