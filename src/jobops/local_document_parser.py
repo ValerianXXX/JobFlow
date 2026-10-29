@@ -148,6 +148,7 @@ def _read_pdf_worker(raw: bytes, worker_module: str) -> tuple[str, dict]:
                 "LOCAL_PARSER_NOT_INSTALLED",
                 "LOCAL_PARSER_NEEDS_OCR",
                 "LOCAL_PARSER_LIMIT",
+                "LOCAL_PARSER_INCOMPLETE_PAGINATION",
             }:
                 code = "LOCAL_PARSER_FAILED"
             raise JobOpsError(

@@ -924,7 +924,9 @@ def export_docx_to_pdf(docx_path: Path, pdf_path: Path, powershell_script: Path)
 
 def render_pdf_to_pngs(pdf_path: Path, output_dir: Path, pdftoppm: str) -> list[Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
-    prefix = output_dir / f".{pdf_path.stem}.jobflow-{uuid.uuid4().hex}"
+    # Original filenames can consume the remaining Windows path budget. A
+    # per-run opaque prefix still rejects stale output without repeating them.
+    prefix = output_dir / f".jobflow-{uuid.uuid4().hex}"
     try:
         completed = subprocess.run(
             [pdftoppm, "-png", "-r", "150", str(pdf_path), str(prefix)],

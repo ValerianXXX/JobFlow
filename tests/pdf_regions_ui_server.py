@@ -27,6 +27,8 @@ from jobops.private_onboarding import PrivateOnboarding
 from jobops.secure_store import WindowsDPAPIStore
 
 FIXTURE = json.loads((ROOT / "tests/fixtures/cjk-column-response-v1.json").read_text(encoding="utf-8"))
+COMPLETE_CORPUS = json.loads((ROOT / "tests/fixtures/complete-materials-v1/manifest.json").read_text(encoding="utf-8"))
+INCOMPLETE_SOURCE_HASH = next(case["sha256"] for case in COMPLETE_CORPUS["challenges"] if case["id"] == "challenge-en-missing_middle")
 
 
 class RecordedSyntheticEngine(AIAnalysisEngine):
@@ -54,8 +56,8 @@ class RecordedSyntheticEngine(AIAnalysisEngine):
 
 class FixedInputService(OnboardingCenterService):
     def preview_source(self, source_type, extension, data, **kwargs):
-        if source_type != "resume" or extension != ".pdf" or hashlib.sha256(data).hexdigest() != FIXTURE["source_sha256"]:
-            raise JobOpsError("SYNTHETIC_FIXTURE_ONLY", "Upload only the pinned synthetic Chinese columns PDF.")
+        if source_type != "resume" or extension != ".pdf" or hashlib.sha256(data).hexdigest() not in {FIXTURE["source_sha256"], INCOMPLETE_SOURCE_HASH}:
+            raise JobOpsError("SYNTHETIC_FIXTURE_ONLY", "Upload only a pinned synthetic columns or incomplete-source PDF.")
         return super().preview_source(source_type, extension, data, **kwargs)
 
 

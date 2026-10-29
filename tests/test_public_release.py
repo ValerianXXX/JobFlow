@@ -166,6 +166,26 @@ class PublicReleaseBoundaryTests(unittest.TestCase):
             self.assertEqual(malformed["status"], "REVIEW_REQUIRED")
             self.assertEqual(malformed["malformed_record_count"], 1)
 
+    def test_synthetic_subdomain_content_does_not_approve_author_identity(self) -> None:
+        for domain in ("applicant.example.test", "nested.applicant.example.test", "APPLICANT.EXAMPLE.TEST"):
+            with self.subTest(domain=domain):
+                self.assertEqual(validate_public_text("fixture.json", "candidate01" + chr(64) + domain), [])
+        for domain in (
+            "example.test.private.invalid", "evil-example.test", "other.test",
+            "applicant.users.noreply.github.com", "-bad.example.test", "bad-.example.test",
+            "bad..example.test", "a" * 64 + ".example.test", "personal.invalid",
+        ):
+            with self.subTest(domain=domain):
+                self.assertEqual(
+                    validate_public_text("fixture.json", "candidate01" + chr(64) + domain),
+                    [{"kind": "email", "path": "fixture.json"}],
+                )
+        raw = b"Synthetic\x1fcandidate01@applicant.example.test\x1fGitHub\x1fnoreply@github.com\x1e"
+        with project_temp() as root:
+            result = self._author_result(root, {"schema_version": 1, "author_identity_policy": "NOREPLY_ONLY"}, raw)
+            self.assertEqual(result["status"], "REVIEW_REQUIRED")
+            self.assertEqual(result["unapproved_identity_count"], 1)
+
     def test_public_email_policy_requires_an_explicit_exact_allowlist(self) -> None:
         raw = b"Synthetic\x1fmaintainer@example.test\x1fSynthetic\x1fmaintainer@example.test\x1e"
         with project_temp() as root:

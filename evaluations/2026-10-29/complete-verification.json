@@ -1,0 +1,243 @@
+{
+  "checked_at_utc": "2026-10-29T19:54:12.701687+00:00",
+  "base_commit": "77b9e2cb142a4a40d84ee70a596dda7385aa56e0",
+  "working_tree_verification": true,
+  "synthetic_only": true,
+  "source_lf_sha256": {
+    "src/jobops/document_coverage.py": "9a6c1f158541e425279b11d9b9dcf340de784d0e48b12d2ed34cd89333f0b319",
+    "src/jobops/document_qa.py": "9553c4ac495f3732cee644a3efaa3786eea3753cac5078ba62906b789bc03bbf",
+    "src/jobops/_pdf_region_worker.py": "47417587fd81bc33780b72ad7e39ae3db818f6e0461191497fb415e2028aa631",
+    "src/jobops/local_document_parser.py": "7b5c704b2136bd555e5b253bfaab655f4350432b3dcaa791d59b26df914d71ec",
+    "src/jobops/onboarding_center.py": "47f2a605020db14cd04547270cc0a2d6350a90ba4c79b1f761d9f96e8c2cc342",
+    "src/jobops/document_builder.py": "3eb93a6cfe4fe3eb2a82d499c7cfaba41aac7864dbf57297673bea5da8578cf5",
+    "src/jobops/ui/app.js": "5c4f183c6eb2d329fb4cb5aaca2b6cb88470b6a85871ea37bf93320bd58c4cac",
+    ".agents/skills/job-application-operator/scripts/extract-pdf-text.py": "fb8ea294b8f374add90eba74be853713859d828385f96377d4dad8021a7d96a2",
+    "scripts/evaluate-complete-materials.py": "56fb71c96c4a087ea2000cac2bdbc2c02c547195fc093c17905bf672648bdfe2",
+    "tests/pdf_regions_ui_e2e.cjs": "ec8e8a3d1d5db6d1a0b6358020a98536a9b42f6572ea4a413557a920b5bf9ba1",
+    "tests/pdf_regions_ui_server.py": "73f70e7122004848680c7860c39cb9ca59d552883710f1d1e6133e209be8be28",
+    "src/jobops/public_release.py": "589663718f75f016541dccf13bccf6a1fc5a4d96e13bef9e4a5ea0fe518fdc43",
+    "tests/test_public_release.py": "b92f41d76d75d4c6572605ed343c9b829270df3a575640149fb1a6a1362e3694"
+  },
+  "original_observations": [
+    {
+      "file": "complete-development-baseline.json",
+      "sha256": "3b7144f8676c19fa3ab8d6a0cc69e61eeea9069b8292e49a262340b617d9d165"
+    },
+    {
+      "file": "complete-development-intermediate.json",
+      "sha256": "cfccf795e2ce3037d53d65bc6cbd2e4b179502cb8ebf499effb138679c7db591"
+    },
+    {
+      "file": "complete-development-final.json",
+      "sha256": "b657af16506b7b494d1b8defa68b7d80d1015a7cf68fe75ff40c4438f1c357d8"
+    },
+    {
+      "file": "complete-held-out-first.json",
+      "sha256": "90a0bb22d1ae82ea73b6122f9ec5d4bd6ddf4a79d3ac6c3ca0c84a9e3be7bf66"
+    },
+    {
+      "file": "complete-held-out-final.json",
+      "sha256": "0b1cb68008f4f7a3a36e2f16a84641c30c1dc638346de1fbe2ec28408b1ea096"
+    }
+  ],
+  "python": {
+    "distinct_related_checks": 135,
+    "suites": [
+      {
+        "suite": "test_complete_material_corpus.py",
+        "passed": 6,
+        "local_log_sha256": "49e8f0aa37ae1819763aef68bce3ab6c480e7882fc435337c578fa7951726e55"
+      },
+      {
+        "suite": "test_document_coverage.py",
+        "passed": 7,
+        "local_log_sha256": "6f3de4c895810d9cb7b8f2e3c326f6947707950ab06cdd88374f17c0fb404f4f",
+        "earlier_logged_passed": 6,
+        "later_run": "Seven tests passed in 5.466 seconds after the addendum correction; command output retained in the task transcript."
+      },
+      {
+        "suite": "test_document_reading_order.py",
+        "passed": 5,
+        "local_log_sha256": "3a9c2a11bcdc8ce47013e376f6eda606cbb752b5498c7ca4869f746269b8ccaf"
+      },
+      {
+        "suite": "test_materials.py",
+        "passed": 12,
+        "local_log_sha256": "dce3a704d149b8395509641dd8f2fef1a1bb173d0ea878fe443f8538d434fb0f"
+      },
+      {
+        "suite": "test_onboarding_center.py",
+        "passed": 74,
+        "local_log_sha256": "f0720539d3ff980d2b51a1b2bec78005d2645ad1116c79b7d6db07010ecbec8a"
+      },
+      {
+        "suite": "test_pdf_regions.py",
+        "passed": 8,
+        "local_log_sha256": "dfc802f78af6db2ac9d0b3b10a6a08247aa3f28829677b625d5e729a32bb92de"
+      },
+      {
+        "suite": "test_public_docs.py",
+        "passed": 5,
+        "local_log_sha256": "f79b33a9c4d18a314dc7bb56bbb994872b87b6e29311056aa7b6b1884ed67b13"
+      },
+      {
+        "suite": "test_source_quality.py",
+        "passed": 3,
+        "local_log_sha256": "f06e0d4910d4029873f8419c473d9d147653c125e4a2a7734ff1835e8b5be373"
+      },
+      {
+        "suite": "test_windows_subprocess_hygiene.py",
+        "passed": 3,
+        "local_log_sha256": "808d3dc16cace5a1ad5b6b4a5f0c49ffbff9e56112f1ccf5be00f610f4a2fc85"
+      },
+      {
+        "suite": "test_public_release.py",
+        "passed": 12,
+        "local_log_sha256": "43b98639d1ad954399c04c1e6173f6af2500893a97f161c03eaa76fda2f8e993"
+      }
+    ],
+    "all_repository_checks": "Hosted CI after commit; not inferred from targeted local tests"
+  },
+  "browser": {
+    "suite": "pdf_regions_ui_e2e.cjs",
+    "status": "PASS_AFTER_FIXTURE_AND_CAPTURE_REPAIRS",
+    "synthetic_only": true,
+    "actual_components": [
+      "Windows DPAPI",
+      "HTTP import",
+      "local PDF parser",
+      "original rendering",
+      "Edge desktop/mobile"
+    ],
+    "model": "RECORDED_SYNTHETIC_RESPONSE_REPLAY",
+    "incomplete_source_rejected_in_zh_and_en": true,
+    "new_error_response_checks": "Actual XHR loadend status 400 and JSON code; no response mocking or weakened assertions",
+    "existing_result": {
+      "synthetic_only": true,
+      "model": "RECORDED_RESPONSE_REPLAY",
+      "desktop": "zh",
+      "mobile": "en",
+      "source_hash_bound": true,
+      "unconfirmed_selection": "BLOCKED",
+      "candidate_count": 5,
+      "after_reload": {
+        "decisions": [
+          "PENDING",
+          "PENDING",
+          "PENDING",
+          "PENDING",
+          "PENDING"
+        ],
+        "sources": 1
+      },
+      "page_errors": [],
+      "external_requests": []
+    },
+    "independent_humans": 0,
+    "visible_bilingual_messages_reviewed": true,
+    "local_capture_sha256": {
+      "incomplete-zh.png": "fb076c58811cd8ddee7887030d3eac907ca8249f1c281a8afdc5051f060f132f",
+      "incomplete-en.png": "2bb905679148508cd244d466a975d72f56ed6197500de22fa2c6e04e7ea51f3e"
+    }
+  },
+  "retained_failures": [
+    {
+      "stage": "Corpus authoring identifier",
+      "issue": "CRLF byte digest was mislabeled LF; loader rejected it before observation. Identifier calculation fixed without changing source facts."
+    },
+    {
+      "stage": "First page-coverage implementation",
+      "issue": "Complete numbered section plus unnumbered addendum was falsely rejected. Original intermediate observation retained; explicit sequence regression added."
+    },
+    {
+      "stage": "Bulk rendering",
+      "issue": "A long generated Poppler output path failed. Opaque fresh prefix restored rendering of the same source, without deleting previous pages."
+    },
+    {
+      "stage": "Browser harness",
+      "issue": "Three attempts could not read the upload response from the Edge inspector cache. The first two also used a fixture whitelist not yet extended to the new pinned incomplete PDF. Both exact synthetic hashes are now allowed; real XHR receipts plus localized UI checks pass. Timing-only capture retry did not fix the cache failure."
+    },
+    {
+      "stage": "Public content scan",
+      "issue": "The frozen synthetic fixture namespace was falsely rejected as a private email. Valid example.test subdomains are now recognized; lookalikes and unrelated domains fail, and synthetic Git authors still require review. No source fixtures or original observations changed.",
+      "initial_local_log_sha256": "606eb06b2da2aab217b4c7beca458d2ebeb3a8c7b4752243937cbf3210ff0efb",
+      "official_rule": "https://www.rfc-editor.org/rfc/rfc6761#section-6.2",
+      "checked_date": "2026-10-29"
+    }
+  ],
+  "held_out_exposure": {
+    "original_families": 4,
+    "language_variants": 12,
+    "early_exposed_family": "hybrid_text_scan",
+    "reason": "English hybrid file exercised by a coverage regression before aggregate run",
+    "other_families": 3,
+    "other_files": 9,
+    "independent_authorship": false,
+    "blind_to_coding_assistant": false
+  },
+  "rendering": {
+    "rendered_outputs": 162,
+    "review_panels": 168,
+    "contact_sheets": 28,
+    "reviewer": "coding assistant",
+    "independent_human_review": false,
+    "intentional_faults": "Challenge scans/blank/missing pages are intentionally defective; not repaired to improve scores."
+  },
+  "unsigned_wheel": {
+    "file": "jobflow_local-0.7.0-py3-none-any.whl",
+    "sha256": "53b1b3a8b6c49dac02beeb91e0079e9a83884b06a24c26e20ce81eb12e2fe2fb",
+    "source_modules_and_ui_match": true,
+    "signed": false
+  },
+  "full_material_model_requests": 0,
+  "semantic_claim_acceptance": "NOT_MEASURED",
+  "current_stage_model_cost_usd": 0,
+  "human_labor_cost": null,
+  "repository_boundary": {
+    "schema_version": 1,
+    "status": "PASS",
+    "readiness_scope": "PUBLIC_REPOSITORY_BOUNDARY_ONLY",
+    "public_repository_ready": true,
+    "public_release_ready": false,
+    "public_release_blockers": [],
+    "tree": {
+      "status": "PASS",
+      "tracked_file_count": 748,
+      "finding_count": 0,
+      "findings": []
+    },
+    "history": {
+      "status": "PASS",
+      "commit_count": 309,
+      "historical_path_count": 681,
+      "unique_blob_count": 2700,
+      "scanned_text_blob_count": 2476,
+      "scanned_document_blob_count": 38,
+      "finding_count": 0,
+      "findings": []
+    },
+    "author_identity": {
+      "status": "PASS",
+      "policy": "PUBLIC_EMAIL_HASHES_APPROVED",
+      "identity_count": 3,
+      "non_noreply_identity_count": 1,
+      "unapproved_identity_count": 0,
+      "approved_public_email_count": 1,
+      "malformed_record_count": 0,
+      "private_identity_values_emitted": 0
+    }
+  },
+  "current_commit_ci": "Check after commit",
+  "remaining": [
+    "Held-out raw-text omissions",
+    "Semantic Claim/ownership/date correctness",
+    "Original-pixel grounding and region calibration",
+    "Independent human acceptance",
+    "Earlier intermittent native startup/visibility",
+    "Trusted production signing unavailable",
+    "Independent clean Windows acceptance environment unavailable"
+  ],
+  "whole_goal_complete": false,
+  "production_actions": 0,
+  "repository_boundary_note": "Working tree plus existing history at base commit; not release approval"
+}

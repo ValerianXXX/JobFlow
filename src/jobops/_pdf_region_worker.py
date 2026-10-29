@@ -68,14 +68,29 @@ def _ordered_rows(rows: list[list[dict]], width: float, ruled: bool) -> tuple[li
             ends = [row[-1]["x1"] for row in left if row[-1]["x1"] <= right_start - 24]
             if len(ends) >= 3:
                 gaps.append((max(ends) + right_start) / 2)
+    # Wrapped columns often have different baselines. The right column's
+    # repeated word start can be hidden inside merged physical rows, so row
+    # starts alone miss its gutter. Propose a separator half the minimum gap
+    # before repeated word starts, then penalize separators cutting other words.
+    word_starts: dict[int, list[float]] = {}
+    for row in rows:
+        for word in row:
+            word_starts.setdefault(round(word["x0"] / 4), []).append(word["x0"])
+    for positions in word_starts.values():
+        if len(positions) >= 3:
+            x = min(positions) - 12
+            if width * .2 < x < width * .8:
+                gaps.append(x)
     best = None
     for x in sorted(set(round(gap, 1) for gap in gaps)):
-        support = _support([_split(row, x) for row in rows])
-        if support >= 3 and (best is None or support > best[0]):
-            best = support, x
+        parts = [_split(row, x) for row in rows]
+        support = _support(parts)
+        score = support - 2 * sum(crossing for _, _, crossing in parts)
+        if support >= 3 and score >= 3 and (best is None or (score, support) > best[:2]):
+            best = score, support, x
     if best is None:
         return rows, False
-    x = best[1]
+    x = best[2]
     ordered: list[list[dict]] = []
     band: list[list[dict]] = []
     changed = False
@@ -105,6 +120,7 @@ def parse_region_pdf(raw: bytes) -> dict:
     import pdfplumber
 
     pages = []
+    physical_page_text = []
     total_characters = 0
     with pdfplumber.open(io.BytesIO(raw)) as pdf:
         if not 1 <= len(pdf.pages) <= 6:
@@ -133,6 +149,7 @@ def parse_region_pdf(raw: bytes) -> dict:
             # order; unruled tables remain an explicit unsupported ambiguity.
             ruled = bool(page.lines or page.rects)
             physical_rows = _rows(words)
+            physical_page_text.append("\n".join(" ".join(w["text"] for w in row) for row in physical_rows))
             if len(physical_rows) > 500:
                 raise ValueError("LOCAL_PARSER_LIMIT")
             rows, reordered = _ordered_rows(physical_rows, float(page.width), ruled)
@@ -151,7 +168,13 @@ def parse_region_pdf(raw: bytes) -> dict:
                 raise ValueError("LOCAL_PARSER_LIMIT")
             pages.append({"page": number, "blank": False, "blocks": blocks,
                           "column_reordered": reordered, "table_order_retained": ruled})
-    return {"pages": pages, "parser_version": "pdf-regions-1", "backend_version": version("pdfplumber")}
+    from .document_coverage import require_complete_page_text
+    from .errors import JobOpsError
+    try:
+        require_complete_page_text(physical_page_text)
+    except JobOpsError as error:
+        raise ValueError("LOCAL_PARSER_INCOMPLETE_PAGINATION") from error
+    return {"pages": pages, "parser_version": "pdf-regions-2", "backend_version": version("pdfplumber")}
 
 
 def main() -> int:
@@ -169,7 +192,7 @@ def main() -> int:
     except Exception as exc:
         code = str(exc) if isinstance(exc, ValueError) and str(exc) in {
             "LOCAL_PARSER_REQUEST_INVALID", "LOCAL_PARSER_LIMIT", "LOCAL_PARSER_NEEDS_OCR",
-            "LOCAL_PARSER_PROVENANCE_INVALID"} else "LOCAL_PARSER_FAILED"
+            "LOCAL_PARSER_PROVENANCE_INVALID", "LOCAL_PARSER_INCOMPLETE_PAGINATION"} else "LOCAL_PARSER_FAILED"
         response = {"ok": False, "code": code}
     sys.stdout.write(json.dumps(response, ensure_ascii=True))
     return 0

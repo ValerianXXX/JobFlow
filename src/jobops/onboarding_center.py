@@ -4180,6 +4180,7 @@ class OnboardingCenterService:
                             layout=layout,
                             page_limit=MAX_ONBOARDING_PDF_PAGES,
                             character_limit=MAX_DERIVED_TEXT_CHARS,
+                            require_complete_pages=True,
                         )
                     except JobOpsError as exc:
                         errors.append(exc)

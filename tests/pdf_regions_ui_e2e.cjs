@@ -28,6 +28,16 @@ const root = path.resolve(__dirname, "..");
     browser=await chromium.launch({channel:"msedge",headless:true});
     page=await browser.newPage({viewport:{width:1365,height:900}});
     page.setDefaultTimeout(30000);
+    await page.addInitScript(()=>{
+      window.syntheticImportReceipts=[];
+      const open=XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open=function(method,url,...rest){
+        if(method==="POST"&&String(url).includes("/api/import?")){
+          this.addEventListener("loadend",()=>window.syntheticImportReceipts.push({status:this.status,body:this.responseText}));
+        }
+        return open.call(this,method,url,...rest);
+      };
+    });
     const pageErrors=[], externalRequests=[];
     page.on("pageerror",err=>pageErrors.push(err.message));
     await page.route("**/*",route=>{
@@ -36,6 +46,27 @@ const root = path.resolve(__dirname, "..");
     });
     await page.goto(url);
     await page.waitForFunction(()=>state.data && !document.querySelector("#documentFile").disabled);
+    await page.locator("#documentFile").setInputFiles(path.join(root,"tests","fixtures","complete-materials-v1","challenge-en-missing_middle.pdf"));
+    await page.waitForFunction(()=>window.syntheticImportReceipts.length===1);
+    const incomplete=await page.evaluate(()=>window.syntheticImportReceipts[0]);
+    assert.equal(incomplete.status,400,JSON.stringify(incomplete));
+    const incompleteBody=JSON.parse(incomplete.body);
+    assert.equal(incompleteBody.code,"LOCAL_PARSER_INCOMPLETE_PAGINATION");
+    await page.waitForFunction(()=>document.querySelector("#toast").textContent.includes("页码不连续"));
+    await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector("#toast")).opacity)>=.99);
+    assert.equal(await page.locator(".source-preview").count(),0);
+    await page.screenshot({path:path.join(artifacts,"incomplete-zh.png")});
+    await page.getByText("EN",{exact:true}).click();
+    await page.locator("#documentFile").setInputFiles([]);
+    await page.locator("#documentFile").setInputFiles(path.join(root,"tests","fixtures","complete-materials-v1","challenge-en-missing_middle.pdf"));
+    await page.waitForFunction(()=>window.syntheticImportReceipts.length===2);
+    const incompleteEn=await page.evaluate(()=>window.syntheticImportReceipts[1]);
+    assert.equal(incompleteEn.status,400,JSON.stringify(incompleteEn));
+    assert.equal(JSON.parse(incompleteEn.body).code,"LOCAL_PARSER_INCOMPLETE_PAGINATION");
+    await page.waitForFunction(()=>document.querySelector("#toast").textContent.includes("pagination is incomplete"));
+    await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector("#toast")).opacity)>=.99);
+    await page.screenshot({path:path.join(artifacts,"incomplete-en.png")});
+    await page.getByText("中文",{exact:true}).click();
     const uploaded=page.waitForResponse(response=>response.request().method()==="POST" && response.url().includes("/api/import?"));
     await page.locator("#documentFile").setInputFiles(path.join(root,"tests","fixtures","material-layout-probes-v1","zh-columns.pdf"));
     const uploadResponse=await uploaded;
