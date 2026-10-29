@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "source_commit": "7b2fbf7d2249829610b4e7a5e4f2c68c8263f3ef",
+  "status": "RELEASE_CANDIDATE_BUILT",
+  "artifact_name": "JobFlow-v0.7.0-7b2fbf7d2249-source.zip",
+  "artifact_sha256": "sha256:05e7dc5949313b5ed88a005e725ddb4b854d581ce7e69766dd11719f096cdd44",
+  "artifact_bytes": 3071999,
+  "reproducible_builds": 2,
+  "archive": {
+    "status": "PASS",
+    "file_count": 561,
+    "finding_count": 0,
+    "findings": []
+  },
+  "source_smoke": {
+    "status": "PASS",
+    "binding": "127.0.0.1",
+    "supported_locales": [
+      "zh",
+      "en"
+    ],
+    "offline_discovery": "PASS",
+    "offline_candidates": 2,
+    "snapshot_persisted": false,
+    "candidate_queue_mutations": 0,
+    "private_values_emitted": 0,
+    "external_network_actions": 0,
+    "real_external_actions": 0,
+    "private_store_health": "PASS",
+    "private_ciphertext_files": 0,
+    "loopback_requests": 5,
+    "security_headers": "PASS",
+    "project_state_isolated": true,
+    "local_app_data_isolated": true
+  },
+  "uploaded": false,
+  "production_signed": false,
+  "clean_windows_acceptance": false,
+  "identity_exception": "One explicitly owner-approved historical email hash; other identities remain gated"
+}

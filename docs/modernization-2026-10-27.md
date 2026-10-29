@@ -118,10 +118,20 @@ findings (561 tracked files, 287 commits, 2,471 unique blobs); author identity i
 identity values emitted. `public_release_ready` remains false: repository-boundary
 success alone does not certify a signed release.
 
-Validation: all 11 focused public-release identity/content tests pass. The new
-commits use the account-linked noreply address for author and committer, changed
-tracked files contain no private-address findings, and the raw-history audit
-still reports one unresolved identity rather than a false release pass.
+Source commit `7b2fbf7d2249829610b4e7a5e4f2c68c8263f3ef` then produced
+`JobFlow-v0.7.0-7b2fbf7d2249-source.zip` twice with identical SHA-256
+`05e7dc5949313b5ed88a005e725ddb4b854d581ce7e69766dd11719f096cdd44`
+(3,071,999 bytes). Its 561-file archive scan and isolated bilingual loopback
+source smoke passed, with zero private values emitted or external actions.
+The [source-candidate receipt](../evaluations/2026-10-28/approved-identity-source-candidate.json)
+binds these results to that commit. This artifact has not been uploaded or
+production-signed; it is separate from the complete Windows runtime below.
+
+Before the historical exception was approved, all 11 focused public-release
+identity/content tests passed, but the raw-history audit still reported one
+unresolved identity. The approved full-history result above supersedes that
+identity finding; it does not replace the remaining release gates. New commits
+continue to use the account-linked noreply address for author and committer.
 
 Runtime and CI receipts elsewhere in this document describe their named source
 commits. This documentation and commit-identity correction does not transfer those receipts to a new
@@ -156,8 +166,8 @@ inspected configuration. Use the existing [release checklist](release-checklist.
 exact-commit builder, protected-publisher request/response validation and clean
 Windows receipt. Do not substitute a developer signature for the production key.
 
-Publication still needs an authorized resolution of the historical-identity discrepancy, protected signing
-availability and clean signed-install/upgrade/rollback acceptance. This workstation
+The specified historical-identity exception is now approved and applied.
+Publication still needs protected signing availability and clean signed-install/upgrade/rollback acceptance. This workstation
 can validate source and synthetic integration tests, but is not a clean Windows
 signed-install acceptance machine. The actual v0.6.0 retained-data layout must be
 checked in an isolated Windows profile. Keep the prior health-checked runtime and
