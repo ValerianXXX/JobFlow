@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-29T15:16:32.692430+00:00",
+  "base_commit": "9425efd10fd1f57450cafdb5e69515b2011919e2",
+  "scope": "FIRST_M0_M1_BATCH_SYNTHETIC_STANDARD_RESUME",
+  "browser": {
+    "synthetic_only": true,
+    "seeded_completed_profile": true,
+    "ai_extraction_tested": false,
+    "live_submission": false,
+    "word_conversion": "REAL_LOCAL_WORD_PASSED",
+    "docx_sha256": "sha256:f77e3340a3b80bf15002b6d72e99f8e2f20d47461457330284c98812ffaf451d",
+    "capabilities": {
+      "docx_generation": true,
+      "pdf_export": "DETECTED_NOT_VERIFIED",
+      "pdf_export_provider": "WORD",
+      "page_preview": true,
+      "application_pdf_renderer": true,
+      "automatic_installation": false,
+      "real_external_actions": 0
+    },
+    "pdf_sha256": "sha256:c83d8650b006e6308c38717644d34239fe801098b12697aff9b0cad3c28d2252",
+    "render_sha256": "sha256:e9727bd09fcc2c2fe7b6f2a8e2b6b4d74ccacf48320d67d2a51bfbeba2f3fb87",
+    "page_indicator": "第 1 / 1 页",
+    "desktop_zh": true,
+    "mobile_en": true,
+    "download_verified": true,
+    "adoption_persisted": true,
+    "session_and_origin_checks": true,
+    "browser_errors": [],
+    "external_requests": []
+  },
+  "verification": {
+    "related_python_tests": 152,
+    "javascript_suites": 10,
+    "real_dpapi": true,
+    "real_word": true,
+    "independent_human_study": false,
+    "live_employer_workflow": false,
+    "clean_windows": false
+  },
+  "generation": {
+    "model_calls": 0,
+    "model_call_cost_usd": 0,
+    "scope": "STANDARD_LAYOUT_FORMATTING_ONLY",
+    "approved_fixture_statements": 2,
+    "earlier_extraction_cost": "SEPARATE_NOT_MEASURED_HERE"
+  },
+  "visual_review": {
+    "reviewer_type": "CODING_ASSISTANT",
+    "page_count": 1,
+    "pages": [
+      {
+        "page": 1,
+        "sha256": "sha256:e9727bd09fcc2c2fe7b6f2a8e2b6b4d74ccacf48320d67d2a51bfbeba2f3fb87",
+        "result": "PASS",
+        "reason": "Observed name, contact wrapping, Chinese heading and both exact English statements, including 20%; no clipping, overlap, blank page or overflow."
+      }
+    ],
+    "materials_validated": false
+  },
+  "limits": [
+    "Seeded completed synthetic profile; extraction and novice onboarding not tested",
+    "Only one rendered Word page; not a general multilingual/layout accuracy estimate",
+    "Historical native Python 3.13 crash cause unresolved",
+    "Trusted production signing and independent clean Windows unavailable"
+  ]
+}

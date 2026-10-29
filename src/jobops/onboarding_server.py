@@ -727,6 +727,19 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.approve_and_start_application(self._json_body())
             elif route == "approve-external-claims":
                 result = self.server.service.approve_external_claims(self._json_body())
+            elif route == "standard-resume-draft":
+                result = self.server.service.create_standard_resume(self._json_body())
+            elif route == "standard-resume-pdf":
+                result = self.server.service.standard_resume_pdf(self._json_body())
+            elif route == "adopt-standard-resume":
+                result = self.server.service.adopt_standard_resume(self._json_body())
+            elif route == "standard-resume-file":
+                raw = bytearray(self.server.service.standard_resume_file(self._json_body()))
+                try:
+                    self._send_bytes(HTTPStatus.OK, raw, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                finally:
+                    raw[:] = b"\0" * len(raw)
+                return
             elif route == "tailoring-manifest-proposal":
                 self._optional_json_body()
                 result = self.server.service.tailoring_manifest_proposal()

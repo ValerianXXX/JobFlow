@@ -4,6 +4,11 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Add a PDF-master path to a new editable standard resume using exact resume-approved wording, with bilingual preview, explicit DOCX download, optional local Word/PDF preview and adoption through a new onboarding revision. Preserve original evidence and require renewed material/position approval.
+- Discover document prerequisites without claiming conversion; retain the draft on export failure. Bump the local UI protocol to 38 without changing Browser Companion 0.9.2/protocol 2.
+- Prevent Word's PowerShell helper from inheriting the long-lived server input pipe, which blocked actual browser export until timeout. Keep the existing deadline and add an open-parent-input regression.
+- Isolate native-parser assertions in a bounded worker with fixed crash/timeout/result diagnostics. Preserve scan, page-coverage and coordinate requirements; the historical native Python 3.13 exit remains causally unresolved.
+
 - Documented the next upgrade milestones and checked upstream references, distinguishing proposed acceptance targets from implemented features and external release prerequisites.
 
 - Repair the synthetic demo's review approval so it reaches its local rehearsal without demanding a real Browser Companion. Keep normal application approval and user-only final Submit unchanged. Add actual HTTP/DPAPI UI coverage through the fake receipt.

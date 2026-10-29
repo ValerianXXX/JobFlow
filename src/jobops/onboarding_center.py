@@ -1081,7 +1081,12 @@ class OnboardingCenterService:
                 raise JobOpsError("EXTERNAL_CLAIM_PROVENANCE_CYCLE", "A derived Claim contains a provenance cycle.")
             visited.add(claim_id)
             if claim_id in base:
-                return [binding("MASTER_RESUME", str(master["secure_ref"]))]
+                # A generated layout is an output, never independent evidence.
+                original = state.get("base_claim_source") or master
+                value = binding("MASTER_RESUME", str(original["secure_ref"]))
+                if value["content_sha256"] != original["sha256"]:
+                    raise JobOpsError("MASTER_RESUME_HASH_INVALID", "The original Claim source binding changed.")
+                return [value]
             item = material.get(claim_id)
             if item is None:
                 raise JobOpsError("EXTERNAL_CLAIM_SOURCE_MISSING", "A confirmed Claim has no encrypted source.")
@@ -1168,7 +1173,9 @@ class OnboardingCenterService:
             output.append({
                 **item,
                 "source_id": original.get("source_id", item.get("source_id")),
-                "provenance": deepcopy(original.get("provenance")),
+                # Original PDF line numbers do not identify paragraphs in a
+                # newly generated layout. Match its actual wording instead.
+                "provenance": None if master.get("derived_from") else deepcopy(original.get("provenance")),
             })
         return output
 
@@ -3523,6 +3530,7 @@ class OnboardingCenterService:
 
     @_synchronized
     def bootstrap(self) -> dict[str, Any]:
+        from .document_capabilities import document_capabilities
         reference, state = self.ensure_state()
         completion = self._completion(state["answers"])
         claims = self._claims_for_ui(state)
@@ -3553,6 +3561,14 @@ class OnboardingCenterService:
                 "ui_protocol": UI_PROTOCOL_VERSION,
             },
             "desktop_update": update_availability(self.project),
+            "document_capabilities": document_capabilities(),
+            "standard_resume": {
+                "offered": bool(master and not master.get("editable_docx")),
+                "available": bool(state.get("status") == COMPLETE and master and not master.get("editable_docx")
+                                  and external_claims.get("current") and "resume" in external_claims.get("allowed_uses", [])),
+                "review_hash": review_hash,
+                "claim_set_hash": external_claims.get("content_hash"),
+            },
             "support_incidents": self.support_incidents.public_state(),
             "dashboard": dashboard,
             "browser_assist": self.browser_assist.public_status(),
@@ -4825,6 +4841,162 @@ class OnboardingCenterService:
             "private_values_emitted": 0, "real_external_actions": 0,
         }
 
+    def _standard_resume_context(self) -> dict[str, Any]:
+        state_ref, state = self.ensure_state()
+        if state.get("status") != COMPLETE:
+            raise JobOpsError("ONBOARDING_INCOMPLETE", "Complete and confirm your profile first.")
+        master, _, review_hash, profile_ref = self._claim_approval_context(state_ref, state)
+        if not master or master.get("editable_docx"):
+            raise JobOpsError("STANDARD_RESUME_PDF_REQUIRED", "This entry is for a retained PDF master.")
+        status = self._external_claim_status(state_ref, state, review_hash, master)
+        if not status.get("current") or "resume" not in status.get("allowed_uses", []):
+            raise JobOpsError("EXTERNAL_CLAIM_APPROVAL_REQUIRED", "Approve the current wording for resume use first.")
+        claim_ref = self._latest_ref("external_claim_set")
+        claims = self._read_json_ref(str(claim_ref))
+        # Verify content, not just the metadata row; fail closed on deleted or
+        # corrupted original evidence even if an earlier approval still exists.
+        bindings = {(str(item["secure_ref"]), str(item["content_sha256"]))
+                    for claim in claims["claims"] for item in claim["source_bindings"]}
+        bindings.add((str(master["secure_ref"]), str(master["sha256"])))
+        verified: dict[str, str] = {}
+        for reference, expected in bindings:
+            if reference not in verified:
+                verified[reference] = sha256_bytes(self.onboarding.read_bytes(reference))
+            if verified[reference] != expected:
+                raise JobOpsError("STANDARD_RESUME_SOURCE_CHANGED", "Review the original evidence again.")
+        profile = self._read_json_ref(str(profile_ref))
+        validate_named("candidate-profile", profile, self.schemas)
+        return {"state_ref": state_ref, "state": state, "master": master, "review_hash": review_hash,
+                "profile_ref": profile_ref, "profile": profile, "claim_ref": claim_ref, "claims": claims}
+
+    def _read_standard_resume(self, reference: str) -> tuple[dict[str, Any], dict[str, Any]]:
+        metadata = self.onboarding.reference_metadata(reference)
+        if metadata.get("kind") != "standard_resume_draft":
+            raise JobOpsError("STANDARD_RESUME_DRAFT_INVALID", "Choose a standard resume draft from this profile.")
+        draft = self._read_json_ref(reference)
+        context = self._standard_resume_context()
+        if (draft.get("onboarding_state_ref") != context["state_ref"]
+                or draft.get("claim_set_hash") != context["claims"]["content_hash"]
+                or draft.get("profile_hash") != sha256_bytes(canonical_json(context["profile"]))
+                or draft.get("original_master") != context["master"]):
+            raise JobOpsError("STANDARD_RESUME_DRAFT_STALE", "The approved profile or evidence changed; generate a fresh draft.")
+        if sha256_bytes(self.onboarding.read_bytes(draft["docx_ref"])) != draft["docx_sha256"]:
+            raise JobOpsError("STANDARD_RESUME_DRAFT_INVALID", "The generated document binding changed.")
+        return draft, context
+
+    @staticmethod
+    def _standard_resume_preview(reference: str, draft: dict[str, Any]) -> dict[str, Any]:
+        return {"status": "STANDARD_RESUME_DRAFT", "draft_ref": reference,
+                "docx_sha256": draft["docx_sha256"], "preview": draft["preview"],
+                "claim_set_hash": draft["claim_set_hash"],
+                "pdf_available": bool(draft.get("pdf_ref")), "materials_validated": False,
+                "real_external_actions": 0}
+
+    @_synchronized
+    def create_standard_resume(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from .document_builder import build_standard_resume
+
+        context = self._standard_resume_context()
+        if payload.get("expected_review_hash") != context["review_hash"]:
+            raise JobOpsError("EXTERNAL_CLAIM_REVIEW_STALE", "Review the current approved wording first.")
+        locale = payload.get("locale", context["state"].get("locale", "zh"))
+        previous = self._latest_ref("standard_resume_draft")
+        if previous:
+            try:
+                old, _ = self._read_standard_resume(previous)
+                if old["preview"]["locale"] == locale:
+                    return self._standard_resume_preview(previous, old)
+            except JobOpsError:
+                pass  # A stale draft remains private; it is never reused.
+        created: list[str] = []
+        try:
+            with self.onboarding.staging_directory() as staging:
+                path = staging / "standard-resume.docx"
+                preview = build_standard_resume(path, profile=context["profile"], claim_set=context["claims"], locale=locale)
+                fingerprint = sha256_bytes(canonical_json(template_fingerprint(path).as_dict()))
+                record = self.onboarding.import_bytes("generated_resume_docx", path.read_bytes(), synthetic=False)
+            if not record.get("deduplicated"):
+                created.append(str(record["secure_ref"]))
+            draft = {
+                "schema_version": 1, "onboarding_state_ref": context["state_ref"],
+                "profile_hash": sha256_bytes(canonical_json(context["profile"])),
+                "claim_set_ref": context["claim_ref"], "claim_set_hash": context["claims"]["content_hash"],
+                "original_master": context["master"], "docx_ref": record["secure_ref"],
+                "docx_sha256": record["content_sha256"], "template_fingerprint": fingerprint,
+                "preview": preview, "created_at": iso_utc(),
+            }
+            stored = self.onboarding.import_bytes("standard_resume_draft", canonical_json(draft), synthetic=False)
+            return self._standard_resume_preview(str(stored["secure_ref"]), draft)
+        except Exception:
+            self._rollback_private_writes(created)
+            raise
+
+    @_synchronized
+    def standard_resume_pdf(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from .document_builder import export_docx_to_pdf
+        from .document_capabilities import document_capabilities
+        from .source_review import source_page
+
+        reference = str(payload.get("draft_ref", ""))
+        draft, _ = self._read_standard_resume(reference)
+        if not draft.get("pdf_ref"):
+            if document_capabilities()["pdf_export"] == "UNAVAILABLE":
+                raise JobOpsError("DOCUMENT_PDF_EXPORT_UNAVAILABLE", "Word export is unavailable; the DOCX draft remains available.")
+            failure_stage = "EXPORT"
+            created: list[str] = []
+            try:
+                with self.onboarding.staging_directory() as staging:
+                    docx, pdf = staging / "standard-resume.docx", staging / "standard-resume.pdf"
+                    docx.write_bytes(self.onboarding.read_bytes(draft["docx_ref"]))
+                    script = self.project / ".agents" / "skills" / "job-application-operator" / "scripts" / "export-docx-pdf.ps1"
+                    export_docx_to_pdf(docx, pdf, script)
+                    raw = pdf.read_bytes()
+                    # Validate the actual output before retaining it.
+                    failure_stage = "RENDER"
+                    source_page(raw, ".pdf", expected_hash=sha256_bytes(raw), page=1)
+                    failure_stage = "STORE"
+                    record = self.onboarding.import_bytes("generated_resume_pdf", raw, synthetic=False)
+                    if not record.get("deduplicated"):
+                        created.append(str(record["secure_ref"]))
+                updated = {**draft, "pdf_ref": record["secure_ref"], "pdf_sha256": record["content_sha256"]}
+                failure_stage = "COMMIT"
+                self.onboarding.rotate(reference, canonical_json(updated))
+                draft = updated
+                created.clear()
+            except Exception as exc:
+                self._rollback_private_writes(created)
+                # COM stderr can contain local paths or document contents.
+                raise JobOpsError("DOCUMENT_PDF_EXPORT_FAILED", "PDF conversion did not finish. Your DOCX draft is still available.", failure_stage=failure_stage) from exc
+        return {**self._standard_resume_preview(reference, draft),
+                "page": source_page(self.onboarding.read_bytes(draft["pdf_ref"]), ".pdf",
+                                    expected_hash=draft["pdf_sha256"], page=payload.get("page", 1))}
+
+    @_synchronized
+    def standard_resume_file(self, payload: dict[str, Any]) -> bytes:
+        draft, _ = self._read_standard_resume(str(payload.get("draft_ref", "")))
+        return self.onboarding.read_bytes(draft["docx_ref"])
+
+    @_synchronized
+    def adopt_standard_resume(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if payload.get("user_confirmed") is not True:
+            raise JobOpsError("STANDARD_RESUME_CONFIRMATION_REQUIRED", "Review and confirm this new layout before adopting it.")
+        reference = str(payload.get("draft_ref", ""))
+        previous_ref, state = self.ensure_state()
+        if (state.get("adopted_standard_resume_ref") == reference and reference
+                and (state.get("master_resume") or {}).get("sha256") == payload.get("expected_docx_sha256")):
+            return {"status": "STANDARD_RESUME_ALREADY_ADOPTED", "changed": False, "real_external_actions": 0}
+        draft, context = self._read_standard_resume(reference)
+        if payload.get("expected_docx_sha256") != draft["docx_sha256"]:
+            raise JobOpsError("STANDARD_RESUME_DRAFT_STALE", "Review the current generated document first.")
+        master = {"secure_ref": draft["docx_ref"], "sha256": draft["docx_sha256"], "extension": ".docx",
+                  "source_id": None, "editable_docx": True, "template_fingerprint": draft["template_fingerprint"],
+                  "template_slots": [], "designated_at": iso_utc(), "derived_from": context["master"]["secure_ref"]}
+        result = self._start_revision(previous_ref, state, master_override=master,
+                                      base_claim_source=state.get("base_claim_source") or context["master"],
+                                      standard_resume_ref=reference)
+        return {**result, "status": "STANDARD_RESUME_ADOPTED", "materials_validated": False,
+                "next_action": "REVIEW_PROFILE_AND_REAPPROVE_MATERIALS"}
+
     @_synchronized
     def tailoring_manifest_proposal(self) -> dict[str, Any]:
         state_ref, state = self.ensure_state()
@@ -5058,6 +5230,14 @@ class OnboardingCenterService:
     @_synchronized
     def start_revision(self) -> dict[str, Any]:
         previous_ref, state = self.ensure_state()
+        return self._start_revision(previous_ref, state)
+
+    def _start_revision(
+        self, previous_ref: str, state: dict[str, Any], *,
+        master_override: dict[str, Any] | None = None,
+        base_claim_source: dict[str, Any] | None = None,
+        standard_resume_ref: str | None = None,
+    ) -> dict[str, Any]:
         if state.get("status") != COMPLETE:
             actions = self._external_action_window(state)
             return {
@@ -5077,6 +5257,10 @@ class OnboardingCenterService:
             "pending_sources": [], "external_action_baseline": external_action_baseline,
             "created_at": now, "updated_at": now, "completed_at": None,
         })
+        if master_override is not None:
+            revision["master_resume"] = deepcopy(master_override)
+            revision["base_claim_source"] = deepcopy(base_claim_source)
+            revision["adopted_standard_resume_ref"] = standard_resume_ref
         answer_bank = {
             "schema_version": 2, "status": IN_PROGRESS, "locale": revision["locale"], "answers": revision["answers"],
             "completion": self._completion(revision["answers"]), "updated_at": now,

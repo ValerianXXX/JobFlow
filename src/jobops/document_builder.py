@@ -668,6 +668,70 @@ def _assert_external_claims(value: dict[str, Any], *, use: str) -> list[tuple[st
     ]
 
 
+def build_standard_resume(
+    path: Path, *, profile: dict[str, Any], claim_set: dict[str, Any], locale: str,
+) -> dict[str, Any]:
+    """Compose a new layout, never a reconstruction of the source PDF.
+
+    Only exact externally approved wording enters professional sections. The
+    caller binds the completed profile and verifies every encrypted source.
+    """
+    from .external_claims import approved_external_claims
+
+    approved = approved_external_claims(claim_set, use="resume")
+    if not isinstance(locale, str) or locale not in {"zh", "en"}:
+        raise JobOpsError("STANDARD_RESUME_LOCALE_INVALID", "Choose Chinese or English headings.")
+    name = profile.get("candidate_display_name")
+    if not isinstance(name, str) or not name.strip():
+        raise JobOpsError("CANDIDATE_PROFILE_MISSING", "A confirmed display name is required.")
+    labels = {
+        "summary": ("个人简介", "Profile"), "work": ("工作经历", "Experience"),
+        "internship": ("实习经历", "Internships"), "project": ("项目经历", "Projects"),
+        "education": ("教育经历", "Education"), "skill": ("技能", "Skills"),
+        "certification": ("证书", "Certifications"), "language": ("语言", "Languages"),
+    }
+    if any(item.get("category") not in labels for item in approved):
+        raise JobOpsError("STANDARD_RESUME_CATEGORY_INVALID", "Review the approved Claim categories first.")
+    Document, _, _, _, _, qn, Inches, Pt, _ = _modules()
+    document = Document()
+    _configure_document(document)
+    document.core_properties.author = ""
+    document.core_properties.last_modified_by = ""
+    document.core_properties.comments = ""
+    section = document.sections[0]
+    section.top_margin = section.bottom_margin = Inches(0.7)
+    section.left_margin = section.right_margin = Inches(0.8)
+    for style in document.styles:
+        if style.type == 1 and style.element.rPr is not None:
+            style.element.get_or_add_rPr().get_or_add_rFonts().set(qn("w:eastAsia"), "Microsoft YaHei")
+    document.add_paragraph(name.strip(), style="JobOps Title")
+    # Contact fields only; no salary, authorization, address or inferred title.
+    contacts = [str(profile[key]).strip() for key in ("email", "phone", "linkedin_url", "website_url", "github_url")
+                if isinstance(profile.get(key), str) and profile[key].strip()]
+    if contacts:
+        paragraph = document.add_paragraph(" | ".join(contacts), style="JobOps Subtitle")
+        paragraph.paragraph_format.space_after = Pt(8)
+    num_id = _add_numbering(document)
+    sections = []
+    for category, titles in labels.items():
+        items = [item for item in approved if item["category"] == category]
+        if not items:
+            continue
+        title = titles[0 if locale == "zh" else 1]
+        document.add_paragraph(title, style="Heading 2")
+        preview = []
+        for item in items:
+            wording = str(item["allowed_wording"][0])
+            _bullet(document, wording, num_id)
+            preview.append({"claim_id": item["claim_id"], "text": wording,
+                            "source_count": len(item["source_bindings"])})
+        sections.append({"category": category, "title": title, "items": preview})
+    _save_document_atomic(document, path)
+    return {"layout": "STANDARD_SINGLE_COLUMN_V1", "locale": locale, "name": name.strip(),
+            "contacts": contacts, "sections": sections, "claim_count": len(approved),
+            "model_calls": 0, "cost_usd": 0, "preserves_original_layout": False}
+
+
 def build_resume(path: Path, *, candidate_display_name: str, target_role: str, summary: str, claims: list[dict[str, Any]], skills: list[str], education: str, bullet_claim_ids: list[str] | None = None) -> dict[str, object]:
     Document, _, _, WD_ALIGN_PARAGRAPH, _, _, _, Pt, _ = _modules()
     approved = _assert_claims(claims)
@@ -832,19 +896,25 @@ def export_docx_to_pdf(docx_path: Path, pdf_path: Path, powershell_script: Path)
             command,
             capture_output=True,
             text=True,
+            # A long-lived UI/Agent keeps its stdin open. The export helper
+            # needs no input and must not wait for that control pipe to close.
+            stdin=subprocess.DEVNULL,
             timeout=90,
             check=False,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
         if completed.returncode != 0 or not temporary_pdf.is_file() or temporary_pdf.stat().st_size == 0:
-            raise JobOpsError("DOCX_PDF_EXPORT_FAILED", "Microsoft Word PDF export failed.", returncode=completed.returncode, stderr=completed.stderr[-1000:])
+            raise JobOpsError("DOCX_PDF_EXPORT_FAILED", "Microsoft Word PDF export failed.",
+                             returncode=completed.returncode,
+                             failure_stage="PROCESS_EXIT" if completed.returncode else "EMPTY_OUTPUT")
         os.replace(temporary_pdf, pdf_path)
     except JobOpsError:
         temporary_pdf.unlink(missing_ok=True)
         raise
     except (OSError, subprocess.SubprocessError) as exc:
         temporary_pdf.unlink(missing_ok=True)
-        raise JobOpsError("DOCX_PDF_EXPORT_FAILED", "Microsoft Word PDF export could not be committed safely.") from exc
+        raise JobOpsError("DOCX_PDF_EXPORT_FAILED", "Microsoft Word PDF export could not be committed safely.",
+                         failure_stage="TIMEOUT" if isinstance(exc, subprocess.TimeoutExpired) else "IO_ERROR") from exc
 
 
 def render_pdf_to_pngs(pdf_path: Path, output_dir: Path, pdftoppm: str) -> list[Path]:

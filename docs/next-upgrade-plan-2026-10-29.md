@@ -1,7 +1,6 @@
 # JobFlow next upgrade plan — October 29, 2026
 
-Status: proposed engineering scope and acceptance targets, not completed
-features or permission to publish. This plan follows the
+Status: engineering scope and acceptance targets. The [first implementation batch](standard-resume-2026-10-29.md) covers parser isolation and the PDF-master standard-layout entry. Later milestones remain proposed, not completed features or permission to publish. This plan follows the
 [browser-operated acceptance review](user-acceptance-2026-10-29.md) at
 `911f8c1ebbe48787c6ef191ab0563a9cf3b9f4ae` (draft #9).
 
