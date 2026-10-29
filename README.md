@@ -14,7 +14,7 @@ The source branch includes these reviewable capabilities. They are not a new sig
 
 | Capability | Available source behavior | Verification and limits |
 | --- | --- | --- |
-| Materials and facts | Optional PDF/image transcription, entity-linked candidates, encrypted originals and separate source/Claim review | [Live synthetic comparisons](docs/pdf-regions-and-cjk-2026-10-29.md) repaired Chinese rejection and improved text-column context. A scanned-Chinese case still misread facts; full-material accuracy remains unproven. |
+| Materials and facts | Optional PDF/image transcription, entity-linked candidates, encrypted originals and separate source/Claim review | [Layout checks](docs/pdf-regions-and-cjk-2026-10-29.md) repaired Chinese rejection and improved text-column context. A [bounded scan follow-up](docs/scan-resolution-2026-10-29.md) improved two fixed transcripts at 220 DPI; full-material and Claim accuracy remain unproven. |
 | Original-source review | Side-by-side original pages, source regions, zoom/fit and keyboard scrolling | [Browser acceptance](docs/pdf-regions-and-cjk-2026-10-29.md) covers actual upload/parser/render/DPAPI with a recorded model response; it is separate from live model observations. |
 | Editable resume | Preserve an approved DOCX master, or create a new standard DOCX from approved PDF-source facts | [Standard-resume workflow](docs/standard-resume-2026-10-29.md); new layouts require review and renewed material/position approval. |
 | Local PDF output | Default Word or explicitly selected LibreOffice with isolated conversion and document QA | [Paired output checks](docs/local-pdf-export-2026-10-29.md); unsafe two-column output remains rejected. No office software is installed automatically. |

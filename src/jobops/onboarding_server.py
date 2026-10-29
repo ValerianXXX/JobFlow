@@ -8,6 +8,7 @@ import shutil
 import struct
 import sys
 import threading
+import time
 import webbrowser
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -345,6 +346,36 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             except OSError:
                 pass
 
+    def _discard_rejected_framing(self) -> None:
+        """Discard a bounded prefix after rejecting ambiguous framing.
+
+        Never interpret a duplicate length or decode transfer-encoded content.
+        The connection is already closing, so these bytes cannot reach an
+        endpoint or become another request. A single deadline also bounds slow
+        senders; consuming a small in-flight body avoids a Windows TCP reset
+        hiding the original structured rejection response.
+        """
+        previous_timeout = self.connection.gettimeout()
+        deadline = time.monotonic() + REJECTED_BODY_DRAIN_TIMEOUT_SECONDS
+        remaining = REJECTED_BODY_DRAIN_LIMIT
+        try:
+            while remaining:
+                timeout = deadline - time.monotonic()
+                if timeout <= 0:
+                    break
+                self.connection.settimeout(timeout)
+                chunk = self.rfile.read1(min(16 * 1024, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+        except OSError:
+            pass
+        finally:
+            try:
+                self.connection.settimeout(previous_timeout)
+            except OSError:
+                pass
+
     def _stream_large_export(self, length: int, extension: str) -> dict[str, Any]:
         if extension.casefold() != ".zip":
             raise JobOpsError("CHATGPT_EXPORT_FORMAT_INVALID", "The streaming large-file option accepts ZIP exports only.")
@@ -420,6 +451,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         if isinstance(exc, JobOpsError):
             if exc.code == "REQUEST_CONTENT_TYPE_INVALID":
                 self._discard_small_declared_body()
+            elif exc.code in {"REQUEST_LENGTH_INVALID", "REQUEST_TRANSFER_ENCODING_FORBIDDEN"}:
+                self._discard_rejected_framing()
             self._send_json(HTTPStatus.BAD_REQUEST, exc.as_dict())
         else:
             self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {
@@ -430,6 +463,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
     def _dispatch_assist_error(self, exc: Exception, origin: str) -> None:
         self.close_connection = True
         if isinstance(exc, JobOpsError):
+            if exc.code in {"REQUEST_LENGTH_INVALID", "REQUEST_TRANSFER_ENCODING_FORBIDDEN"}:
+                self._discard_rejected_framing()
             self._send_assist_json(HTTPStatus.BAD_REQUEST, exc.as_dict(), origin)
         else:
             self._send_assist_json(HTTPStatus.INTERNAL_SERVER_ERROR, {

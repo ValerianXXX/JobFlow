@@ -1,0 +1,88 @@
+{
+  "reviewed_at_utc": "2026-10-29T18:44:46.121005+00:00",
+  "reviewer": "coding assistant; not an independent human participant",
+  "synthetic_only": true,
+  "source_images_inspected": [
+    {
+      "case": "zh-scan",
+      "pdf_dpi": 110,
+      "image_sha256": "sha256:0add976971cd999e740f4c6c29d0072f633113a63737c906dad18159cffb9f1e"
+    },
+    {
+      "case": "zh-scan",
+      "pdf_dpi": 220,
+      "image_sha256": "sha256:bd37b11401395325078b5155883fcfbf8d342086fc03164a5f8df2d7452bb5ec"
+    },
+    {
+      "case": "en-scanned_columns",
+      "pdf_dpi": 220,
+      "image_sha256": "sha256:43df23977f899c347104c478c6c6e42341a551687320666959084fe55a8af7b7"
+    }
+  ],
+  "vision_findings": [
+    {
+      "case": "zh-scan",
+      "dpi": 110,
+      "finding": "Date, report count, second organization, budget amount and applicant/team wording changed; 2/8 designated lines and 1/4 verbatim fact sentences retained."
+    },
+    {
+      "case": "zh-scan",
+      "dpi": 220,
+      "finding": "All eight designated lines match, including organizations, dates, numbers and team/applicant wording."
+    },
+    {
+      "case": "en-scanned_columns",
+      "dpi": 220,
+      "finding": "All eight designated lines match and column entity order is retained."
+    },
+    {
+      "case": "en-scanned_columns",
+      "dpi": 110,
+      "finding": "Applicant in the final fact is corrupted; 7/8 designated lines and 3/4 verbatim fact sentences retained."
+    }
+  ],
+  "invalid_initial_local_ocr_rows": {
+    "receipt": "scan-vision-first.json",
+    "rows": "All four local_ocr objects",
+    "reason": "Missing tsv config in isolated language-data directory caused plain-text output. Initial adapter accepted no TSV rows without validating the header.",
+    "valid_accuracy_estimate": false,
+    "correction": "Explicit tessedit_create_tsv=1 plus strict header validation; local-only rerun in scan-local-ocr-corrected.json; no extra model calls."
+  },
+  "initial_score_metadata_erratum": "Unused parser defaults such as source_review_required=false in assessment are not product state. Actual vision.metadata.visual_verification_required=true in every live row. New scorer excludes unrelated defaults; original records unchanged.",
+  "local_ocr_findings": "Corrected 220-DPI OCR keeps 7/8 lines in each probe, missing the first Chinese organization and corrupting one English numeric value; no 110-DPI complete designated lines. Not production truth or fallback.",
+  "render_default_change_after_experiment": "Default changed from 110 to 220 after the explicit-resolution comparison. Exact arm rendering parameters and image hashes are unchanged; no model rerun.",
+  "field_coverage": "Designated text lines and contiguous entity context only, not whole resumes, Claim validation or application completion",
+  "cost_usd": null,
+  "usage_tokens": null,
+  "real_business_actions": 0,
+  "claims_generated_in_this_round": 0,
+  "production_ocr_enabled": false,
+  "full_material_acceptance": "NOT_COMPLETED",
+  "whole_goal_complete": false,
+  "references_checked": "2026-10-29",
+  "references": [
+    {
+      "url": "https://github.com/jsvine/pdfplumber/tree/db828e3ac08ded001650e6ec66b23e719370d22e",
+      "version": "0.11.9",
+      "license": "MIT",
+      "use": "Existing dependency rendering; no upstream code copied"
+    },
+    {
+      "url": "https://tesseract-ocr.github.io/tessdoc/ImproveQuality.html",
+      "use": "Image-quality and resolution reference; recommendations are not measured outcomes"
+    },
+    {
+      "url": "https://tesseract-ocr.github.io/tessdoc/Command-Line-Usage.html#tsv-output",
+      "use": "Required TSV contract"
+    },
+    {
+      "url": "https://github.com/tesseract-ocr/tessdata_fast",
+      "version": "Ubuntu tesseract-ocr-chi-sim 1:4.1.0-2build1",
+      "license": "Apache-2.0",
+      "package_sha256": "b64b632c873a957e3b9a3668c8734cb6061f09d42a4a5f6918e3b24def593e5f",
+      "chi_sim_sha256": "a5fcb6f0db1e1d6d8522f39db4e848f05984669172e584e8d76b6b3141e1f730",
+      "eng_sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+      "use": "Isolated benchmark only; no binary redistribution or system installation"
+    }
+  ]
+}

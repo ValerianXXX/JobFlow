@@ -1,0 +1,227 @@
+{
+  "checked_at_utc": "2026-10-29T19:08:44.239487+00:00",
+  "base_commit": "3d89942756c729a02fa6b8a4ce64f8bb107bf894",
+  "working_tree_verification": true,
+  "source_lf_sha256": {
+    "src/jobops/multimodal.py": "26ace434413b305dd378f9c6b75d57467d8a1e8fb00c586aa6b249f6fe750ea7",
+    "src/jobops/onboarding_server.py": "8c1916993b2bea68146d5ac946a3091e447ddf13e22267802774c1b1fbd247ff",
+    "scripts/evaluate-scan-resolution.py": "8e2af63b3269c2f3765003e1473919dc94cfa8d536c1346abfc8dce48b11e96e",
+    "scripts/tesseract-probe-adapter.py": "d130b8062649cde920235160c903b0a31e5ef0a3a259144a323c55df704a476b",
+    "tests/test_visual_render_policy.py": "e4e3367a44ac1b9a26f9eba3b34427f9729074a163b83bb90fb37e3cf7061242",
+    "tests/test_scan_resolution_evaluation.py": "62d15c4708f48bfcd78c7195f4d4ffcd0644bc3a6bc5320aae28436ac8fa5688",
+    "tests/test_rejected_body_drain.py": "342a1f9c3770a75d2da0a7df0e52c52fc8e9bec5b149ae7ae05dd641f34c7c7c",
+    "tests/test_secure_store_open_input.py": "f36b64d79b1c5d7ea93459a6b0bb33fb942db6fbd8ea448285fa64a388ba55e4",
+    "tests/standard_resume_ui_e2e.cjs": "54c2a64ed5b79622dd418c35030154acf5fcc7a0d9809b4c1e9287b8583c0688"
+  },
+  "platform": {
+    "os": "Windows",
+    "python": "3.11.3",
+    "node": "24.19.0",
+    "browser": "installed Microsoft Edge through Playwright"
+  },
+  "python": {
+    "distinct_relevant_checks": 127,
+    "full_repository_suite": "NOT_RUN_LOCALLY_THIS_STAGE",
+    "suites": [
+      {
+        "file": "test_visual_render_policy.py",
+        "passed": 6
+      },
+      {
+        "file": "test_scan_resolution_evaluation.py",
+        "passed": 4
+      },
+      {
+        "file": "test_rejected_body_drain.py",
+        "passed": 3
+      },
+      {
+        "file": "test_visual_and_mail.py",
+        "passed": 8
+      },
+      {
+        "file": "test_ai_connections.py",
+        "passed": 26
+      },
+      {
+        "file": "test_onboarding_center.py",
+        "passed": 74
+      },
+      {
+        "file": "test_public_docs.py",
+        "passed": 5
+      },
+      {
+        "file": "test_secure_store_open_input.py",
+        "passed": 1
+      }
+    ]
+  },
+  "browser": {
+    "suites_with_passing_observation": 11,
+    "reliable_first_attempt_acceptance": false,
+    "runs": [
+      {
+        "suite": "browser_companion_e2e.cjs",
+        "status": "PASS",
+        "local_log": "reports/scan-resolution/browser_companion_e2e.log",
+        "log_sha256": "b25f2ca94454db5b91398898188aef24aebb3d3d441114a8a7da5d937db9760f"
+      },
+      {
+        "suite": "browser_companion_guided_autopilot_e2e.cjs",
+        "status": "PASS",
+        "local_log": "reports/scan-resolution/browser_companion_guided_autopilot_e2e.log",
+        "log_sha256": "3da5991a246153a3b16d9b2da356287f76074942c5976aa73d6c4fbe84d6a163"
+      },
+      {
+        "suite": "browser_companion_manual_navigation_e2e.cjs",
+        "status": "PASS",
+        "local_log": "reports/scan-resolution/browser_companion_manual_navigation_e2e.log",
+        "log_sha256": "de3452eb3a97712208488e33a8aa18502cf3db208c21f978d665c89340acd36d"
+      },
+      {
+        "suite": "browser_companion_one_confirmation_e2e.cjs",
+        "status": "PASS",
+        "local_log": "reports/scan-resolution/browser_companion_one_confirmation_e2e.log",
+        "log_sha256": "94905c2bae02b4ec326574aa4d5b2b240785083f46fc0c8698d070fbe18d6a51"
+      },
+      {
+        "suite": "browser_companion_pair_bridge_e2e.cjs",
+        "status": "PASS",
+        "local_log": "reports/scan-resolution/browser_companion_pair_bridge_e2e.log",
+        "log_sha256": "dc67950b619c4022ebf2821bd8fadc95a276b9e415e53a78b3d6ae887886e046"
+      },
+      {
+        "suite": "browser_companion_pairing_e2e.cjs",
+        "status": "PASS",
+        "local_log": "reports/scan-resolution/browser_companion_pairing_e2e.log",
+        "log_sha256": "d773be1e76a3767fe36f606a05e48e2f501f2f6102403b076f2b4aace0f93b7e"
+      },
+      {
+        "suite": "browser_companion_popup_e2e.cjs",
+        "status": "PASS",
+        "local_log": "reports/scan-resolution/browser_companion_popup_e2e.log",
+        "log_sha256": "ad146bf76a6db133c1fcabc5a9656493a19a5713031e5ff47b3ad54f6625be99"
+      },
+      {
+        "suite": "onboarding_ui_e2e.cjs",
+        "status": "PASS",
+        "local_log": "reports/scan-resolution/onboarding_ui_e2e.log",
+        "log_sha256": "8ae294b243d99c22127aeb06c0bb3b1664e8b17ce88e0442cbb39efed47c507b"
+      },
+      {
+        "suite": "pdf_regions_ui_e2e.cjs",
+        "status": "PASS",
+        "local_log": "reports/scan-resolution/pdf_regions_ui_e2e.log",
+        "log_sha256": "fd4e780df38a96409a260cca4ccb4b3226ed06a780353c4a38cbe31705e25acf"
+      },
+      {
+        "suite": "standard_resume_ui_e2e.cjs",
+        "status": "PASS_ON_SERIAL_RERUN",
+        "local_log": "reports/scan-resolution/standard-resume-serial-diagnostic.log",
+        "log_sha256": "c0dadd2e56759e644cbf793cf97bd7043721eb33e6c97a274a089e2e6b4f7766"
+      },
+      {
+        "suite": "workbench_ui_e2e.cjs",
+        "status": "PASS_ON_SERIAL_RERUN",
+        "local_log": "reports/scan-resolution/workbench-serial.log",
+        "log_sha256": "c01db059fa4dd3b33999ed06dd15d4ea08a435cf873132fca0680733cac02bf9"
+      }
+    ]
+  },
+  "retained_failures": [
+    {
+      "check": "test_onboarding_center HTTP early rejection",
+      "before_repair": "Initial 74-test suite and isolated rerun received Windows connection abort before structured duplicate-length/chunked rejection. Assertions unchanged.",
+      "after_repair": "Isolated case and all 74 import tests passed.",
+      "resolved": true
+    },
+    {
+      "check": "standard_resume_ui_e2e",
+      "observation": "First sequential run timed out waiting for a visible enabled createStandardResume button after 60000 ms.",
+      "local_log": "reports/scan-resolution/standard_resume_ui_e2e.log",
+      "resolved": false
+    },
+    {
+      "check": "standard_resume_ui_e2e and workbench_ui_e2e",
+      "observation": "Concurrent diagnostic runs exceeded original 120-second and 60-second fixture startup limits. Subsequent serial runs passed without increasing limits.",
+      "local_logs": [
+        "reports/scan-resolution/standard-resume-diagnostic.log",
+        "reports/scan-resolution/workbench_ui_e2e.log"
+      ],
+      "resolved": false
+    },
+    {
+      "check": "initial local OCR measurement",
+      "observation": "Missing TSV config produced plain text accepted as zero TSV rows. All four original OCR rows are invalid and retained.",
+      "resolution": "Explicit TSV output, strict header regression, local-only rerun; original live-model observations unchanged.",
+      "resolved": true
+    }
+  ],
+  "native_storage_investigation": {
+    "actual_open_parent_stdin_lifecycle": "PASS",
+    "product_dpapi_implementation_changed": false,
+    "fixture_startup_root_cause": "UNRESOLVED"
+  },
+  "standard_resume_scope": {
+    "synthetic_only": true,
+    "seeded_completed_profile": true,
+    "ai_extraction_tested": false,
+    "live_submission": false,
+    "word_conversion": "NOT_RUN",
+    "docx_sha256": "sha256:02af5498cad3a20dffd569792f9c8cb37f1b11948e926c10f7c67171d491e04a",
+    "capabilities": {
+      "docx_generation": true,
+      "pdf_export": "DETECTED_NOT_VERIFIED",
+      "pdf_export_provider": "LIBREOFFICE",
+      "pdf_export_configuration": "VALID",
+      "page_preview": true,
+      "application_pdf_renderer": true,
+      "automatic_installation": false,
+      "real_external_actions": 0
+    },
+    "desktop_zh": true,
+    "mobile_en": true,
+    "download_verified": true,
+    "adoption_persisted": true,
+    "session_and_origin_checks": true,
+    "browser_errors": [],
+    "external_requests": []
+  },
+  "coding_assistant_visual_inspection": [
+    "Synthetic desktop Chinese standard-resume screenshot",
+    "Synthetic mobile English standard-resume screenshot",
+    "Exact-hash diagnostic scan images"
+  ],
+  "independent_human_participants": 0,
+  "compatibility": "PASS; 0.7.0 source / Companion 0.9.2 / protocol 2; stable 0.6.0 mismatch remains disclosed",
+  "unsigned_wheel": {
+    "filename": "jobflow_local-0.7.0-py3-none-any.whl",
+    "sha256": "f54d58c9eeea3daf817140693c30a10b0944f1f6153fbe28513cd5831746a3c9",
+    "build": "PASS",
+    "changed_product_modules_match_working_tree": true,
+    "signed": false
+  },
+  "live_model": {
+    "adapter_requests": 4,
+    "tool_calls": 0,
+    "full_materials": 0,
+    "probe_sources": 2,
+    "cost_usd": null,
+    "usage_tokens": null,
+    "business_completion": "NOT_ATTEMPTED"
+  },
+  "current_commit_ci": "CHECK_AFTER_COMMIT; not represented by local targeted checks",
+  "repository_boundary": {"status": "PASS", "scope": "Staged tree plus existing history before commit; not release authorization", "tracked_files": 680, "historical_commits": 308, "findings": 0, "unapproved_identities": 0, "public_release_ready": false},
+  "remaining": [
+    "36 complete independent-template materials and downstream Claim scoring",
+    "Original-pixel grounding and region calibration",
+    "Intermittent UI visibility and native fixture startup",
+    "Independent human acceptance",
+    "Authenticated mailbox and live ATS acceptance",
+    "Trusted production signing unavailable by owner confirmation",
+    "Independent clean Windows installation/upgrade/data-retention/rollback environment unavailable by owner confirmation"
+  ],
+  "whole_goal_complete": false,
+  "public_release_approved": false
+}
