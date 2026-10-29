@@ -6,6 +6,16 @@ param(
     [Parameter(Mandatory = $false)][ValidateSet('Utf8','Base64')][string]$OutputEncoding = 'Utf8'
 )
 $ErrorActionPreference = 'Stop'
+# A fresh isolated LOCALAPPDATA has no module-analysis cache. Resolve only
+# the two built-in modules this helper uses instead of discovering unrelated
+# machine/user modules before its first Add-Type or filesystem command.
+# This also prevents an ambient module from shadowing these commands.
+$PSModuleAutoLoadingPreference = 'None'
+$secureModuleRoot = [IO.Path]::Combine([Environment]::SystemDirectory, 'WindowsPowerShell', 'v1.0', 'Modules')
+foreach ($secureModuleName in @('Microsoft.PowerShell.Utility', 'Microsoft.PowerShell.Management')) {
+    $secureModulePath = [IO.Path]::Combine($secureModuleRoot, $secureModuleName, ($secureModuleName + '.psd1'))
+    Import-Module -Name $secureModulePath -ErrorAction Stop
+}
 Add-Type -AssemblyName System.Security
 $localData = if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) { [Environment]::GetFolderPath('LocalApplicationData') } else { $env:LOCALAPPDATA }
 $privateRoot = Join-Path $localData 'JobOps\private'

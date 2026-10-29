@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Load the encrypted-store helper's two built-in PowerShell modules by system path, preventing ambient command shadowing and avoiding unrelated module discovery on a cold private directory. Preserve the DPAPI format, atomic writes and existing timeout budgets; hosted startup verification remains separately recorded.
+
 - Preserve fixed-label diagnostics for the five-second source UI bootstrap timeout and run the unchanged source-candidate gate independently of the long Windows regression matrix. Record the passing regressions/browser suites and owner-confirmed signing and clean-Windows blockers without treating the failed source build as passed.
 
 - Fix two remaining Windows smoke-runner races: create the native Python launcher suspended until job assignment, and wait for captured descendant process handles after termination. A Python stdin handshake and a zero active-process count alone were insufficient. Preserve the failing CI evidence, add delayed-launcher/resume-failure/Unicode regressions, and keep all original deadlines and release gates.
