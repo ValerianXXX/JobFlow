@@ -168,7 +168,62 @@ jobs:
         run: python -m pip wheel --no-deps --no-build-isolation --wheel-dir dist .
       - name: Check CLI entry point
         run: jobflow --help
+
+  source-candidate:
+    # Keep the same source gate independent of the long installer matrix so
+    # a failed cold-start request is visible before two hours of regressions.
+    # No upload or production signing; a failure still fails this workflow.
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Provision the pinned signed Git test prerequisite
+        shell: powershell
+        run: |
+          # windows-latest changes its preinstalled Git independently of our
+          # pinned release toolchain. Use verified upstream ZIP bytes in the
+          # existing canonical tool location; do not relax production trust.
+          # https://github.com/git-for-windows/git/releases/tag/v2.53.0.windows.3
+          $gitRoot = Join-Path ([Environment]::GetFolderPath("UserProfile")) ".cache\codex-runtimes\codex-primary-runtime\dependencies\native\git"
+          if (Test-Path -LiteralPath $gitRoot) { throw "JOBFLOW_CI_GIT_DESTINATION_EXISTS" }
+          $gitArchive = Join-Path $env:RUNNER_TEMP "jobflow-ci-MinGit-2.53.0.3-64-bit.zip"
+          if (Test-Path -LiteralPath $gitArchive) { throw "JOBFLOW_CI_GIT_ARCHIVE_EXISTS" }
+          Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/git-for-windows/git/releases/download/v2.53.0.windows.3/MinGit-2.53.0.3-64-bit.zip" -OutFile $gitArchive
+          if ((Get-FileHash -LiteralPath $gitArchive -Algorithm SHA256).Hash -cne "0D7C85A26E45668B35D0D0AEB763289376CFC039E55E0938A617ED0DFA32E433") {
+            throw "JOBFLOW_CI_GIT_ARCHIVE_HASH_MISMATCH"
+          }
+          Expand-Archive -LiteralPath $gitArchive -DestinationPath $gitRoot
+          $gitPath = Join-Path $gitRoot "mingw64\bin\git.exe"
+          if ((Get-FileHash -LiteralPath $gitPath -Algorithm SHA256).Hash -cne "C115A66A1BEDE6694B513AF420CC90F8775BE03666A54D1ECB82D6196B929FE9") {
+            throw "JOBFLOW_CI_GIT_EXECUTABLE_HASH_MISMATCH"
+          }
+          $signature = Microsoft.PowerShell.Security\Get-AuthenticodeSignature -LiteralPath $gitPath
+          $policy = Get-Content -LiteralPath config/release-toolchain.json -Raw | ConvertFrom-Json
+          $trusted = @($policy.tools.git.allowed_signers | Where-Object {
+            $_.subject -ceq $signature.SignerCertificate.Subject -and
+            $_.thumbprint -ceq $signature.SignerCertificate.Thumbprint
+          })
+          if ($signature.Status -ne "Valid" -or $trusted.Count -ne 1) {
+            throw "JOBFLOW_CI_GIT_UNTRUSTED"
+          }
+          "JOBFLOW_RELEASE_GIT_PATH=$gitPath" | Out-File -LiteralPath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Install JobFlow source-candidate dependencies
+        run: python -m pip install -e ".[build,mcp,document]"
+      - name: Prepare canonical source-smoke temporary path
+        shell: powershell
+        run: |
+          $canonicalTemp = & python -I -c "from pathlib import Path; import tempfile; print(Path(tempfile.gettempdir()).resolve(strict=True))"
+          if ($LASTEXITCODE -ne 0) { throw "JOBFLOW_CI_TEMP_RESOLUTION_FAILED" }
+          "TEMP=$canonicalTemp" | Out-File -LiteralPath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$canonicalTemp" | Out-File -LiteralPath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Check installed dependencies
+        run: python -m pip check
       - name: Build and smoke complete source candidate without upload
-        if: matrix.python-version == '3.12'
         shell: powershell
         run: python -m jobops.release_candidate --git-path $env:JOBFLOW_RELEASE_GIT_PATH

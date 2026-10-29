@@ -273,6 +273,15 @@ def _smoke_failure_details(stdout: str) -> dict[str, object]:
     elapsed = result.get("elapsed_ms")
     if type(elapsed) is int and 0 <= elapsed <= 600000:
         details["elapsed_ms"] = elapsed
+    bootstrap = result.get("bootstrap_ms")
+    if type(bootstrap) is int and 0 <= bootstrap <= 600000:
+        details["bootstrap_ms"] = bootstrap
+    components = result.get("active_components")
+    if isinstance(components, list):
+        allowed = {"encrypted_store", "ats_evidence", "schema_validation", "bootstrap"}
+        details["active_components"] = sorted({
+            value for value in components[:64] if isinstance(value, str) and value in allowed
+        })
     return details
 
 
@@ -357,6 +366,7 @@ def run_source_candidate_smoke(archive_path: Path, *, prefix: str, temporary: Pa
         "security_headers": result.get("security_headers"),
         "project_state_isolated": bool(result.get("project_state_isolated")),
         "local_app_data_isolated": bool(result.get("local_app_data_isolated")),
+        "bootstrap_ms": result.get("bootstrap_ms"),
     }
 
 

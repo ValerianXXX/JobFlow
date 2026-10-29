@@ -74,10 +74,12 @@ not exercise HTTP UI, installation, upgrade, data retention or rollback. It
 does not contain this follow-up repair and is not a release-ready package.
 Its canonical evidence was not rewritten to claim otherwise.
 
-Replacement full CI and the original source UI startup gate remain pending.
+Replacement CI completed: all three Python versions passed 1,182 regressions
+and nine browser suites at `1e83d1b`. The source UI gate failed at the bootstrap
+request timeout; see the [October 29 record](source-bootstrap-2026-10-29.md).
 The old CI did not retain enough detail to establish its original HTTP failure
-cause. Production signing and independent clean-Windows acceptance remain
-external requirements. There were zero new model calls, external application
+cause. The owner confirmed production signing and independent clean Windows
+are unavailable; both acceptance blockers remain. There were zero new model calls, external application
 actions, uploads or installed-product/data changes in this repair.
 
 ## Run and rollback
