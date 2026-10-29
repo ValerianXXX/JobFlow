@@ -135,6 +135,7 @@ def extract_pdf_text(
     layout: bool = False,
     page_limit: int | None = None,
     character_limit: int | None = None,
+    require_complete_pages: bool = False,
 ) -> tuple[str, int]:
     if page_limit is not None and page_limit < 1:
         raise JobOpsError("PDF_PAGE_LIMIT_INVALID", "The PDF extraction page limit must be positive.")
@@ -160,6 +161,9 @@ def extract_pdf_text(
                         character_limit=character_limit,
                     )
                 parts.append(part)
+            if require_complete_pages:
+                from .document_coverage import require_complete_page_text
+                require_complete_page_text(parts)
             return "\n".join(parts), page_count
     except ModuleNotFoundError:
         from .util import project_root
@@ -175,6 +179,8 @@ def extract_pdf_text(
             command = [str(interpreter), str(helper), str(path)]
             if layout:
                 command.append("--layout")
+            if require_complete_pages:
+                command.append("--page-parts")
             completed = subprocess.run(
                 command,
                 capture_output=True,
@@ -186,6 +192,15 @@ def extract_pdf_text(
             if completed.returncode == 0:
                 try:
                     result = json.loads(completed.stdout)
+                    if require_complete_pages:
+                        from .document_coverage import require_complete_page_text
+                        parts = result.get("page_parts_base64")
+                        if not isinstance(parts, list) or len(parts) != int(result["page_count"]):
+                            raise JobOpsError("PDF_PAGE_COVERAGE_UNAVAILABLE", "The local PDF helper did not provide complete page coverage; no partial source was analyzed.")
+                        decoded = [base64.b64decode(part, validate=True).decode("utf-8") for part in parts]
+                        if "\n".join(decoded) != base64.b64decode(result["text_base64"]).decode("utf-8"):
+                            raise JobOpsError("PDF_PAGE_COVERAGE_UNAVAILABLE", "The local PDF helper returned inconsistent page coverage.")
+                        require_complete_page_text(decoded)
                     return _bounded_pdf_result(
                         base64.b64decode(result["text_base64"]).decode("utf-8"),
                         int(result["page_count"]),

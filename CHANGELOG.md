@@ -4,6 +4,9 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Add 36 frozen complete synthetic materials with 1,716 fact statements and 18 separate robustness derivatives. Improve wrapped-column geometry, reject unreadable/missing page content before onboarding analysis, explain recovery in both languages, and shorten fresh render filenames for Windows. Preserve baseline failures, an addendum false-rejection correction and held-out limitations; raw parser retention is not full Claim or product acceptance. See [complete-material evidence](docs/complete-materials-2026-10-29.md).
+- Recognize valid subdomains of the existing reserved `example.test` fixture namespace in the public content scan. Keep author approval separate and reject lookalikes, unrelated test domains and private addresses.
+
 - Render opt-in visual PDF input at 220 DPI by default, with an explicit 110..300 override, bounded per-page/document pixels, incremental encoding and retained image hashes/dimensions. Four fixed Hermes transcription calls compared the same two synthetic scans: both 220-DPI transcripts retained all eight designated source lines; the 110-DPI failures remain recorded. This does not establish full-material or downstream Claim accuracy. Original-source review and provider consent remain required.
 - Preserve structured rejection messages for small duplicate-length/transfer-encoded loopback requests on Windows by discarding at most 64 KiB within one 250 ms deadline before close. Continue to reject both framing forms; no request is accepted or executed. Retain the two prior connection-abort test failures and validate the unchanged HTTP assertions.
 - Add a local OCR comparison adapter and strict TSV validation for evaluation only. Retain its first invalid-format observation separately, repeat only the local OCR arms, and do not add an automatic OCR/Claim fallback to the product.

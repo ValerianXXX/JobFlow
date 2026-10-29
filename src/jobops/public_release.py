@@ -76,6 +76,11 @@ PUBLIC_EMAIL = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")
 # still uses the exact same policy below.
 ESCAPED_CONTROL_BYTE = re.compile(r"\\x(?:0[0-9a-fA-F]|1[0-9a-fA-F]|7[fF])")
 SAFE_PUBLIC_EMAIL_SUFFIXES = ("@example.test", "@jobops.local", "@users.noreply.github.com")
+# RFC 6761 section 6.2 reserves .test and its descendants. Content fixtures
+# use only this narrower example namespace; this does not approve Git authors.
+SYNTHETIC_EMAIL_SUBDOMAIN = re.compile(
+    r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+example\.test\Z"
+)
 # Public certificate identities are provenance, not applicant or maintainer data.
 # Keep this allowlist exact so ordinary addresses at the same domain still fail.
 SAFE_PUBLIC_EMAILS = frozenset({"noreply@github.com", "thomas@python.org"})
@@ -170,7 +175,13 @@ def validate_public_text(label: str, text: str) -> list[dict[str, str]]:
             findings.append({"kind": kind, "path": label})
     for email in PUBLIC_EMAIL.findall(ESCAPED_CONTROL_BYTE.sub("\x00", text)):
         normalized = email.casefold()
-        if normalized not in SAFE_PUBLIC_EMAILS and not normalized.endswith(SAFE_PUBLIC_EMAIL_SUFFIXES):
+        domain = normalized.rpartition("@")[2]
+        synthetic_subdomain = len(domain) <= 253 and SYNTHETIC_EMAIL_SUBDOMAIN.fullmatch(domain)
+        if (
+            normalized not in SAFE_PUBLIC_EMAILS
+            and not normalized.endswith(SAFE_PUBLIC_EMAIL_SUFFIXES)
+            and not synthetic_subdomain
+        ):
             findings.append({"kind": "email", "path": label})
     return findings
 
