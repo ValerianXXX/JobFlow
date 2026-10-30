@@ -17,6 +17,11 @@ local run with seven failures and two errors, explains its environment and PDF-t
 isolation defects, and records the focused repairs. It does not replace the missing
 full-material semantic acceptance or clean-Windows release acceptance.
 
+The [focus-recovery follow-up](docs/busy-focus-recovery-2026-10-29.md) fixes a
+hosted onboarding failure after saving and an emergency interruption settle.
+Its ten frozen browser cases pass; independent-user and release acceptance
+remain separate requirements.
+
 | Capability | Available source behavior | Verification and limits |
 | --- | --- | --- |
 | Materials and facts | Optional PDF/image transcription, entity-linked candidates, encrypted originals and separate source/Claim review | [Complete-material follow-up](docs/complete-claims-2026-10-29.md) fixes date/column filtering, retains more bilingual statements and rejects direct ownership substitutions. Three fresh real visual samples reach preview; full semantic accuracy and independent acceptance remain unestablished. |

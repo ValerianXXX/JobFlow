@@ -624,8 +624,13 @@ function syncActivityControls() {
   } else {
     const target = busyFocusReturn;
     busyFocusReturn = null;
+    const focused = document.activeElement;
+    // Chromium may retain an interruption button's focus across its brief inert
+    // interval. Return to the initiating operation after all activities finish,
+    // but preserve an intentional move to a different accessible element.
+    const interruptionFocused = Object.hasOwn(BUSY_INTERRUPTION_ACTIONS, focused?.id);
     if (target?.isConnected && !target.disabled && !target.inert && target.getClientRects().length &&
-        [document.body, document.documentElement].includes(document.activeElement)) {
+        ([document.body, document.documentElement].includes(focused) || interruptionFocused)) {
       target.focus({preventScroll:true});
     }
   }
