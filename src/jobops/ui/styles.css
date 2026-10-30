@@ -750,3 +750,17 @@ body.is-busy :is(#emergencyStop,#cancelGuidedIntake,#pauseAuthorizedDiscovery,#k
 .source-context blockquote{white-space:pre-wrap;margin:10px 0;padding:8px 12px;border-left:3px solid #7a929f;line-height:1.6}
 .source-context small{display:block}.source-context button{margin-top:8px;text-align:left;white-space:normal}
 .context-review-status{display:inline-block;margin:6px 0;color:#664a1e;font-size:12px}
+.analysis-text-controls{grid-column:1/-1;margin:10px 0;font-size:.85rem;line-height:1.5}
+.analysis-gap-links{display:flex;flex-wrap:wrap;gap:10px}
+.analysis-text-dialog{width:min(960px,94vw);max-height:90vh;padding:20px;border:1px solid #839ba7;border-radius:12px;color:#17283b;background:#fff;box-sizing:border-box}
+.analysis-text-dialog::backdrop{background:rgba(20,35,45,.55)}
+.analysis-text-dialog header,.analysis-text-dialog footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.analysis-text-dialog h3{margin:0;flex:1}.analysis-text-note{font-size:.9rem;line-height:1.6}.analysis-text-status{font-weight:600}
+.analysis-lines{max-height:48vh;overflow:auto;border:1px solid #bdcbd3;border-radius:6px;margin:12px 0;background:#f8fafc}
+.analysis-line{display:grid;grid-template-columns:4em minmax(0,1fr);border-bottom:1px solid #e1e8ed;font-size:.9rem;line-height:1.7}
+.analysis-line-number{padding:5px 8px;text-align:right;color:#526575;border-right:1px solid #d7e1e8;user-select:none}
+.analysis-line-text{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0;padding:5px 10px}
+.analysis-line.requested-line{background:#fff0c2;border-left:3px solid #977312}
+.analysis-jump{display:flex;align-items:end;gap:8px;max-width:100%}.analysis-jump label{display:grid;gap:4px;min-width:0}.analysis-jump input{width:100px;max-width:100%}
+.analysis-text-dialog :focus-visible{outline:3px solid #29748b;outline-offset:2px}
+@media(max-width:600px){.analysis-text-dialog{padding:12px}.analysis-text-dialog header{align-items:flex-start}.analysis-lines{max-height:42vh}.analysis-line{grid-template-columns:3em minmax(0,1fr)}}

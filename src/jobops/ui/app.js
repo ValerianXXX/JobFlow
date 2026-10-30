@@ -1498,6 +1498,7 @@ function applyLocale() {
   if(state.reviewPacket)renderReviewPacket();
   if(state.tailoringProposal)renderTailoringProposal(true);
   window.JobFlowWorkbench?.locale();
+  window.JobFlowAnalysisText?.locale();
   renderActivity();
 }
 
@@ -2259,6 +2260,7 @@ function renderDashboard(){
   }).join("");
   renderApplicationReadiness();
   window.JobFlowWorkbench?.decorate();
+  window.JobFlowAnalysisText?.decorate();
 }
 
 function packetValue(value){
@@ -2628,6 +2630,7 @@ function renderSourcePreviews(){
   }).join("");
   const candidateById=new Map(previews.flatMap(preview=>(preview.candidates||[]).map(item=>[item.candidate_id,item])));
   window.JobFlowWorkbench?.decorate();
+  window.JobFlowAnalysisText?.decorate();
   target.querySelectorAll(".preview-select").forEach(input=>{
     const item=candidateById.get(input.dataset.candidate);
     if(item?.provenance?.classification_review_required!==true)return;

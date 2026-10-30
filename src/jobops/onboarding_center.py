@@ -808,6 +808,17 @@ class OnboardingCenterService:
         return application_workspace(self.database, self.project, payload.get("application_id"))
 
     @_synchronized
+    def source_review_text(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from .analysis_text_review import window
+        _, state = self.ensure_state()
+        # A replacement preview owns the current coordinates until discarded.
+        sources = [item["metadata"] for item in state.get("pending_sources", [])] + list(state.get("sources", []))
+        source = next((item for item in sources if item.get("source_id") == payload.get("source_id")), None)
+        if source is None or source.get("raw_retained") is not True:
+            raise JobOpsError("SOURCE_TEXT_REVIEW_UNAVAILABLE", "Choose a retained source from the current review.")
+        return window(source, self.onboarding.read_bytes(source["secure_ref"]), payload)
+
+    @_synchronized
     def source_review_page(self, payload: dict[str, Any]) -> dict[str, Any]:
         import math
         from .source_review import source_page
@@ -3619,7 +3630,7 @@ class OnboardingCenterService:
                         key: item[key]
                         for key in (
                             "source_id", "category", "extension", "safe_display_name", "source_status",
-                            "suggestion_count", "fact_count", "raw_retained", "analysis_mode", "imported_at",
+                            "suggestion_count", "fact_count", "raw_retained", "analysis_mode", "imported_at", "analysis_text_review",
                         )
                         if key in item
                     },
@@ -3628,7 +3639,9 @@ class OnboardingCenterService:
                 for item in state.get("sources", [])
             ],
             "pending_sources": [
-                {key: deepcopy(value) for key, value in item.items() if key != "profile_hints"}
+                {key: ({name: deepcopy(field) for name, field in value.items() if name != "_analysis_transcript"}
+                       if key == "metadata" else deepcopy(value))
+                 for key, value in item.items() if key != "profile_hints"}
                 for item in state.get("pending_sources", []) if isinstance(item, dict)
             ],
             "context_notes": deepcopy(state.get("source_context_notes", [])),
@@ -4337,8 +4350,14 @@ class OnboardingCenterService:
                 text, candidates, segmented_lines=extraction_summary.get("segmented_oversize_lines", 0),
             ),
         }
+        from .analysis_text_review import capture
+        transcript, transcript_review = capture(
+            text, source_id=source_id, source_hash=source_hash, retained=raw_retained,
+            segmented=bool(extraction_summary.get("segmented_oversize_lines")),
+        )
         return {
             "source_id": source_id, "source_type": source_type, "extension": extension,
+            "_analysis_transcript": transcript, "analysis_text_review": transcript_review,
             "source_hash": source_hash, "source_status": source_status, "suggestions": suggestions,
             "candidates": candidates, "extraction_summary": extraction_summary,
             "context_notes": context_notes,
@@ -4437,6 +4456,8 @@ class OnboardingCenterService:
             "extension": prepared["extension"],
             "safe_display_name": f"{prepared['source_type']}-{ordinal:02d}{prepared['extension'] if prepared['source_type'] != 'chatgpt_export' else '.derived'}",
             "secure_ref": prepared["secure_ref"], "sha256": prepared["source_hash"],
+            "_analysis_transcript": prepared.get("_analysis_transcript"),
+            "analysis_text_review": prepared.get("analysis_text_review", {"status": "UNAVAILABLE"}),
             "source_status": prepared["source_status"], "suggestion_count": len(prepared["suggestions"]),
             "fact_count": len(prepared["candidates"]), "raw_retained": prepared["raw_retained"],
             "excluded_secret_fragments": prepared["excluded_secret_fragments"],
@@ -4764,6 +4785,8 @@ class OnboardingCenterService:
         pending = {
             "source_id": source_id, "metadata": {
                 **deepcopy(source), "fact_count": len(prepared["candidates"]),
+                "_analysis_transcript": prepared.get("_analysis_transcript"),
+                "analysis_text_review": prepared.get("analysis_text_review", {"status": "UNAVAILABLE"}),
                 "extraction_summary": prepared["extraction_summary"],
                 "analysis_mode": prepared["extraction_summary"].get("analysis_mode"),
                 "source_status": prepared["source_status"],
