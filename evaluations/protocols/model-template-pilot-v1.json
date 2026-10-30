@@ -1,0 +1,59 @@
+{
+  "protocol": "MODEL_TEMPLATE_PILOT_V1",
+  "frozen_at": "2026-10-30T10:46:07.817697+00:00",
+  "cases": [
+    "en-timeline_cards",
+    "zh-asymmetric_sidebar"
+  ],
+  "max_new_requests": 2,
+  "requests_per_case": 1,
+  "stop_after_failed_arms": 1,
+  "automatic_retries": 0,
+  "prior_requests": 4,
+  "campaign_ceiling": 6,
+  "closed_predecessors": [
+    {
+      "observation": "evaluations/2026-10-30/source-context-live-v1.json",
+      "journal": "evaluations/2026-10-30/source-context-live-v1.requests.jsonl"
+    },
+    {
+      "observation": "evaluations/2026-10-30/fact-preservation-live-v1.json",
+      "journal": "evaluations/2026-10-30/fact-preservation-live-v1.requests.jsonl"
+    }
+  ],
+  "inputs": {
+    "evaluations/2026-10-30/source-context-live-v1.json": "f7cb0e3ae7be716b16c1f421da7ed2e192026ab14a213edc3c4641e60a3ad51a",
+    "evaluations/2026-10-30/source-context-live-v1.requests.jsonl": "e656ec59015d17a1df55ef6d79b20f3b51512fbae41abbf2b396bce9f850b99e",
+    "evaluations/2026-10-30/fact-preservation-live-v1.json": "f2beb6531c1f46191befd233d865641e8233725497848244d8a1242d98965e3a",
+    "evaluations/2026-10-30/fact-preservation-live-v1.requests.jsonl": "8ee35e549032ff46dd3063287c65a9cc90da669c5d6414945afea736a9aa6468"
+  },
+  "product": {
+    "scripts/evaluate-template-pilot.py": "d95c428def5418a3b1fc8c61e937552c250411e78d4d5e12752de3a602414e50",
+    "scripts/evaluate-source-context.py": "6b7ed6ff4ee0f9fc637c946a42f4eeb8e6ae4bec76964a65fe8f092d1876d414",
+    "scripts/evaluate-complete-claims.py": "36ac1033cb4dba5d7d7b841b72cd8e8360e566b03b414714ecaf588a5aa22f5a",
+    "scripts/evaluate-layout-claims.py": "c6f5b9f50c3e79d37617fa790c18f790d3199558db142147ab90134ea07b0bd0",
+    "src/jobops/ai_runtime.py": "c5bc7d43b9eac5b63d6904851c31a294847539aff535caa151c39add0051e0e2",
+    "src/jobops/ai_connections.py": "37bbedfef857139e6f437d8d7b9d097d146bed5547c85f51e5074a3cca1ab407",
+    "src/jobops/onboarding_center.py": "4c7903edc90676077a4a3b411f22b1a02bfe8a59840d6e088587cad2af3e722c",
+    "src/jobops/source_context.py": "f11775c50738f1d1922f6a46b9d0492a2e538f7be348f651d2a22576e6fe7fc2",
+    "src/jobops/profile_source_hints.py": "62bdad116cb03bfa6576497f0f4262cfcfb9ed8ec71a3d6878bd7e4f7a4f079a",
+    "src/jobops/analysis_text_review.py": "dc17ee13a6c0da2addb3eb7a71885c2756e7755df58e486a6ad419fcb60d7828",
+    "src/jobops/_pdf_region_worker.py": "97e3585e3af4000e381899c076754603bb3714e01226770394f67e64b550045d"
+  },
+  "sources": {
+    "en-timeline_cards": "920e51c98eecd63525ccc59081206e02aa8ca8065854beb628c6e53dc5c9ae1a",
+    "zh-asymmetric_sidebar": "41a2d83d212c3edfaff4039acd7e2d3300da3c32afa70db373337d1109e0a696"
+  },
+  "route": {
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "hermes_commit": "afe53708ee7400919ae3e17a6dde9b02629e5c87"
+  },
+  "parser_previously_exposed": true,
+  "model_output_previously_measured": false,
+  "independent_blind_holdout": false,
+  "whole_material_acceptance": false,
+  "billed_cost_usd": null,
+  "labels_sent_to_model": false,
+  "scope": "Two new complete-material model observations; same authored content families already exposed to parsers; no before/after claim or whole-corpus acceptance"
+}

@@ -10,6 +10,11 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
+from .claim_attribution import (
+    explicit_actor_actions as _explicit_actor_actions,
+    explicit_attribution_conflict_count as _explicit_attribution_conflict_count,
+    unsupported_passive_actor_count,
+)
 from .errors import JobOpsError
 from .source_context import DocumentAnalysisResult, SourceContextAccumulator
 from .util import stable_id
@@ -475,34 +480,6 @@ def _merge_candidate_filter_diagnostics(
             _record_candidate_filter(target, str(reason))
 
 
-def _explicit_actor_actions(text: str) -> list[tuple[str, str]]:
-    """Recognize direct subject substitutions, not general semantic entailment.
-
-    Requiring the same complete action clause avoids assigning every number in
-    a broad citation to its first named actor. Synonyms, implicit subjects and
-    differently worded actions remain outside this conservative check.
-    """
-    actors = {"applicant": "applicant", "candidate": "applicant", "i": "applicant",
-              "申请人": "applicant", "本人": "applicant", "team": "team", "团队": "team", "ai": "ai"}
-    result = []
-    for clause in re.split(r"[;；。！？!?\n]|\.(?=\s|$)", unicodedata.normalize("NFKC", text).casefold()):
-        clause = " ".join(clause.strip().split())
-        match = re.match(r"^(?:the )?(applicant|candidate|team|ai|i)\s+(.+)$", clause)
-        if match is None:
-            match = re.match(r"^(申请人|本人|团队|ai)(?=[\u4e00-\u9fff]|\s)\s*(.+)$", clause)
-        if match is not None:
-            result.append((actors[match[1]], match[2]))
-    return result
-
-
-def _explicit_attribution_conflict_count(statement: str, source_excerpt: str) -> int:
-    source_actors: dict[str, set[str]] = {}
-    for actor, action in _explicit_actor_actions(source_excerpt):
-        source_actors.setdefault(action, set()).add(actor)
-    return sum(action in source_actors and actor not in source_actors[action]
-               for actor, action in _explicit_actor_actions(statement))
-
-
 def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str, Any]:
     # A Chinese sentence can express a complete fact in fewer than 20 code
     # points. For this narrow exception require a predicate AND an unchanged
@@ -532,9 +509,11 @@ def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str
     required = max(1 if len(claim_tokens) == 1 else 2, math.ceil(len(claim_tokens) * GROUNDING_RATIO))
     shared_tokens = len(claim_tokens & source_tokens)
     attribution_conflicts = _explicit_attribution_conflict_count(statement, source_excerpt)
+    actor_inferences = unsupported_passive_actor_count(statement, source_excerpt)
     return {
-        "valid": bool(format_complete and not unsupported_numbers and not attribution_conflicts and (not claim_tokens or shared_tokens >= required)),
+        "valid": bool(format_complete and not unsupported_numbers and not attribution_conflicts and not actor_inferences and (not claim_tokens or shared_tokens >= required)),
         "explicit_attribution_conflict_count": attribution_conflicts,
+        "unsupported_actor_inference_count": actor_inferences,
         "statement_format_complete": format_complete,
         "unsupported_number_count": len(unsupported_numbers),
         "shared_grounding_token_count": shared_tokens,
@@ -573,7 +552,8 @@ def _bounded_statement_grounding(
         "citation_adjustment": None,
         "adjacent_line_expansion_attempted": False,
     })
-    if original["valid"] or not original["statement_format_complete"] or original["explicit_attribution_conflict_count"]:
+    if (original["valid"] or not original["statement_format_complete"]
+        or original["explicit_attribution_conflict_count"] or original["unsupported_actor_inference_count"]):
         return original
 
     expanded_start, expanded_end = start_index, end_index
@@ -607,6 +587,7 @@ def _bounded_statement_grounding(
         "expanded_line_end": line_number_start + expanded_end,
         "unsupported_number_count": expanded["unsupported_number_count"],
         "explicit_attribution_conflict_count": expanded["explicit_attribution_conflict_count"],
+        "unsupported_actor_inference_count": expanded["unsupported_actor_inference_count"],
         "shared_grounding_token_count": expanded["shared_grounding_token_count"],
     }}
 
@@ -715,6 +696,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "Preserve company, role, date, number, and responsibility boundaries exactly; never infer missing facts.",
             "Numeric formatting may differ only by commas, digit-grouping spaces, full-width digits, or physical PDF line wraps. Never calculate, round, scale, convert, or infer a value.",
             "Treat team and AI work as separate from sole applicant ownership.",
+            "Keep unassigned passive actions passive. Do not add the applicant, team or another performer when the cited source does not identify who performed the action.",
             "Every candidate must cite inclusive source line_start and line_end.",
             "Before returning, verify that every candidate ends in punctuation and that its cited line range contains every stated identity, date, number, responsibility, and outcome. Expand across wrapped source lines when needed; omit anything that cannot be grounded exactly.",
             "Return JSON only. Do not approve any Claim for external use.",
@@ -1116,6 +1098,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 failure_category = (
                     "UNSUPPORTED_NUMBER" if grounding["unsupported_number_count"]
                     else "ATTRIBUTION_CONFLICT" if grounding["explicit_attribution_conflict_count"]
+                    else "UNSUPPORTED_ACTOR" if grounding["unsupported_actor_inference_count"]
                     else "STATEMENT_FRAGMENT" if not grounding["statement_format_complete"]
                     else "CITED_LINE_GROUNDING"
                 )

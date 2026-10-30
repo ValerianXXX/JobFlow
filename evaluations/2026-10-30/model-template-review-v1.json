@@ -1,0 +1,2184 @@
+{
+  "schema_version": 1,
+  "reviewer": "coding_assistant",
+  "independent_review": false,
+  "semantic_judgments_verified_by_script": false,
+  "whole_material_acceptance": false,
+  "original_observation_lf_sha256": "e8bf0935eb3c41a670d83ce08b9885070683b32ae1140085703c20f4bfcb64a9",
+  "replay_lf_sha256": "7ff78120a616e97e0370571830826c64eabfffb5ae365ebe96e64ef03b047853",
+  "review_scope": "All 94 authored facts, 69 accepted original candidates and 10 context notes were inspected against the recorded source transcripts. These are reviewer judgments, not independent human acceptance.",
+  "cases": [
+    {
+      "case": "en-timeline_cards",
+      "source_facts": 47,
+      "candidates_reviewed": 35,
+      "context_notes_reviewed": 4,
+      "facts": [
+        {
+          "fact_id": "en-timeline_cards-f01",
+          "kind": "identity",
+          "critical": false,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": "candidate_display_name",
+          "decision": "UNCONFIRMED_HEADER_HINT"
+        },
+        {
+          "fact_id": "en-timeline_cards-f02",
+          "kind": "contact",
+          "critical": false,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": "email",
+          "decision": "UNCONFIRMED_HEADER_HINT"
+        },
+        {
+          "fact_id": "en-timeline_cards-f03",
+          "kind": "constraint",
+          "critical": true,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-1F95EC795428"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "fact_id": "en-timeline_cards-f04",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-1F03425C80EA"
+          ],
+          "supported_candidate_ids": [
+            "EXT-1F03425C80EA"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f05",
+          "kind": "ownership",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-BA99EFA43CC7"
+          ],
+          "supported_candidate_ids": [
+            "EXT-BA99EFA43CC7"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f06",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-8525308E44D4"
+          ],
+          "supported_candidate_ids": [
+            "EXT-8525308E44D4"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f07",
+          "kind": "organization",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-FCE3C039B420"
+          ],
+          "supported_candidate_ids": [
+            "EXT-FCE3C039B420"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f08",
+          "kind": "role",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-FCE3C039B420"
+          ],
+          "supported_candidate_ids": [
+            "EXT-FCE3C039B420"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f09",
+          "kind": "dates",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-FCE3C039B420"
+          ],
+          "supported_candidate_ids": [
+            "EXT-FCE3C039B420"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f10",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-25FD0F6DE363"
+          ],
+          "supported_candidate_ids": [
+            "EXT-25FD0F6DE363"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f11",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-454B1F88147E"
+          ],
+          "supported_candidate_ids": [
+            "EXT-454B1F88147E"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f12",
+          "kind": "money",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-C65296C7CD29"
+          ],
+          "supported_candidate_ids": [
+            "EXT-C65296C7CD29"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f13",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-4360A0839CE9"
+          ],
+          "supported_candidate_ids": [
+            "EXT-4360A0839CE9"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f14",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-A42C4EF85837"
+          ],
+          "supported_candidate_ids": [
+            "EXT-A42C4EF85837"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f15",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-9496292C239B"
+          ],
+          "supported_candidate_ids": [
+            "EXT-9496292C239B"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f16",
+          "kind": "negative_evidence",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-3ACB2B05434B"
+          ],
+          "supported_candidate_ids": [
+            "EXT-3ACB2B05434B"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f17",
+          "kind": "scope",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-F9A8EDEF32E8"
+          ],
+          "supported_candidate_ids": [
+            "EXT-F9A8EDEF32E8"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f18",
+          "kind": "organization",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-008EA8D993CB"
+          ],
+          "supported_candidate_ids": [
+            "EXT-008EA8D993CB"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f19",
+          "kind": "role",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-008EA8D993CB"
+          ],
+          "supported_candidate_ids": [
+            "EXT-008EA8D993CB"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f20",
+          "kind": "dates",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-008EA8D993CB"
+          ],
+          "supported_candidate_ids": [
+            "EXT-008EA8D993CB"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f21",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-8BEA68CEEF55"
+          ],
+          "supported_candidate_ids": [
+            "EXT-8BEA68CEEF55"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f22",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-4A11F1654FEA"
+          ],
+          "supported_candidate_ids": [
+            "EXT-4A11F1654FEA"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f23",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-B65D49D93C49"
+          ],
+          "supported_candidate_ids": [
+            "EXT-B65D49D93C49"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f24",
+          "kind": "ownership",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-5D7C4C0BD088"
+          ],
+          "supported_candidate_ids": [
+            "EXT-5D7C4C0BD088"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f25",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-FDB82DD2DB9B"
+          ],
+          "supported_candidate_ids": [],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SOURCE_ONLY_AFTER_UNSUPPORTED_CANDIDATE_FILTERED"
+        },
+        {
+          "fact_id": "en-timeline_cards-f26",
+          "kind": "scope",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-FDED907A1238"
+          ],
+          "supported_candidate_ids": [
+            "EXT-FDED907A1238"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f27",
+          "kind": "organization",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-FAA3B6765A2E"
+          ],
+          "supported_candidate_ids": [
+            "EXT-FAA3B6765A2E"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f28",
+          "kind": "dates",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-FAA3B6765A2E"
+          ],
+          "supported_candidate_ids": [
+            "EXT-FAA3B6765A2E"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f29",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-AF82ED3A9CD3"
+          ],
+          "supported_candidate_ids": [
+            "EXT-AF82ED3A9CD3"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f30",
+          "kind": "scope",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-98FA8B972587"
+          ],
+          "supported_candidate_ids": [
+            "EXT-98FA8B972587"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f31",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-AF525FEFFC2B"
+          ],
+          "supported_candidate_ids": [
+            "EXT-AF525FEFFC2B"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f32",
+          "kind": "future_work",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-0BEA3797C1E4"
+          ],
+          "supported_candidate_ids": [
+            "EXT-0BEA3797C1E4"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f33",
+          "kind": "ownership",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-992C120BF417"
+          ],
+          "supported_candidate_ids": [
+            "EXT-992C120BF417"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f34",
+          "kind": "negative_evidence",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-9E408E8BE601"
+          ],
+          "supported_candidate_ids": [
+            "EXT-9E408E8BE601"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f35",
+          "kind": "organization",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-AAF6AF846316"
+          ],
+          "supported_candidate_ids": [
+            "EXT-AAF6AF846316"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f36",
+          "kind": "qualification",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-AAF6AF846316"
+          ],
+          "supported_candidate_ids": [
+            "EXT-AAF6AF846316"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f37",
+          "kind": "dates",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-AAF6AF846316"
+          ],
+          "supported_candidate_ids": [
+            "EXT-AAF6AF846316"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f38",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-F70871B11652"
+          ],
+          "supported_candidate_ids": [
+            "EXT-F70871B11652"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f39",
+          "kind": "missing_information",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-1110563596A2"
+          ],
+          "supported_candidate_ids": [
+            "EXT-1110563596A2"
+          ],
+          "context_note_ids": [
+            "CTX-89900FFD2AA9"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f40",
+          "kind": "skill",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-BA5113756924"
+          ],
+          "supported_candidate_ids": [
+            "EXT-BA5113756924"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f41",
+          "kind": "skill",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-7BA4C98AD711"
+          ],
+          "supported_candidate_ids": [
+            "EXT-7BA4C98AD711"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f42",
+          "kind": "skill",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-2285E48E32CC"
+          ],
+          "supported_candidate_ids": [
+            "EXT-2285E48E32CC"
+          ],
+          "context_note_ids": [
+            "CTX-1323103F05DB"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f43",
+          "kind": "missing_information",
+          "critical": true,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-1323103F05DB"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "fact_id": "en-timeline_cards-f44",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-950E96920847"
+          ],
+          "supported_candidate_ids": [
+            "EXT-950E96920847"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f45",
+          "kind": "ownership",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-8ECD7F8861E3"
+          ],
+          "supported_candidate_ids": [
+            "EXT-8ECD7F8861E3"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f46",
+          "kind": "scope",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-75C27285CEE6"
+          ],
+          "supported_candidate_ids": [
+            "EXT-75C27285CEE6"
+          ],
+          "context_note_ids": [
+            "CTX-60AC3F5BD6CB"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "en-timeline_cards-f47",
+          "kind": "missing_information",
+          "critical": true,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-60AC3F5BD6CB"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "UNCONFIRMED_SOURCE_CONTEXT"
+        }
+      ],
+      "candidate_review": [
+        {
+          "candidate_id": "EXT-1F03425C80EA",
+          "reviewed_source_ranges": [
+            [
+              6,
+              6
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-BA99EFA43CC7",
+          "reviewed_source_ranges": [
+            [
+              7,
+              7
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-8525308E44D4",
+          "reviewed_source_ranges": [
+            [
+              8,
+              8
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-FCE3C039B420",
+          "reviewed_source_ranges": [
+            [
+              10,
+              12
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-25FD0F6DE363",
+          "reviewed_source_ranges": [
+            [
+              13,
+              13
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-454B1F88147E",
+          "reviewed_source_ranges": [
+            [
+              14,
+              14
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-C65296C7CD29",
+          "reviewed_source_ranges": [
+            [
+              15,
+              15
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-4360A0839CE9",
+          "reviewed_source_ranges": [
+            [
+              16,
+              16
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-A42C4EF85837",
+          "reviewed_source_ranges": [
+            [
+              17,
+              17
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-9496292C239B",
+          "reviewed_source_ranges": [
+            [
+              18,
+              18
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-3ACB2B05434B",
+          "reviewed_source_ranges": [
+            [
+              19,
+              19
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-F9A8EDEF32E8",
+          "reviewed_source_ranges": [
+            [
+              20,
+              20
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-008EA8D993CB",
+          "reviewed_source_ranges": [
+            [
+              24,
+              26
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-8BEA68CEEF55",
+          "reviewed_source_ranges": [
+            [
+              27,
+              27
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-4A11F1654FEA",
+          "reviewed_source_ranges": [
+            [
+              28,
+              28
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-B65D49D93C49",
+          "reviewed_source_ranges": [
+            [
+              29,
+              29
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-5D7C4C0BD088",
+          "reviewed_source_ranges": [
+            [
+              30,
+              30
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-FDB82DD2DB9B",
+          "reviewed_source_ranges": [
+            [
+              31,
+              31
+            ]
+          ],
+          "decision": "UNSUPPORTED_ACTOR_INFERENCE",
+          "reason": "Source leaves the performer unspecified; candidate assigns it to the applicant.",
+          "present_after_replay": false
+        },
+        {
+          "candidate_id": "EXT-FDED907A1238",
+          "reviewed_source_ranges": [
+            [
+              32,
+              32
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-FAA3B6765A2E",
+          "reviewed_source_ranges": [
+            [
+              34,
+              35
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-AF82ED3A9CD3",
+          "reviewed_source_ranges": [
+            [
+              36,
+              36
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-98FA8B972587",
+          "reviewed_source_ranges": [
+            [
+              37,
+              37
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-AF525FEFFC2B",
+          "reviewed_source_ranges": [
+            [
+              38,
+              38
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-0BEA3797C1E4",
+          "reviewed_source_ranges": [
+            [
+              39,
+              39
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-992C120BF417",
+          "reviewed_source_ranges": [
+            [
+              40,
+              40
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-9E408E8BE601",
+          "reviewed_source_ranges": [
+            [
+              41,
+              41
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-AAF6AF846316",
+          "reviewed_source_ranges": [
+            [
+              45,
+              47
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-F70871B11652",
+          "reviewed_source_ranges": [
+            [
+              48,
+              48
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-1110563596A2",
+          "reviewed_source_ranges": [
+            [
+              49,
+              49
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-BA5113756924",
+          "reviewed_source_ranges": [
+            [
+              51,
+              51
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-7BA4C98AD711",
+          "reviewed_source_ranges": [
+            [
+              52,
+              52
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-2285E48E32CC",
+          "reviewed_source_ranges": [
+            [
+              53,
+              53
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-950E96920847",
+          "reviewed_source_ranges": [
+            [
+              56,
+              56
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-8ECD7F8861E3",
+          "reviewed_source_ranges": [
+            [
+              57,
+              57
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-75C27285CEE6",
+          "reviewed_source_ranges": [
+            [
+              58,
+              58
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        }
+      ],
+      "counts": {
+        "SOURCE_ONLY_AFTER_UNSUPPORTED_CANDIDATE_FILTERED": 1,
+        "SUPPORTED_CANDIDATE": 41,
+        "UNCONFIRMED_HEADER_HINT": 2,
+        "UNCONFIRMED_SOURCE_CONTEXT": 3
+      },
+      "parser_verbatim_retained": 47,
+      "unsupported_actor_candidates_before": 1,
+      "same_response_candidates_before": 35,
+      "same_response_candidates_after": 34,
+      "other_statements_preserved": true,
+      "profile_hints_preserved": true,
+      "context_quotes_preserved": true,
+      "new_filter_counts": {
+        "UNSUPPORTED_ACTOR": 1
+      }
+    },
+    {
+      "case": "zh-asymmetric_sidebar",
+      "source_facts": 47,
+      "candidates_reviewed": 34,
+      "context_notes_reviewed": 6,
+      "facts": [
+        {
+          "fact_id": "zh-asymmetric_sidebar-f01",
+          "kind": "identity",
+          "critical": false,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": "candidate_display_name",
+          "decision": "UNCONFIRMED_HEADER_HINT"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f02",
+          "kind": "contact",
+          "critical": false,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": "email",
+          "decision": "UNCONFIRMED_HEADER_HINT"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f03",
+          "kind": "constraint",
+          "critical": true,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-54EB95882658"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f04",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-A6F46181F6BD"
+          ],
+          "supported_candidate_ids": [
+            "EXT-A6F46181F6BD"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f05",
+          "kind": "ownership",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-24FE79C964AC"
+          ],
+          "supported_candidate_ids": [
+            "EXT-24FE79C964AC"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f06",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-99170ED2AA90"
+          ],
+          "supported_candidate_ids": [
+            "EXT-99170ED2AA90"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f07",
+          "kind": "organization",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-1A2D1FF176CD"
+          ],
+          "supported_candidate_ids": [
+            "EXT-1A2D1FF176CD"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f08",
+          "kind": "role",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-1A2D1FF176CD"
+          ],
+          "supported_candidate_ids": [
+            "EXT-1A2D1FF176CD"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f09",
+          "kind": "dates",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-1A2D1FF176CD"
+          ],
+          "supported_candidate_ids": [
+            "EXT-1A2D1FF176CD"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f10",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-3227C6D012B3"
+          ],
+          "supported_candidate_ids": [
+            "EXT-3227C6D012B3"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f11",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-C3B8E985003A"
+          ],
+          "supported_candidate_ids": [
+            "EXT-C3B8E985003A"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f12",
+          "kind": "money",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-EEC10940C1B7"
+          ],
+          "supported_candidate_ids": [
+            "EXT-EEC10940C1B7"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f13",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-DC2A64D55ED8"
+          ],
+          "supported_candidate_ids": [
+            "EXT-DC2A64D55ED8"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f14",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-5F81D5F5FE92"
+          ],
+          "supported_candidate_ids": [
+            "EXT-5F81D5F5FE92"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f15",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-7C1CD30F4A2D"
+          ],
+          "supported_candidate_ids": [
+            "EXT-7C1CD30F4A2D"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f16",
+          "kind": "negative_evidence",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-2D13839ED540"
+          ],
+          "supported_candidate_ids": [
+            "EXT-2D13839ED540"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f17",
+          "kind": "scope",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-5BAF7AD667BC"
+          ],
+          "supported_candidate_ids": [
+            "EXT-5BAF7AD667BC"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f18",
+          "kind": "organization",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-3E2E49772E48"
+          ],
+          "supported_candidate_ids": [
+            "EXT-3E2E49772E48"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f19",
+          "kind": "role",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-3E2E49772E48"
+          ],
+          "supported_candidate_ids": [
+            "EXT-3E2E49772E48"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f20",
+          "kind": "dates",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-3E2E49772E48"
+          ],
+          "supported_candidate_ids": [
+            "EXT-3E2E49772E48"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f21",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-F4F0F416E331"
+          ],
+          "supported_candidate_ids": [
+            "EXT-F4F0F416E331"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f22",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-1771663A147D"
+          ],
+          "supported_candidate_ids": [
+            "EXT-1771663A147D"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f23",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-1DA06E86B2EB"
+          ],
+          "supported_candidate_ids": [
+            "EXT-1DA06E86B2EB"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f24",
+          "kind": "ownership",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-5BE63F683DA4"
+          ],
+          "supported_candidate_ids": [
+            "EXT-5BE63F683DA4"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f25",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-D66DFA289EC5"
+          ],
+          "supported_candidate_ids": [
+            "EXT-D66DFA289EC5"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f26",
+          "kind": "scope",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-9AF0D23B0766"
+          ],
+          "supported_candidate_ids": [
+            "EXT-9AF0D23B0766"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f27",
+          "kind": "organization",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-24386685FE30"
+          ],
+          "supported_candidate_ids": [
+            "EXT-24386685FE30"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f28",
+          "kind": "dates",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-24386685FE30"
+          ],
+          "supported_candidate_ids": [
+            "EXT-24386685FE30"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f29",
+          "kind": "quantity",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-282919230120"
+          ],
+          "supported_candidate_ids": [
+            "EXT-282919230120"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f30",
+          "kind": "scope",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-452D5798E484"
+          ],
+          "supported_candidate_ids": [
+            "EXT-452D5798E484"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f31",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-12D79562FC5A"
+          ],
+          "supported_candidate_ids": [
+            "EXT-12D79562FC5A"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f32",
+          "kind": "future_work",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-035C39E99371"
+          ],
+          "supported_candidate_ids": [
+            "EXT-035C39E99371"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f33",
+          "kind": "ownership",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-3D9E4CC88B4A"
+          ],
+          "supported_candidate_ids": [
+            "EXT-3D9E4CC88B4A"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f34",
+          "kind": "negative_evidence",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-5D8E6759C2AC"
+          ],
+          "supported_candidate_ids": [
+            "EXT-5D8E6759C2AC"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f35",
+          "kind": "organization",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-B338DD5820BD"
+          ],
+          "supported_candidate_ids": [
+            "EXT-B338DD5820BD"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f36",
+          "kind": "qualification",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-B338DD5820BD"
+          ],
+          "supported_candidate_ids": [
+            "EXT-B338DD5820BD"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f37",
+          "kind": "dates",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-B338DD5820BD"
+          ],
+          "supported_candidate_ids": [
+            "EXT-B338DD5820BD"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f38",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-E1B154386E1F"
+          ],
+          "supported_candidate_ids": [
+            "EXT-E1B154386E1F"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f39",
+          "kind": "missing_information",
+          "critical": true,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-F6D6632B593F"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f40",
+          "kind": "skill",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-2FD413B6E14E"
+          ],
+          "supported_candidate_ids": [
+            "EXT-2FD413B6E14E"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f41",
+          "kind": "skill",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-087DEA9A60E1"
+          ],
+          "supported_candidate_ids": [
+            "EXT-087DEA9A60E1"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f42",
+          "kind": "skill",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-B5C5BA6D1F8D"
+          ],
+          "supported_candidate_ids": [
+            "EXT-B5C5BA6D1F8D"
+          ],
+          "context_note_ids": [
+            "CTX-71033CA37EA4"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f43",
+          "kind": "missing_information",
+          "critical": true,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-D4B0C3EEC6A1",
+            "CTX-F2DD015D13BD"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f44",
+          "kind": "qualitative",
+          "critical": false,
+          "original_candidate_ids": [
+            "EXT-E34905E49DBD"
+          ],
+          "supported_candidate_ids": [
+            "EXT-E34905E49DBD"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f45",
+          "kind": "ownership",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-CCFC2A02D66D"
+          ],
+          "supported_candidate_ids": [
+            "EXT-CCFC2A02D66D"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f46",
+          "kind": "scope",
+          "critical": true,
+          "original_candidate_ids": [
+            "EXT-1B3762C895D7"
+          ],
+          "supported_candidate_ids": [
+            "EXT-1B3762C895D7"
+          ],
+          "context_note_ids": [],
+          "unconfirmed_profile_field": null,
+          "decision": "SUPPORTED_CANDIDATE"
+        },
+        {
+          "fact_id": "zh-asymmetric_sidebar-f47",
+          "kind": "missing_information",
+          "critical": true,
+          "original_candidate_ids": [],
+          "supported_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-5AC788C97BD0"
+          ],
+          "unconfirmed_profile_field": null,
+          "decision": "UNCONFIRMED_SOURCE_CONTEXT"
+        }
+      ],
+      "candidate_review": [
+        {
+          "candidate_id": "EXT-A6F46181F6BD",
+          "reviewed_source_ranges": [
+            [
+              7,
+              7
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-24FE79C964AC",
+          "reviewed_source_ranges": [
+            [
+              8,
+              9
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-99170ED2AA90",
+          "reviewed_source_ranges": [
+            [
+              10,
+              10
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-1A2D1FF176CD",
+          "reviewed_source_ranges": [
+            [
+              13,
+              15
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-3227C6D012B3",
+          "reviewed_source_ranges": [
+            [
+              16,
+              16
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-C3B8E985003A",
+          "reviewed_source_ranges": [
+            [
+              17,
+              17
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-EEC10940C1B7",
+          "reviewed_source_ranges": [
+            [
+              18,
+              18
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-DC2A64D55ED8",
+          "reviewed_source_ranges": [
+            [
+              19,
+              19
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-5F81D5F5FE92",
+          "reviewed_source_ranges": [
+            [
+              20,
+              20
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-7C1CD30F4A2D",
+          "reviewed_source_ranges": [
+            [
+              21,
+              21
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-2D13839ED540",
+          "reviewed_source_ranges": [
+            [
+              22,
+              22
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-5BAF7AD667BC",
+          "reviewed_source_ranges": [
+            [
+              23,
+              23
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-3E2E49772E48",
+          "reviewed_source_ranges": [
+            [
+              26,
+              28
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-F4F0F416E331",
+          "reviewed_source_ranges": [
+            [
+              29,
+              30
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-1771663A147D",
+          "reviewed_source_ranges": [
+            [
+              31,
+              32
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-1DA06E86B2EB",
+          "reviewed_source_ranges": [
+            [
+              33,
+              34
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-5BE63F683DA4",
+          "reviewed_source_ranges": [
+            [
+              35,
+              36
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-D66DFA289EC5",
+          "reviewed_source_ranges": [
+            [
+              37,
+              38
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-9AF0D23B0766",
+          "reviewed_source_ranges": [
+            [
+              39,
+              40
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-24386685FE30",
+          "reviewed_source_ranges": [
+            [
+              43,
+              44
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-282919230120",
+          "reviewed_source_ranges": [
+            [
+              45,
+              45
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-452D5798E484",
+          "reviewed_source_ranges": [
+            [
+              46,
+              46
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-12D79562FC5A",
+          "reviewed_source_ranges": [
+            [
+              47,
+              47
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-035C39E99371",
+          "reviewed_source_ranges": [
+            [
+              48,
+              48
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-3D9E4CC88B4A",
+          "reviewed_source_ranges": [
+            [
+              49,
+              49
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-5D8E6759C2AC",
+          "reviewed_source_ranges": [
+            [
+              50,
+              50
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-B338DD5820BD",
+          "reviewed_source_ranges": [
+            [
+              53,
+              56
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-E1B154386E1F",
+          "reviewed_source_ranges": [
+            [
+              57,
+              57
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-E34905E49DBD",
+          "reviewed_source_ranges": [
+            [
+              60,
+              61
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-CCFC2A02D66D",
+          "reviewed_source_ranges": [
+            [
+              62,
+              63
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-1B3762C895D7",
+          "reviewed_source_ranges": [
+            [
+              64,
+              65
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-2FD413B6E14E",
+          "reviewed_source_ranges": [
+            [
+              70,
+              70
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-087DEA9A60E1",
+          "reviewed_source_ranges": [
+            [
+              71,
+              71
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        },
+        {
+          "candidate_id": "EXT-B5C5BA6D1F8D",
+          "reviewed_source_ranges": [
+            [
+              72,
+              72
+            ]
+          ],
+          "decision": "SUPPORTED_PARAPHRASE",
+          "reason": "Source wording, entity, dates, numbers and responsibility qualifiers retained in this reviewed candidate.",
+          "present_after_replay": true
+        }
+      ],
+      "counts": {
+        "SUPPORTED_CANDIDATE": 41,
+        "UNCONFIRMED_HEADER_HINT": 2,
+        "UNCONFIRMED_SOURCE_CONTEXT": 4
+      },
+      "parser_verbatim_retained": 47,
+      "unsupported_actor_candidates_before": 0,
+      "same_response_candidates_before": 34,
+      "same_response_candidates_after": 34,
+      "other_statements_preserved": true,
+      "profile_hints_preserved": true,
+      "context_quotes_preserved": true,
+      "new_filter_counts": {
+        "CITED_LINE_GROUNDING": 1
+      }
+    }
+  ]
+}
