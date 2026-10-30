@@ -76,6 +76,16 @@ sources and unchanged selection. Its backend is a contract double, with zero
 external requests. Full Python discovery on the new source commit is a separate
 milestone check; do not substitute the earlier `ad37cff` full pass for this code.
 
+Source implementation is `c3093bf6d5b2fa7dccd5cb94d402a69ceef5cfcb`. Its complete
+Python run is in progress in an isolated validation worktree at receipt time.
+Public tree/history/author verification passes for that source: 838 tracked
+files, 331 commits, zero findings and only the existing approved historical
+identity exception. Release readiness remains false. The unsigned wheel builds;
+all seven changed runtime/UI files match the source bytes. Its SHA-256 is
+`715c57e8734e04a07a5ead98aa14ae7a7395cc4b5b24bd439e2be60d836792df`.
+Five public-document checks pass. The [machine-readable receipt](../evaluations/2026-10-30/analysis-text-review-v1.json)
+retains the exact earlier failure/pass log hashes and scope distinctions.
+
 ## Actual loopback HTTP and Windows DPAPI review
 
 The coding assistant used `tests/source_coverage_ui_server.py --stdio-control`:
@@ -119,9 +129,11 @@ No real knowledge source was read or modified to repair those fixtures.
 
 For rollout, review the stacked draft and run its own complete checks before
 merging. Revert this feature through an ordinary reviewed commit for rollback;
-preserve encrypted state before any downgrade. Existing source records still
-work, while older code does not display the optional snapshot fields. Do not
-strip newer Profile versions or erase observation history to downgrade.
+preserve encrypted state before any downgrade. Restore a matching pre-upgrade
+encrypted backup when returning to an older build: older bootstrap code does
+not exclude the new pending-transcript metadata, even though its UI cannot
+display the viewer. Do not strip newer Profile versions or erase observation
+history to downgrade.
 
 Full 36-material/holdout semantic acceptance, complete Profile handling,
 independent users, live ATS/mailbox workflows, trusted production signing and an

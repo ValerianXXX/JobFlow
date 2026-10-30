@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "scope": "SYNTHETIC_SOURCE_REVIEW_WORKFLOW",
+  "base_commit": "ad37cff0d184a2e3858b016fd9e6b021725476c4",
+  "frozen_test_commit": "4277122",
+  "source_commit": "c3093bf6d5b2fa7dccd5cb94d402a69ceef5cfcb",
+  "frozen_before": {
+    "test_methods": 9,
+    "failures": 1,
+    "errors_including_subtests": 18
+  },
+  "frozen_after": "9 pass unchanged",
+  "additional_contracts": 4,
+  "contracts_after": {
+    "passed": 13,
+    "seconds": 13.424
+  },
+  "context_regression": {
+    "passed": 29,
+    "seconds": 5.231
+  },
+  "related_initial": {
+    "tests": 96,
+    "passed": 94,
+    "failures": 2,
+    "seconds": 45.741,
+    "cause": "Old exact asset-cache revision assertions"
+  },
+  "related_failed_checks_after": {
+    "passed": 2,
+    "seconds": 0.009,
+    "change": "Synchronize expected exact cache revision; other assertions unchanged"
+  },
+  "javascript": {
+    "suites_passed": 15,
+    "new_suite_scenario_groups": 8,
+    "focused_post_navigation_adjustment": "PASS",
+    "backend": "New suite uses contract double; existing suites include actual HTTP/DPAPI"
+  },
+  "actual_browser": {
+    "source_fixture": "tests/source_coverage_ui_server.py",
+    "model": "pinned prior synthetic response replay",
+    "actual_components": [
+      "original synthetic PDF parser",
+      "Windows DPAPI",
+      "loopback HTTP",
+      "in-app browser"
+    ],
+    "lines": 60,
+    "historical_candidate_uncited_lines": 19,
+    "jumped_range": [
+      54,
+      55
+    ],
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "desktop_and_mobile": true,
+    "mobile_viewport": [
+      390,
+      844
+    ],
+    "mobile_document_width": 375,
+    "mobile_dialog_client_and_scroll_width": [
+      335,
+      335
+    ],
+    "selected_claims": 0,
+    "confirm_reload_same_snapshot": true,
+    "owned_server_and_tab_closed": true,
+    "viewport_reset": true,
+    "temporary_state_removed": true,
+    "independent_human_acceptance": false
+  },
+  "full_regression": {
+    "status": "RUNNING",
+    "source_commit": "c3093bf6d5b2fa7dccd5cb94d402a69ceef5cfcb",
+    "worktree": "JobFlow-material-eval",
+    "log": "reports/transcript-validation-full-20261030.log"
+  },
+  "wheel": {
+    "sha256": "715c57e8734e04a07a5ead98aa14ae7a7395cc4b5b24bd439e2be60d836792df",
+    "changed_module_and_ui_source_matches": true,
+    "signed": false,
+    "published": false
+  },
+  "new_provider_requests": 0,
+  "billed_cost_usd": null,
+  "model_quality_remeasured": false,
+  "review_effort_measured": false,
+  "real_external_actions": 0,
+  "database_migration": false,
+  "signing_and_clean_windows": "UNAVAILABLE_OWNER_CONFIRMED",
+  "whole_material_acceptance": false,
+  "remaining": [
+    "36-material independent semantic acceptance",
+    "Complete Profile/non-Claim destinations",
+    "Live ATS/mailbox and independent users",
+    "Trusted signing and clean Windows lifecycle"
+  ],
+  "logs": [
+    {
+      "path": "reports/analysis-text-frozen-before-20261030.log",
+      "sha256": "7b43be921c6d263f9dced0c96e49d832744156a4ec5275c944e7f74f9c2ed8d8"
+    },
+    {
+      "path": "reports/analysis-text-contracts-20261030.log",
+      "sha256": "fe0cf45a0835792fea5527588a592abceeec9f3ac3cf406dbe51a679bfcffd91"
+    },
+    {
+      "path": "reports/analysis-text-context-regression-20261030.log",
+      "sha256": "da58d173833ab32a3770291f9e29c75b7b87c876d28e4f17cb38d589eccf6509"
+    },
+    {
+      "path": "reports/analysis-text-related-20261030.log",
+      "sha256": "fb2035730aa873978951fe22335a7d8eec2f07a39f2c4a6ae2590bfc1c8b2087"
+    },
+    {
+      "path": "reports/analysis-text-cache-contracts-20261030.log",
+      "sha256": "edd207d55de7743b99faf319aef15b90eec6f0ab32c716705a12c3a0defeac39"
+    },
+    {
+      "path": "reports/analysis-text-all-js-20261030.log",
+      "sha256": "997a1c09c6a8f56ef40393b5a9f282c89a5f17bfba5c030dc50d03b77f23dbf7"
+    },
+    {
+      "path": "reports/analysis-text-all-js-final-20261030.log",
+      "sha256": "12371c287192276a0c8561fe1f12334b498a415f0fd7ac0ca7160ea4c17e2825"
+    },
+    {
+      "path": "reports/analysis-text-ui-final-20261030.log",
+      "sha256": "18d299f1e95ab9b4ecb210df9743e6cf4471832f874f709f8c512a0d2b2f1e30"
+    },
+    {
+      "path": "reports/analysis-text-docs-20261030.log",
+      "sha256": "a0090409113f01083071ef1d8ded750457dabcb563ebd349df5f4a60812778d9"
+    }
+  ],
+  "public_boundary": {
+    "source_commit": "c3093bf6d5b2fa7dccd5cb94d402a69ceef5cfcb",
+    "status": "PASS",
+    "tracked_files": 838,
+    "commits": 331,
+    "findings": 0,
+    "only_existing_historical_identity_exception": true,
+    "public_release_ready": false
+  },
+  "rollback": "Normal reviewed revert plus matching pre-upgrade encrypted backup for older bootstrap behavior; preserve new data backup and Profile versions"
+}
