@@ -1,0 +1,55 @@
+{
+  "protocol": "SOURCE_FACT_PRESERVATION_V1",
+  "frozen_at": "2026-10-30T06:43:40.419050Z",
+  "predecessor_protocol": "SOURCE_CONTEXT_V1",
+  "predecessor_observation": "evaluations/2026-10-30/source-context-live-v1.json",
+  "predecessor_actual_requests": 2,
+  "max_new_requests": 2,
+  "max_per_case": 1,
+  "stop_after_failed_arms": 1,
+  "campaign_request_ceiling": 6,
+  "maximum_planned_campaign_requests": 4,
+  "cases": [
+    "en-chronological",
+    "zh-chronological"
+  ],
+  "inputs": {
+    "evaluations/2026-10-29/source-coverage-replay-text.json": "80ef300a349fc2d511f3c2f71b841af7fe5db113d6bb406413c3e40b3230e059",
+    "evaluations/2026-10-29/source-coverage-replay-visual.json": "68829aa590cacc27bd97bb431395572e30851b8c9c74d18400d047c25008e5a6",
+    "evaluations/2026-10-29/complete-claims-source-review.json": "057331d370f1df6a1753e1236f5e3ddd8307299822e5a52d128e7903da811162",
+    "evaluations/2026-10-30/source-context-live-v1.json": "f7cb0e3ae7be716b16c1f421da7ed2e192026ab14a213edc3c4641e60a3ad51a",
+    "evaluations/2026-10-30/source-context-replay-v1.json": "5dbddd0543bca4b8ea17b4966b558cdadd0b9d70168ccf15f374291e6823a08d",
+    "evaluations/2026-10-30/source-context-review-v1.json": "b1276b71ddd27902c830d53bddf933c456e676b8da4bd641bfc75490dce1b94e"
+  },
+  "product": {
+    "src/jobops/ai_runtime.py": "c5bc7d43b9eac5b63d6904851c31a294847539aff535caa151c39add0051e0e2",
+    "src/jobops/ai_connections.py": "37bbedfef857139e6f437d8d7b9d097d146bed5547c85f51e5074a3cca1ab407",
+    "src/jobops/source_context.py": "f11775c50738f1d1922f6a46b9d0492a2e538f7be348f651d2a22576e6fe7fc2",
+    "src/jobops/onboarding_center.py": "43855cb8a44f72ce77e2666d0feea271dd39d0ec12888e301905f07c75af4ca4",
+    "scripts/evaluate-fact-preservation.py": "9c4ae75b3071608d571767ace740a27f398ff18292308361ef389c247de67c22"
+  },
+  "route": {
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "hermes_commit": "afe53708ee7400919ae3e17a6dde9b02629e5c87"
+  },
+  "primary_targets": [
+    "en-chronological-f06",
+    "zh-chronological-f08",
+    "zh-chronological-f09",
+    "zh-chronological-f30"
+  ],
+  "acceptance": [
+    "Retain all four newly missing/incomplete facts in their appropriate channel",
+    "Retain the nine previously recovered non-contact constraints/evidence facts",
+    "Review all 94 source facts and all new candidates/notes for added omissions, numeric/date/ownership and qualifier errors",
+    "Report Claim representation separately from unconfirmed source-context retention",
+    "Do not infer whole-product recall, independent acceptance or actual billed cost"
+  ],
+  "labels_sent_to_model": false,
+  "same_analyzed_texts": true,
+  "fresh_holdout": false,
+  "live_retranscription": false,
+  "whole_material_acceptance": false,
+  "billed_cost_usd": null
+}
