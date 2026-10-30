@@ -4,6 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Record private source-context decisions separately from Profile answers and
+  Claim approval. Show the saved answer being compared, preserve unsaved edits,
+  require explicit confirmation and structured follow-up/dismissal reasons,
+  and allow reopening. Answer edits and confirmed re-analysis invalidate old
+  comparisons; unknown answers remain unknown. No new model request or
+  accuracy claim. See [contracts, actual local browser checks and rollback](docs/context-review-2026-10-30.md).
+
 - Separate literal Claim attribution checks into a small module and reject
   recognized passive actions that acquire an unsupported named performer.
   Two additional real synthetic-material observations exposed an English
