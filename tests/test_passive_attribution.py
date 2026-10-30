@@ -52,6 +52,12 @@ class PassiveAttributionTests(unittest.TestCase):
         self.assertFalse(report["valid"])
         self.assertFalse(report["adjacent_line_expansion_attempted"])
 
+    def test_by_agent_in_a_later_action_cannot_assign_an_earlier_action(self):
+        source = "The report was prepared from approved records and a separate spreadsheet was reviewed by the applicant."
+        report = _statement_grounding_report("The applicant prepared the report from approved records.", source)
+        self.assertFalse(report["valid"])
+        self.assertEqual(report.get("unsupported_actor_inference_count"), 1)
+
     def test_filter_keeps_supported_candidate_and_records_only_a_reason_count(self):
         source = "An ambiguous observation was marked unresolved instead of being assigned a favorable label."
         value = {"schema_version": AI_PROTOCOL_VERSION, "entities": [], "candidates": [
