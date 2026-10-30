@@ -4,6 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Separate literal Claim attribution checks into a small module and reject
+  recognized passive actions that acquire an unsupported named performer.
+  Two additional real synthetic-material observations exposed an English
+  attribution error; fixed-output PDF/DPAPI replay filters it while retaining
+  the other 68 candidates. Original responses, the remaining omission and the
+  exhausted six-request campaign remain visible in the
+  [template pilot and attribution repair](docs/template-pilot-2026-10-30.md).
 - Verify the closed fact-preservation experiment against its recorded Git
   commit, while continuing to check all frozen inputs, observations and review
   references. Normal product evolution no longer invalidates the old evidence.

@@ -1,0 +1,106 @@
+{
+  "checked_at": "2026-10-30T11:11:30.554043+00:00",
+  "protocol_freeze_commit": "fa2fa7b83fa75a30e4df07c96a60838c3fbf603c",
+  "regression_contract_commit": "545654c707d62002aab824933aa5f1c5fbd7d6e7",
+  "runtime_commit": "64162580ba7a10a6d2e40d4be5de561abf7ab6ea",
+  "real_observation": {
+    "new_adapter_requests": 2,
+    "campaign_requests": 6,
+    "campaign_ceiling": 6,
+    "closed": true,
+    "case_elapsed_ms": [
+      38547,
+      56797
+    ],
+    "billed_cost_usd": null,
+    "provider_internal_requests": null,
+    "cases": [
+      "en-timeline_cards",
+      "zh-asymmetric_sidebar"
+    ],
+    "independent_blind_holdout": false
+  },
+  "review": {
+    "source_facts": 94,
+    "accepted_candidates_inspected": 69,
+    "context_notes_inspected": 10,
+    "observed_unsupported_actor_candidates": 1,
+    "independent_human_review": false,
+    "semantics_verified_by_integrity_checks": false
+  },
+  "same_response_replay": {
+    "live_provider_calls": 0,
+    "before_candidates": [
+      35,
+      34
+    ],
+    "after_candidates": [
+      34,
+      34
+    ],
+    "remaining_english_source_only_fact": 1,
+    "all_other_68_statements_preserved": true,
+    "profile_hints_and_context_quotes_preserved": true,
+    "original_bytes_and_cleanup": true
+  },
+  "tests": {
+    "frozen_before": {
+      "methods": 6,
+      "failures_including_subtests": 9,
+      "seconds": 0.008
+    },
+    "after_attribution": {
+      "methods": 7,
+      "passed": 7,
+      "seconds": 0.008
+    },
+    "protocol_and_replay": {
+      "tests": 9,
+      "passed": 9,
+      "seconds": 0.101
+    },
+    "ai": {
+      "tests": 64,
+      "passed": 64,
+      "seconds": 1.762
+    },
+    "related": {
+      "tests": 121,
+      "passed": 121,
+      "seconds": 52.762
+    },
+    "public_docs": {
+      "tests": 5,
+      "passed": 5,
+      "seconds": 0.039
+    }
+  },
+  "wheel": {
+    "sha256": "9fc331a619cd59fc28ea57528a9cc628e96361a342d7cf9bed9338cf5448c936",
+    "runtime_modules_match": 2,
+    "signed": false,
+    "published": false
+  },
+  "public_boundary": "Run on final delivery commit; results recorded in PR and task ledger",
+  "full_current_local_suite": "Not run in this newly created worktree; prior-revision suites remain separate",
+  "hosted_ci": "Will run on delivery; no pass claimed here",
+  "real_external_actions": 0,
+  "database_migration": false,
+  "configuration_changed": false,
+  "whole_material_acceptance": false,
+  "log_sha256": {
+    "reports/template-pilot-final-contracts-20261030.log": "379df71087addcc6a41959cdc1a2708997c65290a49458ea55747d1f1a28d1cd",
+    "reports/template-pilot-live-20261030.log": "c090daee15d70d28f4684510dc84786e5c5369d641b05cc0ed376846b2c7c9b1",
+    "reports/passive-attribution-before-20261030.log": "a42bb8adb451d7e1b5eda525c80046f890cfce9a682ed46ae1c04f66ea804b8b",
+    "reports/passive-attribution-frozen-before-20261030.log": "c79460ec48bd7616071af026822d49091736523d3745d124869991b3ded49ec5",
+    "reports/passive-attribution-final-frozen-before-20261030.log": "27b0d0ec0a54c6d075eeee3d3a8fbb25392ed8e94bbb75d16682944a65a8725f",
+    "reports/passive-attribution-after-20261030.log": "4c5129ded085d9d42aef297cf02e6e81d03bf497256627712c342a07c62c27df",
+    "reports/passive-attribution-final-20261030.log": "746197c4a3598afcc62d7247f024c2a23999cad2432973725e44ddfa69425e61",
+    "reports/passive-attribution-ai-regression-20261030.log": "b0924a22a0dff01b7f82608a707337133d484f7a29b972347321eaf9b7391615",
+    "reports/passive-attribution-related-20261030.log": "15254cc77f49f54a816ae55856e9e36a15db432d815ec539b5dcfb0ada55576e",
+    "reports/template-pilot-replay-contracts-20261030.log": "1c6d571623332035884c77b0178fae396f39eb177fa15bf0c84c408b0e7abb03",
+    "reports/template-replay-20261030.log": "7e84f946e205a4af21464ca7223cde5e170eaa77e62fd8bbafa9381f9daeeed9",
+    "reports/template-pilot-docs-20261030.log": "b5b961dd148aec476fc8a573135cf5c34a3a11516aa13952091852c14a735437",
+    "reports/template-pilot-wheel-20261030.log": "11f79dda06831fd4fae5176b8d20fd9dda57d2fab282e91107ec3cfa1f0befe1"
+  }
+}
