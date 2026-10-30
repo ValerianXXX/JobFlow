@@ -105,7 +105,54 @@ const {chromium} = require("playwright");
     await page.locator(".source-entry .analysis-text-controls button").click();
     await page.waitForFunction(() => document.querySelectorAll(".analysis-line").length === 100);
     assert.equal(await dialog.locator("img").count(), 0);
+    await dialog.locator(".analysis-close").click();
+    await page.evaluate(() => {
+      const source=state.data.sources[0], descriptor=source.analysis_text_review;
+      state.data.catalog={groups:[{id:"identity_and_contact",label:{en:"Identity",zh:"身份资料"}}],fields:[
+        {id:"candidate_display_name",group:"identity_and_contact",label:{en:"Full name as written",zh:"材料中的完整姓名"},help:{en:"Check the source",zh:"核对来源"},input_type:"text",required_resolution:false,default_policy:"reuse",sensitive:false},
+      ]};
+      state.data.answers={candidate_display_name:{value:"林岚 / Sample 01",status:"CONFIRMED",source:"APPLICANT_PROVIDED_UNCONFIRMED",use_policy:"reuse"}};
+      state.data.profile_hint_sources={candidate_display_name:{status:"AVAILABLE",source_id:source.source_id,source_sha256:descriptor.source_sha256,text_sha256:descriptor.text_sha256,line_start:11,line_end:11}};
+      state.locale="en"; renderQuestions(); navigate("questionnaire");
+    });
+    const nameRow=page.locator('[data-question="candidate_display_name"]');
+    assert.equal(await nameRow.locator(".answer-input").inputValue(), "林岚 / Sample 01");
+    assert.equal(await nameRow.locator(".status-select option:checked").textContent(), "Needs review (imported)");
+    assert.equal(await nameRow.locator("xpath=ancestor::details").count(), 0);
+    await nameRow.locator(".analysis-text-open").click();
+    await page.waitForFunction(() => document.querySelector(".requested-line")?.dataset.line === "11");
+    await dialog.locator(".analysis-close").click();
+    await nameRow.locator(".answer-input").fill("User corrected name");
+    assert.equal(await nameRow.locator(".profile-hint-origin").count(), 0);
+    await page.evaluate(() => {state.locale="zh"; renderQuestions();});
+    assert.match(await nameRow.locator(".profile-hint-origin").textContent(), /请核对后再使用/);
+    await page.evaluate(() => {state.data.profile_hint_sources.candidate_display_name.status="SOURCE_CHANGED"; renderQuestions();});
+    assert.equal(await nameRow.locator(".analysis-text-open").count(), 0);
+    assert.match(await nameRow.locator(".profile-hint-origin").textContent(), /来源分析已变更/);
+    assert.equal(await nameRow.locator(".answer-input").inputValue(), "林岚 / Sample 01");
+    await page.evaluate(() => {
+      const readApi=api; window.languageSaves=[];
+      api=async(route,options)=>{
+        if(route==="save") {languageSaves.push(JSON.parse(options.body));return {status:"SAVED"};}
+        return readApi(route,options);
+      };
+      state.data.claims=[];state.data.conflicts=[];state.data.completion={remaining:25,total:25,resolved:0,percent:0};
+      state.data.profile_hint_sources.candidate_display_name.status="AVAILABLE";
+      renderQuestions();
+    });
+    await page.getByRole("button",{name:"EN",exact:true}).click();
+    await page.waitForFunction(()=>state.activities.length===0);
+    assert.equal(await nameRow.locator("xpath=ancestor::details").count(),0);
+    assert.equal(await nameRow.locator(".status-select option:checked").textContent(),"Needs review (imported)");
+    assert.equal(await nameRow.locator(".analysis-text-open").count(),1);
+    assert.deepEqual(await page.evaluate(()=>languageSaves),[{locale:"en",answers:{}}]);
+    await nameRow.locator(".answer-input").fill("Edited without saving");
+    await page.getByRole("button",{name:"中文",exact:true}).click();
+    await page.waitForFunction(()=>state.activities.length===0);
+    assert.equal(await nameRow.locator(".analysis-text-open").count(),0);
+    assert.equal(await nameRow.locator(".answer-input").inputValue(),"Edited without saving");
+    assert.equal(await nameRow.locator(".status-select option:checked").textContent(),"待核对（材料导入）");
     assert.deepEqual(errors, []); assert.deepEqual(external, []);
-    process.stdout.write(JSON.stringify({status:"PASS",scenario_groups:8,locales:["en","zh"],widths:[1280,390],keyboard:true,late_response_cleared:true,selection_unchanged:true,external_requests:0,backend:"contract double"}));
+    process.stdout.write(JSON.stringify({status:"PASS",scenario_groups:14,locales:["en","zh"],widths:[1280,390],keyboard:true,late_response_cleared:true,selection_unchanged:true,profile_origins:true,edited_origin_removed:true,stale_origin_not_linked:true,locale_preserves_unconfirmed_source:true,edited_locale_has_no_old_origin:true,external_requests:0,backend:"contract double"}));
   } finally {await browser.close();}
 })().catch(e => {process.stderr.write(`${e.stack||e}\n`);process.exit(1);});

@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-30T10:18:18.442782+00:00",
+  "stage": "SOURCE_PROFILE_HINTS_V1",
+  "synthetic_only": true,
+  "branch": "codex/jobflow-profile-source-hints-20261030",
+  "base_commit": "19249a62e467aa6be0197db24d4a92699bea6eea",
+  "commits": {
+    "initial_contracts": "d3fd390f16f73c671c508831764c34f75b837426",
+    "first_implementation": "12b22cc074ffc6e1dff9768ff7af3d18b623b3ff",
+    "chinese_failure_contract": "922b5b7466b43d4297231df81f06d60aec364f2d",
+    "chinese_fix": "f33bc558c624e45f46d62c79ca7d7ff38eefc8ac",
+    "locale_failure_contract": "44c2f2f8f0e4e191dce30254392e9d559471379e",
+    "source_implementation": "821df19406fac0301a41fab4bb42a6e55c6e7aa7"
+  },
+  "baseline": {
+    "full_material_cases": 6,
+    "email_hints": 6,
+    "full_name_hints": 0,
+    "prior_measurement": "evaluations/2026-10-29/profile-hint-destinations-before.json",
+    "claims_regraded": false
+  },
+  "first_replay": {
+    "observation": "evaluations/2026-10-30/profile-source-hints-replay-v1.json",
+    "email_hints": 4,
+    "full_name_hints": 4,
+    "failure": "Two Chinese sources were stopped at their personal-profile heading; original observation remains unchanged"
+  },
+  "corrected_replay": {
+    "observation": "evaluations/2026-10-30/profile-source-hints-replay-v2.json",
+    "cases": 6,
+    "email_hints": 6,
+    "full_name_hints": 6,
+    "both_fields_traceable": 6,
+    "original_bytes_preserved": 6,
+    "encrypted_reopen": 6,
+    "unapproved_profile_name_preserved": 6,
+    "profile_completion_measured": false,
+    "new_model_quality_measured": false
+  },
+  "tests": {
+    "initial_contracts": "9 methods: eight failures and four errors across methods/subtests. Shared-fixture Claim assertion subsequently corrected to exact baseline preservation; this is not described as unchanged-test passage",
+    "first_after": "8 methods passed; one fixture expectation failed because two Claims already existed",
+    "first_related": "114 tests, one legacy fixture error; new optional field set to UNKNOWN in that legacy-state scenario",
+    "related_final": {
+      "tests": 116,
+      "passed": 116,
+      "seconds": 74.439,
+      "source_commit": "12b22cc"
+    },
+    "focused_final": {
+      "tests": 18,
+      "passed": 18,
+      "seconds": 10.288,
+      "source_commit": "f33bc55"
+    },
+    "ui": "All 15 suites pass after final locale fix at 821df19; focused transcript suite covers 14 scenario groups. Earlier visible-count failure and actual locale-click failure are preserved",
+    "docs": "5 pass, 0.035 seconds; prior run had one English-only documentation failure, corrected by English prose without changing the test",
+    "full_regression": "Not completed for this delivery. Prior c3093bf full run remains separate; current full run and hosted CI are tracked in the PR and workspace ledger"
+  },
+  "browser": {
+    "backend": "Actual local HTTP, original synthetic three-page PDF and Windows DPAPI; pinned recorded model response",
+    "server_source_commit": "12b22cc",
+    "final_ui_source_commit": "821df19",
+    "locales": [
+      "zh",
+      "en"
+    ],
+    "viewports": [
+      [
+        1280,
+        900
+      ],
+      [
+        390,
+        844
+      ]
+    ],
+    "selected_claims": 0,
+    "source_name_line": 3,
+    "source_email_line": 4,
+    "manual_edit_survived_reload": true,
+    "edited_value_has_no_old_origin": true,
+    "locale_preserves_unconfirmed_badge": true,
+    "work_authorization_after_save": "UNKNOWN",
+    "profile_review_checkbox_after_reload": false,
+    "mobile_page_width": 375,
+    "mobile_dialog_client_and_scroll_width": 335,
+    "owned_server_closed": true,
+    "owned_tab_closed": true,
+    "viewport_reset": true,
+    "temporary_state_removed": true,
+    "independent_human_acceptance": false,
+    "notes": [
+      "A first server launch without a persistent stdin closed itself and cleaned state; restarted with PTY",
+      "A source click during language save was ignored by the existing busy gate; clicked after the saved-state check and verified the quote"
+    ]
+  },
+  "log_sha256": {
+    "profile-source-hints-before-20261030.log": "1c1a0c02506404ecdcc69eb5269bfc98b70d7eeae8ebb4716688492684bb4004",
+    "profile-source-hints-after-first-20261030.log": "1ea89c0d354f16c5f6667dd55a1b5c57c8d1985ccb062fcddd5683250739f47c",
+    "profile-source-hints-after-20261030.log": "24f1244e4fa8038aca9c58cad0e99c43ccc1884c8bf823593977237e5eb4394c",
+    "profile-source-related-20261030.log": "d9fec13a41e77851592632087ec6d0207cc6ce7cb77c1836abe0ed4c1a8b101b",
+    "profile-source-legacy-fixture-20261030.log": "32a0ea85a347e025c34500e5e645ba861a69910199ea3389d7d403edf04f72c7",
+    "profile-source-related-final-20261030.log": "4beae3909537914ad6dab07c338c35dd2b99aaf8354091f2ba0c22857723084b",
+    "profile-source-chinese-before-20261030.log": "dcb673b3d6d354e1db26fcf4dc850cdfdff9642a6d95c6e4ebe58b107f8ed881",
+    "profile-source-focused-final-20261030.log": "a892500bf583233228704f59980c29eb69f742b62f9d43049efcddcdfde28f5e",
+    "profile-source-ui-all-20261030.log": "c236cca170857c2fc61fcb867e50fd29491f178991d0d0cdc7f35b1f14abd217",
+    "profile-source-ui-final-20261030.log": "16cc56cbe849ad9be77d1e9b2a3ef21461ec712577a105c2bbaf06d77c08996b",
+    "profile-source-language-before-20261030.log": "b6cd976797e0629889005be1f7d1ddea6a3e51cb571f21b19891640fad9ae1f6",
+    "profile-source-language-after-20261030.log": "031402d1f6fc45013f0c94540d769fef8c72d793628202e66f4043720a78afe1",
+    "profile-source-ui-release-20261030.log": "c34ae74add1f88fa0b2750d1aeb87ca4c32c742e14d30a141f34bdeec18df173",
+    "profile-source-docs-20261030.log": "7fae135943e05125d88e5c102838a2c918a00185f776117ee99f525ac482e8d1",
+    "profile-source-docs-final-20261030.log": "539a146473c2dc9ae17356378be89ac5d3f584749df2fd32bf0277c33f046213",
+    "profile-source-wheel-20261030.log": "c10475a4c0df76176669ca7a4a20d925ef69ea209e13d50c67a9466458c88f52",
+    "profile-source-wheel-pip-20261030.log": "85724d2552269b856b4a8d3485562a57fadef1fa6b07bc3851406f913bc4b6bc",
+    "profile-source-wheel-final-20261030.log": "fd3f90045ec0641e4001b4b20a9175f83d9915eb4f4687695938b8a34503193d"
+  },
+  "new_provider_requests": 0,
+  "prior_live_model_cost_usd": null,
+  "real_external_actions": 0,
+  "new_dependency": false,
+  "new_configuration": false,
+  "database_schema_migration": false,
+  "required_answers": 25,
+  "optional_and_required_fields": 40,
+  "rollback": "Reviewed revert with matching pre-upgrade encrypted backup; preserve new state separately. Older versions do not understand the optional answer/provenance. Do not strip fields or rewrite results",
+  "whole_material_acceptance": false,
+  "M1_complete": false,
+  "remaining": [
+    "Full 36-material semantic acceptance and heldouts",
+    "Complete non-Claim destination and review burden measurement",
+    "Independent user acceptance",
+    "Live ATS/mailbox workflows",
+    "Trusted signing",
+    "Independent clean-Windows lifecycle"
+  ],
+  "release_readiness": false,
+  "package": {
+    "kind": "UNSIGNED_SOURCE_WHEEL",
+    "sha256": "17e566ac2e9d31a58fa5116548d8f7363cc0625b7a7b0d1dc16ae72b2c2fbeb2",
+    "runtime_files_equal_source": [
+      "onboarding_catalog.py",
+      "onboarding_center.py",
+      "profile_source_hints.py",
+      "ui/analysis-text.js",
+      "ui/app.js",
+      "ui/index.html"
+    ],
+    "published": false,
+    "build_method": "Existing base pip --python project interpreter; wheel --no-deps --no-build-isolation"
+  },
+  "package_setup_notes": [
+    "python -m build failed because that undeclared front end is absent; no dependency added",
+    "project interpreter -m pip failed because this venv intentionally has no pip; used the existing base pip --python as in prior work"
+  ],
+  "public_boundary": "Exact delivery-head tree/history/author gate is run after this receipt commit; final result is reported in the draft PR and workspace ledger"
+}

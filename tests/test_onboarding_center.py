@@ -574,8 +574,8 @@ class OnboardingCenterTests(unittest.TestCase):
 
     def test_catalog_is_complete_and_bilingual(self) -> None:
         catalog = public_catalog()
-        self.assertEqual(len(catalog["fields"]), 39)
-        self.assertEqual(len(set(FIELD_IDS)), 39)
+        self.assertEqual(len(catalog["fields"]), 40)
+        self.assertEqual(len(set(FIELD_IDS)), 40)
         self.assertEqual(catalog["required_field_count"], 25)
         self.assertEqual(len(set(REQUIRED_FIELD_IDS)), 25)
         for group in catalog["groups"]:
@@ -591,7 +591,7 @@ class OnboardingCenterTests(unittest.TestCase):
             state_ref, state = service.ensure_state()
             legacy = json.loads(json.dumps(state))
             added_profile_fields = (
-                "first_name", "last_name", "email", "phone", "phone_type",
+                "candidate_display_name", "first_name", "last_name", "email", "phone", "phone_type",
                 "address", "city", "state", "postal_code", "country",
                 "github_url", "linkedin_url", "website_url", "portfolio_url",
             )
@@ -710,7 +710,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v47-source-transcript", html)
+        self.assertIn("jobflow-v48-profile-sources", html)
         self.assertIn("function syncActivityControls()", script)
         self.assertIn("BUSY_INTERRUPTION_ACTIONS", script)
         self.assertIn("event.stopImmediatePropagation()", script)
@@ -1176,7 +1176,7 @@ class OnboardingCenterTests(unittest.TestCase):
 
             submitted = full_answers()
             for field_id in (
-                "first_name", "last_name", "email", "phone", "address",
+                "candidate_display_name", "first_name", "last_name", "email", "phone", "address",
                 "city", "state", "postal_code", "country", "linkedin_url",
             ):
                 submitted[field_id] = {
@@ -1198,7 +1198,7 @@ class OnboardingCenterTests(unittest.TestCase):
             })
             completed = service.complete(user_confirmed=True)
             profile = json.loads(service.onboarding.read_bytes(completed["profile_ref"]))
-            self.assertEqual(profile["candidate_display_name"], "Jordan Lee")
+            self.assertEqual(profile["candidate_display_name"], "Jordan Alex Lee")
             self.assertEqual(profile["first_name"], "Jordan")
             self.assertEqual(profile["last_name"], "Lee")
             self.assertEqual(profile["email"], "jordan.lee@example.test")
@@ -1841,7 +1841,7 @@ class OnboardingCenterTests(unittest.TestCase):
             onboarding.import_bytes("candidate_profile", canonical_json(resume_profile), synthetic=True)
             answers = full_answers()
             for field_id in (
-                "first_name", "last_name", "email", "phone", "phone_type",
+                "candidate_display_name", "first_name", "last_name", "email", "phone", "phone_type",
                 "address", "city", "state", "postal_code", "country",
             ):
                 answers[field_id] = {
@@ -2259,7 +2259,7 @@ class OnboardingCenterTests(unittest.TestCase):
                         "ui_protocol": UI_PROTOCOL_VERSION,
                     })
                     self.assertEqual(payload["real_external_actions"], 0)
-                    self.assertEqual(len(payload["catalog"]["fields"]), 39)
+                    self.assertEqual(len(payload["catalog"]["fields"]), 40)
                     self.assertEqual(payload["catalog"]["required_field_count"], 25)
                 preflight = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
                 preflight.request(
@@ -2921,7 +2921,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v47-source-transcript", html)
+        self.assertIn("jobflow-v48-profile-sources", html)
 
     def test_support_diagnostics_never_reads_or_emits_private_values(self) -> None:
         with project_temp() as root:

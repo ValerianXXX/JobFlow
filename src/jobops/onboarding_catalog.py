@@ -57,6 +57,7 @@ YES_NO_UNKNOWN = (
 
 
 FIELDS = (
+    _field("candidate_display_name", "identity_and_contact", "材料中的完整姓名", "Full name as written", help_zh="保留原文顺序；不推断法定姓名或拆分姓氏。核对来源后可修改，申请前仍需审阅。", help_en="Preserve the source order. This is not a legal-name assertion; review the source and edit before application use.", required_resolution=False),
     _field("first_name", "identity_and_contact", "名字", "First name", help_zh="优先从简历提取；只需确认一次。", help_en="Extracted from the resume when reliable; confirm once.", required_resolution=False),
     _field("last_name", "identity_and_contact", "姓氏", "Last name", help_zh="优先从简历提取；只需确认一次。", help_en="Extracted from the resume when reliable; confirm once.", required_resolution=False),
     _field("email", "identity_and_contact", "常用申请邮箱", "Primary application email", help_zh="加密保存，仅在你批准的申请中使用。", help_en="Encrypted locally and used only in applications you approve.", required_resolution=False),

@@ -4,6 +4,15 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Preserve the full applicant name as written, including Chinese and unsplit
+  names, in an optional Profile field. Propose unique contacts only from a
+  bounded applicant header and retain hash-bound source coordinates. Keep
+  imported values expanded and unconfirmed across language changes; manual
+  corrections lose the old attribution. Source deletion revokes only matching,
+  unreviewed imports. A six-source DPAPI replay exposed and then verified a
+  Chinese-header correction; the failed observation remains preserved. See
+  [verification, limitations and rollback](docs/profile-source-hints-2026-10-30.md).
+
 - Save bounded analysis-text snapshots inside encrypted source state. Add bilingual
   numbered-text review with direct links from uncited ranges, candidate citations
   and source notes; preserve blank lines, bounded navigation and source integrity.

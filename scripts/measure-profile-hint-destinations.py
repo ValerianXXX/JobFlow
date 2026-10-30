@@ -35,12 +35,13 @@ report = {
     "baseCommit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
     "syntheticOnly": True, "liveProviderCalls": 0, "newModelQualityMeasurement": False,
     "originalLiveModelCostUSD": None, "profileCompletionMeasured": False,
-    "sourceLFHashes": {p: hashlib.sha256((ROOT / p).read_bytes().replace(b"\r\n", b"\n")).hexdigest() for p in ["src/jobops/onboarding_center.py", "src/jobops/candidate_profile.py", "src/jobops/resume_onboarding.py"]},
+    "sourceLFHashes": {p: hashlib.sha256((ROOT / p).read_bytes().replace(b"\r\n", b"\n")).hexdigest() for p in ["src/jobops/onboarding_center.py", "src/jobops/candidate_profile.py", "src/jobops/resume_onboarding.py", "src/jobops/profile_source_hints.py", "src/jobops/onboarding_catalog.py"]},
     "cases": [],
 }
 for observation in observations:
     case = cases[observation["case"]]
     expected_contact = next(f["text"] for f in case["facts"] if f["kind"] == "contact").split("：")[-1].split(": ")[-1].strip()
+    expected_name = case["facts"][0]["text"].split("：")[-1].split(": ")[-1].strip()
     engine = replay.ReplayEngine(observation["responses"])
     source = (replay.pilot.complete.CORPUS / case["file"]).read_bytes()
     row = {"caseId": case["id"], "mode": observation["mode"], "sourceSHA256": case["sha256"]}
@@ -73,6 +74,19 @@ for observation in observations:
                 row["emailHintSource"] = answers["email"]["source"]
                 row["profileReview"] = saved["profile_review"]
                 row["namePartHintsPresent"] = all(answers[f].get("value") not in (None, "", "UNKNOWN") for f in ("first_name", "last_name"))
+                row["displayNameMatchesSource"] = answers.get("candidate_display_name", {}).get("value") == expected_name
+                row["displayNameSource"] = answers.get("candidate_display_name", {}).get("source")
+                origins = service.bootstrap().get("profile_hint_sources", {})
+                row["identityContactOriginsAvailable"] = all(origins.get(field, {}).get("status") == "AVAILABLE" for field in ("candidate_display_name", "email"))
+                row["identityContactQuotedValuesFound"] = all(
+                    answers.get(field, {}).get("value") in "\n".join(item["text"] for item in service.source_review_text({
+                        "source_id": origins[field]["source_id"], "expected_source_sha256": origins[field]["source_sha256"],
+                        "expected_text_sha256": origins[field]["text_sha256"], "line_start": origins[field]["line_start"],
+                    })["lines"] if item["number"] <= origins[field]["line_end"])
+                    for field in ("candidate_display_name", "email") if field in origins
+                ) and row["identityContactOriginsAvailable"]
+                proposed_profile = service._build_profile(saved, "secure-ref:SYNTHETIC_PROFILE_01")
+                row["unapprovedProfileDisplayNameMatchesSource"] = proposed_profile["candidate_display_name"] == expected_name
                 row["remotePreferenceImported"] = answers["remote_preference"].get("value") == "remote"
                 row["authorizationAnswerStatus"] = answers["work_authorization"]["status"]
                 row["claimsSelected"] = sum(c.get("selected", False) for c in saved.get("material_claims", []))
@@ -93,6 +107,7 @@ for observation in observations:
 report["limitations"] = [
     "No completed or approved Profile is produced; this measures unapproved source-import hints and encrypted persistence only",
     "Numeric synthetic display names are structurally unsuitable for the current conservative first/last-name splitter; absence is not permission to infer legal names",
+    "Name-label punctuation is preserved verbatim; the applicant may edit it during Profile review",
     "Original Claim candidate scores are not regraded by this measurement",
     "Non-Claim constraints and verification notes still require their own reviewed destinations",
 ]

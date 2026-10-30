@@ -32,7 +32,6 @@ from .browser_assist import (
 from .candidate_profile import (
     PROFILE_SCHEMA_VERSION,
     parse_mailing_address,
-    resume_profile_hints,
     split_display_name,
     unique_values,
 )
@@ -100,7 +99,6 @@ from .resume_tailoring import (
     build_tailoring_proposal,
     validate_resume_tailoring_manifest_integrity,
 )
-from .resume_onboarding import parse_resume
 from .runtime_schema import validate_named
 from .runtime_paths import runtime_path
 from .security import assert_no_plaintext_secret
@@ -1238,7 +1236,7 @@ class OnboardingCenterService:
         return self._read_json_ref(reference) if reference else {}
 
     @staticmethod
-    def _apply_profile_hints(state: dict[str, Any], hints: object) -> int:
+    def _apply_profile_hints(state: dict[str, Any], hints: object, metadata: dict | None = None) -> int:
         """Seed only missing one-time Profile facts from an uploaded resume.
 
         Hints remain inside encrypted onboarding state, never overwrite an
@@ -1251,16 +1249,36 @@ class OnboardingCenterService:
         answers = state.get("answers")
         if not isinstance(answers, dict):
             return 0
+        from .profile_source_hints import HINT_FIELDS
+        evidence = (metadata or {}).get("_profile_hint_evidence", {})
+        origins = state.setdefault("profile_hint_sources", {})
         changed = 0
         updated_at = iso_utc()
         for field_id, raw in hints.items():
-            if field_id not in FIELD_BY_ID or not isinstance(raw, str):
+            if field_id not in HINT_FIELDS or field_id not in FIELD_BY_ID or not isinstance(raw, str):
                 continue
             value = re.sub(r"\s+", " ", raw).strip()
             if not value or len(value) > 2_000 or re.search(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", value):
                 continue
+            origin = evidence.get(field_id, {})
+            descriptor = (metadata or {}).get("analysis_text_review", {})
+            if (not isinstance(origin, dict) or descriptor.get("status") != "AVAILABLE"
+                    or origin.get("source_id") != (metadata or {}).get("source_id")
+                    or origin.get("source_sha256") != (metadata or {}).get("sha256")
+                    or origin.get("text_sha256") != descriptor.get("text_sha256")
+                    or origin.get("value_sha256") != sha256_bytes(value.encode("utf-8"))):
+                # Old previews have no bound attribution. Keep their original
+                # source; filling a new answer requires review or re-analysis.
+                continue
             current = answers.get(field_id)
             if not isinstance(current, dict) or current.get("status") != "UNKNOWN":
+                # Re-analysis may move a line without changing a proposed value.
+                # Rebind that same imported value only at explicit source commit.
+                if (isinstance(current, dict) and current.get("value") == value
+                        and current.get("source") == "APPLICANT_PROVIDED_UNCONFIRMED"
+                        and origins.get(field_id, {}).get("source_id") == (metadata or {}).get("source_id")
+                        and field_id in evidence):
+                    origins[field_id] = deepcopy(evidence[field_id])
                 continue
             if field_id.endswith("_url") and not re.fullmatch(r"https://[^\s]{3,2000}", value):
                 continue
@@ -1271,6 +1289,8 @@ class OnboardingCenterService:
                 "use_policy": str(FIELD_BY_ID[field_id]["default_policy"]),
                 "updated_at": updated_at,
             }
+            if field_id in evidence:
+                origins[field_id] = deepcopy(evidence[field_id])
             changed += 1
         if changed:
             state["profile_review"] = "PENDING"
@@ -3630,7 +3650,7 @@ class OnboardingCenterService:
                         key: item[key]
                         for key in (
                             "source_id", "category", "extension", "safe_display_name", "source_status",
-                            "suggestion_count", "fact_count", "raw_retained", "analysis_mode", "imported_at", "analysis_text_review",
+                            "suggestion_count", "fact_count", "raw_retained", "analysis_mode", "imported_at", "analysis_text_review", "profile_hint_review",
                         )
                         if key in item
                     },
@@ -3639,12 +3659,13 @@ class OnboardingCenterService:
                 for item in state.get("sources", [])
             ],
             "pending_sources": [
-                {key: ({name: deepcopy(field) for name, field in value.items() if name != "_analysis_transcript"}
+                {key: ({name: deepcopy(field) for name, field in value.items() if name not in {"_analysis_transcript", "_profile_hint_evidence"}}
                        if key == "metadata" else deepcopy(value))
                  for key, value in item.items() if key != "profile_hints"}
                 for item in state.get("pending_sources", []) if isinstance(item, dict)
             ],
             "context_notes": deepcopy(state.get("source_context_notes", [])),
+            "profile_hint_sources": self._profile_hint_origins(state),
             "suggestions": deepcopy(active_suggestions), "claims": claims,
             "conflicts": conflicts, "profile_review": state.get("profile_review", "PENDING"),
             "state_ref": reference, "privacy": {"storage": "WINDOWS_DPAPI", "network": "LOCALHOST_ONLY", "plaintext_project_files": 0},
@@ -4101,7 +4122,12 @@ class OnboardingCenterService:
         if not isinstance(answers, dict):
             raise JobOpsError("ONBOARDING_ANSWERS_INVALID", "The save request must contain an answers object.")
         for field_id, value in answers.items():
-            state["answers"][field_id] = self._validate_answer(field_id, value)
+            validated = self._validate_answer(field_id, value)
+            old = state["answers"].get(field_id, {})
+            if any(old.get(key) != validated.get(key) for key in ("value", "status", "use_policy")):
+                state.setdefault("profile_hint_sources", {}).pop(field_id, None)
+                state["profile_review"] = "PENDING"
+            state["answers"][field_id] = validated
         answer_bank = {
             "schema_version": 2, "status": IN_PROGRESS, "locale": state["locale"],
             "answers": state["answers"], "completion": self._completion(state["answers"]), "updated_at": iso_utc(),
@@ -4355,9 +4381,15 @@ class OnboardingCenterService:
             text, source_id=source_id, source_hash=source_hash, retained=raw_retained,
             segmented=bool(extraction_summary.get("segmented_oversize_lines")),
         )
+        from .profile_source_hints import collect
+        profile_hints, profile_evidence, profile_review = (
+            collect(text, transcript_review, source_id) if source_type == "resume" else ({}, {}, {})
+        )
         return {
             "source_id": source_id, "source_type": source_type, "extension": extension,
             "_analysis_transcript": transcript, "analysis_text_review": transcript_review,
+            "profile_hints": profile_hints, "_profile_hint_evidence": profile_evidence,
+            "profile_hint_review": profile_review,
             "source_hash": source_hash, "source_status": source_status, "suggestions": suggestions,
             "candidates": candidates, "extraction_summary": extraction_summary,
             "context_notes": context_notes,
@@ -4400,9 +4432,6 @@ class OnboardingCenterService:
                     "The local document extraction quality is too low for grounded AI analysis. Nothing was imported.",
                     document_quality=quality,
                 )
-        profile_hints: dict[str, str] = {}
-        if source_type == "resume":
-            profile_hints = resume_profile_hints(parse_resume(text))
         prepared = self._analyze_prepared_text(
             source_type=source_type,
             extension=extension,
@@ -4413,7 +4442,6 @@ class OnboardingCenterService:
             intake_mode="STANDARD_MEMORY",
             source_selection=source_selection,
         )
-        prepared["profile_hints"] = profile_hints
         return prepared
 
     def _prepare_large_chatgpt_export(
@@ -4458,6 +4486,8 @@ class OnboardingCenterService:
             "secure_ref": prepared["secure_ref"], "sha256": prepared["source_hash"],
             "_analysis_transcript": prepared.get("_analysis_transcript"),
             "analysis_text_review": prepared.get("analysis_text_review", {"status": "UNAVAILABLE"}),
+            "_profile_hint_evidence": deepcopy(prepared.get("_profile_hint_evidence", {})),
+            "profile_hint_review": deepcopy(prepared.get("profile_hint_review", {})),
             "source_status": prepared["source_status"], "suggestion_count": len(prepared["suggestions"]),
             "fact_count": len(prepared["candidates"]), "raw_retained": prepared["raw_retained"],
             "excluded_secret_fragments": prepared["excluded_secret_fragments"],
@@ -4646,7 +4676,7 @@ class OnboardingCenterService:
             raise JobOpsError("SOURCE_PREVIEW_MISSING", "The selected source preview no longer exists.")
         counts = self._commit_pending_source(state, pending, selections)
         master = self._designate_master_resume(state, pending)
-        profile_hints_applied = self._apply_profile_hints(state, pending.get("profile_hints"))
+        profile_hints_applied = self._apply_profile_hints(state, pending.get("profile_hints"), pending.get("metadata"))
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != source_id]
         self._save_state(reference, state)
         return {
@@ -4727,6 +4757,15 @@ class OnboardingCenterService:
                     removed_claim_ids.add(claim_id)
                     changed = True
         before_suggestions = len(state.get("suggestions", []))
+        for field_id, origin in list(state.get("profile_hint_sources", {}).items()):
+            if origin.get("source_id") != source_id:
+                continue
+            answer = state["answers"].get(field_id, {})
+            if (answer.get("source") == "APPLICANT_PROVIDED_UNCONFIRMED"
+                    and isinstance(answer.get("value"), str)
+                    and sha256_bytes(answer["value"].encode("utf-8")) == origin.get("value_sha256")):
+                state["answers"][field_id] = empty_answers()[field_id]
+            state["profile_hint_sources"].pop(field_id)
         state["sources"] = [item for item in state.get("sources", []) if item.get("source_id") != source_id]
         state["source_context_notes"] = [item for item in state.get("source_context_notes", []) if item.get("source_id") != source_id]
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != source_id]
@@ -4787,6 +4826,8 @@ class OnboardingCenterService:
                 **deepcopy(source), "fact_count": len(prepared["candidates"]),
                 "_analysis_transcript": prepared.get("_analysis_transcript"),
                 "analysis_text_review": prepared.get("analysis_text_review", {"status": "UNAVAILABLE"}),
+                "_profile_hint_evidence": deepcopy(prepared.get("_profile_hint_evidence", {})),
+                "profile_hint_review": deepcopy(prepared.get("profile_hint_review", {})),
                 "extraction_summary": prepared["extraction_summary"],
                 "analysis_mode": prepared["extraction_summary"].get("analysis_mode"),
                 "source_status": prepared["source_status"],
@@ -4827,7 +4868,7 @@ class OnboardingCenterService:
             for item in prepared["candidates"]
         ])
         master = self._designate_master_resume(state, pending)
-        profile_hints_applied = self._apply_profile_hints(state, pending.get("profile_hints"))
+        profile_hints_applied = self._apply_profile_hints(state, pending.get("profile_hints"), pending.get("metadata"))
         prepared_reference = str(prepared["secure_ref"])
         try:
             self._save_state(reference, state)
@@ -5395,8 +5436,13 @@ class OnboardingCenterService:
         }
 
     @staticmethod
+    def _profile_hint_origins(state: dict[str, Any]) -> dict:
+        from .profile_source_hints import public_origins
+        return public_origins(state)
+
+    @staticmethod
     def _answer_value(answers: dict[str, Any], field_id: str, default: Any = None) -> Any:
-        item = answers[field_id]
+        item = answers.get(field_id, {})
         return item.get("value") if item.get("status") == "CONFIRMED" else default
 
     def _build_profile(self, state: dict[str, Any], profile_ref: str) -> dict[str, Any]:
@@ -5412,6 +5458,9 @@ class OnboardingCenterService:
         name_item = base.get("candidate_display_name")
         display_name = name_item.get("value") if isinstance(name_item, dict) else base.get("candidate_display_name")
         answers = state["answers"]
+        explicit_display_name = self._answer_value(answers, "candidate_display_name")
+        if explicit_display_name:
+            display_name = explicit_display_name
         authorization = self._answer_value(answers, "work_authorization", "UNKNOWN")
         if authorization == "UNSURE":
             authorization = "UNKNOWN"
@@ -5460,11 +5509,11 @@ class OnboardingCenterService:
                 for key, value in address_parts.items():
                     if key != "address":
                         profile.setdefault(key, value)
-        if not profile.get("first_name") or not profile.get("last_name"):
+        if not explicit_display_name and (not profile.get("first_name") or not profile.get("last_name")):
             for key, value in split_display_name(display_name).items():
                 if key in {"first_name", "last_name"}:
                     profile.setdefault(key, value)
-        if profile.get("first_name") and profile.get("last_name"):
+        if not explicit_display_name and profile.get("first_name") and profile.get("last_name"):
             profile["candidate_display_name"] = f"{profile['first_name']} {profile['last_name']}"
         portfolio_sources = [
             item for item in state.get("sources", [])
