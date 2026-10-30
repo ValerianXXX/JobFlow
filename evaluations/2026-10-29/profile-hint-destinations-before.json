@@ -1,0 +1,197 @@
+{
+  "observedAt": "2026-10-30T02:34:35.552817+00:00",
+  "scope": "UNAPPROVED_PROFILE_HINT_PERSISTENCE_ONLY",
+  "baseCommit": "c6c64d33ebc83bfacc43641b588cd7ba5cf7a4c9",
+  "syntheticOnly": true,
+  "liveProviderCalls": 0,
+  "newModelQualityMeasurement": false,
+  "originalLiveModelCostUSD": null,
+  "profileCompletionMeasured": false,
+  "sourceLFHashes": {
+    "src/jobops/onboarding_center.py": "30651ef40110189f63f5fba78794edf4ce03c8c7605142cf8e0f151b2a9f969b",
+    "src/jobops/candidate_profile.py": "ee9afd6d54011c410bc8d1044fc842b3b02f355e0e2ee06e243c3f57b402f77e",
+    "src/jobops/resume_onboarding.py": "897fa85ac04131148f45cc3e5b659c0f062da89659f5b026b7c8ebc0439c4d25"
+  },
+  "cases": [
+    {
+      "caseId": "en-chronological",
+      "mode": "existing_text",
+      "sourceSHA256": "55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313",
+      "pendingHintFields": [
+        "email"
+      ],
+      "sourceBytesPreserved": true,
+      "importStatus": "SOURCE_SECURELY_IMPORTED",
+      "hintsApplied": 1,
+      "emailHintMatchesSource": true,
+      "emailHintSource": "APPLICANT_PROVIDED_UNCONFIRMED",
+      "profileReview": "PENDING",
+      "namePartHintsPresent": false,
+      "remotePreferenceImported": false,
+      "authorizationAnswerStatus": "UNKNOWN",
+      "claimsSelected": 0,
+      "claimsConfirmed": 0,
+      "hintsSurviveServiceReopen": true,
+      "onboardingStatus": "IN_PROGRESS",
+      "databaseCounts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporaryStateRemoved": true,
+      "recordedResponsesConsumed": 1
+    },
+    {
+      "caseId": "zh-chronological",
+      "mode": "existing_text",
+      "sourceSHA256": "7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+      "pendingHintFields": [
+        "email"
+      ],
+      "sourceBytesPreserved": true,
+      "importStatus": "SOURCE_SECURELY_IMPORTED",
+      "hintsApplied": 1,
+      "emailHintMatchesSource": true,
+      "emailHintSource": "APPLICANT_PROVIDED_UNCONFIRMED",
+      "profileReview": "PENDING",
+      "namePartHintsPresent": false,
+      "remotePreferenceImported": false,
+      "authorizationAnswerStatus": "UNKNOWN",
+      "claimsSelected": 0,
+      "claimsConfirmed": 0,
+      "hintsSurviveServiceReopen": true,
+      "onboardingStatus": "IN_PROGRESS",
+      "databaseCounts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporaryStateRemoved": true,
+      "recordedResponsesConsumed": 1
+    },
+    {
+      "caseId": "mixed-paired_columns",
+      "mode": "pdf_regions",
+      "sourceSHA256": "17cc9f39d2f8eb381cce937467689c7b7057ead81eefa2d498f9b13b10d433cf",
+      "pendingHintFields": [
+        "email"
+      ],
+      "sourceBytesPreserved": true,
+      "importStatus": "SOURCE_SECURELY_IMPORTED",
+      "hintsApplied": 1,
+      "emailHintMatchesSource": true,
+      "emailHintSource": "APPLICANT_PROVIDED_UNCONFIRMED",
+      "profileReview": "PENDING",
+      "namePartHintsPresent": false,
+      "remotePreferenceImported": false,
+      "authorizationAnswerStatus": "UNKNOWN",
+      "claimsSelected": 0,
+      "claimsConfirmed": 0,
+      "hintsSurviveServiceReopen": true,
+      "onboardingStatus": "IN_PROGRESS",
+      "databaseCounts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporaryStateRemoved": true,
+      "recordedResponsesConsumed": 1
+    },
+    {
+      "caseId": "en-scanned_pages",
+      "mode": "visual",
+      "sourceSHA256": "6e05b108fd61ceb348a4c9548867d0e6d221a7ffe9607a7a5b3a712d228c6c3d",
+      "pendingHintFields": [
+        "email"
+      ],
+      "sourceBytesPreserved": true,
+      "importStatus": "SOURCE_SECURELY_IMPORTED",
+      "hintsApplied": 1,
+      "emailHintMatchesSource": true,
+      "emailHintSource": "APPLICANT_PROVIDED_UNCONFIRMED",
+      "profileReview": "PENDING",
+      "namePartHintsPresent": false,
+      "remotePreferenceImported": false,
+      "authorizationAnswerStatus": "UNKNOWN",
+      "claimsSelected": 0,
+      "claimsConfirmed": 0,
+      "hintsSurviveServiceReopen": true,
+      "onboardingStatus": "IN_PROGRESS",
+      "databaseCounts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporaryStateRemoved": true,
+      "recordedResponsesConsumed": 2
+    },
+    {
+      "caseId": "zh-scanned_pages",
+      "mode": "visual",
+      "sourceSHA256": "c6da040bfd1bd4ff1b1194c52dd433270dac520064c02d8064b8939881b5bf5e",
+      "pendingHintFields": [
+        "email"
+      ],
+      "sourceBytesPreserved": true,
+      "importStatus": "SOURCE_SECURELY_IMPORTED",
+      "hintsApplied": 1,
+      "emailHintMatchesSource": true,
+      "emailHintSource": "APPLICANT_PROVIDED_UNCONFIRMED",
+      "profileReview": "PENDING",
+      "namePartHintsPresent": false,
+      "remotePreferenceImported": false,
+      "authorizationAnswerStatus": "UNKNOWN",
+      "claimsSelected": 0,
+      "claimsConfirmed": 0,
+      "hintsSurviveServiceReopen": true,
+      "onboardingStatus": "IN_PROGRESS",
+      "databaseCounts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporaryStateRemoved": true,
+      "recordedResponsesConsumed": 2
+    },
+    {
+      "caseId": "mixed-portfolio_capture",
+      "mode": "visual",
+      "sourceSHA256": "25fc4bf1ba957e54a0491f02d5dafabb1ff32a94271725ee483658b4c8d0a65b",
+      "pendingHintFields": [
+        "email"
+      ],
+      "sourceBytesPreserved": true,
+      "importStatus": "SOURCE_SECURELY_IMPORTED",
+      "hintsApplied": 1,
+      "emailHintMatchesSource": true,
+      "emailHintSource": "APPLICANT_PROVIDED_UNCONFIRMED",
+      "profileReview": "PENDING",
+      "namePartHintsPresent": false,
+      "remotePreferenceImported": false,
+      "authorizationAnswerStatus": "UNKNOWN",
+      "claimsSelected": 0,
+      "claimsConfirmed": 0,
+      "hintsSurviveServiceReopen": true,
+      "onboardingStatus": "IN_PROGRESS",
+      "databaseCounts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporaryStateRemoved": true,
+      "recordedResponsesConsumed": 2
+    }
+  ],
+  "limitations": [
+    "No completed or approved Profile is produced; this measures unapproved source-import hints and encrypted persistence only",
+    "Numeric synthetic display names are structurally unsuitable for the current conservative first/last-name splitter; absence is not permission to infer legal names",
+    "Original Claim candidate scores are not regraded by this measurement",
+    "Non-Claim constraints and verification notes still require their own reviewed destinations"
+  ]
+}

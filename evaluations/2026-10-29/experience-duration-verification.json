@@ -1,0 +1,132 @@
+{
+  "protocol": "DOCUMENTED_EXPERIENCE_V1",
+  "observedAt": "2026-10-30T03:14:16.852082+00:00",
+  "baseCommit": "c6c64d33ebc83bfacc43641b588cd7ba5cf7a4c9",
+  "frozenCommit": "327f9995b40fbadb80d463a0461932963c190d13",
+  "frozenTestsUnchanged": true,
+  "before": {
+    "methods": 18,
+    "methodsWithoutAnyFailure": 0,
+    "failedAssertionsOrSubtests": 28,
+    "errors": 4
+  },
+  "after": {
+    "frozenMethodsPassed": 18,
+    "additionalMethodsPassed": 11,
+    "failed": 0
+  },
+  "intermediateRelated": {
+    "passed": 116,
+    "seconds": 89.928,
+    "scope": "Before Profile version refinement"
+  },
+  "finalRelated": {
+    "passed": 149,
+    "seconds": 647.82,
+    "scope": "Onboarding, Profile, eligibility, schema, materials, offline application preparation"
+  },
+  "installedEnvironment": {
+    "passed": 35,
+    "seconds": 12.951,
+    "distinctBreakdown": {
+      "duration": 29,
+      "mcpSdk": 2,
+      "optionalParser": 4
+    },
+    "pipCheck": "PASS",
+    "isolatedOwnWorktreeImport": "PASS",
+    "crossWorktreePthRemoved": true
+  },
+  "priorHeadFullRun": {
+    "status": "FAILED",
+    "total": 1308,
+    "passed": 1300,
+    "failed": 1,
+    "errors": 3,
+    "skipped": 4,
+    "seconds": 3662.019,
+    "logLFHash": "9fcb42723ab8d5f3258453989a024a154c2ebce5514f5ec1bc151559503c67fe",
+    "issues": [
+      "Build-only interpreter lacked anyio/MCP",
+      "Build-only interpreter lacked optional Docling (one failure and one error)",
+      "Rejected clean-browser pairing request aborted with WinError 10053"
+    ]
+  },
+  "currentFullRun": {
+    "status": "STOPPED_FOR_KNOWN_ENVIRONMENT_REPAIR",
+    "complete": false,
+    "partialLogLFHash": "176a6549ab2a3d161f75a5fb8812fb7c1c8e25d3de40955e071f0480c0d4ac5b",
+    "next": "Repair HTTP probe rejection, then run the full suite with installed declared test extras"
+  },
+  "environmentSetup": "Installed .[build,mcp,document] in the own worktree, constrained to versions from the existing JobFlow development environment. A preliminary shared-site attempt missed pywin32 initialization; its failure is retained. No project dependency policy changed.",
+  "environment": {
+    "python": "3.11.3",
+    "packages": {
+      "anyio": "4.15.1",
+      "mcp": "2.3.0",
+      "docling-slim": "2.144.0",
+      "docling-parse": "7.24.0",
+      "python-docx": "1.2.0",
+      "pypdf": "5.9.0",
+      "setuptools": "80.10.2",
+      "wheel": "0.48.0"
+    }
+  },
+  "sourceLFHashes": {
+    "src/jobops/experience.py": "2fb5b66a34a38acd2c18eb69189cfe0dfafa62b20de5ea0758f8291bd5965b3f",
+    "src/jobops/candidate_profile.py": "db867f3cb1327b5c8ea33ac81d537545d39913cfa4b8d8cd2ee388272712ec9c",
+    "src/jobops/eligibility.py": "f2043d4de91a984417e8d0ad1b6b46bed52b93369e471c5621f3b6605083fd18",
+    "src/jobops/onboarding_center.py": "1036a2d0b94421968e5ef2c23b5b27a8bd1ee10dc98dd9cf1a32892c2c8e9543",
+    "src/jobops/runtime_schema.py": "48d0141501213e0ea507cbf9ae1343599c9521a6ca6fb89d8a658dcd24d81914",
+    "schemas/candidate-profile.schema.json": "a56c3fd5bc296363c9b695760c103767ed8baf467c58abc9f6cf79e9abafd9f3",
+    "tests/test_experience_duration.py": "be3c6006c6fbe9701cc5bdf0bbe978a63c8d73d970f5521c99609d77f08725b2",
+    "tests/test_experience_duration_additional.py": "b71cb10a9d9636b2f8b04c97c309dae491441b6571dfd7cc653ab88fe076f461",
+    "scripts/measure-profile-hint-destinations.py": "576cc26bacb1019e9f93d30ea84a9a606dca61d0ce72dfa37e7566f4fc589e23"
+  },
+  "localLogLFHashes": {
+    "reports/experience-duration-frozen-before-20261029.log": "1ca12865785ecfb951321f7a7333a38322f92767ac6bb9ffb4f05ceb0150fded",
+    "reports/experience-duration-final-20261029.log": "31b050fb711a212f22bb3b911e94ad4a9f7562a8194aaaebf060e367ddaca6ec",
+    "reports/experience-related-20261029.log": "ceea4b216a27602c80b3f7bc26ae9e9e48811f9859afb5845f2920430b0240f4",
+    "reports/experience-related-final-20261029.log": "9c37ce4398bb6663edb9e9502d5951c17bfae59c04cb4d8e7bc87a250d7f50b5",
+    "reports/experience-installed-environment-final-20261029.log": "897f60a3f712ddacb7f06aea12b511476cc5eeb692fd4452ca58b5a66ea0640e"
+  },
+  "additionalLogLFHashes": {
+    "reports/experience-mcp-environment-recovery-20261029.log": "ee368ebbbb3069bb8a3f1e89fc9e42c2bc8a09120a8b2b49bf2ac1b0b1cf06d7",
+    "reports/test-environment-install-20261029.log": "883bd397b41a2fe06ae38adde41bdb14a9abba0726bd7231a75a3251988be10a",
+    "reports/test-environment-constraints-20261029.txt": "f8bf4d60c9de7e75d6f45e555c3f924f98dabf9708114c37409d2ef214b98e50",
+    "reports/profile-hints-reproduction-20261029.json": "0b9e489d7967286d4cbe5f089b523aacce8d511532add15833cfbb8b5ef741d2",
+    "reports/experience-public-boundary-20261029.log": "1dac190a8dcb52c9c9a1406d4cebcadac1d5ed8e364ecf5e1cdd69ae887998f5"
+  },
+  "profileHints": {
+    "original": "profile-hint-destinations-before.json",
+    "emailHintsMatched": 6,
+    "sourceCases": 6,
+    "reproductionSameResults": true,
+    "completedProfile": false,
+    "sourceClaimScoreRegraded": false
+  },
+  "package": {
+    "kind": "UNSIGNED_SOURCE_WHEEL",
+    "sha256": "a319afed42499f13e8b75c08c83cd1ef239525334de4459e949a1287259d2b6d",
+    "changedRuntimeModulesMatch": true,
+    "standaloneInstallerAcceptance": false,
+    "schemaNote": "Runtime wheel is not the complete application source/config/schema bundle"
+  },
+  "publicBoundary": {
+    "status": "PASS",
+    "publicReleaseReady": false,
+    "approvedHistoricalIdentityExceptions": 1
+  },
+  "ci": "NOT_SUBMITTED_YET",
+  "productionActions": 0,
+  "liveModelRequests": 0,
+  "profileCompatibility": "New writer v3; new reader accepts v2. Old generated duration needs reviewed revision; old application rollback needs matching pre-upgrade encrypted-data backup.",
+  "remaining": [
+    "HTTP probe rejection repair and complete valid regression",
+    "Non-Claim constraints and verification-note destinations",
+    "36-material semantic acceptance",
+    "Independent users",
+    "Live ATS and mailbox acceptance",
+    "Trusted signing and independent clean Windows lifecycle acceptance"
+  ]
+}

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .jd_analyzer import NormalizedJD, Requirement, UNKNOWN, _boolean_expression
+from .experience import evaluate_years
 
 
 _LOCATION_ALIASES: dict[str, tuple[str, ...]] = {
@@ -77,14 +78,9 @@ def _evaluate_requirement(requirement: Requirement, profile: dict[str, Any]) -> 
     certifications = {str(value).casefold() for value in profile.get("certifications", [])}
     components: dict[str, str] = {}
     if requirement.category == "years":
-        match = re.search(r"(\d+)\s*\+?\s*(?:years?|年)", requirement.text, re.IGNORECASE)
-        required = int(match.group(1)) if match else None
-        actual = profile.get("years_experience", UNKNOWN)
-        if required is None or actual in (UNKNOWN, None, ""):
-            result = "UNKNOWN"
-        else:
-            result = "PASS" if float(actual) >= required else "FAIL"
-        return {"gate": "years", "requirement_id": requirement.requirement_id, "logic": requirement.logic, "result": result, "components": {"required": required, "actual": actual}, "reason": requirement.text}
+        return {"gate": "years", "requirement_id": requirement.requirement_id,
+                "logic": requirement.logic, "reason": requirement.text,
+                **evaluate_years(profile, requirement.text)}
     if requirement.category == "education":
         actual = str(profile.get("education", UNKNOWN)).casefold()
         result = "UNKNOWN" if actual == "unknown" else ("PASS" if any(term in actual for term in re.findall(r"bachelor|master|phd|本科|硕士|博士", requirement.text.casefold())) else "UNKNOWN")

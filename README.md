@@ -12,6 +12,8 @@ See the [compatibility and recovery matrix](docs/compatibility.md) and [October 
 
 The source branch includes these reviewable capabilities. They are not a new signed desktop release.
 
+Documented work duration now excludes gaps, overlapping jobs and repeated Claims. Partial dates retain bounds; internship time and skill-specific or full-time requirements require separate review. New Profiles use version 3 while older Profiles remain readable; older generated tenure values need a reviewed revision before supporting a years requirement. [Duration rules, regression evidence and rollback](docs/experience-duration-2026-10-29.md) also record the six-sample Profile-hint check without claiming complete material understanding.
+
 The [full-regression follow-up](docs/test-isolation-2026-10-29.md) retains an initial
 local run with seven failures and two errors, explains its environment and PDF-test
 isolation defects, and records the focused repairs. It does not replace the missing

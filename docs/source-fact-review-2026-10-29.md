@@ -33,6 +33,11 @@ Profile import can seed private facts after source confirmation; its completenes
 on these six files was **not measured**. Claim absence therefore cannot establish
 that those facts were lost from the whole product.
 
+A [subsequent Profile-path measurement](experience-duration-2026-10-29.md#profile-hint-measurement)
+replayed the same six synthetic sources through encrypted source confirmation and
+service reopen. All six email hints persisted with Profile review pending. This
+does not change the historical Claim-only score or establish Profile completion.
+
 The other 29 omissions include remote-only location constraints, availability and
 unknown work authorization, absence of underlying customer evidence, and the
 need to verify references/credentials. Some files also lose the absence of

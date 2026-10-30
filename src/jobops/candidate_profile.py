@@ -5,7 +5,7 @@ from typing import Any, Iterable
 from urllib.parse import urlparse
 
 
-PROFILE_SCHEMA_VERSION = 2
+PROFILE_SCHEMA_VERSION = 3
 
 # One vocabulary is shared by onboarding, form analysis, encrypted payload
 # resolution, and browser assistance. Values remain inside DPAPI-protected

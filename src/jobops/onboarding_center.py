@@ -37,6 +37,7 @@ from .candidate_profile import (
     unique_values,
 )
 from .candidate_coverage import source_reference_coverage
+from .experience import documented_experience
 from .application_readiness import build_application_readiness
 from .application_execution import validate_application_execution_plan_integrity
 from .application_field_resolution import (
@@ -5345,12 +5346,9 @@ class OnboardingCenterService:
         languages = [str(item["statement"]) for item in confirmed_claims if item.get("category") == "language"]
         certifications = [str(item["statement"]) for item in confirmed_claims if item.get("category") == "certification"]
         education = " | ".join(str(item["statement"]) for item in confirmed_claims if item.get("category") == "education") or None
-        years = [
-            int(value)
-            for item in confirmed_claims if item.get("category") in {"work", "internship"}
-            for value in re.findall(r"\b(20\d{2})\b", " ".join(str((item.get("entity") or {}).get(key) or "") for key in ("start_date", "end_date")))
-        ]
-        years_experience: int | str = max(0, datetime.now(timezone.utc).year - min(years)) if years else "UNKNOWN"
+        years_experience, experience_calculation = documented_experience(
+            confirmed_claims, as_of=datetime.now(timezone.utc).date(),
+        )
         name_item = base.get("candidate_display_name")
         display_name = name_item.get("value") if isinstance(name_item, dict) else base.get("candidate_display_name")
         answers = state["answers"]
@@ -5372,7 +5370,7 @@ class OnboardingCenterService:
             "remote_preference": str(self._answer_value(answers, "remote_preference", "UNKNOWN")),
             "minimum_salary": minimum, "work_authorization": authorization,
             "skills": skills, "languages": languages, "certifications": certifications, "education": education,
-            "years_experience": years_experience,
+            "years_experience": years_experience, "experience_calculation": experience_calculation,
         }
         reusable_profile_fields = (
             "first_name", "last_name", "email", "phone", "phone_type",
