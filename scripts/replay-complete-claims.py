@@ -68,6 +68,7 @@ def main():
     before = load_observation(args.observation)
     cases = {c['id']: c for c in pilot.complete.load_manifest()['cases']}
     files = ['src/jobops/ai_runtime.py', 'src/jobops/_pdf_region_worker.py', 'src/jobops/onboarding_center.py',
+             'src/jobops/candidate_coverage.py',
              'src/jobops/multimodal.py', 'scripts/replay-complete-claims.py']
     report = {'observed_at': pilot.iso_utc(), 'synthetic_only': True, 'mode': 'SAME_OUTPUT_LOCAL_REPLAY',
               'observation_lf_sha256': VISUAL_OBSERVATION_LF_SHA256 if args.observation == 'visual-followup' else OBSERVATION_LF_SHA256,

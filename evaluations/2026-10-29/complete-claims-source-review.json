@@ -1,0 +1,4074 @@
+{
+  "schema": "COMPLETE_SOURCE_REVIEW_V1",
+  "reviewedAt": "2026-10-30T01:41:49.719951+00:00",
+  "reviewerKind": "CODING_ASSISTANT",
+  "independentReview": false,
+  "basis": "Explicit source-fact and candidate review against frozen synthetic gold, entity context and cited transcript. Not an independent human review or automated semantic score.",
+  "manifestLfSha256": "11d22cb621ed917f1f014804bde9ff911d39816cd5087e54fe19f1bb2bb170ce",
+  "wholeMaterialAcceptance": false,
+  "observations": {
+    "text": {
+      "path": "evaluations/2026-10-29/complete-claims-replay-text.json",
+      "lfSha256": "ca1ffdcf0f471e6f1dcf7532a2bb8eec9fcf6e3c230e6a666d7049708090502f"
+    },
+    "visual": {
+      "path": "evaluations/2026-10-29/complete-claims-replay-visual.json",
+      "lfSha256": "42c2a721415787132f157005748504e5b2d9fe69f19d575f45e5e337d78113db"
+    }
+  },
+  "cases": [
+    {
+      "caseId": "en-chronological",
+      "observation": "text",
+      "sourceSha256": "55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313",
+      "facts": [
+        {
+          "factId": "en-chronological-f01",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "en-chronological-f02",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "en-chronological-f03",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "en-chronological-f04",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B93ADD5E6532"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f05",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-DFCFD4EBE747"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f06",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-F30F512BAF4B"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f07",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-F8C765C591A4"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f08",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-F8C765C591A4"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f09",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-F8C765C591A4"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f10",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-489B71F9F4D3"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f11",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-DCE6C990EE14"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f12",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-2CA15A087D95"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f13",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-08108A1F91D1"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f14",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-2FE4A642279F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f15",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-E518E24C5FA6"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f16",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-998AE6FCF1AD"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f17",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-6CF1A4B80FF5"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f18",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-E57751A63DA7"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f19",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-E57751A63DA7"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f20",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-E57751A63DA7"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f21",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4CFEE5BBAB0C"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f22",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8BA4683930FC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f23",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-F79A3787AE68"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f24",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-28E766E23E27"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f25",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-12525DCDB3FB"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f26",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-FACE41E9BC7D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f27",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-50E4A313C93F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f28",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-50E4A313C93F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f29",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-707508524048"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f30",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1F6676579F11"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f31",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-6F1221C2FCAF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f32",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-EDF8262687AF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f33",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8982D874900D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f34",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-C91FFC9357D4"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f35",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-CBE6CF73BE37"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f36",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-CBE6CF73BE37"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f37",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-CBE6CF73BE37"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f38",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-C4216E7263DF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f39",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-97F7EBE7D32A"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f40",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-3D573EDB4FE3"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f41",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-F6DAA837FA04"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f42",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-98A73BADB6F9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f43",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "en-chronological-f44",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-566302D64459"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f45",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-46E3408D09DA"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-chronological-f46",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "en-chronological-f47",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        }
+      ],
+      "candidates": [
+        {
+          "candidateId": "EXT-B93ADD5E6532",
+          "candidateSha256": "bdba73a429ea1c92706b5752621905e3954d96b8757db3f994e450fd9e70261e",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f04"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-DFCFD4EBE747",
+          "candidateSha256": "7976c2b438362ade6cd8860bf7365932d486889b99e4efdca195def0d0daf0e9",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f05"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-F30F512BAF4B",
+          "candidateSha256": "8a86a6f0f608c80c730d6178a2c633104e31b62792fc6402378f5a8dea1a1c0b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f06"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-F8C765C591A4",
+          "candidateSha256": "20c0d7d9154549870cf2495469975cda8ae6b37f6f501728a4d0bb84ec074b15",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f07",
+            "en-chronological-f08",
+            "en-chronological-f09"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-489B71F9F4D3",
+          "candidateSha256": "6af656e5967b80ccfc6619be82466463bd6b115240fa02f975f03823e88db902",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f10"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-DCE6C990EE14",
+          "candidateSha256": "06472033c8fb3202a2e7453326d57d0d40c9c3a882db6f39a4c6e9093ebe6980",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f11"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-2CA15A087D95",
+          "candidateSha256": "13e3f9d3a0b0055046f72abceb9dbd510a6ea2ddb90513ea64292e25f5413dfc",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f12"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-08108A1F91D1",
+          "candidateSha256": "3525ff3b78e42a2025a67253016b7eca4fbc32411d866f4db1ce84b0488ca5bd",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f13"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-2FE4A642279F",
+          "candidateSha256": "35bd652dc8d354a793fa1d86d211e55df0bbf287ea60f70082ea2805a1167d7c",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f14"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-E518E24C5FA6",
+          "candidateSha256": "19ee9f542787e4791129988d70fbdf224a7bd2da541ec490cd8f2c355c7e0c40",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f15"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-998AE6FCF1AD",
+          "candidateSha256": "8e99c033ed9c711aa53f586bc65cc1553809e39e8e4b1d7a85db40af86f12110",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f16"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-6CF1A4B80FF5",
+          "candidateSha256": "e97b7f72bc2d5437e7f4f622cd8c367144935ec16f43654a2a0ad7cd1fd1ddb7",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f17"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-E57751A63DA7",
+          "candidateSha256": "1a512c498b7faca08746ca6f50538e9dcc8a9a50addd5f71186749e90386cc19",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f18",
+            "en-chronological-f19",
+            "en-chronological-f20"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-4CFEE5BBAB0C",
+          "candidateSha256": "2c0762d031974b765645ba8c8722a26c3fd44f8978b4630fe8017393b2ec013a",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f21"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-8BA4683930FC",
+          "candidateSha256": "cc9db1103a30ec351dcda99b40e56cab0b689d27ccaf97dd71a7d9ef9187e4b2",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f22"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-F79A3787AE68",
+          "candidateSha256": "3cfbc2a92904e6c7502c6a875de6fd5c00312eec0de939e0a18658fdb641f6ed",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f23"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-28E766E23E27",
+          "candidateSha256": "491cc71c6822b96b77d3dca36b6b5eab412bad848b34195d8ca018a1ef528092",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f24"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-12525DCDB3FB",
+          "candidateSha256": "dd30004500bdc382d68de1c4a4d43a6b708ca80ab55c25459c5ac7c36d34af91",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f25"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-FACE41E9BC7D",
+          "candidateSha256": "11f77455a2250153a80f3c97f2285ee84fef725cc9111f3d5fda2749daa024f1",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f26"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-50E4A313C93F",
+          "candidateSha256": "4058b38b227d9129520e5c0d3ca90febc168d779c72abec816f9f50624958053",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f27",
+            "en-chronological-f28"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-707508524048",
+          "candidateSha256": "975f0d7a2b9d76857abe0a36984b3bbedec926687a897d6f3ad6990341eecf7f",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f29"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-1F6676579F11",
+          "candidateSha256": "0d8b9abe92d1ee8dae778adf61c7536ff0a252f09203172f90f4f7b8142967e4",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f30"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-6F1221C2FCAF",
+          "candidateSha256": "15e22266af3169a24d21ad00dfbaab63f61258d399be67921e2362ce683383e1",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f31"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-EDF8262687AF",
+          "candidateSha256": "ad6927227e4fe677d3ba457708c9c5cac649ce1d483ffa4e1504f070f64cfbf0",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f32"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-8982D874900D",
+          "candidateSha256": "d814c70bd43446cb43b5a4cf01c69808690c99bd799b916789787ba7861bfc26",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f33"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-C91FFC9357D4",
+          "candidateSha256": "26480535dc70733cf11a451c73cee175348fb5faea529f585b512d4cfe6baf90",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f34"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-CBE6CF73BE37",
+          "candidateSha256": "1843c69919dfd207231b1d7a7d08be5c0c7f8de6505f28db386b018ba1ac130a",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f35",
+            "en-chronological-f36",
+            "en-chronological-f37"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-C4216E7263DF",
+          "candidateSha256": "68d1fbe3bf7010ae990231795c46944dc0bc04e84ccccf5c548c3c9a380ed8c2",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f38"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-97F7EBE7D32A",
+          "candidateSha256": "2134e61a58ac2d3838c72d2fb73584103195f9473fe68fe827dafde848210ef2",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f39"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-3D573EDB4FE3",
+          "candidateSha256": "759e5740d4f3cdc8e2b57a03023690e702981950d095f65d5b68f2fe9366148b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f40"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-F6DAA837FA04",
+          "candidateSha256": "d1dd23f1cdbf07fd725acde3f6923c6697769def4dce09e5aace0a0e2a108b4f",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f41"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-98A73BADB6F9",
+          "candidateSha256": "b6b3edb5ba74f73ec8d544ada3cf38dc6c4ff4843820f5e876616ff87855c8e8",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f42"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-566302D64459",
+          "candidateSha256": "5d1ade7146a993e5392da829a5af9d4da44bdbe069f38a93bef4a213eb82474b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f44"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-46E3408D09DA",
+          "candidateSha256": "a19622c7d676b488028c6f28bcc80c8b4e9a98d67a978b45f05aeb8c20434c6a",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-chronological-f45"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        }
+      ],
+      "entityMetadataNotes": [
+        "Project organization is blank in the recorded English text response; project name is in its summary and cited source header. This is an incomplete display identity, not an invented employer."
+      ]
+    },
+    {
+      "caseId": "zh-chronological",
+      "observation": "text",
+      "sourceSha256": "7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+      "facts": [
+        {
+          "factId": "zh-chronological-f01",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "zh-chronological-f02",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "zh-chronological-f03",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "zh-chronological-f04",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B35C3BD48B8F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f05",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-ED7101125839"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f06",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1AAA1F73CCF5"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f07",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1A32BD21D20D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f08",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1A32BD21D20D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f09",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1A32BD21D20D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f10",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-E69049D47DE9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f11",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A016E9CAF3E7"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f12",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-5C8B071342D0"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f13",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-68B4C21A89D8"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f14",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-5F0D25836AB7"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f15",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-DA89C825DBFC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f16",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-DFC51BB4A351"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f17",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-ADFE95481BEF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f18",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-2BA06B6E7168"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f19",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-2BA06B6E7168"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f20",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-2BA06B6E7168"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f21",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4B105164064C"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f22",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A6747FDA96FD"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f23",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-0A7F1961CEF7"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f24",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-6BB5D4D5A6FB"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f25",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-DE67745F6B3E"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f26",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-ADDF30A4E560"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f27",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-BE6D69DF6A2F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f28",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-BE6D69DF6A2F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f29",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-D1AFF4E17609"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f30",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-379B56107059"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f31",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-2AC9A9A742B8"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f32",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-940EE92ACD76"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f33",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-604384C8F459"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f34",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4111F8573EDF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f35",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4135288FB6B9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f36",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4135288FB6B9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f37",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4135288FB6B9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f38",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8D9C602AD8B6"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f39",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "zh-chronological-f40",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-981DCB0A2DB9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f41",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B9F1A5BF77EB"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f42",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-51D993C3D114"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f43",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "zh-chronological-f44",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-CCE72E3C273B"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f45",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-13926DC908E1"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-chronological-f46",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "zh-chronological-f47",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        }
+      ],
+      "candidates": [
+        {
+          "candidateId": "EXT-B35C3BD48B8F",
+          "candidateSha256": "f2ad4bd148d78a41c489faaeb5bc0c06978cc1b88b6483bc0ffe796c2a0d55bf",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f04"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-ED7101125839",
+          "candidateSha256": "76b115afdde54dc8146c388795b666e50190e7f03dee3c99f1f6e40c2e43bd73",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f05"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-1AAA1F73CCF5",
+          "candidateSha256": "58febfc20792c14c8c701f315e27b42b8871c82fc280c2abc182145a60874406",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f06"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-1A32BD21D20D",
+          "candidateSha256": "17e4aae7df2d76e53ff3b8e6eb919586ce149292c5b9a3a0c79c286d8bcd0a42",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f07",
+            "zh-chronological-f08",
+            "zh-chronological-f09"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-E69049D47DE9",
+          "candidateSha256": "1518ca62aec6745cf891aec3d2e1fb883c61771b9c929793fdd0eaf6cd18cf04",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f10"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A016E9CAF3E7",
+          "candidateSha256": "957ef0d63dd351c415bf20155859850872f494522190c0024f561f84a37a09c1",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f11"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-5C8B071342D0",
+          "candidateSha256": "adfb919b4f2e5487bcbe630d3b546156c108f3035eaa160b98fce6d860ee81e8",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f12"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-68B4C21A89D8",
+          "candidateSha256": "0526636ff9c13f0822938d07eef1d2929a33ed9dfd6be721552e5589b62e3819",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f13"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-5F0D25836AB7",
+          "candidateSha256": "4669ce1356b53c848b4028597d2586f5ee20583ad7b5dd5f5352bf365f64cf53",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f14"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-DA89C825DBFC",
+          "candidateSha256": "90120ca2187f57ee537c2b524c01f69776de1a0713edf79c20b1677437d0b36b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f15"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-DFC51BB4A351",
+          "candidateSha256": "b842b7b9d1e6bcc23e66f6437d1e8e695b57f7ae7871f66a5e87f09fbed1c207",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f16"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-ADFE95481BEF",
+          "candidateSha256": "f2b768374ed59e85dcc6b815ed5f33b94fd043b9904b1eeb2a92b8a8bb4a7bb0",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f17"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-2BA06B6E7168",
+          "candidateSha256": "4220b54264ec51fb5f5713ce51d72fa9c30c3990c78f8ce73396570960dc0ccf",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f18",
+            "zh-chronological-f19",
+            "zh-chronological-f20"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-4B105164064C",
+          "candidateSha256": "683040f3293cfc771174f80852c2074888ac8f2e6ac47cd7122755af0373855b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f21"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A6747FDA96FD",
+          "candidateSha256": "b0f7804f2d13a3efdb2714384010ae8c95e94f0da95630fd46c4bbb41c2973a4",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f22"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-0A7F1961CEF7",
+          "candidateSha256": "c4fe847ff56f163658a8c360468c749ad0da6e1e93c4d72836b2ade038bc01ae",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f23"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-6BB5D4D5A6FB",
+          "candidateSha256": "22148c25b3c88dc5c85d90f1cb2e283b8641422f9df639e5ca44727be08b4b54",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f24"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-DE67745F6B3E",
+          "candidateSha256": "2a096cad33e5c7334ac6d6b59bd404a0acc1717fb6bd5c789d788373d906dd2c",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f25"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-ADDF30A4E560",
+          "candidateSha256": "a2e37ad0c23e6e5d9475fa272a0964e01353aad13f66bca0174beda5effb62a9",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f26"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-BE6D69DF6A2F",
+          "candidateSha256": "14c4e837c6cca3a3b2e51cbfae10329fe5f4833fa738c54503956d02d5e80e08",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f27",
+            "zh-chronological-f28"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-D1AFF4E17609",
+          "candidateSha256": "cf94756a38e84a9d3daef397b9220d6a4ebda20274c295d6956f76c6fe4b56a1",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f29"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-379B56107059",
+          "candidateSha256": "bc81ba944468dcf5c6b775f3d72cecbd384268916e0527c2bc13ec0b19c9f3ce",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f30"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-2AC9A9A742B8",
+          "candidateSha256": "ba4571fbc17c5fc5d2a9afd47ea936c8ad0e398c1a25ef8b55e97a33e02fdf18",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f31"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-940EE92ACD76",
+          "candidateSha256": "aa8fac9747c8cbb7ac9591ccf40371e67a8feebee1175fcba3d111a553a883ff",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f32"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-604384C8F459",
+          "candidateSha256": "4e01bc45291bbded8441f813dbfcb198bc7974c0172b2a907f19253aacfd3a7b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f33"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-4111F8573EDF",
+          "candidateSha256": "ce82854d5ae11e6e801f1f4f5e57c405fc5509994dd5283f9edf6a0b0751706b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f34"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-4135288FB6B9",
+          "candidateSha256": "b55ff22ec90b8a8f1767ef65196f082259f24bd1d8dfecedd297c093b4c5b7b2",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f35",
+            "zh-chronological-f36",
+            "zh-chronological-f37"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-8D9C602AD8B6",
+          "candidateSha256": "3c078f1a2ca6333ff458d17813a18a74e0437b26b31f8b4781336c03c94cb248",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f38"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-981DCB0A2DB9",
+          "candidateSha256": "c0f33091bdb0d06a8413f68f92b298d3aceee2bfea3fa24e96f23fb410b974b8",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f40"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-B9F1A5BF77EB",
+          "candidateSha256": "49a26ac5c3bd8fb5f971952dc0b590395736a8843b9ca9e2c68f28d953b063d6",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f41"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-51D993C3D114",
+          "candidateSha256": "e0d40ec7925afccdb5d663cc440b9c5dd550b6a5c76f91ba11557892a7278bcd",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f42"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-CCE72E3C273B",
+          "candidateSha256": "eb839a0c2c3306e762c177eafced6f7c06aadce40a0194c354e0177ddfba89db",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f44"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-13926DC908E1",
+          "candidateSha256": "40de164147602b8e8bdcf87e0e90f4f45516452ddc5e6c772455af85b983c02b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-chronological-f45"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        }
+      ],
+      "entityMetadataNotes": []
+    },
+    {
+      "caseId": "mixed-paired_columns",
+      "observation": "text",
+      "sourceSha256": "17cc9f39d2f8eb381cce937467689c7b7057ead81eefa2d498f9b13b10d433cf",
+      "facts": [
+        {
+          "factId": "mixed-paired_columns-f01",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "mixed-paired_columns-f02",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "mixed-paired_columns-f03",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "mixed-paired_columns-f04",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-C8779CBFEF86"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f05",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-AEFC106A9D12"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f06",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "mixed-paired_columns-f07",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-31A4E3BB19D5"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f08",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-31A4E3BB19D5"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f09",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-31A4E3BB19D5"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f10",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-EB1680D99039"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f11",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-D43113960CF6"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f12",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-C6F438771512"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f13",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-71A1282E1AC8"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f14",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8A6722CA6A09"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f15",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-FC6CEC01ACA5"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f16",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-6449EC01D52C"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f17",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-533D7AA52EC3"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f18",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-3A2ABC6D8F10"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f19",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-3A2ABC6D8F10"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f20",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-3A2ABC6D8F10"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f21",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-5EB219B88745"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f22",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-6FEA383102FA"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f23",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-70AAE9D1FC09"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f24",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-AE1D55553D7F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f25",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-13ACCF68AAC6"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f26",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-F543BCBB24EE"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f27",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-7DEA2DCD528B"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f28",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-7DEA2DCD528B"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f29",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-0A71E1A78A4D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f30",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-D9F936F41895"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f31",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-D1774FD4C9D8"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f32",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-BCE76CD75982"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f33",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-225D35B516FA"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f34",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A19DBBEB278B"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f35",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4DF8255DA435"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f36",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4DF8255DA435"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f37",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4DF8255DA435"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f38",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A00CE9709C9D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f39",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A9A1FA1B8AAD"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f40",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-87D27F236568"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f41",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-47139114E8CC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f42",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-19041FABBDD7"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f43",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "mixed-paired_columns-f44",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-7BED8E1F8F7D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f45",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-E83229F2805C"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-paired_columns-f46",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "mixed-paired_columns-f47",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        }
+      ],
+      "candidates": [
+        {
+          "candidateId": "EXT-C8779CBFEF86",
+          "candidateSha256": "9066e9812408772760e10b6817caf1a1fc924d355ecbf7876a09123bb99bff8f",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f04"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-AEFC106A9D12",
+          "candidateSha256": "278aa054af4aa0bb9df18a2b6bc55105a550ff1de19efec10ff118c50464d856",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f05"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-31A4E3BB19D5",
+          "candidateSha256": "e926bc42e67e0d877f23f28d0f4949accc60d386dedb3ce53aa0fbafb84bad5f",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f07",
+            "mixed-paired_columns-f08",
+            "mixed-paired_columns-f09"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-EB1680D99039",
+          "candidateSha256": "58412374e83296dd848199384e925f3502c7d076ea5baf46ceb0912aa3f37d2d",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f10"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-D43113960CF6",
+          "candidateSha256": "5f37046e524a8e173130c1cb115e6d9c7a5f363b6d30888e77fd84e8f529dab8",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f11"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-C6F438771512",
+          "candidateSha256": "1e826e8e041a6cd6cc5a34aee42df950afc671f296422299e7ebc552605a36de",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f12"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-71A1282E1AC8",
+          "candidateSha256": "6b4daefb3137a565b785549ef42075de13ff0d0f2a63f3eb6775cb3988be72c9",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f13"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-8A6722CA6A09",
+          "candidateSha256": "294300982ff8bed4d65d5a6852cdf9193eee6237c4240e0645cead81e05c0ca2",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f14"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-FC6CEC01ACA5",
+          "candidateSha256": "932dfed60edd8faa9f9ec172e6776e1ef855f9fd3f3385ca8f72658ad8b6a979",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f15"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-6449EC01D52C",
+          "candidateSha256": "ee1e5d5bd3ef198fb78cf0b2aec2af01eb2229d31f7e7bdfee0184c8c04ac1fa",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f16"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-533D7AA52EC3",
+          "candidateSha256": "2f5cc4eeb79f51cf74097f34efa349afd1e54b6a0facc5c27bc47648f094c1e3",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f17"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-3A2ABC6D8F10",
+          "candidateSha256": "3ff08e1a72711498c8bd20b3993a15176053e6a0be2127fa6e1665bb89b3ae69",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f18",
+            "mixed-paired_columns-f19",
+            "mixed-paired_columns-f20"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-5EB219B88745",
+          "candidateSha256": "5a10ca760f2ac474784fde8c220bb2ff79bc3d9bb324bb9d0964dc7ddc63618a",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f21"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-6FEA383102FA",
+          "candidateSha256": "f6d76652d9d78d2b17ff094bb5ab35cbd25a97a6895c1dd2e111ede9bfc10f5d",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f22"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-70AAE9D1FC09",
+          "candidateSha256": "715d56f4338ffdf174bacac82e7ed0b018bb16365c2efa6c522d15c273812e2a",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f23"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-AE1D55553D7F",
+          "candidateSha256": "f3fff031b9348fc7dea22995f1465cdda553802761ea2e943fe111e602849556",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f24"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-13ACCF68AAC6",
+          "candidateSha256": "7d299dbbb9e585234d83ddf85784e6283a804270eb9e32e2f87a67b98b175cda",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f25"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-F543BCBB24EE",
+          "candidateSha256": "1ded381c7cc3e57109007077e9edf6f4c33ddc7afd05a807eb4ab11e2f834524",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f26"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-7DEA2DCD528B",
+          "candidateSha256": "c833c01a4d6b0787556d1bbbe8e245a5f37d0d5d24fbd8d000b28ab7276bc629",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f27",
+            "mixed-paired_columns-f28"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-0A71E1A78A4D",
+          "candidateSha256": "0e208ccd31f188d3a2cb40f17942cb9bdfc0d67c896b723a8c7d62e70e0ac8e7",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f29"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-D9F936F41895",
+          "candidateSha256": "50b7140cb94385289f9b5db403148a6224f379aab7230fa07727c6a6ae974cda",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f30"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-D1774FD4C9D8",
+          "candidateSha256": "5fca8378742e2eb56d261b72081f5d073e8100409368f82fdb88ea86762e6b6f",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f31"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-BCE76CD75982",
+          "candidateSha256": "d1b34b58ed44cf9a461b4bb934529a5e32450ac0c0b0d6e00c2d28d1cbc8487c",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f32"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-225D35B516FA",
+          "candidateSha256": "5f991f2b0af1066e32e158b0b508aaa0193e6f94e20657c0e3934e0d538d922e",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f33"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A19DBBEB278B",
+          "candidateSha256": "bf27411a24dedcb7b3f4e84002254f819ea33fda033da5469716a4792cd3cca6",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f34"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-4DF8255DA435",
+          "candidateSha256": "bd2f9084ee2882ca98c00f2b2de78bf3f36ce53f17cf45a82899e812ac638a15",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f35",
+            "mixed-paired_columns-f36",
+            "mixed-paired_columns-f37"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A00CE9709C9D",
+          "candidateSha256": "4d615d365d7a4f25a48c423ca6d1318beb796bf444ee7770b7a03266f0e17418",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f38"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A9A1FA1B8AAD",
+          "candidateSha256": "7a0102ade059e919ba98881d1cee966660b3a23d346bb1eeca92486e2daf7933",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f39"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-7BED8E1F8F7D",
+          "candidateSha256": "3802e92f305a969acfa10b29f24c242633ff6995f413e429aff54a6c238c3553",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f44"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-E83229F2805C",
+          "candidateSha256": "9dd2652f64cf0af9cb195442c4cbaf08e9bdc73160861adedbcc6044d70b22b4",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f45"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-87D27F236568",
+          "candidateSha256": "0bcf4e42e42e7fc8c6eb24ccbd1606806b6dd5f8cca66af0fcf03e03d04c1ea2",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f40"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-47139114E8CC",
+          "candidateSha256": "cd5ccbf5738ef4ac35b39c4043601e3edd4eeb613ac3f3bc3492d14fb88ebb35",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f41"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-19041FABBDD7",
+          "candidateSha256": "c96782bd9794c614d61e786cf4ab95f53a43a8a308003432e43a3c9015df3acf",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-paired_columns-f42"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        }
+      ],
+      "entityMetadataNotes": []
+    },
+    {
+      "caseId": "en-scanned_pages",
+      "observation": "visual",
+      "sourceSha256": "6e05b108fd61ceb348a4c9548867d0e6d221a7ffe9607a7a5b3a712d228c6c3d",
+      "facts": [
+        {
+          "factId": "en-scanned_pages-f01",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "en-scanned_pages-f02",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "en-scanned_pages-f03",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "en-scanned_pages-f04",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-16E24D9D01CE"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f05",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B9E09F8BC644"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f06",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-EF59064E3093"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f07",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B50D00F481A0"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f08",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B50D00F481A0"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f09",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B50D00F481A0"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f10",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-40BFD47458A5"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f11",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-BE0D7CDA5D8E"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f12",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1D95C249BA74"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f13",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1EDD067AA17F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f14",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-D6D8B444CE10"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f15",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-901FFA130375"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f16",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-64EE20699B7A"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f17",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4C404A3009DF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f18",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-DB4A9BCA0FAC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f19",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-DB4A9BCA0FAC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f20",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-DB4A9BCA0FAC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f21",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A0298BC1FAB7"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f22",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-0DE5B41B937B"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f23",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-FE1291006C9E"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f24",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-09C07212BEC0"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f25",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-D2E9F3867EA9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f26",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A2E4E4DB0D1C"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f27",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-E4305CFB68C6"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f28",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-E4305CFB68C6"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f29",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-55F819848D8E"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f30",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A383764C3813"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f31",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-CB794B97A6F9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f32",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-0863C4B87F09"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f33",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-5E33BA5A3F57"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f34",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-9F05DDAAD642"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f35",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-68204B8B891A"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f36",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-68204B8B891A"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f37",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-68204B8B891A"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f38",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4C0325CC104A"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f39",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-74E5ADC92506"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f40",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-87B4ACE061C0"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f41",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-D7FF2F54E9E4"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f42",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A832F7062F11"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f43",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "en-scanned_pages-f44",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-37C172CB7A4A"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f45",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-7980EEC1F851"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "en-scanned_pages-f46",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "en-scanned_pages-f47",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        }
+      ],
+      "candidates": [
+        {
+          "candidateId": "EXT-16E24D9D01CE",
+          "candidateSha256": "24f6c30c3d5032de5dc83070bd1b9edec8de44b8ecbbd2c5f0612c996c0f4b9e",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f04"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-B9E09F8BC644",
+          "candidateSha256": "4e98b4b0f1d92093aeeeb167bc434e5ab3702284a265d8c8bc2f2e09ef8091b1",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f05"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-EF59064E3093",
+          "candidateSha256": "79302fa20cbd61a00401d3f48c1b96a95c7c9503d6150cf5f024c219e05e6b65",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f06"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-B50D00F481A0",
+          "candidateSha256": "8ca7b9587191daa14ce5ae300f2d55d5b0dc445cc3e2c72d1d73916f98353c47",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f07",
+            "en-scanned_pages-f08",
+            "en-scanned_pages-f09"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-40BFD47458A5",
+          "candidateSha256": "7bb20a72cfd5dc2a12534abf3a68bb21b5f4ec5fc55edb283ff1b6250398ad4a",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f10"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-BE0D7CDA5D8E",
+          "candidateSha256": "506a337d4befe65f0a0930b14b0d0baf8a24779c1f90fc0cc7921d25529e6064",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f11"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-1D95C249BA74",
+          "candidateSha256": "e35a1332ae5b039a1d4fd013499a4c27abfda46cea550980c87836488e7247d9",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f12"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-1EDD067AA17F",
+          "candidateSha256": "ef9247e22a046370cc01252dab9a8982690b047b4d20d8a0b8c538e3c1d376ae",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f13"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-D6D8B444CE10",
+          "candidateSha256": "a52d17022ab0aef105bbb3514ae9c11ba9a5980cf6eb78ab6f159ec3de89431a",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f14"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-901FFA130375",
+          "candidateSha256": "e665dffd8c823c141d8af39494346d9623cd67d35f7682f00b749b4a716a1679",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f15"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-64EE20699B7A",
+          "candidateSha256": "f2d43728ab7fc54bacabd89c3e2765a80f38cd5440f77a16252c40fac9939809",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f16"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-4C404A3009DF",
+          "candidateSha256": "39639a3ed3e359ba64ba32d0adca4898947cd21ef673883a625c3f0cfdc09b88",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f17"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-DB4A9BCA0FAC",
+          "candidateSha256": "f48cf5e9aa8121374eac20e8cb1ef30cc63d2eb0760b2cff2b967befb49445ad",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f18",
+            "en-scanned_pages-f19",
+            "en-scanned_pages-f20"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A0298BC1FAB7",
+          "candidateSha256": "5c5a8a501dc373fa514d89d09d1d6a7e2ec7e7f96e2d8f64e7a152d15d3e88aa",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f21"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-0DE5B41B937B",
+          "candidateSha256": "59a4faadc92615ea428039bb4e407096ce5a58c7fbab9e7ce79a9cfa4497718e",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f22"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-FE1291006C9E",
+          "candidateSha256": "dd1be2e6b0b4a2e528d438ddcd1a26ac662519390ab33dc4f6aabe5f9ae69153",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f23"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-09C07212BEC0",
+          "candidateSha256": "c22766e8cd24201a32c5412cedeb5d53453ca970ed13a3dfccc9a0479d057d45",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f24"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-D2E9F3867EA9",
+          "candidateSha256": "76ae54c056ba79d34b6a7cdcc61423e2eb66c60042165947c052062f33610e43",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f25"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A2E4E4DB0D1C",
+          "candidateSha256": "c16be7ed63a3d7ca0a26d9ae7e5e3eb7dc9c982067b73569720f586c81a121c4",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f26"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-E4305CFB68C6",
+          "candidateSha256": "62b933c1f785403c06f40db6b4fe79f6bfac13349df45cee6ea293f3fd0b5293",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f27",
+            "en-scanned_pages-f28"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-55F819848D8E",
+          "candidateSha256": "4c2fb362ce0e2deed3b2636a94647d6b94e9ae2c66861ce9bb8f737ecf1aa6db",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f29"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A383764C3813",
+          "candidateSha256": "c72ce48e40d6a4f94bbfe73098b8d6e9583faa4c42e65b510d6f99fcd53ed6e7",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f30"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-CB794B97A6F9",
+          "candidateSha256": "c557a82252c62817eda72c0ab52256100215da7999aaedb0fc0c76a2de5abc84",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f31"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-0863C4B87F09",
+          "candidateSha256": "b6046465fa2b1f6889285523f414a6a203e2faae643fa30ed8f47ed2737e9d3a",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f32"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-5E33BA5A3F57",
+          "candidateSha256": "6c3a4fc326318d7141e79620029d90da08511546dc21bccb4b6af14e77fc81d6",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f33"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-9F05DDAAD642",
+          "candidateSha256": "62ee4feea3bb404cf36b65889dd805ecc8c30c2a91779a33d222bfd0c2838ab2",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f34"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-68204B8B891A",
+          "candidateSha256": "ec038efd7343d9cfbd8d78882e5e72d32ef6c3e845fc1ccc32a44a10462e2f45",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f35",
+            "en-scanned_pages-f36",
+            "en-scanned_pages-f37"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-4C0325CC104A",
+          "candidateSha256": "f33bd1d3727ac693f8af66caf5922114d62779b3b25349e89fc37b479e79e867",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f38"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-74E5ADC92506",
+          "candidateSha256": "5fc2948a96a8166817157267ee4fb030ec721c1de28f95784a5a4c3aed1543a4",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f39"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-87B4ACE061C0",
+          "candidateSha256": "338981d40ec66c8526b4afa7d03441bba73e081c421a426c44f9943650e57333",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f40"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-D7FF2F54E9E4",
+          "candidateSha256": "a776cff13feaf1309a6c448e7969cfbe1a2df97fcf6c4c33108eff6958541580",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f41"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A832F7062F11",
+          "candidateSha256": "d1835ec55c3c636874eeefaa9cd84edfc5157e1ac8f49061900b9a6b7cecb26a",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f42"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-37C172CB7A4A",
+          "candidateSha256": "a0a74a5e93a591660537d511949bdfb400325c78fc881bec54453f1c81ab4927",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f44"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-7980EEC1F851",
+          "candidateSha256": "030e84df4dbb4360e197ba483d4139c1db102065ddd8b1533aad540cbe25f97c",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "en-scanned_pages-f45"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        }
+      ],
+      "entityMetadataNotes": []
+    },
+    {
+      "caseId": "zh-scanned_pages",
+      "observation": "visual",
+      "sourceSha256": "c6da040bfd1bd4ff1b1194c52dd433270dac520064c02d8064b8939881b5bf5e",
+      "facts": [
+        {
+          "factId": "zh-scanned_pages-f01",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "zh-scanned_pages-f02",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "zh-scanned_pages-f03",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "zh-scanned_pages-f04",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4D1E86338C18"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f05",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-4D1E86338C18"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f06",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "zh-scanned_pages-f07",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-FE85DDBA1ED9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f08",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-FE85DDBA1ED9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f09",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-FE85DDBA1ED9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f10",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-296601454919"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f11",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-296601454919"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f12",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-473C25E95313"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f13",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-D4D867F9D800"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f14",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-EBDA247052AE"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f15",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-40F90194F9A5"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f16",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-9F6D30C91A6C"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f17",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-C7AF1677A46F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f18",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-62F8D5A7F5C3"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f19",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-62F8D5A7F5C3"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f20",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-62F8D5A7F5C3"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f21",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-04C7A6D49C67"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f22",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-BEF2A128D40D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f23",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-2FE520E2170D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f24",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-EB42C8F8AF2F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f25",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-898BD31B61A8"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f26",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-48A9AE3D3C62"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f27",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8C3ADB512452"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f28",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8C3ADB512452"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f29",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A6442EFC7D52"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f30",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-6247E3AC82A6"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f31",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-BD31FDEA55AE"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f32",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-3E30E209FF1E"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f33",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-3237E1F9346E"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f34",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-7A1B839326AC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f35",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-43E8C6EA8CDF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f36",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-43E8C6EA8CDF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f37",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-43E8C6EA8CDF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f38",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-9B63F086FA79"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f39",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "zh-scanned_pages-f40",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-3EA7987FAFCC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f41",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8A3EE0C36518"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f42",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-9BEBAFD7DE47"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f43",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "zh-scanned_pages-f44",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8CFD759E7A08"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f45",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-E22392D52765"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "zh-scanned_pages-f46",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "zh-scanned_pages-f47",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        }
+      ],
+      "candidates": [
+        {
+          "candidateId": "EXT-4D1E86338C18",
+          "candidateSha256": "28a4529e93d6c54b0bad5615a6db86f686fb26732873c3b37d3995db2d3a36bc",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f04",
+            "zh-scanned_pages-f05"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-FE85DDBA1ED9",
+          "candidateSha256": "273ff529eb00697b013c2e2bbf47b8cd3bc11b11e51d1f7494882c0eb7a03775",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f07",
+            "zh-scanned_pages-f08",
+            "zh-scanned_pages-f09"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-296601454919",
+          "candidateSha256": "6d107dfe81ea60c949cab4e069a46a1f6cedd0caf6e5f853d7630fa3eb2db4ab",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f10",
+            "zh-scanned_pages-f11"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-473C25E95313",
+          "candidateSha256": "aca24fc7eb519ba0b55880759c0d16c3adb4bb6e363bef495ebda23e9951a5f2",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f12"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-D4D867F9D800",
+          "candidateSha256": "03c7ce845521404505b5ab450a7c5284e5a02d2aef4358c607472d8186de70bf",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f13"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-EBDA247052AE",
+          "candidateSha256": "4839042777eca86343245f6713b9487de025d17fc317387518af383120b845d3",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f14"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-40F90194F9A5",
+          "candidateSha256": "9c91b0300f5e3ea46ef4f82e215d4f8530be597c181b48c4ae2cfb01b41cd64f",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f15"
+          ],
+          "note": "The transcript changes the original wording about aggregate totals to aggregate data; the candidate retains preparing the checklist and sending inconsistent totals/data for review. Accepted as a qualitative paraphrase in this coding-assistant review; transcription difference remains disclosed and needs independent review."
+        },
+        {
+          "candidateId": "EXT-9F6D30C91A6C",
+          "candidateSha256": "94bdd2f879ab20f5619ba5803089b5f145a5587e645dbefcd53c66c10c4d481e",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f16"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-C7AF1677A46F",
+          "candidateSha256": "4c03d4a49e03495de40a4e43ec41ab780cc09da57e3ca2feff7daa45f2b4741b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f17"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-62F8D5A7F5C3",
+          "candidateSha256": "9e4280570bbdc7be89a7678506bf47975e6cb71cea9db83ce80a205875306bee",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f18",
+            "zh-scanned_pages-f19",
+            "zh-scanned_pages-f20"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-04C7A6D49C67",
+          "candidateSha256": "d3e0005ba8cf596af17204fb6d79d26c3b89229578fc67615fabe9759b7c04f9",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f21"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-BEF2A128D40D",
+          "candidateSha256": "d16f2e1ce8b5ec645be750ff8fe2bb0add3ef8dffa4cd82b63d1e7d86868ca48",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f22"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-2FE520E2170D",
+          "candidateSha256": "ffc09fb146e5e9b4f1bb0b7136138402d97ecf9166439753c0950311f82254e5",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f23"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-EB42C8F8AF2F",
+          "candidateSha256": "1fe9548e6666fe0ccb02d1a66f735ec3f3335542ad98fd40097f018510170207",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f24"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-898BD31B61A8",
+          "candidateSha256": "cc425f4421a16f26b1287c0fe747a22c5e2e8ef3084d44191b6ee231e0a074f8",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f25"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-48A9AE3D3C62",
+          "candidateSha256": "c0719ff82033a64904fa0746917140229220c1da3fe08b455478438ff09b6dd7",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f26"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-8C3ADB512452",
+          "candidateSha256": "581afd519d8bcf5d1369c508de573a6453cd941a12eb99e07db284ca079ec245",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f27",
+            "zh-scanned_pages-f28"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A6442EFC7D52",
+          "candidateSha256": "d990941824f6065c2f714a802b04ae7315fa47678eaa42e95450c145f7506a6c",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f29"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-6247E3AC82A6",
+          "candidateSha256": "6abeaf8821342729510dcbbce8dca7dbfff9740de2bc1f7aff51ea924fc475ef",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f30"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-BD31FDEA55AE",
+          "candidateSha256": "5992383572bf7220e9410f83b5076bebba4610f1e58cb0350c2bde3a7f3b38fe",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f31"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-3E30E209FF1E",
+          "candidateSha256": "205e5bdc2f1211f5ba595ec5a5a999ed72185cd3ba89a5640c5315382742a259",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f32"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-3237E1F9346E",
+          "candidateSha256": "4031836d68c828d57e51a268c86de5a018ed0acbfe488300e4af9b1c9b7d2010",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f33"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-7A1B839326AC",
+          "candidateSha256": "e7cd00c65d332a8c29281e406052970873edfaa3694ca9ed1b1c35287511f070",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f34"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-43E8C6EA8CDF",
+          "candidateSha256": "ca52b5ccf0d6ac2c0b47bcb99f13a747c20703895af4db529a735013523929cf",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f35",
+            "zh-scanned_pages-f36",
+            "zh-scanned_pages-f37"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-9B63F086FA79",
+          "candidateSha256": "6c10682055ec1c5876d84f847ed1f061bca3074fab3c6f53c6429619e3244198",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f38"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-3EA7987FAFCC",
+          "candidateSha256": "c153c21149d057080a2e4af58e2364264bd8bcc50c3b74db1f701f4245bed3de",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f40"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-8A3EE0C36518",
+          "candidateSha256": "6bfbf185ffb7ce219114fe14c5fce6224dce86ab2ff4647aae6f007f31a6e14c",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f41"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-9BEBAFD7DE47",
+          "candidateSha256": "7cc7b29349b893b5f3c438f923b6b8086e40e9041f9114e478f23601c5a30f90",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f42"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-8CFD759E7A08",
+          "candidateSha256": "88e83df41dfcc1988a72ec2a790316e4c5fc67b7e5d8300a1707e4e9122f0b60",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f44"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-E22392D52765",
+          "candidateSha256": "ab92b5c79cf114a69d30d972abbfef2bdd07abf9d61b1c8a9a755ecd50adb987",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "zh-scanned_pages-f45"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        }
+      ],
+      "entityMetadataNotes": []
+    },
+    {
+      "caseId": "mixed-portfolio_capture",
+      "observation": "visual",
+      "sourceSha256": "25fc4bf1ba957e54a0491f02d5dafabb1ff32a94271725ee483658b4c8d0a65b",
+      "facts": [
+        {
+          "factId": "mixed-portfolio_capture-f01",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "mixed-portfolio_capture-f02",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "factId": "mixed-portfolio_capture-f03",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "mixed-portfolio_capture-f04",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B53C7D4ACA1A"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f05",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-81697A7F52C6"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f06",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B34DD191E8C9"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f07",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-23D2E6C3BDC3"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f08",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-23D2E6C3BDC3"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f09",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-23D2E6C3BDC3"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f10",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-91254A3323F7"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f11",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-2140C8D4F36F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f12",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-34B24C7D976F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f13",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-7F61C8C7A3BE"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f14",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-096C1C235FDD"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f15",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-AFF48422FB07"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f16",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-D8B63FA02CC8"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f17",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-C1253DE44B2A"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f18",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-056064EB81CC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f19",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-056064EB81CC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f20",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-056064EB81CC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f21",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-97745E39551F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f22",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-698A79DB402D"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f23",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-79840933E114"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f24",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-0FCE5ED2D47F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f25",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-CDDEE65FA795"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f26",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B754326CE62B"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f27",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1A48946511F8"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f28",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1A48946511F8"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f29",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8135C0464690"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f30",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-A7D78200EE17"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f31",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8FE10C3D621A"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f32",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-8B23FAC48BCF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f33",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-7173E2E2DEB2"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f34",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-2C2F1EF51CBF"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f35",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1E7F85AF6339"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f36",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1E7F85AF6339"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f37",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1E7F85AF6339"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f38",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-0923DFF38D34"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f39",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "mixed-portfolio_capture-f40",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-B09549B7EC2E"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f41",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-9A2764D871E4"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f42",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-73DC0934E4BC"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f43",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "mixed-portfolio_capture-f44",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-1A6BD89D8A22"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f45",
+          "decision": "COVERED",
+          "candidateIds": [
+            "EXT-9A4448725E2F"
+          ],
+          "omissionReason": null
+        },
+        {
+          "factId": "mixed-portfolio_capture-f46",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "factId": "mixed-portfolio_capture-f47",
+          "decision": "OMITTED",
+          "candidateIds": [],
+          "omissionReason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        }
+      ],
+      "candidates": [
+        {
+          "candidateId": "EXT-B53C7D4ACA1A",
+          "candidateSha256": "46552f2d242f860792545661abf97b3843af4822a4aa87a696954b9a453bec4b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f04"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-81697A7F52C6",
+          "candidateSha256": "f1ee6b0e9ba4d89fc885ed7e139008af15fcf5f0091212081ae91d6912491cb5",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f05"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-B34DD191E8C9",
+          "candidateSha256": "daf62a073ebf72009aa2e94eec624db90c1c4bb6a16abf2726940fb585479a11",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f06"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-23D2E6C3BDC3",
+          "candidateSha256": "70d0b174eea332c289018fb92ce8c24ca80be51b761b83753535c9c5c6387541",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f07",
+            "mixed-portfolio_capture-f08",
+            "mixed-portfolio_capture-f09"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-91254A3323F7",
+          "candidateSha256": "227a43f9b009da805bce5e7af5481b8a7559ce3d065498778724efb1390a67db",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f10"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-2140C8D4F36F",
+          "candidateSha256": "16a0f39af85be2e22471c53f884e8497d1a2bac82998f42bf2f29bc188d64b7c",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f11"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-34B24C7D976F",
+          "candidateSha256": "56c65c4babd8f3049090be362fbb4658805c99066af40094f256cf70125ee666",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f12"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-7F61C8C7A3BE",
+          "candidateSha256": "e0e66ee608583290918f9d031be0ae1fb9384b4cfa70f481261edbfe8a64a6ea",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f13"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-096C1C235FDD",
+          "candidateSha256": "c4a72baa1444c0f0188bb77f9bf1cbc91fc96d44b04147d07e5496ef9e31bc08",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f14"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-AFF48422FB07",
+          "candidateSha256": "d10998d548a00103b863464d9e3041b56d830fec53c16c71e065856e26e20b64",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f15"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-D8B63FA02CC8",
+          "candidateSha256": "f86a6cfdc525b675cc1643aecde159f8c13260063277a4be99bbd10fdada9354",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f16"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-C1253DE44B2A",
+          "candidateSha256": "ac4dbba84de50603fb86f38d4d04383f48b0086d416de8dc3850a8569a5d0204",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f17"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-056064EB81CC",
+          "candidateSha256": "5ee8c67b20c96bbbe184aaa622ff680f1d2cee5471e7c9a54ca7d7fba61b490e",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f18",
+            "mixed-portfolio_capture-f19",
+            "mixed-portfolio_capture-f20"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-97745E39551F",
+          "candidateSha256": "81dfb78d3764f3d10e8e3335317cbfb7657516310569e3a6fe3d12865497c0b2",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f21"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-698A79DB402D",
+          "candidateSha256": "ac017c5ac49857e62ead1335c3853754fce812038455c464b5be48009c983941",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f22"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-79840933E114",
+          "candidateSha256": "2ba3fe4b51c7a0f694f3b8084915e4c700550c4d2a08176ebdd33b3e1ca1916f",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f23"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-0FCE5ED2D47F",
+          "candidateSha256": "2170a3db443a6f038fbcce5ca9d991bb3e96d15d20eef94afc8422b7304981c9",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f24"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-CDDEE65FA795",
+          "candidateSha256": "5477b2a9fe4b7264ab2fa630aa0dd15180628a4c5b16f12266df49ea05c98d2b",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f25"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-B754326CE62B",
+          "candidateSha256": "8a94f17f2632333d71209fc1af664c5e9197876f37dcaa96b56896df5d910e33",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f26"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-1A48946511F8",
+          "candidateSha256": "4d036d196da8a9fa828b5b832db93569766c1eb8c94e70faf0049ab6ff8033cd",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f27",
+            "mixed-portfolio_capture-f28"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-8135C0464690",
+          "candidateSha256": "325edd2e1bd5aa3f12cc4f3ccbe74d2fbe514f6dc0a0b21c31ae293c3ad7c8ca",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f29"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-A7D78200EE17",
+          "candidateSha256": "513cd31f8cf3ba23c0bcf48e392e5d0ee9221359959c1af1ad9a094092a7a530",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f30"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-8FE10C3D621A",
+          "candidateSha256": "fd9f257feba8dbbc5403db7139cb2841ca553618136eeee718f11be6b67eb379",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f31"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-8B23FAC48BCF",
+          "candidateSha256": "a26dc83daa2af8f488d9b80d40e9e0bfb92db5822de89ab59e20aa9b32df64f9",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f32"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-7173E2E2DEB2",
+          "candidateSha256": "837e28809256d239cd5a635172d0db2cbc5d1738106ed233f829d5da23ba9d91",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f33"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-2C2F1EF51CBF",
+          "candidateSha256": "7285c3bb8afd8d38ce713a4cfcc53c528fcce27c6a404b622674266dffa1bfe2",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f34"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-1E7F85AF6339",
+          "candidateSha256": "472a4c477d1d50ddd01bb0ec7e660cca75bb52ac29d610c15aad7dac0f18a1cb",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f35",
+            "mixed-portfolio_capture-f36",
+            "mixed-portfolio_capture-f37"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-0923DFF38D34",
+          "candidateSha256": "a9c39c9603393284c29d6625777498fc0be54bec3cd6ae5d4e15e10f63c2e5b6",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f38"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-B09549B7EC2E",
+          "candidateSha256": "eca7512c3a8fd36003713acb9f4a7648c0a9b49890c95c426bede2fb36c3d1c8",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f40"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-9A2764D871E4",
+          "candidateSha256": "6a23a2e7fa79838777197b0bf4737863f585f3a7c25135072d4290f40d93b0d6",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f41"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-73DC0934E4BC",
+          "candidateSha256": "6f64995f5a09161d26a51c38788f313b5f01c6b199fdd7e4767d437ecce76bd8",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f42"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-1A6BD89D8A22",
+          "candidateSha256": "fbc89382436be5a29af42bb34ae8f70cf71bc61330795b4db9518ae9423f2902",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f44"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        },
+        {
+          "candidateId": "EXT-9A4448725E2F",
+          "candidateSha256": "5532df2c578ca85e53aa43d413abab291fc6a610be6eb6dd15d117342e2a88f9",
+          "decision": "SUPPORTED",
+          "sourceFactIds": [
+            "mixed-portfolio_capture-f45"
+          ],
+          "note": "Source meaning, quantities, dates, entity context, responsibility and limiting clauses reviewed; no additional unsupported assertion identified in this candidate."
+        }
+      ],
+      "entityMetadataNotes": []
+    }
+  ]
+}

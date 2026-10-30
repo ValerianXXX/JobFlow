@@ -710,7 +710,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("claim-row-conflict", styles)
         self.assertIn("refreshLatest", script)
         self.assertIn('cache:"no-store"', script)
-        self.assertIn("jobflow-v45-busy-focus", html)
+        self.assertIn("jobflow-v46-source-coverage", html)
         self.assertIn("function syncActivityControls()", script)
         self.assertIn("BUSY_INTERRUPTION_ACTIONS", script)
         self.assertIn("event.stopImmediatePropagation()", script)
@@ -1093,6 +1093,48 @@ class OnboardingCenterTests(unittest.TestCase):
             self.assertEqual(source["ai_input_characters"], source["ai_covered_characters"])
             self.assertFalse(source["ai_input_truncated"])
             self.assertGreaterEqual(source["ai_chunks"], 1)
+
+    def test_source_reference_counts_are_host_derived_and_survive_pending_reload(self) -> None:
+        with project_temp() as root:
+            service, onboarding, _, _, _ = self.make_service(root)
+            before = service.bootstrap()
+            text = "Remote work only.\nPrepared a synthetic research report.\nWork authorization is unknown.\n"
+            original_analyze = service.ai_engine.analyze_document
+
+            def one_cited_line(source_text, **kwargs):
+                candidates, summary = original_analyze(source_text, **kwargs)
+                # The engine double isolates the preview boundary. Claim validation
+                # has separate tests; this does not pretend to be a provider result.
+                candidate = candidates[0]
+                candidate["statement"] = "Prepared a synthetic research report."
+                candidate["provenance"].update(line_start=2, line_end=2)
+                candidate["entity"].update(line_start=2, line_end=2)
+                summary["source_reference_coverage"] = {
+                    "fact_completeness_verified": True, "semantic_recall": 1,
+                    "uncited_source_lines": 0,
+                }
+                return candidates, summary
+
+            with mock.patch.object(service.ai_engine, "analyze_document", side_effect=one_cited_line):
+                preview = service.preview_source("project_case", ".txt", text.encode("utf-8"))
+            reloaded = OnboardingCenterService(
+                service.project, service.database, onboarding, ai_engine=service.ai_engine,
+            ).bootstrap()
+            pending = reloaded["pending_sources"][0]
+            coverage = pending["extraction_summary"]["source_reference_coverage"]
+            self.assertEqual(pending["source_id"], preview["source_id"])
+            self.assertEqual(coverage["cited_source_lines"], 1)
+            self.assertEqual(coverage["nonempty_source_lines"], 3)
+            self.assertEqual(coverage["uncited_line_ranges"], [
+                {"line_start": 1, "line_end": 1}, {"line_start": 3, "line_end": 3},
+            ])
+            self.assertIsNone(coverage["semantic_recall"])
+            self.assertFalse(coverage["fact_completeness_verified"])
+            self.assertFalse(any(item["selected"] for item in pending["candidates"]))
+            self.assertEqual(reloaded["answers"], before["answers"])
+            self.assertEqual(reloaded["claims"], before["claims"])
+            self.assertEqual(reloaded["profile_review"], "PENDING")
+            self.assertFalse(reloaded["external_claim_approval"]["current"])
 
     def test_resume_preview_seeds_one_time_profile_facts_only_after_commit(self) -> None:
         with project_temp() as root:
@@ -2879,7 +2921,7 @@ class OnboardingCenterTests(unittest.TestCase):
         self.assertIn("catch(_refreshError)", app)
         self.assertIn('refreshFailed?"aiConnectionRefreshWarning":"aiConnectionSucceeded"', app)
         self.assertIn("state.aiConnectionErrorCode=error?.code", app)
-        self.assertIn("jobflow-v45-busy-focus", html)
+        self.assertIn("jobflow-v46-source-coverage", html)
 
     def test_support_diagnostics_never_reads_or_emits_private_values(self) -> None:
         with project_temp() as root:
