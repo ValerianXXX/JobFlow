@@ -1,0 +1,164 @@
+{
+  "schema": "COMPLETE_SOURCE_REVIEW_SUMMARY_V1",
+  "scope": "CLAIM_CANDIDATE_REPRESENTATION_ONLY",
+  "reviewedSourceFacts": 282,
+  "coveredSourceFacts": 241,
+  "coveredSourceFactRatio": 0.8546099290780141,
+  "plannedWholeMaterialSourceFacts": 1716,
+  "reviewedCandidates": 197,
+  "independentReview": false,
+  "wholeMaterialAcceptance": false,
+  "liveProviderCalls": 0,
+  "profileImportCompletionMeasured": false,
+  "cases": [
+    {
+      "caseId": "en-chronological",
+      "sourceFacts": 47,
+      "coveredFacts": 41,
+      "omittedFactIds": [
+        "en-chronological-f01",
+        "en-chronological-f02",
+        "en-chronological-f03",
+        "en-chronological-f43",
+        "en-chronological-f46",
+        "en-chronological-f47"
+      ],
+      "unresolvedFactIds": [],
+      "criticalOmissions": 4,
+      "criticalUnresolved": 0,
+      "privateIdentityContactOmissions": 2,
+      "reviewedCandidates": 34,
+      "candidateDecisions": {
+        "SUPPORTED": 34,
+        "PARTIAL": 0,
+        "UNSUPPORTED": 0,
+        "UNCERTAIN": 0
+      }
+    },
+    {
+      "caseId": "zh-chronological",
+      "sourceFacts": 47,
+      "coveredFacts": 40,
+      "omittedFactIds": [
+        "zh-chronological-f01",
+        "zh-chronological-f02",
+        "zh-chronological-f03",
+        "zh-chronological-f39",
+        "zh-chronological-f43",
+        "zh-chronological-f46",
+        "zh-chronological-f47"
+      ],
+      "unresolvedFactIds": [],
+      "criticalOmissions": 5,
+      "criticalUnresolved": 0,
+      "privateIdentityContactOmissions": 2,
+      "reviewedCandidates": 33,
+      "candidateDecisions": {
+        "SUPPORTED": 33,
+        "PARTIAL": 0,
+        "UNSUPPORTED": 0,
+        "UNCERTAIN": 0
+      }
+    },
+    {
+      "caseId": "mixed-paired_columns",
+      "sourceFacts": 47,
+      "coveredFacts": 40,
+      "omittedFactIds": [
+        "mixed-paired_columns-f01",
+        "mixed-paired_columns-f02",
+        "mixed-paired_columns-f03",
+        "mixed-paired_columns-f06",
+        "mixed-paired_columns-f43",
+        "mixed-paired_columns-f46",
+        "mixed-paired_columns-f47"
+      ],
+      "unresolvedFactIds": [],
+      "criticalOmissions": 4,
+      "criticalUnresolved": 0,
+      "privateIdentityContactOmissions": 2,
+      "reviewedCandidates": 33,
+      "candidateDecisions": {
+        "SUPPORTED": 33,
+        "PARTIAL": 0,
+        "UNSUPPORTED": 0,
+        "UNCERTAIN": 0
+      }
+    },
+    {
+      "caseId": "en-scanned_pages",
+      "sourceFacts": 47,
+      "coveredFacts": 41,
+      "omittedFactIds": [
+        "en-scanned_pages-f01",
+        "en-scanned_pages-f02",
+        "en-scanned_pages-f03",
+        "en-scanned_pages-f43",
+        "en-scanned_pages-f46",
+        "en-scanned_pages-f47"
+      ],
+      "unresolvedFactIds": [],
+      "criticalOmissions": 4,
+      "criticalUnresolved": 0,
+      "privateIdentityContactOmissions": 2,
+      "reviewedCandidates": 34,
+      "candidateDecisions": {
+        "SUPPORTED": 34,
+        "PARTIAL": 0,
+        "UNSUPPORTED": 0,
+        "UNCERTAIN": 0
+      }
+    },
+    {
+      "caseId": "zh-scanned_pages",
+      "sourceFacts": 47,
+      "coveredFacts": 39,
+      "omittedFactIds": [
+        "zh-scanned_pages-f01",
+        "zh-scanned_pages-f02",
+        "zh-scanned_pages-f03",
+        "zh-scanned_pages-f06",
+        "zh-scanned_pages-f39",
+        "zh-scanned_pages-f43",
+        "zh-scanned_pages-f46",
+        "zh-scanned_pages-f47"
+      ],
+      "unresolvedFactIds": [],
+      "criticalOmissions": 5,
+      "criticalUnresolved": 0,
+      "privateIdentityContactOmissions": 2,
+      "reviewedCandidates": 30,
+      "candidateDecisions": {
+        "SUPPORTED": 30,
+        "PARTIAL": 0,
+        "UNSUPPORTED": 0,
+        "UNCERTAIN": 0
+      }
+    },
+    {
+      "caseId": "mixed-portfolio_capture",
+      "sourceFacts": 47,
+      "coveredFacts": 40,
+      "omittedFactIds": [
+        "mixed-portfolio_capture-f01",
+        "mixed-portfolio_capture-f02",
+        "mixed-portfolio_capture-f03",
+        "mixed-portfolio_capture-f39",
+        "mixed-portfolio_capture-f43",
+        "mixed-portfolio_capture-f46",
+        "mixed-portfolio_capture-f47"
+      ],
+      "unresolvedFactIds": [],
+      "criticalOmissions": 5,
+      "criticalUnresolved": 0,
+      "privateIdentityContactOmissions": 2,
+      "reviewedCandidates": 33,
+      "candidateDecisions": {
+        "SUPPORTED": 33,
+        "PARTIAL": 0,
+        "UNSUPPORTED": 0,
+        "UNCERTAIN": 0
+      }
+    }
+  ]
+}

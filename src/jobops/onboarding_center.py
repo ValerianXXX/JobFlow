@@ -36,6 +36,7 @@ from .candidate_profile import (
     split_display_name,
     unique_values,
 )
+from .candidate_coverage import source_reference_coverage
 from .application_readiness import build_application_readiness
 from .application_execution import validate_application_execution_plan_integrity
 from .application_field_resolution import (
@@ -4303,6 +4304,9 @@ class OnboardingCenterService:
             "intake_mode": intake_mode,
             **(source_selection or {}),
             **extraction_summary,
+            "source_reference_coverage": source_reference_coverage(
+                text, candidates, segmented_lines=extraction_summary.get("segmented_oversize_lines", 0),
+            ),
         }
         return {
             "source_id": source_id, "source_type": source_type, "extension": extension,

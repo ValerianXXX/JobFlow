@@ -741,3 +741,6 @@ body.is-busy :is(#emergencyStop,#cancelGuidedIntake,#pauseAuthorizedDiscovery,#k
 #standardResumeDraft>label{display:flex;align-items:flex-start;gap:.6rem;margin:1rem 0;line-height:1.6}
 #standardResumeDraft>label input{flex:0 0 auto;margin-top:.35rem}
 #standardResumeDraft,#standardResumePages{scroll-margin-top:110px}
+
+.source-reference-coverage{margin:12px 0;padding:12px;border:1px solid rgba(117,142,156,.4);border-radius:10px;overflow-wrap:anywhere}
+.source-reference-coverage p{margin:6px 0}.source-reference-coverage summary{cursor:pointer}

@@ -4,6 +4,8 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Distinguish input processing from factual completeness in both UI languages. Show host-derived candidate/entity citation counts and bounded uncited line ranges without selecting Claims or changing approval. Record all 282 source-fact and 197 candidate decisions from six exposed complete-material samples, with 241 facts represented and explicit omissions; the ledger checker validates references and denominators, not semantic truth. See [source review and limits](docs/source-fact-review-2026-10-29.md).
+
 - Restore keyboard focus to the initiating operation after a nested interruption retains focus, while preserving deliberate movement and invalid-target guards. Retain the hosted failure and a frozen 10-case before/after browser comparison in [focus recovery evidence](docs/busy-focus-recovery-2026-10-29.md).
 
 - Bind Word-specific PDF contracts to their own converter configuration, preserving failure, redaction, stale-output and rollback assertions when the caller selects LibreOffice. Document per-worktree test prerequisites and retain the failed full run alongside focused recovery in the [regression addendum](docs/test-isolation-2026-10-29.md).

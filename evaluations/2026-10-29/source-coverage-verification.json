@@ -1,0 +1,546 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-30T02:03:26.775122+00:00",
+  "base_commit": "726688ef060c97ad97b37363810748e165093695",
+  "working_tree_observation": true,
+  "synthetic_only": true,
+  "review_scope": "CLAIM_CANDIDATE_REPRESENTATION_ONLY",
+  "facts_represented": 241,
+  "all_source_facts_reviewed": 282,
+  "all_candidates_reviewed": 197,
+  "private_identity_contact_omissions": 12,
+  "other_omissions": 29,
+  "coding_assistant_review": true,
+  "independent_review": false,
+  "whole_material_acceptance": false,
+  "profile_import_completeness_measured": false,
+  "model_quality_improvement_demonstrated": false,
+  "new_live_provider_calls": 0,
+  "original_live_model_cost_usd": null,
+  "source_lf_sha256": {
+    "src/jobops/candidate_coverage.py": "ff171afc85d9f2f0577bd13d4f3e96d8bb5286e05e07730fc117e1832a6398c9",
+    "src/jobops/onboarding_center.py": "30651ef40110189f63f5fba78794edf4ce03c8c7605142cf8e0f151b2a9f969b",
+    "src/jobops/ui/app.js": "f8d91c1ccaf32767d32c167e820551dec508e58f15dc6fcb5c8ba7933531946f",
+    "src/jobops/ui/index.html": "12964f450654fa2eace9f9a34daaa4daa18f9f3e69fddf6476b07648715c7456",
+    "src/jobops/ui/styles.css": "cc5b33c1c849d2290ebae5e48e8d906682540480d19f7e575e879a7672e77485",
+    "scripts/check-complete-source-review.py": "321c5a276344598a660c281d55598d8907234d377da76693a82d29c56023d73c",
+    "scripts/replay-complete-claims.py": "689ffb48696d4a16eb72a0c54b5a8a0c5a637eb329ecf537a097c22341ef4b01",
+    "tests/test_candidate_coverage.py": "95ec6dfb62981808fd90dae2ee476136f857bff88d7994dcaeb9237659b9509d",
+    "tests/test_complete_source_review.py": "f3e3e930fccc0c460bf58afafb2bb2e37cc706ad1cc7e374e9fb135650c6c994",
+    "tests/test_onboarding_center.py": "50bf0b3822d1408610074a1e9965e212b0f6d1a152879b74553faf7097c75e28",
+    "tests/onboarding_source_coverage_e2e.cjs": "abc53f99d672116ac69071c37f8083d539b1d59543ef6f61c7c9e8c9327a8da1",
+    "tests/source_coverage_ui_server.py": "af696a2712d8a433591157e6446a92dcd49925e3fba59abaff212eea6d137c1e"
+  },
+  "review_lf_sha256": "057331d370f1df6a1753e1236f5e3ddd8307299822e5a52d128e7903da811162",
+  "summary_lf_sha256": "dec42457a6a95021d74e270933eb8762d8aa41ace420e437611dc10eadfb3334",
+  "related_python_checks": [
+    {
+      "log": "reports/source-coverage-counts-20261029.log",
+      "tests_run": 8,
+      "status": "PASS",
+      "log_lf_sha256": "01bde96734c18e28028488dfba9f8f40b49dc488260ad46279d6d0493817a105"
+    },
+    {
+      "log": "reports/source-coverage-complete-contracts-final-20261029.log",
+      "tests_run": 22,
+      "status": "PASS",
+      "log_lf_sha256": "c2c8bba52ef1ecfc8e9f6fc20f6936a5803c5befd07a8d98bd34fdb285dbfe2b"
+    },
+    {
+      "log": "reports/source-coverage-onboarding-20261029.log",
+      "tests_run": 75,
+      "status": "PASS",
+      "log_lf_sha256": "00293a45b49c73e89aaa83b7574800fc87c1ca5d23b105297e0cf0c162caec31"
+    }
+  ],
+  "javascript": {
+    "status": "PASS",
+    "suites": 13,
+    "log": "reports/source-coverage-javascript-direct-20261029.log",
+    "log_lf_sha256": "4b6619c587ac95a7522330d044fc4be2ff3c12dfde376a458baf6bfb13755531",
+    "launcher_note": "npm was unavailable on this shell PATH; the exact package script target ran directly with node."
+  },
+  "full_python_regression": {
+    "status": "IN_PROGRESS",
+    "log": "reports/source-fact-review-full-20261029.log",
+    "source_frozen_during_run": true
+  },
+  "hosted": {
+    "this_branch": "NOT_SUBMITTED_YET",
+    "base_pr": 18,
+    "base_run": 40981746542,
+    "base_observed": "Source candidate passed; all three Windows regression jobs remained in progress. No inherited pass claim."
+  },
+  "replays": [
+    {
+      "case": "en-chronological",
+      "mode": "text",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidate_count": 34,
+      "candidates_unchanged": true,
+      "source_reference_coverage": {
+        "schema_version": 1,
+        "status": "LINE_REFERENCES_ONLY",
+        "nonempty_source_lines": 60,
+        "cited_source_lines": 41,
+        "uncited_source_lines": 19,
+        "uncited_line_ranges": [
+          {
+            "line_start": 1,
+            "line_end": 5
+          },
+          {
+            "line_start": 9,
+            "line_end": 9
+          },
+          {
+            "line_start": 21,
+            "line_end": 23
+          },
+          {
+            "line_start": 33,
+            "line_end": 33
+          },
+          {
+            "line_start": 42,
+            "line_end": 44
+          },
+          {
+            "line_start": 50,
+            "line_end": 50
+          },
+          {
+            "line_start": 54,
+            "line_end": 55
+          },
+          {
+            "line_start": 58,
+            "line_end": 60
+          }
+        ],
+        "range_list_truncated": false,
+        "invalid_reference_count": 0,
+        "semantic_recall": null,
+        "fact_completeness_verified": false
+      },
+      "failure_code": null,
+      "live_provider_calls": 0,
+      "observation_lf_sha256": "80ef300a349fc2d511f3c2f71b841af7fe5db113d6bb406413c3e40b3230e059",
+      "original_replay_lf_sha256": "ca1ffdcf0f471e6f1dcf7532a2bb8eec9fcf6e3c230e6a666d7049708090502f"
+    },
+    {
+      "case": "zh-chronological",
+      "mode": "text",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidate_count": 33,
+      "candidates_unchanged": true,
+      "source_reference_coverage": {
+        "schema_version": 1,
+        "status": "LINE_REFERENCES_ONLY",
+        "nonempty_source_lines": 60,
+        "cited_source_lines": 40,
+        "uncited_source_lines": 20,
+        "uncited_line_ranges": [
+          {
+            "line_start": 1,
+            "line_end": 5
+          },
+          {
+            "line_start": 9,
+            "line_end": 9
+          },
+          {
+            "line_start": 21,
+            "line_end": 23
+          },
+          {
+            "line_start": 33,
+            "line_end": 33
+          },
+          {
+            "line_start": 42,
+            "line_end": 44
+          },
+          {
+            "line_start": 49,
+            "line_end": 50
+          },
+          {
+            "line_start": 54,
+            "line_end": 55
+          },
+          {
+            "line_start": 58,
+            "line_end": 60
+          }
+        ],
+        "range_list_truncated": false,
+        "invalid_reference_count": 0,
+        "semantic_recall": null,
+        "fact_completeness_verified": false
+      },
+      "failure_code": null,
+      "live_provider_calls": 0,
+      "observation_lf_sha256": "80ef300a349fc2d511f3c2f71b841af7fe5db113d6bb406413c3e40b3230e059",
+      "original_replay_lf_sha256": "ca1ffdcf0f471e6f1dcf7532a2bb8eec9fcf6e3c230e6a666d7049708090502f"
+    },
+    {
+      "case": "mixed-paired_columns",
+      "mode": "text",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidate_count": 33,
+      "candidates_unchanged": true,
+      "source_reference_coverage": {
+        "schema_version": 1,
+        "status": "LINE_REFERENCES_ONLY",
+        "nonempty_source_lines": 80,
+        "cited_source_lines": 59,
+        "uncited_source_lines": 21,
+        "uncited_line_ranges": [
+          {
+            "line_start": 1,
+            "line_end": 5
+          },
+          {
+            "line_start": 9,
+            "line_end": 11
+          },
+          {
+            "line_start": 28,
+            "line_end": 29
+          },
+          {
+            "line_start": 42,
+            "line_end": 43
+          },
+          {
+            "line_start": 57,
+            "line_end": 58
+          },
+          {
+            "line_start": 66,
+            "line_end": 66
+          },
+          {
+            "line_start": 70,
+            "line_end": 74
+          },
+          {
+            "line_start": 80,
+            "line_end": 80
+          }
+        ],
+        "range_list_truncated": false,
+        "invalid_reference_count": 0,
+        "semantic_recall": null,
+        "fact_completeness_verified": false
+      },
+      "failure_code": null,
+      "live_provider_calls": 0,
+      "observation_lf_sha256": "80ef300a349fc2d511f3c2f71b841af7fe5db113d6bb406413c3e40b3230e059",
+      "original_replay_lf_sha256": "ca1ffdcf0f471e6f1dcf7532a2bb8eec9fcf6e3c230e6a666d7049708090502f"
+    },
+    {
+      "case": "en-scanned_pages",
+      "mode": "text",
+      "status": "BLOCKED",
+      "candidate_count": 0,
+      "candidates_unchanged": true,
+      "source_reference_coverage": null,
+      "failure_code": "VISUAL_RESPONSE_INVALID",
+      "live_provider_calls": 0,
+      "observation_lf_sha256": "80ef300a349fc2d511f3c2f71b841af7fe5db113d6bb406413c3e40b3230e059",
+      "original_replay_lf_sha256": "ca1ffdcf0f471e6f1dcf7532a2bb8eec9fcf6e3c230e6a666d7049708090502f"
+    },
+    {
+      "case": "zh-scanned_pages",
+      "mode": "text",
+      "status": "BLOCKED",
+      "candidate_count": 0,
+      "candidates_unchanged": true,
+      "source_reference_coverage": null,
+      "failure_code": "VISUAL_RESPONSE_INVALID",
+      "live_provider_calls": 0,
+      "observation_lf_sha256": "80ef300a349fc2d511f3c2f71b841af7fe5db113d6bb406413c3e40b3230e059",
+      "original_replay_lf_sha256": "ca1ffdcf0f471e6f1dcf7532a2bb8eec9fcf6e3c230e6a666d7049708090502f"
+    },
+    {
+      "case": "mixed-portfolio_capture",
+      "mode": "text",
+      "status": "BLOCKED",
+      "candidate_count": 0,
+      "candidates_unchanged": true,
+      "source_reference_coverage": null,
+      "failure_code": "VISUAL_RESPONSE_INVALID",
+      "live_provider_calls": 0,
+      "observation_lf_sha256": "80ef300a349fc2d511f3c2f71b841af7fe5db113d6bb406413c3e40b3230e059",
+      "original_replay_lf_sha256": "ca1ffdcf0f471e6f1dcf7532a2bb8eec9fcf6e3c230e6a666d7049708090502f"
+    },
+    {
+      "case": "en-scanned_pages",
+      "mode": "visual",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidate_count": 34,
+      "candidates_unchanged": true,
+      "source_reference_coverage": {
+        "schema_version": 1,
+        "status": "LINE_REFERENCES_ONLY",
+        "nonempty_source_lines": 60,
+        "cited_source_lines": 41,
+        "uncited_source_lines": 19,
+        "uncited_line_ranges": [
+          {
+            "line_start": 1,
+            "line_end": 5
+          },
+          {
+            "line_start": 9,
+            "line_end": 9
+          },
+          {
+            "line_start": 21,
+            "line_end": 23
+          },
+          {
+            "line_start": 33,
+            "line_end": 33
+          },
+          {
+            "line_start": 42,
+            "line_end": 44
+          },
+          {
+            "line_start": 50,
+            "line_end": 50
+          },
+          {
+            "line_start": 54,
+            "line_end": 55
+          },
+          {
+            "line_start": 58,
+            "line_end": 60
+          }
+        ],
+        "range_list_truncated": false,
+        "invalid_reference_count": 0,
+        "semantic_recall": null,
+        "fact_completeness_verified": false
+      },
+      "failure_code": null,
+      "live_provider_calls": 0,
+      "observation_lf_sha256": "68829aa590cacc27bd97bb431395572e30851b8c9c74d18400d047c25008e5a6",
+      "original_replay_lf_sha256": "42c2a721415787132f157005748504e5b2d9fe69f19d575f45e5e337d78113db"
+    },
+    {
+      "case": "zh-scanned_pages",
+      "mode": "visual",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidate_count": 30,
+      "candidates_unchanged": true,
+      "source_reference_coverage": {
+        "schema_version": 1,
+        "status": "LINE_REFERENCES_ONLY",
+        "nonempty_source_lines": 60,
+        "cited_source_lines": 39,
+        "uncited_source_lines": 21,
+        "uncited_line_ranges": [
+          {
+            "line_start": 1,
+            "line_end": 5
+          },
+          {
+            "line_start": 8,
+            "line_end": 9
+          },
+          {
+            "line_start": 21,
+            "line_end": 23
+          },
+          {
+            "line_start": 33,
+            "line_end": 33
+          },
+          {
+            "line_start": 42,
+            "line_end": 44
+          },
+          {
+            "line_start": 49,
+            "line_end": 50
+          },
+          {
+            "line_start": 54,
+            "line_end": 55
+          },
+          {
+            "line_start": 58,
+            "line_end": 60
+          }
+        ],
+        "range_list_truncated": false,
+        "invalid_reference_count": 0,
+        "semantic_recall": null,
+        "fact_completeness_verified": false
+      },
+      "failure_code": null,
+      "live_provider_calls": 0,
+      "observation_lf_sha256": "68829aa590cacc27bd97bb431395572e30851b8c9c74d18400d047c25008e5a6",
+      "original_replay_lf_sha256": "42c2a721415787132f157005748504e5b2d9fe69f19d575f45e5e337d78113db"
+    },
+    {
+      "case": "mixed-portfolio_capture",
+      "mode": "visual",
+      "status": "SOURCE_PREVIEW_READY",
+      "candidate_count": 33,
+      "candidates_unchanged": true,
+      "source_reference_coverage": {
+        "schema_version": 1,
+        "status": "LINE_REFERENCES_ONLY",
+        "nonempty_source_lines": 60,
+        "cited_source_lines": 40,
+        "uncited_source_lines": 20,
+        "uncited_line_ranges": [
+          {
+            "line_start": 1,
+            "line_end": 5
+          },
+          {
+            "line_start": 9,
+            "line_end": 9
+          },
+          {
+            "line_start": 21,
+            "line_end": 23
+          },
+          {
+            "line_start": 33,
+            "line_end": 33
+          },
+          {
+            "line_start": 42,
+            "line_end": 44
+          },
+          {
+            "line_start": 49,
+            "line_end": 50
+          },
+          {
+            "line_start": 54,
+            "line_end": 55
+          },
+          {
+            "line_start": 58,
+            "line_end": 60
+          }
+        ],
+        "range_list_truncated": false,
+        "invalid_reference_count": 0,
+        "semantic_recall": null,
+        "fact_completeness_verified": false
+      },
+      "failure_code": null,
+      "live_provider_calls": 0,
+      "observation_lf_sha256": "68829aa590cacc27bd97bb431395572e30851b8c9c74d18400d047c25008e5a6",
+      "original_replay_lf_sha256": "42c2a721415787132f157005748504e5b2d9fe69f19d575f45e5e337d78113db"
+    }
+  ],
+  "actual_browser": {
+    "browser": "Codex in-app browser",
+    "viewports": [
+      [
+        1280,
+        900
+      ],
+      [
+        390,
+        844
+      ]
+    ],
+    "locales": [
+      "zh",
+      "en"
+    ],
+    "backend": "REAL_LOOPBACK_HTTP_AND_WINDOWS_DPAPI",
+    "model": "PINNED_RECORDED_RESPONSE",
+    "source_case": "en-chronological",
+    "original_pdf_pages": 3,
+    "original_page_checked": 1,
+    "line_counts": {
+      "cited": 41,
+      "uncited": 19,
+      "total": 60
+    },
+    "keyboard_details": "PASS",
+    "reload": "PASS",
+    "candidate_count_after_reload": 34,
+    "selected_after_reload": 0,
+    "mobile_horizontal_overflow": false,
+    "observed_console_errors": 0,
+    "temporary_state_removed": true,
+    "owned_tab_closed": true,
+    "viewport_reset": true,
+    "screenshots": {
+      "docs/screenshots/source-coverage-desktop-2026-10-29.png": "976dfd5d5b3db20061424d4a6b874f3db9e7023979b2ae219d2efc13e50bfdbf",
+      "docs/screenshots/source-coverage-mobile-2026-10-29.png": "621f6d98dea59bb8a3c6d8379a988692ca5208e85bd950ef8af7d3f42836d4f0"
+    }
+  },
+  "deployment": "NONE",
+  "database_migration": "NONE",
+  "remaining": [
+    "Full 36-material semantic acceptance",
+    "Non-Claim/Profile fact completeness",
+    "Independently authored evaluation and human acceptance",
+    "Broader semantic ownership/date/constraint validation",
+    "Trusted production signing",
+    "Independent clean Windows lifecycle acceptance",
+    "Live ATS/mailbox acceptance"
+  ],
+  "public_boundary": {
+    "status": "PASS",
+    "scope": "PUBLIC_REPOSITORY_BOUNDARY_ONLY",
+    "tree": {
+      "status": "PASS",
+      "tracked_file_count": 786,
+      "finding_count": 0,
+      "findings": []
+    },
+    "history": {
+      "status": "PASS",
+      "commit_count": 313,
+      "historical_path_count": 771,
+      "unique_blob_count": 2831,
+      "scanned_text_blob_count": 2545,
+      "scanned_document_blob_count": 89,
+      "finding_count": 0,
+      "findings": []
+    },
+    "author_identity": {
+      "status": "PASS",
+      "policy": "PUBLIC_EMAIL_HASHES_APPROVED",
+      "identity_count": 3,
+      "non_noreply_identity_count": 1,
+      "unapproved_identity_count": 0,
+      "approved_public_email_count": 1,
+      "malformed_record_count": 0,
+      "private_identity_values_emitted": 0
+    },
+    "release_authorized": false,
+    "log_lf_sha256": "8e52303bd1da9441b61686489f29ac4cb8c3d25c1692cd1ee70851d432d214e7"
+  },
+  "package": {
+    "status": "PASS",
+    "type": "UNSIGNED_SOURCE_WHEEL",
+    "sha256": "eda75fe59a2a3f8727489632e857cfbb4e1c85520f1bd34675c51e18cfb0d8d0",
+    "changed_runtime_files_match_working_tree": true,
+    "published": false,
+    "backend": "setuptools.build_meta.build_wheel",
+    "setuptools": "80.10.2",
+    "wheel": "0.48.0",
+    "environment_attempts": [
+      "Worktree Python has no pip frontend; no build started.",
+      "Global Python used setuptools below the declared build requirement and rejected SPDX metadata.",
+      "Existing worktree build backend meets pyproject constraints and built the verified wheel without installation or network access."
+    ]
+  }
+}
