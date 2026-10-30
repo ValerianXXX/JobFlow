@@ -129,7 +129,48 @@ class ContextDecisionTests(unittest.TestCase):
             self.assertEqual(service.ensure_state()[1], stored)
             self.assertEqual(self.item(service)[1]['review_id'], first['review_id'])
             with self.assertRaises(JobOpsError):
+                service.review_source_context({**request, 'expected_review_id': 'CTXREV-unrelated'})
+            with self.assertRaises(JobOpsError):
                 service.review_source_context({**request, 'decision': 'FOLLOW_UP', 'reason': 'NEEDS_EVIDENCE'})
+
+    def test_corrupt_review_history_fails_closed_with_a_recovery_error(self):
+        with project_temp() as root:
+            service, _, _ = self.service(root)
+            self.source(service)
+            service.review_source_context(self.request(service))
+            reference, original = service.ensure_state()
+            for field, value in [('decision', []), ('reason', {}), ('note_id', []),
+                                 ('answer_sha256', []), ('review_id', 'CTXREV-forged'),
+                                 ('approved_for_external', True)]:
+                saved = deepcopy(original)
+                saved['source_context_reviews'][0][field] = value
+                service._save_state(reference, saved)
+                with self.subTest(field=field), self.assertRaises(JobOpsError) as error:
+                    service.bootstrap()
+                self.assertEqual(error.exception.code, 'SOURCE_CONTEXT_HISTORY_INVALID')
+
+    def test_review_rejects_changed_source_bytes_and_forged_but_rehashed_note(self):
+        from jobops.util import sha256_bytes
+        with project_temp() as root:
+            service, _, _ = self.service(root)
+            self.source(service)
+            reference, original = service.ensure_state()
+            forged = deepcopy(original)
+            forged['source_context_notes'][0]['quote'] = 'A forged preference.'
+            forged['source_context_notes'][0]['quote_sha256'] = sha256_bytes(b'A forged preference.')
+            service._save_state(reference, forged)
+            with self.assertRaises(JobOpsError) as error:
+                service.review_source_context(self.request(service))
+            self.assertEqual(error.exception.code, 'SOURCE_CONTEXT_REVIEW_MISMATCH')
+            service._save_state(reference, original)
+            request = self.request(service)
+            original_read = service.onboarding.read_bytes
+            raw_ref = original['sources'][0]['secure_ref']
+            with mock.patch.object(service.onboarding, 'read_bytes', side_effect=lambda ref:
+                                   b'Changed retained bytes' if ref == raw_ref else original_read(ref)):
+                with self.assertRaises(JobOpsError):
+                    service.review_source_context(request)
+            self.assertEqual(service.ensure_state()[1].get('source_context_reviews', []), [])
 
     def test_gap_followup_dismissal_and_reopen_are_reversible_without_claim_creation(self):
         with project_temp() as root:

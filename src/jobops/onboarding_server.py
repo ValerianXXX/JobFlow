@@ -508,6 +508,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             asset, content_type = "workbench.js", "text/javascript; charset=utf-8"
         elif relative == "analysis-text.js":
             asset, content_type = "analysis-text.js", "text/javascript; charset=utf-8"
+        elif relative == "context-review.js":
+            asset, content_type = "context-review.js", "text/javascript; charset=utf-8"
         elif relative == "styles.css":
             asset, content_type = "styles.css", "text/css; charset=utf-8"
         elif relative == "api/bootstrap":
@@ -645,6 +647,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.source_review_page(self._json_body())
             elif route == "source-review-text":
                 result = self.server.service.source_review_text(self._json_body())
+            elif route == "source-context-review":
+                result = self.server.service.review_source_context(self._json_body())
             elif route == "status-inbox":
                 result = self.server.service.status_inbox(self._json_body())
             elif route == "review-status-message":
