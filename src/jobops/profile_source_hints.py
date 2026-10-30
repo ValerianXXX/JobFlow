@@ -14,7 +14,7 @@ from .util import sha256_bytes
 
 HINT_FIELDS = frozenset({"candidate_display_name", "first_name", "last_name", "email", "phone",
                          "address", "city", "state", "postal_code", "country", "linkedin_url", "github_url", "website_url"})
-_PROFILE = re.compile(r"^(?:profile|personal (?:profile|details|information)|contact(?: information| details)?|个人信息|基本信息|联系方式|联系信息)$", re.I)
+_PROFILE = re.compile(r"^(?:profile|personal (?:profile|details|information)|contact(?: information| details)?|个人简介|个人信息|基本信息|联系方式|联系信息)$", re.I)
 _BODY = re.compile(r"experience|employment|education|projects?|skills?|certifications?|references?|referees?|summary|languages?|work history|工作经历|职业经历|教育|项目|技能|证书|推荐人|证明人|简介|语言", re.I)
 _NAME = re.compile(r"^(?:name|full name|candidate name|姓名|名字|申请人姓名)\s*[:：]\s*(.+)$", re.I)
 _LABEL = re.compile(r"(?:e-?mail|contact|phone|telephone|mobile|address|linkedin|github|website|portfolio|url|联系邮箱|电子邮箱|邮箱|电话|手机|通讯地址|地址|个人网站|网址|作品集)\s*[:：]?\s*", re.I)
