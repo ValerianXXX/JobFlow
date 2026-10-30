@@ -146,7 +146,13 @@ const {chromium} = require("playwright");
     assert.equal(await nameRow.locator(".status-select option:checked").textContent(),"Needs review (imported)");
     assert.equal(await nameRow.locator(".analysis-text-open").count(),1);
     assert.deepEqual(await page.evaluate(()=>languageSaves),[{locale:"en",answers:{}}]);
+    await nameRow.locator(".answer-input").fill("Edited without saving");
+    await page.getByRole("button",{name:"中文",exact:true}).click();
+    await page.waitForFunction(()=>state.activities.length===0);
+    assert.equal(await nameRow.locator(".analysis-text-open").count(),0);
+    assert.equal(await nameRow.locator(".answer-input").inputValue(),"Edited without saving");
+    assert.equal(await nameRow.locator(".status-select option:checked").textContent(),"待核对（材料导入）");
     assert.deepEqual(errors, []); assert.deepEqual(external, []);
-    process.stdout.write(JSON.stringify({status:"PASS",scenario_groups:12,locales:["en","zh"],widths:[1280,390],keyboard:true,late_response_cleared:true,selection_unchanged:true,profile_origins:true,edited_origin_removed:true,stale_origin_not_linked:true,external_requests:0,backend:"contract double"}));
+    process.stdout.write(JSON.stringify({status:"PASS",scenario_groups:14,locales:["en","zh"],widths:[1280,390],keyboard:true,late_response_cleared:true,selection_unchanged:true,profile_origins:true,edited_origin_removed:true,stale_origin_not_linked:true,locale_preserves_unconfirmed_source:true,edited_locale_has_no_old_origin:true,external_requests:0,backend:"contract double"}));
   } finally {await browser.close();}
 })().catch(e => {process.stderr.write(`${e.stack||e}\n`);process.exit(1);});

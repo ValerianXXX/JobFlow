@@ -3525,7 +3525,11 @@ document.addEventListener("click", async event => {
   if (locale) {
     const draft=collectAnswerDraft();
     collectClaimEdits();
-    Object.assign(state.data.answers,draft);
+    for(const [fieldId,answer] of Object.entries(draft)){
+      const previous=state.data.answers[fieldId]||{};
+      if(["value","status","use_policy"].some(key=>JSON.stringify(previous[key])!==JSON.stringify(answer[key])))delete (state.data.profile_hint_sources||{})[fieldId];
+      state.data.answers[fieldId]={...previous,...answer};
+    }
     state.locale=locale.dataset.locale; applyLocale(); renderDashboard(); renderSources(); renderQuestions(); renderClaims(); renderReadiness(); renderStateMode(); renderWorkflowNow();
     if(state.officialDiscovery)renderOfficialDiscovery(state.officialDiscovery);
     if(!isReadonly()){try { await withActivity("savingLanguage",()=>api("save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({locale:state.locale,answers:{}})})); } catch(e) { handleUiError(e); }}
