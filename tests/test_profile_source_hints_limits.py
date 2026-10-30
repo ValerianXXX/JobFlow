@@ -41,6 +41,13 @@ class ProfileSourceHintLimitsTests(unittest.TestCase):
         self.assertEqual(hints["email"], "projects@example.test")
         self.assertEqual(hints["website_url"], "https://skills.example.test")
 
+    def test_chinese_profile_heading_preserves_explicit_name_and_contact(self):
+        hints, evidence, _ = self.hints("完整合成材料\n个人简介\n姓名：合成申请人21。\n联系邮箱：candidate21@applicant.example.test\n工作经历\n记录了职责边界。")
+        self.assertEqual(hints.get("candidate_display_name"), "合成申请人21。")
+        self.assertEqual(hints.get("email"), "candidate21@applicant.example.test")
+        self.assertEqual(evidence["email"]["line_start"], 4)
+        self.assertNotIn("first_name", hints)
+
     def test_commit_reanalysis_rebinds_same_value_but_not_new_value(self):
         text = "PROFILE\nName: Jordan Lee\nEmail: candidate@example.test\nEXPERIENCE\nRecorded work."
         changed = "PROFILE\n\nName: Jordan Lee\nEmail: candidate@example.test\nEXPERIENCE\nRecorded work."
