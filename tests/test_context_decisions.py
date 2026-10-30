@@ -36,8 +36,8 @@ class ContextDecisionTests(unittest.TestCase):
                 'expected_review_id': view['review_id'], 'expected_answer_sha256': view['answer_sha256'],
                 'decision': decision, 'reason': reason, 'user_confirmed': True}
 
-    def answer(self, service, value, status='ANSWERED'):
-        service.save_answers({'answers': {'remote_preference': {'value': value, 'status': status, 'use_policy': 'reuse'}}})
+    def answer(self, service, value, status='CONFIRMED'):
+        service.save_answers({'answers': {'remote_preference': {'value': value.casefold(), 'status': status, 'use_policy': 'reuse'}}})
 
     def test_review_is_private_persistent_and_never_changes_answers_or_approval(self):
         with project_temp() as root:
