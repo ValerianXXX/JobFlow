@@ -4,6 +4,10 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Bound rejected pairing/onboarding request disposal with a shared 64 KiB / 250 ms
+  total-deadline helper. Reject duplicate pairing lengths, avoid double reads and
+  close rejected connections. Preserve original full-run failures and distinguish
+  synthetic local HTTP verification from installed-browser acceptance.
 - Replace current-year-minus-first-year tenure with documented work-interval bounds. Exclude gaps, overlap, repeated entities and internship time; retain uncertain dates and unresolved entity conflicts. Do not use generic tenure to satisfy skill, industry or full-time requirements. Preserve old Profiles, require duration provenance in new v3 Profiles, and require revision of older generated tenure before using it for eligibility. Freeze 18 regression methods before repair and add 11 precision/schema checks. See [evidence and compatibility](docs/experience-duration-2026-10-29.md).
 - Measure six fixed synthetic sources through actual encrypted source import and service reopen: all six email hints persisted with Profile review pending; synthetic numeric names and remote-only preferences were not auto-filled. Keep the prior 241/282 candidate representation result unchanged and retain the outstanding non-Claim review destinations.
 - Distinguish input processing from factual completeness in both UI languages. Show host-derived candidate/entity citation counts and bounded uncited line ranges without selecting Claims or changing approval. Record all 282 source-fact and 197 candidate decisions from six exposed complete-material samples, with 241 facts represented and explicit omissions; the ledger checker validates references and denominators, not semantic truth. See [source review and limits](docs/source-fact-review-2026-10-29.md).
