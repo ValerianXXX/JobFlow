@@ -28,6 +28,7 @@ from .ai_runtime import (
 from .errors import JobOpsError
 from .util import has_reparse_component, iso_utc
 from .source_quality import safe_ai_failure_category
+from .source_context import DocumentAnalysisResult, SourceContextAccumulator
 
 
 MAX_CONNECTION_RESPONSE_BYTES = 8 * 1024 * 1024
@@ -618,11 +619,15 @@ def _analyze_all_chunks(
     batches: list[list[dict[str, Any]]] = []
     repairs = 0
     quality_diagnostics: dict[str, Any] = {}
+    context = SourceContextAccumulator(source_id, enabled=source_type != "chatgpt_export")
     for request in requests:
-        _, candidates, repaired = _analyze_with_single_repair(
+        value, candidates, repaired = _analyze_with_single_repair(
             invoke, request, source_id=source_id,
             quality_diagnostics=quality_diagnostics,
         )
+        numbered = request["line_numbered_document"]
+        context.add(value, [str(line).split("\t", 1)[1] for line in numbered],
+                    line_number_start=int(str(numbered[0]).split("\t", 1)[0]) if numbered else 1)
         batches.append(candidates)
         repairs += int(repaired)
     merged = LocalSubprocessAIEngine._merge_candidate_batches(batches)
@@ -630,14 +635,15 @@ def _analyze_all_chunks(
         str((candidate.get("entity") or {}).get("entity_fingerprint"))
         for candidate in merged if candidate.get("entity")
     }
-    return merged, {
+    return DocumentAnalysisResult(merged, {
         "ai_candidates": len(merged), "ai_entities": len(entity_fingerprints),
         **coverage, "ai_repair_attempted": repairs > 0,
         "ai_repair_succeeded": repairs > 0, "ai_repair_count": repairs,
         "quality_gate_version": 5,
         **_candidate_filter_summary(quality_diagnostics),
         **_structural_quality_summary(merged),
-    }
+        "source_context_review": context.summary(),
+    }, context.notes)
 
 
 def _verify_structured_capability(invoke: Callable[[dict[str, Any]], Any]) -> dict[str, Any]:
@@ -809,15 +815,16 @@ class AgentCLIEngine(AIAnalysisEngine):
         self._capability = _verify_structured_capability(self._invoke)
 
     def analyze_document(self, text: str, *, source_id: str, source_type: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-        candidates, details = _analyze_all_chunks(
+        result = _analyze_all_chunks(
             self._invoke, text, source_id=source_id, source_type=source_type,
         )
-        return candidates, {
+        candidates, details = result
+        return DocumentAnalysisResult(candidates, {
             "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
             **details,
             "automatic_claim_selection": False,
             "quality_contract": AI_QUALITY_CONTRACT,
-        }
+        }, result.context_notes)
 
 
 class WSLAgentCLIEngine(AgentCLIEngine):
@@ -1204,15 +1211,16 @@ class LoopbackModelAIEngine(AIAnalysisEngine):
         self._capability = _verify_structured_capability(self._complete)
 
     def analyze_document(self, text: str, *, source_id: str, source_type: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-        candidates, details = _analyze_all_chunks(
+        result = _analyze_all_chunks(
             self._complete, text, source_id=source_id, source_type=source_type,
         )
-        return candidates, {
+        candidates, details = result
+        return DocumentAnalysisResult(candidates, {
             "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
             **details,
             "automatic_claim_selection": False,
             "quality_contract": AI_QUALITY_CONTRACT,
-        }
+        }, result.context_notes)
 
 
 class AIConnectionManager:

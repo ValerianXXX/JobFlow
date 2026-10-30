@@ -76,6 +76,14 @@ related run, including the unchanged nine new contracts, passes **58/58 in
 [verification receipt](../evaluations/2026-10-30/runtime-revalidation.json);
 pending runs are not successful results.
 
+The subsequent local full run completed at exact source head
+`b97dbe08e87125f89d8c21d5f042430fd6108842`: **1,361 tests in 3,645.024
+seconds, 1,357 passed, four skipped, zero failures/errors**. The skips require
+native symlink creation unavailable to this Windows account and remain
+unverified. This later observation does not rewrite the initial pending receipt
+or apply to later source changes. Hosted CI and independent clean-Windows release
+acceptance remain separate.
+
 ## Run and rollback
 
 Use the README's per-worktree Development prerequisites. The repair adds no

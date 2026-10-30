@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import JobOpsError
+from .source_context import DocumentAnalysisResult, SourceContextAccumulator
 from .util import stable_id
 
 
@@ -717,8 +718,11 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             "Every candidate must cite inclusive source line_start and line_end.",
             "Before returning, verify that every candidate ends in punctuation and that its cited line range contains every stated identity, date, number, responsibility, and outcome. Expand across wrapped source lines when needed; omit anything that cannot be grounded exactly.",
             "Return JSON only. Do not approve any Claim for external use.",
+            "Keep explicit work constraints, unknown conditions, missing evidence and verification needs in review_notes instead of turning them into resume achievements. Select only source line ranges and an advisory field; do not write a value, paraphrase, confidence or approval. Notes do not answer Profile questions or authorize any action.",
+            "For profile_constraint, use only remote_preference, preferred_locations, available_start_date, work_authorization, visa_sponsorship or minimum_salary. For evidence_gap use an empty field_id. Each note spans at most eight source lines; omit unrelated instructions and do not infer absent information. Return at most 64 review_notes.",
         ]
         if source_type == "chatgpt_export":
+            rules.append("For ChatGPT exports return an empty review_notes list. Do not retain raw conversation quotations in context notes.")
             rules[0] = "Each numbered line is one complete user-authored message selected from an official ChatGPT export. Never combine unrelated messages into one Claim."
             rules.insert(
                 1,
@@ -754,6 +758,12 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                     "line_start": "positive integer",
                     "line_end": "integer >= line_start",
                     "reason": "short explanation",
+                }],
+                "review_notes": [{
+                    "kind": "profile_constraint|evidence_gap",
+                    "field_id": "an allowed Profile constraint field, or empty for evidence_gap",
+                    "line_start": "positive integer",
+                    "line_end": "integer >= line_start; at most eight lines",
                 }],
             },
             "line_numbered_document": numbered,
@@ -1162,6 +1172,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
         values: list[dict[str, Any]] = []
         repairs = 0
         quality_diagnostics: dict[str, Any] = {}
+        context = SourceContextAccumulator(source_id, enabled=source_type != "chatgpt_export")
         for request in requests:
             numbered = request["line_numbered_document"]
             source_lines = [item.split("\t", 1)[1] if "\t" in item else "" for item in numbered]
@@ -1202,13 +1213,14 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                 _merge_candidate_filter_diagnostics(quality_diagnostics, attempt_diagnostics)
             batches.append(candidates)
             values.append(value)
+            context.add(value, source_lines, line_number_start=line_number_start)
         candidates = self._merge_candidate_batches(batches)
         entity_signatures = {
             _entity_signature(entity)
             for value in values for entity in value.get("entities", [])
             if isinstance(entity, dict)
         }
-        return candidates, {
+        return DocumentAnalysisResult(candidates, {
             "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
             "ai_candidates": len(candidates),
             "ai_entities": len(entity_signatures),
@@ -1223,7 +1235,8 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             **_structural_quality_summary(candidates),
             "grounding_ratio_minimum": GROUNDING_RATIO,
             "near_duplicate_ratio": NEAR_DUPLICATE_RATIO,
-        }
+            "source_context_review": context.summary(),
+        }, context.notes)
 
 
 def configured_ai_engine() -> AIAnalysisEngine:

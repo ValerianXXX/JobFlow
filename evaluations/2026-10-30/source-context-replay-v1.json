@@ -1,0 +1,4871 @@
+{
+  "observed_at": "2026-10-30T06:10:47.454512Z",
+  "mode": "SAME_RESPONSE_ORIGINAL_PDF_AND_DPAPI_REPLAY",
+  "synthetic_only": true,
+  "original_observation_lf_sha256": "f7cb0e3ae7be716b16c1f421da7ed2e192026ab14a213edc3c4641e60a3ad51a",
+  "live_provider_calls": 0,
+  "current_stage_model_cost_usd": 0,
+  "original_billed_cost_usd": null,
+  "source_commit": "3eb8ed0014087ec6ee68f40399e4cd9f051330ba",
+  "source_lf_sha256": {
+    "src/jobops/ai_runtime.py": "a5794ab524d6e1e365cf2e59be10d4c5066ac81f62faff3c66b5a8a34fa23f50",
+    "src/jobops/source_context.py": "f11775c50738f1d1922f6a46b9d0492a2e538f7be348f651d2a22576e6fe7fc2",
+    "src/jobops/onboarding_center.py": "43855cb8a44f72ce77e2666d0feea271dd39d0ec12888e301905f07c75af4ca4",
+    "src/jobops/ui/app.js": "ad667df9b8989b2eeff4fc787d60feaef668bef76d24ae8a55324e3d1e480b4a",
+    "src/jobops/ui/styles.css": "4bd7d04f44e0e214fa966103168521859f98e7d9300ccb022e4431675c41fdb9",
+    "src/jobops/ai_connections.py": "37bbedfef857139e6f437d8d7b9d097d146bed5547c85f51e5074a3cca1ab407",
+    "scripts/replay-source-context.py": "2669ece63c5a873d64c14c55f18d99cbb0025494975a20f620be878d7c12d845"
+  },
+  "independent_human_acceptance": false,
+  "whole_material_acceptance": false,
+  "arms": [
+    {
+      "case": "en-chronological",
+      "status": "SOURCE_SAVED_AND_REOPENED",
+      "notes": [
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "remote_preference",
+          "kind": "profile_constraint",
+          "line_end": 5,
+          "line_start": 5,
+          "note_id": "CTX-4636C43FBA34",
+          "quote": "Location: Example City; remote work only.",
+          "quote_sha256": "sha256:4ccab30f149dee0fe855c1cc98aa2d20c95246b70b112e7c19411e0a2a4f30d9",
+          "source_id": "SRC-D9A44C04EEFE",
+          "source_sha256": "sha256:55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 19,
+          "line_start": 17,
+          "note_id": "CTX-ED257A719588",
+          "quote": "A documented pilot reduced median review time from 51 to 41 minutes; wider rollout was not measured.\nThe applicant wrote the pilot checklist and escalated inconsistent totals for review.\nSales growth was not measured and must not be inferred from this pilot.",
+          "quote_sha256": "sha256:8ef28f7bcd0337026d0b31934eadd289a222bff47fd73f82c062c4cdf1b4e500",
+          "source_id": "SRC-D9A44C04EEFE",
+          "source_sha256": "sha256:55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 41,
+          "line_start": 39,
+          "note_id": "CTX-50ACF32D3CD7",
+          "quote": "The team proposed a future scoring model, but no calibrated overall score was enabled.\nAI assisted with draft explanations; the applicant verified every published numeric example.\nNo customer adoption, commercial revenue or production deployment was observed.",
+          "quote_sha256": "sha256:d3bc79503a1c9d78c89446efb2cd04d2842cb6fb43e50c4944277af7bd37262b",
+          "source_id": "SRC-D9A44C04EEFE",
+          "source_sha256": "sha256:55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 49,
+          "line_start": 49,
+          "note_id": "CTX-B914702B81A0",
+          "quote": "No grade point average, academic award or professional license is supplied.",
+          "quote_sha256": "sha256:0faafacbf790a315946ffdff69116cd3cde0b329f2a2576ec24723eb1360bba3",
+          "source_id": "SRC-D9A44C04EEFE",
+          "source_sha256": "sha256:55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 53,
+          "line_start": 53,
+          "note_id": "CTX-708750829CAE",
+          "quote": "Language: English and Mandarin; no formal proficiency-test score is supplied.",
+          "quote_sha256": "sha256:fab1086b7fcbd5f6e54872df409ffb151d2d1cc1fae8e4cfedf1fb822f6948f1",
+          "source_id": "SRC-D9A44C04EEFE",
+          "source_sha256": "sha256:55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "available_start_date",
+          "kind": "profile_constraint",
+          "line_end": 54,
+          "line_start": 54,
+          "note_id": "CTX-A743FD2E9AD9",
+          "quote": "Availability and work authorization are not stated and require direct confirmation.",
+          "quote_sha256": "sha256:260c3b71aa023d2c69e9617a6a95590dae57ae99b716424c9d883a9dacbca944",
+          "source_id": "SRC-D9A44C04EEFE",
+          "source_sha256": "sha256:55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "work_authorization",
+          "kind": "profile_constraint",
+          "line_end": 54,
+          "line_start": 54,
+          "note_id": "CTX-6CDCD04FB5AF",
+          "quote": "Availability and work authorization are not stated and require direct confirmation.",
+          "quote_sha256": "sha256:260c3b71aa023d2c69e9617a6a95590dae57ae99b716424c9d883a9dacbca944",
+          "source_id": "SRC-D9A44C04EEFE",
+          "source_sha256": "sha256:55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 59,
+          "line_start": 58,
+          "note_id": "CTX-26911554CA06",
+          "quote": "Underlying customer records are not included; this entire document is synthetic.\nReferences and original credentials would require separate authorized verification.",
+          "quote_sha256": "sha256:c4e77d4bc33ae952c5dfa0338991db3411ac425cdce8323f9b2f7e487e82a8ad",
+          "source_id": "SRC-D9A44C04EEFE",
+          "source_sha256": "sha256:55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        }
+      ],
+      "candidate_count": 30,
+      "candidates": [
+        {
+          "ai_reason": "The profile explicitly states this professional focus.",
+          "candidate_id": "EXT-B93ADD5E6532",
+          "category": "summary",
+          "claim_kind": "summary",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 6,
+            "ai_line_start": 6,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 6,
+            "line_start": 6,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant focuses on operations analysis and evidence-based process improvement."
+        },
+        {
+          "ai_reason": "The source explicitly distinguishes the applicant's work from business-owner approval authority.",
+          "candidate_id": "EXT-DFCFD4EBE747",
+          "category": "summary",
+          "claim_kind": "summary",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 7,
+            "ai_line_start": 7,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 7,
+            "line_start": 7,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant prepares analysis, while business owners approve operational changes."
+        },
+        {
+          "ai_reason": "The organization, role, dates, and employment status are explicitly stated.",
+          "candidate_id": "EXT-293973729601",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-C376E22AE84F",
+            "entity_id": "ENT-1FD3B3C52306",
+            "entity_key": "work-synthetic-cedar-studio-01-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 01",
+            "role": "Operations Analyst; individual contributor",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-1FD3B3C52306",
+          "provenance": {
+            "ai_line_end": 12,
+            "ai_line_start": 10,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 12,
+            "line_start": 10,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "At Synthetic Cedar Studio 01, the applicant served as an Operations Analyst and individual contributor from 2023-02 through 2025-06 in a full-time position."
+        },
+        {
+          "ai_reason": "The source attributes the review to the team and provides the exact store count.",
+          "candidate_id": "EXT-489B71F9F4D3",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-C376E22AE84F",
+            "entity_id": "ENT-1FD3B3C52306",
+            "entity_key": "work-synthetic-cedar-studio-01-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 01",
+            "role": "Operations Analyst; individual contributor",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-1FD3B3C52306",
+          "provenance": {
+            "ai_line_end": 13,
+            "ai_line_start": 13,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 13,
+            "line_start": 13,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The team reviewed 21 stores using a shared checklist."
+        },
+        {
+          "ai_reason": "The source directly attributes the reports to the applicant.",
+          "candidate_id": "EXT-DCE6C990EE14",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-C376E22AE84F",
+            "entity_id": "ENT-1FD3B3C52306",
+            "entity_key": "work-synthetic-cedar-studio-01-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 01",
+            "role": "Operations Analyst; individual contributor",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-1FD3B3C52306",
+          "provenance": {
+            "ai_line_end": 14,
+            "ai_line_start": 14,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 14,
+            "line_start": 14,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant prepared 9 reports from the approved store records."
+        },
+        {
+          "ai_reason": "The source states both the team-managed budget and the applicant's authority boundary.",
+          "candidate_id": "EXT-2CA15A087D95",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-C376E22AE84F",
+            "entity_id": "ENT-1FD3B3C52306",
+            "entity_key": "work-synthetic-cedar-studio-01-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 01",
+            "role": "Operations Analyst; individual contributor",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-1FD3B3C52306",
+          "provenance": {
+            "ai_line_end": 15,
+            "ai_line_start": 15,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 15,
+            "line_start": 15,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The team managed a USD 12637 budget, and the applicant had no spending authority."
+        },
+        {
+          "ai_reason": "The source directly describes this validation responsibility.",
+          "candidate_id": "EXT-08108A1F91D1",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-C376E22AE84F",
+            "entity_id": "ENT-1FD3B3C52306",
+            "entity_key": "work-synthetic-cedar-studio-01-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 01",
+            "role": "Operations Analyst; individual contributor",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-1FD3B3C52306",
+          "provenance": {
+            "ai_line_end": 16,
+            "ai_line_start": 16,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 16,
+            "line_start": 16,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant checked duplicate store identifiers before comparing monthly results."
+        },
+        {
+          "ai_reason": "The measured pilot result and its explicit measurement limitation are both stated.",
+          "candidate_id": "EXT-FA9BF810FFA5",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-C376E22AE84F",
+            "entity_id": "ENT-1FD3B3C52306",
+            "entity_key": "work-synthetic-cedar-studio-01-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 01",
+            "role": "Operations Analyst; individual contributor",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-1FD3B3C52306",
+          "provenance": {
+            "ai_line_end": 17,
+            "ai_line_start": 17,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 17,
+            "line_start": 17,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "A documented pilot reduced median review time from 51 to 41 minutes; wider rollout was not measured."
+        },
+        {
+          "ai_reason": "The source directly attributes both responsibilities to the applicant.",
+          "candidate_id": "EXT-E518E24C5FA6",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-C376E22AE84F",
+            "entity_id": "ENT-1FD3B3C52306",
+            "entity_key": "work-synthetic-cedar-studio-01-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 01",
+            "role": "Operations Analyst; individual contributor",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-1FD3B3C52306",
+          "provenance": {
+            "ai_line_end": 18,
+            "ai_line_start": 18,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 18,
+            "line_start": 18,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant wrote the pilot checklist and escalated inconsistent totals for review."
+        },
+        {
+          "ai_reason": "The source states the methods used and the production-change boundary.",
+          "candidate_id": "EXT-6CF1A4B80FF5",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-C376E22AE84F",
+            "entity_id": "ENT-1FD3B3C52306",
+            "entity_key": "work-synthetic-cedar-studio-01-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 01",
+            "role": "Operations Analyst; individual contributor",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-1FD3B3C52306",
+          "provenance": {
+            "ai_line_end": 20,
+            "ai_line_start": 20,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 20,
+            "line_start": 20,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The work used SQL and spreadsheet reconciliation, and no production database changes were made."
+        },
+        {
+          "ai_reason": "The organization, role, supervision context, dates, and employment status are explicitly stated.",
+          "candidate_id": "EXT-F3969C3E3605",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022-12",
+            "entity_fingerprint": "ENTKEY-8FC931B09D1A",
+            "entity_id": "ENT-C4D523CCE311",
+            "entity_key": "work-synthetic-harbor-lab-01-2021-09-2022-12",
+            "entity_type": "work",
+            "line_end": 26,
+            "line_start": 24,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor Lab 01",
+            "role": "Research Assistant; supervised analysis assignment",
+            "start_date": "2021-09"
+          },
+          "entity_id": "ENT-C4D523CCE311",
+          "provenance": {
+            "ai_line_end": 26,
+            "ai_line_start": 24,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 26,
+            "line_start": 24,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "At Synthetic Harbor Lab 01, the applicant served as a Research Assistant on a supervised analysis assignment from 2021-09 through 2022-12 in a part-time position."
+        },
+        {
+          "ai_reason": "The source directly attributes the coding work and exact record count to the applicant.",
+          "candidate_id": "EXT-4CFEE5BBAB0C",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022-12",
+            "entity_fingerprint": "ENTKEY-8FC931B09D1A",
+            "entity_id": "ENT-C4D523CCE311",
+            "entity_key": "work-synthetic-harbor-lab-01-2021-09-2022-12",
+            "entity_type": "work",
+            "line_end": 26,
+            "line_start": 24,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor Lab 01",
+            "role": "Research Assistant; supervised analysis assignment",
+            "start_date": "2021-09"
+          },
+          "entity_id": "ENT-C4D523CCE311",
+          "provenance": {
+            "ai_line_end": 27,
+            "ai_line_start": 27,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 27,
+            "line_start": 27,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant coded 331 public records using a written codebook."
+        },
+        {
+          "ai_reason": "The source states the review scope and limits the interpretation of reviewer agreement.",
+          "candidate_id": "EXT-1851ED488E28",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022-12",
+            "entity_fingerprint": "ENTKEY-8FC931B09D1A",
+            "entity_id": "ENT-C4D523CCE311",
+            "entity_key": "work-synthetic-harbor-lab-01-2021-09-2022-12",
+            "entity_type": "work",
+            "line_end": 26,
+            "line_start": 24,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor Lab 01",
+            "role": "Research Assistant; supervised analysis assignment",
+            "start_date": "2021-09"
+          },
+          "entity_id": "ENT-C4D523CCE311",
+          "provenance": {
+            "ai_line_end": 28,
+            "ai_line_start": 28,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 28,
+            "line_start": 28,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "Two reviewers checked a sample of 31 records; agreement was not converted into market demand."
+        },
+        {
+          "ai_reason": "The source directly describes the applicant's research-log documentation.",
+          "candidate_id": "EXT-F79A3787AE68",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022-12",
+            "entity_fingerprint": "ENTKEY-8FC931B09D1A",
+            "entity_id": "ENT-C4D523CCE311",
+            "entity_key": "work-synthetic-harbor-lab-01-2021-09-2022-12",
+            "entity_type": "work",
+            "line_end": 26,
+            "line_start": 24,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor Lab 01",
+            "role": "Research Assistant; supervised analysis assignment",
+            "start_date": "2021-09"
+          },
+          "entity_id": "ENT-C4D523CCE311",
+          "provenance": {
+            "ai_line_end": 29,
+            "ai_line_start": 29,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 29,
+            "line_start": 29,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant retained source URLs, collection dates, and exclusions in the research log."
+        },
+        {
+          "ai_reason": "The source explicitly separates team ownership from the applicant's role.",
+          "candidate_id": "EXT-28E766E23E27",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022-12",
+            "entity_fingerprint": "ENTKEY-8FC931B09D1A",
+            "entity_id": "ENT-C4D523CCE311",
+            "entity_key": "work-synthetic-harbor-lab-01-2021-09-2022-12",
+            "entity_type": "work",
+            "line_end": 26,
+            "line_start": 24,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor Lab 01",
+            "role": "Research Assistant; supervised analysis assignment",
+            "start_date": "2021-09"
+          },
+          "entity_id": "ENT-C4D523CCE311",
+          "provenance": {
+            "ai_line_end": 30,
+            "ai_line_start": 30,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 30,
+            "line_start": 30,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The team selected the study question, and the applicant did not claim independent project leadership."
+        },
+        {
+          "ai_reason": "The source explicitly describes how the ambiguous observation was handled.",
+          "candidate_id": "EXT-12525DCDB3FB",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022-12",
+            "entity_fingerprint": "ENTKEY-8FC931B09D1A",
+            "entity_id": "ENT-C4D523CCE311",
+            "entity_key": "work-synthetic-harbor-lab-01-2021-09-2022-12",
+            "entity_type": "work",
+            "line_end": 26,
+            "line_start": 24,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor Lab 01",
+            "role": "Research Assistant; supervised analysis assignment",
+            "start_date": "2021-09"
+          },
+          "entity_id": "ENT-C4D523CCE311",
+          "provenance": {
+            "ai_line_end": 31,
+            "ai_line_start": 31,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 31,
+            "line_start": 31,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "An ambiguous observation was marked unresolved instead of being assigned a favorable label."
+        },
+        {
+          "ai_reason": "The cited lines establish the assignment context and its stated deliverable boundary.",
+          "candidate_id": "EXT-64FE0089625D",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022-12",
+            "entity_fingerprint": "ENTKEY-8FC931B09D1A",
+            "entity_id": "ENT-C4D523CCE311",
+            "entity_key": "work-synthetic-harbor-lab-01-2021-09-2022-12",
+            "entity_type": "work",
+            "line_end": 26,
+            "line_start": 24,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor Lab 01",
+            "role": "Research Assistant; supervised analysis assignment",
+            "start_date": "2021-09"
+          },
+          "entity_id": "ENT-C4D523CCE311",
+          "provenance": {
+            "ai_line_end": 32,
+            "ai_line_start": 25,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 32,
+            "line_start": 25,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The supervised assignment produced a research memo rather than a deployed commercial service."
+        },
+        {
+          "ai_reason": "The project name, type, dates, and applicant role are explicitly stated.",
+          "candidate_id": "EXT-E3CEBF834FBE",
+          "category": "project",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-11",
+            "entity_fingerprint": "ENTKEY-2214C6DF3247",
+            "entity_id": "ENT-34E450BD7868",
+            "entity_key": "project-synthetic-map-project-01-2025-08-2025-11",
+            "entity_type": "project",
+            "line_end": 35,
+            "line_start": 34,
+            "normalization_codes": [],
+            "organization": "",
+            "role": "contributor",
+            "start_date": "2025-08"
+          },
+          "entity_id": "ENT-34E450BD7868",
+          "provenance": {
+            "ai_line_end": 35,
+            "ai_line_start": 34,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 35,
+            "line_start": 34,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The Synthetic Map Project 01 was a local comparison prototype conducted from 2025-08 through 2025-11, with the applicant serving as a contributor."
+        },
+        {
+          "ai_reason": "The source directly attributes the testing and exact scenario count to the applicant.",
+          "candidate_id": "EXT-707508524048",
+          "category": "project",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-11",
+            "entity_fingerprint": "ENTKEY-2214C6DF3247",
+            "entity_id": "ENT-34E450BD7868",
+            "entity_key": "project-synthetic-map-project-01-2025-08-2025-11",
+            "entity_type": "project",
+            "line_end": 35,
+            "line_start": 34,
+            "normalization_codes": [],
+            "organization": "",
+            "role": "contributor",
+            "start_date": "2025-08"
+          },
+          "entity_id": "ENT-34E450BD7868",
+          "provenance": {
+            "ai_line_end": 36,
+            "ai_line_start": 36,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 36,
+            "line_start": 36,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant tested 25 scenarios, including missing-data cases."
+        },
+        {
+          "ai_reason": "The source explicitly identifies the prototype data as synthetic.",
+          "candidate_id": "EXT-1F6676579F11",
+          "category": "project",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-11",
+            "entity_fingerprint": "ENTKEY-2214C6DF3247",
+            "entity_id": "ENT-34E450BD7868",
+            "entity_key": "project-synthetic-map-project-01-2025-08-2025-11",
+            "entity_type": "project",
+            "line_end": 35,
+            "line_start": 34,
+            "normalization_codes": [],
+            "organization": "",
+            "role": "contributor",
+            "start_date": "2025-08"
+          },
+          "entity_id": "ENT-34E450BD7868",
+          "provenance": {
+            "ai_line_end": 37,
+            "ai_line_start": 37,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 37,
+            "line_start": 37,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "All prototype addresses and business names were synthetic examples."
+        },
+        {
+          "ai_reason": "The source directly attributes both implementations and states their inspection purpose.",
+          "candidate_id": "EXT-6F1221C2FCAF",
+          "category": "project",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-11",
+            "entity_fingerprint": "ENTKEY-2214C6DF3247",
+            "entity_id": "ENT-34E450BD7868",
+            "entity_key": "project-synthetic-map-project-01-2025-08-2025-11",
+            "entity_type": "project",
+            "line_end": 35,
+            "line_start": 34,
+            "normalization_codes": [],
+            "organization": "",
+            "role": "contributor",
+            "start_date": "2025-08"
+          },
+          "entity_id": "ENT-34E450BD7868",
+          "provenance": {
+            "ai_line_end": 38,
+            "ai_line_start": 38,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 38,
+            "line_start": 38,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant implemented evidence links and a report export so users could inspect the source."
+        },
+        {
+          "ai_reason": "The source attributes the proposal to the team and states the implementation boundary.",
+          "candidate_id": "EXT-EDF8262687AF",
+          "category": "project",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-11",
+            "entity_fingerprint": "ENTKEY-2214C6DF3247",
+            "entity_id": "ENT-34E450BD7868",
+            "entity_key": "project-synthetic-map-project-01-2025-08-2025-11",
+            "entity_type": "project",
+            "line_end": 35,
+            "line_start": 34,
+            "normalization_codes": [],
+            "organization": "",
+            "role": "contributor",
+            "start_date": "2025-08"
+          },
+          "entity_id": "ENT-34E450BD7868",
+          "provenance": {
+            "ai_line_end": 39,
+            "ai_line_start": 39,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 39,
+            "line_start": 39,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The team proposed a future scoring model, but no calibrated overall score was enabled."
+        },
+        {
+          "ai_reason": "The source explicitly separates AI assistance from the applicant's verification work.",
+          "candidate_id": "EXT-141C914B5273",
+          "category": "project",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-11",
+            "entity_fingerprint": "ENTKEY-2214C6DF3247",
+            "entity_id": "ENT-34E450BD7868",
+            "entity_key": "project-synthetic-map-project-01-2025-08-2025-11",
+            "entity_type": "project",
+            "line_end": 35,
+            "line_start": 34,
+            "normalization_codes": [],
+            "organization": "",
+            "role": "contributor",
+            "start_date": "2025-08"
+          },
+          "entity_id": "ENT-34E450BD7868",
+          "provenance": {
+            "ai_line_end": 40,
+            "ai_line_start": 40,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 40,
+            "line_start": 40,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "AI assisted with draft explanations, while the applicant verified every published numeric example."
+        },
+        {
+          "ai_reason": "The institution, qualification, attendance dates, and completion date are explicitly stated.",
+          "candidate_id": "EXT-E1FBED010CA8",
+          "category": "education",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2021-05",
+            "entity_fingerprint": "ENTKEY-4EC3506702FB",
+            "entity_id": "ENT-6D0411075B47",
+            "entity_key": "education-synthetic-example-university-2017-09-2021-05",
+            "entity_type": "education",
+            "line_end": 47,
+            "line_start": 45,
+            "normalization_codes": [],
+            "organization": "Synthetic Example University",
+            "role": "Bachelor of Science in Information Systems",
+            "start_date": "2017-09"
+          },
+          "entity_id": "ENT-6D0411075B47",
+          "provenance": {
+            "ai_line_end": 47,
+            "ai_line_start": 45,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 47,
+            "line_start": 45,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "At Synthetic Example University, the applicant completed a Bachelor of Science in Information Systems after attending from 2017-09 through 2021-05, with the degree completed in 2021-05."
+        },
+        {
+          "ai_reason": "The source explicitly lists these coursework areas.",
+          "candidate_id": "EXT-C4216E7263DF",
+          "category": "education",
+          "claim_kind": "qualification",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2021-05",
+            "entity_fingerprint": "ENTKEY-4EC3506702FB",
+            "entity_id": "ENT-6D0411075B47",
+            "entity_key": "education-synthetic-example-university-2017-09-2021-05",
+            "entity_type": "education",
+            "line_end": 47,
+            "line_start": 45,
+            "normalization_codes": [],
+            "organization": "Synthetic Example University",
+            "role": "Bachelor of Science in Information Systems",
+            "start_date": "2017-09"
+          },
+          "entity_id": "ENT-6D0411075B47",
+          "provenance": {
+            "ai_line_end": 48,
+            "ai_line_start": 48,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 48,
+            "line_start": 48,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant's coursework included databases, applied statistics, and research methods."
+        },
+        {
+          "ai_reason": "The source explicitly lists these tools as used in the work.",
+          "candidate_id": "EXT-3D573EDB4FE3",
+          "category": "skill",
+          "claim_kind": "skill",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 51,
+            "ai_line_start": 51,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 51,
+            "line_start": 51,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The tools used in the listed work were Python, SQL, spreadsheets, and Git."
+        },
+        {
+          "ai_reason": "The source directly states these capabilities.",
+          "candidate_id": "EXT-F6DAA837FA04",
+          "category": "skill",
+          "claim_kind": "skill",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 52,
+            "ai_line_start": 52,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 52,
+            "line_start": 52,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant can inspect tabular data and explain assumptions to nontechnical reviewers."
+        },
+        {
+          "ai_reason": "The source explicitly lists both languages.",
+          "candidate_id": "EXT-0B286A7BA6A4",
+          "category": "language",
+          "claim_kind": "qualification",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 53,
+            "ai_line_start": 53,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 53,
+            "line_start": 53,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The applicant lists English and Mandarin as languages."
+        },
+        {
+          "ai_reason": "The source explicitly describes the work sample's retained documentation.",
+          "candidate_id": "EXT-566302D64459",
+          "category": "summary",
+          "claim_kind": "summary",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 56,
+            "ai_line_start": 56,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 56,
+            "line_start": 56,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "The work sample retains methods, limitations, and review decisions alongside its results."
+        },
+        {
+          "ai_reason": "The source explicitly limits sole ownership of team outcomes.",
+          "candidate_id": "EXT-46E3408D09DA",
+          "category": "summary",
+          "claim_kind": "summary",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 57,
+            "ai_line_start": 57,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 57,
+            "line_start": 57,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "Team outcomes are not described as the applicant's sole achievement."
+        }
+      ],
+      "summary": {
+        "ai_candidates": 30,
+        "ai_chunking_applied": false,
+        "ai_chunks": 1,
+        "ai_covered_characters": 3672,
+        "ai_entities": 4,
+        "ai_input_characters": 3672,
+        "ai_input_truncated": false,
+        "ai_repair_attempted": false,
+        "ai_repair_count": 0,
+        "ai_repair_succeeded": false,
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "automatic_claim_selection": false,
+        "candidate_filter_applied": false,
+        "claim_candidates": 30,
+        "classification_review_candidate_count": 0,
+        "document_page_count": 3,
+        "document_quality": {
+          "character_count": 3672,
+          "characters_per_page": 1224.0,
+          "contains_document_text": false,
+          "control_character_count": 0,
+          "extension": ".pdf",
+          "long_line_count": 0,
+          "nonempty_line_count": 60,
+          "page_count": 3,
+          "private_use_glyph_count": 0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "replacement_character_count": 0,
+          "schema_version": 1,
+          "short_line_ratio": 0.0,
+          "status": "PASS",
+          "unique_line_ratio": 0.9667,
+          "wordish_character_count": 3051
+        },
+        "filtered_candidate_count": 0,
+        "filtered_candidate_reasons": {},
+        "filtered_noise_lines": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "non_claim_blocks": 0,
+        "pdf_extraction_candidates_compared": 2,
+        "pdf_extraction_strategy": "LOGICAL_READING_ORDER",
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6",
+        "quality_gate_version": 5,
+        "raw_lines": 60,
+        "reconstructed_blocks": 4,
+        "segmented_oversize_lines": 0,
+        "source_context_review": {
+          "automatic_claim_creation": false,
+          "automatic_profile_update": false,
+          "contract_version": 1,
+          "duplicates": 0,
+          "filtered": 0,
+          "missing_chunks": 0,
+          "proposed": 8,
+          "provided_chunks": 1,
+          "retained": 8,
+          "semantic_completeness_verified": false,
+          "status": "PROVIDED"
+        },
+        "source_reference_coverage": {
+          "cited_source_lines": 37,
+          "fact_completeness_verified": false,
+          "invalid_reference_count": 0,
+          "nonempty_source_lines": 60,
+          "range_list_truncated": false,
+          "schema_version": 1,
+          "semantic_recall": null,
+          "status": "LINE_REFERENCES_ONLY",
+          "uncited_line_ranges": [
+            {
+              "line_end": 5,
+              "line_start": 1
+            },
+            {
+              "line_end": 9,
+              "line_start": 8
+            },
+            {
+              "line_end": 19,
+              "line_start": 19
+            },
+            {
+              "line_end": 23,
+              "line_start": 21
+            },
+            {
+              "line_end": 33,
+              "line_start": 33
+            },
+            {
+              "line_end": 44,
+              "line_start": 41
+            },
+            {
+              "line_end": 50,
+              "line_start": 49
+            },
+            {
+              "line_end": 55,
+              "line_start": 54
+            },
+            {
+              "line_end": 60,
+              "line_start": 58
+            }
+          ],
+          "uncited_source_lines": 23
+        },
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0
+      },
+      "exact_context_matches": [
+        {
+          "fact_id": "en-chronological-f01",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f02",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f03",
+          "exact_quote_note_ids": [
+            "CTX-4636C43FBA34"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f04",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f05",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f06",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f07",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f08",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f09",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f10",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f11",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f12",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f13",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f14",
+          "exact_quote_note_ids": [
+            "CTX-ED257A719588"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f15",
+          "exact_quote_note_ids": [
+            "CTX-ED257A719588"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f16",
+          "exact_quote_note_ids": [
+            "CTX-ED257A719588"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f17",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f18",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f19",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f20",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f21",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f22",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f23",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f24",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f25",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f26",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f27",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f28",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f29",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f30",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f31",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f32",
+          "exact_quote_note_ids": [
+            "CTX-50ACF32D3CD7"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f33",
+          "exact_quote_note_ids": [
+            "CTX-50ACF32D3CD7"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f34",
+          "exact_quote_note_ids": [
+            "CTX-50ACF32D3CD7"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f35",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f36",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f37",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f38",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f39",
+          "exact_quote_note_ids": [
+            "CTX-B914702B81A0"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f40",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f41",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f42",
+          "exact_quote_note_ids": [
+            "CTX-708750829CAE"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f43",
+          "exact_quote_note_ids": [
+            "CTX-A743FD2E9AD9",
+            "CTX-6CDCD04FB5AF"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f44",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f45",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f46",
+          "exact_quote_note_ids": [
+            "CTX-26911554CA06"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f47",
+          "exact_quote_note_ids": [
+            "CTX-26911554CA06"
+          ]
+        }
+      ],
+      "candidate_diagnostic": {
+        "source_facts": 47,
+        "exact_grounded_wording_matches": 2,
+        "facts": [
+          {
+            "fact_id": "en-chronological-f01",
+            "kind": "identity",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-4CFEE5BBAB0C",
+                "text_similarity": 0.333,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-2CA15A087D95",
+                "text_similarity": 0.33,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-707508524048",
+                "text_similarity": 0.325,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f02",
+            "kind": "contact",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-46E3408D09DA",
+                "text_similarity": 0.436,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-1F6676579F11",
+                "text_similarity": 0.396,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-0B286A7BA6A4",
+                "text_similarity": 0.382,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f03",
+            "kind": "constraint",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-6F1221C2FCAF",
+                "text_similarity": 0.359,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-1851ED488E28",
+                "text_similarity": 0.33,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-4CFEE5BBAB0C",
+                "text_similarity": 0.308,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f04",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-B93ADD5E6532",
+                "text_similarity": 0.874,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-566302D64459",
+                "text_similarity": 0.391,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-46E3408D09DA",
+                "text_similarity": 0.37,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f05",
+            "kind": "ownership",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-DFCFD4EBE747",
+                "text_similarity": 0.951,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-DCE6C990EE14",
+                "text_similarity": 0.544,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-B93ADD5E6532",
+                "text_similarity": 0.514,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f06",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-DCE6C990EE14",
+                "text_similarity": 0.424,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-3D573EDB4FE3",
+                "text_similarity": 0.403,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-EDF8262687AF",
+                "text_similarity": 0.356,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f07",
+            "kind": "organization",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-293973729601",
+                "text_similarity": 0.294,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-1F6676579F11",
+                "text_similarity": 0.4,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-566302D64459",
+                "text_similarity": 0.333,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f08",
+            "kind": "role",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-293973729601",
+                "text_similarity": 0.48,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-B93ADD5E6532",
+                "text_similarity": 0.5,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-12525DCDB3FB",
+                "text_similarity": 0.355,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f09",
+            "kind": "dates",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-293973729601",
+                "text_similarity": 0.398,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-F3969C3E3605",
+                "text_similarity": 0.333,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-E3CEBF834FBE",
+                "text_similarity": 0.311,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f10",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-489B71F9F4D3",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-4CFEE5BBAB0C",
+                "text_similarity": 0.44,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-64FE0089625D",
+                "text_similarity": 0.413,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f11",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-DCE6C990EE14",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-DFCFD4EBE747",
+                "text_similarity": 0.523,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-C4216E7263DF",
+                "text_similarity": 0.504,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f12",
+            "kind": "money",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-2CA15A087D95",
+                "text_similarity": 0.962,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-46E3408D09DA",
+                "text_similarity": 0.452,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-28E766E23E27",
+                "text_similarity": 0.408,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f13",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-08108A1F91D1",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-0B286A7BA6A4",
+                "text_similarity": 0.479,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-E518E24C5FA6",
+                "text_similarity": 0.473,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f14",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-FA9BF810FFA5",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-489B71F9F4D3",
+                "text_similarity": 0.357,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-6F1221C2FCAF",
+                "text_similarity": 0.352,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f15",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-E518E24C5FA6",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-08108A1F91D1",
+                "text_similarity": 0.473,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-707508524048",
+                "text_similarity": 0.458,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f16",
+            "kind": "negative_evidence",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-46E3408D09DA",
+                "text_similarity": 0.356,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-F6DAA837FA04",
+                "text_similarity": 0.336,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-12525DCDB3FB",
+                "text_similarity": 0.333,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f17",
+            "kind": "scope",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-6CF1A4B80FF5",
+                "text_similarity": 0.969,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-B93ADD5E6532",
+                "text_similarity": 0.403,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-566302D64459",
+                "text_similarity": 0.395,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f18",
+            "kind": "organization",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-F3969C3E3605",
+                "text_similarity": 0.267,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-1F6676579F11",
+                "text_similarity": 0.387,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-6CF1A4B80FF5",
+                "text_similarity": 0.328,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f19",
+            "kind": "role",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-F3969C3E3605",
+                "text_similarity": 0.526,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-64FE0089625D",
+                "text_similarity": 0.331,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-B93ADD5E6532",
+                "text_similarity": 0.457,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f20",
+            "kind": "dates",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-F3969C3E3605",
+                "text_similarity": 0.433,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-64FE0089625D",
+                "text_similarity": 0.228,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-E3CEBF834FBE",
+                "text_similarity": 0.347,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f21",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-4CFEE5BBAB0C",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-64FE0089625D",
+                "text_similarity": 0.162,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-08108A1F91D1",
+                "text_similarity": 0.465,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f22",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-1851ED488E28",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-64FE0089625D",
+                "text_similarity": 0.375,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-4CFEE5BBAB0C",
+                "text_similarity": 0.358,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f23",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-F79A3787AE68",
+                "text_similarity": 0.993,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-64FE0089625D",
+                "text_similarity": 0.28,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-F6DAA837FA04",
+                "text_similarity": 0.519,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f24",
+            "kind": "ownership",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-28E766E23E27",
+                "text_similarity": 0.971,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-64FE0089625D",
+                "text_similarity": 0.303,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-2CA15A087D95",
+                "text_similarity": 0.513,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f25",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-12525DCDB3FB",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-64FE0089625D",
+                "text_similarity": 0.325,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-F79A3787AE68",
+                "text_similarity": 0.346,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f26",
+            "kind": "scope",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-64FE0089625D",
+                "text_similarity": 0.857,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-EDF8262687AF",
+                "text_similarity": 0.432,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-DCE6C990EE14",
+                "text_similarity": 0.393,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f27",
+            "kind": "organization",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-E3CEBF834FBE",
+                "text_similarity": 0.53,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-E518E24C5FA6",
+                "text_similarity": 0.385,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-08108A1F91D1",
+                "text_similarity": 0.354,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f28",
+            "kind": "dates",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-E3CEBF834FBE",
+                "text_similarity": 0.628,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-46E3408D09DA",
+                "text_similarity": 0.4,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-293973729601",
+                "text_similarity": 0.37,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f29",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-707508524048",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-0B286A7BA6A4",
+                "text_similarity": 0.538,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-DFCFD4EBE747",
+                "text_similarity": 0.504,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f30",
+            "kind": "scope",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-1F6676579F11",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-DFCFD4EBE747",
+                "text_similarity": 0.376,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-489B71F9F4D3",
+                "text_similarity": 0.365,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f31",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-6F1221C2FCAF",
+                "text_similarity": 0.981,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-0B286A7BA6A4",
+                "text_similarity": 0.457,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-DCE6C990EE14",
+                "text_similarity": 0.456,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f32",
+            "kind": "future_work",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-EDF8262687AF",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-3D573EDB4FE3",
+                "text_similarity": 0.444,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-489B71F9F4D3",
+                "text_similarity": 0.407,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f33",
+            "kind": "ownership",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-141C914B5273",
+                "text_similarity": 0.958,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-4CFEE5BBAB0C",
+                "text_similarity": 0.382,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-28E766E23E27",
+                "text_similarity": 0.381,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f34",
+            "kind": "negative_evidence",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-6CF1A4B80FF5",
+                "text_similarity": 0.447,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-B93ADD5E6532",
+                "text_similarity": 0.441,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-566302D64459",
+                "text_similarity": 0.351,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f35",
+            "kind": "organization",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-E1FBED010CA8",
+                "text_similarity": 0.281,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-1F6676579F11",
+                "text_similarity": 0.449,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-141C914B5273",
+                "text_similarity": 0.384,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f36",
+            "kind": "qualification",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-E1FBED010CA8",
+                "text_similarity": 0.434,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-08108A1F91D1",
+                "text_similarity": 0.413,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-4CFEE5BBAB0C",
+                "text_similarity": 0.374,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f37",
+            "kind": "dates",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-E1FBED010CA8",
+                "text_similarity": 0.486,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-F3969C3E3605",
+                "text_similarity": 0.306,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f38",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-C4216E7263DF",
+                "text_similarity": 0.895,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-46E3408D09DA",
+                "text_similarity": 0.455,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-F79A3787AE68",
+                "text_similarity": 0.369,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f39",
+            "kind": "missing_information",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-B93ADD5E6532",
+                "text_similarity": 0.357,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f40",
+            "kind": "skill",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-3D573EDB4FE3",
+                "text_similarity": 0.923,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-46E3408D09DA",
+                "text_similarity": 0.404,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-6CF1A4B80FF5",
+                "text_similarity": 0.365,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f41",
+            "kind": "skill",
+            "critical": false,
+            "exact_grounded_candidate_ids": [
+              "EXT-F6DAA837FA04"
+            ],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-F6DAA837FA04",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-F79A3787AE68",
+                "text_similarity": 0.516,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-E518E24C5FA6",
+                "text_similarity": 0.513,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f42",
+            "kind": "skill",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-0B286A7BA6A4",
+                "text_similarity": 0.452,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-EDF8262687AF",
+                "text_similarity": 0.34,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-6F1221C2FCAF",
+                "text_similarity": 0.336,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f43",
+            "kind": "missing_information",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-566302D64459",
+                "text_similarity": 0.411,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-DCE6C990EE14",
+                "text_similarity": 0.372,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-B93ADD5E6532",
+                "text_similarity": 0.365,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f44",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-566302D64459",
+                "text_similarity": 0.994,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-6CF1A4B80FF5",
+                "text_similarity": 0.516,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-F79A3787AE68",
+                "text_similarity": 0.506,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f45",
+            "kind": "ownership",
+            "critical": true,
+            "exact_grounded_candidate_ids": [
+              "EXT-46E3408D09DA"
+            ],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-46E3408D09DA",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-2CA15A087D95",
+                "text_similarity": 0.441,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-28E766E23E27",
+                "text_similarity": 0.438,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f46",
+            "kind": "scope",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-46E3408D09DA",
+                "text_similarity": 0.419,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-707508524048",
+                "text_similarity": 0.394,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-C4216E7263DF",
+                "text_similarity": 0.376,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "en-chronological-f47",
+            "kind": "missing_information",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-1F6676579F11",
+                "text_similarity": 0.358,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-DFCFD4EBE747",
+                "text_similarity": 0.336,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-E518E24C5FA6",
+                "text_similarity": 0.322,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          }
+        ],
+        "semantic_recall": null,
+        "unsupported_claims": null,
+        "unflagged_critical_errors": null,
+        "independent_adjudication": false,
+        "scope": "All source facts retained; similarity only suggests review candidates and is never a correctness score."
+      },
+      "constraint_answers_unchanged": true,
+      "material_claims": 0,
+      "retained_original_matches": true,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 6203
+    },
+    {
+      "case": "zh-chronological",
+      "status": "SOURCE_SAVED_AND_REOPENED",
+      "notes": [
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "remote_preference",
+          "kind": "profile_constraint",
+          "line_end": 5,
+          "line_start": 5,
+          "note_id": "CTX-0E1CDF6CFB87",
+          "quote": "\u5730\u70b9\uff1a\u793a\u4f8b\u57ce\u5e02\uff1b\u4ec5\u63a5\u53d7\u8fdc\u7a0b\u5de5\u4f5c\u3002",
+          "quote_sha256": "sha256:4bab8650261f2aea7eff3daff3ada2d327a6cddb901a3f9ce39d212eef639821",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 8,
+          "line_start": 7,
+          "note_id": "CTX-DFBFC3E63FCD",
+          "quote": "\u7533\u8bf7\u4eba\u51c6\u5907\u5206\u6790\uff1b\u4e1a\u52a1\u8d1f\u8d23\u4eba\u6279\u51c6\u8fd0\u8425\u8c03\u6574\u3002\n\u672c\u6750\u6599\u5c06\u5df2\u5b8c\u6210\u5de5\u4f5c\u4e0e\u672a\u6765\u63d0\u8bae\u5206\u522b\u5217\u51fa\u3002",
+          "quote_sha256": "sha256:e8cfbf1411e330b7f7941653fb17255d6f545958971b992846ae83993075e405",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 15,
+          "line_start": 15,
+          "note_id": "CTX-1BBA321597C2",
+          "quote": "\u56e2\u961f\u7ba1\u740615377\u7f8e\u5143\u9884\u7b97\uff1b\u7533\u8bf7\u4eba\u6ca1\u6709\u652f\u51fa\u5ba1\u6279\u6743\u3002",
+          "quote_sha256": "sha256:98b8ce36c423a4826c64d871f114a09d065c5cffe06536f332f4cd49c008f5b8",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 19,
+          "line_start": 17,
+          "note_id": "CTX-9B827838EA4D",
+          "quote": "\u6709\u8bb0\u5f55\u7684\u8bd5\u70b9\u5c06\u5ba1\u6838\u4e2d\u4f4d\u8017\u65f6\u4ece71\u5206\u949f\u964d\u523061\u5206\u949f\uff1b\u672a\u6d4b\u91cf\u5168\u9762\u63a8\u5e7f\u6548\u679c\u3002\n\u7533\u8bf7\u4eba\u7f16\u5199\u8bd5\u70b9\u68c0\u67e5\u8868\uff0c\u5e76\u5c06\u4e0d\u4e00\u81f4\u7684\u6c47\u603b\u6570\u63d0\u4ea4\u590d\u6838\u3002\n\u8be5\u8bd5\u70b9\u6ca1\u6709\u6d4b\u91cf\u9500\u552e\u589e\u957f\uff0c\u4e0d\u80fd\u636e\u6b64\u63a8\u65ad\u9500\u552e\u6210\u679c\u3002",
+          "quote_sha256": "sha256:7039bc4d71169aec9e6998fb0dd13a2f56c73df24e6376d98434d8f7455dcf38",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 20,
+          "line_start": 20,
+          "note_id": "CTX-DCA7BF7049E4",
+          "quote": "\u5de5\u4f5c\u4f7f\u7528SQL\u548c\u7535\u5b50\u8868\u683c\u8fdb\u884c\u6838\u5bf9\uff1b\u672a\u4fee\u6539\u751f\u4ea7\u6570\u636e\u5e93\u3002",
+          "quote_sha256": "sha256:3f16b98b02953559ad5ba7a3f66a4487e38932142a03edb149f83d22a4d08258",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 28,
+          "line_start": 28,
+          "note_id": "CTX-99EB87C32068",
+          "quote": "\u4e24\u540d\u590d\u6838\u8005\u68c0\u67e5\u4e8651\u6761\u6837\u672c\uff1b\u4e00\u81f4\u6027\u6ca1\u6709\u88ab\u5f53\u4f5c\u5e02\u573a\u9700\u6c42\u3002",
+          "quote_sha256": "sha256:43734e68354f3b78f3ce946ef78d36730f2c7870bf599edf0e4fee679470ff41",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 32,
+          "line_start": 30,
+          "note_id": "CTX-10E3C0564146",
+          "quote": "\u56e2\u961f\u786e\u5b9a\u7814\u7a76\u95ee\u9898\uff1b\u7533\u8bf7\u4eba\u4e0d\u58f0\u79f0\u72ec\u7acb\u9886\u5bfc\u8be5\u9879\u76ee\u3002\n\u4e00\u6761\u6709\u6b67\u4e49\u7684\u89c2\u5bdf\u88ab\u6807\u4e3a\u672a\u89e3\u51b3\uff0c\u6ca1\u6709\u88ab\u6539\u5199\u6210\u6709\u5229\u6807\u7b7e\u3002\n\u8be5\u4efb\u52a1\u4ea7\u51fa\u7814\u7a76\u5907\u5fd8\u5f55\uff0c\u6ca1\u6709\u90e8\u7f72\u5546\u4e1a\u670d\u52a1\u3002",
+          "quote_sha256": "sha256:af7e2e0f95223221f395270d74da08724e28b236d3d6b58791d8d9a9fe46f269",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 39,
+          "line_start": 39,
+          "note_id": "CTX-E3596BFE6F28",
+          "quote": "\u56e2\u961f\u63d0\u8bae\u672a\u6765\u5f00\u53d1\u8bc4\u5206\u6a21\u578b\uff0c\u4f46\u6ca1\u6709\u542f\u7528\u7ecf\u8fc7\u6821\u51c6\u7684\u7efc\u5408\u8bc4\u5206\u3002",
+          "quote_sha256": "sha256:618a75b1ff1a005052aaa21176dc62e3c78b1ed09ffbf0ef83ebd7d63702d708",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 41,
+          "line_start": 41,
+          "note_id": "CTX-934C94595583",
+          "quote": "\u672a\u89c2\u5bdf\u5230\u5ba2\u6237\u91c7\u7528\u3001\u5546\u4e1a\u6536\u5165\u6216\u751f\u4ea7\u90e8\u7f72\u3002",
+          "quote_sha256": "sha256:3b8361c18cfbc9c0ce5cb01a84b8df65a4aa0bdac5eba50073d5b64a739acbfe",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 49,
+          "line_start": 49,
+          "note_id": "CTX-B7BE4682372C",
+          "quote": "\u6750\u6599\u6ca1\u6709\u63d0\u4f9b\u7ee9\u70b9\u3001\u5b66\u672f\u5956\u9879\u6216\u804c\u4e1a\u6267\u7167\u3002",
+          "quote_sha256": "sha256:c98a0c71cc41fdcca3ce0123b48bb7ede370fbfcae5161e1887bf4f1c0db98bd",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 53,
+          "line_start": 53,
+          "note_id": "CTX-68633FA28F43",
+          "quote": "\u8bed\u8a00\uff1a\u82f1\u8bed\u4e0e\u666e\u901a\u8bdd\uff1b\u672a\u63d0\u4f9b\u6b63\u5f0f\u8bed\u8a00\u8003\u8bd5\u5206\u6570\u3002",
+          "quote_sha256": "sha256:ee1212f5af7951c92d8baf7f3fe9066d256d424687104afa9d81397d47caa2b8",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "available_start_date",
+          "kind": "profile_constraint",
+          "line_end": 54,
+          "line_start": 54,
+          "note_id": "CTX-331285DDD2CF",
+          "quote": "\u53ef\u5165\u804c\u65f6\u95f4\u548c\u5de5\u4f5c\u8bb8\u53ef\u672a\u8bf4\u660e\uff0c\u5fc5\u987b\u5411\u7533\u8bf7\u4eba\u786e\u8ba4\u3002",
+          "quote_sha256": "sha256:d0b3b2aacc22e691f49e095b6e4bfb1c6834cec07bd37259749521bcf37adbe4",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "work_authorization",
+          "kind": "profile_constraint",
+          "line_end": 54,
+          "line_start": 54,
+          "note_id": "CTX-C4494761A6DF",
+          "quote": "\u53ef\u5165\u804c\u65f6\u95f4\u548c\u5de5\u4f5c\u8bb8\u53ef\u672a\u8bf4\u660e\uff0c\u5fc5\u987b\u5411\u7533\u8bf7\u4eba\u786e\u8ba4\u3002",
+          "quote_sha256": "sha256:d0b3b2aacc22e691f49e095b6e4bfb1c6834cec07bd37259749521bcf37adbe4",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        },
+        {
+          "approved_for_external": false,
+          "coordinate_space": "ANALYZED_TEXT_LINES",
+          "field_id": "",
+          "kind": "evidence_gap",
+          "line_end": 59,
+          "line_start": 57,
+          "note_id": "CTX-387A06F3BAE4",
+          "quote": "\u56e2\u961f\u6210\u679c\u4e0d\u88ab\u8868\u8ff0\u4e3a\u7533\u8bf7\u4eba\u7684\u4e2a\u4eba\u72ec\u7acb\u6210\u679c\u3002\n\u4e0d\u5305\u542b\u5e95\u5c42\u5ba2\u6237\u8bb0\u5f55\uff1b\u6574\u4efd\u6587\u6863\u5747\u4e3a\u5408\u6210\u5185\u5bb9\u3002\n\u63a8\u8350\u4eba\u53ca\u539f\u59cb\u8d44\u8d28\u9700\u8981\u53e6\u884c\u83b7\u5f97\u6388\u6743\u540e\u6838\u9a8c\u3002",
+          "quote_sha256": "sha256:76d914176dc7cce6b67edfb866161bba0ebbced9ab5575432b1adb3676822e5d",
+          "source_id": "SRC-02D999BFD2A2",
+          "source_sha256": "sha256:7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d",
+          "status": "UNCONFIRMED_SOURCE_CONTEXT"
+        }
+      ],
+      "candidate_count": 19,
+      "candidates": [
+        {
+          "ai_reason": "\u6765\u6e90\u660e\u786e\u9648\u8ff0\u4e86\u7533\u8bf7\u4eba\u7684\u4e13\u4e1a\u65b9\u5411\u3002",
+          "candidate_id": "EXT-B35C3BD48B8F",
+          "category": "summary",
+          "claim_kind": "summary",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 6,
+            "ai_line_start": 6,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 6,
+            "line_start": 6,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u7684\u65b9\u5411\u662f\u8fd0\u8425\u5206\u6790\u4e0e\u57fa\u4e8e\u8bc1\u636e\u7684\u6d41\u7a0b\u6539\u8fdb\u3002"
+        },
+        {
+          "ai_reason": "\u6765\u6e90\u660e\u786e\u5c0641\u5bb6\u95e8\u5e97\u7684\u6838\u9a8c\u5f52\u4e8e\u56e2\u961f\u3002",
+          "candidate_id": "EXT-A391D8BA6A1C",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-ABAF77FFC514",
+            "entity_id": "ENT-58D11DD130DD",
+            "entity_key": "work-synthetic-cedar-studio-21-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 21",
+            "role": "\u8fd0\u8425\u5206\u6790\u5458",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-58D11DD130DD",
+          "provenance": {
+            "ai_line_end": 13,
+            "ai_line_start": 10,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 13,
+            "line_start": 10,
+            "numeric_format_normalizations": 2,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "Synthetic Cedar Studio 21\u56e2\u961f\u4f7f\u7528\u5171\u540c\u68c0\u67e5\u8868\u6838\u9a8c\u4e8641\u5bb6\u95e8\u5e97\u3002"
+        },
+        {
+          "ai_reason": "\u62a5\u544a\u6570\u91cf\u3001\u4f9d\u636e\u548c\u7533\u8bf7\u4eba\u8d23\u4efb\u5747\u6709\u660e\u786e\u8bb0\u5f55\u3002",
+          "candidate_id": "EXT-A016E9CAF3E7",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-ABAF77FFC514",
+            "entity_id": "ENT-58D11DD130DD",
+            "entity_key": "work-synthetic-cedar-studio-21-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 21",
+            "role": "\u8fd0\u8425\u5206\u6790\u5458",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-58D11DD130DD",
+          "provenance": {
+            "ai_line_end": 14,
+            "ai_line_start": 14,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 14,
+            "line_start": 14,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u6839\u636e\u5df2\u6279\u51c6\u7684\u95e8\u5e97\u8bb0\u5f55\u7f16\u5199\u4e8629\u4efd\u62a5\u544a\u3002"
+        },
+        {
+          "ai_reason": "\u6765\u6e90\u660e\u786e\u63cf\u8ff0\u4e86\u6bd4\u8f83\u7ed3\u679c\u524d\u7684\u68c0\u67e5\u6b65\u9aa4\u3002",
+          "candidate_id": "EXT-68B4C21A89D8",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-ABAF77FFC514",
+            "entity_id": "ENT-58D11DD130DD",
+            "entity_key": "work-synthetic-cedar-studio-21-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 21",
+            "role": "\u8fd0\u8425\u5206\u6790\u5458",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-58D11DD130DD",
+          "provenance": {
+            "ai_line_end": 16,
+            "ai_line_start": 16,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 16,
+            "line_start": 16,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u5728\u6bd4\u8f83\u6708\u5ea6\u7ed3\u679c\u524d\u68c0\u67e5\u4e86\u91cd\u590d\u95e8\u5e97\u7f16\u53f7\u3002"
+        },
+        {
+          "ai_reason": "\u8bd5\u70b9\u7ed3\u679c\u53ca\u4e24\u4e2a\u65f6\u95f4\u6570\u503c\u5747\u88ab\u76f4\u63a5\u8bb0\u5f55\u3002",
+          "candidate_id": "EXT-DF13D4854B01",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-ABAF77FFC514",
+            "entity_id": "ENT-58D11DD130DD",
+            "entity_key": "work-synthetic-cedar-studio-21-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 21",
+            "role": "\u8fd0\u8425\u5206\u6790\u5458",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-58D11DD130DD",
+          "provenance": {
+            "ai_line_end": 17,
+            "ai_line_start": 17,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 17,
+            "line_start": 17,
+            "numeric_format_normalizations": 2,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u6709\u8bb0\u5f55\u7684\u8bd5\u70b9\u5c06\u5ba1\u6838\u4e2d\u4f4d\u8017\u65f6\u4ece71\u5206\u949f\u964d\u523061\u5206\u949f\u3002"
+        },
+        {
+          "ai_reason": "\u6765\u6e90\u660e\u786e\u5217\u51fa\u7533\u8bf7\u4eba\u7684\u4e24\u9879\u5de5\u4f5c\u8d23\u4efb\u3002",
+          "candidate_id": "EXT-DA89C825DBFC",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-ABAF77FFC514",
+            "entity_id": "ENT-58D11DD130DD",
+            "entity_key": "work-synthetic-cedar-studio-21-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 21",
+            "role": "\u8fd0\u8425\u5206\u6790\u5458",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-58D11DD130DD",
+          "provenance": {
+            "ai_line_end": 18,
+            "ai_line_start": 18,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 18,
+            "line_start": 18,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u7f16\u5199\u8bd5\u70b9\u68c0\u67e5\u8868\uff0c\u5e76\u5c06\u4e0d\u4e00\u81f4\u7684\u6c47\u603b\u6570\u63d0\u4ea4\u590d\u6838\u3002"
+        },
+        {
+          "ai_reason": "\u6765\u6e90\u660e\u786e\u8bf4\u660e\u4e86\u6838\u5bf9\u5de5\u4f5c\u6240\u7528\u5de5\u5177\u3002",
+          "candidate_id": "EXT-0C1E8375AEF5",
+          "category": "work",
+          "claim_kind": "skill",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-06",
+            "entity_fingerprint": "ENTKEY-ABAF77FFC514",
+            "entity_id": "ENT-58D11DD130DD",
+            "entity_key": "work-synthetic-cedar-studio-21-2023-02-2025-06",
+            "entity_type": "work",
+            "line_end": 12,
+            "line_start": 10,
+            "normalization_codes": [],
+            "organization": "Synthetic Cedar Studio 21",
+            "role": "\u8fd0\u8425\u5206\u6790\u5458",
+            "start_date": "2023-02"
+          },
+          "entity_id": "ENT-58D11DD130DD",
+          "provenance": {
+            "ai_line_end": 20,
+            "ai_line_start": 20,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 20,
+            "line_start": 20,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u5728\u5de5\u4f5c\u4e2d\u4f7f\u7528SQL\u548c\u7535\u5b50\u8868\u683c\u8fdb\u884c\u6838\u5bf9\u3002"
+        },
+        {
+          "ai_reason": "\u673a\u6784\u3001\u804c\u4f4d\u3001\u6307\u5bfc\u5173\u7cfb\u3001\u65e5\u671f\u548c\u517c\u804c\u6027\u8d28\u5747\u6709\u660e\u786e\u8bb0\u5f55\u3002",
+          "candidate_id": "EXT-AF302F9FF80F",
+          "category": "work",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022-12",
+            "entity_fingerprint": "ENTKEY-1FBEF7AF91DA",
+            "entity_id": "ENT-3FD82A50460D",
+            "entity_key": "work-synthetic-harbor-lab-21-2021-09-2022-12",
+            "entity_type": "work",
+            "line_end": 26,
+            "line_start": 24,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor Lab 21",
+            "role": "\u7814\u7a76\u52a9\u7406",
+            "start_date": "2021-09"
+          },
+          "entity_id": "ENT-3FD82A50460D",
+          "provenance": {
+            "ai_line_end": 26,
+            "ai_line_start": 24,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 26,
+            "line_start": 24,
+            "numeric_format_normalizations": 5,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u5728Synthetic Harbor Lab 21\u62c5\u4efb\u7814\u7a76\u52a9\u7406\uff0c\u5728\u6307\u5bfc\u4e0b\u8fdb\u884c\u5206\u6790\uff0c\u4efb\u804c\u65f6\u95f4\u4e3a2021-09\u81f32022-12\uff0c\u4e14\u4e3a\u517c\u804c\u3002"
+        },
+        {
+          "ai_reason": "\u5904\u7406\u4f9d\u636e\u3001\u8bb0\u5f55\u6570\u91cf\u548c\u7533\u8bf7\u4eba\u8d23\u4efb\u5747\u6709\u660e\u786e\u8bb0\u5f55\u3002",
+          "candidate_id": "EXT-4B105164064C",
+          "category": "work",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022-12",
+            "entity_fingerprint": "ENTKEY-1FBEF7AF91DA",
+            "entity_id": "ENT-3FD82A50460D",
+            "entity_key": "work-synthetic-harbor-lab-21-2021-09-2022-12",
+            "entity_type": "work",
+            "line_end": 26,
+            "line_start": 24,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor Lab 21",
+            "role": "\u7814\u7a76\u52a9\u7406",
+            "start_date": "2021-09"
+          },
+          "entity_id": "ENT-3FD82A50460D",
+          "provenance": {
+            "ai_line_end": 27,
+            "ai_line_start": 27,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 27,
+            "line_start": 27,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u6839\u636e\u4e66\u9762\u7f16\u7801\u89c4\u8303\u5904\u7406\u4e86551\u6761\u516c\u5f00\u8bb0\u5f55\u3002"
+        },
+        {
+          "ai_reason": "\u6765\u6e90\u660e\u786e\u63cf\u8ff0\u4e86\u7814\u7a76\u65e5\u5fd7\u4e2d\u4fdd\u7559\u7684\u4fe1\u606f\u3002",
+          "candidate_id": "EXT-0A7F1961CEF7",
+          "category": "work",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2022-12",
+            "entity_fingerprint": "ENTKEY-1FBEF7AF91DA",
+            "entity_id": "ENT-3FD82A50460D",
+            "entity_key": "work-synthetic-harbor-lab-21-2021-09-2022-12",
+            "entity_type": "work",
+            "line_end": 26,
+            "line_start": 24,
+            "normalization_codes": [],
+            "organization": "Synthetic Harbor Lab 21",
+            "role": "\u7814\u7a76\u52a9\u7406",
+            "start_date": "2021-09"
+          },
+          "entity_id": "ENT-3FD82A50460D",
+          "provenance": {
+            "ai_line_end": 29,
+            "ai_line_start": 29,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 29,
+            "line_start": 29,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u5728\u7814\u7a76\u65e5\u5fd7\u4e2d\u4fdd\u7559\u4e86\u6765\u6e90\u94fe\u63a5\u3001\u91c7\u96c6\u65e5\u671f\u548c\u6392\u9664\u539f\u56e0\u3002"
+        },
+        {
+          "ai_reason": "\u9879\u76ee\u540d\u79f0\u3001\u6027\u8d28\u3001\u5468\u671f\u548c\u7533\u8bf7\u4eba\u89d2\u8272\u5747\u6709\u660e\u786e\u8bb0\u5f55\u3002",
+          "candidate_id": "EXT-79757034EBF7",
+          "category": "project",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-11",
+            "entity_fingerprint": "ENTKEY-92817DE75B8C",
+            "entity_id": "ENT-BC6AF75FF72F",
+            "entity_key": "project-synthetic-map-project-21-2025-08-2025-11",
+            "entity_type": "project",
+            "line_end": 35,
+            "line_start": 34,
+            "normalization_codes": [],
+            "organization": "Synthetic Map Project 21",
+            "role": "\u8d21\u732e\u8005",
+            "start_date": "2025-08"
+          },
+          "entity_id": "ENT-BC6AF75FF72F",
+          "provenance": {
+            "ai_line_end": 35,
+            "ai_line_start": 34,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 35,
+            "line_start": 34,
+            "numeric_format_normalizations": 4,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "Synthetic Map Project 21\u662f\u4e00\u4e2a\u672c\u5730\u6bd4\u8f83\u539f\u578b\uff0c\u9879\u76ee\u5468\u671f\u4e3a2025-08\u81f32025-11\uff0c\u7533\u8bf7\u4eba\u62c5\u4efb\u8d21\u732e\u8005\u3002"
+        },
+        {
+          "ai_reason": "\u6d4b\u8bd5\u6570\u91cf\u53ca\u7f3a\u5931\u6570\u636e\u8986\u76d6\u60c5\u51b5\u5747\u6709\u660e\u786e\u8bb0\u5f55\u3002",
+          "candidate_id": "EXT-D1AFF4E17609",
+          "category": "project",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-11",
+            "entity_fingerprint": "ENTKEY-92817DE75B8C",
+            "entity_id": "ENT-BC6AF75FF72F",
+            "entity_key": "project-synthetic-map-project-21-2025-08-2025-11",
+            "entity_type": "project",
+            "line_end": 35,
+            "line_start": 34,
+            "normalization_codes": [],
+            "organization": "Synthetic Map Project 21",
+            "role": "\u8d21\u732e\u8005",
+            "start_date": "2025-08"
+          },
+          "entity_id": "ENT-BC6AF75FF72F",
+          "provenance": {
+            "ai_line_end": 36,
+            "ai_line_start": 36,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 36,
+            "line_start": 36,
+            "numeric_format_normalizations": 1,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u6d4b\u8bd5\u4e8645\u4e2a\u573a\u666f\uff0c\u5176\u4e2d\u5305\u542b\u7f3a\u5931\u6570\u636e\u60c5\u51b5\u3002"
+        },
+        {
+          "ai_reason": "\u6765\u6e90\u660e\u786e\u8bb0\u5f55\u4e86\u7533\u8bf7\u4eba\u5b9e\u73b0\u7684\u529f\u80fd\u53ca\u5176\u7528\u9014\u3002",
+          "candidate_id": "EXT-8CA8A23F4C0F",
+          "category": "project",
+          "claim_kind": "achievement",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-11",
+            "entity_fingerprint": "ENTKEY-92817DE75B8C",
+            "entity_id": "ENT-BC6AF75FF72F",
+            "entity_key": "project-synthetic-map-project-21-2025-08-2025-11",
+            "entity_type": "project",
+            "line_end": 35,
+            "line_start": 34,
+            "normalization_codes": [],
+            "organization": "Synthetic Map Project 21",
+            "role": "\u8d21\u732e\u8005",
+            "start_date": "2025-08"
+          },
+          "entity_id": "ENT-BC6AF75FF72F",
+          "provenance": {
+            "ai_line_end": 38,
+            "ai_line_start": 38,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 38,
+            "line_start": 38,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u5b9e\u73b0\u8bc1\u636e\u94fe\u63a5\u548c\u62a5\u544a\u5bfc\u51fa\uff0c\u7528\u6237\u53ef\u4ee5\u68c0\u67e5\u6765\u6e90\u3002"
+        },
+        {
+          "ai_reason": "\u6765\u6e90\u5206\u522b\u8bf4\u660e\u4e86AI\u8f85\u52a9\u5de5\u4f5c\u548c\u7533\u8bf7\u4eba\u7684\u6838\u5bf9\u8d23\u4efb\u3002",
+          "candidate_id": "EXT-01C741A42A0D",
+          "category": "project",
+          "claim_kind": "responsibility",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2025-11",
+            "entity_fingerprint": "ENTKEY-92817DE75B8C",
+            "entity_id": "ENT-BC6AF75FF72F",
+            "entity_key": "project-synthetic-map-project-21-2025-08-2025-11",
+            "entity_type": "project",
+            "line_end": 35,
+            "line_start": 34,
+            "normalization_codes": [],
+            "organization": "Synthetic Map Project 21",
+            "role": "\u8d21\u732e\u8005",
+            "start_date": "2025-08"
+          },
+          "entity_id": "ENT-BC6AF75FF72F",
+          "provenance": {
+            "ai_line_end": 40,
+            "ai_line_start": 40,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 40,
+            "line_start": 40,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "AI\u8f85\u52a9\u8d77\u8349\u89e3\u91ca\uff1b\u7533\u8bf7\u4eba\u6838\u5bf9\u4e86\u6bcf\u4e2a\u516c\u5f00\u7684\u6570\u503c\u793a\u4f8b\u3002"
+        },
+        {
+          "ai_reason": "\u5b66\u6821\u3001\u5b66\u5386\u3001\u5c31\u8bfb\u65e5\u671f\u548c\u5b8c\u6210\u65e5\u671f\u5747\u6709\u660e\u786e\u8bb0\u5f55\u3002",
+          "candidate_id": "EXT-C5F15C54E860",
+          "category": "education",
+          "claim_kind": "entity_summary",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2021-05",
+            "entity_fingerprint": "ENTKEY-35B7DFBCBBF2",
+            "entity_id": "ENT-5335FBE973C0",
+            "entity_key": "education-synthetic-example-university-2017-09-2021-05",
+            "entity_type": "education",
+            "line_end": 47,
+            "line_start": 45,
+            "normalization_codes": [],
+            "organization": "\u5408\u6210\u793a\u4f8b\u5927\u5b66",
+            "role": "\u4fe1\u606f\u7cfb\u7edf\u7406\u5b66\u5b66\u58eb",
+            "start_date": "2017-09"
+          },
+          "entity_id": "ENT-5335FBE973C0",
+          "provenance": {
+            "ai_line_end": 47,
+            "ai_line_start": 45,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 47,
+            "line_start": 45,
+            "numeric_format_normalizations": 4,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u5728\u5408\u6210\u793a\u4f8b\u5927\u5b66\u653b\u8bfb\u4fe1\u606f\u7cfb\u7edf\u7406\u5b66\u5b66\u58eb\uff0c2017-09\u5f00\u59cb\u5c31\u8bfb\uff0c\u5e76\u4e8e2021-05\u5b8c\u6210\u5b66\u4f4d\u3002"
+        },
+        {
+          "ai_reason": "\u5b66\u6821\u8eab\u4efd\u548c\u8bfe\u7a0b\u5185\u5bb9\u5747\u5305\u542b\u5728\u5f15\u7528\u8303\u56f4\u5185\u3002",
+          "candidate_id": "EXT-92A72C13E277",
+          "category": "education",
+          "claim_kind": "qualification",
+          "confidence": "HIGH",
+          "entity": {
+            "classification_review_required": false,
+            "end_date": "2021-05",
+            "entity_fingerprint": "ENTKEY-35B7DFBCBBF2",
+            "entity_id": "ENT-5335FBE973C0",
+            "entity_key": "education-synthetic-example-university-2017-09-2021-05",
+            "entity_type": "education",
+            "line_end": 47,
+            "line_start": 45,
+            "normalization_codes": [],
+            "organization": "\u5408\u6210\u793a\u4f8b\u5927\u5b66",
+            "role": "\u4fe1\u606f\u7cfb\u7edf\u7406\u5b66\u5b66\u58eb",
+            "start_date": "2017-09"
+          },
+          "entity_id": "ENT-5335FBE973C0",
+          "provenance": {
+            "ai_line_end": 48,
+            "ai_line_start": 45,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 48,
+            "line_start": 45,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u5728\u5408\u6210\u793a\u4f8b\u5927\u5b66\u7684\u8bfe\u7a0b\u5305\u62ec\u6570\u636e\u5e93\u3001\u5e94\u7528\u7edf\u8ba1\u548c\u7814\u7a76\u65b9\u6cd5\u3002"
+        },
+        {
+          "ai_reason": "\u6765\u6e90\u660e\u786e\u5217\u4e3e\u4e86\u5de5\u4f5c\u4e2d\u4f7f\u7528\u7684\u5de5\u5177\u3002",
+          "candidate_id": "EXT-981DCB0A2DB9",
+          "category": "skill",
+          "claim_kind": "skill",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 51,
+            "ai_line_start": 51,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 51,
+            "line_start": 51,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u4e0a\u8ff0\u5de5\u4f5c\u4f7f\u7528\u7684\u5de5\u5177\u5305\u62ecPython\u3001SQL\u3001\u7535\u5b50\u8868\u683c\u548cGit\u3002"
+        },
+        {
+          "ai_reason": "\u6765\u6e90\u660e\u786e\u9648\u8ff0\u4e86\u6570\u636e\u68c0\u67e5\u548c\u6c9f\u901a\u80fd\u529b\u3002",
+          "candidate_id": "EXT-B9F1A5BF77EB",
+          "category": "skill",
+          "claim_kind": "skill",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 52,
+            "ai_line_start": 52,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 52,
+            "line_start": 52,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u7533\u8bf7\u4eba\u80fd\u591f\u68c0\u67e5\u8868\u683c\u6570\u636e\uff0c\u5e76\u5411\u975e\u6280\u672f\u590d\u6838\u8005\u89e3\u91ca\u5047\u8bbe\u3002"
+        },
+        {
+          "ai_reason": "\u6765\u6e90\u660e\u786e\u8bf4\u660e\u4e86\u5de5\u4f5c\u6837\u672c\u7684\u4fe1\u606f\u4fdd\u7559\u65b9\u5f0f\u3002",
+          "candidate_id": "EXT-CCE72E3C273B",
+          "category": "summary",
+          "claim_kind": "summary",
+          "confidence": "HIGH",
+          "entity": null,
+          "entity_id": null,
+          "provenance": {
+            "ai_line_end": 56,
+            "ai_line_start": 56,
+            "citation_adjustment": null,
+            "classification_review_required": false,
+            "human_confirmation_required": true,
+            "line_end": 56,
+            "line_start": 56,
+            "numeric_format_normalizations": 0,
+            "structural_normalizations": []
+          },
+          "selected": false,
+          "selection_reason": "AI_DERIVED_REQUIRES_CONFIRMATION",
+          "statement": "\u5de5\u4f5c\u6837\u672c\u5728\u7ed3\u679c\u65c1\u4fdd\u7559\u65b9\u6cd5\u3001\u9650\u5236\u4e0e\u5ba1\u6838\u51b3\u5b9a\u3002"
+        }
+      ],
+      "summary": {
+        "ai_candidates": 19,
+        "ai_chunking_applied": false,
+        "ai_chunks": 1,
+        "ai_covered_characters": 1377,
+        "ai_entities": 4,
+        "ai_input_characters": 1377,
+        "ai_input_truncated": false,
+        "ai_repair_attempted": false,
+        "ai_repair_count": 0,
+        "ai_repair_succeeded": false,
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "automatic_claim_selection": false,
+        "candidate_filter_applied": true,
+        "claim_candidates": 19,
+        "classification_review_candidate_count": 0,
+        "document_page_count": 3,
+        "document_quality": {
+          "character_count": 1377,
+          "characters_per_page": 459.0,
+          "contains_document_text": false,
+          "control_character_count": 0,
+          "extension": ".pdf",
+          "long_line_count": 0,
+          "nonempty_line_count": 60,
+          "page_count": 3,
+          "private_use_glyph_count": 0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "replacement_character_count": 0,
+          "schema_version": 1,
+          "short_line_ratio": 0.0,
+          "status": "PASS",
+          "unique_line_ratio": 0.9667,
+          "wordish_character_count": 1159
+        },
+        "filtered_candidate_count": 1,
+        "filtered_candidate_reasons": {
+          "CITED_LINE_GROUNDING": 1
+        },
+        "filtered_noise_lines": 0,
+        "intake_mode": "STANDARD_MEMORY",
+        "non_claim_blocks": 0,
+        "pdf_extraction_candidates_compared": 2,
+        "pdf_extraction_strategy": "LOGICAL_READING_ORDER",
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6",
+        "quality_gate_version": 5,
+        "raw_lines": 60,
+        "reconstructed_blocks": 4,
+        "segmented_oversize_lines": 0,
+        "source_context_review": {
+          "automatic_claim_creation": false,
+          "automatic_profile_update": false,
+          "contract_version": 1,
+          "duplicates": 0,
+          "filtered": 0,
+          "missing_chunks": 0,
+          "proposed": 14,
+          "provided_chunks": 1,
+          "retained": 14,
+          "semantic_completeness_verified": false,
+          "status": "PROVIDED"
+        },
+        "source_reference_coverage": {
+          "cited_source_lines": 27,
+          "fact_completeness_verified": false,
+          "invalid_reference_count": 0,
+          "nonempty_source_lines": 60,
+          "range_list_truncated": false,
+          "schema_version": 1,
+          "semantic_recall": null,
+          "status": "LINE_REFERENCES_ONLY",
+          "uncited_line_ranges": [
+            {
+              "line_end": 5,
+              "line_start": 1
+            },
+            {
+              "line_end": 9,
+              "line_start": 7
+            },
+            {
+              "line_end": 15,
+              "line_start": 15
+            },
+            {
+              "line_end": 19,
+              "line_start": 19
+            },
+            {
+              "line_end": 23,
+              "line_start": 21
+            },
+            {
+              "line_end": 28,
+              "line_start": 28
+            },
+            {
+              "line_end": 33,
+              "line_start": 30
+            },
+            {
+              "line_end": 37,
+              "line_start": 37
+            },
+            {
+              "line_end": 39,
+              "line_start": 39
+            },
+            {
+              "line_end": 44,
+              "line_start": 41
+            },
+            {
+              "line_end": 50,
+              "line_start": 49
+            },
+            {
+              "line_end": 55,
+              "line_start": 53
+            },
+            {
+              "line_end": 60,
+              "line_start": 57
+            }
+          ],
+          "uncited_source_lines": 33
+        },
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0
+      },
+      "exact_context_matches": [
+        {
+          "fact_id": "zh-chronological-f01",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f02",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f03",
+          "exact_quote_note_ids": [
+            "CTX-0E1CDF6CFB87"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f04",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f05",
+          "exact_quote_note_ids": [
+            "CTX-DFBFC3E63FCD"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f06",
+          "exact_quote_note_ids": [
+            "CTX-DFBFC3E63FCD"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f07",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f08",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f09",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f10",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f11",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f12",
+          "exact_quote_note_ids": [
+            "CTX-1BBA321597C2"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f13",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f14",
+          "exact_quote_note_ids": [
+            "CTX-9B827838EA4D"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f15",
+          "exact_quote_note_ids": [
+            "CTX-9B827838EA4D"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f16",
+          "exact_quote_note_ids": [
+            "CTX-9B827838EA4D"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f17",
+          "exact_quote_note_ids": [
+            "CTX-DCA7BF7049E4"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f18",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f19",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f20",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f21",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f22",
+          "exact_quote_note_ids": [
+            "CTX-99EB87C32068"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f23",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f24",
+          "exact_quote_note_ids": [
+            "CTX-10E3C0564146"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f25",
+          "exact_quote_note_ids": [
+            "CTX-10E3C0564146"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f26",
+          "exact_quote_note_ids": [
+            "CTX-10E3C0564146"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f27",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f28",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f29",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f30",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f31",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f32",
+          "exact_quote_note_ids": [
+            "CTX-E3596BFE6F28"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f33",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f34",
+          "exact_quote_note_ids": [
+            "CTX-934C94595583"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f35",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f36",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f37",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f38",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f39",
+          "exact_quote_note_ids": [
+            "CTX-B7BE4682372C"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f40",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f41",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f42",
+          "exact_quote_note_ids": [
+            "CTX-68633FA28F43"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f43",
+          "exact_quote_note_ids": [
+            "CTX-331285DDD2CF",
+            "CTX-C4494761A6DF"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f44",
+          "exact_quote_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f45",
+          "exact_quote_note_ids": [
+            "CTX-387A06F3BAE4"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f46",
+          "exact_quote_note_ids": [
+            "CTX-387A06F3BAE4"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f47",
+          "exact_quote_note_ids": [
+            "CTX-387A06F3BAE4"
+          ]
+        }
+      ],
+      "candidate_diagnostic": {
+        "source_facts": 47,
+        "exact_grounded_wording_matches": 3,
+        "facts": [
+          {
+            "fact_id": "zh-chronological-f01",
+            "kind": "identity",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-A016E9CAF3E7",
+                "text_similarity": 0.303,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f02",
+            "kind": "contact",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f03",
+            "kind": "constraint",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f04",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-B35C3BD48B8F",
+                "text_similarity": 0.85,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f05",
+            "kind": "ownership",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f06",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f07",
+            "kind": "organization",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-A391D8BA6A1C",
+                "text_similarity": 0.697,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-AF302F9FF80F",
+                "text_similarity": 0.326,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-79757034EBF7",
+                "text_similarity": 0.322,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f08",
+            "kind": "role",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-A391D8BA6A1C",
+                "text_similarity": 0.034,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-B35C3BD48B8F",
+                "text_similarity": 0.3,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f09",
+            "kind": "dates",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-A391D8BA6A1C",
+                "text_similarity": 0.065,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-AF302F9FF80F",
+                "text_similarity": 0.318,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f10",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-A391D8BA6A1C",
+                "text_similarity": 0.621,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-68B4C21A89D8",
+                "text_similarity": 0.308,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f11",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-A016E9CAF3E7",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-4B105164064C",
+                "text_similarity": 0.356,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-68B4C21A89D8",
+                "text_similarity": 0.326,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f12",
+            "kind": "money",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f13",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-68B4C21A89D8",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-A016E9CAF3E7",
+                "text_similarity": 0.326,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-DA89C825DBFC",
+                "text_similarity": 0.304,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f14",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-DF13D4854B01",
+                "text_similarity": 0.833,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f15",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-DA89C825DBFC",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-B9F1A5BF77EB",
+                "text_similarity": 0.44,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-68B4C21A89D8",
+                "text_similarity": 0.304,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f16",
+            "kind": "negative_evidence",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f17",
+            "kind": "scope",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-0C1E8375AEF5",
+                "text_similarity": 0.708,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-981DCB0A2DB9",
+                "text_similarity": 0.421,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f18",
+            "kind": "organization",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-AF302F9FF80F",
+                "text_similarity": 0.467,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-A391D8BA6A1C",
+                "text_similarity": 0.469,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-79757034EBF7",
+                "text_similarity": 0.353,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f19",
+            "kind": "role",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-AF302F9FF80F",
+                "text_similarity": 0.313,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f20",
+            "kind": "dates",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-AF302F9FF80F",
+                "text_similarity": 0.455,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f21",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-4B105164064C",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-A016E9CAF3E7",
+                "text_similarity": 0.356,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f22",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f23",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-0A7F1961CEF7",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f24",
+            "kind": "ownership",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f25",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f26",
+            "kind": "scope",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f27",
+            "kind": "organization",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-79757034EBF7",
+                "text_similarity": 0.602,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-A391D8BA6A1C",
+                "text_similarity": 0.417,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-AF302F9FF80F",
+                "text_similarity": 0.306,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f28",
+            "kind": "dates",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-79757034EBF7",
+                "text_similarity": 0.615,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f29",
+            "kind": "quantity",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-D1AFF4E17609",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f30",
+            "kind": "scope",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f31",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-8CA8A23F4C0F",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              },
+              {
+                "candidate_id": "EXT-A016E9CAF3E7",
+                "text_similarity": 0.304,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f32",
+            "kind": "future_work",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f33",
+            "kind": "ownership",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-01C741A42A0D",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": false
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f34",
+            "kind": "negative_evidence",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f35",
+            "kind": "organization",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-92A72C13E277",
+                "text_similarity": 0.389,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-C5F15C54E860",
+                "text_similarity": 0.246,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f36",
+            "kind": "qualification",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-C5F15C54E860",
+                "text_similarity": 0.339,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-92A72C13E277",
+                "text_similarity": 0.158,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f37",
+            "kind": "dates",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-C5F15C54E860",
+                "text_similarity": 0.532,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-92A72C13E277",
+                "text_similarity": 0.103,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f38",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [
+              "EXT-92A72C13E277"
+            ],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-92A72C13E277",
+                "text_similarity": 0.818,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f39",
+            "kind": "missing_information",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f40",
+            "kind": "skill",
+            "critical": false,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-981DCB0A2DB9",
+                "text_similarity": 0.951,
+                "full_wording": false,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-0C1E8375AEF5",
+                "text_similarity": 0.462,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f41",
+            "kind": "skill",
+            "critical": false,
+            "exact_grounded_candidate_ids": [
+              "EXT-B9F1A5BF77EB"
+            ],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-B9F1A5BF77EB",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-DA89C825DBFC",
+                "text_similarity": 0.44,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              },
+              {
+                "candidate_id": "EXT-68B4C21A89D8",
+                "text_similarity": 0.304,
+                "full_wording": false,
+                "source_wording": false,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f42",
+            "kind": "skill",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f43",
+            "kind": "missing_information",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f44",
+            "kind": "qualitative",
+            "critical": false,
+            "exact_grounded_candidate_ids": [
+              "EXT-CCE72E3C273B"
+            ],
+            "adjudication_suggestions": [
+              {
+                "candidate_id": "EXT-CCE72E3C273B",
+                "text_similarity": 1.0,
+                "full_wording": true,
+                "source_wording": true,
+                "expected_entity_fields_match": true
+              }
+            ],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f45",
+            "kind": "ownership",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f46",
+            "kind": "scope",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          },
+          {
+            "fact_id": "zh-chronological-f47",
+            "kind": "missing_information",
+            "critical": true,
+            "exact_grounded_candidate_ids": [],
+            "adjudication_suggestions": [],
+            "semantic_status": "REQUIRES_SOURCE_ADJUDICATION"
+          }
+        ],
+        "semantic_recall": null,
+        "unsupported_claims": null,
+        "unflagged_critical_errors": null,
+        "independent_adjudication": false,
+        "scope": "All source facts retained; similarity only suggests review candidates and is never a correctness score."
+      },
+      "constraint_answers_unchanged": true,
+      "material_claims": 0,
+      "retained_original_matches": true,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "temporary_state_removed": true,
+      "elapsed_ms": 5813
+    }
+  ]
+}

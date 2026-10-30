@@ -40,6 +40,17 @@ For a fictional, auto-cleaned tour, run `Start JobFlow Demo.cmd` instead.
 4. Review every proposed Claim and resolve conflicts.
 5. Approve the exact resume positions and Claim wording that may be used in application materials.
 
+In a source preview, inspect **Constraints and verification needs from the
+source** as well as the Claim candidates. These are verbatim excerpts selected
+from analyzed text and still need review. **Open the Profile question** reveals
+the existing field without filling or confirming it. Enter the actual answer
+yourself; an unknown work-authorization statement remains unknown. Confirming
+the source retains these excerpts in encrypted storage. Re-analysis creates a
+new pending preview; discarding it preserves the previously saved excerpts.
+For scans, compare with the original page because transcription can be wrong.
+Missing or empty context notes do not prove that no constraints were present.
+See [source-context behavior and limits](source-context-2026-10-30.md).
+
 If your retained master is a PDF, first approve its confirmed wording for resume use, then choose **Preview a standard resume**. Review the new layout, optionally inspect a real local Word/PDF export, and explicitly adopt the DOCX through a new profile revision. Reconfirm the profile, material use and editing positions. See the [standard-resume guide](standard-resume-2026-10-29.md); this does not preserve the original PDF's styling or replace final document QA.
 
 If Word is unavailable, the [optional local LibreOffice exporter](local-pdf-export-2026-10-29.md) can be explicitly selected before starting JobFlow. Install it separately from its official source, confirm the displayed provider and inspect the converted pages. Merely detecting an executable does not verify conversion, layout or application readiness.
