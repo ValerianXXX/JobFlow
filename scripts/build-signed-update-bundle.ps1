@@ -1736,7 +1736,10 @@ function New-ProtectedInputStagingRoot([string]$DistRoot) {
         Assert-StableReleaseDirectoryLocks @($distContext.Locks) $code
         $parentLock = @($distContext.Locks)[@($distContext.Locks).Count - 1]
         for ($attempt = 0; $attempt -lt 8; $attempt++) {
-            $name = ".protected-signing-inputs-" + [Guid]::NewGuid().ToString("N")
+            # Preserve the full random identity with less path overhead. Native
+            # loader dependencies can hit NAME_TOO_LONG even after handle-based
+            # file validation succeeds in a deeply nested source checkout.
+            $name = ".jfi-" + [Guid]::NewGuid().ToString("N")
             $rootLock = $null
             try {
                 $rootLock = New-StableReleaseChildDirectory $parentLock $name $code
@@ -2432,9 +2435,55 @@ function Enter-InputFileLock(
     }
 }
 
+function Assert-ProtectedStagedInputUnchanged([object]$Lock) {
+    $code = "JOBFLOW_RELEASE_INPUT_CHANGED"
+    if (
+        $null -eq $Lock -or $null -eq $Lock.ParentLock -or
+        [string]::IsNullOrWhiteSpace([string]$Lock.Name) -or
+        [string]$Lock.Name -match '[\\/:]' -or
+        [long]$Lock.length -lt 1 -or
+        [long]$Lock.length -gt [long]$Lock.maximum_bytes
+    ) { throw $code }
+    # Staged files already have retained parent/file handles. Reopen relative to
+    # that parent, not through legacy .NET File.Exists/Get-Item path APIs which
+    # can report a valid >260-character leaf as absent on stock PowerShell 5.1.
+    Assert-StableReleaseDirectoryLocks @($Lock.ParentLock) $code
+    $expected = [IO.Path]::GetFullPath((Join-Path ([string]$Lock.ParentLock.Path) ([string]$Lock.Name)))
+    if (-not $expected.Equals([string]$Lock.path, [StringComparison]::OrdinalIgnoreCase)) { throw $code }
+    Assert-ProtectedStagedFileLockHandleUnchanged $Lock $code
+    $retainedIdentity = Get-ReleaseHandleIdentity $Lock.stream.SafeFileHandle $code
+    if (
+        ([uint32]$retainedIdentity.Attributes -band [uint32][IO.FileAttributes]::Directory) -ne 0 -or
+        ([uint32]$retainedIdentity.Attributes -band [uint32][IO.FileAttributes]::ReparsePoint) -ne 0
+    ) { throw $code }
+    $current = $null
+    try {
+        $current = Open-ReleaseRelativeReadStream $Lock.ParentLock ([string]$Lock.Name) 1 $code
+        $identity = Get-OpenOutputFileIdentity $current $code
+        $nativeIdentity = Get-ReleaseHandleIdentity $current.SafeFileHandle $code
+        if (
+            ([uint32]$nativeIdentity.Attributes -band [uint32][IO.FileAttributes]::Directory) -ne 0 -or
+            ([uint32]$nativeIdentity.Attributes -band [uint32][IO.FileAttributes]::ReparsePoint) -ne 0 -or
+            [long]$identity.link_count -ne 1 -or
+            [long]$identity.volume -ne [long]$Lock.volume -or
+            [uint64]$identity.file_index -ne [uint64]$Lock.file_index -or
+            [long]$current.Length -ne [long]$Lock.length -or
+            ("sha256:" + (Get-StreamSha256 $current)) -cne [string]$Lock.sha256 -or
+            -not (Get-ReleaseFinalPathFromHandle $current.SafeFileHandle $code).Equals(
+                $expected, [StringComparison]::OrdinalIgnoreCase
+            )
+        ) { throw $code }
+    }
+    finally { if ($null -ne $current) { $current.Dispose() } }
+}
+
 function Assert-InputFileLockUnchanged([object]$Lock) {
     if ($null -eq $Lock -or $null -eq $Lock.stream -or [string]::IsNullOrWhiteSpace([string]$Lock.code)) {
         throw "JOBFLOW_RELEASE_INPUT_IDENTITY_INVALID"
+    }
+    if ($null -ne $Lock.PSObject.Properties["ParentLock"]) {
+        Assert-ProtectedStagedInputUnchanged $Lock
+        return
     }
     $absolute = Assert-ExplicitAbsoluteInputFile ([string]$Lock.path) ([long]$Lock.maximum_bytes) ([string]$Lock.code)
     $current = Get-OutputFileIdentity $absolute ([string]$Lock.code)
