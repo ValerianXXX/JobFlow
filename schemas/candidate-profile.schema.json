@@ -5,8 +5,9 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["profile_ref", "profile_version", "candidate_display_name", "target_functions", "target_levels", "locations", "remote_preference", "minimum_salary", "work_authorization", "skills", "years_experience"],
+  "allOf": [{"if": {"required": ["profile_schema_version"], "properties": {"profile_schema_version": {"const": 3}}}, "then": {"required": ["experience_calculation"]}}],
   "properties": {
-    "profile_schema_version": {"const": 2},
+    "profile_schema_version": {"enum": [2, 3]},
     "profile_ref": {"type": "string", "pattern": "^secure-ref:[A-Za-z0-9_-]{8,128}$"},
     "profile_version": {"type": "string", "minLength": 1},
     "candidate_display_name": {"type": "string", "minLength": 1},
@@ -22,6 +23,23 @@
     "education": {"type": ["string", "null"]},
     "target_industries": {"type": "array", "items": {"type": "string"}},
     "years_experience": {"type": ["number", "string"]},
+    "experience_calculation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "coverage", "as_of_date", "calendar_months_lower_bound", "calendar_months_upper_bound", "work_entities", "internship_entities_excluded", "unresolved_entities", "source_claim_ids", "uncertainty_codes"],
+      "properties": {
+        "method": {"const": "CONFIRMED_WORK_CALENDAR_BOUNDS_V1"},
+        "coverage": {"const": "DOCUMENTED_CLAIMS_ONLY"},
+        "as_of_date": {"type": "string", "format": "date"},
+        "calendar_months_lower_bound": {"type": "integer", "minimum": 0},
+        "calendar_months_upper_bound": {"type": ["integer", "null"], "minimum": 0},
+        "work_entities": {"type": "integer", "minimum": 0},
+        "internship_entities_excluded": {"type": "integer", "minimum": 0},
+        "unresolved_entities": {"type": "integer", "minimum": 0},
+        "source_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,160}$"}},
+        "uncertainty_codes": {"type": "array", "uniqueItems": true, "items": {"enum": ["ENTITY_OR_SOURCE_CONFLICT", "MISSING_INVALID_OR_FUTURE_DATES", "DATE_PRECISION_OR_PARTIAL_MONTH"]}}
+      }
+    },
     "first_name": {"type": "string", "minLength": 1},
     "last_name": {"type": "string", "minLength": 1},
     "email": {"type": "string", "minLength": 3},

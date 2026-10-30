@@ -817,4 +817,9 @@ def validate_named(name: str, value: dict[str, Any], schema_dir: Path) -> dict[s
     schema = load_json(path)
     validate_schema(value, schema)
     semantic_validate(name, value)
+    if name == "candidate-profile":
+        from .experience import valid_experience_basis
+
+        if (value.get("profile_schema_version") == 3 or "experience_calculation" in value) and not valid_experience_basis(value.get("experience_calculation")):
+            raise JobOpsError("PROFILE_EXPERIENCE_BASIS_INVALID", "The profile needs a valid documented experience calculation.")
     return value
