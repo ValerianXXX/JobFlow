@@ -12,6 +12,11 @@ See the [compatibility and recovery matrix](docs/compatibility.md) and [October 
 
 The source branch includes these reviewable capabilities. They are not a new signed desktop release.
 
+The [runtime revalidation follow-up](docs/runtime-revalidation-2026-10-30.md)
+preserves a failed 1,352-test full run, repairs native staged-file validation for
+deep paths, and corrects the public-English guide. Focused native execution and
+documentation checks pass; the new full run remains a separate acceptance gate.
+
 Documented work duration now excludes gaps, overlapping jobs and repeated Claims. Partial dates retain bounds; internship time and skill-specific or full-time requirements require separate review. New Profiles use version 3 while older Profiles remain readable; older generated tenure values need a reviewed revision before supporting a years requirement. [Duration rules, regression evidence and rollback](docs/experience-duration-2026-10-29.md) also record the six-sample Profile-hint check without claiming complete material understanding.
 
 The [loopback rejection repair](docs/probe-rejection-2026-10-29.md) addresses a
