@@ -7,6 +7,7 @@ import re
 import secrets
 import subprocess
 import threading
+import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
@@ -17,6 +18,12 @@ from urllib.parse import urlsplit
 
 from .companion_binding import sign_pair_response
 from .errors import JobOpsError
+from .http_rejection import (
+    REJECTED_BODY_DRAIN_LIMIT,
+    REJECTED_BODY_DRAIN_TIMEOUT_SECONDS,
+    discard_rejected_prefix,
+    small_declared_body_length,
+)
 from .release_toolchain import (
     ReleaseToolchainError,
     _close_handle,
@@ -316,6 +323,8 @@ class _ProbeHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self._security_headers(content_type, origin=origin)
         self.send_header("Content-Length", str(len(body)))
+        if self.close_connection:
+            self.send_header("Connection", "close")
         self.end_headers()
         if self.command != "HEAD":
             self.wfile.write(body)
@@ -336,6 +345,14 @@ class _ProbeHandler(BaseHTTPRequestHandler):
 
     def _blocked(self, status: HTTPStatus, code: str, *, origin: str | None = None) -> None:
         self.close_connection = True
+        if self.command == "POST" and not getattr(self, "_pair_body_consumed", False):
+            length = small_declared_body_length(self.headers)
+            discard_rejected_prefix(
+                self.rfile,
+                self.connection,
+                byte_limit=length if length is not None else REJECTED_BODY_DRAIN_LIMIT,
+                deadline=time.monotonic() + REJECTED_BODY_DRAIN_TIMEOUT_SECONDS,
+            )
         self._send_json(
             status,
             {"status": "BLOCKED", "code": code, "automatic_retry": False},
@@ -389,6 +406,7 @@ class _ProbeHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self) -> None:  # noqa: N802
+        self._pair_body_consumed = False
         channel = self.probe.channel_for_pair_path(self.path)
         origin = self.headers.get("Origin", "")
         if (
@@ -409,11 +427,12 @@ class _ProbeHandler(BaseHTTPRequestHandler):
                 origin=origin,
             )
             return
-        if self.headers.get("Transfer-Encoding") is not None:
+        content_lengths = self.headers.get_all("Content-Length") or []
+        if self.headers.get("Transfer-Encoding") is not None or len(content_lengths) != 1:
             self._blocked(HTTPStatus.BAD_REQUEST, "CLEAN_WINDOWS_PAIR_BODY_INVALID", origin=origin)
             return
         try:
-            length = int(self.headers.get("Content-Length", ""))
+            length = int(content_lengths[0])
         except ValueError:
             length = -1
         if length < 2 or length > _MAX_PAIR_BODY_BYTES:
@@ -427,6 +446,7 @@ class _ProbeHandler(BaseHTTPRequestHandler):
             self._blocked(HTTPStatus.BAD_REQUEST, "CLEAN_WINDOWS_PAIR_CONTENT_TYPE_INVALID", origin=origin)
             return
         raw = self.rfile.read(length)
+        self._pair_body_consumed = True
         try:
             payload = json.loads(raw.decode("utf-8"), object_pairs_hook=_reject_duplicate_keys)
         except (UnicodeDecodeError, json.JSONDecodeError, _DuplicateJsonKey):
