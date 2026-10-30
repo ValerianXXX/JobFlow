@@ -4,6 +4,12 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Preserve complete entity summaries and relevant factual limitations in document
+  candidates, keeping source notes supplemental. A frozen two-request Hermes
+  comparison recovered four preceding gaps in the two exposed samples; full
+  material acceptance remains open. Keep both observations and the shared call
+  budget immutable. See [comparison and rollback](docs/fact-preservation-2026-10-30.md).
+
 - Retain bounded, source-bound work constraints and evidence gaps separately from
   Claim candidates. Add bilingual preview/retained-source review and keyboard
   navigation to existing Profile fields without copying values or changing

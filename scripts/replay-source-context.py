@@ -26,14 +26,18 @@ from jobops.private_onboarding import PrivateOnboarding
 from jobops.secure_store import WindowsDPAPIStore
 from jobops.util import iso_utc
 
-OBSERVATION = ROOT / "evaluations/2026-10-30/source-context-live-v1.json"
-OBSERVATION_LF_SHA256 = "f7cb0e3ae7be716b16c1f421da7ed2e192026ab14a213edc3c4641e60a3ad51a"
+OBSERVATIONS = {
+    "source-context-v1": ("source-context-live-v1.json", "f7cb0e3ae7be716b16c1f421da7ed2e192026ab14a213edc3c4641e60a3ad51a"),
+    "fact-preservation-v1": ("fact-preservation-live-v1.json", "f2beb6531c1f46191befd233d865641e8233725497848244d8a1242d98965e3a"),
+}
 
 
-def load_observation():
-    if experiment.digest(OBSERVATION) != OBSERVATION_LF_SHA256:
-        raise ValueError("The original failed observation changed")
-    value = json.loads(OBSERVATION.read_text(encoding="utf8"))
+def load_observation(name="source-context-v1"):
+    filename, expected_hash = OBSERVATIONS[name]
+    path = ROOT / "evaluations/2026-10-30" / filename
+    if experiment.digest(path) != expected_hash:
+        raise ValueError("The pinned original observation changed")
+    value = json.loads(path.read_text(encoding="utf8"))
     if not value.get("protocol_closed") or value["adapter_requests"] != 2 or len(value["responses"]) != 2:
         raise ValueError("Unexpected closed experiment population")
     return value
@@ -57,10 +61,12 @@ class ReplayEngine(WSLHermesCLIEngine):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--observation", choices=tuple(OBSERVATIONS), default="source-context-v1")
     args = parser.parse_args()
     if args.output.exists():
         parser.error("Keep existing observations immutable; choose a new offline output")
-    observation = load_observation()
+    observation = load_observation(args.observation)
+    observation_hash = OBSERVATIONS[args.observation][1]
     plan, old_arms = experiment.load_inputs(verify_product=False)
     old_by_case = {arm["case"]: arm for arm in old_arms}
     manifest = {row["id"]: row for row in experiment.complete.complete.load_manifest()["cases"]}
@@ -68,7 +74,7 @@ def main():
     reports.mkdir(exist_ok=True)
     files = [*plan["product"], "src/jobops/ai_connections.py", "scripts/replay-source-context.py"]
     report = {"observed_at": iso_utc(), "mode": "SAME_RESPONSE_ORIGINAL_PDF_AND_DPAPI_REPLAY", "synthetic_only": True,
-              "original_observation_lf_sha256": OBSERVATION_LF_SHA256, "live_provider_calls": 0,
+              "observation": args.observation, "original_observation_lf_sha256": observation_hash, "live_provider_calls": 0,
               "current_stage_model_cost_usd": 0, "original_billed_cost_usd": None,
               "source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
               "source_lf_sha256": {name: experiment.digest(ROOT / name) for name in files},
