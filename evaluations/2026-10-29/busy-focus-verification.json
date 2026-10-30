@@ -1,0 +1,50 @@
+{
+  "schema": "JOBFLOW_BUSY_FOCUS_VERIFICATION_V1",
+  "date": "2026-10-29",
+  "base_commit": "1eb6bb2ce9754a62b9e0fec0c5f9e4772f7e76e1",
+  "original_hosted_run": {
+    "url": "https://github.com/ValerianXXX/JobFlow/actions/runs/40965803779",
+    "source_candidate": "PASS",
+    "windows_python_3_11": "PASS",
+    "windows_python_3_13": "PASS",
+    "windows_python_3_12_regression": "PASS",
+    "windows_python_3_12_ui": "FAIL",
+    "failure": "onboarding_ui_e2e.cjs:581 expected saveAnswers focus and observed emergencyStop"
+  },
+  "frozen_cases": {
+    "path": "tests/onboarding_busy_focus_e2e.cjs",
+    "sha256": "d4218426f5aaea28a40fbbd906ee48fe631c302523c8a12631ec81c49875b5f0",
+    "before": {"passed": 5, "failed": 5},
+    "after": {"passed": 10, "failed": 0},
+    "unchanged_during_production_fix": true,
+    "initial_fixture_correction": "HTML hidden was overridden by author CSS; use display:none before freezing the comparison. Preserve the original six-failure development run separately."
+  },
+  "local_checks": {
+    "node": "24.19.0",
+    "python": "3.11.3",
+    "onboarding_python": {"passed": 74, "failed": 0, "seconds": 43.313},
+    "full_javascript_suites": {"passed": 12, "failed": 0, "includes_frozen_focus_cases": true},
+    "compatibility": "PASS_OFFLINE_SOURCE_CONSISTENCY_ONLY",
+    "public_release_ready": false,
+    "public_tree_history_author_scan": "PASS_WITH_EXPLICIT_GIT_PATH",
+    "initial_scan_invocation": "RELEASE_GIT_PATH_REQUIRED; corrected the command, not the trust policy",
+    "environment_external_actions": 0,
+    "knowledge_discovery": "KNOWLEDGE_ROOT_NOT_FOUND_IN_ISOLATED_CHECKOUT"
+  },
+  "interactive": {
+    "surface": "Codex in-app desktop browser",
+    "scope": "SYNTHETIC_UI_WITH_IN_MEMORY_EFFECTS",
+    "actions": ["Keyboard Enter on save", "Click emergency-stop control", "Observe settled focus and inert attributes"],
+    "final_focus": "saveAnswers",
+    "final_save_inert": false,
+    "final_stop_inert": false,
+    "real_backend_emergency_stop_verified": false,
+    "independent_human_test": false
+  },
+  "hosted_followup": "PENDING_NEW_COMMIT",
+  "migration_required": false,
+  "new_model_requests": 0,
+  "production_actions": 0,
+  "release_approval": false,
+  "remaining": ["Full-material semantic acceptance", "Live ATS and mailbox acceptance", "Independent user acceptance", "Trusted production signing", "Independent clean-Windows lifecycle acceptance"]
+}

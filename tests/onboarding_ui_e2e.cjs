@@ -45,8 +45,8 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20260906-jobflow-v44-accessible-controls/);
-    assert.match(initial.styleVersion, /20260906-jobflow-v44-accessible-controls/);
+    assert.match(initial.scriptVersion, /20261029-jobflow-v45-busy-focus/);
+    assert.match(initial.styleVersion, /20261029-jobflow-v45-busy-focus/);
     assert.equal(initial.skipHref, "#mainContent");
     assert.equal(initial.mainTabIndex, "-1");
     assert.equal(initial.supportButtonType, "button");
