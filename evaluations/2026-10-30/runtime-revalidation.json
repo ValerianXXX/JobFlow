@@ -1,0 +1,124 @@
+{
+  "observedAt": "2026-10-30T04:58:53.989737+00:00",
+  "baseCommit": "8f72fa13a5386a3b3b370a303dfb8553542f7a55",
+  "sourceCommit": "fb6b90af12593f3165a90763aa0d006f17930832",
+  "frozenCommit": "71bf98e56467fbeb85a91903fe5e0cb055321e31",
+  "previousFull": {
+    "sourceCommit": "d281fbc3d54ed76514507abe2b913e99c41f692f",
+    "tests": 1352,
+    "passed": 1346,
+    "failed": 2,
+    "skipped": 4,
+    "seconds": 3631.449,
+    "status": "FAILED",
+    "failures": [
+      "public English docs",
+      "protected runtime execution"
+    ],
+    "skipReason": "Four native symbolic-link cases could not create symlinks on this host"
+  },
+  "previousHosted311": {
+    "run": 40999836350,
+    "job": 123881406614,
+    "tests": 1352,
+    "failed": 1,
+    "seconds": 3177.378,
+    "failure": "public English docs",
+    "status": "FAILED"
+  },
+  "unchangedStagingBefore": {
+    "tests": 8,
+    "passed": 7,
+    "failed": 1,
+    "seconds": 9.703
+  },
+  "diagnosis": {
+    "pathLength": 261,
+    "leaf": "_testimportmultiple.pyd",
+    "laterNativeExit": "0xC0000106",
+    "nativeMeaning": "STATUS_NAME_TOO_LONG",
+    "diagnosticScope": "Disposable synthetic harness only; original assertions unchanged"
+  },
+  "frozenBefore": {
+    "tests": 9,
+    "passed": 5,
+    "failed": 4,
+    "seconds": 8.028
+  },
+  "harnessCorrection": "Pre-freeze import stopped duplicate discovery of 8 original tests; assertions unchanged",
+  "frozenAfter": {
+    "tests": 9,
+    "passed": 9,
+    "unchanged": true,
+    "finalSourceObservation": "Included in 58-test complete presign/update related run"
+  },
+  "nativeStagingAfter": {
+    "tests": 8,
+    "passed": 8,
+    "seconds": 10.745
+  },
+  "relatedAfter": {
+    "tests": 58,
+    "passed": 58,
+    "skipped": 0,
+    "seconds": 249.118
+  },
+  "documentationAfter": {
+    "tests": 5,
+    "passed": 5,
+    "seconds": 0.034,
+    "scope": "After English correction, before this additional guide"
+  },
+  "newFullRun": {
+    "status": "NOT_STARTED_AT_OBSERVATION",
+    "required": true
+  },
+  "runtime": {
+    "platform": "Windows",
+    "python": "3.11.3",
+    "shell": "stock Windows PowerShell 5.1"
+  },
+  "compatibility": {
+    "status": "PASS",
+    "source": "0.7.0",
+    "companion": "0.9.2",
+    "signedStableMatch": false
+  },
+  "sourceLFHashes": {
+    "scripts/build-signed-update-bundle.ps1": "8b819fce148aaef6aeb1d027e69b4995f7bc2e7e4b6f58ed18c95c4e4d341bc4",
+    "tests/test_staged_runtime_revalidation.py": "7239c31a5b8ef4a8b4b6f71af116741fa05ec144ede19b771b2ce1c38a72b5ea",
+    "tests/test_signed_update_staging_handles.py": "e3373c5cfc8bc7c414bea8e72b774f492ff3497dff163ad155b0e6668bfe5171"
+  },
+  "localLogLFHashes": {
+    "probe-rejection-full-20261029.log": "a04f6a4bdd62bd059feb72eb763f6b2816174810c3d8b5ceb68165d9d320190f",
+    "staging-handles-isolated-before-20261030.log": "6829c9df05e39e980ea18b090364c831029c927b05718fa2af31a6db546ed2eb",
+    "staging-handles-diagnostic-20261030.log": "99072a1381922fb5a4d8c84da18b20befee934bf3ab76a29dc7817c03c704de3",
+    "staging-handles-diagnostic-lines-20261030.log": "04f0f922907c956e3fd3690d1830eb736b121c97108121c46815c00d529c9051",
+    "staging-handles-diagnostic-inner-20261030.log": "050f29a28918c9b5453589aae7a2b9ebf5507ced85b0d4b12b299dc68ac44658",
+    "staging-handles-diagnostic-length-20261030.log": "542216b71ab2ecc3e20508755e46a2bf6d492a4bbd230f35438c9e7e28b675a9",
+    "staging-handles-diagnostic-execution-20261030.log": "eadc4e7e31dc19a2dfbac4d636f80c1703a541d82e2886637f74465e64ba119e",
+    "runtime-revalidation-frozen-before-20261030.log": "84a69d43394c67fd6a820aa022cf6c4a2271ad52ab424dc0fb480d61021dcd2b",
+    "runtime-revalidation-frozen-corrected-before-20261030.log": "8ebafe1e88d6b73f98c37c4e7ea93cb1da1c399b4f4e469f7bcc8cee5ec450a1",
+    "runtime-revalidation-frozen-after-20261030.log": "b426493a7e681bcaa7f7f2c5ecd3fea3a21fc3a47382a140214f4eb0067514d5",
+    "runtime-revalidation-staging-after-20261030.log": "8a47b997c3a948d93c4000fc148d53b67dc212dd018f70050009b1bae46435b1",
+    "runtime-revalidation-staging-final-20261030.log": "b7f64d4780ac701664dec9deb4521c3164ce8eff9927a0975576c67dd58c88e9",
+    "runtime-revalidation-related-20261030.log": "456334b70a40875ac4620112bc6e04033850a74fd14b31730a61b284b0c38bad",
+    "runtime-revalidation-docs-after-20261030.log": "b59b87790f4ae7c15eba91534e94547d52421f999cb50dc90617470ae648581b"
+  },
+  "deepFixturePathLength": 280,
+  "fullGuidIdentityRetained": true,
+  "publicGate": "PENDING_FINAL_DOCUMENT_COMMIT",
+  "newModelCalls": 0,
+  "productionActions": 0,
+  "migration": false,
+  "knowledgeUse": "No vault located in the isolated worktree; no private knowledge workflow run",
+  "notEstablished": [
+    "Arbitrary-depth executable paths",
+    "New full-suite success",
+    "Trusted production signing",
+    "Independent clean Windows lifecycle",
+    "Complete-material semantic acceptance",
+    "Live ATS/mailbox flows",
+    "Independent human acceptance"
+  ]
+}

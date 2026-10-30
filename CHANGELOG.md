@@ -4,6 +4,14 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Revalidate staged runtime files through retained parent/file handles and a
+  relative reopen, preserving hashes, size, identity, reparse and single-link
+  requirements. Reject altered parent/name bindings and shorten generated
+  staging paths without reducing GUID identity. Retain the failed full run and
+  native loader observation; see [verification and rollback](docs/runtime-revalidation-2026-10-30.md).
+- Keep public duration documentation English while retaining bilingual token
+  fixtures and product behavior.
+
 - Bound rejected pairing/onboarding request disposal with a shared 64 KiB / 250 ms
   total-deadline helper. Reject duplicate pairing lengths, avoid double reads and
   close rejected connections. Preserve original full-run failures and distinguish
