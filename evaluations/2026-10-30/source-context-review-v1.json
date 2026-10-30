@@ -1,0 +1,1481 @@
+{
+  "schema": "SOURCE_CONTEXT_REVIEW_V1",
+  "reviewed_at": "2026-10-30T06:20:29.156638Z",
+  "reviewer": "CODING_ASSISTANT",
+  "independent_review": false,
+  "semantic_acceptance": false,
+  "mode": "REVIEWED_CANDIDATES_AND_EXACT_CONTEXT_EXCERPTS_SEPARATE",
+  "replay_lf_sha256": "5dbddd0543bca4b8ea17b4966b558cdadd0b9d70168ccf15f374291e6823a08d",
+  "observation_lf_sha256": "f7cb0e3ae7be716b16c1f421da7ed2e192026ab14a213edc3c4641e60a3ad51a",
+  "cases": [
+    {
+      "case": "en-chronological",
+      "source_facts": 47,
+      "candidates_reviewed": 30,
+      "notes_reviewed": 8,
+      "facts": [
+        {
+          "fact_id": "en-chronological-f01",
+          "decision": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "fact_id": "en-chronological-f02",
+          "decision": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "fact_id": "en-chronological-f03",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-4636C43FBA34"
+          ],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "fact_id": "en-chronological-f04",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-B93ADD5E6532"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f05",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-DFCFD4EBE747"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f06",
+          "decision": "OMITTED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f07",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-293973729601"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f08",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-293973729601"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f09",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-293973729601"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f10",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-489B71F9F4D3"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f11",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-DCE6C990EE14"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f12",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-2CA15A087D95"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f13",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-08108A1F91D1"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f14",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-FA9BF810FFA5"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-ED257A719588"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f15",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-E518E24C5FA6"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-ED257A719588"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f16",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-ED257A719588"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f17",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-6CF1A4B80FF5"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f18",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-F3969C3E3605"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f19",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-F3969C3E3605"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f20",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-F3969C3E3605"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f21",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-4CFEE5BBAB0C"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f22",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-1851ED488E28"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f23",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-F79A3787AE68"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f24",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-28E766E23E27"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f25",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-12525DCDB3FB"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f26",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-64FE0089625D"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f27",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-E3CEBF834FBE"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f28",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-E3CEBF834FBE"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f29",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-707508524048"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f30",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-1F6676579F11"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f31",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-6F1221C2FCAF"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f32",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-EDF8262687AF"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-50ACF32D3CD7"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f33",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-141C914B5273"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-50ACF32D3CD7"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f34",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-50ACF32D3CD7"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f35",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-E1FBED010CA8"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f36",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-E1FBED010CA8"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f37",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-E1FBED010CA8"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f38",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-C4216E7263DF"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f39",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-B914702B81A0"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f40",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-3D573EDB4FE3"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f41",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-F6DAA837FA04"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f42",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [
+            "EXT-0B286A7BA6A4"
+          ],
+          "context_note_ids": [
+            "CTX-708750829CAE"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f43",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-A743FD2E9AD9",
+            "CTX-6CDCD04FB5AF"
+          ],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "fact_id": "en-chronological-f44",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-566302D64459"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f45",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-46E3408D09DA"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "en-chronological-f46",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-26911554CA06"
+          ],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "fact_id": "en-chronological-f47",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-26911554CA06"
+          ],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        }
+      ],
+      "candidate_review": [
+        {
+          "candidate_id": "EXT-B93ADD5E6532",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-DFCFD4EBE747",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-293973729601",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-489B71F9F4D3",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-DCE6C990EE14",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-2CA15A087D95",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-08108A1F91D1",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-FA9BF810FFA5",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-E518E24C5FA6",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-6CF1A4B80FF5",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-F3969C3E3605",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-4CFEE5BBAB0C",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-1851ED488E28",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-F79A3787AE68",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-28E766E23E27",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-12525DCDB3FB",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-64FE0089625D",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-E3CEBF834FBE",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-707508524048",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-1F6676579F11",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-6F1221C2FCAF",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-EDF8262687AF",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-141C914B5273",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-E1FBED010CA8",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-C4216E7263DF",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-3D573EDB4FE3",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-F6DAA837FA04",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-0B286A7BA6A4",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": [
+            "en-chronological-f42"
+          ]
+        },
+        {
+          "candidate_id": "EXT-566302D64459",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-46E3408D09DA",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        }
+      ],
+      "note_review": [
+        {
+          "note_id": "CTX-4636C43FBA34",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED"
+        },
+        {
+          "note_id": "CTX-ED257A719588",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-50ACF32D3CD7",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-B914702B81A0",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-708750829CAE",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-A743FD2E9AD9",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED"
+        },
+        {
+          "note_id": "CTX-6CDCD04FB5AF",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED"
+        },
+        {
+          "note_id": "CTX-26911554CA06",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        }
+      ],
+      "target_omission_fact_ids": [
+        "en-chronological-f03",
+        "en-chronological-f43",
+        "en-chronological-f46",
+        "en-chronological-f47"
+      ],
+      "target_facts_retained_in_notes": [
+        "en-chronological-f03",
+        "en-chronological-f43",
+        "en-chronological-f46",
+        "en-chronological-f47"
+      ],
+      "new_missing_or_partial_fact_ids": [
+        "en-chronological-f06"
+      ],
+      "source_reference_check_mismatches": [],
+      "entity_metadata_note": "English project name is present in candidate wording but blank in organization metadata; requires review"
+    },
+    {
+      "case": "zh-chronological",
+      "source_facts": 47,
+      "candidates_reviewed": 19,
+      "notes_reviewed": 14,
+      "facts": [
+        {
+          "fact_id": "zh-chronological-f01",
+          "decision": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "fact_id": "zh-chronological-f02",
+          "decision": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM"
+        },
+        {
+          "fact_id": "zh-chronological-f03",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-0E1CDF6CFB87"
+          ],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "fact_id": "zh-chronological-f04",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-B35C3BD48B8F"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f05",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-DFBFC3E63FCD"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f06",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-DFBFC3E63FCD"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f07",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-A391D8BA6A1C"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f08",
+          "decision": "PARTIAL_CANDIDATE_ONLY",
+          "candidate_ids": [],
+          "partial_candidate_ids": [
+            "EXT-A391D8BA6A1C"
+          ],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f09",
+          "decision": "PARTIAL_CANDIDATE_ONLY",
+          "candidate_ids": [],
+          "partial_candidate_ids": [
+            "EXT-A391D8BA6A1C"
+          ],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f10",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-A391D8BA6A1C"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f11",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-A016E9CAF3E7"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f12",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-1BBA321597C2"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f13",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-68B4C21A89D8"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f14",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [
+            "EXT-DF13D4854B01"
+          ],
+          "context_note_ids": [
+            "CTX-9B827838EA4D"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f15",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-DA89C825DBFC"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-9B827838EA4D"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f16",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-9B827838EA4D"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f17",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [
+            "EXT-0C1E8375AEF5"
+          ],
+          "context_note_ids": [
+            "CTX-DCA7BF7049E4"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f18",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-AF302F9FF80F"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f19",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-AF302F9FF80F"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f20",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-AF302F9FF80F"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f21",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-4B105164064C"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f22",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-99EB87C32068"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f23",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-0A7F1961CEF7"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f24",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-10E3C0564146"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f25",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-10E3C0564146"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f26",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-10E3C0564146"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f27",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-79757034EBF7"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f28",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-79757034EBF7"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f29",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-D1AFF4E17609"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f30",
+          "decision": "OMITTED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f31",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-8CA8A23F4C0F"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f32",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-E3596BFE6F28"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f33",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-01C741A42A0D"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f34",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-934C94595583"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f35",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-C5F15C54E860"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f36",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-C5F15C54E860"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f37",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-C5F15C54E860"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f38",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-92A72C13E277"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f39",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-B7BE4682372C"
+          ],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "fact_id": "zh-chronological-f40",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-981DCB0A2DB9"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f41",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-B9F1A5BF77EB"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f42",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-68633FA28F43"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f43",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-331285DDD2CF",
+            "CTX-C4494761A6DF"
+          ],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "fact_id": "zh-chronological-f44",
+          "decision": "CANDIDATE_REPRESENTED",
+          "candidate_ids": [
+            "EXT-CCE72E3C273B"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f45",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-387A06F3BAE4"
+          ],
+          "prior_candidate_decision": "COVERED",
+          "prior_omission_reason": null
+        },
+        {
+          "fact_id": "zh-chronological-f46",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-387A06F3BAE4"
+          ],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        },
+        {
+          "fact_id": "zh-chronological-f47",
+          "decision": "SOURCE_CONTEXT_RETAINED",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-387A06F3BAE4"
+          ],
+          "prior_candidate_decision": "OMITTED",
+          "prior_omission_reason": "NOT_REPRESENTED_IN_CLAIM_CANDIDATES"
+        }
+      ],
+      "candidate_review": [
+        {
+          "candidate_id": "EXT-B35C3BD48B8F",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-A391D8BA6A1C",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-A016E9CAF3E7",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-68B4C21A89D8",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-DF13D4854B01",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": [
+            "zh-chronological-f14"
+          ]
+        },
+        {
+          "candidate_id": "EXT-DA89C825DBFC",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-0C1E8375AEF5",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": [
+            "zh-chronological-f17"
+          ]
+        },
+        {
+          "candidate_id": "EXT-AF302F9FF80F",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-4B105164064C",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-0A7F1961CEF7",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-79757034EBF7",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-D1AFF4E17609",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-8CA8A23F4C0F",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-01C741A42A0D",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-C5F15C54E860",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-92A72C13E277",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-981DCB0A2DB9",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-B9F1A5BF77EB",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        },
+        {
+          "candidate_id": "EXT-CCE72E3C273B",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "qualifiers_in_context_fact_ids": []
+        }
+      ],
+      "note_review": [
+        {
+          "note_id": "CTX-0E1CDF6CFB87",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED"
+        },
+        {
+          "note_id": "CTX-DFBFC3E63FCD",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-1BBA321597C2",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-9B827838EA4D",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-DCA7BF7049E4",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-99EB87C32068",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-10E3C0564146",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-E3596BFE6F28",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-934C94595583",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-B7BE4682372C",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-68633FA28F43",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        },
+        {
+          "note_id": "CTX-331285DDD2CF",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED"
+        },
+        {
+          "note_id": "CTX-C4494761A6DF",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED"
+        },
+        {
+          "note_id": "CTX-387A06F3BAE4",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "READ_ONLY_SOURCE_LIMIT_OR_VERIFICATION_CONTEXT"
+        }
+      ],
+      "target_omission_fact_ids": [
+        "zh-chronological-f03",
+        "zh-chronological-f39",
+        "zh-chronological-f43",
+        "zh-chronological-f46",
+        "zh-chronological-f47"
+      ],
+      "target_facts_retained_in_notes": [
+        "zh-chronological-f03",
+        "zh-chronological-f39",
+        "zh-chronological-f43",
+        "zh-chronological-f46",
+        "zh-chronological-f47"
+      ],
+      "new_missing_or_partial_fact_ids": [
+        "zh-chronological-f08",
+        "zh-chronological-f09",
+        "zh-chronological-f30"
+      ],
+      "source_reference_check_mismatches": [],
+      "entity_metadata_note": "Cedar entity metadata omits individual-contributor and full-time qualifiers; do not infer them"
+    }
+  ],
+  "limitations": [
+    "Two exposed synthetic samples, one model response each; no fresh holdout or statistical causal inference",
+    "Source excerpt retention is not a confirmed answer, Claim approval, complete product recall or independent review",
+    "Four other cases were not run after the frozen two-failure stop",
+    "Provider-internal usage, billed cost, independent human time and correction effort are unavailable"
+  ]
+}

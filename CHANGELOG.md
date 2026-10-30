@@ -4,6 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Retain bounded, source-bound work constraints and evidence gaps separately from
+  Claim candidates. Add bilingual preview/retained-source review and keyboard
+  navigation to existing Profile fields without copying values or changing
+  approval. Preserve encrypted state through confirm/reload and reanalysis;
+  reject forged values, invalid coordinates and stale quotations. See
+  [verification, experiment scope and rollback](docs/source-context-2026-10-30.md).
+
 - Revalidate staged runtime files through retained parent/file handles and a
   relative reopen, preserving hashes, size, identity, reparse and single-link
   requirements. Reject altered parent/name bindings and shorten generated

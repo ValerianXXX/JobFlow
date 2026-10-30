@@ -1,0 +1,115 @@
+{
+  "schema": "SOURCE_CONTEXT_VERIFICATION_V1",
+  "observed_at": "2026-10-30",
+  "source_before_receipt": "3eb8ed0014087ec6ee68f40399e4cd9f051330ba",
+  "working_tree_observation": true,
+  "status": "IMPLEMENTED_WITH_OPEN_MODEL_COMPLETENESS_DEFECTS",
+  "tests": {
+    "initial_frozen_before": {
+      "tests": 9,
+      "failures": 8,
+      "errors": 1
+    },
+    "initial_frozen_after": {
+      "passed": 9
+    },
+    "adapters_frozen_before": {
+      "tests": 5,
+      "failures": 5
+    },
+    "adapters_after": {
+      "passed": 5,
+      "seconds": 0.101
+    },
+    "all_context_contracts": {
+      "passed": 29,
+      "seconds": 5.296
+    },
+    "existing_connections": {
+      "passed": 26,
+      "seconds": 1.553
+    },
+    "existing_onboarding": {
+      "passed": 75,
+      "seconds": 44.347
+    },
+    "existing_grounding": {
+      "passed": 18,
+      "seconds": 0.014
+    },
+    "javascript_suites": {
+      "passed": 14
+    },
+    "public_documentation": {
+      "passed": 5
+    }
+  },
+  "logs_lf_sha256": {
+    "reports/source-context-frozen-before-20261030.log": "f9af1d59f901aad1700754244145f237a1d8e78a3c46ae77927a1880a221f7cc",
+    "reports/source-context-frozen-after-core-20261030.log": "77e5452168305a4d8a94a7bcc8990a9928cdeb24de214e5d5f8e1d518c2a794c",
+    "reports/source-context-integration-20261030.log": "84907997a1a91320c1290e4a261fbe8ef7d494a9683de7ecb9d4c26230d8d83c",
+    "reports/source-context-all-contracts-20261030.log": "386e80eb692596467e32da92e480289437614299b4dc66ddcbd907d0850964f6",
+    "reports/source-context-adapters-before-20261030.log": "598dbcc2b45d3ea9ecf553f16368d2f2ad9ada42a5e920fd0be4d10a8b93d149",
+    "reports/source-context-adapters-after-20261030.log": "ac1906c93c4f581b11ad84f096067e53c628d9ac145637f40a1bdecfa2b86500",
+    "reports/source-context-connection-regression-20261030.log": "5d7eb18528d05ab44bc7c1314f31cc7299e19b0bf464c1d50b5bf464c5ad044c",
+    "reports/source-context-onboarding-regression-20261030.log": "68ad72b3aa409a66f5f1c3fcbcd013b33bdd0c6d921e8ac16c031ee079fb2f10",
+    "reports/source-context-grounding-regression-20261030.log": "4d007a21b61143f38798e0f2d1089a3d98e8f13670e2f57cda83d4478e72f41f",
+    "reports/source-context-javascript-regression-20261030.log": "a35a87ed21636ee3f9e859b4713acf0cef1b743d6628d6b77c915f484496407d",
+    "reports/source-context-browser-contract-final-20261030.log": "44b21054b6cf0ed73f19fe8a7431a27515b0bc7befdb5d8d11a45af316385c45",
+    "reports/source-context-docs-final-20261030.log": "0ae01d5d9c07164b5737f24c700c89337f61e152bee624d9f46f25b757987313"
+  },
+  "browser_simulation": {
+    "driver": "Coding assistant through in-app browser; Edge contract suites separately",
+    "actual_http": true,
+    "actual_windows_dpapi": true,
+    "model": "Fixed synthetic contract response, not live",
+    "viewports": [
+      1280,
+      390
+    ],
+    "locales": [
+      "en",
+      "zh"
+    ],
+    "notes_persisted_after_reload": 3,
+    "unknown_authorization_unchanged": true,
+    "pending_reanalysis_discard_keeps_notes": true,
+    "console_warnings_or_errors": 0,
+    "owned_server_stopped": true,
+    "owned_temporary_state_removed": true
+  },
+  "live_experiment": {
+    "protocol": "SOURCE_CONTEXT_V1",
+    "requests": 2,
+    "integration_failed_arms": 2,
+    "not_run_arms": 4,
+    "closed": true,
+    "raw_receipt": "source-context-live-v1.json",
+    "billed_cost_usd": null
+  },
+  "offline_same_response_replay": {
+    "cases": 2,
+    "retained_notes": 22,
+    "prior_missing_facts_retained": 9,
+    "new_missing_or_partial_facts": 4,
+    "actual_original_pdf_parse_and_dpapi": true,
+    "new_model_requests": 0,
+    "receipt": "source-context-replay-v1.json",
+    "review": "source-context-review-v1.json"
+  },
+  "current_full_regression": "NOT_STARTED_AT_RECEIPT_WRITE",
+  "independent_human_acceptance": false,
+  "whole_material_acceptance": false,
+  "release_ready": false,
+  "production_actions": 0,
+  "database_migration": false,
+  "remaining": [
+    "Full current-source regression and hosted CI",
+    "Four observed new fact gaps and qualifiers separated from Claim wording",
+    "Four fixed experiment cases not run",
+    "Full 36-material/1716-fact semantics",
+    "Independent human review",
+    "Trusted production signing and independent clean Windows lifecycle",
+    "Live ATS and authenticated mailbox workflows"
+  ]
+}

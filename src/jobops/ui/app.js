@@ -4,7 +4,7 @@ const STRINGS = {
   zh: {
     sourceContextTitle: "原文中的约束与待核实事项",
     sourceContextHelp: "以下内容来自原文，仍需你核对。它们不会自动填写资料、成为 Claim 或获得对外使用批准。行号对应分析文本；扫描件还需对照原始页面。",
-    sourceContextConstraint: "求职约束", sourceContextGap: "证据缺口", sourceContextUnconfirmed: "待核对",
+    sourceContextConstraint: "求职约束", sourceContextGap: "来源限制与待核实事项", sourceContextUnconfirmed: "待核对",
     sourceContextLines: "分析文本第 {start}–{end} 行", sourceContextOpenField: "查看并填写对应资料",
     sourceContextEmpty: "本次没有保留约束或待核实事项；这不表示原文没有此类信息。请核对原件。",
     sourceContextUnavailable: "本次没有可用的约束核对记录，请查看原件并手动补充资料。",
@@ -81,7 +81,7 @@ const STRINGS = {
   en: {
     sourceContextTitle: "Constraints and verification needs from the source",
     sourceContextHelp: "These source excerpts still need your review. They do not automatically fill Profile answers, become Claims or authorize external use. Lines refer to analyzed text; check scans against the original page too.",
-    sourceContextConstraint: "Work constraint", sourceContextGap: "Evidence gap", sourceContextUnconfirmed: "Needs review",
+    sourceContextConstraint: "Work constraint", sourceContextGap: "Source limits and verification needs", sourceContextUnconfirmed: "Needs review",
     sourceContextLines: "Analysis text lines {start}–{end}", sourceContextOpenField: "Open the Profile question",
     sourceContextEmpty: "No constraints or verification needs were retained in this analysis. This does not mean the source has none. Check the original.",
     sourceContextUnavailable: "No constraint review record is available. Check the original and enter any missing Profile information yourself.",

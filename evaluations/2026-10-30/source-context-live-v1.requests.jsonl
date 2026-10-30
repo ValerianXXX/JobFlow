@@ -1,0 +1,6 @@
+{"event": "RESERVED", "request": 1, "case": "en-chronological", "at": "2026-10-30T06:02:55.749524Z"}
+{"event": "FINISHED", "case": "en-chronological", "status": "RETURNED", "tool_calls": 0, "elapsed_ms": 43672}
+{"event": "ARM", "case": "en-chronological", "source_sha256": "55380fdecc927be2f2537eb0bdfb4295dab79d3f207a12838e77ccb87216d313", "text_sha256": "8abf221c19e05643979e20466cd84906430f9004550c2478aa21a12bc598ddc2", "target_fact_ids": ["en-chronological-f03", "en-chronological-f43", "en-chronological-f46", "en-chronological-f47"], "status": "FAILED", "error_type": "AttributeError", "elapsed_ms": 43687}
+{"event": "RESERVED", "request": 2, "case": "zh-chronological", "at": "2026-10-30T06:03:39.430229Z"}
+{"event": "FINISHED", "case": "zh-chronological", "status": "RETURNED", "tool_calls": 0, "elapsed_ms": 72078}
+{"event": "ARM", "case": "zh-chronological", "source_sha256": "7d22554623eed66c68719e53ffd442d9daed19b83684e0f8002b03921944dc5d", "text_sha256": "3713af6711a24369775e493c976d4cf6dfdbf20be05cd891ece83462a7837db6", "target_fact_ids": ["zh-chronological-f03", "zh-chronological-f39", "zh-chronological-f43", "zh-chronological-f46", "zh-chronological-f47"], "status": "FAILED", "error_type": "AttributeError", "elapsed_ms": 72078}

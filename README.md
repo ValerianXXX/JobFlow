@@ -15,7 +15,9 @@ The source branch includes these reviewable capabilities. They are not a new sig
 The [runtime revalidation follow-up](docs/runtime-revalidation-2026-10-30.md)
 preserves a failed 1,352-test full run, repairs native staged-file validation for
 deep paths, and corrects the public-English guide. Focused native execution and
-documentation checks pass; the new full run remains a separate acceptance gate.
+documentation checks pass. The subsequent full run at `b97dbe0` completed 1,361
+tests with no failures and four native-symlink skips; later changes need their own
+checks. This does not establish signed-release or clean-Windows acceptance.
 
 Documented work duration now excludes gaps, overlapping jobs and repeated Claims. Partial dates retain bounds; internship time and skill-specific or full-time requirements require separate review. New Profiles use version 3 while older Profiles remain readable; older generated tenure values need a reviewed revision before supporting a years requirement. [Duration rules, regression evidence and rollback](docs/experience-duration-2026-10-29.md) also record the six-sample Profile-hint check without claiming complete material understanding.
 
@@ -36,8 +38,9 @@ remain separate requirements.
 
 | Capability | Available source behavior | Verification and limits |
 | --- | --- | --- |
-| Materials and facts | Optional PDF/image transcription, entity-linked candidates, encrypted originals and separate source/Claim review | [Source-fact review](docs/source-fact-review-2026-10-29.md) accounts for 241/282 source facts in candidates across six exposed development files. This includes 12 private identity/contact omissions whose Profile path needs separate measurement; it is not full-material acceptance. |
+| Materials and facts | Optional PDF/image transcription, entity-linked candidates, encrypted originals and separate source/Claim review | [Source-fact review](docs/source-fact-review-2026-10-29.md) accounts for 241/282 source facts in candidates across six exposed development files. Twelve private identity/contact facts are outside the Claim channel; a later six-source check verified email hints only. Full-material acceptance remains open. |
 | Omission review | Host-derived cited/uncited line counts, bounded ranges and bilingual explanations | [Verification](docs/source-fact-review-2026-10-29.md): input coverage and line citations never certify fact completeness. Original PDF/image comparison remains available; TXT/DOCX originals must be opened separately. |
+| Source constraints | Separately retained source excerpts for work constraints and missing evidence, with links to Profile questions | [Source-context review](docs/source-context-2026-10-30.md): two real responses recovered nine prior omissions after adapter repair/replay, but four new missing/incomplete facts remain. Notes stay unconfirmed; model completeness is not accepted. |
 | Original-source review | Side-by-side original pages, source regions, zoom/fit and keyboard scrolling | [Browser acceptance](docs/pdf-regions-and-cjk-2026-10-29.md) covers actual upload/parser/render/DPAPI with a recorded model response; it is separate from live model observations. |
 | Editable resume | Preserve an approved DOCX master, or create a new standard DOCX from approved PDF-source facts | [Standard-resume workflow](docs/standard-resume-2026-10-29.md); new layouts require review and renewed material/position approval. |
 | Local PDF output | Default Word or explicitly selected LibreOffice with isolated conversion and document QA | [Paired output checks](docs/local-pdf-export-2026-10-29.md); unsafe two-column output remains rejected. No office software is installed automatically. |
