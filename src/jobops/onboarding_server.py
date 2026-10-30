@@ -20,6 +20,12 @@ from .errors import JobOpsError
 from .browser_assist import BrowserAssistManager, COMPANION_EXTENSION_VERSION, COMPANION_PROTOCOL_VERSION
 from .companion_binding import sign_pair_response, validate_pair_request
 from .compatibility import companion_compatibility
+from .http_rejection import (
+    REJECTED_BODY_DRAIN_LIMIT,
+    REJECTED_BODY_DRAIN_TIMEOUT_SECONDS,
+    discard_rejected_prefix,
+    small_declared_body_length,
+)
 from .instance_lock import local_instance_lock
 from .onboarding_center import (
     MAX_LARGE_EXPORT_BYTES,
@@ -33,8 +39,6 @@ from .official_discovery import MAX_SNAPSHOT_BYTES
 
 JSON_LIMIT = 2 * 1024 * 1024
 APPLICATION_BUNDLE_MANIFEST_LIMIT = 64 * 1024
-REJECTED_BODY_DRAIN_LIMIT = 64 * 1024
-REJECTED_BODY_DRAIN_TIMEOUT_SECONDS = 0.25
 
 
 class OnboardingHTTPServer(ThreadingHTTPServer):
@@ -314,37 +318,19 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
 
         Windows may reset a TCP connection when the server closes it with unread
         request bytes, which can hide the JSON error response from the browser.
-        Only one small, explicitly sized body is consumed, with a short timeout;
+        Only one small, explicitly sized body is consumed, with a total deadline;
         transfer-encoded, ambiguous, oversized, or incomplete bodies still fail
         closed without an unbounded read.
         """
-        if self.headers.get("Transfer-Encoding") is not None:
+        length = small_declared_body_length(self.headers)
+        if length is None:
             return
-        content_lengths = self.headers.get_all("Content-Length") or []
-        if len(content_lengths) != 1:
-            return
-        try:
-            length = int(content_lengths[0])
-        except ValueError:
-            return
-        if not 0 < length <= REJECTED_BODY_DRAIN_LIMIT:
-            return
-        previous_timeout = self.connection.gettimeout()
-        try:
-            self.connection.settimeout(REJECTED_BODY_DRAIN_TIMEOUT_SECONDS)
-            remaining = length
-            while remaining:
-                chunk = self.rfile.read(min(16 * 1024, remaining))
-                if not chunk:
-                    break
-                remaining -= len(chunk)
-        except OSError:
-            pass
-        finally:
-            try:
-                self.connection.settimeout(previous_timeout)
-            except OSError:
-                pass
+        discard_rejected_prefix(
+            self.rfile,
+            self.connection,
+            byte_limit=length,
+            deadline=time.monotonic() + REJECTED_BODY_DRAIN_TIMEOUT_SECONDS,
+        )
 
     def _discard_rejected_framing(self) -> None:
         """Discard a bounded prefix after rejecting ambiguous framing.
@@ -355,26 +341,12 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
         senders; consuming a small in-flight body avoids a Windows TCP reset
         hiding the original structured rejection response.
         """
-        previous_timeout = self.connection.gettimeout()
-        deadline = time.monotonic() + REJECTED_BODY_DRAIN_TIMEOUT_SECONDS
-        remaining = REJECTED_BODY_DRAIN_LIMIT
-        try:
-            while remaining:
-                timeout = deadline - time.monotonic()
-                if timeout <= 0:
-                    break
-                self.connection.settimeout(timeout)
-                chunk = self.rfile.read1(min(16 * 1024, remaining))
-                if not chunk:
-                    break
-                remaining -= len(chunk)
-        except OSError:
-            pass
-        finally:
-            try:
-                self.connection.settimeout(previous_timeout)
-            except OSError:
-                pass
+        discard_rejected_prefix(
+            self.rfile,
+            self.connection,
+            byte_limit=REJECTED_BODY_DRAIN_LIMIT,
+            deadline=time.monotonic() + REJECTED_BODY_DRAIN_TIMEOUT_SECONDS,
+        )
 
     def _stream_large_export(self, length: int, extension: str) -> dict[str, Any]:
         if extension.casefold() != ".zip":

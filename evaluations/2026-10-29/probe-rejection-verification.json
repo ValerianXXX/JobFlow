@@ -1,0 +1,80 @@
+{
+  "observedAt": "2026-10-30T03:51:39.707393+00:00",
+  "baseCommit": "deda8b9b6da91be4eafb047b20b3e82f733a571a",
+  "frozenCommit": "41cb9193233359f45a894a8094223302d91115d6",
+  "sourceCommit": "d281fbc3d54ed76514507abe2b913e99c41f692f",
+  "runtime": {
+    "python": "3.11.3",
+    "platform": "Windows x64",
+    "extras": [
+      "build",
+      "mcp",
+      "document"
+    ]
+  },
+  "harnessOnlyInitialError": "Wrong imported handler name; preserved separately before test freeze; not a product failure",
+  "frozenBefore": {
+    "tests": 8,
+    "passed": 4,
+    "failed": 4
+  },
+  "frozenAfter": {
+    "tests": 8,
+    "passed": 8,
+    "unchanged": true
+  },
+  "related": {
+    "tests": 107,
+    "passed": 107,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 53.109
+  },
+  "additionalBoundaries": 6,
+  "compatibility": "PASS: source 0.7.0 with Companion 0.9.2; signed stable match still unavailable",
+  "publicGateStatus": "PASS",
+  "lockedJavascriptTree": {
+    "files": 173,
+    "bytes": 18516238,
+    "sha256": "df85481a30bcbc0f7276548d245eba0980d136c8085ca4a3662cb6f3c568302f",
+    "validatedBeforeAndAfterCopy": true
+  },
+  "sourceLFHashes": {
+    "src/jobops/http_rejection.py": "50acb1092c996e6d8a769adf6e92a7fba850768a760bd3fea369bd2a5014f5e4",
+    "src/jobops/onboarding_server.py": "9f48b45d777344a8b6c371251309da567472eebb0ec276a4779950829d0c5a7d",
+    "src/jobops/clean_windows_acceptance.py": "592b2e5cdee9d618fd9ff5e83169ed05c8c859ce5b423b23ab31ecde67f534a6",
+    "tests/test_probe_http_rejection.py": "4524c4402140a4ff54389a85a3fb354bd79b3c65213f070bee2a17c6c921c2f9",
+    "tests/test_http_rejection_boundaries.py": "4050bc2c8e0f459f95ffc8797175221f7f696eaa8ef886caae5998b73a942d4b"
+  },
+  "localLogLFHashes": {
+    "probe-rejection-frozen-before-20261029.log": "e6f78e0e76c357eb945658c0343d53462ab238809c638433ea746409187be9e4",
+    "probe-rejection-frozen-corrected-before-20261029.log": "b6557f2c27b4f1f0d36cab437fd6a1ba4c0e5b6d8d568fb582f7249c4da49f7b",
+    "probe-rejection-frozen-after-20261029.log": "1abc9501825c9c477fc4cb8b9160dce973e19dd5ea08149f7e63a21b761d76e9",
+    "probe-rejection-related-20261029.log": "c8452da61f2e75edad531eb56850957117f56fe326d8f339af1fe9c5e95213e8",
+    "probe-rejection-public-boundary-20261029.log": "f7b9fc4442fe8eb136c07b81030a3bc0d69cb85dc077130ce21baf0ae6beea92"
+  },
+  "priorFullRun": {
+    "commit": "c6c64d33ebc83bfacc43641b588cd7ba5cf7a4c9",
+    "tests": 1308,
+    "passed": 1300,
+    "failed": 1,
+    "errors": 3,
+    "skipped": 4
+  },
+  "newFullRun": {
+    "status": "RUNNING_AT_OBSERVATION",
+    "sourceCommit": "d281fbc3d54ed76514507abe2b913e99c41f692f"
+  },
+  "newModelCalls": 0,
+  "productionActions": 0,
+  "migration": false,
+  "validationLevel": "Deterministic contracts and actual local HTTP with synthetic headers and native-binding fixtures",
+  "notEstablished": [
+    "Installed store browser proof",
+    "Independent clean Windows lifecycle",
+    "Trusted signing",
+    "Complete material semantic acceptance",
+    "Live ATS and mailbox workflows",
+    "Independent human acceptance"
+  ]
+}
