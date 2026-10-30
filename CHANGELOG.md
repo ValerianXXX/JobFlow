@@ -4,6 +4,12 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Verify the closed fact-preservation experiment against its recorded Git
+  commit, while continuing to check all frozen inputs, observations and review
+  references. Normal product evolution no longer invalidates the old evidence.
+  Missing history fails explicitly; the live runner, budgets, gold facts and
+  original failed regression remain unchanged. See the
+  [historical verification repair](docs/frozen-evaluation-review-2026-10-30.md).
 - Preserve the full applicant name as written, including Chinese and unsplit
   names, in an optional Profile field. Propose unique contacts only from a
   bounded applicant header and retain hash-bound source coordinates. Keep

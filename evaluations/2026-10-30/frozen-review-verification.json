@@ -1,0 +1,57 @@
+{
+  "checked_at": "2026-10-30T10:37:34.999112+00:00",
+  "base_commit": "c7bdf13e2f1c5efb02541b0bbe9d1f1e1edf286d",
+  "historical_experiment_commit": "93cb574db68f0f55827e28e81ebef7d0b37a37ca",
+  "change": "Separate closed-observation code provenance from live pre-dispatch product checks",
+  "initial_full_run": {
+    "commit": "c3093bf6d5b2fa7dccd5cb94d402a69ceef5cfcb",
+    "discovered": 1410,
+    "passed": 1405,
+    "errors": 1,
+    "skipped": 4,
+    "seconds": 3700.455,
+    "status": "FAILED"
+  },
+  "before_focus": {
+    "commit": "c7bdf13e2f1c5efb02541b0bbe9d1f1e1edf286d",
+    "tests": 6,
+    "errors": 1,
+    "seconds": 0.047
+  },
+  "after_focus": {
+    "tests": 14,
+    "passed": 14,
+    "seconds": 1.538
+  },
+  "related_review_tests": {
+    "tests": 46,
+    "passed": 46,
+    "seconds": 15.642
+  },
+  "public_documentation": {
+    "tests": 5,
+    "passed": 5,
+    "seconds": 0.056
+  },
+  "frozen_live_runner_changed": false,
+  "gold_or_observations_changed": false,
+  "budgets_changed": false,
+  "frozen_input_files_checked": 6,
+  "historical_product_files_checked": 5,
+  "only_evolved_current_product": "src/jobops/onboarding_center.py",
+  "new_provider_calls": 0,
+  "real_external_actions": 0,
+  "semantic_judgments_verified": false,
+  "whole_material_acceptance": false,
+  "full_current_regression": "NOT_YET_RUN",
+  "requires": "Full Git checkout containing the recorded experiment commit; no network fetch by verifier",
+  "rollback": "Reviewed revert; no runtime state, schema, provider or deployment changes",
+  "log_sha256": {
+    "reports/transcript-validation-full-20261030.log": "783be76fdc5768e9b5f9bc46a34d1e260a2e4468aa34bd0aea224bc425051345",
+    "reports/frozen-review-before-20261030.log": "382f79a0fd2b9232c480dbe514758479216ae832be359881800fcffcebdcd6e8",
+    "reports/frozen-review-after-20261030.log": "8ca2ffbe96be3ef2459e94d0f5bf3c9bd0feaac9d34e27b4005863079b940c84",
+    "reports/frozen-review-related-20261030.log": "f0f41f215038cd3adf5569779da2eb00ba6972e3cb67519f051d634cdb9aa530",
+    "reports/frozen-review-docs-20261030.log": "5808f8a3cd70c018a112983e6430733edaf2fb7fa93a66c38889e663fd742b1e",
+    "reports/frozen-review-cli-20261030.json": "9553dc6caa4e0d9449387211af896774bf53c870ce3e7c3631d534679c9aefa6"
+  }
+}
