@@ -1,0 +1,43 @@
+{
+  "protocol": "SOURCE_CONTEXT_V1",
+  "frozen_at": "2026-10-30T06:02:22.313961Z",
+  "max_requests": 6,
+  "requests_per_case": 1,
+  "stop_after_failed_arms": 2,
+  "automatic_retries": 0,
+  "scope": "Six exposed synthetic transcripts; document analysis only; no OCR or complete workflow claim",
+  "cases": [
+    "en-chronological",
+    "zh-chronological",
+    "mixed-paired_columns",
+    "en-scanned_pages",
+    "zh-scanned_pages",
+    "mixed-portfolio_capture"
+  ],
+  "observations": [
+    "evaluations/2026-10-29/source-coverage-replay-text.json",
+    "evaluations/2026-10-29/source-coverage-replay-visual.json"
+  ],
+  "review": "evaluations/2026-10-29/complete-claims-source-review.json",
+  "inputs": {
+    "evaluations/2026-10-29/source-coverage-replay-text.json": "80ef300a349fc2d511f3c2f71b841af7fe5db113d6bb406413c3e40b3230e059",
+    "evaluations/2026-10-29/source-coverage-replay-visual.json": "68829aa590cacc27bd97bb431395572e30851b8c9c74d18400d047c25008e5a6",
+    "evaluations/2026-10-29/complete-claims-source-review.json": "057331d370f1df6a1753e1236f5e3ddd8307299822e5a52d128e7903da811162"
+  },
+  "product": {
+    "src/jobops/ai_runtime.py": "a5794ab524d6e1e365cf2e59be10d4c5066ac81f62faff3c66b5a8a34fa23f50",
+    "src/jobops/source_context.py": "f11775c50738f1d1922f6a46b9d0492a2e538f7be348f651d2a22576e6fe7fc2",
+    "src/jobops/onboarding_center.py": "43855cb8a44f72ce77e2666d0feea271dd39d0ec12888e301905f07c75af4ca4",
+    "src/jobops/ui/app.js": "ad667df9b8989b2eeff4fc787d60feaef668bef76d24ae8a55324e3d1e480b4a",
+    "src/jobops/ui/styles.css": "4bd7d04f44e0e214fa966103168521859f98e7d9300ccb022e4431675c41fdb9"
+  },
+  "route": {
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "hermes_commit": "afe53708ee7400919ae3e17a6dde9b02629e5c87"
+  },
+  "billed_cost_usd": null,
+  "independent_human_acceptance": false,
+  "fresh_holdout": false,
+  "whole_material_acceptance": false
+}
