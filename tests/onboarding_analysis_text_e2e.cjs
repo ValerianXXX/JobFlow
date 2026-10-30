@@ -130,6 +130,22 @@ const {chromium} = require("playwright");
     assert.equal(await nameRow.locator(".analysis-text-open").count(), 0);
     assert.match(await nameRow.locator(".profile-hint-origin").textContent(), /来源分析已变更/);
     assert.equal(await nameRow.locator(".answer-input").inputValue(), "林岚 / Sample 01");
+    await page.evaluate(() => {
+      const readApi=api; window.languageSaves=[];
+      api=async(route,options)=>{
+        if(route==="save") {languageSaves.push(JSON.parse(options.body));return {status:"SAVED"};}
+        return readApi(route,options);
+      };
+      state.data.claims=[];state.data.conflicts=[];state.data.completion={remaining:25,total:25,resolved:0,percent:0};
+      state.data.profile_hint_sources.candidate_display_name.status="AVAILABLE";
+      renderQuestions();
+    });
+    await page.getByRole("button",{name:"EN",exact:true}).click();
+    await page.waitForFunction(()=>state.activities.length===0);
+    assert.equal(await nameRow.locator("xpath=ancestor::details").count(),0);
+    assert.equal(await nameRow.locator(".status-select option:checked").textContent(),"Needs review (imported)");
+    assert.equal(await nameRow.locator(".analysis-text-open").count(),1);
+    assert.deepEqual(await page.evaluate(()=>languageSaves),[{locale:"en",answers:{}}]);
     assert.deepEqual(errors, []); assert.deepEqual(external, []);
     process.stdout.write(JSON.stringify({status:"PASS",scenario_groups:12,locales:["en","zh"],widths:[1280,390],keyboard:true,late_response_cleared:true,selection_unchanged:true,profile_origins:true,edited_origin_removed:true,stale_origin_not_linked:true,external_requests:0,backend:"contract double"}));
   } finally {await browser.close();}
