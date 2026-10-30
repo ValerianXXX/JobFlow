@@ -4,6 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Save bounded analysis-text snapshots inside encrypted source state. Add bilingual
+  numbered-text review with direct links from uncited ranges, candidate citations
+  and source notes; preserve blank lines, bounded navigation and source integrity.
+  Re-analysis invalidates old coordinates; closing the viewer clears its content.
+  Viewing does not select Claims, fill Profile or grant approval. See
+  [verification and rollback](docs/analysis-text-review-2026-10-30.md).
+
 - Preserve complete entity summaries and relevant factual limitations in document
   candidates, keeping source notes supplemental. A frozen two-request Hermes
   comparison recovered four preceding gaps in the two exposed samples; full
