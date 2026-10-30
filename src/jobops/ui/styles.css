@@ -749,6 +749,14 @@ body.is-busy :is(#emergencyStop,#cancelGuidedIntake,#pauseAuthorizedDiscovery,#k
 .source-context ul{list-style:none;padding:0;margin:12px 0 0}.source-context li{padding:12px 0;border-top:1px solid #dbe4e8}
 .source-context blockquote{white-space:pre-wrap;margin:10px 0;padding:8px 12px;border-left:3px solid #7a929f;line-height:1.6}
 .source-context small{display:block}.source-context button{margin-top:8px;text-align:left;white-space:normal}
+.context-decision-panel{margin-top:12px}.context-decision-panel summary{cursor:pointer;font-weight:600;padding:10px 0}
+.context-decision-controls{display:grid;gap:12px;min-width:0;border:1px solid #bccbd0;border-radius:8px;padding:12px;margin:8px 0}
+.context-decision-controls label{display:grid;gap:6px}.context-decision-controls label[hidden]{display:none}
+.context-decision-controls select{width:100%;min-width:0;max-width:100%;padding:8px}
+.context-decision-controls .context-confirm-row{display:flex;align-items:flex-start;line-height:1.5}
+.context-confirm-row input{flex:0 0 auto;margin-top:4px}.context-review-unavailable{font-weight:600}
+.context-review-status{display:block;margin-top:6px;font-weight:600}.context-saved-answer{padding:8px;background:#edf2f5;border-radius:6px}
+.source-entry .context-saved-answer strong{display:inline}
 .context-review-status{display:inline-block;margin:6px 0;color:#664a1e;font-size:12px}
 .analysis-text-controls{grid-column:1/-1;margin:10px 0;font-size:.85rem;line-height:1.5}
 .analysis-gap-links{display:flex;flex-wrap:wrap;gap:10px}

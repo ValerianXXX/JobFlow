@@ -2558,7 +2558,7 @@ function renderAiConnection() {
 }
 
 const SOURCE_CONTEXT_FIELDS=new Set(["remote_preference","preferred_locations","available_start_date","work_authorization","visa_sponsorship","minimum_salary"]);
-function sourceContextMarkup(value, summary) {
+function sourceContextMarkup(value, summary, reviewable=false) {
   const notes=(Array.isArray(value)?value:[]).slice(0,64).filter(note=>note&&
     note.status==="UNCONFIRMED_SOURCE_CONTEXT"&&note.approved_for_external===false&&
     typeof note.quote==="string"&&note.quote.length>0&&note.quote.length<=2000&&
@@ -2569,7 +2569,7 @@ function sourceContextMarkup(value, summary) {
   const filtered=Number.isInteger(summary?.filtered)&&summary.filtered>0?summary.filtered:0;
   return `<section class="source-context"><h4>${escapeHtml(t("sourceContextTitle"))}</h4><p>${escapeHtml(t("sourceContextHelp"))}</p>${notes.length?`<ul>${notes.map(note=>{
     const location=t("sourceContextLines").replace("{start}",String(note.line_start)).replace("{end}",String(note.line_end));
-    return `<li><strong>${escapeHtml(t(note.kind==="profile_constraint"?"sourceContextConstraint":"sourceContextGap"))}${note.field_id?` · ${escapeHtml(fieldLabel(note.field_id))}`:""}</strong><span class="context-review-status">${escapeHtml(t("sourceContextUnconfirmed"))}</span><blockquote>${escapeHtml(note.quote)}</blockquote><small>${escapeHtml(location)}</small>${note.field_id?`<button type="button" class="text-action source-context-field" data-context-field="${escapeHtml(note.field_id)}">${escapeHtml(t("sourceContextOpenField"))}</button>`:""}</li>`;
+    return `<li${reviewable&&typeof note.note_id==="string"?` data-context-note="${escapeHtml(note.note_id)}"`:""}><strong>${escapeHtml(t(note.kind==="profile_constraint"?"sourceContextConstraint":"sourceContextGap"))}${note.field_id?` · ${escapeHtml(fieldLabel(note.field_id))}`:""}</strong><span class="context-review-status">${escapeHtml(t("sourceContextUnconfirmed"))}</span><blockquote>${escapeHtml(note.quote)}</blockquote><small>${escapeHtml(location)}</small>${note.field_id?`<button type="button" class="text-action source-context-field" data-context-field="${escapeHtml(note.field_id)}">${escapeHtml(t("sourceContextOpenField"))}</button>`:""}</li>`;
   }).join("")}</ul>`:`<p>${escapeHtml(t(provided?"sourceContextEmpty":"sourceContextUnavailable"))}</p>`}${filtered?`<p>${escapeHtml(t("sourceContextFiltered").replace("{count}",String(filtered)))}</p>`:""}</section>`;
 }
 
@@ -2602,9 +2602,10 @@ function renderSources() {
   list.querySelectorAll(".source-entry").forEach((entry,index)=>{
     const source=state.data.sources[index];
     const notes=(state.data.context_notes||[]).filter(note=>note.source_id===source.source_id);
-    entry.insertAdjacentHTML("beforeend",sourceContextMarkup(notes,source.source_context_review));
+    entry.insertAdjacentHTML("beforeend",sourceContextMarkup(notes,source.source_context_review,true));
   });
   renderSourcePreviews();
+  window.JobFlowContextReview?.decorate();
   const pending=state.data.suggestions.filter(item=>!item.accepted);
   document.querySelector("#suggestionBox").classList.toggle("hidden", !pending.length);
   document.querySelector("#suggestionCount").textContent=pending.length;
@@ -2799,6 +2800,9 @@ async function refresh(cacheBust=false) {
   if(["zh","en"].includes(next?.locale)){state.locale=next.locale;applyLocale();}
   assertUiCompatibility(next);
   state.data=next;
+  // Locale switches preserve unsaved drafts in data.answers. Context review
+  // must display the saved snapshot that its server-issued hash actually binds.
+  state.savedContextAnswers=JSON.parse(JSON.stringify(next.answers));
   state.tailoringProposal=null;
   state.answerDraft=JSON.parse(JSON.stringify(state.data.answers));
   state.claimDraft={}; state.claimEditDraft={}; state.conflictDraft={}; state.selectedClaims=new Set();

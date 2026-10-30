@@ -37,6 +37,7 @@ from .candidate_profile import (
 )
 from .candidate_coverage import source_reference_coverage
 from .source_context import DocumentAnalysisResult, bind_context_notes, safe_context_summary
+from .context_decisions import prepare_review as prepare_context_review, review_state as context_review_state, track_answer_versions
 from .experience import documented_experience
 from .application_readiness import build_application_readiness
 from .application_execution import validate_application_execution_plan_integrity
@@ -817,6 +818,27 @@ class OnboardingCenterService:
         return window(source, self.onboarding.read_bytes(source["secure_ref"]), payload)
 
     @_synchronized
+    def review_source_context(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from .analysis_text_review import window
+        reference, state = self.ensure_state()
+        self._assert_editable(state)
+        note, event, changed = prepare_context_review(state, payload)
+        source = next(item for item in state['sources'] if item['source_id'] == note['source_id'])
+        excerpt = window(source, self.onboarding.read_bytes(source['secure_ref']), {
+            'source_id': source['source_id'], 'expected_source_sha256': source['sha256'],
+            'expected_text_sha256': source['_analysis_transcript']['text_sha256'], 'line_start': note['line_start'],
+        })
+        text = '\n'.join(row['text'] for row in excerpt['lines'] if row['number'] <= note['line_end']).strip()
+        if text != note['quote'] or excerpt['last_line'] < note['line_end']:
+            raise JobOpsError('SOURCE_CONTEXT_REVIEW_MISMATCH', 'The context no longer matches the retained source analysis.')
+        if changed:
+            state.setdefault('source_context_reviews', []).append(event)
+            self._save_state(reference, state)
+        return {'status': 'SOURCE_CONTEXT_REVIEW_RECORDED', 'review_id': event['review_id'],
+                'context_review': context_review_state(state),
+                'changed': changed, 'answers_changed': False, 'approved_for_external': False, 'real_external_actions': 0}
+
+    @_synchronized
     def source_review_page(self, payload: dict[str, Any]) -> dict[str, Any]:
         import math
         from .source_review import source_page
@@ -1547,6 +1569,7 @@ class OnboardingCenterService:
         completion_ref: str | None = None,
     ) -> dict[str, object]:
         previous = self.onboarding.read_bytes(reference)
+        track_answer_versions(state, json.loads(previous))
         state["updated_at"] = iso_utc()
         result = self.onboarding.rotate(reference, canonical_json(state))
         try:
@@ -3665,6 +3688,7 @@ class OnboardingCenterService:
                 for item in state.get("pending_sources", []) if isinstance(item, dict)
             ],
             "context_notes": deepcopy(state.get("source_context_notes", [])),
+            "context_review": context_review_state(state),
             "profile_hint_sources": self._profile_hint_origins(state),
             "suggestions": deepcopy(active_suggestions), "claims": claims,
             "conflicts": conflicts, "profile_review": state.get("profile_review", "PENDING"),
@@ -4549,6 +4573,8 @@ class OnboardingCenterService:
         state["source_context_notes"] = [
             item for item in state.get("source_context_notes", []) if item.get("source_id") != source_id
         ] + deepcopy(pending.get("context_notes", []))
+        generations = state.setdefault('context_source_generations', {})
+        generations[source_id] = generations.get(source_id, 0) + 1
         known_claims = {item["claim_id"] for item in state.get("material_claims", [])}
         active_by_signature: dict[tuple[str, str, str], dict[str, Any]] = {}
         for claim in state.get("material_claims", []):
@@ -4768,6 +4794,8 @@ class OnboardingCenterService:
             state["profile_hint_sources"].pop(field_id)
         state["sources"] = [item for item in state.get("sources", []) if item.get("source_id") != source_id]
         state["source_context_notes"] = [item for item in state.get("source_context_notes", []) if item.get("source_id") != source_id]
+        state['source_context_reviews'] = [item for item in state.get('source_context_reviews', []) if item.get('source_id') != source_id]
+        state.setdefault('context_source_generations', {}).pop(source_id, None)
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != source_id]
         state["material_claims"] = [
             item for item in state.get("material_claims", []) if str(item.get("claim_id")) not in removed_claim_ids

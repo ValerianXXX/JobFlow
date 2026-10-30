@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-10-30",
+  "runtime_commit": "85ff7cfb088bdbdbd2283a0d51b93f1ea8909491",
+  "base_commit": "eea4455b32fd51265f2e260824255f2b1df91803",
+  "frozen_contract_commit": "ec04318",
+  "scope": "Private human source-context decisions; not a new extraction or model measurement",
+  "baseline": {
+    "tests": 29,
+    "passed": 29,
+    "seconds": 6.29
+  },
+  "before": {
+    "tests": 10,
+    "errors": 10,
+    "seconds": 4.864,
+    "fixture_correction": "Existing CONFIRMED status and normalized option values replaced nonexistent fixture status; expected assertions retained"
+  },
+  "first_after": {
+    "tests": 10,
+    "passed": 10,
+    "seconds": 15.233
+  },
+  "after": {
+    "tests": 12,
+    "passed": 12,
+    "seconds": 18.716
+  },
+  "related": {
+    "initial_tests": 102,
+    "initial_passed": 100,
+    "initial_failed": 2,
+    "seconds": 66.818,
+    "reason": "Two old cache-version assertions; exact expected asset revision updated, all other assertions retained",
+    "focused_repair_passed": 2,
+    "focused_repair_seconds": 0.008
+  },
+  "javascript_full": {
+    "status": "PASS",
+    "suites": 16,
+    "runtime_commit": "85ff7cfb088bdbdbd2283a0d51b93f1ea8909491"
+  },
+  "python_full": {
+    "status": "RUNNING",
+    "started_at_runtime_commit": "85ff7cfb088bdbdbd2283a0d51b93f1ea8909491",
+    "log": "reports/context-review-python-full-20261030.log",
+    "no_pass_claim": true
+  },
+  "public_docs": {
+    "tests": 5,
+    "passed": 5,
+    "seconds": 0.324
+  },
+  "browser": {
+    "status": "PASS",
+    "synthetic_only": true,
+    "actual_loopback_http": true,
+    "actual_windows_dpapi": true,
+    "live_provider_calls": 0,
+    "source_analysis": "FIXED_SYNTHETIC_RESPONSE",
+    "decisions_persisted": 5,
+    "unknown_remains_unknown": true,
+    "unsaved_profile_draft_preserved": true,
+    "locale_switch_uses_saved_answer": true,
+    "changed_answer_invalidates": true,
+    "reason_required": true,
+    "reanalysis_blocks_review": true,
+    "discard_restores_review": true,
+    "reload_preserves": true,
+    "session_origin_checks": true,
+    "external_requests": [],
+    "browser_errors": [],
+    "locales": [
+      "zh",
+      "en"
+    ],
+    "viewport_widths": [
+      1280,
+      390
+    ],
+    "independent_human_acceptance": false
+  },
+  "interactive_browser": {
+    "coding_assistant_operated": true,
+    "unknown_and_followup_verified": true,
+    "issues_fixed": [
+      "Missing static asset route",
+      "Select accessible name"
+    ],
+    "owned_fixture_cleanup_confirmed": true,
+    "independent_human": false
+  },
+  "browser_harness_repairs": [
+    "Use actual commit/discard selectors",
+    "Match existing Unanswered translation",
+    "Remove path session token for unauthenticated request",
+    "Assert disabled child select rather than fieldset"
+  ],
+  "screenshot_followup": {
+    "test_only": true,
+    "reason": "Wait for language-save overlay to settle and capture the complete card below the sticky header",
+    "all_workflow_assertions_retained": true,
+    "workflow_passed": true
+  },
+  "wheel": {
+    "unsigned": true,
+    "sha256": "9a5e2693231e45c05e7586ad9d31630f011a8966fbc1e5c263961e780c71c2fd",
+    "exact_source_matches": {
+      "context_decisions.py": true,
+      "onboarding_center.py": true,
+      "onboarding_server.py": true,
+      "ui/app.js": true,
+      "ui/context-review.js": true,
+      "ui/index.html": true,
+      "ui/styles.css": true
+    }
+  },
+  "safe_start": {
+    "audit": "PASS",
+    "real_knowledge": "KNOWLEDGE_ROOT_NOT_FOUND",
+    "real_knowledge_read": false
+  },
+  "environment": {
+    "own_worktree_venv": true,
+    "own_node_modules": true,
+    "dependency_files_changed": false,
+    "npm_bootstrap": "10.9.2 from the official npm registry through existing pnpm; npm ci --ignore-scripts",
+    "pip_check": "PASS"
+  },
+  "new_model_requests": 0,
+  "billed_cost_measured": false,
+  "semantic_gain_measured": false,
+  "human_review_time_measured": false,
+  "external_actions": 0,
+  "production_actions": 0,
+  "release_approved": false,
+  "open_requirements": [
+    "Complete 36-material semantic acceptance",
+    "Independent human review",
+    "Route-specific live ATS and mailbox acceptance",
+    "Trusted production signing",
+    "Independent clean Windows installation, upgrade, data retention and rollback",
+    "Full Python and hosted checks for this branch"
+  ],
+  "logs": {
+    "context-review-after-20261030.log": {
+      "path": "reports/context-review-after-20261030.log",
+      "sha256": "55c0dd1011967973559c5eddfa4415aa6a0348527fdf902a54a9c0753cc53572"
+    },
+    "context-review-audit-20261030.log": {
+      "path": "reports/context-review-audit-20261030.log",
+      "sha256": "1804952dd04baa11ff0189d2918a66a0d185f2a5d83a46f19e6e12e7c129e80e"
+    },
+    "context-review-baseline-20261030.log": {
+      "path": "reports/context-review-baseline-20261030.log",
+      "sha256": "3c41760acfd1d4707238a507e54960ac1422be0c22b5b021976cb5ba6dcbccb6"
+    },
+    "context-review-browser-artifacts-20261030.log": {
+      "path": "reports/context-review-browser-artifacts-20261030.log",
+      "sha256": "7f8e0dfa7a7548ed32946d0149dc8310fb1da5758e35479289fb95e540f729b4"
+    },
+    "context-review-browser-final-20261030.log": {
+      "path": "reports/context-review-browser-final-20261030.log",
+      "sha256": "7f8e0dfa7a7548ed32946d0149dc8310fb1da5758e35479289fb95e540f729b4"
+    },
+    "context-review-browser-first-20261030.log": {
+      "path": "reports/context-review-browser-first-20261030.log",
+      "sha256": "0cbca0c74b5363c824f66ca82f496a4a1e1906891dce381517315924c78b3e87"
+    },
+    "context-review-browser-fourth-20261030.log": {
+      "path": "reports/context-review-browser-fourth-20261030.log",
+      "sha256": "e14b4456b2cae9e22a58cd3418362760362ad1eda93b66cfc022042e3d2aabac"
+    },
+    "context-review-browser-second-20261030.log": {
+      "path": "reports/context-review-browser-second-20261030.log",
+      "sha256": "d0d196064055db441c78ed3de5c75985ebae97a9c56ec8c1ec4e232ca9b955c3"
+    },
+    "context-review-browser-settled-20261030.log": {
+      "path": "reports/context-review-browser-settled-20261030.log",
+      "sha256": "7f8e0dfa7a7548ed32946d0149dc8310fb1da5758e35479289fb95e540f729b4"
+    },
+    "context-review-browser-third-20261030.log": {
+      "path": "reports/context-review-browser-third-20261030.log",
+      "sha256": "b17034987e7976dde916bf761e949fdb4e93219a5230fd384a972ba19c667676"
+    },
+    "context-review-cache-regression-20261030.log": {
+      "path": "reports/context-review-cache-regression-20261030.log",
+      "sha256": "d55b29d45cb675b6cb18ea1ca43d132e855e70a213e38786554dc8971ac2771b"
+    },
+    "context-review-first-after-20261030.log": {
+      "path": "reports/context-review-first-after-20261030.log",
+      "sha256": "4882c5f3d0414218705083e998300b0130b28861710b2847e9475a779ace28dd"
+    },
+    "context-review-frozen-before-20261030.log": {
+      "path": "reports/context-review-frozen-before-20261030.log",
+      "sha256": "bc087e76fc9bbac224756449cc5ff8eef1698ad7c670ce2b4ee1301614856618"
+    },
+    "context-review-frozen-corrected-before-20261030.log": {
+      "path": "reports/context-review-frozen-corrected-before-20261030.log",
+      "sha256": "e885306bff588841618a8e0b31f5efb15f75b6a3951f56ea548b80dbbeda486d"
+    },
+    "context-review-javascript-full-20261030.log": {
+      "path": "reports/context-review-javascript-full-20261030.log",
+      "sha256": "c7c4bc61a5762184744efb409619c3c49f1fb70e38f4e56bfb5f7790db0ce440"
+    },
+    "context-review-locate-20261030.log": {
+      "path": "reports/context-review-locate-20261030.log",
+      "sha256": "6011e91d04e7bd459f6b350b4ceaa941e9e2286abb0a0421d96cd3b682030cff"
+    },
+    "context-review-node-setup-20261030.log": {
+      "path": "reports/context-review-node-setup-20261030.log",
+      "sha256": "49c9989e6fc71310cf90c8bd4a1f85a206ed2a72a8255568c775c286412cbeac"
+    },
+    "context-review-public-docs-20261030.log": {
+      "path": "reports/context-review-public-docs-20261030.log",
+      "sha256": "20e98c7defb5f3ec504f5732cfa218ded071d4fd834bf960a74c4537e01d23af"
+    },
+    "context-review-related-20261030.log": {
+      "path": "reports/context-review-related-20261030.log",
+      "sha256": "b06525899f02dc92c53d1b50952474c4a5a885e206b9ab8d270255f710273cfa"
+    },
+    "context-review-venv-setup-20261030.log": {
+      "path": "reports/context-review-venv-setup-20261030.log",
+      "sha256": "a757b4627e55e83d718935705499c6bccb8eb779812f6a090db8908ff2233a11"
+    },
+    "context-review-wheel-20261030.log": {
+      "path": "reports/context-review-wheel-20261030.log",
+      "sha256": "f4a4094e84897a515507e0cd89c54983b1d86b1088a292b82a59edf133164471"
+    }
+  }
+}
