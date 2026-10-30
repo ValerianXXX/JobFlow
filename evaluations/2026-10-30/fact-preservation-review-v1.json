@@ -1,0 +1,2576 @@
+{
+  "schema": "SOURCE_FACT_PRESERVATION_REVIEW_V1",
+  "reviewed_at": "2026-10-30T06:54:31.797083+00:00",
+  "reviewer": "CODING_ASSISTANT",
+  "independent_review": false,
+  "semantic_acceptance": false,
+  "whole_material_acceptance": false,
+  "observation_lf_sha256": "f2beb6531c1f46191befd233d865641e8233725497848244d8a1242d98965e3a",
+  "replay_lf_sha256": "16d2867142faf3c484dd6f8ebc50463f55e86f08883f9695335839b9fb73dc44",
+  "predecessor_review_lf_sha256": "b1276b71ddd27902c830d53bddf933c456e676b8da4bd641bfc75490dce1b94e",
+  "limitations": [
+    "Same two exposed synthetic transcripts; one response per prompt and case, no fresh holdout or statistical inference",
+    "Mappings are coding-assistant semantic judgments; the checker validates references and denominators only",
+    "Identity/contact facts remain in the 47-fact denominator but are outside the Claim/context scoring channels",
+    "Context notes remain unconfirmed; quoted unknowns are not verified eligibility or Profile answers",
+    "Billed cost, provider-internal requests, token use, independent human correction time and full-product recall are unknown"
+  ],
+  "cases": [
+    {
+      "case": "en-chronological",
+      "source_facts": 47,
+      "candidates_reviewed": 34,
+      "notes_reviewed": 6,
+      "facts": [
+        {
+          "fact_id": "en-chronological-f01",
+          "decision": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f02",
+          "decision": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f03",
+          "decision": "EXACT_UNCONFIRMED_CONTEXT_ONLY",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-4636C43FBA34"
+          ],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-4636C43FBA34"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f04",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-10B4EDC56E66"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-B93ADD5E6532"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f05",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-DFCFD4EBE747"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-DFCFD4EBE747"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f06",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-F30F512BAF4B"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f07",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-51425B759245"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-293973729601"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f08",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-51425B759245"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-293973729601"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f09",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-51425B759245"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-293973729601"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f10",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-489B71F9F4D3"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-489B71F9F4D3"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f11",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-DCE6C990EE14"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-DCE6C990EE14"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f12",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-2CA15A087D95"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-2CA15A087D95"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f13",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-08108A1F91D1"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-08108A1F91D1"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f14",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-286177842E96"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-FA9BF810FFA5"
+          ],
+          "previous_context_note_ids": [
+            "CTX-ED257A719588"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f15",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-E518E24C5FA6"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-E518E24C5FA6"
+          ],
+          "previous_context_note_ids": [
+            "CTX-ED257A719588"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f16",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-286177842E96"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-ED257A719588"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f17",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-6CF1A4B80FF5"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-6CF1A4B80FF5"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f18",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-CAF932DC6DC3"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-F3969C3E3605"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f19",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-CAF932DC6DC3"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-F3969C3E3605"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f20",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-CAF932DC6DC3"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-F3969C3E3605"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f21",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-4CFEE5BBAB0C"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-4CFEE5BBAB0C"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f22",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-8BA4683930FC"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-1851ED488E28"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f23",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-9F0F1F64D138"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-F79A3787AE68"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f24",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-28E766E23E27"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-28E766E23E27"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f25",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-12525DCDB3FB"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-12525DCDB3FB"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f26",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-FACE41E9BC7D"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-64FE0089625D"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f27",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-BEA34BCD4772"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-E3CEBF834FBE"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f28",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-BEA34BCD4772"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-E3CEBF834FBE"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f29",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-707508524048"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-707508524048"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f30",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-1F6676579F11"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-1F6676579F11"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f31",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-6F1221C2FCAF"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-6F1221C2FCAF"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f32",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-EDF8262687AF"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-EDF8262687AF"
+          ],
+          "previous_context_note_ids": [
+            "CTX-50ACF32D3CD7"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f33",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-8982D874900D"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-141C914B5273"
+          ],
+          "previous_context_note_ids": [
+            "CTX-50ACF32D3CD7"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f34",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-F18B0254BC0D"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-50ACF32D3CD7"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f35",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-57E5F7ADCEB1"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-E1FBED010CA8"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f36",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-57E5F7ADCEB1"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-E1FBED010CA8"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f37",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-57E5F7ADCEB1"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-E1FBED010CA8"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f38",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-1255A8632DBA"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-C4216E7263DF"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f39",
+          "decision": "EXACT_UNCONFIRMED_CONTEXT_ONLY",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-B914702B81A0"
+          ],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-B914702B81A0"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f40",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-B62AF2E185D9"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-3D573EDB4FE3"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f41",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-F6DAA837FA04"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-F6DAA837FA04"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f42",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-56E6756AE03D"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-D3096064BE69"
+          ],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-708750829CAE"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f43",
+          "decision": "EXACT_UNCONFIRMED_CONTEXT_ONLY",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-D3096064BE69",
+            "CTX-A743FD2E9AD9",
+            "CTX-6CDCD04FB5AF"
+          ],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-A743FD2E9AD9",
+            "CTX-6CDCD04FB5AF"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f44",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-A3F1DF6D30E5"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-566302D64459"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f45",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-46E3408D09DA"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-46E3408D09DA"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "en-chronological-f46",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-7548DE9EA44B"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-26911554CA06"
+          ]
+        },
+        {
+          "fact_id": "en-chronological-f47",
+          "decision": "EXACT_UNCONFIRMED_CONTEXT_ONLY",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-14D30A0BC389"
+          ],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-26911554CA06"
+          ]
+        }
+      ],
+      "candidate_review": [
+        {
+          "candidate_id": "EXT-75BE4B063C81",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              1,
+              1
+            ]
+          ],
+          "full_fact_ids": [],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": "Supported synthetic-material header outside the frozen 47-fact denominator; no extra credit"
+        },
+        {
+          "candidate_id": "EXT-10B4EDC56E66",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              6,
+              6
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f04"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-DFCFD4EBE747",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              7,
+              7
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f05"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-F30F512BAF4B",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              8,
+              8
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f06"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-51425B759245",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f07",
+            "en-chronological-f08",
+            "en-chronological-f09"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-489B71F9F4D3",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              13,
+              13
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f10"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-DCE6C990EE14",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              14,
+              14
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f11"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-2CA15A087D95",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              15,
+              15
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f12"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-08108A1F91D1",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              16,
+              16
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f13"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-286177842E96",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              17,
+              19
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f14",
+            "en-chronological-f16"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-E518E24C5FA6",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              18,
+              18
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f15"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-6CF1A4B80FF5",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              20,
+              20
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f17"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-CAF932DC6DC3",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f18",
+            "en-chronological-f19",
+            "en-chronological-f20"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-4CFEE5BBAB0C",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              27,
+              27
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f21"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-8BA4683930FC",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              28,
+              28
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f22"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-9F0F1F64D138",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              29,
+              29
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f23"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-28E766E23E27",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              30,
+              30
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f24"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-12525DCDB3FB",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              31,
+              31
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f25"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-FACE41E9BC7D",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              32,
+              32
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f26"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-BEA34BCD4772",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f27",
+            "en-chronological-f28"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-707508524048",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              36,
+              36
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f29"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-1F6676579F11",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              37,
+              37
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f30"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-6F1221C2FCAF",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              38,
+              38
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f31"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-EDF8262687AF",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              39,
+              39
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f32"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-8982D874900D",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              40,
+              40
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f33"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-F18B0254BC0D",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              41,
+              41
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f34"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-57E5F7ADCEB1",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              45,
+              47
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f35",
+            "en-chronological-f36",
+            "en-chronological-f37"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-1255A8632DBA",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              48,
+              48
+            ],
+            [
+              45,
+              47
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f38"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-B62AF2E185D9",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              51,
+              51
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f40"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-F6DAA837FA04",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              52,
+              52
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f41"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-56E6756AE03D",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              53,
+              53
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f42"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-A3F1DF6D30E5",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              56,
+              56
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f44"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-46E3408D09DA",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              57,
+              57
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f45"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-7548DE9EA44B",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              58,
+              58
+            ]
+          ],
+          "full_fact_ids": [
+            "en-chronological-f46"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        }
+      ],
+      "note_review": [
+        {
+          "note_id": "CTX-4636C43FBA34",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        },
+        {
+          "note_id": "CTX-B914702B81A0",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        },
+        {
+          "note_id": "CTX-D3096064BE69",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        },
+        {
+          "note_id": "CTX-A743FD2E9AD9",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        },
+        {
+          "note_id": "CTX-6CDCD04FB5AF",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        },
+        {
+          "note_id": "CTX-14D30A0BC389",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        }
+      ],
+      "primary_target_fact_ids": [
+        "en-chronological-f06"
+      ],
+      "primary_targets_fully_in_candidates": [
+        "en-chronological-f06"
+      ],
+      "prior_non_contact_omissions": [
+        "en-chronological-f03",
+        "en-chronological-f43",
+        "en-chronological-f46",
+        "en-chronological-f47"
+      ],
+      "prior_non_contact_omissions_retained": [
+        "en-chronological-f03",
+        "en-chronological-f43",
+        "en-chronological-f46",
+        "en-chronological-f47"
+      ],
+      "new_missing_or_partial_fact_ids": [],
+      "entity_metadata_note": "Four entity summaries retain names, roles and dates; named-project organization metadata now retains the exact source project name. Full-time/part-time qualifiers remain in candidate wording."
+    },
+    {
+      "case": "zh-chronological",
+      "source_facts": 47,
+      "candidates_reviewed": 34,
+      "notes_reviewed": 6,
+      "facts": [
+        {
+          "fact_id": "zh-chronological-f01",
+          "decision": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f02",
+          "decision": "PRIVATE_IDENTITY_OR_CONTACT_NOT_A_CLAIM",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f03",
+          "decision": "EXACT_UNCONFIRMED_CONTEXT_ONLY",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-0E1CDF6CFB87"
+          ],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-0E1CDF6CFB87"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f04",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-B35C3BD48B8F"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-B35C3BD48B8F"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f05",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-DD31E3C21651"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-DFBFC3E63FCD"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f06",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-AB75ACAF4C34"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-DFBFC3E63FCD"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f07",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-487D9A8C1AAD"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-A391D8BA6A1C"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f08",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-487D9A8C1AAD"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f09",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-487D9A8C1AAD"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f10",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-5C21F4B90E65"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-A391D8BA6A1C"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f11",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-A016E9CAF3E7"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-A016E9CAF3E7"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f12",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-BF9016E0EF91"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-1BBA321597C2"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f13",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-F921968BB965"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-68B4C21A89D8"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f14",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-14F28FCC778C"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-9B827838EA4D"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f15",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-9D5E3922C0AF"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-DA89C825DBFC"
+          ],
+          "previous_context_note_ids": [
+            "CTX-9B827838EA4D"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f16",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-749DCC4D7C8C"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-9B827838EA4D"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f17",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-ADFE95481BEF"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-DCA7BF7049E4"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f18",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-2C592862A996"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-AF302F9FF80F"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f19",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-2C592862A996"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-AF302F9FF80F"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f20",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-2C592862A996"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-AF302F9FF80F"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f21",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-4B105164064C"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-4B105164064C"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f22",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-BBBBFD098770"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-99EB87C32068"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f23",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-0A7F1961CEF7"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-0A7F1961CEF7"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f24",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-4C36CA0905D2"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-10E3C0564146"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f25",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-DE67745F6B3E"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-10E3C0564146"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f26",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-152F50C1E574"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-10E3C0564146"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f27",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-79080541FAD3"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-79757034EBF7"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f28",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-79080541FAD3"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-79757034EBF7"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f29",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-A48B64210703"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-D1AFF4E17609"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f30",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-17DDD533D9C2"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f31",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-23CAB96EBE13"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-8CA8A23F4C0F"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f32",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-940EE92ACD76"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-E3596BFE6F28"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f33",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-604384C8F459"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-01C741A42A0D"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f34",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-E80B138EC86E"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-934C94595583"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f35",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-A709EBAB2931"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-C5F15C54E860"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f36",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-A709EBAB2931"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-C5F15C54E860"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f37",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-A709EBAB2931"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-C5F15C54E860"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f38",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-726D5C2B0883"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-92A72C13E277"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f39",
+          "decision": "EXACT_UNCONFIRMED_CONTEXT_ONLY",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-B7BE4682372C"
+          ],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-B7BE4682372C"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f40",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-981DCB0A2DB9"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-981DCB0A2DB9"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f41",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-B9F1A5BF77EB"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-B9F1A5BF77EB"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f42",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-FD821928ECFA"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-68633FA28F43"
+          ],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-68633FA28F43"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f43",
+          "decision": "EXACT_UNCONFIRMED_CONTEXT_ONLY",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-331285DDD2CF",
+            "CTX-C4494761A6DF"
+          ],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-331285DDD2CF",
+            "CTX-C4494761A6DF"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f44",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-E0FBDA78FFF8"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [
+            "EXT-CCE72E3C273B"
+          ],
+          "previous_context_note_ids": []
+        },
+        {
+          "fact_id": "zh-chronological-f45",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-13926DC908E1"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-387A06F3BAE4"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f46",
+          "decision": "FULL_FACT_IN_CANDIDATE",
+          "candidate_ids": [
+            "EXT-870D8271CB97"
+          ],
+          "partial_candidate_ids": [],
+          "context_note_ids": [],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-387A06F3BAE4"
+          ]
+        },
+        {
+          "fact_id": "zh-chronological-f47",
+          "decision": "EXACT_UNCONFIRMED_CONTEXT_ONLY",
+          "candidate_ids": [],
+          "partial_candidate_ids": [],
+          "context_note_ids": [
+            "CTX-B3DE86664C7A"
+          ],
+          "previous_candidate_ids": [],
+          "previous_context_note_ids": [
+            "CTX-387A06F3BAE4"
+          ]
+        }
+      ],
+      "candidate_review": [
+        {
+          "candidate_id": "EXT-B35C3BD48B8F",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              6,
+              6
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f04"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-DD31E3C21651",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              7,
+              7
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f05"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-AB75ACAF4C34",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              8,
+              8
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f06"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-487D9A8C1AAD",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f07",
+            "zh-chronological-f08",
+            "zh-chronological-f09"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-5C21F4B90E65",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              10,
+              13
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f10"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-A016E9CAF3E7",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              14,
+              14
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f11"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-BF9016E0EF91",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              15,
+              15
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f12"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-F921968BB965",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              16,
+              16
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f13"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-14F28FCC778C",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              17,
+              17
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f14"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-9D5E3922C0AF",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              18,
+              18
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f15"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-749DCC4D7C8C",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              19,
+              19
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f16"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-ADFE95481BEF",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              20,
+              20
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f17"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-2C592862A996",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f18",
+            "zh-chronological-f19",
+            "zh-chronological-f20"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-4B105164064C",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              27,
+              27
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f21"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-BBBBFD098770",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              28,
+              28
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f22"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-0A7F1961CEF7",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              29,
+              29
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f23"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-4C36CA0905D2",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              30,
+              30
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f24"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-DE67745F6B3E",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              31,
+              31
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f25"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-152F50C1E574",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              32,
+              32
+            ],
+            [
+              24,
+              26
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f26"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-79080541FAD3",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f27",
+            "zh-chronological-f28"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-A48B64210703",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              34,
+              36
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f29"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-17DDD533D9C2",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              34,
+              37
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f30"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-23CAB96EBE13",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              38,
+              38
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f31"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-940EE92ACD76",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              39,
+              39
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f32"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-604384C8F459",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              40,
+              40
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f33"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-E80B138EC86E",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              34,
+              41
+            ],
+            [
+              34,
+              35
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f34"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-A709EBAB2931",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              45,
+              47
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f35",
+            "zh-chronological-f36",
+            "zh-chronological-f37"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-726D5C2B0883",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              46,
+              48
+            ],
+            [
+              45,
+              47
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f38"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-981DCB0A2DB9",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              51,
+              51
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f40"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-B9F1A5BF77EB",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              52,
+              52
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f41"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-FD821928ECFA",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              53,
+              53
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f42"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-E0FBDA78FFF8",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              56,
+              56
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f44"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-13926DC908E1",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              57,
+              57
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f45"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        },
+        {
+          "candidate_id": "EXT-870D8271CB97",
+          "decision": "SUPPORTED_BY_FIXED_SOURCE",
+          "reviewed_source_ranges": [
+            [
+              58,
+              58
+            ]
+          ],
+          "full_fact_ids": [
+            "zh-chronological-f46"
+          ],
+          "numeric_date_ownership_or_qualifier_error_observed": false,
+          "extra_source_fact_note": null
+        }
+      ],
+      "note_review": [
+        {
+          "note_id": "CTX-0E1CDF6CFB87",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        },
+        {
+          "note_id": "CTX-B7BE4682372C",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        },
+        {
+          "note_id": "CTX-68633FA28F43",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        },
+        {
+          "note_id": "CTX-331285DDD2CF",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        },
+        {
+          "note_id": "CTX-C4494761A6DF",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        },
+        {
+          "note_id": "CTX-B3DE86664C7A",
+          "decision": "EXACT_SOURCE_QUOTE",
+          "advisory_destination": "SUPPORTED",
+          "resolved": false
+        }
+      ],
+      "primary_target_fact_ids": [
+        "zh-chronological-f08",
+        "zh-chronological-f09",
+        "zh-chronological-f30"
+      ],
+      "primary_targets_fully_in_candidates": [
+        "zh-chronological-f08",
+        "zh-chronological-f09",
+        "zh-chronological-f30"
+      ],
+      "prior_non_contact_omissions": [
+        "zh-chronological-f03",
+        "zh-chronological-f39",
+        "zh-chronological-f43",
+        "zh-chronological-f46",
+        "zh-chronological-f47"
+      ],
+      "prior_non_contact_omissions_retained": [
+        "zh-chronological-f03",
+        "zh-chronological-f39",
+        "zh-chronological-f43",
+        "zh-chronological-f46",
+        "zh-chronological-f47"
+      ],
+      "new_missing_or_partial_fact_ids": [],
+      "entity_metadata_note": "Four entity summaries retain names, roles and dates; named-project organization metadata now retains the exact source project name. Full-time/part-time qualifiers remain in candidate wording."
+    }
+  ]
+}

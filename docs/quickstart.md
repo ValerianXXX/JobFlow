@@ -50,6 +50,9 @@ new pending preview; discarding it preserves the previously saved excerpts.
 For scans, compare with the original page because transcription can be wrong.
 Missing or empty context notes do not prove that no constraints were present.
 See [source-context behavior and limits](source-context-2026-10-30.md).
+Check the full role, employment type, project name and limits in each candidate,
+even if a separate source excerpt repeats them. The [fact-preservation follow-up](fact-preservation-2026-10-30.md)
+improves two fixed samples; it does not replace your original-document review.
 
 If your retained master is a PDF, first approve its confirmed wording for resume use, then choose **Preview a standard resume**. Review the new layout, optionally inspect a real local Word/PDF export, and explicitly adopt the DOCX through a new profile revision. Reconfirm the profile, material use and editing positions. See the [standard-resume guide](standard-resume-2026-10-29.md); this does not preserve the original PDF's styling or replace final document QA.
 

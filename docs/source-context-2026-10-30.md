@@ -186,6 +186,11 @@ retention is implemented, but model completeness remains an open internal defect
 The next quality change must preserve complete entity facts and relevant limits
 before compressing them into Claims, then use another frozen bounded comparison.
 
+A subsequent [fact-preservation follow-up](fact-preservation-2026-10-30.md) ran
+two separately budgeted requests and recovered these four gaps in the same two
+exposed samples. The preceding results above remain unchanged; the follow-up
+does not establish full-material or independent acceptance.
+
 ## Rollback and remaining work
 
 The product implementation began at source commit `ab2f436`; use a normal reviewed revert

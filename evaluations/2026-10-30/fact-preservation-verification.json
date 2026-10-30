@@ -1,0 +1,137 @@
+{
+  "schema": "SOURCE_FACT_PRESERVATION_VERIFICATION_V1",
+  "observed_at": "2026-10-30T06:59:47.694777+00:00",
+  "source_commit": "93cb574db68f0f55827e28e81ebef7d0b37a37ca",
+  "working_tree_observation": true,
+  "status": "TWO_EXPOSED_SAMPLES_IMPROVED_FULL_MATERIAL_ACCEPTANCE_OPEN",
+  "product_scope": "Prompt contract only; existing request schema, providers, storage and approval boundaries unchanged",
+  "tests": {
+    "source_context_contracts": {
+      "passed": 29,
+      "seconds": 5.4
+    },
+    "budget_and_review_contracts": {
+      "passed": 7,
+      "seconds": 0.309
+    },
+    "existing_grounding_and_public_docs": {
+      "passed": 23,
+      "seconds": 0.05
+    }
+  },
+  "logs_lf_sha256": {
+    "reports/fact-preservation-contracts-20261030.log": "971242196636c600277b9464fda8cf1d562082314b4565975f38adbf4a5ac7d7",
+    "reports/fact-preservation-review-tests-20261030.log": "bef7c3624121fa800bb6d6a5d0d23e486440fbe41134c0e7bc567e8c8cd1fa7c",
+    "reports/fact-preservation-related-tests-20261030.log": "7932f5917ac3863fbab08959d93123b553ca065c934f83a102680106476de760"
+  },
+  "real_model": {
+    "protocol": "SOURCE_FACT_PRESERVATION_V1",
+    "closed": true,
+    "new_adapter_requests": 2,
+    "predecessor_adapter_requests": 2,
+    "campaign_adapter_requests": 4,
+    "campaign_ceiling": 6,
+    "same_two_exposed_transcripts": true,
+    "fresh_holdout": false,
+    "reported_tool_calls": 0,
+    "adapter_elapsed_ms": [
+      40578,
+      56219
+    ],
+    "analysis_arm_elapsed_ms": [
+      40844,
+      56312
+    ],
+    "billed_cost_usd": null,
+    "provider_internal_requests": null,
+    "token_usage": null,
+    "automatic_profile_updates": 0,
+    "automatic_approvals": 0
+  },
+  "review": {
+    "reviewer": "CODING_ASSISTANT",
+    "independent": false,
+    "source_facts": 94,
+    "candidates": 68,
+    "notes": 12,
+    "preceding_full_facts_in_candidates": [
+      36,
+      23
+    ],
+    "new_full_facts_in_candidates": [
+      41,
+      41
+    ],
+    "denominators": [
+      47,
+      47
+    ],
+    "primary_gaps_recovered": 4,
+    "earlier_non_contact_omissions_retained": 9,
+    "mixed_candidate_or_context_counts": [
+      45,
+      45
+    ],
+    "mixed_count_is_claim_recall": false,
+    "new_numeric_date_ownership_qualifier_errors_observed_by_assistant": 0,
+    "semantic_judgments_verified_by_script": false
+  },
+  "offline_replay": {
+    "new_model_calls": 0,
+    "original_pdf_parse": true,
+    "actual_windows_dpapi": true,
+    "arms": [
+      {
+        "case": "en-chronological",
+        "status": "SOURCE_SAVED_AND_REOPENED",
+        "candidate_count": 34,
+        "constraint_answers_unchanged": true,
+        "material_claims": 0,
+        "retained_original_matches": true,
+        "database_counts": {
+          "applications": 0,
+          "claims": 0,
+          "approvals": 0,
+          "external_action_attempts": 0
+        },
+        "temporary_state_removed": true,
+        "elapsed_ms": 6296
+      },
+      {
+        "case": "zh-chronological",
+        "status": "SOURCE_SAVED_AND_REOPENED",
+        "candidate_count": 34,
+        "constraint_answers_unchanged": true,
+        "material_claims": 0,
+        "retained_original_matches": true,
+        "database_counts": {
+          "applications": 0,
+          "claims": 0,
+          "approvals": 0,
+          "external_action_attempts": 0
+        },
+        "temporary_state_removed": true,
+        "elapsed_ms": 6000
+      }
+    ]
+  },
+  "full_regression": {
+    "this_head_local_full": "NOT_RUN; preceding exact context head still running, new PR hosted regression required",
+    "preceding_head": "8eba2a20a469ea0ff6b3d00999a4ab23e579a06e",
+    "preceding_status": "RUNNING_AT_RECEIPT_WRITE"
+  },
+  "browser": "No UI change; previous browser results retain their recorded source version",
+  "public_boundary": "CHECK_REQUIRED_AFTER_FINAL_COMMIT",
+  "database_migration": false,
+  "production_actions": 0,
+  "whole_material_acceptance": false,
+  "release_ready": false,
+  "remaining": [
+    "Full 36-material semantic and visual acceptance",
+    "Independent source review and user correction measurement",
+    "Complete non-Claim Profile handling and evidence-gap resolution",
+    "Trusted production signing",
+    "Independent clean-Windows lifecycle",
+    "Real ATS and mailbox business workflows"
+  ]
+}
