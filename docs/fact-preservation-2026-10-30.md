@@ -90,6 +90,11 @@ not a second live observation or an independent person's acceptance.
 
 After the README's per-worktree setup, reproduce without a provider call:
 
+Use a full Git checkout for historical verification. The
+[later verifier repair](frozen-evaluation-review-2026-10-30.md) checks the recorded
+experiment commit instead of requiring today's product files to remain frozen.
+It retains all original observations, protocol hashes and live-run guards.
+
 ```powershell
 .\.venv\Scripts\python.exe scripts/verify-fact-preservation-review.py
 .\.venv\Scripts\python.exe -m unittest discover -s tests -p 'test_fact_preservation*.py' -v

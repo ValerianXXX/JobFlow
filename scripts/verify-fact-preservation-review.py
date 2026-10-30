@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import hashlib
 import importlib.util
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+import re
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("fact_review_inputs", ROOT / "scripts/evaluate-fact-preservation.py")
@@ -17,6 +20,55 @@ OBSERVATION = DIRECTORY / "fact-preservation-live-v1.json"
 PREVIOUS = DIRECTORY / "source-context-review-v1.json"
 
 
+def recorded_product_digest(commit, relative):
+    """Read an immutable Git blob, never execute the historical runner."""
+    if not isinstance(relative, str):
+        raise ValueError("Invalid recorded product reference")
+    path = PurePosixPath(relative)
+    if (not isinstance(commit, str) or re.fullmatch(r"[0-9a-f]{40}", commit) is None
+        or path.is_absolute() or path.as_posix() != relative
+        or any(part in {"", ".", ".."} for part in relative.split("/"))
+        or any(char in relative for char in "\\:\x00\r\n")):
+        raise ValueError("Invalid recorded product reference")
+    try:
+        result = subprocess.run(
+            ["git", "show", "--no-ext-diff", "--no-textconv", f"{commit}:{relative}"],
+            cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15, check=True,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise ValueError("Recorded product history is unavailable; use a full Git checkout") from error
+    return hashlib.sha256(result.stdout.replace(b"\r\n", b"\n")).hexdigest()
+
+
+def review_inputs(observation):
+    """Verify closed observations against their source commit, not today's code.
+
+    The frozen live runner and its current-tree checks remain unchanged. Reading
+    this historical record does not create a request journal or open a provider.
+    """
+    plan = json.loads(inputs.PLAN.read_text(encoding="utf8"))
+    digest = inputs.previous.digest
+    if (plan["protocol"] != inputs.PROTOCOL or plan["max_new_requests"] != 2
+        or plan["cases"] != ["en-chronological", "zh-chronological"]
+        or observation["protocol"] != plan["protocol"]
+        or observation["plan_lf_sha256"] != digest(inputs.PLAN)
+        or observation["input_files"] != plan["inputs"]
+        or observation["product_files"] != plan["product"]
+        or observation["runner_lf_sha256"] != plan["product"]["scripts/evaluate-fact-preservation.py"]):
+        raise ValueError("Changed frozen experiment plan or recorded product binding")
+    for relative, expected in plan["inputs"].items():
+        if digest(ROOT / relative) != expected:
+            raise ValueError("Frozen source or observation changed")
+    for relative, expected in plan["product"].items():
+        if recorded_product_digest(observation["source_commit"], relative) != expected:
+            raise ValueError("Recorded product differs from the frozen experiment")
+    predecessor = json.loads((ROOT / plan["predecessor_observation"]).read_text(encoding="utf8"))
+    if predecessor["adapter_requests"] != 2 or predecessor["protocol_closed"] is not True:
+        raise ValueError("The predecessor is not the expected closed two-request experiment")
+    _, arms = inputs.previous.load_inputs(verify_product=False)
+    return plan, [arm for case in plan["cases"] for arm in arms if arm["case"] == case]
+
+
 def unique_rows(rows, key):
     result = {row[key]: row for row in rows}
     if len(result) != len(rows):
@@ -25,8 +77,6 @@ def unique_rows(rows, key):
 
 
 def verify(review=None):
-    plan, original = inputs.load_plan()
-    text = {row["case"]: row["analyzed_text"] for row in original}
     observation = json.loads(OBSERVATION.read_text(encoding="utf8"))
     replay = json.loads(REPLAY.read_text(encoding="utf8"))
     previous = unique_rows(json.loads(PREVIOUS.read_text(encoding="utf8"))["cases"], "case")
@@ -41,6 +91,8 @@ def verify(review=None):
         or observation["campaign_actual_requests"] != 4 or replay["live_provider_calls"] != 0
         or replay["original_observation_lf_sha256"] != digest(OBSERVATION)):
         raise ValueError("Changed closed experiment or offline replay boundary")
+    plan, original = review_inputs(observation)
+    text = {row["case"]: row["analyzed_text"] for row in original}
     gold = {row["id"]: row for row in inputs.previous.complete.complete.load_manifest()["cases"]}
     actual = unique_rows(replay["arms"], "case")
     reviewed = unique_rows(review["cases"], "case")

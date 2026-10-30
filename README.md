@@ -152,6 +152,8 @@ npm ci --ignore-scripts
 
 Python 3.11-3.13 is supported for source development. Install the locked Node dependencies before full Python discovery: that suite also verifies their exact tree. Each worktree needs its own populated `.venv` and `node_modules`; setting `PYTHONPATH` or borrowing another checkout's interpreter does not prepare the isolated launcher tests. `npx playwright install chromium` and `npm run test:e2e` run the browser checks. Release scanning additionally requires the explicitly selected, trusted Git described in [the release checklist](docs/release-checklist.md). Source setup is not a signed installation and does not authorize production release.
 
+Use a full Git checkout for the [historical evaluation checks](docs/frozen-evaluation-review-2026-10-30.md). They verify experiment code at its recorded commit; missing history fails explicitly, and later product changes do not rewrite earlier observations.
+
 `mcp` and `document` are optional runtime extras, included above to run their integration tests. Ordinary use can install `.[build]`. See [configuration and reproduction](docs/workbench-modernization-2026-10-28.md#run-and-configure) for MCP, Docling, and the synthetic comparison.
 
 The project is intentionally Windows-first because secure applicant storage uses DPAPI. Runtime state, databases, review packets, encrypted private files, and local release reports are excluded from the public repository.
