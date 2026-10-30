@@ -37,6 +37,7 @@ from .candidate_profile import (
     unique_values,
 )
 from .candidate_coverage import source_reference_coverage
+from .source_context import DocumentAnalysisResult, bind_context_notes, safe_context_summary
 from .experience import documented_experience
 from .application_readiness import build_application_readiness
 from .application_execution import validate_application_execution_plan_integrity
@@ -208,6 +209,11 @@ def _public_ai_analysis(summary: Any) -> dict[str, Any]:
         if key in value
     }
     fields["analysis_complete"] = _ai_analysis_is_complete(value)
+    context = value.get("source_context_review")
+    retained = context.get("retained", 0) if isinstance(context, dict) else 0
+    fields["source_context_review"] = safe_context_summary(
+        context, retained=retained if type(retained) is int and 0 <= retained <= 64 else 0,
+    )
     return fields
 
 
@@ -1333,6 +1339,7 @@ class OnboardingCenterService:
             "schema_version": ONBOARDING_STATE_SCHEMA_VERSION, "status": IN_PROGRESS,
             "locale": "zh", "answers": answers,
             "sources": [], "pending_sources": [], "suggestions": [], "material_claims": [],
+            "source_context_notes": [],
             "claim_overrides": {},
             "claim_decisions": claim_decisions, "conflict_resolutions": conflict_resolutions,
             "strict_ai_claims": True,
@@ -1433,6 +1440,7 @@ class OnboardingCenterService:
             answers[field_id] = {**fallback, **current} if isinstance(current, dict) else fallback
         state["answers"] = answers
         state.setdefault("pending_sources", [])
+        state.setdefault("source_context_notes", [])
         state.setdefault("claim_overrides", {})
         state.setdefault("master_resume", None)
         state.setdefault("revision_number", 1)
@@ -3623,6 +3631,7 @@ class OnboardingCenterService:
                 {key: deepcopy(value) for key, value in item.items() if key != "profile_hints"}
                 for item in state.get("pending_sources", []) if isinstance(item, dict)
             ],
+            "context_notes": deepcopy(state.get("source_context_notes", [])),
             "suggestions": deepcopy(active_suggestions), "claims": claims,
             "conflicts": conflicts, "profile_review": state.get("profile_review", "PENDING"),
             "state_ref": reference, "privacy": {"storage": "WINDOWS_DPAPI", "network": "LOCALHOST_ONLY", "plaintext_project_files": 0},
@@ -4247,9 +4256,10 @@ class OnboardingCenterService:
             assert_no_plaintext_secret(text)
         document_quality = (source_selection or {}).get("document_quality")
         try:
-            candidates, extraction_summary = self.ai_engine.analyze_document(
+            analysis_result = self.ai_engine.analyze_document(
                 text, source_id=source_id, source_type=source_type,
             )
+            candidates, extraction_summary = analysis_result
         except JobOpsError as exc:
             if exc.code.startswith("AI_"):
                 raise JobOpsError(
@@ -4262,6 +4272,24 @@ class OnboardingCenterService:
                     },
                 ) from exc
             raise
+        context_notes = []
+        context_status = None
+        if source_type == "chatgpt_export":
+            context_status = "DISABLED_FOR_CHAT_EXPORT"
+        elif extraction_summary.get("segmented_oversize_lines"):
+            context_status = "UNAVAILABLE_SEGMENTED_COORDINATES"
+        elif isinstance(analysis_result, DocumentAnalysisResult):
+            context_notes = bind_context_notes(
+                analysis_result.context_notes, text=text, source_id=source_id, source_sha256=source_hash,
+            )
+        else:
+            context_status = "NOT_PROVIDED"
+        extraction_summary = {
+            **extraction_summary,
+            "source_context_review": safe_context_summary(
+                extraction_summary.get("source_context_review"), retained=len(context_notes), status=context_status,
+            ),
+        }
         if not _ai_analysis_is_complete(extraction_summary):
             raise JobOpsError(
                 "AI_ANALYSIS_INCOMPLETE",
@@ -4313,6 +4341,7 @@ class OnboardingCenterService:
             "source_id": source_id, "source_type": source_type, "extension": extension,
             "source_hash": source_hash, "source_status": source_status, "suggestions": suggestions,
             "candidates": candidates, "extraction_summary": extraction_summary,
+            "context_notes": context_notes,
             "raw_retained": raw_retained, "excluded_secret_fragments": excluded_secret_fragments,
             "secure_ref": str(stored["secure_ref"]),
         }
@@ -4466,6 +4495,9 @@ class OnboardingCenterService:
             state["sources"].append(deepcopy(pending["metadata"]))
         else:
             existing.update(deepcopy(pending["metadata"]))
+        state["source_context_notes"] = [
+            item for item in state.get("source_context_notes", []) if item.get("source_id") != source_id
+        ] + deepcopy(pending.get("context_notes", []))
         known_claims = {item["claim_id"] for item in state.get("material_claims", [])}
         active_by_signature: dict[tuple[str, str, str], dict[str, Any]] = {}
         for claim in state.get("material_claims", []):
@@ -4548,6 +4580,7 @@ class OnboardingCenterService:
             "source_id": prepared["source_id"], "metadata": metadata,
             "candidates": prepared["candidates"], "suggestions": prepared["suggestions"],
             "extraction_summary": prepared["extraction_summary"], "replace_existing": False,
+            "context_notes": deepcopy(prepared.get("context_notes", [])),
             "profile_hints": deepcopy(prepared.get("profile_hints", {})),
         }
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != prepared["source_id"]]
@@ -4578,6 +4611,7 @@ class OnboardingCenterService:
             "status": "SOURCE_PREVIEW_READY", "source_id": prepared["source_id"],
             "safe_display_name": metadata["safe_display_name"],
             "candidate_count": len(prepared["candidates"]), "suggestion_count": len(prepared["suggestions"]),
+            "context_note_count": len(prepared.get("context_notes", [])),
             "extraction_summary": prepared["extraction_summary"], "private_values_emitted": 0,
             "real_external_actions": 0,
         }
@@ -4673,6 +4707,7 @@ class OnboardingCenterService:
                     changed = True
         before_suggestions = len(state.get("suggestions", []))
         state["sources"] = [item for item in state.get("sources", []) if item.get("source_id") != source_id]
+        state["source_context_notes"] = [item for item in state.get("source_context_notes", []) if item.get("source_id") != source_id]
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != source_id]
         state["material_claims"] = [
             item for item in state.get("material_claims", []) if str(item.get("claim_id")) not in removed_claim_ids
@@ -4735,6 +4770,7 @@ class OnboardingCenterService:
             },
             "candidates": prepared["candidates"], "suggestions": prepared["suggestions"],
             "extraction_summary": prepared["extraction_summary"], "replace_existing": True,
+            "context_notes": deepcopy(prepared.get("context_notes", [])),
             "profile_hints": deepcopy(prepared.get("profile_hints", {})),
         }
         state["pending_sources"] = [item for item in state.get("pending_sources", []) if item.get("source_id") != source_id]
@@ -4760,6 +4796,7 @@ class OnboardingCenterService:
             "source_id": prepared["source_id"], "metadata": metadata,
             "candidates": prepared["candidates"], "suggestions": prepared["suggestions"],
             "extraction_summary": prepared["extraction_summary"], "replace_existing": False,
+            "context_notes": deepcopy(prepared.get("context_notes", [])),
             "profile_hints": deepcopy(prepared.get("profile_hints", {})),
         }
         counts = self._commit_pending_source(state, pending, [

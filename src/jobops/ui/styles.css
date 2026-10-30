@@ -744,3 +744,9 @@ body.is-busy :is(#emergencyStop,#cancelGuidedIntake,#pauseAuthorizedDiscovery,#k
 
 .source-reference-coverage{margin:12px 0;padding:12px;border:1px solid rgba(117,142,156,.4);border-radius:10px;overflow-wrap:anywhere}
 .source-reference-coverage p{margin:6px 0}.source-reference-coverage summary{cursor:pointer}
+.source-context{grid-column:1/-1;min-width:0;margin:12px 0;padding:14px;border:1px solid #bccbd0;border-radius:10px;background:#f8fafb;overflow-wrap:anywhere}
+.source-context h4{margin:0 0 8px}.source-context p{margin:6px 0;line-height:1.6}
+.source-context ul{list-style:none;padding:0;margin:12px 0 0}.source-context li{padding:12px 0;border-top:1px solid #dbe4e8}
+.source-context blockquote{white-space:pre-wrap;margin:10px 0;padding:8px 12px;border-left:3px solid #7a929f;line-height:1.6}
+.source-context small{display:block}.source-context button{margin-top:8px;text-align:left;white-space:normal}
+.context-review-status{display:inline-block;margin:6px 0;color:#664a1e;font-size:12px}

@@ -2,6 +2,13 @@
 
 const STRINGS = {
   zh: {
+    sourceContextTitle: "原文中的约束与待核实事项",
+    sourceContextHelp: "以下内容来自原文，仍需你核对。它们不会自动填写资料、成为 Claim 或获得对外使用批准。行号对应分析文本；扫描件还需对照原始页面。",
+    sourceContextConstraint: "求职约束", sourceContextGap: "证据缺口", sourceContextUnconfirmed: "待核对",
+    sourceContextLines: "分析文本第 {start}–{end} 行", sourceContextOpenField: "查看并填写对应资料",
+    sourceContextEmpty: "本次没有保留约束或待核实事项；这不表示原文没有此类信息。请核对原件。",
+    sourceContextUnavailable: "本次没有可用的约束核对记录，请查看原件并手动补充资料。",
+    sourceContextFiltered: "有 {count} 条模型标注未通过来源或范围校验，未保留。",
     documentIncomplete: "文档存在无法读取的页面或页码不连续。请检查原文件是否缺页，补齐资料后重试；扫描内容可在确认数据发送路径后使用视觉读取。本次未分析或导入部分内容。",
     visualSourceConfirm: "我已对照原始页面核对所选内容的姓名、日期、金额、数字及本人／团队归属；图片转录可能出错。",
     sourceEvidenceDetails: "查看证据位置详情",
@@ -72,6 +79,13 @@ const STRINGS = {
     browserAssistManualNavigation: "这个 Next/Continue 必须由你亲自点击。进入下一页后，再点浏览器伴侣中的“继续分析当前页”。",
   },
   en: {
+    sourceContextTitle: "Constraints and verification needs from the source",
+    sourceContextHelp: "These source excerpts still need your review. They do not automatically fill Profile answers, become Claims or authorize external use. Lines refer to analyzed text; check scans against the original page too.",
+    sourceContextConstraint: "Work constraint", sourceContextGap: "Evidence gap", sourceContextUnconfirmed: "Needs review",
+    sourceContextLines: "Analysis text lines {start}–{end}", sourceContextOpenField: "Open the Profile question",
+    sourceContextEmpty: "No constraints or verification needs were retained in this analysis. This does not mean the source has none. Check the original.",
+    sourceContextUnavailable: "No constraint review record is available. Check the original and enter any missing Profile information yourself.",
+    sourceContextFiltered: "{count} model annotations failed source or range validation and were not retained.",
     documentIncomplete: "Some pages are unreadable or printed pagination is incomplete. Check the original for missing pages and supply the complete source. Scans can use the optional visual route after confirming where data is sent. No partial content was analyzed or imported.",
     visualSourceConfirm: "I checked the selected claims, names, dates, amounts, numbers and individual/team ownership against the original pages. Visual transcription can be wrong.",
     sourceEvidenceDetails: "Show evidence position details",
@@ -2538,6 +2552,22 @@ function renderAiConnection() {
   status.innerHTML=`<strong>${escapeHtml(t("aiConnectedStatus").replace("{name}",name))}</strong><small>${escapeHtml(t("aiConnectedModel").replace("{model}",model).replace("{route}",route))}</small>${refreshWarning}`;
 }
 
+const SOURCE_CONTEXT_FIELDS=new Set(["remote_preference","preferred_locations","available_start_date","work_authorization","visa_sponsorship","minimum_salary"]);
+function sourceContextMarkup(value, summary) {
+  const notes=(Array.isArray(value)?value:[]).slice(0,64).filter(note=>note&&
+    note.status==="UNCONFIRMED_SOURCE_CONTEXT"&&note.approved_for_external===false&&
+    typeof note.quote==="string"&&note.quote.length>0&&note.quote.length<=2000&&
+    Number.isInteger(note.line_start)&&Number.isInteger(note.line_end)&&
+    note.line_start>0&&note.line_end>=note.line_start&&note.line_end-note.line_start<8&&
+    (note.kind==="evidence_gap"&&note.field_id===""||note.kind==="profile_constraint"&&SOURCE_CONTEXT_FIELDS.has(note.field_id)));
+  const provided=["PROVIDED","PARTIAL"].includes(summary?.status);
+  const filtered=Number.isInteger(summary?.filtered)&&summary.filtered>0?summary.filtered:0;
+  return `<section class="source-context"><h4>${escapeHtml(t("sourceContextTitle"))}</h4><p>${escapeHtml(t("sourceContextHelp"))}</p>${notes.length?`<ul>${notes.map(note=>{
+    const location=t("sourceContextLines").replace("{start}",String(note.line_start)).replace("{end}",String(note.line_end));
+    return `<li><strong>${escapeHtml(t(note.kind==="profile_constraint"?"sourceContextConstraint":"sourceContextGap"))}${note.field_id?` · ${escapeHtml(fieldLabel(note.field_id))}`:""}</strong><span class="context-review-status">${escapeHtml(t("sourceContextUnconfirmed"))}</span><blockquote>${escapeHtml(note.quote)}</blockquote><small>${escapeHtml(location)}</small>${note.field_id?`<button type="button" class="text-action source-context-field" data-context-field="${escapeHtml(note.field_id)}">${escapeHtml(t("sourceContextOpenField"))}</button>`:""}</li>`;
+  }).join("")}</ul>`:`<p>${escapeHtml(t(provided?"sourceContextEmpty":"sourceContextUnavailable"))}</p>`}${filtered?`<p>${escapeHtml(t("sourceContextFiltered").replace("{count}",String(filtered)))}</p>`:""}</section>`;
+}
+
 function renderSources() {
   const ai=state.data.ai_engine||{};
   const aiReady=isAiReady(ai);
@@ -2564,6 +2594,11 @@ function renderSources() {
       return `<div class="source-entry"><div><strong>${escapeHtml(item.safe_display_name)}</strong><small>${escapeHtml(item.category)} · ${escapeHtml(countLabel)} · ${escapeHtml(coverageLabel)}</small></div><div class="source-actions"><span class="status-chip ${passed?"analysis-passed":"analysis-needed"}">${escapeHtml(analysisLabel)}</span>${item.raw_retained&&!readonly?`<button class="text-action reprocess-source" data-id="${escapeHtml(item.source_id)}"${disabledAttr(!aiReady)}>${escapeHtml(t("reprocess"))}</button>`:""}${reupload?`<button class="text-action reupload-source" data-id="${escapeHtml(item.source_id)}"${disabledAttr(!aiReady)}>${escapeHtml(t("reuploadAndAnalyze"))}</button>`:""}${!readonly?`<button class="text-action danger remove-source" data-id="${escapeHtml(item.source_id)}">${escapeHtml(t("deleteSource"))}</button>`:""}</div></div>`;
     }).join("");
   }
+  list.querySelectorAll(".source-entry").forEach((entry,index)=>{
+    const source=state.data.sources[index];
+    const notes=(state.data.context_notes||[]).filter(note=>note.source_id===source.source_id);
+    entry.insertAdjacentHTML("beforeend",sourceContextMarkup(notes,source.source_context_review));
+  });
   renderSourcePreviews();
   const pending=state.data.suggestions.filter(item=>!item.accepted);
   document.querySelector("#suggestionBox").classList.toggle("hidden", !pending.length);
@@ -2586,6 +2621,7 @@ function renderSourcePreviews(){
       ${summary.visual_verification_required?`<label class="visual-source-review"><input type="checkbox" class="visual-source-confirm">${escapeHtml(t("visualSourceConfirm"))}</label><details class="source-region-details"><summary>${escapeHtml(t("sourceEvidenceDetails"))}</summary><p>${escapeHtml((Array.isArray(summary.visual_regions)?summary.visual_regions:[]).slice(0,1000).filter(region=>region&&typeof region==="object").map(region=>`page ${region.page}, line ${region.line_start}, box [${Array.isArray(region.bbox)?region.bbox.slice(0,4).join(", "):""}]`).join("; "))}</p></details>`:""}
       ${Number(summary.filtered_candidate_count||0)>0?`<p class="preview-filter-notice">${escapeHtml(t("filteredCandidateNotice").replace("{count}",String(Number(summary.filtered_candidate_count||0))))}</p>`:""}
       ${sourceReferenceCoverageMarkup(summary)}
+      ${sourceContextMarkup(preview.context_notes,summary.source_context_review)}
       <div class="preview-candidates">${candidates.length?candidates.map(item=>`<label class="preview-candidate"><span class="preview-choice"><input class="preview-select" type="checkbox" data-candidate="${escapeHtml(item.candidate_id)}" ${item.selected?"checked":""}><small>${escapeHtml(t("includeAsClaim"))}</small></span><span>${item.entity?`<strong class="entity-label">${escapeHtml(categoryLabel(item.category))} · ${escapeHtml(entityLabel(item))}</strong>`:""}<textarea class="preview-statement" aria-label="${escapeHtml(t("editText"))}">${escapeHtml(item.statement)}</textarea><span class="preview-meta"><select class="preview-category" aria-label="${escapeHtml(t("category"))}">${categoryOptions(item.category,Boolean(item.entity))}</select><small>${escapeHtml(item.selection_reason==="AI_DERIVED_REQUIRES_CONFIRMATION"?t("selectedByDefault"):t("needsReview"))} · lines ${item.provenance?.line_start||"—"}–${item.provenance?.line_end||"—"}${item.provenance?.numeric_format_normalizations?` · ${escapeHtml(t("numericFormatReview"))}`:""}${item.provenance?.citation_adjustment==="ADJACENT_WRAPPED_LINES"?` · ${escapeHtml(t("adjacentWrapReview"))}`:""}</small></span></span></label>`).join(""):`<p class="preview-empty">${escapeHtml(t("previewEmpty"))}</p>`}</div>
       <footer><button class="secondary discard-preview" data-id="${escapeHtml(preview.source_id)}">${escapeHtml(t("discardPreview"))}</button><button class="secondary commit-preview" data-id="${escapeHtml(preview.source_id)}"${disabledAttr(!aiPassed)}>${escapeHtml(t("confirmSource"))}</button><button class="primary include-all-preview" data-id="${escapeHtml(preview.source_id)}"${disabledAttr(!aiPassed||!candidates.length)}>${escapeHtml(t("includeAllClaims"))}</button></footer>
     </article>`;
@@ -3529,6 +3565,17 @@ document.addEventListener("click", async event => {
   if(removeSource){if(!window.confirm(t("deleteSourceConfirm")))return;try{await withActivity("deletingSource",async()=>{await api("delete-source",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({source_id:removeSource.dataset.id,user_confirmed:true})});await refresh();});showToast(t("sourceDeleted"));}catch(e){handleUiError(e);}return;}
   const conflictJump=event.target.closest(".conflict-jump");
   if(conflictJump){navigate("review");setTimeout(()=>scrollToElement(document.getElementById(`conflict-${conflictJump.dataset.conflictTarget}`),{block:"center"}),0);return;}
+  const contextField=event.target.closest(".source-context-field");
+  if(contextField){
+    const field=contextField.dataset.contextField;
+    if(!SOURCE_CONTEXT_FIELDS.has(field))return;
+    navigate("questionnaire");
+    const row=document.querySelector(`[data-question="${CSS.escape(field)}"]`);
+    for(let parent=row?.parentElement;parent;parent=parent.parentElement){if(parent.tagName==="DETAILS")parent.open=true;}
+    scrollToElement(row,{block:"center"});
+    row?.querySelector(".answer-input, input, select, textarea")?.focus({preventScroll:true});
+    return;
+  }
   const fieldJump=event.target.closest(".conflict-field-jump");
   if(fieldJump){navigate("questionnaire");setTimeout(()=>scrollToElement(document.querySelector(`[data-question="${CSS.escape(fieldJump.dataset.fieldTarget)}"]`),{block:"center"}),0);return;}
   const jump=event.target.closest("[data-target]"); if (jump) { navigate(jump.dataset.target); return; }
