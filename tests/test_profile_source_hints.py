@@ -110,7 +110,7 @@ class ProfileSourceHintsTests(unittest.TestCase):
             self.assertNotIn(text, json.dumps(public, ensure_ascii=False))
             self.assertEqual(public["profile_review"], "PENDING")
             self.assertFalse(public["external_claim_approval"]["current"])
-            self.assertEqual(public["claims"], [])
+            self.assertEqual(public["claims"], before["claims"])
             self.assertEqual(public["answers"]["work_authorization"]["status"], "UNKNOWN")
 
     def test_manual_answer_is_not_overwritten_or_misattributed(self):

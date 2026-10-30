@@ -52,8 +52,8 @@ const STRINGS = {
     sourceIntakeDemoTitle: "当前是合成演示，不接收真实文件", sourceIntakeDemoBody: "请关闭演示启动窗口，然后双击 Start JobFlow.cmd 进入可上传的真实本机工作区。", sourceIntakeReadonlyTitle: "当前资料版本已完成，因此文件接入已锁定", sourceIntakeReadonlyBody: "历史版本不会被覆盖。建立一个可编辑新版本后，即可继续添加、删除和重新分析资料。", sourceIntakeAiTitle: "连接 AI 后才能分析文件", sourceIntakeAiBody: "点击右上角“连接 AI”，选择已准备的 Agent 或本地模型。连接成功后文件选择会自动开放。",
     docsTitle: "简历与项目材料", docsBody: "DOCX、PDF、TXT、MD 或 JSON；启用视觉理解后可用 PNG/JPEG。适用于简历、案例、证书、作品集与补充材料。", materialType: "材料类型", resume: "简历", projectCase: "项目案例", supporting: "补充材料", portfolioFile: "作品集文件",
     aiTitle: "AI 资料", aiBody: "支持 ChatGPT 官方导出 ZIP 或你整理的 AI 总结。超过 200 MB 的官方导出请选择“雷霆大文件”；原始 ZIP 不会被保留。", aiType: "AI 资料类型", chatgptExport: "ChatGPT 官方导出（不超过 200 MB）", chatgptExportLarge: "雷霆大文件（超过 200 MB 请选择）", aiSummary: "AI 总结", chooseFile: "选择本地文件", uploadAndAnalyze: "选择并由 AI 分析",
-    directTitle: "只补充缺失资料", directBody: "简历中已有的姓名、联系方式和公开链接会自动带入；这里只突出仍缺失的资格、偏好与政策答案。", startQuestions: "检查缺失项", importedSources: "已安全接入", noSources: "尚未通过此页面添加资料；已有安全简历仍然保留。",
-    suggestions: "待确认的自动预填建议", continueQuestions: "检查缺失资料", questionsTitle: "只确认缺失或需要修改的信息", questionsBody: "已从简历识别的资料会折叠保留，不要求重复输入。资格硬条件必须明确；法律与签名仍然逐次确认。", resolvedProfileFacts: "已从资料填好 {count} 项（展开可检查或修改）", optionalProfileFacts: "其他可选资料 {count} 项（按需填写）", saveHint: "内容不会进入命令行或明文 JSON", saveEncrypted: "加密保存并继续",
+    directTitle: "只补充缺失资料", directBody: "可定位来源的姓名和联系方式会作为待核对信息带入；请核对它们，再补充缺失的资格、偏好与政策答案。", startQuestions: "检查缺失项", importedSources: "已安全接入", noSources: "尚未通过此页面添加资料；已有安全简历仍然保留。",
+    suggestions: "待确认的自动预填建议", continueQuestions: "检查缺失资料", questionsTitle: "只确认缺失或需要修改的信息", questionsBody: "材料导入值保持展开，方便对照来源核对；已由你确认的答案可折叠查看。资格硬条件必须明确；法律与签名仍然逐次确认。", resolvedProfileFacts: "已确认 {count} 项（展开可检查或修改）", optionalProfileFacts: "其他可选资料 {count} 项（按需填写）", saveHint: "内容不会进入命令行或明文 JSON", saveEncrypted: "加密保存并继续",
     reviewTitle: "集中处理资料与 Claim", reviewBody: "只显示经过 AI 归并和完整性检查的 Claim。工作、实习、教育和项目分别归类；确认不等于自动对外提交。", claimsReviewed: "已审阅 Claim", conflictsResolved: "已解决冲突", conflicts: "需要单独解决的冲突", conflictsHelp: "只有两个相关来源对同一事实给出不同答案时，才算冲突；系统会直接说明哪个字段、两边各写了什么。",
     profileConfirmTitle: "我已审阅 Candidate Profile", profileConfirmBody: "确认简历、项目、技能、教育及成果栏目；未解决冲突除外。", saveReview: "保存审阅结果",
     finishTitle: "完成 JobFlow 设置", finishBody: "完成后，JobFlow 可连续准备岗位并生成待审批队列。每个已批准申请仍需你单独授权，才会在你在场时预填并附加材料；最终提交始终由你亲自点击。", finalConsent: "我确认以上答案和审阅决定准确，并同意将其加密保存为当前 Candidate Profile 与 Answer Bank。", completeButton: "完成 JobFlow 设置",
@@ -129,8 +129,8 @@ const STRINGS = {
     sourceIntakeDemoTitle: "Synthetic demo mode does not accept real files", sourceIntakeDemoBody: "Close the demo launch window, then double-click Start JobFlow.cmd to open the real local workspace with file intake enabled.", sourceIntakeReadonlyTitle: "File intake is locked because this profile revision is complete", sourceIntakeReadonlyBody: "Historical revisions are preserved. Create an editable revision to add, delete, or re-analyze sources.", sourceIntakeAiTitle: "Connect AI before analyzing files", sourceIntakeAiBody: "Use Connect AI at the top right and choose a prepared Agent or local model. File selection opens automatically after a successful connection.",
     docsTitle: "Resume & project materials", docsBody: "DOCX, PDF, TXT, MD, or JSON; PNG/JPEG with optional visual analysis enabled. For resumes, cases, certificates, portfolios, and supporting material.", materialType: "Material type", resume: "Resume", projectCase: "Project case", supporting: "Supporting material", portfolioFile: "Portfolio file",
     aiTitle: "AI sources", aiBody: "Use an official ChatGPT export ZIP or a curated AI summary. For exports over 200 MB, pick ZIPzilla Express. The raw ZIP is never retained.", aiType: "AI source type", chatgptExport: "Official ChatGPT export (up to 200 MB)", chatgptExportLarge: "ZIPzilla Express (over 200 MB — unleash the beast)", aiSummary: "AI summary", chooseFile: "Choose local file", uploadAndAnalyze: "Choose & analyze with AI",
-    directTitle: "Fill only the missing details", directBody: "Names, contact details, and public links already present in the resume are carried forward. This section highlights only missing eligibility, preference, and policy answers.", startQuestions: "Review missing details", importedSources: "Securely imported", noSources: "No source added from this page yet; the existing secure resume remains available.",
-    suggestions: "Autofill suggestions awaiting confirmation", continueQuestions: "Review missing details", questionsTitle: "Confirm only missing or changed information", questionsBody: "Facts recognized from the resume stay available in a collapsed review section instead of being requested again. Eligibility gates must be explicit; legal and signature items still require per-application confirmation.", resolvedProfileFacts: "{count} items already filled from your sources (expand to review or edit)", optionalProfileFacts: "{count} optional profile items (fill only when useful)", saveHint: "Answers never enter CLI arguments or plaintext JSON", saveEncrypted: "Encrypt, save & continue",
+    directTitle: "Fill only the missing details", directBody: "Traceable names and contacts are proposed for review. Verify them, then supply missing eligibility, preference and policy answers.", startQuestions: "Review missing details", importedSources: "Securely imported", noSources: "No source added from this page yet; the existing secure resume remains available.",
+    suggestions: "Autofill suggestions awaiting confirmation", continueQuestions: "Review missing details", questionsTitle: "Confirm only missing or changed information", questionsBody: "Imported values stay expanded for source review. Answers you have confirmed can be collapsed. Eligibility gates must be explicit; legal and signature items still require per-application confirmation.", resolvedProfileFacts: "{count} confirmed answers (expand to review or edit)", optionalProfileFacts: "{count} optional profile items (fill only when useful)", saveHint: "Answers never enter CLI arguments or plaintext JSON", saveEncrypted: "Encrypt, save & continue",
     reviewTitle: "Resolve Profile and Claims together", reviewBody: "Only AI-consolidated, completeness-checked Claims are shown. Work, internships, education, and projects remain separate. Confirmation never submits anything externally.", claimsReviewed: "Claims reviewed", conflictsResolved: "Conflicts resolved", conflicts: "Conflicts requiring an individual decision", conflictsHelp: "A conflict exists only when two relevant sources disagree about the same fact. Each item names the exact field and states both values plainly.",
     profileConfirmTitle: "I reviewed the Candidate Profile", profileConfirmBody: "I checked resume, project, skill, education, and outcome sections, excluding unresolved conflicts.", saveReview: "Save review",
     finishTitle: "Complete JobFlow setup", finishBody: "After setup, JobFlow can continuously prepare roles and build the approval queue. Each approved application still needs separate consent before user-present fill and attachment; only you can click the final Submit button.", finalConsent: "I confirm these answers and review decisions are accurate and authorize encrypted storage as my current Candidate Profile and Answer Bank.", completeButton: "Complete JobFlow setup",
@@ -266,7 +266,7 @@ Object.assign(STRINGS.zh,{
   workflowWorkingDetail:"已持续 {elapsed} 秒。任务仍在运行；此状态不会因浮动提示关闭而消失。", workflowWorkingEstimate:"已持续 {elapsed} 秒，按当前估计约还需 {remaining} 秒。", workflowUploadDetail:"本机安全传送已完成 {percent}%。此状态会一直保留到处理结束。",
   workflowConnectAiTitle:"先连接并验证 AI", workflowConnectAiDetail:"JobFlow 需要一个已配置好的 Agent 或本地模型来理解资料和岗位。连接成功后会自动继续显示下一步。", workflowConnectAiAction:"连接 AI",
   workflowSourcesTitle:"先把已有资料交给 JobFlow", workflowSourcesDetail:"上传简历和可选项目资料；AI 会提取已有事实，后面只追问仍然缺失的内容。", workflowSourcesAction:"打开资料来源",
-  workflowQuestionsTitle:"只补充仍然缺失的资料", workflowQuestionsDetail:"已从简历识别出的字段会折叠保存；这里只需要完成仍未解决的必填项。", workflowQuestionsAction:"继续补充资料",
+  workflowQuestionsTitle:"只补充仍然缺失的资料", workflowQuestionsDetail:"核对材料导入值及其来源，并补充仍未解决的必填项；不必重新输入已有值。", workflowQuestionsAction:"继续补充资料",
   workflowReviewTitle:"集中审阅 Profile 与 Claim", workflowReviewDetail:"确认 AI 整理出的个人事实、Claim 和真正冲突；不会自动批准任何对外表述。", workflowReviewAction:"开始集中审阅",
   workflowFinishTitle:"完成一次性资料确认", workflowFinishDetail:"最后确认当前 Profile 和答案库，之后每个岗位只补充岗位专属问题。", workflowFinishAction:"完成资料设置",
   workflowReadyTitle:"资料已就绪，可以处理下一份岗位", workflowReadyDetail:"说出岗位目标或粘贴公司官网链接；JobFlow 会连续运行到一次审阅或必须由你处理的安全门。", workflowReadyAction:"开始处理岗位",
@@ -281,7 +281,7 @@ Object.assign(STRINGS.en,{
   workflowWorkingDetail:"Running for {elapsed}s. This state remains here even if the floating notice closes.", workflowWorkingEstimate:"Running for {elapsed}s · about {remaining}s remaining at the current estimate.", workflowUploadDetail:"{percent}% transferred into local secure processing. This state remains until processing finishes.",
   workflowConnectAiTitle:"Connect and verify AI first", workflowConnectAiDetail:"JobFlow needs an already configured Agent or local model to understand sources and roles. The next step appears automatically after verification.", workflowConnectAiAction:"Connect AI",
   workflowSourcesTitle:"Give JobFlow the sources you already have", workflowSourcesDetail:"Upload the resume and optional project sources. AI extracts existing facts so later questions cover only genuine gaps.", workflowSourcesAction:"Open sources",
-  workflowQuestionsTitle:"Fill only the remaining gaps", workflowQuestionsDetail:"Fields recovered from the resume stay collapsed and saved; only unresolved required items remain here.", workflowQuestionsAction:"Continue missing details",
+  workflowQuestionsTitle:"Fill only the remaining gaps", workflowQuestionsDetail:"Review imported values against their sources and fill unresolved required items without retyping existing values.", workflowQuestionsAction:"Continue missing details",
   workflowReviewTitle:"Review Profile and Claims together", workflowReviewDetail:"Confirm the personal facts, Claims, and genuine conflicts organized by AI. No external wording is auto-approved.", workflowReviewAction:"Start consolidated review",
   workflowFinishTitle:"Complete the one-time profile confirmation", workflowFinishDetail:"Confirm the current Profile and answer bank once; future roles ask only role-specific questions.", workflowFinishAction:"Finish profile setup",
   workflowReadyTitle:"Profile ready — process the next role", workflowReadyDetail:"Describe the role or paste an official company URL. JobFlow continues until one review or a safety gate genuinely needs you.", workflowReadyAction:"Process a role",
@@ -2449,8 +2449,9 @@ function navigate(target) {
   if (target === "finish") renderReadiness();
 }
 
-function statusOptions(selected) {
-  const items = [["UNKNOWN",t("unknown")],["CONFIRMED",t("confirmed")],["PREFER_NOT_TO_ANSWER",t("preferNot")],["NOT_APPLICABLE",t("notApplicable")]];
+function statusOptions(selected, imported=false) {
+  const confirmedLabel=imported?(state.locale==="zh"?"待核对（材料导入）":"Needs review (imported)"):t("confirmed");
+  const items = [["UNKNOWN",t("unknown")],["CONFIRMED",confirmedLabel],["PREFER_NOT_TO_ANSWER",t("preferNot")],["NOT_APPLICABLE",t("notApplicable")]];
   return items.map(([v,l])=>`<option value="${v}" ${v===selected?"selected":""}>${escapeHtml(l)}</option>`).join("");
 }
 function policyOptions(selected) {
@@ -2513,7 +2514,7 @@ function renderQuestionRow(field) {
   return `<div class="question-row" data-question="${field.id}">
     <div class="question-copy"><label for="${escapeHtml(answerId)}">${escapeHtml(fieldLabel)}</label><small>${escapeHtml(field.help[state.locale] || "")}</small></div>
     <div>${inputControl(field, answer)}${field.sensitive?`<div class="policy-row"><label for="${escapeHtml(policyId)}">${escapeHtml(t("policy"))}</label><select id="${escapeHtml(policyId)}" class="policy-select" data-field="${field.id}" aria-label="${escapeHtml(t("answerPolicyLabel").replace("{field}",fieldLabel))}"${disabledAttr(isReadonly())}>${policyOptions(answer.use_policy)}</select></div>`:""}</div>
-    <select id="${escapeHtml(statusId)}" class="status-select" data-field="${field.id}" aria-label="${escapeHtml(t("answerStatusLabel").replace("{field}",fieldLabel))}"${disabledAttr(isReadonly())}>${statusOptions(answer.status)}</select>
+    <select id="${escapeHtml(statusId)}" class="status-select" data-field="${field.id}" aria-label="${escapeHtml(t("answerStatusLabel").replace("{field}",fieldLabel))}"${disabledAttr(isReadonly())}>${statusOptions(answer.status,answer.source==="APPLICANT_PROVIDED_UNCONFIRMED")}</select>
   </div>`;
 }
 
@@ -2521,8 +2522,9 @@ function renderQuestions() {
   const catalog=state.data.catalog;
   const groups=catalog.groups.map(group=>{
     const fields=catalog.fields.filter(field=>field.group===group.id);
-    const resolved=fields.filter(field=>answerForField(field).status!=="UNKNOWN");
-    const unresolved=fields.filter(field=>answerForField(field).status==="UNKNOWN");
+    const needsReview=field=>answerForField(field).status==="UNKNOWN"||answerForField(field).source==="APPLICANT_PROVIDED_UNCONFIRMED";
+    const resolved=fields.filter(field=>!needsReview(field));
+    const unresolved=fields.filter(needsReview);
     const priority=unresolved.filter(field=>field.required_resolution||group.id==="identity_and_contact");
     const optional=unresolved.filter(field=>!priority.includes(field));
     const priorityRows=priority.map(renderQuestionRow).join("");
@@ -2531,6 +2533,7 @@ function renderQuestions() {
     return `<section class="question-group" data-question-group="${escapeHtml(group.id)}"><h3>${escapeHtml(group.label[state.locale])}</h3>${priorityRows}${optionalRows}${resolvedRows}</section>`;
   }).join("");
   document.querySelector("#questionGroups").innerHTML=groups;
+  window.JobFlowAnalysisText?.decorate();
 }
 
 function renderAiConnection() {

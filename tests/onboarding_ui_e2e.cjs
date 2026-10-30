@@ -45,8 +45,8 @@ const {chromium} = require("playwright");
     }
     assert.equal(initial.sourcesBeforeDashboard, true);
     assert.equal(initial.dashboardImmediatelyAfterFinish, true);
-    assert.match(initial.scriptVersion, /20261030-jobflow-v47-source-transcript/);
-    assert.match(initial.styleVersion, /20261030-jobflow-v47-source-transcript/);
+    assert.match(initial.scriptVersion, /20261030-jobflow-v48-profile-sources/);
+    assert.match(initial.styleVersion, /20261030-jobflow-v48-profile-sources/);
     assert.equal(initial.skipHref, "#mainContent");
     assert.equal(initial.mainTabIndex, "-1");
     assert.equal(initial.supportButtonType, "button");
@@ -335,11 +335,18 @@ const {chromium} = require("playwright");
         resolvedSummary: document.querySelector(".resolved-question-details summary")?.textContent,
       };
     });
-    assert.equal(adaptiveProfile.visibleMissingIdentity, 1);
-    assert.equal(adaptiveProfile.resolvedCount, 1);
+    assert.equal(adaptiveProfile.visibleMissingIdentity, 2);
+    assert.equal(adaptiveProfile.resolvedCount, 0);
     assert.equal(adaptiveProfile.optionalCount, 1);
-    assert.equal(adaptiveProfile.resolvedOpen, false);
-    assert.match(adaptiveProfile.resolvedSummary, /已从资料填好 1 项/);
+    assert.equal(adaptiveProfile.resolvedOpen, undefined);
+    assert.equal(adaptiveProfile.resolvedSummary, undefined);
+    const confirmedIdentity = await page.evaluate(() => {
+      state.data.answers.first_name.source="APPLICANT_CONFIRMED"; renderQuestions();
+      return {count:document.querySelectorAll(".resolved-question-details .question-row").length,
+        open:document.querySelector(".resolved-question-details")?.open};
+    });
+    assert.equal(confirmedIdentity.count, 1);
+    assert.equal(confirmedIdentity.open, false);
 
     const operatorActivity = await page.evaluate(() => {
       state.locale = "en";

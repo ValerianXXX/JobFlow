@@ -74,6 +74,24 @@
       const header = root.querySelector("header");
       if (header) header.after(controls); else root.append(controls);
     }
+    for (const row of document.querySelectorAll("[data-question]")) {
+      row.querySelector(".profile-hint-origin")?.remove();
+      delete row.dataset.analysisSource;
+      const origin = state.data?.profile_hint_sources?.[row.dataset.question];
+      if (!origin) continue;
+      const note = document.createElement("div");
+      note.className = "profile-hint-origin";
+      const zh = state.locale === "zh";
+      const source = state.data?.pending_sources?.find(item=>item.source_id===origin.source_id)?.metadata || state.data?.sources?.find(item=>item.source_id===origin.source_id);
+      const descriptor = source?.analysis_text_review;
+      const valid = origin.status === "AVAILABLE" && available(descriptor) && descriptor.source_sha256 === origin.source_sha256 && descriptor.text_sha256 === origin.text_sha256 && rangeValid(origin.line_start,origin.line_end,descriptor.total_lines);
+      note.textContent = valid ? (zh?"材料中的信息，请核对后再使用。 ":"Imported from the source; verify before use. ") : (zh?"来源分析已变更，请重新核对这个值。":"Source analysis changed; review this value again.");
+      if (valid) {
+        row.dataset.analysisSource = origin.source_id;
+        note.append(makeButton(`${label("citation")} ${origin.line_start}–${origin.line_end}`, origin.line_start, origin.line_end, descriptor.total_lines));
+      }
+      row.querySelector(".question-copy")?.append(note);
+    }
   }
 
   function clear() {
@@ -122,7 +140,7 @@
   function open(button) {
     const root = button.closest("[data-analysis-source]"), id = root?.dataset.analysisSource;
     const pending = state.data?.pending_sources?.find(item => item.source_id === id);
-    const source = root?.classList.contains("source-preview") ? pending?.metadata : state.data?.sources?.find(item => item.source_id === id);
+    const source = root?.classList.contains("source-preview") ? pending?.metadata : (root?.hasAttribute("data-question") && pending ? pending.metadata : state.data?.sources?.find(item => item.source_id === id));
     const descriptor = source?.analysis_text_review;
     if (!available(descriptor)) return;
     const start = Number(button.dataset.analysisStart), end = Number(button.dataset.analysisEnd);
@@ -146,6 +164,12 @@
     const button = event.target.closest(".analysis-text-open");
     if (!button) return;
     event.preventDefault(); event.stopPropagation(); open(button);
+  });
+  for (const kind of ["input", "change"]) document.addEventListener(kind, event => {
+    const row = event.target.closest("[data-question]");
+    if (!row) return;
+    row.querySelector(".profile-hint-origin")?.remove();
+    delete row.dataset.analysisSource;
   });
   dialog.addEventListener("click", event => {
     if (event.target.closest(".analysis-close")) dialog.close();
