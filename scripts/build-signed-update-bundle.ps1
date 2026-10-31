@@ -342,9 +342,13 @@ function Invoke-SanitizedTextCommand(
     $process.StartInfo = $start
     try {
         if (-not $process.Start()) { throw "JOBFLOW_RELEASE_COMMAND_FAILED" }
-        $stdout = $process.StandardOutput.ReadToEnd()
-        $stderr = $process.StandardError.ReadToEnd()
+        # Drain both pipes concurrently: a child blocked on a full stderr pipe
+        # cannot finish stdout, even when its output is otherwise valid.
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
         $process.WaitForExit()
+        $stdout = $stdoutTask.GetAwaiter().GetResult()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
         return [pscustomobject]@{ exit_code = $process.ExitCode; stdout = $stdout; stderr = $stderr }
     }
     finally { $process.Dispose() }
