@@ -1,0 +1,10 @@
+test_authenticated_hardlink_is_still_rejected (test_release_node_path.ExplicitReleaseNodeTests.test_authenticated_hardlink_is_still_rejected) ... ok
+test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) ... ok
+test_explicit_official_binary_retains_locked_signer_and_hash_checks (test_release_node_path.ExplicitReleaseNodeTests.test_explicit_official_binary_retains_locked_signer_and_hash_checks) ... ok
+test_trusted_binary_in_a_path_with_spaces_is_supported (test_release_node_path.ExplicitReleaseNodeTests.test_trusted_binary_in_a_path_with_spaces_is_supported) ... ok
+test_unsigned_executable_and_renamed_binary_are_rejected (test_release_node_path.ExplicitReleaseNodeTests.test_unsigned_executable_and_renamed_binary_are_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 20.894s
+
+OK
