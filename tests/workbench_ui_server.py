@@ -21,11 +21,22 @@ from test_workbench import eml
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--stdio-control", action="store_true")
+    parser.add_argument("--mail-review-fixture", action="store_true")
     args = parser.parse_args()
     project = Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix="jobflow-workbench-ui-") as temporary:
         service = create_demo_service(project, Path(temporary))
-        OnboardingCenterService.import_status_eml(service, eml())
+        if args.mail_review_fixture:
+            for body, html in [
+                ("This is not an interview invitation.", False),
+                ("邀请您参加面试。\n> 本次申请未通过。", False),
+                ("<p>We are not moving forward.</p><blockquote>We invite you to an interview.</blockquote>", True),
+            ]:
+                raw = eml(body, html=html)
+                assert OnboardingCenterService.import_status_eml(service, raw)["added"] == 1
+                assert OnboardingCenterService.import_status_eml(service, raw)["added"] == 0
+        else:
+            OnboardingCenterService.import_status_eml(service, eml())
         # Add a real, hash-bound synthetic snapshot alongside the demo's
         # deliberately unavailable legacy snapshot. Neither is a live JD.
         snapshot = (

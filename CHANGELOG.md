@@ -4,6 +4,14 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Separate current mail evidence from recognized quotes, forwarded history,
+  negation and conditional examples; preserve raw evidence and citation offsets.
+  Make review decisions transactional in memory and add one-page encrypted cursor
+  recovery with scoped provider identities. The fixed bilingual 120-case comparison
+  removes 39 status disagreements and 30 unsupported confident proposals; all mail
+  still needs human review. No live mailbox connector or protected-state write.
+  [Evidence, native checks, remaining limits and rollback](docs/mail-review-and-sync-2026-10-31.md).
+
 - Record private source-context decisions separately from Profile answers and
   Claim approval. Show the saved answer being compared, preserve unsaved edits,
   require explicit confirmation and structured follow-up/dismissal reasons,

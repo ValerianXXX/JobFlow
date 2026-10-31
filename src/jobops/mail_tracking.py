@@ -10,9 +10,39 @@ import re
 from typing import Protocol
 from lxml.etree import ParserError
 from .errors import JobOpsError
+from .mail_interpretation import interpret_status
 from .util import canonical_json, sha256_bytes
 
 MAX_EML_BYTES = 2 * 1024 * 1024
+
+
+def _html_quote_ranges(root):
+    """Locate explicit HTML history in the unchanged lxml text_content output."""
+    ranges, offset = [], 0
+
+    def text(value, quoted):
+        nonlocal offset
+        if value:
+            if quoted:
+                ranges.append((offset, offset + len(value)))
+            offset += len(value)
+
+    def visit(element, parent_quote=False):
+        # Comments are excluded by text_content; their tails still belong to the parent.
+        if not isinstance(element.tag, str):
+            return
+        quoted = (parent_quote or element.tag.casefold() == "blockquote"
+                  or "gmail_quote" in element.get("class", "").split()
+                  or element.get("type", "").casefold() == "cite")
+        text(element.text, quoted)
+        for child in element:
+            visit(child, quoted)
+            text(child.tail, quoted)
+
+    visit(root)
+    if offset != len(root.text_content()):
+        raise ValueError("HTML mail evidence coordinates do not match.")
+    return ranges
 
 
 class LocalEmlAdapter:
@@ -47,12 +77,14 @@ class LocalEmlAdapter:
             body = part.get_content()
             if not isinstance(body, str) or len(body) > 50_000:
                 raise ValueError()
+            self.quoted_body_ranges = []
             if part.get_content_type() == "text/html":
                 from lxml import html
 
                 root = html.fromstring(body)
                 for element in root.xpath("//script|//style|//iframe|//object|//head"):
                     element.drop_tree()
+                self.quoted_body_ranges = _html_quote_ranges(root)
                 body = root.text_content()
             subject = str(parsed.get("Subject", ""))
             if len(subject) + len(body) > 50_000:
@@ -119,10 +151,13 @@ class SyntheticStatusAdapter:
         ][:limit]
 
 
-def propose_status(message: StatusMessage, applications: list[dict]) -> dict:
+def propose_status(message: StatusMessage, applications: list[dict], *, ignored_body_ranges=()) -> dict:
     if (
-        not message.message_id
+        not isinstance(message, StatusMessage)
+        or any(not isinstance(value, str) for value in (message.message_id, message.received_at, message.sender_domain, message.subject, message.body))
+        or not message.message_id
         or len(message.message_id) > 300
+        or len(message.sender_domain) > 253
         or len(message.subject) + len(message.body) > 50_000
     ):
         raise JobOpsError(
@@ -138,20 +173,9 @@ def propose_status(message: StatusMessage, applications: list[dict]) -> dict:
             "MAIL_STATUS_DATE_INVALID",
             "A timezone-aware receipt timestamp is required.",
         ) from exc
-    text = message.subject + "\n" + message.body
-    patterns = {
-        "APPLICATION_RECEIVED": r"application (?:has been |was )?received|received your application|申请已收到|收到您的申请",
-        "REJECTED": r"not (?:be )?moving forward|not selected|unsuccessful|未通过|未能进入|不予录用",
-        "INTERVIEW_INVITED": r"invite you (?:to|for) (?:an? )?interview|interview invitation|邀请.{0,8}面试|面试邀请",
-    }
-    matches = [
-        (status, match)
-        for status, pattern in patterns.items()
-        if (match := re.search(pattern, text, re.I))
-    ]
-    # Conflicting receipt/outcome phrases stay uncertain; no last-write-wins guesses.
-    status = matches[0][0] if len(matches) == 1 else "UNKNOWN"
-    candidates, reasons = [], []
+    interpretation = interpret_status(message.subject, message.body, ignored_body_ranges=ignored_body_ranges)
+    text, status = interpretation["active_text"], interpretation["status"]
+    exact_candidates, role_candidates = [], []
     domain = message.sender_domain.strip().casefold()
     if message.authenticated_sender is True:
         for application in applications:
@@ -166,13 +190,14 @@ def propose_status(message: StatusMessage, applications: list[dict]) -> dict:
                 r"(?<![\w-])" + re.escape(reference) + r"(?![\w-])", text, re.I
             )
             role_match = len(role) >= 5 and role.casefold() in text.casefold()
-            if exact_ref or role_match:
-                candidates.append(str(application["application_id"]))
-                reasons.append(
-                    "EXACT_REFERENCE_AND_SENDER"
-                    if exact_ref
-                    else "ROLE_AND_SENDER_REVIEW"
-                )
+            if exact_ref:
+                exact_candidates.append(str(application["application_id"]))
+            elif role_match:
+                role_candidates.append(str(application["application_id"]))
+    # A known reference identifies the role more precisely than a shared title.
+    # Multiple references still require a decision; history does not add candidates.
+    candidates = list(dict.fromkeys(exact_candidates or role_candidates))
+    reasons = [("EXACT_REFERENCE_AND_SENDER" if exact_candidates else "ROLE_AND_SENDER_REVIEW")] * len(candidates)
     linked = (
         len(candidates) == 1
         and reasons == ["EXACT_REFERENCE_AND_SENDER"]
@@ -188,9 +213,9 @@ def propose_status(message: StatusMessage, applications: list[dict]) -> dict:
         "candidate_application_ids": candidates,
         "match_reasons": reasons,
         "review_status": "MATCHED_AWAITING_REVIEW" if linked else "UNCERTAIN",
-        "status_evidence_spans": [
-            {"start": match.start(), "end": match.end()} for _, match in matches
-        ],
+        "status_evidence_spans": interpretation["spans"],
+        "status_review_reasons": interpretation["review_reasons"],
+        "interpretation_version": 2,
         "application_state_changed": False,
         "real_external_actions": 0,
     }
@@ -220,8 +245,6 @@ class ApplicationStatusInbox:
         after: str | None = None,
         limit: int = 50,
     ) -> dict:
-        from copy import deepcopy
-
         if type(limit) is not int or not 1 <= limit <= 100:
             raise JobOpsError(
                 "MAIL_STATUS_LIMIT", "Read at most 100 supplied messages per batch."
@@ -231,10 +254,29 @@ class ApplicationStatusInbox:
             raise JobOpsError(
                 "MAIL_STATUS_LIMIT", "The adapter exceeded the requested message limit."
             )
+        return self._collect_messages(messages, applications, adapter=adapter)
+
+    def collect_page(self, adapter, applications, *, checkpoint_ref=None, limit=50):
+        from .mail_sync import collect_page
+        return collect_page(self, adapter, applications, checkpoint_ref=checkpoint_ref, limit=limit)
+
+    def _collect_messages(self, messages, applications, *, adapter=None, source_scope=None):
+        from copy import deepcopy
+
         known = {event["event_id"] for event in self.events}
         proposals = [
-            (message, propose_status(message, applications)) for message in messages
+            (message, propose_status(message, applications,
+                ignored_body_ranges=adapter.quoted_body_ranges if isinstance(adapter, LocalEmlAdapter) else ()))
+            for message in messages
         ]
+        if source_scope is not None:
+            identities = {event["event_id"]: event["evidence_sha256"] for event in self.events}
+            for message, event in proposals:
+                identity = sha256_bytes(canonical_json({"source_scope_sha256": source_scope, "provider_message_id": message.message_id}))
+                if identity in identities and identities[identity] != event["evidence_sha256"]:
+                    raise JobOpsError("MAIL_MESSAGE_ID_CONFLICT", "A provider identity has conflicting evidence. No messages or decisions were overwritten.")
+                identities[identity] = event["evidence_sha256"]
+                event.update(event_id=identity, source_scope_sha256=source_scope, source_kind="SUPPLIED_PAGED_ADAPTER")
         if len(known | {event["event_id"] for _, event in proposals}) > 1000:
             raise JobOpsError(
                 "MAIL_INBOX_LIMIT",
@@ -323,27 +365,9 @@ class ApplicationStatusInbox:
                 "MAIL_STATUS_LINK_INVALID",
                 "Choose an application supported by the evidence or reject the link.",
             )
-        from .util import iso_utc
-
-        event["review_history"].append(
-            {
-                "decision": decision,
-                "application_id": application_id,
-                "reviewed_at": iso_utc(),
-            }
-        )
-        event["application_id"] = application_id if decision == "ACCEPT_LINK" else None
-        event["review_status"] = (
-            "USER_LINK_CONFIRMED" if decision == "ACCEPT_LINK" else "USER_LINK_REJECTED"
-        )
-        stored = self.private.import_bytes(
-            "application_mail_review", canonical_json(self.events)
-        )
-        return {
-            "review_ref": stored["secure_ref"],
-            "application_state_changed": False,
-            "real_external_actions": 0,
-        }
+        return self._save_review(event_id, application_id, decision,
+            linked=decision == "ACCEPT_LINK",
+            review_status="USER_LINK_CONFIRMED" if decision == "ACCEPT_LINK" else "USER_LINK_REJECTED")
 
     def manual_review(
         self,
@@ -369,25 +393,29 @@ class ApplicationStatusInbox:
             raise JobOpsError(
                 "MAIL_STATUS_LINK_INVALID", "Choose an existing application."
             )
+        # This operation does not authenticate the sender or write to applications.
+        return self._save_review(event_id, application_id, decision,
+            linked=decision == "MANUAL_LINK",
+            review_status="USER_MANUALLY_ASSOCIATED" if decision == "MANUAL_LINK" else "UNCERTAIN")
+
+    def _save_review(self, event_id, application_id, decision, *, linked, review_status):
+        from copy import deepcopy
         from .util import iso_utc
 
-        event["review_history"].append(
-            {
-                "decision": decision,
-                "application_id": application_id,
-                "reviewed_at": iso_utc(),
-            }
-        )
-        event["application_id"] = application_id if decision == "MANUAL_LINK" else None
-        event["review_status"] = (
-            "USER_MANUALLY_ASSOCIATED" if decision == "MANUAL_LINK" else "UNCERTAIN"
-        )
-        # This operation does not authenticate the sender or write to applications.
-        stored = self.private.import_bytes(
-            "application_mail_review", canonical_json(self.events)
-        )
+        updated = deepcopy(self.events)
+        event = next(item for item in updated if item["event_id"] == event_id)
+        event["review_history"].append({"decision": decision, "application_id": application_id, "reviewed_at": iso_utc()})
+        event["application_id"] = application_id if linked else None
+        event["review_status"] = review_status
+        try:
+            stored = self.private.import_bytes("application_mail_review", canonical_json(updated))
+            reference = stored["secure_ref"]
+        except Exception:
+            raise JobOpsError("MAIL_REVIEW_SAVE_FAILED", "The evidence decision was not saved. Reload and try again.") from None
+        # Publish in-memory state only after the encrypted journal commits.
+        self.events = updated
         return {
-            "review_ref": stored["secure_ref"],
+            "review_ref": reference,
             "application_state_changed": False,
             "real_external_actions": 0,
         }
