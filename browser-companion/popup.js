@@ -18,6 +18,11 @@ const copy = {
     capturePaired: "岗位任务已配对。JobFlow 会在可见标签页中搜索、核验公司岗位并读取申请表。", captureJob: "继续自动搜索与读取", captureForm: "继续读取申请表并生成审阅包",
     captureWorking: "正在搜索、核验官网并沿安全 Apply 路径继续……", capturePreparing: "本机 AI 正在后台生成审阅包，可能需要几分钟。你可以关闭这个小窗口；完成后 JobFlow 会自动更新。", captureNext: "岗位页已核验。JobFlow 正在沿官网公布的安全 Apply 链接进入申请表；若网页要求登录、验证或无法证明链接来源，会停下交给你。", captureReady: "审阅包已生成。返回 JobFlow 完成一次审阅。", localTimeout: "本机 JobFlow 暂时没有响应。请保持 JobFlow 窗口运行，然后重试；系统不会自动重复生成或执行外部操作。",
     captureBoundary: "准备阶段会在可见标签页中搜索，只打开核验后的公司官网岗位和其公布的 Apply 链接，并只读表单结构；不会填写、上传、点击网页控件，也不读取密码、验证码或现有输入值。",
+    captureReturn: "返回 JobFlow 查看任务",
+    captureChanged: "当前表单与本次任务最初读取的表单不同，旧审阅包不能用于此表单。请返回 JobFlow 检查已有任务，再为新表单建立导入。",
+    captureStartFailed: "尚未启动准备任务。确认本机 JobFlow 正常运行后，你可以手动重试；不会自动重新生成。",
+    captureClosing: "JobFlow 正在关闭，会先等待已开始的本地任务结束。请等待关闭结束，再重新打开 JobFlow 查看保存的结果；不会自动重试。",
+    captureUnconfirmed: "准备任务可能已经启动。正在查询这次任务的状态，不会重新发送表单。",
     boundary: "JobFlow 可在你在场时逐页填写并点击明确的 Next/Continue，但绝不会点击最终 Submit、创建账号或绕过验证码。最终提交只能由你亲自点击。",
     working: "正在核对表单、预填并附加材料……", wrong: "请先打开 JobFlow 指定的公司申请页面。",
     permission: "首次使用需要允许浏览器搜索和公司招聘网站访问；授权只需一次，JobFlow 不会读取密码、验证码或其他标签页内容。", permissionDenied: "未获得浏览器搜索与公司网站访问权限。JobFlow 已停止，没有填写、上传或点击网页。再次打开 J 即可重新授权。", done: "已停在最终提交前。请检查内容并亲自点击提交。",
@@ -31,6 +36,11 @@ const copy = {
     capturePaired: "The job task is paired. JobFlow searches in a visible tab, verifies the company job page, and reads the application form.", captureJob: "Continue automatic search and read", captureForm: "Continue form read and build review packet",
     captureWorking: "Searching, verifying the official site, and following the safe Apply route…", capturePreparing: "Local AI is building the review packet in the background and may need several minutes. You may close this popup; JobFlow updates automatically when it finishes.", captureNext: "The official role is verified. JobFlow is following the company-published Apply link; it stops for login, verification, or any route it cannot prove.", captureReady: "The review packet is ready. Return to JobFlow for one review.", localTimeout: "Local JobFlow did not respond in time. Keep the JobFlow window running and try again; no preparation or external action will be repeated automatically.",
     captureBoundary: "Preparation searches in a visible tab, opens only a verified company role and its published Apply URL, and reads only form structure. It does not fill, upload, click page controls, or read passwords, verification codes, or existing values.",
+    captureReturn: "Return to JobFlow to review the task",
+    captureChanged: "This form differs from the one first captured for this task. The previous packet cannot be used for this form. Return to JobFlow to check the existing task, then start an import for the new form.",
+    captureStartFailed: "Preparation did not start. Check that local JobFlow is running, then retry explicitly. No packet will be generated again automatically.",
+    captureClosing: "JobFlow is closing and waiting for accepted local tasks to finish. Wait for closure, then reopen JobFlow to review saved results. Nothing will retry automatically.",
+    captureUnconfirmed: "Preparation may already be running. Checking the existing task's status without sending the form again.",
     boundary: "While you are present, JobFlow may fill each page and activate an explicit Next/Continue control. It never clicks final Submit, creates an account, or bypasses verification. Only you submit.",
     working: "Matching the page, filling approved fields, and attaching materials…", wrong: "Open the application page selected by JobFlow first.",
     permission: "First use needs browser-search and company-careers-site access. This is granted once; JobFlow does not read passwords, verification codes, or unrelated tabs.", permissionDenied: "Browser-search and company-site access were not granted. JobFlow stopped without filling, uploading, or clicking the page. Open J again to retry.", done: "Stopped before final submission. Review everything and click Submit yourself.",
@@ -104,6 +114,10 @@ function operationErrorMessage(result) {
   if (["SITE_CHANGED", "FORM_ROUTE_BINDING_CHANGED", "FORM_ROUTE_IDENTITY_CHANGED"].includes(code)) return text.siteChanged;
   if (["APPLICATION_PRIVATE_REFERENCE_INVALID", "APPLICATION_PRIVATE_REFERENCE_HASH_INVALID", "BROWSER_PRIVATE_SOURCE_CHANGED"].includes(code)) return text.privateSourceInvalid;
   if (code === "COMPANION_LOCAL_REQUEST_TIMEOUT") return text.localTimeout;
+  if (code === "GUIDED_PREPARATION_INPUT_CHANGED") return text.captureChanged;
+  if (code === "GUIDED_PREPARATION_START_FAILED") return text.captureStartFailed;
+  if (code === "GUIDED_PREPARATION_CLOSING") return text.captureClosing;
+  if (code === "GUIDED_PREPARATION_START_UNCONFIRMED") return text.captureUnconfirmed;
   return String(result?.message || code || "JobFlow blocked the operation.");
 }
 
@@ -119,6 +133,7 @@ function isJobFlowTab(tab) {
 function render() {
   const text = copy[locale];
   const capture = status?.mode === "JOB_CAPTURE";
+  const preparationBlocked = capture && ["GUIDED_PREPARATION_INPUT_CHANGED", "GUIDED_PREPARATION_CLOSING"].includes(status?.last_result?.code || status?.code);
   elements.subtitle.textContent = text.subtitle;
   elements.version.textContent = `v${chrome.runtime.getManifest().version}`;
   elements.state.textContent = status?.paired ? (capture
@@ -126,10 +141,11 @@ function render() {
     : `${text.paired}\n${status.provider || ""} · ${status.current_step || 1}/${status.max_steps || 20}\n${status.allowed_page_origin || ""}`) : text.notPaired;
   elements.fill.textContent = !status?.paired
     ? (isJobFlowTab(currentTab) ? text.reconnect : text.returnToJobFlow)
+    : preparationBlocked ? text.captureReturn
     : capture
     ? (["AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED"].includes(status?.status) ? text.captureForm : text.captureJob)
     : status?.status === "HANDOFF_REQUIRED" ? text.resume : status?.status === "MANUAL_NAVIGATION_REQUIRED" ? text.manualNext : ["MANUAL_NAVIGATION_RESTART_REQUIRED", "APPLY_RESTART_REQUIRED"].includes(status?.status) ? text.restartButton : status?.status === "PAGE_REVIEW_REQUIRED" ? text.continue : text.fill;
-  elements.fill.disabled = (!status?.paired && !isJobFlowTab(currentTab)) || (status?.paired && (capture
+  elements.fill.disabled = preparationBlocked || (!status?.paired && !isJobFlowTab(currentTab)) || (status?.paired && (capture
     ? ["REVIEW_PACKET_READY", "DEFERRED", "PREPARING_APPLICATION"].includes(status?.status)
     : ["AWAITING_USER_SUBMIT", "OBSERVING_RESULT_PAGE", "AWAITING_NAVIGATION", "MANUAL_NAVIGATION_REQUIRED", "MANUAL_NAVIGATION_RESTART_REQUIRED", "APPLY_RESTART_REQUIRED", "CONFIRMED"].includes(status?.status)));
   elements.boundary.textContent = capture ? text.captureBoundary : text.boundary;
@@ -140,7 +156,8 @@ async function refresh() {
   status = await chrome.runtime.sendMessage({type: "JOBFLOW_GET_STATUS"});
   render();
   if (status?.mode === "JOB_CAPTURE" && status?.status === "AWAITING_APPLICATION_FORM_CAPTURE") elements.message.textContent = copy[locale].captureNext;
-  else if (status?.mode === "JOB_CAPTURE" && status?.status === "PREPARING_APPLICATION") elements.message.textContent = copy[locale].capturePreparing;
+  else if (status?.mode === "JOB_CAPTURE" && status?.status === "PREPARING_APPLICATION") elements.message.textContent = status?.last_result?.code === "GUIDED_PREPARATION_START_UNCONFIRMED" ? copy[locale].captureUnconfirmed : copy[locale].capturePreparing;
+  else if (status?.mode === "JOB_CAPTURE" && status?.status === "FORM_CAPTURE_FAILED") elements.message.textContent = operationErrorMessage(status?.last_result || status);
   else if (status?.mode === "JOB_CAPTURE" && ["REVIEW_PACKET_READY", "DEFERRED"].includes(status?.status)) elements.message.textContent = copy[locale].captureReady;
   else if (status?.last_result?.status === "AWAITING_USER_SUBMIT") elements.message.textContent = copy[locale].done;
   else if (status?.status === "HANDOFF_REQUIRED") elements.message.textContent = copy[locale].handoff;
