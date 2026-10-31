@@ -880,10 +880,17 @@ class RealProfileOfflineApplicationTests(unittest.TestCase):
                 self.assertEqual(pending["status"], "PREPARING_APPLICATION")
                 repeated = service.start_guided_application_form_preparation(
                     token,
-                    {"url": "https://example.com/other", "sanitized_html": "<form><input></form>"},
+                    {"url": "https://example.com/apply", "sanitized_html": "<form><input></form>"},
                     extension_origin=COMPANION_EXTENSION_ORIGIN,
                 )
                 self.assertEqual(repeated["status"], "PREPARING_APPLICATION")
+                with self.assertRaises(JobOpsError) as changed:
+                    service.start_guided_application_form_preparation(
+                        token,
+                        {"url": "https://example.com/other", "sanitized_html": "<form><input></form>"},
+                        extension_origin=COMPANION_EXTENSION_ORIGIN,
+                    )
+                self.assertEqual(changed.exception.code, "GUIDED_PREPARATION_INPUT_CHANGED")
                 self.assertEqual(len(calls), 1, "polling or repeat clicks must not start a second preparation")
                 release.set()
                 deadline = time.time() + 5
