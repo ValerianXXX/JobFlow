@@ -16,6 +16,7 @@ from .claim_attribution import (
     unsupported_passive_actor_count,
 )
 from .errors import JobOpsError
+from .claim_quantities import NUMBER_TOKEN_RE, canonical_number as _canonical_number, numeric_context_report
 from .source_context import DocumentAnalysisResult, SourceContextAccumulator
 from .util import stable_id
 
@@ -83,11 +84,6 @@ BULLET_PREFIX_RE = re.compile(
     r"^\s*(?:[\u2022\u2023\u25e6\u2043\u2219\uf0de\uf0b7▪▫●○◦‣·*]|[-–—]\s+|\d{1,3}[.)]\s+)"
 )
 SENTENCE_END_RE = re.compile(r"[.?!。！？][\"'’)）\]]*\s*$")
-NUMBER_TOKEN_RE = re.compile(
-    r"(?<![A-Za-z0-9])(?:[$£€¥]\s*)?"
-    r"(?:\d{1,3}(?:(?:,[ \t]*|[ '\u00a0\u2009\u202f])\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
-    r"(?!\d)"
-)
 
 
 def _run_bounded_ai_command(
@@ -242,14 +238,6 @@ def _numeric_text(value: str) -> str:
             output.append(line)
         previous = line
     return "\n".join(output)
-
-
-def _canonical_number(value: str) -> str:
-    cleaned = re.sub(r"[$£€¥, '\t\u00a0\u2009\u202f]", "", value)
-    integer, separator, fraction = cleaned.partition(".")
-    integer = integer.lstrip("0") or "0"
-    fraction = fraction.rstrip("0")
-    return integer + ("." + fraction if separator and fraction else "")
 
 
 def _number_tokens(value: str) -> list[tuple[str, str]]:
@@ -504,6 +492,7 @@ def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str
         format_complete = False
     statement_numbers = _numbers(statement)
     unsupported_numbers = statement_numbers - _numbers(source_excerpt)
+    quantities = numeric_context_report(_numeric_text(statement), _numeric_text(source_excerpt))
     claim_tokens = _tokens(statement)
     source_tokens = _tokens(source_excerpt)
     required = max(1 if len(claim_tokens) == 1 else 2, math.ceil(len(claim_tokens) * GROUNDING_RATIO))
@@ -511,7 +500,9 @@ def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str
     attribution_conflicts = _explicit_attribution_conflict_count(statement, source_excerpt)
     actor_inferences = unsupported_passive_actor_count(statement, source_excerpt)
     return {
-        "valid": bool(format_complete and not unsupported_numbers and not attribution_conflicts and not actor_inferences and (not claim_tokens or shared_tokens >= required)),
+        "valid": bool(format_complete and not unsupported_numbers and not quantities['unsupported_numeric_context_count']
+                      and not attribution_conflicts and not actor_inferences and (not claim_tokens or shared_tokens >= required)),
+        **quantities,
         "explicit_attribution_conflict_count": attribution_conflicts,
         "unsupported_actor_inference_count": actor_inferences,
         "statement_format_complete": format_complete,
@@ -553,7 +544,8 @@ def _bounded_statement_grounding(
         "adjacent_line_expansion_attempted": False,
     })
     if (original["valid"] or not original["statement_format_complete"]
-        or original["explicit_attribution_conflict_count"] or original["unsupported_actor_inference_count"]):
+        or original["explicit_attribution_conflict_count"] or original["unsupported_actor_inference_count"]
+        or original["explicit_numeric_context_conflict_count"]):
         return original
 
     expanded_start, expanded_end = start_index, end_index
@@ -586,6 +578,8 @@ def _bounded_statement_grounding(
         "expanded_line_start": line_number_start + expanded_start,
         "expanded_line_end": line_number_start + expanded_end,
         "unsupported_number_count": expanded["unsupported_number_count"],
+        "unsupported_numeric_context_count": expanded["unsupported_numeric_context_count"],
+        "explicit_numeric_context_conflict_count": expanded["explicit_numeric_context_conflict_count"],
         "explicit_attribution_conflict_count": expanded["explicit_attribution_conflict_count"],
         "unsupported_actor_inference_count": expanded["unsupported_actor_inference_count"],
         "shared_grounding_token_count": expanded["shared_grounding_token_count"],
@@ -1097,6 +1091,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
             if not grounding["valid"]:
                 failure_category = (
                     "UNSUPPORTED_NUMBER" if grounding["unsupported_number_count"]
+                    else "UNSUPPORTED_NUMERIC_CONTEXT" if grounding["unsupported_numeric_context_count"]
                     else "ATTRIBUTION_CONFLICT" if grounding["explicit_attribution_conflict_count"]
                     else "UNSUPPORTED_ACTOR" if grounding["unsupported_actor_inference_count"]
                     else "STATEMENT_FRAGMENT" if not grounding["statement_format_complete"]
