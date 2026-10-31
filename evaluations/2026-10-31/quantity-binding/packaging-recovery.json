@@ -1,0 +1,142 @@
+{
+  "observed_at": "2026-10-31T21:16:03.362477+00:00",
+  "failed_branch": "codex/jobflow-quantity-binding-20261031",
+  "failed_commit": "a2c5b7ce6e2fcefd7355ffa24277317b1d62d3fa",
+  "failed_scan_sha256": "75552a92e5df2d85414d062076abe733970dfb86cd024a8dc7707b46925b40aa",
+  "failed_scan": {
+    "schema_version": 1,
+    "status": "FAIL",
+    "readiness_scope": "PUBLIC_REPOSITORY_BOUNDARY_ONLY",
+    "public_repository_ready": false,
+    "public_release_ready": false,
+    "public_release_blockers": [
+      "PUBLIC_TREE_BOUNDARY_FAILED",
+      "PUBLIC_HISTORY_BOUNDARY_FAILED"
+    ],
+    "tree": {
+      "status": "FAIL",
+      "tracked_file_count": 1010,
+      "finding_count": 11,
+      "findings": [
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-ai-related.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-binding-after-initial.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-binding-after.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-binding-before.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-boundaries-before.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-dependency-check.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-grounding-baseline.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-node-dependencies.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-safe-start-audit.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-safe-start-locate.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-template-replay.log"
+        }
+      ]
+    },
+    "history": {
+      "status": "FAIL",
+      "commit_count": 388,
+      "historical_path_count": 1011,
+      "unique_blob_count": 3227,
+      "scanned_text_blob_count": 2881,
+      "scanned_document_blob_count": 89,
+      "finding_count": 11,
+      "findings": [
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-ai-related.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-binding-after-initial.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-binding-after.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-binding-before.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-boundaries-before.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-dependency-check.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-grounding-baseline.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-node-dependencies.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-safe-start-audit.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-safe-start-locate.log"
+        },
+        {
+          "kind": "private_or_generated_file_tracked",
+          "path": "evaluations/2026-10-31/quantity-binding/quantity-template-replay.log"
+        }
+      ]
+    },
+    "author_identity": {
+      "status": "PASS",
+      "policy": "PUBLIC_EMAIL_HASHES_APPROVED",
+      "identity_count": 3,
+      "non_noreply_identity_count": 1,
+      "unapproved_identity_count": 0,
+      "approved_public_email_count": 1,
+      "malformed_record_count": 0,
+      "private_identity_values_emitted": 0
+    }
+  },
+  "reason": "Sanitized evidence used a forbidden .log suffix; history gate scans all local refs",
+  "recovery": "New branch at the identical runtime commit; scanned .txt evidence; independent clone includes proposed branch and fetched public refs",
+  "failed_branch_retained": true,
+  "history_rewritten": false,
+  "history_deleted": false,
+  "policy_changed": false,
+  "original_shared_checkout_boundary": "REMAINS_FAILED_BY_RETAINED_LOCAL_BRANCH",
+  "runtime_source_unchanged": true,
+  "external_actions": 0
+}

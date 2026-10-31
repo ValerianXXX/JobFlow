@@ -1,0 +1,9 @@
+{
+  "status": "BLOCKED",
+  "code": "ENV_MANIFEST_INVALID",
+  "message": "JOBOPS_KNOWLEDGE_MANIFEST was set but does not name a readable file; fallback is disabled.",
+  "details": {
+    "path": "$PROJECT_ROOT/reports/quantity-stage-no-private-knowledge.json"
+  },
+  "next_safe_action": "REVIEW_BLOCKING_CODE"
+}

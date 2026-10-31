@@ -1,0 +1,242 @@
+test_currency_identity_cannot_change_with_the_same_coefficient (test_ai_quantity_binding.AIQuantityBindingTests.test_currency_identity_cannot_change_with_the_same_coefficient) ... 
+  test_currency_identity_cannot_change_with_the_same_coefficient (test_ai_quantity_binding.AIQuantityBindingTests.test_currency_identity_cannot_change_with_the_same_coefficient) (original='EUR', changed='USD') ... FAIL
+  test_currency_identity_cannot_change_with_the_same_coefficient (test_ai_quantity_binding.AIQuantityBindingTests.test_currency_identity_cannot_change_with_the_same_coefficient) (original='GBP', changed='CAD') ... FAIL
+  test_currency_identity_cannot_change_with_the_same_coefficient (test_ai_quantity_binding.AIQuantityBindingTests.test_currency_identity_cannot_change_with_the_same_coefficient) (original='CNY', changed='JPY') ... FAIL
+test_explicit_negative_quantities_cannot_lose_their_sign (test_ai_quantity_binding.AIQuantityBindingTests.test_explicit_negative_quantities_cannot_lose_their_sign) ... FAIL
+test_explicit_unit_conflict_cannot_borrow_a_neighboring_quantity (test_ai_quantity_binding.AIQuantityBindingTests.test_explicit_unit_conflict_cannot_borrow_a_neighboring_quantity) ... FAIL
+test_literal_positive_formats_and_aliases_remain_usable (test_ai_quantity_binding.AIQuantityBindingTests.test_literal_positive_formats_and_aliases_remain_usable) ... ok
+test_matching_literal_metrics_cannot_exchange_their_values (test_ai_quantity_binding.AIQuantityBindingTests.test_matching_literal_metrics_cannot_exchange_their_values) ... FAIL
+test_monetary_scale_cannot_be_dropped_or_inflated (test_ai_quantity_binding.AIQuantityBindingTests.test_monetary_scale_cannot_be_dropped_or_inflated) ... 
+  test_monetary_scale_cannot_be_dropped_or_inflated (test_ai_quantity_binding.AIQuantityBindingTests.test_monetary_scale_cannot_be_dropped_or_inflated) (original='million', changed='') ... FAIL
+  test_monetary_scale_cannot_be_dropped_or_inflated (test_ai_quantity_binding.AIQuantityBindingTests.test_monetary_scale_cannot_be_dropped_or_inflated) (original='thousand', changed='million') ... FAIL
+  test_monetary_scale_cannot_be_dropped_or_inflated (test_ai_quantity_binding.AIQuantityBindingTests.test_monetary_scale_cannot_be_dropped_or_inflated) (original='billion', changed='million') ... FAIL
+test_multiple_source_sentences_keep_each_supported_literal_metric_order (test_ai_quantity_binding.AIQuantityBindingTests.test_multiple_source_sentences_keep_each_supported_literal_metric_order) ... ok
+test_nonmonetary_explicit_scale_remains_part_of_the_quantity (test_ai_quantity_binding.AIQuantityBindingTests.test_nonmonetary_explicit_scale_remains_part_of_the_quantity) ... FAIL
+test_percentage_points_percent_and_basis_points_are_distinct (test_ai_quantity_binding.AIQuantityBindingTests.test_percentage_points_percent_and_basis_points_are_distinct) ... 
+  test_percentage_points_percent_and_basis_points_are_distinct (test_ai_quantity_binding.AIQuantityBindingTests.test_percentage_points_percent_and_basis_points_are_distinct) (original='percentage points', changed='percent') ... FAIL
+  test_percentage_points_percent_and_basis_points_are_distinct (test_ai_quantity_binding.AIQuantityBindingTests.test_percentage_points_percent_and_basis_points_are_distinct) (original='basis points', changed='percent') ... FAIL
+  test_percentage_points_percent_and_basis_points_are_distinct (test_ai_quantity_binding.AIQuantityBindingTests.test_percentage_points_percent_and_basis_points_are_distinct) (original='percent', changed='') ... FAIL
+test_reordered_plain_lists_are_not_mistaken_for_changed_metrics (test_ai_quantity_binding.AIQuantityBindingTests.test_reordered_plain_lists_are_not_mistaken_for_changed_metrics) ... ok
+test_time_units_cannot_change_with_the_same_digits (test_ai_quantity_binding.AIQuantityBindingTests.test_time_units_cannot_change_with_the_same_digits) ... 
+  test_time_units_cannot_change_with_the_same_digits (test_ai_quantity_binding.AIQuantityBindingTests.test_time_units_cannot_change_with_the_same_digits) (original='milliseconds', changed='seconds') ... FAIL
+  test_time_units_cannot_change_with_the_same_digits (test_ai_quantity_binding.AIQuantityBindingTests.test_time_units_cannot_change_with_the_same_digits) (original='minutes', changed='hours') ... FAIL
+  test_time_units_cannot_change_with_the_same_digits (test_ai_quantity_binding.AIQuantityBindingTests.test_time_units_cannot_change_with_the_same_digits) (original='hours', changed='days') ... FAIL
+test_time_units_cannot_change_with_the_same_digits (test_ai_quantity_binding.AIQuantityBindingTests.test_time_units_cannot_change_with_the_same_digits) ... FAIL
+test_whole_preview_filters_bad_units_without_rewriting_or_approving_other_candidates (test_ai_quantity_binding.AIQuantityBindingTests.test_whole_preview_filters_bad_units_without_rewriting_or_approving_other_candidates) ... FAIL
+test_wrapped_unit_can_complete_the_original_citation (test_ai_quantity_binding.AIQuantityBindingTests.test_wrapped_unit_can_complete_the_original_citation) ... FAIL
+
+======================================================================
+FAIL: test_currency_identity_cannot_change_with_the_same_coefficient (test_ai_quantity_binding.AIQuantityBindingTests.test_currency_identity_cannot_change_with_the_same_coefficient) (original='EUR', changed='USD')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 19, in test_currency_identity_cannot_change_with_the_same_coefficient
+    self.reject(f'The team managed a {original} 5000 budget for the synthetic pilot.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_currency_identity_cannot_change_with_the_same_coefficient (test_ai_quantity_binding.AIQuantityBindingTests.test_currency_identity_cannot_change_with_the_same_coefficient) (original='GBP', changed='CAD')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 19, in test_currency_identity_cannot_change_with_the_same_coefficient
+    self.reject(f'The team managed a {original} 5000 budget for the synthetic pilot.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_currency_identity_cannot_change_with_the_same_coefficient (test_ai_quantity_binding.AIQuantityBindingTests.test_currency_identity_cannot_change_with_the_same_coefficient) (original='CNY', changed='JPY')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 19, in test_currency_identity_cannot_change_with_the_same_coefficient
+    self.reject(f'The team managed a {original} 5000 budget for the synthetic pilot.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_explicit_negative_quantities_cannot_lose_their_sign (test_ai_quantity_binding.AIQuantityBindingTests.test_explicit_negative_quantities_cannot_lose_their_sign)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 58, in test_explicit_negative_quantities_cannot_lose_their_sign
+    self.reject('The applicant recorded a -12% change in the synthetic measure.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_explicit_unit_conflict_cannot_borrow_a_neighboring_quantity (test_ai_quantity_binding.AIQuantityBindingTests.test_explicit_unit_conflict_cannot_borrow_a_neighboring_quantity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 100, in test_explicit_unit_conflict_cannot_borrow_a_neighboring_quantity
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_matching_literal_metrics_cannot_exchange_their_values (test_ai_quantity_binding.AIQuantityBindingTests.test_matching_literal_metrics_cannot_exchange_their_values)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 52, in test_matching_literal_metrics_cannot_exchange_their_values
+    self.reject('The applicant recorded 25% growth and 40% retention in the synthetic report.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_monetary_scale_cannot_be_dropped_or_inflated (test_ai_quantity_binding.AIQuantityBindingTests.test_monetary_scale_cannot_be_dropped_or_inflated) (original='million', changed='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 26, in test_monetary_scale_cannot_be_dropped_or_inflated
+    self.reject(f'The team managed USD 3 {original} in synthetic annual revenue.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_monetary_scale_cannot_be_dropped_or_inflated (test_ai_quantity_binding.AIQuantityBindingTests.test_monetary_scale_cannot_be_dropped_or_inflated) (original='thousand', changed='million')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 26, in test_monetary_scale_cannot_be_dropped_or_inflated
+    self.reject(f'The team managed USD 3 {original} in synthetic annual revenue.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_monetary_scale_cannot_be_dropped_or_inflated (test_ai_quantity_binding.AIQuantityBindingTests.test_monetary_scale_cannot_be_dropped_or_inflated) (original='billion', changed='million')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 26, in test_monetary_scale_cannot_be_dropped_or_inflated
+    self.reject(f'The team managed USD 3 {original} in synthetic annual revenue.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_nonmonetary_explicit_scale_remains_part_of_the_quantity (test_ai_quantity_binding.AIQuantityBindingTests.test_nonmonetary_explicit_scale_remains_part_of_the_quantity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 31, in test_nonmonetary_explicit_scale_remains_part_of_the_quantity
+    self.reject('The applicant analyzed 3 million records for the synthetic research project.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_percentage_points_percent_and_basis_points_are_distinct (test_ai_quantity_binding.AIQuantityBindingTests.test_percentage_points_percent_and_basis_points_are_distinct) (original='percentage points', changed='percent')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 47, in test_percentage_points_percent_and_basis_points_are_distinct
+    self.reject(f'The applicant recorded a 12 {original} change in the synthetic measure.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_percentage_points_percent_and_basis_points_are_distinct (test_ai_quantity_binding.AIQuantityBindingTests.test_percentage_points_percent_and_basis_points_are_distinct) (original='basis points', changed='percent')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 47, in test_percentage_points_percent_and_basis_points_are_distinct
+    self.reject(f'The applicant recorded a 12 {original} change in the synthetic measure.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_percentage_points_percent_and_basis_points_are_distinct (test_ai_quantity_binding.AIQuantityBindingTests.test_percentage_points_percent_and_basis_points_are_distinct) (original='percent', changed='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 47, in test_percentage_points_percent_and_basis_points_are_distinct
+    self.reject(f'The applicant recorded a 12 {original} change in the synthetic measure.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_time_units_cannot_change_with_the_same_digits (test_ai_quantity_binding.AIQuantityBindingTests.test_time_units_cannot_change_with_the_same_digits) (original='milliseconds', changed='seconds')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 39, in test_time_units_cannot_change_with_the_same_digits
+    self.reject(f'The applicant reduced latency by 20 {original} in the synthetic benchmark.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_time_units_cannot_change_with_the_same_digits (test_ai_quantity_binding.AIQuantityBindingTests.test_time_units_cannot_change_with_the_same_digits) (original='minutes', changed='hours')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 39, in test_time_units_cannot_change_with_the_same_digits
+    self.reject(f'The applicant reduced latency by 20 {original} in the synthetic benchmark.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_time_units_cannot_change_with_the_same_digits (test_ai_quantity_binding.AIQuantityBindingTests.test_time_units_cannot_change_with_the_same_digits) (original='hours', changed='days')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 39, in test_time_units_cannot_change_with_the_same_digits
+    self.reject(f'The applicant reduced latency by 20 {original} in the synthetic benchmark.',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_time_units_cannot_change_with_the_same_digits (test_ai_quantity_binding.AIQuantityBindingTests.test_time_units_cannot_change_with_the_same_digits)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 41, in test_time_units_cannot_change_with_the_same_digits
+    self.reject('申请人在合成测试中将处理延迟减少了20毫秒并保存结果。',
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 14, in reject
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_whole_preview_filters_bad_units_without_rewriting_or_approving_other_candidates (test_ai_quantity_binding.AIQuantityBindingTests.test_whole_preview_filters_bad_units_without_rewriting_or_approving_other_candidates)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 115, in test_whole_preview_filters_bad_units_without_rewriting_or_approving_other_candidates
+    self.assertEqual([item['statement'] for item in result], [source])
+AssertionError: Lists differ: ['The team managed USD 5000 for the synthetic pilot.', 'The [43 chars]ot.'] != ['The team managed EUR 5000 for the synthetic pilot.']
+
+First differing element 0:
+'The team managed USD 5000 for the synthetic pilot.'
+'The team managed EUR 5000 for the synthetic pilot.'
+
+First list contains 1 additional elements.
+First extra element 1:
+'The team managed EUR 5000 for the synthetic pilot.'
+
+- ['The team managed USD 5000 for the synthetic pilot.',
+-  'The team managed EUR 5000 for the synthetic pilot.']
+? ^
+
++ ['The team managed EUR 5000 for the synthetic pilot.']
+? ^
+
+
+======================================================================
+FAIL: test_wrapped_unit_can_complete_the_original_citation (test_ai_quantity_binding.AIQuantityBindingTests.test_wrapped_unit_can_complete_the_original_citation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_binding.py", line 93, in test_wrapped_unit_can_complete_the_original_citation
+    self.assertEqual((report['line_start'], report['line_end']), (1, 2))
+AssertionError: Tuples differ: (1, 1) != (1, 2)
+
+First differing element 1:
+1
+2
+
+- (1, 1)
+?     ^
+
++ (1, 2)
+?     ^
+
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.017s
+
+FAILED (failures=19)

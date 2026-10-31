@@ -1,0 +1,69 @@
+{
+  "original": "evaluations/2026-10-30/model-template-replay-v1.json",
+  "original_sha256": "7ff78120a616e97e0370571830826c64eabfffb5ae365ebe96e64ef03b047853",
+  "current_sha256": "69a41b22b9bf7fb47a80d8d462b14d053f2f80938df97cf5f8faa1b250ed3216",
+  "rows": [
+    {
+      "case": "en-timeline_cards",
+      "before_candidates": 34,
+      "after_candidates": 34,
+      "exact_equal_fields": {
+        "case": true,
+        "source_sha256": true,
+        "analyzed_text": true,
+        "candidates": true,
+        "assessment": true,
+        "context_notes": true,
+        "profile_hints": true,
+        "profile_hint_review": true,
+        "material_claims": true
+      },
+      "all_candidates_unselected": true,
+      "retained_original_matches": true,
+      "temporary_state_removed": true,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "elapsed_ms": 4562,
+      "live_provider_calls": 0,
+      "filtered_candidate_reasons": {
+        "UNSUPPORTED_ACTOR": 1
+      }
+    },
+    {
+      "case": "zh-asymmetric_sidebar",
+      "before_candidates": 34,
+      "after_candidates": 34,
+      "exact_equal_fields": {
+        "case": true,
+        "source_sha256": true,
+        "analyzed_text": true,
+        "candidates": true,
+        "assessment": true,
+        "context_notes": true,
+        "profile_hints": true,
+        "profile_hint_review": true,
+        "material_claims": true
+      },
+      "all_candidates_unselected": true,
+      "retained_original_matches": true,
+      "temporary_state_removed": true,
+      "database_counts": {
+        "applications": 0,
+        "claims": 0,
+        "approvals": 0,
+        "external_action_attempts": 0
+      },
+      "elapsed_ms": 3688,
+      "live_provider_calls": 0,
+      "filtered_candidate_reasons": {
+        "CITED_LINE_GROUNDING": 1
+      }
+    }
+  ],
+  "new_model_quality_measurement": false,
+  "independent_human_review": false
+}

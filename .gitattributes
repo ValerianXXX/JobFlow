@@ -1,4 +1,5 @@
 * text=auto
+.gitattributes text eol=lf
 *.py text eol=lf
 *.js text eol=lf
 *.css text eol=lf
@@ -16,3 +17,4 @@ MANIFEST.in text eol=lf
 *.png binary
 *.pdf binary
 *.docx binary
+evaluations/2026-10-31/quantity-binding/*.txt text eol=lf

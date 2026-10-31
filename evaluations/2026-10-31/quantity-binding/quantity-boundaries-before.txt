@@ -1,0 +1,24 @@
+test_explicit_currency_code_before_a_symbol_is_not_discarded (test_ai_quantity_boundaries.AIQuantityBoundaryTests.test_explicit_currency_code_before_a_symbol_is_not_discarded) ... FAIL
+test_explicit_currency_code_can_preserve_a_redundant_symbol (test_ai_quantity_boundaries.AIQuantityBoundaryTests.test_explicit_currency_code_can_preserve_a_redundant_symbol) ... FAIL
+test_long_source_prefixes_do_not_change_local_quantity_identity (test_ai_quantity_boundaries.AIQuantityBoundaryTests.test_long_source_prefixes_do_not_change_local_quantity_identity) ... ok
+
+======================================================================
+FAIL: test_explicit_currency_code_before_a_symbol_is_not_discarded (test_ai_quantity_boundaries.AIQuantityBoundaryTests.test_explicit_currency_code_before_a_symbol_is_not_discarded)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_boundaries.py", line 11, in test_explicit_currency_code_before_a_symbol_is_not_discarded
+    self.assertFalse(_statement_grounding_report(candidate, source)['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_explicit_currency_code_can_preserve_a_redundant_symbol (test_ai_quantity_boundaries.AIQuantityBoundaryTests.test_explicit_currency_code_can_preserve_a_redundant_symbol)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE\JobFlow-quantity-binding\tests\test_ai_quantity_boundaries.py", line 16, in test_explicit_currency_code_can_preserve_a_redundant_symbol
+    self.assertTrue(_statement_grounding_report(candidate, source)['valid'])
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.064s
+
+FAILED (failures=2)

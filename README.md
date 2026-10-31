@@ -12,6 +12,13 @@ See the [compatibility and recovery matrix](docs/compatibility.md) and [October 
 
 The source branch includes these reviewable capabilities. They are not a new signed desktop release.
 
+Material review now checks recognized numeric units, scales, currencies and
+literal metric order against cited source text. Unsupported candidates are
+filtered with a reason and remain subject to user review. The
+[quantity-grounding record](docs/quantity-binding-2026-10-31.md) includes frozen
+failures and a two-response PDF/DPAPI replay with unchanged retained candidates;
+it does not establish complete material understanding or a new model-quality gain.
+
 Local shutdown drains accepted HTTP requests and their background application
 preparation before returning. Identical capture requests share one result;
 changed forms cannot reuse an older packet. Uncertain launches are polled without
