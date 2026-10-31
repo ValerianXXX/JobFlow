@@ -1,5 +1,7 @@
 """Failure paths of the owned request barrier, with real loopback sockets."""
+import errno
 import socket
+import socketserver
 import threading
 import unittest
 from unittest import mock
@@ -9,6 +11,27 @@ from jobops.onboarding_server import OnboardingHTTPServer
 
 
 class ShutdownFaultTests(unittest.TestCase):
+    def test_storage_errors_are_not_hidden_while_closing(self):
+        server = OnboardingHTTPServer(("127.0.0.1", 0), Service(), token="synthetic-shutdown")
+        server.server_close()
+        for error in (OSError(errno.ENOSPC, "synthetic disk full"), PermissionError("synthetic storage denial")):
+            with self.subTest(error=type(error).__name__), mock.patch.object(socketserver.BaseServer, "handle_error") as report:
+                try:
+                    raise error
+                except OSError:
+                    server.handle_error(None, None)
+                report.assert_called_once_with(None, None)
+
+    def test_expected_socket_disconnect_is_quiet_while_closing(self):
+        server = OnboardingHTTPServer(("127.0.0.1", 0), Service(), token="synthetic-shutdown")
+        server.server_close()
+        with mock.patch.object(socketserver.BaseServer, "handle_error") as report:
+            try:
+                raise ConnectionAbortedError("synthetic peer closed")
+            except ConnectionAbortedError:
+                server.handle_error(None, None)
+            report.assert_not_called()
+
     def test_started_worker_remains_owned_when_start_reports_an_error(self):
         with server_fixture() as f:
             server = f["server"]
