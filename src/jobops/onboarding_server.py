@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
 import os
@@ -94,8 +95,12 @@ class OnboardingHTTPServer(ThreadingHTTPServer):
         error = sys.exc_info()[1]
         if isinstance(error, (BrokenPipeError, ConnectionResetError)):
             return
-        if self._closing.is_set() and isinstance(error, OSError):
-            # Disconnects below intentionally interrupt blocked request I/O.
+        if self._closing.is_set() and isinstance(error, OSError) and (
+            isinstance(error, ConnectionAbortedError)
+            or error.errno == errno.ENOTSOCK
+            or getattr(error, "winerror", None) in {10038, 10057, 10058}
+        ):
+            # Suppress only interrupted socket I/O, never storage failures.
             return
         super().handle_error(request, client_address)
 
