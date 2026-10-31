@@ -1,0 +1,6 @@
+test_missing_invalid_or_zero_page_helper_evidence_fails_closed (test_pdf_content_coverage.PdfContentCoverageTests.test_missing_invalid_or_zero_page_helper_evidence_fails_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK

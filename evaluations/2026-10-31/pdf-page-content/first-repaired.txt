@@ -1,0 +1,13 @@
+test_fallback_runtime_cannot_bypass_content_guard (test_pdf_content_coverage.PdfContentCoverageTests.test_fallback_runtime_cannot_bypass_content_guard) ... ok
+test_frozen_synthetic_files_have_not_changed (test_pdf_content_coverage.PdfContentCoverageTests.test_frozen_synthetic_files_have_not_changed) ... ok
+test_geometry_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_geometry_worker_rejects_incomplete_page_content) ... ok
+test_logical_and_layout_routes_reject_unread_raster_or_only_pagination (test_pdf_content_coverage.PdfContentCoverageTests.test_logical_and_layout_routes_reject_unread_raster_or_only_pagination) ... ok
+test_non_strict_diagnostic_still_exposes_actual_partial_text (test_pdf_content_coverage.PdfContentCoverageTests.test_non_strict_diagnostic_still_exposes_actual_partial_text) ... ok
+test_opt_in_worker_failure_never_invokes_configured_visual_provider (test_pdf_content_coverage.PdfContentCoverageTests.test_opt_in_worker_failure_never_invokes_configured_visual_provider) ... ok
+test_optional_native_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_optional_native_worker_rejects_incomplete_page_content) ... ok
+test_text_small_decorations_and_searchable_raster_keep_review_boundary (test_pdf_content_coverage.PdfContentCoverageTests.test_text_small_decorations_and_searchable_raster_keep_review_boundary) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 15.854s
+
+OK

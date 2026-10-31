@@ -1,0 +1,295 @@
+{
+  "observed_at_utc": "2026-10-31T23:40:58.384785+00:00",
+  "synthetic_only": true,
+  "runtime_commit": "698430bc40459ef2f2fe64af5f80be86b06159b3",
+  "parent_commit": "301fca09ddcfad99dfc505c07d0c2bbcf1702f93",
+  "negative_fixture_and_initial_harness_commit": "552091f",
+  "corrected_harness_commit": "b454948",
+  "positive_render_correction_commit": "65ff493",
+  "negative_fixture_bytes_changed": false,
+  "initial_harness_result": {
+    "tests": 8,
+    "failures": 6,
+    "secondary_harness_errors": 3
+  },
+  "corrected_pre_product_baseline": {
+    "methods": 8,
+    "failed_assertions": 24
+  },
+  "observations": {
+    "initial-harness": {
+      "exit": 1,
+      "log": "initial-harness.txt",
+      "tests": 8,
+      "seconds": 26.094
+    },
+    "baseline": {
+      "exit": 1,
+      "log": "baseline.txt",
+      "tests": 8,
+      "seconds": 48.649
+    },
+    "positive-fixture-baseline": {
+      "exit": 0,
+      "log": "positive-fixture-baseline.txt",
+      "tests": 1,
+      "seconds": 0.461
+    },
+    "first-repaired": {
+      "exit": 0,
+      "log": "first-repaired.txt",
+      "tests": 8,
+      "seconds": 15.854
+    },
+    "expanded-contracts": {
+      "exit": 0,
+      "log": "expanded-contracts.txt",
+      "tests": 12,
+      "seconds": 17.565
+    },
+    "helper-boundary": {
+      "exit": 0,
+      "log": "helper-boundary.txt",
+      "tests": 1,
+      "seconds": 0.0
+    },
+    "final-contracts": {
+      "exit": 0,
+      "log": "final-contracts.txt",
+      "tests": 17,
+      "seconds": 36.753
+    },
+    "related": {
+      "exit": 0,
+      "log": "related.txt",
+      "tests": 103,
+      "seconds": 166.937
+    },
+    "browser-initial": {
+      "exit": 0,
+      "log": "browser-initial.txt"
+    },
+    "browser-mobile": {
+      "exit": 0,
+      "log": "browser-mobile.txt"
+    },
+    "browser-frozen": {
+      "exit": 0,
+      "log": "browser-frozen.txt"
+    }
+  },
+  "related_scope": "103 tests on the working implementation before resource-error classification was refined; final 17 include four overlapping native tests",
+  "final_contracts_scope": "13 new contracts plus four existing native-parser tests",
+  "browser_scope": "Final observation rerun after runtime was committed/frozen; initial and mobile-extension observations retained separately",
+  "browser": {
+    "synthetic_only": true,
+    "model": "RECORDED_RESPONSE_REPLAY",
+    "desktop": "zh",
+    "mobile": "en",
+    "content_rejections": [
+      {
+        "language": "中文",
+        "fixture": "scan-footer",
+        "status": 400,
+        "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED"
+      },
+      {
+        "language": "中文",
+        "fixture": "scan-header",
+        "status": 400,
+        "code": "LOCAL_PARSER_NEEDS_OCR"
+      },
+      {
+        "language": "中文",
+        "fixture": "pagination-only",
+        "status": 400,
+        "code": "LOCAL_PARSER_NEEDS_OCR"
+      },
+      {
+        "language": "EN",
+        "fixture": "scan-footer",
+        "status": 400,
+        "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED"
+      },
+      {
+        "language": "EN",
+        "fixture": "scan-header",
+        "status": 400,
+        "code": "LOCAL_PARSER_NEEDS_OCR"
+      },
+      {
+        "language": "EN",
+        "fixture": "pagination-only",
+        "status": 400,
+        "code": "LOCAL_PARSER_NEEDS_OCR"
+      }
+    ],
+    "source_hash_bound": true,
+    "unconfirmed_selection": "BLOCKED",
+    "candidate_count": 5,
+    "after_reload": {
+      "decisions": [
+        "PENDING",
+        "PENDING",
+        "PENDING",
+        "PENDING",
+        "PENDING"
+      ],
+      "sources": 1
+    },
+    "page_errors": [],
+    "external_requests": []
+  },
+  "server": {
+    "synthetic_only": true,
+    "real_model_calls": 0,
+    "recorded_response_replays": 1,
+    "invalid_visual_responses": 4,
+    "source_count": 1,
+    "material_claim_count": 5,
+    "claim_decisions": [
+      "PENDING",
+      "PENDING",
+      "PENDING",
+      "PENDING",
+      "PENDING"
+    ],
+    "database_counts": {
+      "applications": 0,
+      "claims": 0,
+      "approvals": 0,
+      "external_action_attempts": 0
+    },
+    "temporary_state_removed": true
+  },
+  "whole_material_parser_comparison": "corpus-comparison.json",
+  "new_full_local": {
+    "status": "RUNNING_NOT_COUNTED_AS_PASS",
+    "runtime_commit": "698430bc40459ef2f2fe64af5f80be86b06159b3",
+    "local_log": "task-artifacts/jobflow-page-content-full-20261031.log"
+  },
+  "hosted": "PENDING_EXACT_DELIVERY_HEAD",
+  "source_sha256": {
+    "src/jobops/pdf_content_coverage.py": "40dd73bbb69df61237a795a1f798bdf0f91996129dcdffb1490a11c95ae869b2",
+    "src/jobops/document_coverage.py": "9a6c1f158541e425279b11d9b9dcf340de784d0e48b12d2ed34cd89333f0b319",
+    "src/jobops/document_qa.py": "56499002c00e54a2fa1c54f45f0a872a2c64485e9d926b7b57e7ee7ef50deac3",
+    "src/jobops/_pdf_region_worker.py": "0f90c215f9c85b99577abf7781fcc21ce50fdf3cfe52930018e6427dcf49d5f0",
+    "src/jobops/_docling_worker.py": "5a2fd3103d290a3dae422d611a047e622f2a6ce3bd0d06fbb502d054d34e4424",
+    "src/jobops/local_document_parser.py": "7b5c704b2136bd555e5b253bfaab655f4350432b3dcaa791d59b26df914d71ec",
+    "src/jobops/onboarding_center.py": "b683fd7b89824576766c1fcfd9ae35d7092ff5d3817e6a2127fdf735f40a509e",
+    "src/jobops/ui/app.js": "7daebdfcec30f2dc66ed885dea2c902ac798011e7f549905cd5e0098c9efbb56",
+    ".agents/skills/job-application-operator/scripts/extract-pdf-text.py": "28373d5f82ea79bd8636534dec94a7591e98bb2da6cdcbca17fece8b0b3f7aa4",
+    "tests/test_pdf_content_coverage.py": "14e9f88ac70f8831f93d1b3cc4f3a6ec1144cb3f3a5570429a6e269cbb1e4094",
+    "tests/pdf_regions_ui_server.py": "3882839e7893b60870ab74d89d828531efba7996522782d916bb991f1cf82232",
+    "tests/pdf_regions_ui_e2e.cjs": "0fc966fb6e9cde2a1e26bda98a67652f73bb139ec22399ecc920e44fd37bab8e",
+    "scripts/build-pdf-content-probes.py": "591e23c6dad06697781cb55c3039516557bbc88179975114e7a7c5c3e233f115",
+    "scripts/evaluate-complete-materials.py": "56fb71c96c4a087ea2000cac2bdbc2c02c547195fc093c17905bf672648bdfe2",
+    "tests/fixtures/pdf-content-probes-v1/manifest.json": "7e5f8eaf87809d91af00a35708905c8c98476883e703834bd7a42ed4396021ed"
+  },
+  "committed_source_sha256": {
+    "src/jobops/pdf_content_coverage.py": "40dd73bbb69df61237a795a1f798bdf0f91996129dcdffb1490a11c95ae869b2",
+    "src/jobops/document_coverage.py": "9a6c1f158541e425279b11d9b9dcf340de784d0e48b12d2ed34cd89333f0b319",
+    "src/jobops/document_qa.py": "56499002c00e54a2fa1c54f45f0a872a2c64485e9d926b7b57e7ee7ef50deac3",
+    "src/jobops/_pdf_region_worker.py": "0f90c215f9c85b99577abf7781fcc21ce50fdf3cfe52930018e6427dcf49d5f0",
+    "src/jobops/_docling_worker.py": "5a2fd3103d290a3dae422d611a047e622f2a6ce3bd0d06fbb502d054d34e4424",
+    "src/jobops/local_document_parser.py": "7b5c704b2136bd555e5b253bfaab655f4350432b3dcaa791d59b26df914d71ec",
+    "src/jobops/onboarding_center.py": "b683fd7b89824576766c1fcfd9ae35d7092ff5d3817e6a2127fdf735f40a509e",
+    "src/jobops/ui/app.js": "7daebdfcec30f2dc66ed885dea2c902ac798011e7f549905cd5e0098c9efbb56",
+    ".agents/skills/job-application-operator/scripts/extract-pdf-text.py": "28373d5f82ea79bd8636534dec94a7591e98bb2da6cdcbca17fece8b0b3f7aa4",
+    "tests/test_pdf_content_coverage.py": "14e9f88ac70f8831f93d1b3cc4f3a6ec1144cb3f3a5570429a6e269cbb1e4094",
+    "tests/pdf_regions_ui_server.py": "3882839e7893b60870ab74d89d828531efba7996522782d916bb991f1cf82232",
+    "tests/pdf_regions_ui_e2e.cjs": "c11bec754b7877d3c93081114141340c90efb700816cfbcb9af00b6d670994dd",
+    "scripts/build-pdf-content-probes.py": "591e23c6dad06697781cb55c3039516557bbc88179975114e7a7c5c3e233f115",
+    "scripts/evaluate-complete-materials.py": "56fb71c96c4a087ea2000cac2bdbc2c02c547195fc093c17905bf672648bdfe2",
+    "tests/fixtures/pdf-content-probes-v1/manifest.json": "7e5f8eaf87809d91af00a35708905c8c98476883e703834bd7a42ed4396021ed"
+  },
+  "source_hash_basis": "Actual local validation bytes and Git normalized source bytes are recorded separately; CJS checkout uses CRLF",
+  "packaging_recovery": {
+    "initial_metadata_build": "Stopped before verification/state write on local-vs-Git CJS hash assertion",
+    "normalized_source_bytes_equal": true,
+    "observations_changed": false,
+    "resume": "Existing observation bytes compared before metadata completion; no product or test changes"
+  },
+  "original_local_log_sha256": {
+    "task-artifacts/jobflow-page-content-before-20261031.log": "cb7e3d5b41e033c1e29db6c09b79c165aec847491a3a67f62f4cbac92235646b",
+    "task-artifacts/jobflow-page-content-baseline-20261031.log": "fdc4d9009595dae9445a1eab10e183b8d8776e80de20bb3679dcce6b2f427b6f",
+    "task-artifacts/jobflow-page-content-positive-baseline-20261031.log": "da0e1759c3035634871cac035e7ac6638b0d0b6f384ce32398f83bcfc7a931af",
+    "task-artifacts/jobflow-page-content-after-20261031.log": "7aa7ba886ab8bafcf02b6db424a8b87dba81c81a2a3bcb9c1beb5ca519e47393",
+    "task-artifacts/jobflow-page-content-final-targeted-20261031.log": "78de36231e374334090e9148983abbc291930e4894a79d6c0e11ccaec2b19394",
+    "task-artifacts/jobflow-page-content-helper-boundary-20261031.log": "bda80c0f89b1b6bf35f0f452cd26c17eb5bf9b5180744a1ee5c6e2de4a15d0cf",
+    "task-artifacts/jobflow-page-content-final-contracts-20261031.log": "bcc3efcfaa68bdd61286e3314578da64ea40c2a4e996a0fc60d778b3d55f3be2",
+    "task-artifacts/jobflow-page-content-related-20261031.log": "05de7a1979ba2b49ab29d74b83815c8f9ecb3087958bff3fb8e1c5238fffc3b2",
+    "task-artifacts/jobflow-page-content-browser-20261031.log": "fd4e780df38a96409a260cca4ccb4b3226ed06a780353c4a38cbe31705e25acf",
+    "task-artifacts/jobflow-page-content-browser-mobile-20261031.log": "fd4e780df38a96409a260cca4ccb4b3226ed06a780353c4a38cbe31705e25acf",
+    "task-artifacts/jobflow-page-content-browser-frozen-20261031.log": "fd4e780df38a96409a260cca4ccb4b3226ed06a780353c4a38cbe31705e25acf",
+    "task-artifacts/jobflow-page-content-docs-20261031.log": "8af79764527bd5246b3633c7a1aa3b4d0040f48b04947cc68a07bcd730bf17c8",
+    "task-artifacts/jobflow-page-content-wheel-20261031.log": "9ff842d958ba7dded3f482b9c3de151ec71337fcfce43766f5a8ee179ef3419b"
+  },
+  "artifact_sha256": {
+    "baseline.txt": "4dd1fa7dd34cafc69486cd46e899bcc899a510791566ab3cc8f6b34f8f5b7378",
+    "browser-frozen.txt": "dbcb9e032c13d128cf3bbcb05c820a6af9ad98729418a2002916fa948cec8329",
+    "browser-initial.txt": "dbcb9e032c13d128cf3bbcb05c820a6af9ad98729418a2002916fa948cec8329",
+    "browser-mobile.txt": "dbcb9e032c13d128cf3bbcb05c820a6af9ad98729418a2002916fa948cec8329",
+    "browser.json": "03f07b15cb23108337e62e142ec054a426d5ad0e8b2cb282f0bc3a73894db612",
+    "content-rejected-en.png": "71bde557fb1ccb1d645e48f590ce7d2049312ea3043200625f6f0a5201add9f1",
+    "content-rejected-zh.png": "ca2559bc5a272c5d28a889f743cbb3cf2f42cd360f105fb9df0afbe3f45ed7d7",
+    "corpus-comparison.json": "80c54e5b2e88170c9a2de6c7d319ec65d7faf6260cf16aad00131a23993f6817",
+    "desktop-source.png": "80a34276d5d597fea783c15f6a7d9141894581039103f3b2052d7b12303ee6da",
+    "documentation.txt": "d33c0818c8ad8e29b9a6add9398cf63d91758e55fbd1744f453ea3c074125b61",
+    "expanded-contracts.txt": "5bc8349f1ec16790ef3b017731bfdcef45291adfc2ca8933367c50389a7c280a",
+    "final-contracts.txt": "4eccf222d503821d85692ce822143aea29f0faac3a433e01f1da96a4c1e73206",
+    "first-repaired.txt": "49f66932041c17d3e06df2a424946aea4fd3344daef51932c78f896863495638",
+    "helper-boundary.txt": "8041df7f957f62d2bc7f635a52f007d84de402e8ca2c8d6b022a0e92c18069bd",
+    "initial-harness.txt": "a168f51feade00250242d03673e0c5e78d789312c3fa55e875831bc1e4f03e26",
+    "mobile-source.png": "d4613517a69fde9458fb08d4c8800b319f608709941c204c2aeffe23717afe71",
+    "positive-fixture-baseline.txt": "e24014b603ca5f7c6c7a358d124bd955a234dbba9900f83d9cb6964b8b5be814",
+    "related.txt": "a859e59097e3be956f2ecb81097837b47f0da888893d2d2411936854ed98262e",
+    "release-observation.json": "4321d78efd4870ad644c2f294b7242ed4def6b4caafff2b4206afd1cf9aa5009",
+    "server.json": "e57201d5e55d9b24910ba35a70afe7d22bb0f0804dca79242fbb1eb86c91a6a8",
+    "wheel-build.txt": "145cd4a4a359a4919875876d234f619bd5656311c8aa12088f072ba265e2ae57"
+  },
+  "redaction": [
+    "Local worktree/home paths replaced in public logs",
+    "LF and trailing whitespace normalized; original raw logs retained and hashed"
+  ],
+  "versions": {
+    "python": "3.11.3",
+    "pdfplumber": "0.11.9",
+    "pypdf": "5.9.0",
+    "Pillow": "11.3.0",
+    "docling-slim": "2.144.0",
+    "docling-parse": "7.24.0"
+  },
+  "new_dependencies": [],
+  "new_model_calls": 0,
+  "new_paid_provider_requests": 0,
+  "ai_quality_gain_measured": false,
+  "data_migration": false,
+  "production_changes": false,
+  "M1_complete": false,
+  "remaining": [
+    "Full current local/hosted regression",
+    "Large decorative images may require visual review; small/partly represented images and vector text remain unverified",
+    "Whole-material semantic quality target and pending additional model-call budget",
+    "Trusted signing and independent clean Windows absent",
+    "Independent human, live mailbox and route-specific business acceptance"
+  ],
+  "delivery_preparation": {
+    "documentation_tests": 5,
+    "documentation_seconds": 0.939,
+    "wheel_build": "PASS_UNPUBLISHED",
+    "wheel_sha256": "ece6cdd7915d5ced2ea1a3d2bdde6d165b8dd95292148b44cdbfad8e09ef3e5d",
+    "wheel_scope": "New module and UI bytes checked against runtime; not a signed Windows installer",
+    "source_hash_pairs_verified": 15,
+    "artifact_hashes_verified_before_this_append": 19,
+    "relative_links_verified_before_final_release_note": 67
+  },
+  "external_verification": {
+    "pdfplumber_commit": "db828e3ac08ded001650e6ec66b23e719370d22e",
+    "tag": "v0.11.9",
+    "license": "MIT verified via GitHub connector after web cache miss",
+    "date": "2026-10-31",
+    "github_releases": "release-observation.json",
+    "extension_stores": "October 31 web reads failed; October 27 observations remain dated, not reverified"
+  }
+}

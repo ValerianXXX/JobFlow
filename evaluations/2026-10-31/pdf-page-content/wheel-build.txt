@@ -1,0 +1,12 @@
+Processing <WORKSPACE>\jobflow-page-content
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: jobflow-local
+  Building wheel for jobflow-local (pyproject.toml): started
+  Building wheel for jobflow-local (pyproject.toml): finished with status 'done'
+  Created wheel for jobflow-local: filename=jobflow_local-0.7.0-py3-none-any.whl size=828835 sha256=ece6cdd7915d5ced2ea1a3d2bdde6d165b8dd95292148b44cdbfad8e09ef3e5d
+  Stored in directory: <USER_HOME>\appdata\local\pip\cache\wheels\c2\e3\b7\bd5913e9230839a982821e9c4c1339c781d68cbd3ace2cd551
+Successfully built jobflow-local
+
+[notice] A new release of pip available: 22.3.1 -> 26.2.2
+[notice] To update, run: <WORKSPACE>\JobFlow-quantity-delivery\.venv\Scripts\python.exe -m pip install --upgrade pip
