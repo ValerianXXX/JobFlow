@@ -24,13 +24,17 @@ FACTS = [
 ]
 
 
-def make_pdf(lines, rectangles=(), *, rotate=False):
+def make_pdf(lines, rectangles=(), *, rotate=False, invisible_text=False, decoration=False):
     writer = PdfWriter()
     page = writer.add_page(PdfReader(io.BytesIO(text_pdf(lines))).pages[0])
     bitmap = Image.new('RGB', (960, 600), 'white')
     draw = ImageDraw.Draw(bitmap)
-    for index, fact in enumerate(FACTS):
-        draw.text((30, 35 + index * 80), fact, fill='black', font_size=25)
+    if decoration:
+        draw.rectangle((30, 30, 930, 570), outline='#123456', width=30)
+        draw.text((190, 200), 'EXAMPLE', fill='#123456', font_size=130)
+    else:
+        for index, fact in enumerate(FACTS):
+            draw.text((30, 35 + index * 80), fact, fill='black', font_size=25)
     raster = DecodedStreamObject()
     raster.set_data(bitmap.tobytes())
     raster.update({NameObject('/Type'): NameObject('/XObject'), NameObject('/Subtype'): NameObject('/Image'),
@@ -40,7 +44,10 @@ def make_pdf(lines, rectangles=(), *, rotate=False):
     # Image first, text overlay last. Rectangles are PDF bottom-left coordinates.
     commands = [f'q {w} 0 0 {h} {x} {y} cm /Scan Do Q' for x, y, w, h in rectangles]
     content = DecodedStreamObject()
-    content.set_data(('\n'.join(commands) + '\n').encode('ascii') + page.get_contents().get_data())
+    text_stream = page.get_contents().get_data()
+    if invisible_text:
+        text_stream = text_stream.replace(b'BT /F1', b'BT 3 Tr /F1')
+    content.set_data(('\n'.join(commands) + '\n').encode('ascii') + text_stream)
     page[NameObject('/Contents')] = writer._add_object(content)
     if rotate:
         page.rotate(90)
@@ -62,9 +69,9 @@ def build():
         ('tiled-scan', make_pdf(footer, [(40 + (i % 3) * 175, 130 + (i // 3) * 135, 175, 135) for i in range(12)]), True),
         ('rotated-scan', make_pdf(footer, raster, rotate=True), True),
         ('text-only', make_pdf(body + footer), False),
-        ('small-logo', make_pdf(body + footer, [(520, 720, 40, 40)]), False),
-        ('searchable-raster', make_pdf(body + footer, [(35, 430, 540, 300)]), False),
-        ('overlapping-stamps', make_pdf(body + footer, [(460, 100, 100, 100)] * 12), False),
+        ('small-logo', make_pdf(body + footer, [(520, 720, 40, 40)], decoration=True), False),
+        ('searchable-raster', make_pdf(body + footer, [(35, 430, 540, 300)], invisible_text=True), False),
+        ('overlapping-stamps', make_pdf(body + footer, [(460, 100, 100, 100)] * 12, decoration=True), False),
         ('off-page-raster', make_pdf(body + footer, [(-480, 100, 500, 500)]), False),
     ]
     writer = PdfWriter()

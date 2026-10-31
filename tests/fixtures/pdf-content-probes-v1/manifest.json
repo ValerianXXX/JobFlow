@@ -49,19 +49,19 @@
     {
       "id": "small-logo",
       "file": "small-logo.pdf",
-      "sha256": "478e7da2b804710ee6ce1e6c043e86f3a7acf0564ad2a0e1464ba90c3a2a3320",
+      "sha256": "a7c7b861a2a9c611de0fa82f00b8fdbbe26b0b540cf44d51cb9c665855d0a2d1",
       "must_block_text_only": false
     },
     {
       "id": "searchable-raster",
       "file": "searchable-raster.pdf",
-      "sha256": "e4624b6e8a8776ddefe2da5359f3c3009c79da3bf3e9103e009b0605d47177ba",
+      "sha256": "4b9c1d1b2c97808d2ba8a422de7550249f0cc50e364f8db68a623b02fc168f37",
       "must_block_text_only": false
     },
     {
       "id": "overlapping-stamps",
       "file": "overlapping-stamps.pdf",
-      "sha256": "9746bbffa037c7542c4d5ce57323989edcca5bb3382f92d5cf2e864f5d2bcc95",
+      "sha256": "da9233f0ac4759881689742114e0231d40a20a20a7b37e34916c3759a1b08105",
       "must_block_text_only": false
     },
     {
@@ -76,5 +76,14 @@
       "sha256": "6a4706edc201e85c0a2bdb0eb7f3f2091acb9a09c432847e5a944eca61035c33",
       "must_block_text_only": true
     }
-  ]
+  ],
+  "pre_implementation_fixture_correction": {
+    "original_commit": "b454948",
+    "changed_positive_cases": [
+      "small-logo",
+      "searchable-raster",
+      "overlapping-stamps"
+    ],
+    "reason": "Use invisible searchable text instead of duplicated visible lines and actual decorative logos instead of miniaturized fact images. All six rejection inputs and expected outcomes unchanged."
+  }
 }
