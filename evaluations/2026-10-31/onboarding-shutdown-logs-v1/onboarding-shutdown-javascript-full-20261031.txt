@@ -1,0 +1,41 @@
+[RUN] browser_companion_e2e.cjs
+{"status":"PASS","controls":7,"guided_job_capture":true,"fields":3,"files":3,"programmatic_submit_events_before_user_click":0,"trusted_user_submit_observed":true,"lever_provider_runtime":true,"lever_fields":3,"lever_files":1,"lever_explicit_nonfinal_navigation":true,"lever_navigation_fields":3,"lever_navigation_files":1,"lever_programmatic_final_submit_events":0,"workday_provider_file_runtime":true,"workday_fields":5,"workday_files":1,"workday_programmatic_final_submit_events":0,"ashby_provider_runtime":true,"ashby_fields":2,"ashby_files":1,"ashby_programmatic_final_submit_events":0,"smartrecruiters_provider_runtime":true,"smartrecruiters_fields":3,"smartrecruiters_files":1,"smartrecruiters_programmatic_final_submit_events":0,"greenhouse_component_rerender_rebinding":true,"lever_component_rerender_rebinding":true,"workday_component_rerender_rebinding":true,"ashby_component_rerender_rebinding":true,"smartrecruiters_component_rerender_rebinding":true,"submit_like_next_programmatic_clicks":0,"trusted_manual_next_observed_before_unload":true,"scoped_explicit_button_navigation":true,"lwc_choice_controls":true,"non_input_aria_combobox":true,"component_rerender_rebinding":true,"shadow_root_mutation_settling":true,"async_upload_replacement":true,"partial_apply_evidence":true,"dynamic_maxlength_fail_closed":true,"approval_semantics_and_atomic_preflight":true,"protected_account_and_credential_gates":true,"programmatic_final_submit_events":0}[RUN] browser_companion_guided_autopilot_e2e.cjs
+{"status":"PASS","visible_search_started":1,"official_job_pages_opened":1,"rejected_candidate_advanced_to_next":1,"verified_apply_routes_followed":1,"application_forms_captured":1,"ambiguous_search_navigations":0,"permission_denial_external_actions":0,"programmatic_apply_clicks":0,"programmatic_submit_clicks":0,"real_external_actions":0}[RUN] browser_companion_manual_navigation_e2e.cjs
+{"status":"PASS","arm_before_stage_commit":true,"companion_tab_injected":true,"forged_nonce_rejected":true,"wrong_tab_rejected":true,"wrong_document_rejected":true,"prevented_default_rejected":true,"replay_rejected":true,"immediate_unload_recorded":true,"automatic_resume_after_trusted_next":true,"spa_resume_supported":true,"unrelated_same_origin_rejected":true,"no_automatic_retry":true,"expired_challenge_rejected":true,"public_nonce_redacted":true,"arm_failure_restart_required":true,"arm_failure_no_retry":true,"explicit_button_fresh_proof_required":true,"dynamic_review_before_complete":true,"partial_apply_audited_once":true,"partial_apply_no_retry":true,"initial_tab_handoff":true,"post_write_tab_handoff_blocked":true,"wrong_origin_handoff_blocked":true,"final_submit_user_only":true,"real_external_actions":0}[RUN] browser_companion_one_confirmation_e2e.cjs
+{"status":"PASS","one_confirmation_transition":true,"approved_application_tab_reused":true,"automatic_prefill_runs":1,"duplicate_prefill_runs":0,"programmatic_navigation_clicks":0,"programmatic_submit_clicks":0,"final_submit":"USER_ONLY"}[RUN] browser_companion_pair_bridge_e2e.cjs
+{"status":"PASS","reinjected_generations":4,"pair_requests_forwarded":2,"pair_results_published":1,"status_events_published":1,"stale_generation_noop":true,"stale_async_completion_noop":true,"real_external_actions":0}[RUN] browser_companion_pairing_e2e.cjs
+{"status":"PASS","signed_external_pairing":true,"popup_pair_fallback":true,"installation_hmac_required":true,"native_host_binding":true,"native_binding_refresh_after_invalid_proof":true,"fake_loopback_rejected":true,"unsigned_routing_change_rejected":true,"different_mode_blocked":true,"stale_async_completion_blocked":true,"final_review_immutable":true,"unrelated_tab_update_ignored":true,"same_bound_tab_result_observed":true,"binding_scoped_status":true,"scoped_cancel_releases_session":true,"guided_preparation_background_polled":true,"guided_preparation_start_count":1,"raw_abort_error_normalized":true,"capability_values_redacted":true,"network_calls":13,"real_external_actions":0}[RUN] browser_companion_popup_e2e.cjs
+{"status":"PASS","user_gesture_permission_required":true,"permission_denial_fail_closed":true,"optional_host_permission_available":true,"optional_permission_requests":1,"capture_messages":1,"restart_required_bilingual":true,"restart_required_disabled":true,"apply_failure_diagnostic_bilingual":true,"aria_combobox_failure_bilingual":true,"protected_credential_failure_bilingual":true,"real_external_actions":0}[RUN] context_review_ui_e2e.cjs
+Context review UI: PASS (actual HTTP/DPAPI, synthetic source, saved-answer binding, drafts, reasons, reanalysis, reload, bilingual)
+[RUN] mail_review_ui_e2e.cjs
+Mail review HTTP/DPAPI UI PASS: negation, plain/HTML history, review/reload/undo, bilingual desktop/mobile; no external actions.
+[RUN] onboarding_analysis_text_e2e.cjs
+{"status":"PASS","scenario_groups":14,"locales":["en","zh"],"widths":[1280,390],"keyboard":true,"late_response_cleared":true,"selection_unchanged":true,"profile_origins":true,"edited_origin_removed":true,"stale_origin_not_linked":true,"locale_preserves_unconfirmed_source":true,"edited_locale_has_no_old_origin":true,"external_requests":0,"backend":"contract double"}[RUN] onboarding_busy_focus_e2e.cjs
+✔ return to the initiating control after emergencyStop retains focus (846.7645ms)
+✔ return to the initiating control after cancelGuidedIntake retains focus (515.4061ms)
+✔ return to the initiating control after pauseAuthorizedDiscovery retains focus (474.9299ms)
+✔ return to the initiating control after killAuthorizedDiscovery retains focus (465.3135ms)
+✔ return to the initiating control after pauseIntakeControl retains focus (458.6736ms)
+✔ restore from the document body when no control retained focus (454.2592ms)
+✔ do not steal focus deliberately moved to another accessible element (453.1004ms)
+✔ do not restore an initiating control that is removed (438.4887ms)
+✔ do not restore an initiating control that is disabled (450.5254ms)
+✔ do not restore an initiating control that is hidden (447.3051ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5260.1136
+[RUN] onboarding_source_context_e2e.cjs
+{"status":"PASS","locales":["en","zh"],"viewport_widths":[1280,390],"keyboard_and_collapsed_field_navigation":true,"answers_unchanged":true,"untrusted_html_escaped":true,"retained_context_visible":true,"external_requests":0}[RUN] onboarding_source_coverage_e2e.cjs
+{"status":"PASS","scenario_groups":7,"locales":["en","zh"],"viewport_widths":[1280,390],"keyboard_details":true,"candidate_selection_unchanged":true,"no_fact_completeness_claim":true,"legacy_and_invalid_metadata_fallback":true,"external_requests":0}[RUN] onboarding_ui_e2e.cjs
+{"status":"PASS","materials_before_application_console":true,"persistent_failure_indicator":true,"persistent_primary_workflow":true,"authorized_discovery_inbox":true,"companion_version_update_direction":true,"incompatible_companion_pairing_blocked":true,"busy_keyboard_reentrancy_blocked":true,"busy_stop_controls_reachable":true,"busy_control_state_restored":true,"reduced_motion_navigation":true,"supported_locales":["zh","en"],"real_external_actions":0}[RUN] pdf_regions_ui_e2e.cjs
+PDF regions UI PASS: real upload, parser, original render, confirmation gate, Chinese desktop, English mobile, pending Claims after reload, zero external actions and clean teardown; model replay only.
+[RUN] standard_resume_ui_e2e.cjs
+Standard resume UI: PASS (synthetic PDF profile, actual DPAPI, bilingual, download, adoption, reload)
+[RUN] workbench_ui_e2e.cjs
+Workbench HTTP/DPAPI UI PASS: bilingual, desktop/mobile, source review, snapshot integrity, mail link/reload/undo/clear, UI approval through synthetic receipt; no external requests.
+JOBFLOW_JAVASCRIPT_E2E_PASS=17

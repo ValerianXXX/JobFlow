@@ -12,6 +12,12 @@ See the [compatibility and recovery matrix](docs/compatibility.md) and [October 
 
 The source branch includes these reviewable capabilities. They are not a new signed desktop release.
 
+Local shutdown now stops further HTTP admission and waits for accepted request
+writers before returning. This addresses a reproduced cleanup race; fixed
+synthetic contracts and an actual DPAPI/browser flow verify the behavior.
+[Evidence, unfinished lifecycle work and rollback](docs/onboarding-shutdown-2026-10-31.md)
+distinguish this repair from full-suite, signing and independent-user acceptance.
+
 The [runtime revalidation follow-up](docs/runtime-revalidation-2026-10-30.md)
 preserves a failed 1,352-test full run, repairs native staged-file validation for
 deep paths, and corrects the public-English guide. Focused native execution and
@@ -22,8 +28,9 @@ checks. This does not establish signed-release or clean-Windows acceptance.
 The later mail-review full run failed five release-tool prerequisites and one
 bootstrap timeout test. [Isolated Node selection](docs/release-node-selection-2026-10-31.md)
 adds an explicit authenticated tool path without replacing the host runtime or
-changing trusted signers. Focused path checks pass; the original timeout remains
-unexplained and a newer full run must be tracked separately.
+changing trusted signers. Its later local run completed 1,490 tests without
+failures and with four native-symlink skips. The original timeout remains
+unexplained; the newer HTTP shutdown change requires its own complete checks.
 
 Documented work duration now excludes gaps, overlapping jobs and repeated Claims. Partial dates retain bounds; internship time and skill-specific or full-time requirements require separate review. New Profiles use version 3 while older Profiles remain readable; older generated tenure values need a reviewed revision before supporting a years requirement. [Duration rules, regression evidence and rollback](docs/experience-duration-2026-10-29.md) also record the six-sample Profile-hint check without claiming complete material understanding.
 

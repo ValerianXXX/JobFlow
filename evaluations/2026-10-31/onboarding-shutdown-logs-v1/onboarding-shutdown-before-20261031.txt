@@ -1,0 +1,106 @@
+test_buffered_second_request_is_not_admitted_after_close_starts (test_onboarding_shutdown.OnboardingShutdownTests.test_buffered_second_request_is_not_admitted_after_close_starts) ... FAIL
+test_close_waits_for_an_accepted_mutation_before_returning (test_onboarding_shutdown.OnboardingShutdownTests.test_close_waits_for_an_accepted_mutation_before_returning) ... ----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 58886)
+FAIL
+test_idle_keep_alive_connection_is_stopped_before_close_returns (test_onboarding_shutdown.OnboardingShutdownTests.test_idle_keep_alive_connection_is_stopped_before_close_returns) ... Traceback (most recent call last):
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\socketserver.py", line 691, in process_request_thread
+    self.finish_request(request, client_address)
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\socketserver.py", line 755, in __init__
+    self.handle()
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 43, in handle
+    super().handle()
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\http\server.py", line 432, in handle
+    self.handle_one_request()
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\http\server.py", line 420, in handle_one_request
+    method()
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 55, in do_GET
+    self._send_bytes(200, b"synthetic", "text/plain")
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\src\jobops\onboarding_server.py", line 101, in _send_bytes
+    self.wfile.write(data)
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\socketserver.py", line 834, in write
+    self._sock.sendall(b)
+ConnectionAbortedError: [WinError 10053] 你的主机中的软件中止了一个已建立的连接。
+----------------------------------------
+FAIL
+test_service_close_error_does_not_skip_request_drain (test_onboarding_shutdown.OnboardingShutdownTests.test_service_close_error_does_not_skip_request_drain) ... ----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 58890)
+Traceback (most recent call last):
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\socketserver.py", line 691, in process_request_thread
+    self.finish_request(request, client_address)
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\socketserver.py", line 755, in __init__
+    self.handle()
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 43, in handle
+    super().handle()
+FAIL
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\http\server.py", line 432, in handle
+    self.handle_one_request()
+test_successful_close_is_idempotent (test_onboarding_shutdown.OnboardingShutdownTests.test_successful_close_is_idempotent) ...   File "<USER>\AppData\Local\Programs\Python\Python311\Lib\http\server.py", line 420, in handle_one_request
+    method()
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 55, in do_GET
+    self._send_bytes(200, b"synthetic", "text/plain")
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\src\jobops\onboarding_server.py", line 101, in _send_bytes
+    self.wfile.write(data)
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\socketserver.py", line 834, in write
+    self._sock.sendall(b)
+ConnectionAbortedError: [WinError 10053] 你的主机中的软件中止了一个已建立的连接。
+----------------------------------------
+FAIL
+test_unfinished_request_body_is_not_committed_during_shutdown (test_onboarding_shutdown.OnboardingShutdownTests.test_unfinished_request_body_is_not_committed_during_shutdown) ... FAIL
+test_unused_listener_closes_without_starting_the_serve_loop (test_onboarding_shutdown.OnboardingShutdownTests.test_unused_listener_closes_without_starting_the_serve_loop) ... ok
+
+======================================================================
+FAIL: test_buffered_second_request_is_not_admitted_after_close_starts (test_onboarding_shutdown.OnboardingShutdownTests.test_buffered_second_request_is_not_admitted_after_close_starts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 137, in test_buffered_second_request_is_not_admitted_after_close_starts
+    self.assertFalse(f["second"].wait(0.15), "Buffered request wrote after shutdown began")
+AssertionError: True is not false : Buffered request wrote after shutdown began
+
+======================================================================
+FAIL: test_close_waits_for_an_accepted_mutation_before_returning (test_onboarding_shutdown.OnboardingShutdownTests.test_close_waits_for_an_accepted_mutation_before_returning)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 116, in test_close_waits_for_an_accepted_mutation_before_returning
+    self.assertFalse(f["closed"].wait(0.15), "Close returned while an accepted write was still active")
+AssertionError: True is not false : Close returned while an accepted write was still active
+
+======================================================================
+FAIL: test_idle_keep_alive_connection_is_stopped_before_close_returns (test_onboarding_shutdown.OnboardingShutdownTests.test_idle_keep_alive_connection_is_stopped_before_close_returns)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 127, in test_idle_keep_alive_connection_is_stopped_before_close_returns
+    self.assertTrue(f["finished"].is_set(), "Idle request still owns the temporary workspace")
+AssertionError: False is not true : Idle request still owns the temporary workspace
+
+======================================================================
+FAIL: test_service_close_error_does_not_skip_request_drain (test_onboarding_shutdown.OnboardingShutdownTests.test_service_close_error_does_not_skip_request_drain)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 147, in test_service_close_error_does_not_skip_request_drain
+    self.assertFalse(f["closed"].wait(0.15))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_successful_close_is_idempotent (test_onboarding_shutdown.OnboardingShutdownTests.test_successful_close_is_idempotent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 167, in test_successful_close_is_idempotent
+    self.assertEqual(service.close_count, 1)
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_unfinished_request_body_is_not_committed_during_shutdown (test_onboarding_shutdown.OnboardingShutdownTests.test_unfinished_request_body_is_not_committed_during_shutdown)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 159, in test_unfinished_request_body_is_not_committed_during_shutdown
+    self.assertTrue(f["finished"].is_set())
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.122s
+
+FAILED (failures=6)

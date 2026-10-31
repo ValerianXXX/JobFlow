@@ -1,0 +1,34 @@
+test_concurrent_close_calls_share_one_completed_service_close (test_onboarding_shutdown_faults.ShutdownFaultTests.test_concurrent_close_calls_share_one_completed_service_close) ... ok
+test_disconnect_error_still_drains_before_propagating (test_onboarding_shutdown_faults.ShutdownFaultTests.test_disconnect_error_still_drains_before_propagating) ... FAIL
+test_thread_start_failure_does_not_poison_later_server_close (test_onboarding_shutdown_faults.ShutdownFaultTests.test_thread_start_failure_does_not_poison_later_server_close) ... ERROR
+
+======================================================================
+ERROR: test_thread_start_failure_does_not_poison_later_server_close (test_onboarding_shutdown_faults.ShutdownFaultTests.test_thread_start_failure_does_not_poison_later_server_close)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown_faults.py", line 22, in test_thread_start_failure_does_not_poison_later_server_close
+    server.server_close()
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\src\jobops\onboarding_server.py", line 119, in server_close
+    super().server_close()
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\socketserver.py", line 709, in server_close
+    self._threads.join()
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\socketserver.py", line 655, in join
+    thread.join()
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\threading.py", line 1107, in join
+    raise RuntimeError("cannot join thread before it is started")
+RuntimeError: cannot join thread before it is started
+
+======================================================================
+FAIL: test_disconnect_error_still_drains_before_propagating (test_onboarding_shutdown_faults.ShutdownFaultTests.test_disconnect_error_still_drains_before_propagating)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown_faults.py", line 42, in test_disconnect_error_still_drains_before_propagating
+    f["close_in_thread"]()
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 91, in close_in_thread
+    raise AssertionError("Server did not start closing its service")
+AssertionError: Server did not start closing its service
+
+----------------------------------------------------------------------
+Ran 3 tests in 3.049s
+
+FAILED (failures=1, errors=1)

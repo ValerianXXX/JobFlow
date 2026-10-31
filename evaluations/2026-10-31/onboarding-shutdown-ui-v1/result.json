@@ -1,0 +1,25 @@
+{
+  "synthetic_only": true,
+  "seeded_completed_profile": true,
+  "ai_extraction_tested": false,
+  "live_submission": false,
+  "word_conversion": "NOT_RUN",
+  "docx_sha256": "sha256:469602e228f3439a3a8599e360af4c8f5d4757110eded0e5ea62a1b768490fe6",
+  "capabilities": {
+    "docx_generation": true,
+    "pdf_export": "DETECTED_NOT_VERIFIED",
+    "pdf_export_provider": "WORD",
+    "pdf_export_configuration": "VALID",
+    "page_preview": true,
+    "application_pdf_renderer": true,
+    "automatic_installation": false,
+    "real_external_actions": 0
+  },
+  "desktop_zh": true,
+  "mobile_en": true,
+  "download_verified": true,
+  "adoption_persisted": true,
+  "session_and_origin_checks": true,
+  "browser_errors": [],
+  "external_requests": []
+}

@@ -1,0 +1,10 @@
+test_public_github_text_is_english_only (test_public_docs.PublicDocumentationTests.test_public_github_text_is_english_only) ... ok
+test_public_install_instructions_route_only_to_bootstrap_v2 (test_public_docs.PublicDocumentationTests.test_public_install_instructions_route_only_to_bootstrap_v2) ... ok
+test_quick_start_is_english_and_covers_the_safe_first_run (test_public_docs.PublicDocumentationTests.test_quick_start_is_english_and_covers_the_safe_first_run) ... ok
+test_quick_start_relative_links_resolve (test_public_docs.PublicDocumentationTests.test_quick_start_relative_links_resolve) ... ok
+test_readme_relative_links_resolve_inside_the_repository (test_public_docs.PublicDocumentationTests.test_readme_relative_links_resolve_inside_the_repository) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.046s
+
+OK

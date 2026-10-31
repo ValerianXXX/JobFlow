@@ -1,0 +1,17 @@
+test_concurrent_close_calls_share_one_completed_service_close (test_onboarding_shutdown_faults.ShutdownFaultTests.test_concurrent_close_calls_share_one_completed_service_close) ... ok
+test_disconnect_error_still_drains_before_propagating (test_onboarding_shutdown_faults.ShutdownFaultTests.test_disconnect_error_still_drains_before_propagating) ... ok
+test_started_worker_remains_owned_when_start_reports_an_error (test_onboarding_shutdown_faults.ShutdownFaultTests.test_started_worker_remains_owned_when_start_reports_an_error) ... FAIL
+test_thread_start_failure_does_not_poison_later_server_close (test_onboarding_shutdown_faults.ShutdownFaultTests.test_thread_start_failure_does_not_poison_later_server_close) ... ok
+
+======================================================================
+FAIL: test_started_worker_remains_owned_when_start_reports_an_error (test_onboarding_shutdown_faults.ShutdownFaultTests.test_started_worker_remains_owned_when_start_reports_an_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown_faults.py", line 32, in test_started_worker_remains_owned_when_start_reports_an_error
+    self.assertFalse(f["closed"].wait(0.15), "Started request lost ownership when launch reported an error")
+AssertionError: True is not false : Started request lost ownership when launch reported an error
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.231s
+
+FAILED (failures=1)
