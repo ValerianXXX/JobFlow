@@ -29,14 +29,15 @@ class PdfContentCoverageTests(unittest.TestCase):
             if not case['must_block_text_only']:
                 continue
             for layout in (False, True):
-                with self.subTest(case=case['id'], layout=layout), self.assertRaises(JobOpsError) as caught:
-                    extract_pdf_text(CORPUS / case['file'], layout=layout, require_complete_pages=True)
-                self.assertEqual(caught.exception.code, 'ONBOARDING_DOCUMENT_QUALITY_FAILED')
-                quality = caught.exception.details['document_quality']
-                self.assertEqual(quality['status'], 'FAIL')
-                self.assertIn('OCR_REQUIRED', quality['reason_codes'])
-                self.assertFalse(quality['contains_document_text'])
-                self.assertNotIn('Cedar', json.dumps(caught.exception.as_dict()))
+                with self.subTest(case=case['id'], layout=layout):
+                    with self.assertRaises(JobOpsError) as caught:
+                        extract_pdf_text(CORPUS / case['file'], layout=layout, require_complete_pages=True)
+                    self.assertEqual(caught.exception.code, 'ONBOARDING_DOCUMENT_QUALITY_FAILED')
+                    quality = caught.exception.details['document_quality']
+                    self.assertEqual(quality['status'], 'FAIL')
+                    self.assertIn('OCR_REQUIRED', quality['reason_codes'])
+                    self.assertFalse(quality['contains_document_text'])
+                    self.assertNotIn('Cedar', json.dumps(caught.exception.as_dict()))
 
     def test_text_small_decorations_and_searchable_raster_keep_review_boundary(self):
         for case in MANIFEST['cases']:
@@ -50,15 +51,17 @@ class PdfContentCoverageTests(unittest.TestCase):
 
     def test_geometry_worker_rejects_incomplete_page_content(self):
         for name in ('scan-footer', 'scan-header', 'pagination-only', 'tiled-scan', 'mixed-pages'):
-            with self.subTest(case=name), self.assertRaises(JobOpsError) as caught:
-                read_region_pdf((CORPUS / (name + '.pdf')).read_bytes())
-            self.assertEqual(caught.exception.code, 'LOCAL_PARSER_NEEDS_OCR')
+            with self.subTest(case=name):
+                with self.assertRaises(JobOpsError) as caught:
+                    read_region_pdf((CORPUS / (name + '.pdf')).read_bytes())
+                self.assertEqual(caught.exception.code, 'LOCAL_PARSER_NEEDS_OCR')
 
     def test_optional_native_worker_rejects_incomplete_page_content(self):
         for name in ('scan-footer', 'scan-header', 'pagination-only', 'mixed-pages'):
-            with self.subTest(case=name), self.assertRaises(JobOpsError) as caught:
-                read_local_pdf((CORPUS / (name + '.pdf')).read_bytes())
-            self.assertEqual(caught.exception.code, 'LOCAL_PARSER_NEEDS_OCR')
+            with self.subTest(case=name):
+                with self.assertRaises(JobOpsError) as caught:
+                    read_local_pdf((CORPUS / (name + '.pdf')).read_bytes())
+                self.assertEqual(caught.exception.code, 'LOCAL_PARSER_NEEDS_OCR')
 
     def test_fallback_runtime_cannot_bypass_content_guard(self):
         with patch.dict(sys.modules, {'pdfplumber': None}), self.assertRaises(JobOpsError) as caught:
