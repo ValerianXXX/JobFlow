@@ -28,8 +28,9 @@ Release preparation also includes [native runtime checks](docs/runtime-revalidat
 Their dated records retain earlier failures and successful checks separately;
 an earlier branch's pass is not substituted for this branch's unfinished checks.
 The [native trust timing investigation](docs/release-trust-timing-2026-10-31.md)
-records the three failed hosted Windows runs and an independent bounded probe;
-local success has not yet resolved the hosted release blocker.
+records the three failed hosted Windows runs, an independent bounded probe and
+an explicit system-module repair. Local checks pass; hosted verification of the
+repair is still required before calling the release blocker resolved.
 
 Documented work duration now excludes gaps, overlapping jobs and repeated Claims. Partial dates retain bounds; internship time and skill-specific or full-time requirements require separate review. New Profiles use version 3 while older Profiles remain readable; older generated tenure values need a reviewed revision before supporting a years requirement. [Duration rules, regression evidence and rollback](docs/experience-duration-2026-10-29.md) also record the six-sample Profile-hint check without claiming complete material understanding.
 

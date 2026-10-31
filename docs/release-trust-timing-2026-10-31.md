@@ -1,4 +1,4 @@
-# Native release trust timing and unresolved hosted failures
+# Native release trust module resolution and hosted failures
 
 Scope: 31 October 2026, development source and owned Windows diagnostic
 processes. No production signature, installed-user data or release is changed.
@@ -25,6 +25,34 @@ The same five unmodified trust contracts pass locally in 16.996 seconds. A real
 instrumented probe completes in 4.843 seconds, including two signature checks
 and four full hashes. This discrepancy means that local success alone cannot
 identify the hosted cause or establish release reliability.
+
+## Evidence-supported repair
+
+The second hosted diagnostic, job `124625682799` in
+[run 41231212099](https://github.com/ValerianXXX/JobFlow/actions/runs/41231212099),
+reached child entry at 1,966 ms but did not reach the explicit security-module
+import before its 30.047-second timeout. Between those markers the original
+script set simple preference variables and called `Join-Path`, which required
+implicit module discovery. The original five tests again ran and had two errors
+in 87.290 seconds. These observations locate the stall before native signature
+verification, not in hashing or file-identity compilation.
+
+The proposed repair disables automatic module discovery only inside the isolated
+signature program. It constructs the two fixed system-module paths with .NET,
+explicitly imports Security and Utility, and uses the qualified signature and
+JSON commands. It reuses the existing approach in
+[secure-store.ps1](../.agents/skills/job-application-operator/scripts/secure-store.ps1),
+from this repository at the base revision; no new dependency or external code is
+introduced. Both native signature verifications, signer allowlists, file locks,
+path rejection, stream/path hashes and the 30-second probe limits remain.
+
+Four native module-boundary contracts were frozen before this change. Two valid
+tool scenarios failed when synthetic module search paths interfered with command
+resolution; the two rejection cases already passed. After the repair all four
+unchanged contracts pass in 14.382 seconds. The original five path/trust checks
+also pass in 16.701 seconds, and the real local segmented probe passes in 5.313
+seconds. This is not evidence of a general local speed gain or a demonstrated
+publisher-impersonation exploit. Hosted verification of the repair is pending.
 
 ## Diagnostic boundary
 
@@ -91,14 +119,18 @@ This checkpoint does not claim a repair or a hosted pass. Complete material-qual
 acceptance, trustworthy production signing and clean Windows installation,
 upgrade, retention and rollback remain open.
 
-Microsoft's [Get-AuthenticodeSignature documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/get-authenticodesignature?view=powershell-5.1)
+Microsoft's [Get-AuthenticodeSignature documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/get-authenticodesignature?view=powershell-5.1),
+[module autoloading preference](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-5.1#psmoduleautoloadingpreference)
 and [Add-Type documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/add-type?view=powershell-5.1)
 were checked on 31 October 2026. The former describes file-signature inspection;
-the latter describes runtime compilation of supplied .NET source. Neither is
-evidence that one of those operations caused this timeout. No external code
-implementation was copied.
+the preference explicitly permits disabling automatic imports in favor of
+`Import-Module`; Add-Type describes runtime compilation of supplied .NET source.
+The timing and failure observations above, rather than these documents alone,
+support the diagnosis. No external code implementation was copied.
 
-An ordinary reviewed revert removes this diagnostic script and extra CI job.
-Retain its reports and the original failures. There is no database migration,
+An ordinary reviewed revert restores the original ambient module discovery and
+removes the diagnostic/extra CI job. It may reintroduce the observed false
+rejections and hosted timeout. Retain reports and original failures; finish owned
+verification processes before reverting their source. There is no database migration,
 new model route, application-state change, production deployment or rollback
 of user data in this diagnostic checkpoint.

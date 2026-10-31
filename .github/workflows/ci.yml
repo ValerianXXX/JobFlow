@@ -50,6 +50,9 @@ jobs:
       - name: Run all original Node trust contracts even after a profiling failure
         if: success() || failure()
         run: python -m unittest discover -s tests -p test_release_node_path.py -v
+      - name: Run native module isolation and publisher rejection contracts
+        if: success() || failure()
+        run: python -m unittest discover -s tests -p test_release_trust_modules.py -v
 
   windows-tests:
     runs-on: windows-latest

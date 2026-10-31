@@ -24,7 +24,8 @@ from jobops.release_toolchain import windows_system_directory
 STAGES = frozenset({"STARTED", "NODE_SELECTED", "FILE_ID_BEGIN", "FILE_ID_END",
     "FIRST_IDENTITY_BEGIN", "FIRST_IDENTITY_END", "SIGNATURE_PROCESS_BEGIN",
     "SIGNATURE_PROCESS_END", "HASH_BEGIN", "HASH_END", "AUTH_LOCKED", "AUTH_RECHECKED",
-    "CHILD_STARTED", "CHILD_IMPORT_BEGIN", "CHILD_IMPORT_END", "CHILD_VERIFY_BEGIN", "CHILD_VERIFY_END"})
+    "CHILD_STARTED", "CHILD_IMPORT_BEGIN", "CHILD_IMPORT_END", "CHILD_VERIFY_BEGIN", "CHILD_VERIFY_END",
+    "CHILD_UTILITY_IMPORT_BEGIN", "CHILD_UTILITY_IMPORT_END"})
 
 
 def instrument(source: str) -> str:
@@ -70,6 +71,13 @@ Write-ChildTrustProbeStage 'CHILD_STARTED'
         if result.count(line) != 1:
             raise ValueError("TRUST_PROFILE_SOURCE_CHANGED")
         result = result.replace(line, f"Write-ChildTrustProbeStage '{before}'\n{line}\nWrite-ChildTrustProbeStage '{after}'")
+    utility_import = "Import-Module -Name `$utilityModule -ErrorAction Stop"
+    if utility_import in result:
+        if result.count(utility_import) != 1:
+            raise ValueError("TRUST_PROFILE_SOURCE_CHANGED")
+        result = result.replace(utility_import,
+            "Write-ChildTrustProbeStage 'CHILD_UTILITY_IMPORT_BEGIN'\n" + utility_import
+            + "\nWrite-ChildTrustProbeStage 'CHILD_UTILITY_IMPORT_END'")
     return result
 
 
