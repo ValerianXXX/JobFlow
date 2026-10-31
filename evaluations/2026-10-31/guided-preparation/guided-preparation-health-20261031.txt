@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "status": "JOBFLOW_READY",
+  "version": "0.7.0",
+  "checks_passed": 12,
+  "checks_total": 12,
+  "checks": [
+    {
+      "id": "PROJECT_ROOT",
+      "status": "PASS",
+      "label_zh": "项目文件完整",
+      "label_en": "Project files present",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "RUNTIME_DATA_ROOT",
+      "status": "PASS",
+      "label_zh": "运行数据目录可信",
+      "label_en": "Runtime data root is trusted",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "PYTHON_RUNTIME",
+      "status": "PASS",
+      "label_zh": "本地运行环境已安装",
+      "label_en": "Local runtime installed",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "PACKAGE_IMPORT",
+      "status": "PASS",
+      "label_zh": "JobFlow 程序可载入",
+      "label_en": "JobFlow package loads",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "DEPENDENCIES",
+      "status": "PASS",
+      "label_zh": "依赖完整",
+      "label_en": "Dependencies healthy",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "CLI",
+      "status": "PASS",
+      "label_zh": "启动入口可用",
+      "label_en": "Startup entry available",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "SCHEMAS",
+      "status": "PASS",
+      "label_zh": "核心 Schema 齐全",
+      "label_en": "Core Schemas present",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "SECURE_STORE",
+      "status": "PASS",
+      "label_zh": "DPAPI 安全存储组件齐全",
+      "label_en": "DPAPI secure-store helper present",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "PRIVATE_STORE_INTEGRITY",
+      "status": "PASS",
+      "label_zh": "私密引用、密文与临时区一致",
+      "label_en": "Private references, ciphertext and staging are consistent",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "LOCAL_UI",
+      "status": "PASS",
+      "label_zh": "本机界面文件齐全",
+      "label_en": "Local UI files present",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "BROWSER_COMPANION",
+      "status": "PASS",
+      "label_zh": "浏览器伴侣文件齐全",
+      "label_en": "Browser Companion files present",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    },
+    {
+      "id": "SAFETY_POLICY",
+      "status": "PASS",
+      "label_zh": "仅限时只读找岗可在后台运行；申请预填、上传、前进和最终提交仍受用户在场边界保护",
+      "label_en": "Only time-limited read-only discovery may run in the background; application fill, upload, navigation, and final submission remain user-present boundaries",
+      "action_zh": "无需操作",
+      "action_en": "No action needed"
+    }
+  ],
+  "private_values_read": 0,
+  "private_values_emitted": 0,
+  "network_actions": 0,
+  "real_external_actions": 0,
+  "next_safe_action": "Start JobFlow.cmd"
+}

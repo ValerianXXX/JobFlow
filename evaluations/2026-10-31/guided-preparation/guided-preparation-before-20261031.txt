@@ -1,0 +1,126 @@
+test_a_post_start_exception_retains_ownership_and_prevents_duplicate_preparation (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_a_post_start_exception_retains_ownership_and_prevents_duplicate_preparation) ... ERROR
+test_close_waits_for_the_admitted_write_before_closing_dependencies (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_close_waits_for_the_admitted_write_before_closing_dependencies) ... FAIL
+test_closed_service_rejects_new_preparation_without_starting_a_worker (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_closed_service_rejects_new_preparation_without_starting_a_worker) ... FAIL
+test_closing_service_rejects_admission_while_an_owned_worker_is_draining (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_closing_service_rejects_admission_while_an_owned_worker_is_draining) ... FAIL
+test_completed_packet_cannot_be_returned_for_a_changed_form (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_completed_packet_cannot_be_returned_for_a_changed_form) ... FAIL
+test_http_server_close_waits_for_its_accepted_background_preparation (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_http_server_close_waits_for_its_accepted_background_preparation) ... FAIL
+test_identical_retry_is_idempotent_but_a_changed_pending_form_is_rejected (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_identical_retry_is_idempotent_but_a_changed_pending_form_is_rejected) ... FAIL
+test_input_snapshot_is_independent_and_polling_preserves_external_action_boundary (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_input_snapshot_is_independent_and_polling_preserves_external_action_boundary) ... ok
+test_preparation_cannot_join_itself_by_closing_the_service (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_preparation_cannot_join_itself_by_closing_the_service) ... FAIL
+test_repeated_close_runs_dependency_cleanup_once (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_repeated_close_runs_dependency_cleanup_once) ... FAIL
+test_start_failure_leaves_no_permanently_pending_job_and_allows_explicit_retry (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_start_failure_leaves_no_permanently_pending_job_and_allows_explicit_retry) ... ERROR
+
+======================================================================
+ERROR: test_a_post_start_exception_retains_ownership_and_prevents_duplicate_preparation (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_a_post_start_exception_retains_ownership_and_prevents_duplicate_preparation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 205, in test_a_post_start_exception_retains_ownership_and_prevents_duplicate_preparation
+    self.start()
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 64, in start
+    return self.service.start_guided_application_form_preparation(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<project>\src\jobops\onboarding_center.py", line 2467, in start_guided_application_form_preparation
+    worker.start()
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 202, in start_then_fail
+    raise RuntimeError('synthetic post-start detail')
+RuntimeError: synthetic post-start detail
+
+======================================================================
+ERROR: test_start_failure_leaves_no_permanently_pending_job_and_allows_explicit_retry (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_start_failure_leaves_no_permanently_pending_job_and_allows_explicit_retry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 141, in test_start_failure_leaves_no_permanently_pending_job_and_allows_explicit_retry
+    self.start()
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 64, in start
+    return self.service.start_guided_application_form_preparation(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<project>\src\jobops\onboarding_center.py", line 2467, in start_guided_application_form_preparation
+    worker.start()
+  File "<user-home>\AppData\Local\Programs\Python\Python311\Lib\unittest\mock.py", line 1118, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user-home>\AppData\Local\Programs\Python\Python311\Lib\unittest\mock.py", line 1122, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<user-home>\AppData\Local\Programs\Python\Python311\Lib\unittest\mock.py", line 1177, in _execute_mock_call
+    raise effect
+RuntimeError: synthetic private detail
+
+======================================================================
+FAIL: test_close_waits_for_the_admitted_write_before_closing_dependencies (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_close_waits_for_the_admitted_write_before_closing_dependencies)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 106, in test_close_waits_for_the_admitted_write_before_closing_dependencies
+    self.assertFalse(closed.wait(0.15), 'Close returned before the admitted write')
+AssertionError: True is not false : Close returned before the admitted write
+
+======================================================================
+FAIL: test_closed_service_rejects_new_preparation_without_starting_a_worker (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_closed_service_rejects_new_preparation_without_starting_a_worker)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 117, in test_closed_service_rejects_new_preparation_without_starting_a_worker
+    with self.assertRaises(JobOpsError) as error:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_closing_service_rejects_admission_while_an_owned_worker_is_draining (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_closing_service_rejects_admission_while_an_owned_worker_is_draining)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 130, in test_closing_service_rejects_admission_while_an_owned_worker_is_draining
+    self.assertTrue(joining.wait(0.5), 'Close did not drain its preparation worker')
+AssertionError: False is not true : Close did not drain its preparation worker
+
+======================================================================
+FAIL: test_completed_packet_cannot_be_returned_for_a_changed_form (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_completed_packet_cannot_be_returned_for_a_changed_form)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 164, in test_completed_packet_cannot_be_returned_for_a_changed_form
+    with self.assertRaises(JobOpsError) as error:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_http_server_close_waits_for_its_accepted_background_preparation (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_http_server_close_waits_for_its_accepted_background_preparation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 229, in test_http_server_close_waits_for_its_accepted_background_preparation
+    self.assertFalse(closed.wait(0.15), 'HTTP server closed while local preparation still writes')
+AssertionError: True is not false : HTTP server closed while local preparation still writes
+
+======================================================================
+FAIL: test_identical_retry_is_idempotent_but_a_changed_pending_form_is_rejected (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_identical_retry_is_idempotent_but_a_changed_pending_form_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 154, in test_identical_retry_is_idempotent_but_a_changed_pending_form_is_rejected
+    with self.assertRaises(JobOpsError) as error:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_preparation_cannot_join_itself_by_closing_the_service (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_preparation_cannot_join_itself_by_closing_the_service)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 194, in test_preparation_cannot_join_itself_by_closing_the_service
+    self.assertEqual(result['status'], 'FORM_CAPTURE_FAILED')
+AssertionError: 'REVIEW_PACKET_READY' != 'FORM_CAPTURE_FAILED'
+- REVIEW_PACKET_READY
++ FORM_CAPTURE_FAILED
+
+
+======================================================================
+FAIL: test_repeated_close_runs_dependency_cleanup_once (test_guided_preparation_lifecycle.GuidedPreparationLifecycleTests.test_repeated_close_runs_dependency_cleanup_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<project>\tests\test_guided_preparation_lifecycle.py", line 181, in test_repeated_close_runs_dependency_cleanup_once
+    self.assertEqual(self.resource_closes, ['browser', 'ai'])
+AssertionError: Lists differ: ['browser', 'ai', 'browser', 'ai'] != ['browser', 'ai']
+
+First list contains 2 additional elements.
+First extra element 2:
+'browser'
+
+- ['browser', 'ai', 'browser', 'ai']
++ ['browser', 'ai']
+
+----------------------------------------------------------------------
+Ran 11 tests in 3.253s
+
+FAILED (failures=8, errors=2)

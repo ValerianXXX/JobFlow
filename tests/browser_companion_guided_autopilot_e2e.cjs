@@ -20,6 +20,7 @@ let nextTabId = 40;
 let permissionsGranted = true;
 let searchMode = "selected";
 let captureJobCalls = 0;
+let formFailure = null;
 
 function event(name) {
   const values = new Set();
@@ -175,6 +176,14 @@ const sandbox = {
         apply_route_status: "SELECTED", automatic_retry: false, real_external_actions: 0
       });
     }
+    if (value.endsWith("/capture-form") && formFailure) return {
+      ok: false, async json() { return {status: "BLOCKED", code: formFailure,
+        message: "Synthetic preparation response", details: {automatic_retry: false}}; }
+    };
+    if (value.endsWith("/capture-form-status")) return response({
+      status: "REVIEW_PACKET_READY", mode: "JOB_CAPTURE", intake_id: "GIN-GUIDED-AUTOPILOT",
+      application_id: "APP-GUIDED-AUTOPILOT", automatic_retry: false, real_external_actions: 0
+    });
     if (value.endsWith("/capture-form")) return response({
       status: "PREPARING_APPLICATION", mode: "JOB_CAPTURE", intake_id: "GIN-GUIDED-AUTOPILOT",
       application_id: "APP-GUIDED-AUTOPILOT", retry_after_ms: 3000,
@@ -242,6 +251,36 @@ function send(message, sender = {}) {
   assert.equal(requests.slice(requestsBeforeAmbiguity).some((item) => item.url.endsWith("/capture-job")), false);
   assert.equal(session.jobflowAssist.autopilot_in_progress, false);
 
+  searchMode = "selected";
+  formFailure = "GUIDED_PREPARATION_START_UNCONFIRMED";
+  seedState();
+  const uncertainRequests = requests.length;
+  const uncertain = await send({type: "JOBFLOW_RUN_GUIDED_AUTOPILOT"});
+  assert.equal(uncertain.status, "PREPARING_APPLICATION", "uncertain launch must query the existing job");
+  assert.equal(session.jobflowAssist.stage, "PREPARING_APPLICATION");
+  const recovered = await sandbox.pollGuidedPreparation();
+  assert.equal(recovered.status, "REVIEW_PACKET_READY");
+  assert.equal(recovered.automatic_retry, false);
+  assert.equal(recovered.real_external_actions, 0);
+  assert.equal(session.jobflowAssist.stage, "REVIEW_PACKET_READY");
+  const uncertainTraffic = requests.slice(uncertainRequests);
+  assert.equal(uncertainTraffic.filter((item) => item.url.endsWith("/capture-form")).length, 1);
+  assert.equal(uncertainTraffic.filter((item) => item.url.endsWith("/capture-form-status")).length, 1);
+
+  for (const code of ["GUIDED_PREPARATION_START_FAILED", "GUIDED_PREPARATION_INPUT_CHANGED"]) {
+    formFailure = code;
+    seedState();
+    const beforeFailure = requests.length;
+    const failed = await send({type: "JOBFLOW_RUN_GUIDED_AUTOPILOT"});
+    assert.equal(failed.code, code);
+    assert.equal(session.jobflowAssist.stage, "FORM_CAPTURE_FAILED");
+    assert.equal(requests.slice(beforeFailure).filter((item) => item.url.endsWith("/capture-form")).length, 1);
+    assert.equal(requests.slice(beforeFailure).some((item) => item.url.endsWith("/capture-form-status")), false);
+  }
+  formFailure = null;
+  assert.equal(domMessages.some((item) => item.message.type === "JOBFLOW_APPLY_APPROVED"), false);
+  assert.equal(domMessages.some((item) => item.message.type === "JOBFLOW_NAVIGATE_APPROVED"), false);
+
   const openedBeforeDenial = openedUrls.length;
   const requestsBeforeDenial = requests.length;
   permissionsGranted = false;
@@ -256,6 +295,8 @@ function send(message, sender = {}) {
     status: "PASS", visible_search_started: 1, official_job_pages_opened: 1,
     rejected_candidate_advanced_to_next: 1,
     verified_apply_routes_followed: 1, application_forms_captured: 1,
+    uncertain_start_status_recovery: 1, uncertain_start_resubmissions: 0,
+    explicit_failure_and_changed_input_stopped: 2,
     ambiguous_search_navigations: 0, permission_denial_external_actions: 0,
     programmatic_apply_clicks: 0, programmatic_submit_clicks: 0,
     real_external_actions: 0

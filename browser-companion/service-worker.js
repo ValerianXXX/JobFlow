@@ -1137,13 +1137,24 @@ async function captureGuidedCurrentTab(tabId, tabUrl) {
       state = await assertCurrentSession(state);
     } catch (error) {
       state = await assertCurrentSession(state);
-      const failure = {
-        ...publicError(error), status: "FORM_CAPTURE_FAILED",
-        intake_id: state.intake_id, mode: "JOB_CAPTURE", real_external_actions: 0
-      };
-      const failed = await saveSessionCAS(state, {...state, stage: failure.status, last_result: failure});
-      await notifyJobFlow(failure, "JOBFLOW_INTAKE_STATUS", failed);
-      throw error;
+      if (error?.jobflow?.code === "GUIDED_PREPARATION_START_UNCONFIRMED") {
+        // The local service still owns this possible launch. Poll that exact
+        // intake; never send a second capture just because its reply was uncertain.
+        result = {
+          ...publicError(error), status: "PREPARING_APPLICATION",
+          intake_id: state.intake_id, mode: "JOB_CAPTURE", retry_after_ms: 3000,
+          automatic_retry: false, real_external_actions: 0
+        };
+      } else {
+        const failure = {
+          ...publicError(error), status: "FORM_CAPTURE_FAILED",
+          intake_id: state.intake_id, mode: "JOB_CAPTURE",
+          automatic_retry: false, real_external_actions: 0
+        };
+        const failed = await saveSessionCAS(state, {...state, stage: failure.status, last_result: failure});
+        await notifyJobFlow(failure, "JOBFLOW_INTAKE_STATUS", failed);
+        throw error;
+      }
     }
     const next = await saveSessionCAS(state, {
       ...state, stage: result.status, application_id: result.application_id,

@@ -192,6 +192,24 @@ vm.runInContext(source, sandbox, {filename: "popup.js"});
   await elements.en.listeners.click[0]();
   assert.match(elements.message.textContent, /will not read or fill/);
 
+  for (const [code, disabled, zhText, enText] of [
+    ['GUIDED_PREPARATION_INPUT_CHANGED', true, /旧审阅包不能用于此表单/, /previous packet cannot be used for this form/],
+    ['GUIDED_PREPARATION_CLOSING', true, /正在关闭/, /is closing/],
+    ['GUIDED_PREPARATION_START_FAILED', false, /尚未启动/, /did not start/],
+    ['GUIDED_PREPARATION_START_UNCONFIRMED', true, /正在查询/, /Checking the existing/]
+  ]) {
+    const stage = code === 'GUIDED_PREPARATION_START_UNCONFIRMED' ? 'PREPARING_APPLICATION' : 'FORM_CAPTURE_FAILED';
+    pairedStatus = {status: stage, paired: true, mode: 'JOB_CAPTURE',
+      intake_id: 'GIN-SYNTHETIC-RECOVERY', last_result: {status: stage, code,
+        message: 'Synthetic diagnostic', automatic_retry: false, real_external_actions: 0}};
+    await elements.zh.listeners.click[0]();
+    assert.match(elements.message.textContent, zhText, `${code} must survive reopening or refreshing the popup`);
+    assert.equal(elements.fill.disabled, disabled);
+    await elements.en.listeners.click[0]();
+    assert.match(elements.message.textContent, enText);
+    assert.equal(elements.fill.disabled, disabled);
+  }
+
   process.stdout.write(JSON.stringify({
     status: "PASS",
     user_gesture_permission_required: true,
@@ -204,6 +222,7 @@ vm.runInContext(source, sandbox, {filename: "popup.js"});
     apply_failure_diagnostic_bilingual: true,
     aria_combobox_failure_bilingual: true,
     protected_credential_failure_bilingual: true,
+    preparation_recovery_bilingual: 4,
     real_external_actions: 0
   }));
 })().catch((error) => {

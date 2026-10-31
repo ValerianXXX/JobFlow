@@ -11,6 +11,14 @@ Verified on **2026-10-27** against GitHub release metadata, the v0.6.0 manifest,
 
 The [machine-readable matrix](../config/compatibility-matrix.json) is checked with `python -m jobops.compatibility`. It checks Python/package/lockfile versions, extension manifest, backend, UI and popup constants, plus the changelog. `PASS` means source consistency only. It does not validate a downloaded artifact or authorize publication. Exact authenticated pairing remains required; semantic version ordering is used only to explain which component needs updating.
 
+The October 31 [preparation recovery follow-up](guided-preparation-lifecycle-2026-10-31.md)
+is an unreleased source change on protocol 2. Its automatic status query after an
+uncertain launch and its bilingual popup guidance require the matching reviewed
+source assets. The existing store package is not evidence of those behaviors.
+No store version or signed desktop was published. A future store upload must use
+a reviewed new extension version and rerun this matrix against supported desktop
+builds; do not upload different bytes as the existing store version.
+
 ## Recovery
 
 1. If the installed desktop expects an older extension, preserve the installation and data and wait for the matching signed desktop migration. Reinstalling the store extension, spoofing its version or disabling checks cannot repair the mismatch.
