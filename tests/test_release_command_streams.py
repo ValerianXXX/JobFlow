@@ -51,7 +51,8 @@ try {
             launcher = root / "launch.py"
             launcher.write_text(
                 "import subprocess,sys\n"
-                "result=subprocess.run([sys.argv[1],'-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',sys.argv[2]], creationflags=subprocess.CREATE_NO_WINDOW)\n"
+                "result=subprocess.run([sys.argv[1],'-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',sys.argv[2]], capture_output=True,text=True,encoding='utf-8',errors='replace',creationflags=subprocess.CREATE_NO_WINDOW)\n"
+                "sys.stdout.write(result.stdout); sys.stderr.write(result.stderr)\n"
                 "raise SystemExit(result.returncode)\n", encoding="utf-8")
             # The existing smoke owner starts suspended, contains descendants,
             # then reclaims the entire owned job even if this contract times out.
