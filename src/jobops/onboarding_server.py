@@ -5,6 +5,7 @@ import json
 import os
 import secrets
 import shutil
+import socket
 import struct
 import sys
 import threading
@@ -42,7 +43,8 @@ APPLICATION_BUNDLE_MANIFEST_LIMIT = 64 * 1024
 
 
 class OnboardingHTTPServer(ThreadingHTTPServer):
-    daemon_threads = True
+    # A successful close is a barrier for accepted HTTP request writers.
+    daemon_threads = False
 
     def __init__(self, address: tuple[str, int], service: OnboardingCenterService, token: str | None = None) -> None:
         if address[0] != "127.0.0.1":
@@ -50,7 +52,39 @@ class OnboardingHTTPServer(ThreadingHTTPServer):
         self.service = service
         self.session_token = token or secrets.token_urlsafe(32)
         self.ui_root = Path(__file__).resolve().parent / "ui"
+        self._closing = threading.Event()
+        self._request_lock = threading.Lock()
+        self._close_lock = threading.Lock()
+        self._requests: set[socket.socket] = set()
+        self._request_threads: set[threading.Thread] = set()
+        self._close_completed = False
         super().__init__(address, OnboardingRequestHandler)
+
+    def process_request(self, request, client_address) -> None:  # type: ignore[no-untyped-def]
+        with self._request_lock:
+            if self._closing.is_set():
+                self.shutdown_request(request)
+                return
+            self._requests.add(request)
+            self._request_threads = {thread for thread in self._request_threads if thread.is_alive()}
+            worker = threading.Thread(target=self.process_request_thread,
+                                      args=(request, client_address), daemon=False)
+            try:
+                worker.start()
+            except BaseException:
+                if worker.ident is not None:
+                    self._request_threads.add(worker)
+                else:
+                    self._requests.discard(request)
+                raise
+            self._request_threads.add(worker)
+
+    def process_request_thread(self, request, client_address) -> None:  # type: ignore[no-untyped-def]
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            with self._request_lock:
+                self._requests.discard(request)
 
     @property
     def url(self) -> str:
@@ -60,18 +94,66 @@ class OnboardingHTTPServer(ThreadingHTTPServer):
         error = sys.exc_info()[1]
         if isinstance(error, (BrokenPipeError, ConnectionResetError)):
             return
+        if self._closing.is_set() and isinstance(error, OSError):
+            # Disconnects below intentionally interrupt blocked request I/O.
+            return
         super().handle_error(request, client_address)
 
     def server_close(self) -> None:
-        try:
-            self.service.close()
-        finally:
-            super().server_close()
+        with self._request_lock:
+            if threading.current_thread() in self._request_threads:
+                raise JobOpsError("ONBOARDING_CLOSE_FROM_REQUEST_FORBIDDEN", "Close the local server from its owner, not an HTTP request.")
+        with self._close_lock:
+            if self._close_completed:
+                return
+            self._closing.set()
+            with self._request_lock:
+                requests = tuple(self._requests)
+                workers = tuple(self._request_threads)
+            # Close admission and unblock idle keep-alive, partial uploads and
+            # stalled response readers before joining the non-daemon handlers.
+            self.socket.close()
+            disconnect_error = None
+            try:
+                for request in requests:
+                    try:
+                        request.shutdown(socket.SHUT_RDWR)
+                    except OSError:
+                        pass  # The handler may already have closed its socket.
+                    try:
+                        # shutdown alone does not wake a blocking Windows recv;
+                        # makefile() also delays socket.close(). Detach only this
+                        # owned descriptor so later file closes cannot reuse it.
+                        descriptor = request.detach()
+                        if descriptor >= 0:
+                            socket.close(descriptor)
+                    except OSError as error:
+                        disconnect_error = disconnect_error or error
+                self.service.close()
+            finally:
+                try:
+                    super().server_close()
+                finally:
+                    for worker in workers:
+                        worker.join()
+            if disconnect_error:
+                raise disconnect_error
+            self._close_completed = True
 
 
 class OnboardingRequestHandler(BaseHTTPRequestHandler):
     server: OnboardingHTTPServer
     protocol_version = "HTTP/1.1"
+
+    def handle_one_request(self) -> None:
+        if self.server._closing.is_set():
+            self.close_connection = True
+            return
+        try:
+            super().handle_one_request()
+        finally:
+            if self.server._closing.is_set():
+                self.close_connection = True
 
     def log_message(self, format: str, *args: object) -> None:
         return
