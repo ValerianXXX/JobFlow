@@ -211,6 +211,128 @@ class GuidedPreparationLifecycleTests(unittest.TestCase):
         self.release.set(); self.assertTrue(closed.wait(2))
         self.assertEqual(self.close_errors, []); self.assertEqual(len(self.received), 1)
 
+    def test_a_concurrent_replay_observes_completion_after_its_initial_cache_miss(self):
+        missed, proceed = threading.Event(), threading.Event()
+        self.addCleanup(proceed.set)
+        results, errors = [], []
+        cached = self.service._guided_preparations.cached
+        def delayed_cache(*args):
+            result = cached(*args)
+            if threading.current_thread().name == 'synthetic-delayed-replay' and not missed.is_set():
+                self.assertIsNone(result)
+                missed.set()
+                self.assertTrue(proceed.wait(3))
+            return result
+        def request():
+            try:
+                results.append(self.start())
+            except BaseException as exc:
+                errors.append(exc)
+        with mock.patch.object(self.service._guided_preparations, 'cached', side_effect=delayed_cache):
+            caller = threading.Thread(target=request, name='synthetic-delayed-replay', daemon=True)
+            self.closers.append(caller); caller.start()
+            self.assertTrue(missed.wait(1))
+            self.start(); self.assertTrue(self.entered.wait(2)); self.completed()
+            # The real preparation updates the intake lease before returning.
+            self.service._guided_intakes[self.token]['status'] = 'REVIEW_PACKET_READY'
+            proceed.set(); caller.join(2)
+        self.assertFalse(caller.is_alive())
+        self.assertEqual(errors, [])
+        self.assertEqual(results[0]['status'], 'REVIEW_PACKET_READY')
+        self.assertEqual(len(self.received), 1)
+
+    def test_discarding_progress_does_not_release_a_live_worker(self):
+        self.start(); self.assertTrue(self.entered.wait(2))
+        self.service._guided_preparations.discard(self.token)
+        with self.assertRaises(JobOpsError) as missing:
+            self.status()
+        self.assertEqual(missing.exception.code, 'GUIDED_INTAKE_PREPARATION_NOT_FOUND')
+        closed = self.closer()
+        self.assertFalse(closed.wait(0.15))
+        self.release.set(); self.assertTrue(closed.wait(2))
+        self.assertEqual(self.close_errors, [])
+        self.assertTrue(self.finished.is_set())
+        with self.assertRaises(JobOpsError):
+            self.status()  # A late result must not resurrect discarded progress.
+
+    def test_expired_cached_result_cannot_bypass_the_intake_deadline(self):
+        self.start(); self.assertTrue(self.entered.wait(2)); self.completed()
+        future = time.time() + 601
+        with mock.patch('jobops.guided_preparation.time.time', return_value=future):
+            for request in (self.start, self.status):
+                with self.assertRaises(JobOpsError) as error:
+                    request()
+                self.assertEqual(error.exception.code, 'GUIDED_INTAKE_EXPIRED')
+        self.assertEqual(len(self.received), 1)
+
+    def test_cleanup_failure_remains_visible_after_draining_and_is_not_retried(self):
+        self.start(); self.assertTrue(self.entered.wait(2))
+        failure = RuntimeError('synthetic dependency cleanup error')
+        def fail_close():
+            self.resource_closes.append('browser')
+            raise failure
+        with mock.patch.object(self.service.browser_assist, 'close', side_effect=fail_close):
+            closed = self.closer()
+            self.assertFalse(closed.wait(0.15))
+            self.release.set(); self.assertTrue(closed.wait(2))
+            self.assertEqual(self.close_errors, [failure])
+            with self.assertRaises(RuntimeError) as repeated:
+                self.service.close()
+            self.assertIs(repeated.exception, failure)
+        self.assertEqual(self.resource_closes, ['browser', 'ai'])
+        # The fixture expects closure to succeed. This test already asserted the
+        # persistent failure twice; do not ask its cleanup to hide that failure.
+        self.stack.enter_context(mock.patch.object(self.service, 'close', return_value=None))
+
+    def test_concurrent_closers_share_the_same_completion_barrier(self):
+        self.start(); self.assertTrue(self.entered.wait(2))
+        first, second = self.closer(), self.closer()
+        self.assertFalse(first.wait(0.15)); self.assertFalse(second.is_set())
+        self.release.set()
+        self.assertTrue(first.wait(2)); self.assertTrue(second.wait(2))
+        self.assertEqual(self.close_errors, [])
+        self.assertEqual(self.resource_closes, ['browser', 'ai'])
+
+    def test_close_between_lease_validation_and_admission_does_not_launch_work(self):
+        validated, proceed = threading.Event(), threading.Event()
+        self.addCleanup(proceed.set)
+        admit = self.service._guided_preparations.start
+        errors = []
+        def delayed_admission(*args, **kwargs):
+            validated.set(); self.assertTrue(proceed.wait(3))
+            return admit(*args, **kwargs)
+        def request():
+            try:
+                self.start()
+            except JobOpsError as error:
+                errors.append(error.code)
+        with mock.patch.object(self.service._guided_preparations, 'start', side_effect=delayed_admission):
+            caller = threading.Thread(target=request, daemon=True)
+            self.closers.append(caller); caller.start()
+            self.assertTrue(validated.wait(1)); self.service.close()
+            proceed.set(); caller.join(2)
+        self.assertFalse(caller.is_alive())
+        self.assertEqual(errors, ['GUIDED_PREPARATION_CLOSING'])
+        self.assertEqual(self.received, [])
+
+    def test_worker_self_close_does_not_deadlock_an_already_waiting_external_closer(self):
+        joining = threading.Event()
+        def self_close(*args, **kwargs):
+            self.workers.append(threading.current_thread()); self.entered.set()
+            self.assertTrue(self.release.wait(3))
+            self.service.close()
+        with mock.patch.object(self.service, 'capture_guided_application_form', side_effect=self_close):
+            self.start(); self.assertTrue(self.entered.wait(2))
+            worker = self.workers[0]; original_join = worker.join
+            def observed_join(*args, **kwargs):
+                joining.set(); return original_join(*args, **kwargs)
+            with mock.patch.object(worker, 'join', side_effect=observed_join):
+                closed = self.closer(); self.assertTrue(joining.wait(1))
+                self.release.set(); self.assertTrue(closed.wait(2))
+        self.assertEqual(self.close_errors, [])
+        self.assertEqual(self.status()['code'], 'GUIDED_PREPARATION_CLOSE_FROM_WORKER')
+        self.assertEqual(self.resource_closes, ['browser', 'ai'])
+
     def test_http_server_close_waits_for_its_accepted_background_preparation(self):
         server = create_server(self.service, token='synthetic-preparation-session')
         loop = threading.Thread(target=server.serve_forever, kwargs={'poll_interval': 0.01}, daemon=True)
