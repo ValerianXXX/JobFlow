@@ -152,11 +152,17 @@ function Get-AuthenticatedToolIdentity([string]$Tool, [string]$Path, [object]$Po
     Assert-NoReparsePath $systemPowerShell $code -MustExist | Out-Null
     $encodedToolPath = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($absolute))
     $signatureScript = @"
+`$ErrorActionPreference = 'Stop'
+`$PSModuleAutoLoadingPreference = 'None'
 `$ProgressPreference = 'SilentlyContinue'
 `$InformationPreference = 'SilentlyContinue'
 `$VerbosePreference = 'SilentlyContinue'
 `$WarningPreference = 'SilentlyContinue'
-`$securityModule = Join-Path `$PSHOME 'Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1'
+# Resolve only the system modules used by this isolated verifier. A cold
+# command-discovery cache must not search unrelated user or machine modules.
+`$utilityModule = [IO.Path]::Combine(`$PSHOME, 'Modules', 'Microsoft.PowerShell.Utility', 'Microsoft.PowerShell.Utility.psd1')
+`$securityModule = [IO.Path]::Combine(`$PSHOME, 'Modules', 'Microsoft.PowerShell.Security', 'Microsoft.PowerShell.Security.psd1')
+Import-Module -Name `$utilityModule -ErrorAction Stop
 Import-Module -Name `$securityModule -ErrorAction Stop
 `$toolPath = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('$encodedToolPath'))
 `$signature = Microsoft.PowerShell.Security\Get-AuthenticodeSignature -LiteralPath `$toolPath
@@ -165,7 +171,7 @@ if (`$signature.Status -ne [Management.Automation.SignatureStatus]::Valid -or `$
     status = [string]`$signature.Status
     subject = [string]`$signature.SignerCertificate.Subject
     thumbprint = ([string]`$signature.SignerCertificate.Thumbprint).ToUpperInvariant()
-} | ConvertTo-Json -Compress
+} | Microsoft.PowerShell.Utility\ConvertTo-Json -Compress
 "@
     $encodedSignatureScript = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($signatureScript))
     $signatureCommand = Invoke-SanitizedTextCommand "powershell" $systemPowerShell @(

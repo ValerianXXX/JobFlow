@@ -1,0 +1,25 @@
+test_ambient_serializer_cannot_replace_the_actual_publisher (test_release_trust_modules.ReleaseTrustModuleTests.test_ambient_serializer_cannot_replace_the_actual_publisher) ... ok
+test_unsigned_file_stays_rejected_with_an_ambient_serializer (test_release_trust_modules.ReleaseTrustModuleTests.test_unsigned_file_stays_rejected_with_an_ambient_serializer) ... ok
+test_valid_tool_does_not_need_ambient_path_command (test_release_trust_modules.ReleaseTrustModuleTests.test_valid_tool_does_not_need_ambient_path_command) ... FAIL
+test_valid_tool_does_not_need_ambient_serializer (test_release_trust_modules.ReleaseTrustModuleTests.test_valid_tool_does_not_need_ambient_serializer) ... FAIL
+
+======================================================================
+FAIL: test_valid_tool_does_not_need_ambient_path_command (test_release_trust_modules.ReleaseTrustModuleTests.test_valid_tool_does_not_need_ambient_path_command)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<workspace>\JobFlow-release-trust\tests\test_release_trust_modules.py", line 96, in test_valid_tool_does_not_need_ambient_path_command
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 2 != 0 : JOBFLOW_RELEASE_NODE_NOT_TRUSTED
+
+======================================================================
+FAIL: test_valid_tool_does_not_need_ambient_serializer (test_release_trust_modules.ReleaseTrustModuleTests.test_valid_tool_does_not_need_ambient_serializer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<workspace>\JobFlow-release-trust\tests\test_release_trust_modules.py", line 102, in test_valid_tool_does_not_need_ambient_serializer
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 2 != 0 : JOBFLOW_RELEASE_NODE_NOT_TRUSTED
+
+----------------------------------------------------------------------
+Ran 4 tests in 9.929s
+
+FAILED (failures=2)

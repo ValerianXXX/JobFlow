@@ -1,0 +1,90 @@
+{
+  "label": "initial",
+  "revision": "0fe599e47c7adf4dc4a0717c4c7d41450170ae70",
+  "runId": 41230817388,
+  "jobId": 124624476914,
+  "url": "https://github.com/ValerianXXX/JobFlow/actions/runs/41230817388/job/124624476914",
+  "decodedLfLogSha256": "04742badd35fc1bb81ac93da64b8d8d76487adc79074fae6925a7bfb0a7a97cf",
+  "decodedLfLogBytes": 24881,
+  "profile": {
+    "status": "FAILED",
+    "error_type": "JobOpsError",
+    "elapsed_seconds": 30.031000000000006,
+    "stages": [
+      {
+        "stage": "STARTED",
+        "elapsed_ms": 40
+      },
+      {
+        "stage": "NODE_SELECTED",
+        "elapsed_ms": 748
+      },
+      {
+        "stage": "FILE_ID_BEGIN",
+        "elapsed_ms": 758
+      },
+      {
+        "stage": "FILE_ID_END",
+        "elapsed_ms": 1316
+      },
+      {
+        "stage": "FIRST_IDENTITY_BEGIN",
+        "elapsed_ms": 1318
+      },
+      {
+        "stage": "SIGNATURE_PROCESS_BEGIN",
+        "elapsed_ms": 1405
+      },
+      {
+        "stage": "SIGNATURE_PROCESS_END",
+        "elapsed_ms": 25035
+      },
+      {
+        "stage": "HASH_BEGIN",
+        "elapsed_ms": 25057
+      },
+      {
+        "stage": "HASH_END",
+        "elapsed_ms": 25154
+      },
+      {
+        "stage": "FIRST_IDENTITY_END",
+        "elapsed_ms": 25161
+      },
+      {
+        "stage": "HASH_BEGIN",
+        "elapsed_ms": 25163
+      },
+      {
+        "stage": "HASH_END",
+        "elapsed_ms": 25270
+      },
+      {
+        "stage": "AUTH_LOCKED",
+        "elapsed_ms": 25272
+      },
+      {
+        "stage": "SIGNATURE_PROCESS_BEGIN",
+        "elapsed_ms": 25279
+      }
+    ],
+    "source_lf_sha256": "7e89ad4989eeb7135d41709939848bd6199e7061da0eadadd5efcb6fefcec281",
+    "node_sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237",
+    "python": "3.12.10",
+    "deadline_seconds": 30,
+    "trust_operations_replaced": false,
+    "raw_paths_logged": false,
+    "production_actions": 0,
+    "note": "Real Windows trust operations; not signed-release or clean-machine acceptance"
+  },
+  "tests": [
+    {
+      "tests": 5,
+      "seconds": 82.547
+    }
+  ],
+  "originalFiveErrors": 2,
+  "frozenFourPassed": null,
+  "fullWorkflowConclusionAtObservation": "cancelled",
+  "cancellationScope": "Earlier full matrix automatically superseded on branch push; completed native failures are retained, not passes"
+}

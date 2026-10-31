@@ -1,0 +1,136 @@
+{
+  "status": "PASS",
+  "error_type": null,
+  "elapsed_seconds": 5.437999999965541,
+  "stages": [
+    {
+      "stage": "STARTED",
+      "elapsed_ms": 37
+    },
+    {
+      "stage": "NODE_SELECTED",
+      "elapsed_ms": 167
+    },
+    {
+      "stage": "FILE_ID_BEGIN",
+      "elapsed_ms": 186
+    },
+    {
+      "stage": "FILE_ID_END",
+      "elapsed_ms": 364
+    },
+    {
+      "stage": "FIRST_IDENTITY_BEGIN",
+      "elapsed_ms": 366
+    },
+    {
+      "stage": "SIGNATURE_PROCESS_BEGIN",
+      "elapsed_ms": 402
+    },
+    {
+      "stage": "CHILD_STARTED",
+      "elapsed_ms": 1245
+    },
+    {
+      "stage": "CHILD_IMPORT_BEGIN",
+      "elapsed_ms": 1289
+    },
+    {
+      "stage": "CHILD_IMPORT_END",
+      "elapsed_ms": 1304
+    },
+    {
+      "stage": "CHILD_VERIFY_BEGIN",
+      "elapsed_ms": 1304
+    },
+    {
+      "stage": "CHILD_VERIFY_END",
+      "elapsed_ms": 2297
+    },
+    {
+      "stage": "SIGNATURE_PROCESS_END",
+      "elapsed_ms": 2409
+    },
+    {
+      "stage": "HASH_BEGIN",
+      "elapsed_ms": 2428
+    },
+    {
+      "stage": "HASH_END",
+      "elapsed_ms": 2685
+    },
+    {
+      "stage": "FIRST_IDENTITY_END",
+      "elapsed_ms": 2693
+    },
+    {
+      "stage": "HASH_BEGIN",
+      "elapsed_ms": 2696
+    },
+    {
+      "stage": "HASH_END",
+      "elapsed_ms": 2970
+    },
+    {
+      "stage": "AUTH_LOCKED",
+      "elapsed_ms": 2972
+    },
+    {
+      "stage": "SIGNATURE_PROCESS_BEGIN",
+      "elapsed_ms": 2989
+    },
+    {
+      "stage": "CHILD_STARTED",
+      "elapsed_ms": 3219
+    },
+    {
+      "stage": "CHILD_IMPORT_BEGIN",
+      "elapsed_ms": 3263
+    },
+    {
+      "stage": "CHILD_IMPORT_END",
+      "elapsed_ms": 3278
+    },
+    {
+      "stage": "CHILD_VERIFY_BEGIN",
+      "elapsed_ms": 3278
+    },
+    {
+      "stage": "CHILD_VERIFY_END",
+      "elapsed_ms": 4248
+    },
+    {
+      "stage": "SIGNATURE_PROCESS_END",
+      "elapsed_ms": 4384
+    },
+    {
+      "stage": "HASH_BEGIN",
+      "elapsed_ms": 4385
+    },
+    {
+      "stage": "HASH_END",
+      "elapsed_ms": 4642
+    },
+    {
+      "stage": "HASH_BEGIN",
+      "elapsed_ms": 4645
+    },
+    {
+      "stage": "HASH_END",
+      "elapsed_ms": 4913
+    },
+    {
+      "stage": "AUTH_RECHECKED",
+      "elapsed_ms": 4914
+    }
+  ],
+  "source_lf_sha256": "7e89ad4989eeb7135d41709939848bd6199e7061da0eadadd5efcb6fefcec281",
+  "node_sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237",
+  "python": "3.11.3",
+  "deadline_seconds": 30,
+  "trust_operations_replaced": false,
+  "raw_paths_logged": false,
+  "child_timing_clock": "UTC epoch aligned to parent start; diagnostic only, not deadline enforcement",
+  "production_actions": 0,
+  "note": "Real Windows trust operations; not signed-release or clean-machine acceptance"
+}

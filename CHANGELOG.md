@@ -4,6 +4,14 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Resolve the isolated release verifier's Security/Utility modules explicitly,
+  avoiding ambient command discovery before signature verification. Add a bounded
+  timing diagnostic and independent early CI check. Retain both real signature
+  checks, file locks, hashes, original tests and their 30-second budgets. Preserve
+  hosted failures and the two failing module-boundary counterexamples; a local
+  pass does not establish that hosted release readiness is resolved. See
+  [timings, reproduction and limits](docs/release-trust-timing-2026-10-31.md).
+
 - Own and drain background guided preparations before closing their dependencies;
   reject new admission during shutdown, retain started workers across uncertain
   launch errors, and clear jobs that never started. Bind cached packets to the

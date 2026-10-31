@@ -1,0 +1,63 @@
+{
+  "label": "child-stages",
+  "revision": "d6724aa36083a959e39c8e9e314ae00fe6b88b82",
+  "runId": 41231212099,
+  "jobId": 124625682799,
+  "url": "https://github.com/ValerianXXX/JobFlow/actions/runs/41231212099/job/124625682799",
+  "decodedLfLogSha256": "9c8518cfd240dfaef3a8ec6516f8e99ef306fcc20e012421c8d97ff0c945ab8d",
+  "decodedLfLogBytes": 24641,
+  "profile": {
+    "status": "FAILED",
+    "error_type": "JobOpsError",
+    "elapsed_seconds": 30.047000000000025,
+    "stages": [
+      {
+        "stage": "STARTED",
+        "elapsed_ms": 56
+      },
+      {
+        "stage": "NODE_SELECTED",
+        "elapsed_ms": 926
+      },
+      {
+        "stage": "FILE_ID_BEGIN",
+        "elapsed_ms": 941
+      },
+      {
+        "stage": "FILE_ID_END",
+        "elapsed_ms": 1618
+      },
+      {
+        "stage": "FIRST_IDENTITY_BEGIN",
+        "elapsed_ms": 1664
+      },
+      {
+        "stage": "SIGNATURE_PROCESS_BEGIN",
+        "elapsed_ms": 1726
+      },
+      {
+        "stage": "CHILD_STARTED",
+        "elapsed_ms": 1966
+      }
+    ],
+    "source_lf_sha256": "7e89ad4989eeb7135d41709939848bd6199e7061da0eadadd5efcb6fefcec281",
+    "node_sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237",
+    "python": "3.12.10",
+    "deadline_seconds": 30,
+    "trust_operations_replaced": false,
+    "raw_paths_logged": false,
+    "child_timing_clock": "UTC epoch aligned to parent start; diagnostic only, not deadline enforcement",
+    "production_actions": 0,
+    "note": "Real Windows trust operations; not signed-release or clean-machine acceptance"
+  },
+  "tests": [
+    {
+      "tests": 5,
+      "seconds": 87.29
+    }
+  ],
+  "originalFiveErrors": 2,
+  "frozenFourPassed": null,
+  "fullWorkflowConclusionAtObservation": "cancelled",
+  "cancellationScope": "Earlier full matrix automatically superseded on branch push; completed native failures are retained, not passes"
+}
