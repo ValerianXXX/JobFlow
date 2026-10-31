@@ -19,6 +19,12 @@ documentation checks pass. The subsequent full run at `b97dbe0` completed 1,361
 tests with no failures and four native-symlink skips; later changes need their own
 checks. This does not establish signed-release or clean-Windows acceptance.
 
+The later mail-review full run failed five release-tool prerequisites and one
+bootstrap timeout test. [Isolated Node selection](docs/release-node-selection-2026-10-31.md)
+adds an explicit authenticated tool path without replacing the host runtime or
+changing trusted signers. Focused path checks pass; the original timeout remains
+unexplained and a newer full run must be tracked separately.
+
 Documented work duration now excludes gaps, overlapping jobs and repeated Claims. Partial dates retain bounds; internship time and skill-specific or full-time requirements require separate review. New Profiles use version 3 while older Profiles remain readable; older generated tenure values need a reviewed revision before supporting a years requirement. [Duration rules, regression evidence and rollback](docs/experience-duration-2026-10-29.md) also record the six-sample Profile-hint check without claiming complete material understanding.
 
 The [loopback rejection repair](docs/probe-rejection-2026-10-29.md) addresses a

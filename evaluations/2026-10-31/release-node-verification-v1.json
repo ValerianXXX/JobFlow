@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-31T14:18:58.621235+00:00",
+  "status": "TARGETED_NATIVE_PASS_FULL_REGRESSION_RUNNING",
+  "branch": "codex/jobflow-release-node-20261031",
+  "base_commit": "7b6b32b741dcb69cd4638a245aff7d27d705e1a2",
+  "frozen_test_commit": "175de1a029d11994774aeec12650ed2c7aa1cb2a",
+  "runtime_commit": "d9bec0ab172538f402bbab7a69da2446b9ac1554",
+  "original_full": {
+    "tests_run": 1485,
+    "failures": 5,
+    "errors": 1,
+    "skipped": 4,
+    "seconds": 4843.308,
+    "status": "FAILED"
+  },
+  "cause_of_five_failures": "Shared host Node bytes/publisher differed from the pinned OpenJS test prerequisite; rejection was correct",
+  "frozen": {
+    "methods": 5,
+    "initial_failing_assertions_subtests": 9,
+    "unchanged_final_passed": 5,
+    "seconds": 19.9
+  },
+  "existing_regression": {
+    "passed": 14,
+    "seconds": 248.66,
+    "previous_node_failures_rechecked": 5,
+    "production_signature_gate_retained": true
+  },
+  "original_timeout": {
+    "root_cause": "UNRESOLVED",
+    "single_diagnostic_rerun_passed": true,
+    "seconds": 11.388,
+    "health_code_or_timeout_changed": false,
+    "full_suite_stability_claimed": false
+  },
+  "docs": {
+    "passed": 5,
+    "seconds": 0.055
+  },
+  "full_python": {
+    "status": "RUNNING",
+    "session_id": 21291,
+    "log": "reports/release-node-python-full-20261031.log",
+    "runtime": "d9bec0ab172538f402bbab7a69da2446b9ac1554"
+  },
+  "javascript": {
+    "new_run": false,
+    "reason": "No JavaScript, UI or dependency changes; prior exact-source 17-suite pass retained"
+  },
+  "official_prerequisite": {
+    "Source": "https://nodejs.org/dist/v24.19.0/win-x64/node.exe",
+    "ExpectedVersion": "24.19.0",
+    "ActualVersion": "24.19.0",
+    "SHA256": "3602F2BB1A10F2CBAB4C36886218A33C1AB3DB87290E73B033C46C77147D0237",
+    "Signature": "Valid",
+    "Signer": "CN=OpenJS Foundation, O=OpenJS Foundation, L=San Francisco, S=California, C=US",
+    "Thumbprint": "8EA1D142EA3F46023BACA38C23A7E7AE6AFCE30C",
+    "GlobalRuntimeModified": false
+  },
+  "trust_policy_unchanged": true,
+  "runtime_and_contract_lf_sha256": {
+    "scripts/build-signed-update-bundle.ps1": "ee3fd92b1b8bf8290336277ed17b8e74ccb3234f135867ab37479b4615245a7e",
+    "tests/test_release_packaging.py": "2a06ebb7e7cc269069e551c645d2b35fe050b88e9622a381dc1b5f2e92ea6d7b",
+    "tests/test_signed_update_presign_v2.py": "e92dea76ef9c40bfb6564bb315f671bc70634b601771f549be70d66a58a8d509",
+    "tests/_release_node_fixture.py": "378d36a2730254e6b7165787fa3b4d8583a0040e397cd9bc0c7e01807d57d5c2",
+    "tests/test_release_node_path.py": "e0eecaae03e3edd03dfb15eb3127c2e0565814d947587cb52aff2abc222f6017"
+  },
+  "logs": {
+    "mail-review-python-full-20261031": {
+      "original_sha256": "c039d120399a14534b5799834b683e2b7c59876010c24819b133b4d302e42daf",
+      "portable_path": "evaluations/2026-10-31/release-node-logs-v1/mail-review-python-full-20261031.txt",
+      "portable_sha256": "8409470689a0d9b9be452194752045679c3d98cca5ccc5285eb4db2129dbd409"
+    },
+    "mail-review-health-timeout-isolated-20261031": {
+      "original_sha256": "6b3f829a9dd00bc78c13a0e62666c5732f3eec350dbcb9aff6c1d09689770aad",
+      "portable_path": "evaluations/2026-10-31/release-node-logs-v1/mail-review-health-timeout-isolated-20261031.txt",
+      "portable_sha256": "d9a9eab5986cf13c7073c91ff88010038b954e4028096ab64f6251fcd1cd5490"
+    },
+    "release-node-before-20261031": {
+      "original_sha256": "ab0f0db6d9f3ac3ee3bc23e1c4010e64f8fb626260688bf5a1443eeedcb05f1d",
+      "portable_path": "evaluations/2026-10-31/release-node-logs-v1/release-node-before-20261031.txt",
+      "portable_sha256": "f4d2b9ed385a2813834de96e8dda3162514ac3402694205d7ae977e62b0699e9"
+    },
+    "release-node-after-20261031": {
+      "original_sha256": "624e9338fe639405a301f8e428f25347ad8bc7fcc72f62d78e417c32b1a95db3",
+      "portable_path": "evaluations/2026-10-31/release-node-logs-v1/release-node-after-20261031.txt",
+      "portable_sha256": "42d2061dcf385b703c608d493630d1c33665be0a22756e9e605061759bf10687"
+    },
+    "release-node-regression-20261031": {
+      "original_sha256": "4023141ee6b3dbbf93f135a89e1de373a893413e94ad854f961a495e93c958f1",
+      "portable_path": "evaluations/2026-10-31/release-node-logs-v1/release-node-regression-20261031.txt",
+      "portable_sha256": "e7771b1c0fb92acb1e1187a7fa2190888223427de28093464c7e70d4e0a8ee46"
+    },
+    "release-node-docs-20261031": {
+      "original_sha256": "c36e1c49d01579a8f1479028df2b9f19cc43aac06a00caef84f1ab9333b5f261",
+      "portable_path": "evaluations/2026-10-31/release-node-logs-v1/release-node-docs-20261031.txt",
+      "portable_sha256": "6566ed3c7e318a4c3fe27500604fadea28f5a2b22dcc3b29a684db390f5124aa"
+    }
+  },
+  "host_runtime_modified": false,
+  "path_environment_modified": false,
+  "production_actions": 0,
+  "model_calls": 0,
+  "independent_human_acceptance": false,
+  "goal_complete": false,
+  "remaining": [
+    "New complete local Python regression",
+    "Exact-delivery hosted CI",
+    "Original bootstrap timeout cause/stability remains unresolved",
+    "Existing full-material, live ATS/mailbox, independent-human requirements",
+    "Trusted production signing and independent clean Windows unavailable"
+  ]
+}

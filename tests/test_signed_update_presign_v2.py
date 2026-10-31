@@ -459,6 +459,9 @@ if __name__ == "__main__":
                     str(signature),
                 ]
             )
+        explicit_node = os.environ.get("JOBFLOW_TEST_NODE_PATH")
+        if explicit_node is not None:
+            arguments.extend(["-NodePath", explicit_node])
         return subprocess.run(
             arguments,
             cwd=fixture,

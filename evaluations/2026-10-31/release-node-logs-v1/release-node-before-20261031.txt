@@ -1,0 +1,111 @@
+test_authenticated_hardlink_is_still_rejected (test_release_node_path.ExplicitReleaseNodeTests.test_authenticated_hardlink_is_still_rejected) ... FAIL
+test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) ... 
+  test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) (kind='relative/node.exe') ... FAIL
+  test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) (kind='\\Users\\10418\\AppData\\Local\\Temp\\jobflow-explicit-node-pbecs0u9\\missing.exe') ... FAIL
+  test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) (kind=' ') ... FAIL
+  test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) (kind='\\\\invalid.example\\tools\\node.exe') ... FAIL
+  test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) (kind='stream') ... FAIL
+test_explicit_official_binary_retains_locked_signer_and_hash_checks (test_release_node_path.ExplicitReleaseNodeTests.test_explicit_official_binary_retains_locked_signer_and_hash_checks) ... FAIL
+test_trusted_binary_in_a_path_with_spaces_is_supported (test_release_node_path.ExplicitReleaseNodeTests.test_trusted_binary_in_a_path_with_spaces_is_supported) ... FAIL
+test_unsigned_executable_and_renamed_binary_are_rejected (test_release_node_path.ExplicitReleaseNodeTests.test_unsigned_executable_and_renamed_binary_are_rejected) ... FAIL
+
+======================================================================
+FAIL: test_authenticated_hardlink_is_still_rejected (test_release_node_path.ExplicitReleaseNodeTests.test_authenticated_hardlink_is_still_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\tests\test_release_node_path.py", line 95, in test_authenticated_hardlink_is_still_rejected
+    self.assert_rejected(self.run_selection(root, second))
+  File "<checkout>\tests\test_release_node_path.py", line 49, in assert_rejected
+    self.assertEqual(result.returncode, 2)
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) (kind='relative/node.exe')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\tests\test_release_node_path.py", line 75, in test_bad_explicit_input_never_falls_back_to_a_default_runtime
+    self.assert_rejected(self.run_selection(root, node))
+  File "<checkout>\tests\test_release_node_path.py", line 49, in assert_rejected
+    self.assertEqual(result.returncode, 2)
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) (kind='\\Users\\10418\\AppData\\Local\\Temp\\jobflow-explicit-node-pbecs0u9\\missing.exe')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\tests\test_release_node_path.py", line 75, in test_bad_explicit_input_never_falls_back_to_a_default_runtime
+    self.assert_rejected(self.run_selection(root, node))
+  File "<checkout>\tests\test_release_node_path.py", line 49, in assert_rejected
+    self.assertEqual(result.returncode, 2)
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) (kind=' ')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\tests\test_release_node_path.py", line 75, in test_bad_explicit_input_never_falls_back_to_a_default_runtime
+    self.assert_rejected(self.run_selection(root, node))
+  File "<checkout>\tests\test_release_node_path.py", line 49, in assert_rejected
+    self.assertEqual(result.returncode, 2)
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) (kind='\\\\invalid.example\\tools\\node.exe')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\tests\test_release_node_path.py", line 75, in test_bad_explicit_input_never_falls_back_to_a_default_runtime
+    self.assert_rejected(self.run_selection(root, node))
+  File "<checkout>\tests\test_release_node_path.py", line 49, in assert_rejected
+    self.assertEqual(result.returncode, 2)
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_bad_explicit_input_never_falls_back_to_a_default_runtime (test_release_node_path.ExplicitReleaseNodeTests.test_bad_explicit_input_never_falls_back_to_a_default_runtime) (kind='stream')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\tests\test_release_node_path.py", line 75, in test_bad_explicit_input_never_falls_back_to_a_default_runtime
+    self.assert_rejected(self.run_selection(root, node))
+  File "<checkout>\tests\test_release_node_path.py", line 49, in assert_rejected
+    self.assertEqual(result.returncode, 2)
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_explicit_official_binary_retains_locked_signer_and_hash_checks (test_release_node_path.ExplicitReleaseNodeTests.test_explicit_official_binary_retains_locked_signer_and_hash_checks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\tests\test_release_node_path.py", line 56, in test_explicit_official_binary_retains_locked_signer_and_hash_checks
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : <user-profile>\AppData\Local\Temp\jobflow-explicit-node-pf9s5f5d\node-selection.ps1 : A parameter cannot be found that 
+matches parameter name 'NodePath'.
+    + CategoryInfo          : InvalidArgument: (:) [node-selection.ps1], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : NamedParameterNotFound,node-selection.ps1
+ 
+
+
+======================================================================
+FAIL: test_trusted_binary_in_a_path_with_spaces_is_supported (test_release_node_path.ExplicitReleaseNodeTests.test_trusted_binary_in_a_path_with_spaces_is_supported)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\tests\test_release_node_path.py", line 66, in test_trusted_binary_in_a_path_with_spaces_is_supported
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : <user-profile>\AppData\Local\Temp\jobflow-explicit-node-la56j_yo\node-selection.ps1 : A parameter cannot be found that 
+matches parameter name 'NodePath'.
+    + CategoryInfo          : InvalidArgument: (:) [node-selection.ps1], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : NamedParameterNotFound,node-selection.ps1
+ 
+
+
+======================================================================
+FAIL: test_unsigned_executable_and_renamed_binary_are_rejected (test_release_node_path.ExplicitReleaseNodeTests.test_unsigned_executable_and_renamed_binary_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\tests\test_release_node_path.py", line 82, in test_unsigned_executable_and_renamed_binary_are_rejected
+    self.assert_rejected(self.run_selection(root, fake))
+  File "<checkout>\tests\test_release_node_path.py", line 49, in assert_rejected
+    self.assertEqual(result.returncode, 2)
+AssertionError: 1 != 2
+
+----------------------------------------------------------------------
+Ran 5 tests in 6.343s
+
+FAILED (failures=9)

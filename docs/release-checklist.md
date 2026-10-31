@@ -1,5 +1,11 @@
 # Public Release Checklist
 
+The protected signing builder accepts an optional explicit `-NodePath` for an
+isolated approved executable. It retains signer and locked-file checks and never
+falls back after a bad explicit selection. See
+[prerequisite provenance and regression setup](release-node-selection-2026-10-31.md).
+Selecting a tool does not satisfy any unchecked release gate below.
+
 Run these checks only on the final clean commit. This checklist does not authorize a recruiting action.
 
 ## Automated gates

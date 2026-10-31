@@ -1,0 +1,6 @@
+test_wall_timeout_is_exit_4_kills_child_and_leaves_no_temp_or_pointer (test_jobflow_bootstrap_runtime_health.JobFlowBootstrapRuntimeHealthTests.test_wall_timeout_is_exit_4_kills_child_and_leaves_no_temp_or_pointer) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 11.388s
+
+OK
