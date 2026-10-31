@@ -9,6 +9,39 @@ from jobops.onboarding_server import OnboardingHTTPServer
 
 
 class ShutdownFaultTests(unittest.TestCase):
+    def test_started_worker_remains_owned_when_start_reports_an_error(self):
+        with server_fixture() as f:
+            server = f["server"]
+            server.shutdown()
+            second_client = socket.create_connection(server.server_address, timeout=3)
+            request, address = server.get_request()
+            second_client.sendall(b"GET /hold HTTP/1.1\r\nHost: localhost\r\n\r\n")
+            original = threading.Thread.start
+            started = []
+            def start_and_report(worker):
+                original(worker)
+                started.append(worker)
+                if not f["request_started"].wait(3):
+                    raise AssertionError("Started request did not reach its write barrier")
+                raise RuntimeError("synthetic post-start report")
+            try:
+                with mock.patch.object(threading.Thread, "start", start_and_report):
+                    with self.assertRaisesRegex(RuntimeError, "synthetic post-start report"):
+                        server.process_request(request, address)
+                f["close_in_thread"]()
+                self.assertFalse(f["closed"].wait(0.15), "Started request lost ownership when launch reported an error")
+                f["release"].set()
+                self.assertTrue(f["closed"].wait(3))
+                self.assertEqual((f["root"] / "last-write.txt").read_text(), "/hold")
+                self.assertFalse(any(worker.is_alive() for worker in started))
+            finally:
+                f["release"].set()
+                second_client.close()
+                request.close()
+                for worker in started:
+                    worker.join(3)
+                    self.assertFalse(worker.is_alive())
+
     def test_thread_start_failure_does_not_poison_later_server_close(self):
         service = Service()
         server = OnboardingHTTPServer(("127.0.0.1", 0), service, token="synthetic-shutdown")
