@@ -18,3 +18,4 @@ MANIFEST.in text eol=lf
 *.pdf binary
 *.docx binary
 evaluations/2026-10-31/quantity-binding/*.txt text eol=lf
+evaluations/2026-10-31/launcher-handoff/*.txt text eol=lf

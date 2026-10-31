@@ -64,6 +64,9 @@ execution time. The synthetic fixture's acknowledgement wait is itself bounded.
 The repaired isolated test is not reported as a new complete 1,548-test local
 pass. [Verification receipt](../evaluations/2026-10-31/launcher-handoff/verification.json)
 retains original failures, terminal totals, diagnostic timestamps and hashes.
+Local Windows script-byte hashes and Git's normalized source hashes are recorded
+separately. Public observation logs use fixed LF endings; original local logs stay
+unchanged and retain their own hashes.
 Earlier model observations and complete-material scores are unchanged. There
 were no new model requests, external application actions or deployments.
 

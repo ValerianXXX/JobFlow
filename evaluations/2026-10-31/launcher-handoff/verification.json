@@ -100,5 +100,14 @@
     "Whole-material factual acceptance, additional model-call budget pending",
     "Trusted production signing and independent clean Windows machine absent",
     "Independent human/business acceptance"
-  ]
+  ],
+  "source_hash_basis": "Actual local validation worktree bytes; PowerShell scripts use required CRLF checkout",
+  "committed_source_hashes": {
+    "tests/test_windows_launchers.py": "0a98236a8ad6701fca9a84429cac0f092c4ce36b5d94ff2d5c40ef8795ddf397",
+    "tests/_launcher_process.py": "7bc777367f0dc7afec7399c19d162cf1cd204d0a61f10ef4748e292eab2fa749",
+    "scripts/install-jobflow.ps1": "283a3efd852b91af2bc79cf89b7d5c880fa0c34c97aaf106c36b9b1cdac27406",
+    "scripts/windows-runtime/jobflow-runtime-locks.ps1": "1c0f51f36a4562229e0d056b3234681d294585d5ae88d4b7ad46ce3dbbbfe060",
+    "scripts/windows-runtime/jobflow-bootstrap.ps1": "431a52e71572df912cd1b7e0525c8c66391303a9e1564f13e46c669da9cee0dc"
+  },
+  "artifact_hash_basis": "UTF-8 fixed-LF public observation bytes; .gitattributes preserves LF on Windows"
 }
