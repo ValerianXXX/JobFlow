@@ -1,0 +1,38 @@
+{
+  "started_at": "2026-10-31T23:03:50.110258+00:00",
+  "source": "fe148b4641ac8b41cd6215c46e998129dddcaced",
+  "fixture_root_retained": "<TEMP>/owned-synthetic-launcher-fixture",
+  "fixture_scope": "Dependency-free synthetic copy of real installer; no real installation/signing validation",
+  "probe_only_observation_ceiling_seconds": 60,
+  "original_test_gate_seconds": 15,
+  "original_test_or_product_limits_changed": false,
+  "returncode": 0,
+  "timed_out": false,
+  "elapsed_seconds": 32.36,
+  "gate_observed_seconds": 23.625,
+  "stages": [
+    {
+      "stage": "entry",
+      "elapsed_seconds": 0.946
+    },
+    {
+      "stage": "python_search_started",
+      "elapsed_seconds": 2.105
+    },
+    {
+      "stage": "python_search_returned",
+      "elapsed_seconds": 2.618
+    },
+    {
+      "stage": "source_verified",
+      "elapsed_seconds": 3.568
+    },
+    {
+      "stage": "launcher_gate",
+      "elapsed_seconds": 23.579
+    }
+  ],
+  "late_source_mutation_executed": true,
+  "installed_original_bytes_retained": true,
+  "owned_process_exited": true
+}

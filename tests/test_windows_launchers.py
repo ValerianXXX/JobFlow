@@ -1285,6 +1285,10 @@ class WindowsLauncherTests(unittest.TestCase):
         system_temp = Path(tempfile.gettempdir()).resolve(strict=True)
         with tempfile.TemporaryDirectory(prefix="jobflow-late-launcher-qa-", dir=system_temp) as raw:
             signal = Path(raw) / "target-committed.signal"
+            mutation_ack = Path(raw) / "source-mutated.signal"
+            ack_consumed = Path(raw) / "mutation-observed.signal"
+            stdout_path = Path(raw) / "installer.stdout"
+            stderr_path = Path(raw) / "installer.stderr"
 
             def pause_before_launchers(installer: str) -> str:
                 anchor = "        Install-StableLaunchers $targetVersionRoot $installFiles"
@@ -1293,7 +1297,14 @@ class WindowsLauncherTests(unittest.TestCase):
                     anchor,
                     '        [IO.File]::WriteAllText($env:JOBFLOW_QA_LATE_LAUNCHER_SIGNAL, "ready", '
                     '(New-Object Text.UTF8Encoding($false)))\n'
-                    "        Start-Sleep -Seconds 3\n" + anchor,
+                    "        $qaAckDeadline = [DateTime]::UtcNow.AddSeconds(30)\n"
+                    "        while (-not [IO.File]::Exists($env:JOBFLOW_QA_LATE_LAUNCHER_ACK)) {\n"
+                    "            if ([DateTime]::UtcNow -ge $qaAckDeadline) { throw 'QA_MUTATION_ACK_TIMEOUT' }\n"
+                    "            Start-Sleep -Milliseconds 50\n"
+                    "        }\n"
+                    "        if ([IO.File]::ReadAllText($env:JOBFLOW_QA_LATE_LAUNCHER_ACK) -cne 'mutated') { throw 'QA_MUTATION_ACK_INVALID' }\n"
+                    '        [IO.File]::WriteAllText($env:JOBFLOW_QA_LATE_LAUNCHER_ACK_CONSUMED, "observed", '
+                    '(New-Object Text.UTF8Encoding($false)))\n' + anchor,
                     1,
                 )
 
@@ -1304,26 +1315,40 @@ class WindowsLauncherTests(unittest.TestCase):
             )
             environment = fixture["environment"]
             environment["JOBFLOW_QA_LATE_LAUNCHER_SIGNAL"] = str(signal)
-            process = RealPopen(
-                fixture["command"], cwd=fixture["fixture_root"], env=environment,
-                stdin=DEVNULL, stdout=PIPE, stderr=PIPE, text=True,
-                encoding="utf-8", errors="replace",
-            )
-            try:
-                deadline = time.monotonic() + 15
-                while not signal.is_file() and time.monotonic() < deadline:
-                    time.sleep(0.05)
-                self.assertTrue(signal.is_file(), "installer did not reach the launcher gate")
-                (fixture["runtime_root"] / "start-installed-jobflow.ps1").write_text(
-                    "throw 'late unverified source mutation'\n", encoding="utf-8-sig"
+            environment["JOBFLOW_QA_LATE_LAUNCHER_ACK"] = str(mutation_ack)
+            environment["JOBFLOW_QA_LATE_LAUNCHER_ACK_CONSUMED"] = str(ack_consumed)
+            source_launcher = fixture["runtime_root"] / "start-installed-jobflow.ps1"
+            original_bytes = source_launcher.read_bytes()
+            # Preserve the original 15 + 30 second maximum as one deadline.
+            # Source verification/staging may need >15s on stock local Windows;
+            # the bounded handoff proves mutation occurs before launcher install.
+            deadline = time.monotonic() + 45
+            with stdout_path.open("wb") as stdout_file, stderr_path.open("wb") as stderr_file:
+                process = RealPopen(
+                    fixture["command"], cwd=fixture["fixture_root"], env=environment,
+                    stdin=DEVNULL, stdout=stdout_file, stderr=stderr_file,
+                    creationflags=CREATE_NO_WINDOW,
                 )
-                stdout, stderr = process.communicate(timeout=30)
-                self.assertEqual(process.returncode, 0, stdout + stderr)
-            finally:
-                if process.poll() is None:
-                    process.kill()
-                    process.wait(timeout=5)
+                try:
+                    while not signal.is_file() and process.poll() is None and time.monotonic() < deadline:
+                        time.sleep(0.05)
+                    diagnostics = lambda: (stdout_path.read_text(encoding="utf-8-sig", errors="replace")
+                                           + stderr_path.read_text(encoding="utf-8-sig", errors="replace"))
+                    self.assertTrue(signal.is_file(), "installer did not reach the launcher gate\n" + diagnostics())
+                    self.assertFalse(ack_consumed.exists(), "installer advanced before source mutation")
+                    source_launcher.write_text("throw 'late unverified source mutation'\n", encoding="utf-8-sig")
+                    self.assertNotEqual(source_launcher.read_bytes(), original_bytes)
+                    mutation_ack.write_text("mutated", encoding="utf-8")
+                    remaining = deadline - time.monotonic()
+                    self.assertGreater(remaining, 0, "installer exhausted the original total deadline")
+                    process.wait(timeout=remaining)
+                    self.assertEqual(process.returncode, 0, diagnostics())
+                finally:
+                    if process.poll() is None:
+                        terminate_process_tree(process)
+            self.assertEqual(ack_consumed.read_text(encoding="utf-8"), "observed")
             installed = fixture["local_app_data"] / "JobOps" / "bin" / "start-installed-jobflow.ps1"
+            self.assertEqual(installed.read_bytes(), original_bytes)
             self.assertEqual(installed.read_text(encoding="utf-8-sig"), "exit 0\n")
 
     def test_existing_version_descendant_reparse_is_rejected_before_execution(self) -> None:

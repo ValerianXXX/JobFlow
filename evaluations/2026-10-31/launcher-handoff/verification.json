@@ -1,0 +1,113 @@
+{
+  "observed_at": "2026-10-31T23:10:50.672684+00:00",
+  "product_runtime_base": "fe148b4641ac8b41cd6215c46e998129dddcaced",
+  "test_commit": "3ee79e4528350f17a961b9ef9899cb536d88913b",
+  "original_full": {
+    "tests": 1548,
+    "passed": 1543,
+    "failures": 1,
+    "skipped": 4,
+    "seconds": 7128.987,
+    "exit": 1,
+    "log": "original-full.txt",
+    "skip_lines": [
+      "test_fixed_state_file_reparse_point_is_rejected (test_jobflow_bootstrap_activation_journal.JobFlowBootstrapActivationJournalTests.test_fixed_state_file_reparse_point_is_rejected) ... skipped 'File symlink creation unavailable: 1314'",
+      "test_archive_symbolic_link_is_rejected_when_supported (test_jobflow_bootstrap_trust.JobFlowBootstrapTrustTests.test_archive_symbolic_link_is_rejected_when_supported) ... skipped 'archive symbolic links are unavailable: OSError'",
+      "test_symbolic_link_is_rejected_when_supported (test_jobflow_bootstrap_trust.JobFlowBootstrapTrustTests.test_symbolic_link_is_rejected_when_supported) ... skipped 'symbolic links are unavailable: OSError'",
+      "test_reparse_fails_closed_when_symlink_privilege_is_available (test_windows_runtime_tamper_matrix.WindowsRuntimeTamperMatrixTests.test_reparse_fails_closed_when_symlink_privilege_is_available) ... skipped 'Symlink creation is unavailable on this Windows host'"
+    ]
+  },
+  "focused": {
+    "isolated-before": {
+      "tests": 1,
+      "seconds": 15.215,
+      "exit": 1,
+      "log": "isolated-before.txt"
+    },
+    "isolated-after": {
+      "tests": 1,
+      "seconds": 30.385,
+      "exit": 0,
+      "log": "isolated-after.txt"
+    },
+    "capture-after": {
+      "tests": 1,
+      "seconds": 6.012,
+      "exit": 0,
+      "log": "capture-after.txt"
+    }
+  },
+  "probe": {
+    "log": "readiness-probe.json",
+    "gate_seconds": 23.625,
+    "elapsed_seconds": 32.36,
+    "exit": 0,
+    "scope": "Synthetic dependency-free installer, not production installation acceptance"
+  },
+  "limits": {
+    "old_readiness_seconds": 15,
+    "old_completion_seconds": 30,
+    "new_total_wait_deadline_seconds": 45,
+    "production_limits_changed": false,
+    "cleanup": "Existing owned-tree cleanup has its separate bound; not additional test execution budget"
+  },
+  "correctness": [
+    "Original success and installed-content assertions retained",
+    "Exact original/installed byte comparison added",
+    "Source mutation confirmed before the child acknowledgement",
+    "Fixed sleep replaced by a bounded two-way fixture-only handoff",
+    "Owned file captures and existing descendant cleanup"
+  ],
+  "source_hashes": {
+    "tests/test_windows_launchers.py": "0a98236a8ad6701fca9a84429cac0f092c4ce36b5d94ff2d5c40ef8795ddf397",
+    "tests/_launcher_process.py": "7bc777367f0dc7afec7399c19d162cf1cd204d0a61f10ef4748e292eab2fa749",
+    "scripts/install-jobflow.ps1": "6ab7494289f7d84636eec17e732b408f2d463edf3c74098d0f6401fc7b3316ca",
+    "scripts/windows-runtime/jobflow-runtime-locks.ps1": "e0627b66d909f91d3f6c3680887d455d9a0cef121f96b1dce7e89cc2b978cf01",
+    "scripts/windows-runtime/jobflow-bootstrap.ps1": "a8daf278c558fbfeb5d6718f4681b4e34bfad0bea30e1d3d5abb3bf659d3967a"
+  },
+  "artifact_hashes": {
+    "original-full.txt": "06a1bc19052cdbe0ea21e1f92d8c4793b2c5ce926c8f95345403b0d1bd0566b3",
+    "isolated-before.txt": "2f0d2b422ad40d42fd961c60059500c8e061806c12f2f7a4033f78468f6926ce",
+    "isolated-after.txt": "87da5af7e0dd4d42f7cafe592e268626b317473f7de698457af8affa31821e51",
+    "capture-after.txt": "6851d132cad31820248642585b4def2e5c7b8e1295032b46b23180a785e5caba",
+    "readiness-probe.json": "ab698fce911234f0c3b0bdd3266089edc2ac60c494fab41f8b7f19bdd28f6ce0",
+    "readiness-stdout.txt": "eccc24e3f1909b2692703365ac88ca75adfd8039e0bc54537e4694437f102cad",
+    "readiness-stderr.txt": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "original_local_hashes": {
+    "JobFlow-quantity-binding/reports/quantity-full-regression-20261031.log": "51d34e208957dfd546fefc5704f0bceb07f0ea3028da4cdb1ecb5975d1bdbd4b",
+    "task-artifacts/jobflow-launcher-isolated-before-20261031.log": "5d881de23bc7edd4a8495eaecfa20966449fe98f5b2704e9eefeaf85e0c1ac65",
+    "task-artifacts/jobflow-launcher-isolated-after-20261031.log": "9b8aa4f3a00197ce56896e1050c76e0a1890b0cebf692d18fdb1323b05f97991",
+    "task-artifacts/jobflow-launcher-capture-after-20261031.log": "2dff607e56b96f79550722f932f28afa3d652716b7176fe26dc5e19fb5746838",
+    "task-artifacts/jobflow-launcher-readiness-probe-20261031-v1/observation.json": "841684d521b71598b1bceeef64c8984b4d04a2cbb8ea6b35abe681691418fbe6",
+    "task-artifacts/jobflow-launcher-readiness-probe-20261031-v1/stdout.txt": "eccc24e3f1909b2692703365ac88ca75adfd8039e0bc54537e4694437f102cad",
+    "task-artifacts/jobflow-launcher-readiness-probe-20261031-v1/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "artifact_transforms": [
+    "Host/workspace/temp paths replaced",
+    "LF endings and trailing whitespace normalized",
+    "Original logs retained locally and hashed; no outcomes changed",
+    "Owned synthetic fixture path replaced after JSON parsing; original diagnostic hash retained"
+  ],
+  "new_hosted_run": "PENDING_EXACT_DELIVERY_HEAD",
+  "new_complete_local_run": "NOT_CLAIMED; original failed run and focused repair are distinct",
+  "new_model_calls": 0,
+  "production_changes": false,
+  "M1_complete": false,
+  "remaining": [
+    "New hosted complete regression",
+    "Local symlink privilege coverage unavailable",
+    "Whole-material factual acceptance, additional model-call budget pending",
+    "Trusted production signing and independent clean Windows machine absent",
+    "Independent human/business acceptance"
+  ],
+  "source_hash_basis": "Actual local validation worktree bytes; PowerShell scripts use required CRLF checkout",
+  "committed_source_hashes": {
+    "tests/test_windows_launchers.py": "0a98236a8ad6701fca9a84429cac0f092c4ce36b5d94ff2d5c40ef8795ddf397",
+    "tests/_launcher_process.py": "7bc777367f0dc7afec7399c19d162cf1cd204d0a61f10ef4748e292eab2fa749",
+    "scripts/install-jobflow.ps1": "283a3efd852b91af2bc79cf89b7d5c880fa0c34c97aaf106c36b9b1cdac27406",
+    "scripts/windows-runtime/jobflow-runtime-locks.ps1": "1c0f51f36a4562229e0d056b3234681d294585d5ae88d4b7ad46ce3dbbbfe060",
+    "scripts/windows-runtime/jobflow-bootstrap.ps1": "431a52e71572df912cd1b7e0525c8c66391303a9e1564f13e46c669da9cee0dc"
+  },
+  "artifact_hash_basis": "UTF-8 fixed-LF public observation bytes; .gitattributes preserves LF on Windows"
+}

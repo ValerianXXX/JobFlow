@@ -12,6 +12,11 @@ See the [compatibility and recovery matrix](docs/compatibility.md) and [October 
 
 The source branch includes these reviewable capabilities. They are not a new signed desktop release.
 
+[Installer regression evidence](docs/launcher-handoff-2026-10-31.md) retains a
+local full-suite failure and repairs its synthetic mutation handoff within the
+original total test deadline. It does not establish production-signed or
+independent clean-Windows installation acceptance.
+
 Material review now checks recognized numeric units, scales, currencies and
 literal metric order against cited source text. Unsupported candidates are
 filtered with a reason and remain subject to user review. The
