@@ -23,7 +23,8 @@ from jobops.release_toolchain import windows_system_directory
 
 STAGES = frozenset({"STARTED", "NODE_SELECTED", "FILE_ID_BEGIN", "FILE_ID_END",
     "FIRST_IDENTITY_BEGIN", "FIRST_IDENTITY_END", "SIGNATURE_PROCESS_BEGIN",
-    "SIGNATURE_PROCESS_END", "HASH_BEGIN", "HASH_END", "AUTH_LOCKED", "AUTH_RECHECKED"})
+    "SIGNATURE_PROCESS_END", "HASH_BEGIN", "HASH_END", "AUTH_LOCKED", "AUTH_RECHECKED",
+    "CHILD_STARTED", "CHILD_IMPORT_BEGIN", "CHILD_IMPORT_END", "CHILD_VERIFY_BEGIN", "CHILD_VERIFY_END"})
 
 
 def instrument(source: str) -> str:
@@ -47,6 +48,28 @@ def instrument(source: str) -> str:
         if result.count(old) != 1:
             raise ValueError("TRUST_PROFILE_SOURCE_CHANGED")
         result = result.replace(old, new)
+    # Child markers use an epoch captured with the parent stopwatch. They are
+    # diagnostic wall-clock observations, not an authorization or deadline clock.
+    child_markers = r'''
+function Write-ChildTrustProbeStage([string]`$Stage) {
+    [IO.File]::AppendAllText([Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('$encodedProbeTrace')),
+        `$Stage + ':' + ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - $script:probeStartUtc) + [Environment]::NewLine)
+}
+Write-ChildTrustProbeStage 'CHILD_STARTED'
+'''
+    old = '$signatureScript = @"\n'
+    if result.count(old) != 1:
+        raise ValueError("TRUST_PROFILE_SOURCE_CHANGED")
+    result = result.replace(old,
+        "$encodedProbeTrace = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes((Join-Path $PSScriptRoot 'timings.txt')))\n    "
+        + old + child_markers)
+    for line, before, after in (
+        ("Import-Module -Name `$securityModule -ErrorAction Stop", "CHILD_IMPORT_BEGIN", "CHILD_IMPORT_END"),
+        ("`$signature = Microsoft.PowerShell.Security\\Get-AuthenticodeSignature -LiteralPath `$toolPath", "CHILD_VERIFY_BEGIN", "CHILD_VERIFY_END"),
+    ):
+        if result.count(line) != 1:
+            raise ValueError("TRUST_PROFILE_SOURCE_CHANGED")
+        result = result.replace(line, f"Write-ChildTrustProbeStage '{before}'\n{line}\nWrite-ChildTrustProbeStage '{after}'")
     return result
 
 
@@ -63,6 +86,7 @@ def main() -> int:
     harness += "\n$projectRoot = '" + str(PROJECT).replace("'", "''") + "'\n"
     harness += r'''
 $probeClock = [Diagnostics.Stopwatch]::StartNew()
+$script:probeStartUtc = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
 function Set-TrustProbeStage([string]$Stage) {
     [IO.File]::AppendAllText((Join-Path $PSScriptRoot 'timings.txt'), $Stage + ':' + $probeClock.ElapsedMilliseconds + [Environment]::NewLine)
 }
@@ -116,6 +140,7 @@ try {
         "stages": stages, "source_lf_sha256": hashlib.sha256(source.encode()).hexdigest(),
         "node_sha256": PINNED_NODE_SHA256, "python": sys.version.split()[0],
         "deadline_seconds": 30, "trust_operations_replaced": False, "raw_paths_logged": False,
+        "child_timing_clock": "UTC epoch aligned to parent start; diagnostic only, not deadline enforcement",
         "production_actions": 0, "note": "Real Windows trust operations; not signed-release or clean-machine acceptance"}
     with output.open("x", encoding="utf-8") as stream:
         json.dump(report, stream, indent=2)

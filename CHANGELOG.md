@@ -4,6 +4,12 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Add a bounded native tool-trust timing diagnostic and independent early CI
+  check. Retain both real signature checks, file locks, hashes, original tests
+  and their 30-second budgets. Preserve all three failed hosted Windows results;
+  a local pass does not establish that their cause is resolved. See
+  [timings, reproduction and limits](docs/release-trust-timing-2026-10-31.md).
+
 - Own and drain background guided preparations before closing their dependencies;
   reject new admission during shutdown, retain started workers across uncertain
   launch errors, and clear jobs that never started. Bind cached packets to the
