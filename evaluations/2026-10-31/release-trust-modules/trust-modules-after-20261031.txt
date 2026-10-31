@@ -1,0 +1,9 @@
+test_ambient_serializer_cannot_replace_the_actual_publisher (test_release_trust_modules.ReleaseTrustModuleTests.test_ambient_serializer_cannot_replace_the_actual_publisher) ... ok
+test_unsigned_file_stays_rejected_with_an_ambient_serializer (test_release_trust_modules.ReleaseTrustModuleTests.test_unsigned_file_stays_rejected_with_an_ambient_serializer) ... ok
+test_valid_tool_does_not_need_ambient_path_command (test_release_trust_modules.ReleaseTrustModuleTests.test_valid_tool_does_not_need_ambient_path_command) ... ok
+test_valid_tool_does_not_need_ambient_serializer (test_release_trust_modules.ReleaseTrustModuleTests.test_valid_tool_does_not_need_ambient_serializer) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 14.382s
+
+OK

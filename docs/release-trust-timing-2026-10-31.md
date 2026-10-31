@@ -52,7 +52,37 @@ resolution; the two rejection cases already passed. After the repair all four
 unchanged contracts pass in 14.382 seconds. The original five path/trust checks
 also pass in 16.701 seconds, and the real local segmented probe passes in 5.313
 seconds. This is not evidence of a general local speed gain or a demonstrated
-publisher-impersonation exploit. Hosted verification of the repair is pending.
+publisher-impersonation exploit.
+
+At runtime `f17dfead3221bc67924defc40a8b7a254687f0cd`, the hosted
+[native trust job](https://github.com/ValerianXXX/JobFlow/actions/runs/41231707568/job/124627166609)
+passes on Windows/Python 3.12.10: the real profile completes in **4.734 seconds**,
+the original five contracts pass in **12.262 seconds**, and the four frozen
+module-boundary contracts pass in **9.475 seconds**. Both signature checks execute
+and reach `AUTH_RECHECKED` within the unchanged deadline. The signature subprocesses
+take 1,085 and 955 ms; native signature inspection itself takes 647 and 636 ms.
+This removes the observed module-discovery stall in the fixed hosted protocol;
+it does not guarantee certificate-service availability or every machine's
+latency. Full Windows regression and source-candidate results remain separate.
+
+The related local packaging suite passes 12 tests in 9.946 seconds; the native
+pre-signing/rollback suite passes 15 in 203.332 seconds. They retain production
+signature rejection, locked input bytes, transaction failure and rollback
+checks. The public tree/history/identity scan passes with zero findings and zero
+unapproved identities, retaining only the previously approved historical email
+exception. It does not grant signing or release approval.
+
+The [verification receipt and portable logs](../evaluations/2026-10-31/release-trust-modules/verification.json)
+retain original failures, three hosted timing observations and local checks.
+Seven source/config hashes are bound to the runtime commit. The frozen four
+contracts, original five-contract file, signer/identity policies, six core trust
+functions and the original full CI job definitions are byte-checked unchanged.
+The final wrapper LF SHA-256 is
+`74c8d2367312df1662e18218d7ccf8b9427106195da2b77bcbd330ed8b2ae008`.
+Earlier diagnostic workflows were automatically superseded by branch updates;
+their completed failed native jobs are retained, and cancelled full matrices
+are not counted as passes. There were no model calls or measured AI-quality
+changes. No UI or independent-user acceptance is implied by these native tests.
 
 ## Diagnostic boundary
 
@@ -115,7 +145,9 @@ startup, module import and native signature verification. Additional allowlisted
 child markers use UTC aligned with parent start, purely for timing diagnostics;
 the monotonic 30-second owner deadline remains unchanged.
 
-This checkpoint does not claim a repair or a hosted pass. Complete material-quality targets, independent-user
+The two failed diagnostic checkpoints remain historical failures. The repair's
+focused hosted result is recorded above; it does not establish full regression
+or release readiness. Complete material-quality targets, independent-user
 acceptance, trustworthy production signing and clean Windows installation,
 upgrade, retention and rollback remain open.
 

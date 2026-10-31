@@ -1,0 +1,569 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-31T18:59:53.144Z",
+  "base": "3c9ac3f892ebdeeb62c0c3d095b639960675b283",
+  "runtime": "f17dfead3221bc67924defc40a8b7a254687f0cd",
+  "frozenContracts": "a38a8d55daad2541fe47672e254021636f9ab0f7",
+  "scope": "Native release-tool trust only; no production signature, deployment or application operation",
+  "local": {
+    "python": "3.11.3",
+    "platform": "Windows",
+    "originalBefore": {
+      "tests": 5,
+      "passed": 5,
+      "failures": 0,
+      "seconds": 16.996,
+      "log": "trust-node-baseline-20261031.txt"
+    },
+    "modulesBefore": {
+      "tests": 4,
+      "passed": 2,
+      "failures": 2,
+      "seconds": 9.929,
+      "log": "trust-modules-before-20261031.txt"
+    },
+    "modulesAfter": {
+      "tests": 4,
+      "passed": 4,
+      "failures": 0,
+      "seconds": 14.382,
+      "log": "trust-modules-after-20261031.txt"
+    },
+    "originalAfter": {
+      "tests": 5,
+      "passed": 5,
+      "failures": 0,
+      "seconds": 16.701,
+      "log": "trust-node-after-20261031.txt"
+    },
+    "packaging": {
+      "tests": 12,
+      "passed": 12,
+      "failures": 0,
+      "seconds": 9.946,
+      "log": "trust-packaging-after-20261031.txt"
+    },
+    "presign": {
+      "tests": 15,
+      "passed": 15,
+      "failures": 0,
+      "seconds": 203.332,
+      "log": "trust-presign-after-20261031.txt"
+    },
+    "publicTreeStatus": "PASS",
+    "publicBoundary": {
+      "schema_version": 1,
+      "status": "PASS",
+      "readiness_scope": "PUBLIC_REPOSITORY_BOUNDARY_ONLY",
+      "public_repository_ready": true,
+      "public_release_ready": false,
+      "public_release_blockers": [],
+      "tree": {
+        "status": "PASS",
+        "tracked_file_count": 962,
+        "finding_count": 0,
+        "findings": []
+      },
+      "history": {
+        "status": "PASS",
+        "commit_count": 379,
+        "historical_path_count": 963,
+        "unique_blob_count": 3169,
+        "scanned_text_blob_count": 2834,
+        "scanned_document_blob_count": 89,
+        "finding_count": 0,
+        "findings": []
+      },
+      "author_identity": {
+        "status": "PASS",
+        "policy": "PUBLIC_EMAIL_HASHES_APPROVED",
+        "identity_count": 3,
+        "non_noreply_identity_count": 1,
+        "unapproved_identity_count": 0,
+        "approved_public_email_count": 1,
+        "malformed_record_count": 0,
+        "private_identity_values_emitted": 0
+      }
+    },
+    "knowledgeRoot": "KNOWLEDGE_ROOT_NOT_FOUND; unrelated to tool-only diagnostic"
+  },
+  "hosted": [
+    {
+      "label": "initial",
+      "revision": "0fe599e47c7adf4dc4a0717c4c7d41450170ae70",
+      "runId": 41230817388,
+      "jobId": 124624476914,
+      "url": "https://github.com/ValerianXXX/JobFlow/actions/runs/41230817388/job/124624476914",
+      "decodedLfLogSha256": "04742badd35fc1bb81ac93da64b8d8d76487adc79074fae6925a7bfb0a7a97cf",
+      "decodedLfLogBytes": 24881,
+      "profile": {
+        "status": "FAILED",
+        "error_type": "JobOpsError",
+        "elapsed_seconds": 30.031000000000006,
+        "stages": [
+          {
+            "stage": "STARTED",
+            "elapsed_ms": 40
+          },
+          {
+            "stage": "NODE_SELECTED",
+            "elapsed_ms": 748
+          },
+          {
+            "stage": "FILE_ID_BEGIN",
+            "elapsed_ms": 758
+          },
+          {
+            "stage": "FILE_ID_END",
+            "elapsed_ms": 1316
+          },
+          {
+            "stage": "FIRST_IDENTITY_BEGIN",
+            "elapsed_ms": 1318
+          },
+          {
+            "stage": "SIGNATURE_PROCESS_BEGIN",
+            "elapsed_ms": 1405
+          },
+          {
+            "stage": "SIGNATURE_PROCESS_END",
+            "elapsed_ms": 25035
+          },
+          {
+            "stage": "HASH_BEGIN",
+            "elapsed_ms": 25057
+          },
+          {
+            "stage": "HASH_END",
+            "elapsed_ms": 25154
+          },
+          {
+            "stage": "FIRST_IDENTITY_END",
+            "elapsed_ms": 25161
+          },
+          {
+            "stage": "HASH_BEGIN",
+            "elapsed_ms": 25163
+          },
+          {
+            "stage": "HASH_END",
+            "elapsed_ms": 25270
+          },
+          {
+            "stage": "AUTH_LOCKED",
+            "elapsed_ms": 25272
+          },
+          {
+            "stage": "SIGNATURE_PROCESS_BEGIN",
+            "elapsed_ms": 25279
+          }
+        ],
+        "source_lf_sha256": "7e89ad4989eeb7135d41709939848bd6199e7061da0eadadd5efcb6fefcec281",
+        "node_sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237",
+        "python": "3.12.10",
+        "deadline_seconds": 30,
+        "trust_operations_replaced": false,
+        "raw_paths_logged": false,
+        "production_actions": 0,
+        "note": "Real Windows trust operations; not signed-release or clean-machine acceptance"
+      },
+      "tests": [
+        {
+          "tests": 5,
+          "seconds": 82.547
+        }
+      ],
+      "originalFiveErrors": 2,
+      "frozenFourPassed": null,
+      "fullWorkflowConclusionAtObservation": "cancelled",
+      "cancellationScope": "Earlier full matrix automatically superseded on branch push; completed native failures are retained, not passes"
+    },
+    {
+      "label": "child-stages",
+      "revision": "d6724aa36083a959e39c8e9e314ae00fe6b88b82",
+      "runId": 41231212099,
+      "jobId": 124625682799,
+      "url": "https://github.com/ValerianXXX/JobFlow/actions/runs/41231212099/job/124625682799",
+      "decodedLfLogSha256": "9c8518cfd240dfaef3a8ec6516f8e99ef306fcc20e012421c8d97ff0c945ab8d",
+      "decodedLfLogBytes": 24641,
+      "profile": {
+        "status": "FAILED",
+        "error_type": "JobOpsError",
+        "elapsed_seconds": 30.047000000000025,
+        "stages": [
+          {
+            "stage": "STARTED",
+            "elapsed_ms": 56
+          },
+          {
+            "stage": "NODE_SELECTED",
+            "elapsed_ms": 926
+          },
+          {
+            "stage": "FILE_ID_BEGIN",
+            "elapsed_ms": 941
+          },
+          {
+            "stage": "FILE_ID_END",
+            "elapsed_ms": 1618
+          },
+          {
+            "stage": "FIRST_IDENTITY_BEGIN",
+            "elapsed_ms": 1664
+          },
+          {
+            "stage": "SIGNATURE_PROCESS_BEGIN",
+            "elapsed_ms": 1726
+          },
+          {
+            "stage": "CHILD_STARTED",
+            "elapsed_ms": 1966
+          }
+        ],
+        "source_lf_sha256": "7e89ad4989eeb7135d41709939848bd6199e7061da0eadadd5efcb6fefcec281",
+        "node_sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237",
+        "python": "3.12.10",
+        "deadline_seconds": 30,
+        "trust_operations_replaced": false,
+        "raw_paths_logged": false,
+        "child_timing_clock": "UTC epoch aligned to parent start; diagnostic only, not deadline enforcement",
+        "production_actions": 0,
+        "note": "Real Windows trust operations; not signed-release or clean-machine acceptance"
+      },
+      "tests": [
+        {
+          "tests": 5,
+          "seconds": 87.29
+        }
+      ],
+      "originalFiveErrors": 2,
+      "frozenFourPassed": null,
+      "fullWorkflowConclusionAtObservation": "cancelled",
+      "cancellationScope": "Earlier full matrix automatically superseded on branch push; completed native failures are retained, not passes"
+    },
+    {
+      "label": "fixed",
+      "revision": "f17dfead3221bc67924defc40a8b7a254687f0cd",
+      "runId": 41231707568,
+      "jobId": 124627166609,
+      "url": "https://github.com/ValerianXXX/JobFlow/actions/runs/41231707568/job/124627166609",
+      "decodedLfLogSha256": "b40603996076ec8dfe2f1213a932119f870a6bb4c25c46afb98d67fae6ce79c2",
+      "decodedLfLogBytes": 25347,
+      "profile": {
+        "status": "PASS",
+        "error_type": null,
+        "elapsed_seconds": 4.734000000000037,
+        "stages": [
+          {
+            "stage": "STARTED",
+            "elapsed_ms": 57
+          },
+          {
+            "stage": "NODE_SELECTED",
+            "elapsed_ms": 963
+          },
+          {
+            "stage": "FILE_ID_BEGIN",
+            "elapsed_ms": 977
+          },
+          {
+            "stage": "FILE_ID_END",
+            "elapsed_ms": 1666
+          },
+          {
+            "stage": "FIRST_IDENTITY_BEGIN",
+            "elapsed_ms": 1714
+          },
+          {
+            "stage": "SIGNATURE_PROCESS_BEGIN",
+            "elapsed_ms": 1787
+          },
+          {
+            "stage": "CHILD_STARTED",
+            "elapsed_ms": 2037
+          },
+          {
+            "stage": "CHILD_UTILITY_IMPORT_BEGIN",
+            "elapsed_ms": 2049
+          },
+          {
+            "stage": "CHILD_UTILITY_IMPORT_END",
+            "elapsed_ms": 2093
+          },
+          {
+            "stage": "CHILD_IMPORT_BEGIN",
+            "elapsed_ms": 2093
+          },
+          {
+            "stage": "CHILD_IMPORT_END",
+            "elapsed_ms": 2123
+          },
+          {
+            "stage": "CHILD_VERIFY_BEGIN",
+            "elapsed_ms": 2123
+          },
+          {
+            "stage": "CHILD_VERIFY_END",
+            "elapsed_ms": 2770
+          },
+          {
+            "stage": "SIGNATURE_PROCESS_END",
+            "elapsed_ms": 2872
+          },
+          {
+            "stage": "HASH_BEGIN",
+            "elapsed_ms": 2902
+          },
+          {
+            "stage": "HASH_END",
+            "elapsed_ms": 3015
+          },
+          {
+            "stage": "FIRST_IDENTITY_END",
+            "elapsed_ms": 3024
+          },
+          {
+            "stage": "HASH_BEGIN",
+            "elapsed_ms": 3027
+          },
+          {
+            "stage": "HASH_END",
+            "elapsed_ms": 3153
+          },
+          {
+            "stage": "AUTH_LOCKED",
+            "elapsed_ms": 3155
+          },
+          {
+            "stage": "SIGNATURE_PROCESS_BEGIN",
+            "elapsed_ms": 3166
+          },
+          {
+            "stage": "CHILD_STARTED",
+            "elapsed_ms": 3352
+          },
+          {
+            "stage": "CHILD_UTILITY_IMPORT_BEGIN",
+            "elapsed_ms": 3366
+          },
+          {
+            "stage": "CHILD_UTILITY_IMPORT_END",
+            "elapsed_ms": 3409
+          },
+          {
+            "stage": "CHILD_IMPORT_BEGIN",
+            "elapsed_ms": 3409
+          },
+          {
+            "stage": "CHILD_IMPORT_END",
+            "elapsed_ms": 3423
+          },
+          {
+            "stage": "CHILD_VERIFY_BEGIN",
+            "elapsed_ms": 3423
+          },
+          {
+            "stage": "CHILD_VERIFY_END",
+            "elapsed_ms": 4059
+          },
+          {
+            "stage": "SIGNATURE_PROCESS_END",
+            "elapsed_ms": 4121
+          },
+          {
+            "stage": "HASH_BEGIN",
+            "elapsed_ms": 4123
+          },
+          {
+            "stage": "HASH_END",
+            "elapsed_ms": 4234
+          },
+          {
+            "stage": "HASH_BEGIN",
+            "elapsed_ms": 4238
+          },
+          {
+            "stage": "HASH_END",
+            "elapsed_ms": 4366
+          },
+          {
+            "stage": "AUTH_RECHECKED",
+            "elapsed_ms": 4366
+          }
+        ],
+        "source_lf_sha256": "74c8d2367312df1662e18218d7ccf8b9427106195da2b77bcbd330ed8b2ae008",
+        "node_sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237",
+        "python": "3.12.10",
+        "deadline_seconds": 30,
+        "trust_operations_replaced": false,
+        "raw_paths_logged": false,
+        "child_timing_clock": "UTC epoch aligned to parent start; diagnostic only, not deadline enforcement",
+        "production_actions": 0,
+        "note": "Real Windows trust operations; not signed-release or clean-machine acceptance"
+      },
+      "tests": [
+        {
+          "tests": 5,
+          "seconds": 12.262
+        },
+        {
+          "tests": 4,
+          "seconds": 9.475
+        }
+      ],
+      "originalFiveErrors": 0,
+      "frozenFourPassed": 4,
+      "fullWorkflowConclusionAtObservation": "in_progress",
+      "cancellationScope": null
+    }
+  ],
+  "originalProbeDeadlineSeconds": 30,
+  "unchangedFiles": [
+    "tests/test_release_node_path.py",
+    "config/release-toolchain.json",
+    "config/public-release.json"
+  ],
+  "unchangedTrustFunctions": [
+    "Get-StreamSha256",
+    "Get-FileSha256",
+    "Enter-AuthenticatedToolLock",
+    "Assert-AuthenticatedToolUnchanged",
+    "Set-SanitizedProcessEnvironment",
+    "Invoke-SanitizedTextCommand"
+  ],
+  "originalFullWorkflowJobsSha256": "dbee0838632808ee20026bd4ba6acf894a4e2d0aa04b4740ea287d442dfdf929",
+  "sourceLfSha256": {
+    "scripts/build-signed-update-bundle.ps1": "74c8d2367312df1662e18218d7ccf8b9427106195da2b77bcbd330ed8b2ae008",
+    "scripts/profile_release_tool_trust.py": "451c9d474aa53f681550516f0235d619743b4588be9df8ad600780b6a1425dbc",
+    "tests/test_release_trust_modules.py": "519d22f21df1e6e634814469379b728408c883a688364153c995f6c6a760284a",
+    "tests/test_release_node_path.py": "6dd57686a42cf29f18119354793fdccf1a48c0b223c24a38294cf9959a40ad3e",
+    ".github/workflows/ci.yml": "1c39b8428c9ff3d2da49ee5de90722fa182fc22e3e8045b54e9e1aa56e9f83bf",
+    "config/release-toolchain.json": "146f0946644a50ec541c8f8f08a84755d852ed019053f6f9156b2c974c4c5598",
+    "config/public-release.json": "14d8a00cdece49debe97cfe70edf051ed854b3f494b5a508f7d7a43d65d8486c"
+  },
+  "logs": [
+    {
+      "path": "trust-node-baseline-20261031.txt",
+      "rawSha256": "1bceac850a92586f3a7167f7892f832f3103fe2328c160fb3e53b35df78b5ac9",
+      "portableSha256": "6e699df76d8de2b073b6a39ad551b13d837428e0ab26b953802e364026dac358",
+      "rawBytes": 970,
+      "portableBytes": 960,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-modules-before-20261031.txt",
+      "rawSha256": "6edfd98e2d562a72cab523f90f45cae599e2935d081e12e387465f144309653e",
+      "portableSha256": "ea9d6b16b0c161e0cb9936ce1f6652e347d6a1836efd8fa16a700371f8d1c5ec",
+      "rawBytes": 2151,
+      "portableBytes": 1992,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-modules-after-20261031.txt",
+      "rawSha256": "cee7359acb5939e1ad95dbe9998ad442386fc87bce2e1fd0805e606280d2bbbc",
+      "portableSha256": "6eb7fd77a4efd0990415487b2caacd991282ef4f54d94d30ac1f43348f82f881",
+      "rawBytes": 790,
+      "portableBytes": 781,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-node-after-20261031.txt",
+      "rawSha256": "7656094f9e1ab5ed92d8b3ca7176e20ef139266362825bba8dd6b56f46e3aac6",
+      "portableSha256": "8411c75734c54e992e90c90100dbc3c94e1e9dad711808a55f286d3a3df17c62",
+      "rawBytes": 970,
+      "portableBytes": 960,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-packaging-after-20261031.txt",
+      "rawSha256": "f706142cc8e87a02d469de9d5b6a9333fd55aa162917665c80a3edc2c7b20a5a",
+      "portableSha256": "dba20cc9db62461db5e3e876100630312de3921e503581c943220bdb69ecec9f",
+      "rawBytes": 2372,
+      "portableBytes": 2355,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-presign-after-20261031.txt",
+      "rawSha256": "dd61b44b05f5aa01d777dfd7bb261f21b5fd33dba13d740dbcd835578bd32ba5",
+      "portableSha256": "5e578aa935d0efa18af28a73acb47cdde459326afe1f82414b9e0af4f26003f1",
+      "rawBytes": 3205,
+      "portableBytes": 3185,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-ci-contracts-before-20261031.txt",
+      "rawSha256": "565c42acefa14dd068e24a826d71005efe646d0af92aab8a0e820045f6adfb0c",
+      "portableSha256": "305dd985a82d19a8b2d9c60dcf0cafd205b7beeb5c3b5cb2909f710b35e60081",
+      "rawBytes": 1336,
+      "portableBytes": 1324,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-initial-docs-20261031.txt",
+      "rawSha256": "7594cf121e54251e6675cf3751b5ea35493324e3a274bb1a9af283c0b59a6a47",
+      "portableSha256": "183aae7d91190143c3e3adbb08121575cc460ae22e8386907c0287a450eedc01",
+      "rawBytes": 873,
+      "portableBytes": 863,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-draft-docs-20261031.txt",
+      "rawSha256": "e25604befeb3983ead3e4924011b9cb0b7bbc5034e8081007983767403e0cd1b",
+      "portableSha256": "644ff1c22ac9f9a4dee42dc13682090395cf2fe6b57cb54330ff94511c2f85e5",
+      "rawBytes": 873,
+      "portableBytes": 863,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-public-boundary-20261031.txt",
+      "rawSha256": "f72e9c0f6845202cdceeb8c2a6eb7fc69f496d9081ca9baa16e30dfef688aa73",
+      "portableSha256": "d3322f0283fd0aab2260212bd9a681ae12a7ebcf993c1aacae7eb056f08fea21",
+      "rawBytes": 907,
+      "portableBytes": 873,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-profile-frozen-local-20261031.json",
+      "rawSha256": "9f4f183710768d20d26a8361dbc0cb51616842fca60a808c713d0d18930eb72e",
+      "portableSha256": "1cc70c9c1156bed32ba81d1fa9c72e40211f2078d6ffe04c8eae556515e2b702",
+      "rawBytes": 2006,
+      "portableBytes": 1911,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-profile-child-stages-local-20261031.json",
+      "rawSha256": "8ef6cb5ae96ef8c63b0d3b7673db6a7d944e83076e7bd19804a88c45dd4dc874",
+      "portableSha256": "aab76fdb9773a6e4585d2c8f8f0f458364821b69928fe31bc0e72b02e202d89b",
+      "rawBytes": 2883,
+      "portableBytes": 2747,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    },
+    {
+      "path": "trust-profile-after-local-20261031.json",
+      "rawSha256": "5106fd5923a90f0c077cb9050e8b24227865d63ae3a70b488cd019e62ffbb6a3",
+      "portableSha256": "7bfb91dbf380ff6641dc83f817bde9c50fb78e28b7841bddff4beb130ea77917",
+      "rawBytes": 3227,
+      "portableBytes": 3075,
+      "normalization": "UTF-8 LF; workspace path redacted; trailing diagnostic whitespace trimmed"
+    }
+  ],
+  "referenceImplementation": {
+    "repository": "ValerianXXX/JobFlow",
+    "revision": "3c9ac3f892ebdeeb62c0c3d095b639960675b283",
+    "path": ".agents/skills/job-application-operator/scripts/secure-store.ps1",
+    "license": "MIT",
+    "reusedPattern": "Disable automatic module discovery and import fixed system modules explicitly"
+  },
+  "limits": [
+    "Full current Windows regression not yet terminal",
+    "Dedicated native job is not signed-release or clean-machine acceptance",
+    "No general local speed benefit or exploit claim; two rejection cases already passed before",
+    "OS certificate-service availability and all-host latency not guaranteed",
+    "Production signer and independent clean Windows environment remain unavailable",
+    "Complete material-quality, independent users and live workflows remain open"
+  ],
+  "productionActions": 0,
+  "newModelCalls": 0,
+  "aiQualityBenefitMeasured": false,
+  "goalComplete": false
+}

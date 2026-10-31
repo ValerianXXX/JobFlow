@@ -1,0 +1,12 @@
+test_ci_exercises_the_bootstrap_first_installer_contract (test_release_packaging.ReleasePackagingTests.test_ci_exercises_the_bootstrap_first_installer_contract) ... ok
+test_ci_fetches_full_history_before_public_scan_and_builds_without_publish (test_release_packaging.ReleasePackagingTests.test_ci_fetches_full_history_before_public_scan_and_builds_without_publish) ... ok
+test_ci_prepares_signed_launchers_and_javascript_before_python_tests (test_release_packaging.ReleasePackagingTests.test_ci_prepares_signed_launchers_and_javascript_before_python_tests) ... ok
+test_ci_runs_every_checked_in_javascript_e2e_suite (test_release_packaging.ReleasePackagingTests.test_ci_runs_every_checked_in_javascript_e2e_suite) ... ok
+test_ci_stages_exact_signed_node_at_the_existing_release_location (test_release_packaging.ReleasePackagingTests.test_ci_stages_exact_signed_node_at_the_existing_release_location) ... ok
+test_package_metadata_is_public_release_ready (test_release_packaging.ReleasePackagingTests.test_package_metadata_is_public_release_ready) ... ok
+test_source_manifest_excludes_runtime_and_private_artifacts (test_release_packaging.ReleasePackagingTests.test_source_manifest_excludes_runtime_and_private_artifacts) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.028s
+
+OK
