@@ -1,0 +1,9 @@
+{"stage": "all-tracked-copy", "tracked_files": 980, "mismatches": 0, "deep_parent_characters": 150, "maximum_destination_characters": 268, "tracked_list_sha256": "6205043728335b574e3d2571807427e2dc55caf95a7ea8c57a1908764238a515"}
+test_bundle_builder_fails_closed_before_signer_or_formal_outputs (test_signed_updates.SignedUpdateTests.test_bundle_builder_fails_closed_before_signer_or_formal_outputs) ... ok
+test_runtime_closure_guard_precedes_ignored_archive_processing (test_signed_updates.SignedUpdateTests.test_runtime_closure_guard_precedes_ignored_archive_processing) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 33.670s
+
+OK
+{"stage": "cleanup", "owned_deep_root_removed": true}

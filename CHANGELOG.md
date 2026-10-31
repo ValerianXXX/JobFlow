@@ -4,6 +4,12 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Preserve every tracked file in deep Windows signed-update test fixtures using
+  extended filesystem paths, invocation-scoped Git long-path support and bounded
+  cleanup. Keep original signing/output assertions and record before/after native
+  counterexamples. No production code, signer policy or OS setting changes.
+  [Evidence and reproduction](docs/bundle-fixture-paths-2026-10-31.md).
+
 - Resolve the isolated release verifier's Security/Utility modules explicitly,
   avoiding ambient command discovery before signature verification. Add a bounded
   timing diagnostic and independent early CI check. Retain both real signature

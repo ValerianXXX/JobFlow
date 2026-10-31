@@ -13,7 +13,9 @@ import time
 import tomllib
 import unittest
 import zipfile
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Iterator
 
 from _support import PROJECT
 from jobops.errors import JobOpsError
@@ -58,6 +60,32 @@ def _read_bytes(path: Path) -> bytes:
 
 def _is_file(path: Path) -> bool:
     return Path(_windows_extended_path(path)).is_file()
+
+
+def _remove_owned_bundle_fixture(root: Path) -> None:
+    base = SIGNED_UPDATE_TEST_ROOT.resolve(strict=True)
+    owned = root.resolve(strict=True)
+    if owned == base or not owned.is_relative_to(base):
+        raise ValueError("Bundle fixture cleanup escaped its test directory")
+
+    def remove_readonly(function, path, exception) -> None:
+        if not isinstance(exception[1], PermissionError):
+            raise exception[1]
+        os.chmod(path, stat.S_IWRITE)
+        function(path)
+
+    # Git can leave read-only objects. Extended paths are required on cleanup
+    # too; ordinary rmtree silently misses overlong leaves on some hosts.
+    shutil.rmtree(_windows_extended_path(owned), onerror=remove_readonly)
+
+
+@contextmanager
+def _bundle_fixture_root(prefix: str) -> Iterator[Path]:
+    root = Path(tempfile.mkdtemp(prefix=prefix, dir=SIGNED_UPDATE_TEST_ROOT)).resolve(strict=True)
+    try:
+        yield root
+    finally:
+        _remove_owned_bundle_fixture(root)
 
 
 class SignedUpdateTests(unittest.TestCase):
@@ -135,7 +163,8 @@ class SignedUpdateTests(unittest.TestCase):
             project=project,
         )
         completed = subprocess.run(
-            [str(GIT), *arguments], cwd=project, env=environment, capture_output=True, text=True,
+            [str(GIT), "-c", "core.longpaths=true", *arguments],
+            cwd=project, env=environment, capture_output=True, text=True,
             encoding="utf-8", errors="replace", check=False,
         )
         if completed.returncode != 0:
@@ -195,17 +224,20 @@ class SignedUpdateTests(unittest.TestCase):
             shutil.copy2(source, target)
         self.assertIn(self._authenticode_identity(target), expected)
 
+    def _copy_bundle_source(self, fixture: Path) -> None:
+        fixture.mkdir(parents=True)
+        tracked = self._git(PROJECT, "ls-files").splitlines()
+        for relative in tracked:
+            source = Path(_windows_extended_path(PROJECT / relative))
+            destination = Path(_windows_extended_path(fixture / relative))
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+
     def _prepare_bundle_fixture(
         self, root: Path, *, forge_archive: bool = False,
     ) -> tuple[Path, dict[str, object], dict[str, str]]:
         fixture = root / "project"
-        fixture.mkdir(parents=True)
-        tracked = self._git(PROJECT, "ls-files").splitlines()
-        for relative in tracked:
-            source = PROJECT / relative
-            destination = fixture / relative
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, destination)
+        self._copy_bundle_source(fixture)
         # The release toolchain policy is new in this worktree and may not yet
         # appear in the baseline commit used to construct the isolated fixture.
         # Copy the exact production policy explicitly, then create the only
@@ -988,8 +1020,7 @@ class SignedUpdateTests(unittest.TestCase):
                 self.assertIn("JOBFLOW_RELEASE_SIGNED_ARCHIVE_IDENTITY_MISMATCH", completed.stderr)
 
     def test_bundle_builder_fails_closed_before_signer_or_formal_outputs(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="jobflow-bundle-e2e-", dir=SIGNED_UPDATE_TEST_ROOT) as raw:
-            root = Path(raw)
+        with _bundle_fixture_root("jobflow-bundle-e2e-") as root:
             fixture, _candidate, environment = self._prepare_bundle_fixture(root)
             manifest = fixture / "dist" / "JobFlow-update-manifest.json"
             signature = fixture / "dist" / "JobFlow-update-manifest.sig.json"
@@ -999,7 +1030,7 @@ class SignedUpdateTests(unittest.TestCase):
                 "DevelopmentFixtureSigning" / "development-fixture-signing-key.dpapi"
             )
             key_before = _read_bytes(key_path)
-            key_mtime_before = key_path.stat().st_mtime_ns
+            key_mtime_before = Path(_windows_extended_path(key_path)).stat().st_mtime_ns
             poison = root / "caller-controlled-tool-environment"
             environment.update(
                 {
@@ -1039,7 +1070,7 @@ class SignedUpdateTests(unittest.TestCase):
             self.assertFalse(manifest.exists())
             self.assertFalse(signature.exists())
             self.assertEqual(_read_bytes(key_path), key_before)
-            self.assertEqual(key_path.stat().st_mtime_ns, key_mtime_before)
+            self.assertEqual(Path(_windows_extended_path(key_path)).stat().st_mtime_ns, key_mtime_before)
             leftovers = [
                 path.name for path in (fixture / "dist").iterdir()
                 if path.name.endswith((".tmp", ".bak", ".rollback", ".transaction.json"))
@@ -1047,8 +1078,7 @@ class SignedUpdateTests(unittest.TestCase):
             self.assertEqual(leftovers, [])
 
     def test_runtime_closure_guard_precedes_ignored_archive_processing(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="jobflow-bundle-forged-", dir=SIGNED_UPDATE_TEST_ROOT) as raw:
-            root = Path(raw)
+        with _bundle_fixture_root("jobflow-bundle-forged-") as root:
             fixture, _candidate, environment = self._prepare_bundle_fixture(root, forge_archive=True)
             completed = subprocess.run(
                 [

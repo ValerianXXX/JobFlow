@@ -1,0 +1,46 @@
+{
+  "python_version": "3.11.3",
+  "project_path_characters": 100,
+  "tracked_count": 979,
+  "longest_relative_characters": 107,
+  "longest_relative_paths": [
+    "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-public-boundary-runtime-20261031.txt",
+    "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-started-fault-before-20261031.txt",
+    "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-diagnostics-before-20261031.txt"
+  ],
+  "cases": [
+    {
+      "characters": 259,
+      "ordinary_copy": "PASS",
+      "extended_copy": "PASS",
+      "bytes_equal": true,
+      "mtime_equal": true
+    },
+    {
+      "characters": 260,
+      "ordinary_copy": "FileNotFoundError",
+      "winerror": null,
+      "extended_copy": "PASS",
+      "bytes_equal": true,
+      "mtime_equal": true
+    },
+    {
+      "characters": 263,
+      "ordinary_copy": "FileNotFoundError",
+      "winerror": null,
+      "extended_copy": "PASS",
+      "bytes_equal": true,
+      "mtime_equal": true
+    },
+    {
+      "characters": 300,
+      "ordinary_copy": "FileNotFoundError",
+      "winerror": null,
+      "extended_copy": "PASS",
+      "bytes_equal": true,
+      "mtime_equal": true
+    }
+  ],
+  "no_os_or_git_config_changes": true,
+  "runtime_source_unchanged": true
+}
