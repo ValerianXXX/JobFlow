@@ -4,6 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Synchronize the synthetic late-launcher mutation test with an explicit
+  acknowledgement within its original combined 45-second deadline. Preserve
+  success/content assertions, add exact-byte and ordering checks, and release
+  owned capture handles/processes on failure. Retain the full-run failure,
+  isolated reproduction and actual readiness diagnostic. No production installer,
+  trust policy or runtime limit changes. [Evidence](docs/launcher-handoff-2026-10-31.md).
+
 - Bind recognized literal numeric units, scale, sign and currency to the cited
   coefficient; reject exchanged values in otherwise identical metric clauses.
   Preserve the original numeric parser, bounded wrap recovery, unselected valid

@@ -1,0 +1,6 @@
+test_timeout_closes_descendant_capture_handles (test_windows_launchers.LauncherProcessCaptureTests.test_timeout_closes_descendant_capture_handles) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 6.012s
+
+OK

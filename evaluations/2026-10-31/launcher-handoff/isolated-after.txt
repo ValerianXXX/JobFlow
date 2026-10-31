@@ -1,0 +1,6 @@
+test_late_project_launcher_mutation_cannot_change_committed_launcher_bytes (test_windows_launchers.WindowsLauncherTests.test_late_project_launcher_mutation_cannot_change_committed_launcher_bytes) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 30.385s
+
+OK

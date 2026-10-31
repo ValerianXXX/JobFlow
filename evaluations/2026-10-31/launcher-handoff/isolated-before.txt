@@ -1,0 +1,20 @@
+test_late_project_launcher_mutation_cannot_change_committed_launcher_bytes (test_windows_launchers.WindowsLauncherTests.test_late_project_launcher_mutation_cannot_change_committed_launcher_bytes) ... FAIL
+<USER_HOME>\AppData\Local\Programs\Python\Python311\Lib\unittest\case.py:622: ResourceWarning: unclosed file <_io.TextIOWrapper name=4 encoding='utf-8'>
+  with outcome.testPartExecutor(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+<USER_HOME>\AppData\Local\Programs\Python\Python311\Lib\unittest\case.py:622: ResourceWarning: unclosed file <_io.TextIOWrapper name=5 encoding='utf-8'>
+  with outcome.testPartExecutor(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+
+======================================================================
+FAIL: test_late_project_launcher_mutation_cannot_change_committed_launcher_bytes (test_windows_launchers.WindowsLauncherTests.test_late_project_launcher_mutation_cannot_change_committed_launcher_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-launcher-handoff\tests\test_windows_launchers.py", line 1316, in test_late_project_launcher_mutation_cannot_change_committed_launcher_bytes
+    self.assertTrue(signal.is_file(), "installer did not reach the launcher gate")
+AssertionError: False is not true : installer did not reach the launcher gate
+
+----------------------------------------------------------------------
+Ran 1 test in 15.215s
+
+FAILED (failures=1)
