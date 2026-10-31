@@ -107,7 +107,7 @@
     },
     "quantity-binding-before": {
       "raw_local_sha256": "2b0bcc06473b0d9da19ea282a5addfc0cccfa70e5c060db7fe8381e2639a09cd",
-      "portable_sha256": "f10cd5722ca5c94468973798203f4241f7d7e30c39ea0287f0440f914de7e8f5",
+      "portable_sha256": "d35bfdc3402da64b7860c953b9a59969c7e966a9fb11712d9d68286d5538f80d",
       "path": "evaluations/2026-10-31/quantity-binding/quantity-binding-before.txt"
     },
     "quantity-binding-after-initial": {
@@ -173,7 +173,7 @@
     "evaluations/2026-10-31/quantity-binding/quantity-ai-related.txt": "0cccef0d4801aed2ab2093ec87dbe1020f46de14b648eb03ef39387a18878009",
     "evaluations/2026-10-31/quantity-binding/quantity-binding-after-initial.txt": "40bae55f96aa0da5ec99e403429c3586165e75084880b09e5bb4da2801aadec5",
     "evaluations/2026-10-31/quantity-binding/quantity-binding-after.txt": "b515ee691b047fd765fd12809258cda0cecf45846d55e184f4517b372f5d1222",
-    "evaluations/2026-10-31/quantity-binding/quantity-binding-before.txt": "f10cd5722ca5c94468973798203f4241f7d7e30c39ea0287f0440f914de7e8f5",
+    "evaluations/2026-10-31/quantity-binding/quantity-binding-before.txt": "d35bfdc3402da64b7860c953b9a59969c7e966a9fb11712d9d68286d5538f80d",
     "evaluations/2026-10-31/quantity-binding/quantity-boundaries-before.txt": "76f2046b95070b6b74c93d99860a0cc7f6434cc00340af36f1dc7e517307d3d6",
     "evaluations/2026-10-31/quantity-binding/quantity-dependency-check.txt": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09",
     "evaluations/2026-10-31/quantity-binding/quantity-grounding-baseline.txt": "5465dcde3dfce0d604c5fd2cfe56cb205561bf665d6c7c6871249c2c00752e80",
@@ -184,5 +184,10 @@
     "evaluations/2026-10-31/quantity-binding/recorded-response-replay.json": "0fa1149cc4e82d82bcab8e5387faf3602c08a43401b3d1005ddb6c7e2205c142",
     "evaluations/2026-10-31/quantity-binding/replay-comparison.json": "cbc6db1cfa9bfd6f52a8c7dde1a258cb239b63ebc2a1212c619c3e0f8848786a"
   },
-  "packaging_recovery": "evaluations/2026-10-31/quantity-binding/packaging-recovery.json"
+  "packaging_recovery": "evaluations/2026-10-31/quantity-binding/packaging-recovery.json",
+  "portable_log_transforms": [
+    "UTF-8 and LF",
+    "Replace workspace and home roots with placeholders",
+    "Strip trailing whitespace only; preserve messages, failures and counts; raw local SHA256 retained"
+  ]
 }
