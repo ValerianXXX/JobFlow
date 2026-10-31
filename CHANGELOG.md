@@ -4,6 +4,12 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Drain accepted onboarding HTTP requests before reporting server closure; stop
+  new/keep-alive admission, disconnect only owned sockets and retain request
+  ownership across startup/close failures. Keep cleanup assertions and prior
+  failures, without adding automatic retries or a forced-termination claim.
+  [Contracts, actual browser observation and limits](docs/onboarding-shutdown-2026-10-31.md).
+
 - Allow an explicit canonical `-NodePath` in protected signing handoff while
   retaining authenticated file locks, publisher policy and all signature gates.
   Add an isolated checksum-pinned test prerequisite override without replacing

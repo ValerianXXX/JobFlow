@@ -1,0 +1,15 @@
+test_buffered_second_request_is_not_admitted_after_close_starts (test_onboarding_shutdown.OnboardingShutdownTests.test_buffered_second_request_is_not_admitted_after_close_starts) ... ok
+test_close_waits_for_an_accepted_mutation_before_returning (test_onboarding_shutdown.OnboardingShutdownTests.test_close_waits_for_an_accepted_mutation_before_returning) ... ok
+test_idle_keep_alive_connection_is_stopped_before_close_returns (test_onboarding_shutdown.OnboardingShutdownTests.test_idle_keep_alive_connection_is_stopped_before_close_returns) ... ok
+test_service_close_error_does_not_skip_request_drain (test_onboarding_shutdown.OnboardingShutdownTests.test_service_close_error_does_not_skip_request_drain) ... ok
+test_successful_close_is_idempotent (test_onboarding_shutdown.OnboardingShutdownTests.test_successful_close_is_idempotent) ... ok
+test_unfinished_request_body_is_not_committed_during_shutdown (test_onboarding_shutdown.OnboardingShutdownTests.test_unfinished_request_body_is_not_committed_during_shutdown) ... ok
+test_unused_listener_closes_without_starting_the_serve_loop (test_onboarding_shutdown.OnboardingShutdownTests.test_unused_listener_closes_without_starting_the_serve_loop) ... ok
+test_concurrent_close_calls_share_one_completed_service_close (test_onboarding_shutdown_faults.ShutdownFaultTests.test_concurrent_close_calls_share_one_completed_service_close) ... ok
+test_disconnect_error_still_drains_before_propagating (test_onboarding_shutdown_faults.ShutdownFaultTests.test_disconnect_error_still_drains_before_propagating) ... ok
+test_thread_start_failure_does_not_poison_later_server_close (test_onboarding_shutdown_faults.ShutdownFaultTests.test_thread_start_failure_does_not_poison_later_server_close) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.776s
+
+OK

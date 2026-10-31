@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-31T15:56:05.113946+00:00",
+  "status": "HTTP_CONTRACTS_AND_BROWSER_PASS_FULL_PYTHON_RUNNING",
+  "branch": "codex/jobflow-ui-shutdown-20261031",
+  "base_commit": "2a98f7fb2ee5e788bf9f4c1552faecffbc14038e",
+  "runtime_commit": "dfb2294ebc294b73b7b8c7c39d194795fb9c529c",
+  "original_hosted_failure": {
+    "run_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/41203196343",
+    "job_id": 124542951630,
+    "matrix_label": "Windows Python 3.13",
+    "fixture_traceback_interpreter": "Python 3.11.3",
+    "result": "FAILED: WinError 145 in TemporaryDirectory.cleanup after standard-resume UI assertions",
+    "raw_log_sha256": "6a6d64a8dbcc5aa09b52e09e820206c68012719044c5b8e057db19caff1116b4",
+    "exclusive_causality_proven": false,
+    "original_failure_retained": true
+  },
+  "frozen_contracts": {
+    "first_commit": "abfb1a9",
+    "first_before": {
+      "passed": 1,
+      "failed": 6
+    },
+    "faults_commit": "d317a94",
+    "faults_before": {
+      "passed": 1,
+      "failed": 1,
+      "errors": 1
+    },
+    "post_start_commit": "c792977",
+    "post_start_before": {
+      "passed": 3,
+      "failed": 1
+    },
+    "diagnostics_commit": "7f357e1",
+    "diagnostics_before": {
+      "passed_methods": 5,
+      "failed_methods": 1,
+      "failed_subtests": 2
+    },
+    "final": {
+      "passed": 13,
+      "seconds": 1.004,
+      "original_assertions_unchanged": true
+    }
+  },
+  "existing_center": {
+    "passed": 75,
+    "seconds": 58.003,
+    "runtime_commit": "c95db5e4e94829bb9dc18a4966425158b83f6d0e"
+  },
+  "javascript": {
+    "status": "PASS",
+    "suites": 17,
+    "process_exit": 0,
+    "runtime_commit": "dfb2294ebc294b73b7b8c7c39d194795fb9c529c",
+    "actual_browser": "Windows Edge, synthetic local HTTP and DPAPI state",
+    "fixture_cleanup_required": true,
+    "node": "24.22.1",
+    "python": "3.11.3"
+  },
+  "browser_inspection": {
+    "screenshots": {
+      "desktop-zh.png": {
+        "path": "evaluations/2026-10-31/onboarding-shutdown-ui-v1/desktop-zh.png",
+        "sha256": "6fe9f4b6d537c141c2499d896cd94c6241d7225690893445177385734b444929"
+      },
+      "mobile-en.png": {
+        "path": "evaluations/2026-10-31/onboarding-shutdown-ui-v1/mobile-en.png",
+        "sha256": "4706d79aedc60c39303edd74127e7770e0abee2e7e9e50ffe4330e216ebb7222"
+      },
+      "result.json": {
+        "path": "evaluations/2026-10-31/onboarding-shutdown-ui-v1/result.json",
+        "sha256": "6262a6382b3c4826bbdb1b3b583a1d1e810b93f021707a1fd4b696a6984d8ea8"
+      }
+    },
+    "runtime_commit": "c95db5e4e94829bb9dc18a4966425158b83f6d0e",
+    "desktop_locale": "zh",
+    "mobile_locale": "en",
+    "mobile_width": 390,
+    "download_adopt_reload": "PASS",
+    "independent_humans": false,
+    "word_pdf_conversion": "NOT_RUN",
+    "ai_extraction": "NOT_RUN"
+  },
+  "public_docs": {
+    "passed": 5,
+    "seconds": 0.046
+  },
+  "discarded_test_invocation": {
+    "pattern": "test_release_docs.py",
+    "tests_found": 0,
+    "acceptance_credit": false
+  },
+  "full_python": {
+    "status": "RUNNING",
+    "session_id": 8400,
+    "runtime_commit": "dfb2294ebc294b73b7b8c7c39d194795fb9c529c",
+    "log": "reports/onboarding-shutdown-python-full-20261031.log"
+  },
+  "previous_branch_full_python": {
+    "runtime_commit": "d9bec0ab172538f402bbab7a69da2446b9ac1554",
+    "tests_run": 1490,
+    "skipped": 4,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 5367.991,
+    "raw_sha256": "678236774a036875264947726b1fb085e69d5d513b9fc1006e7cef63c4dc88b0",
+    "counts_for_this_runtime": false
+  },
+  "public_boundary_at_runtime": {
+    "status": "PASS",
+    "tracked_files": 898,
+    "history_commits": 363,
+    "findings": 0,
+    "unapproved_identities": 0,
+    "approved_historical_exceptions": 1,
+    "public_release_ready": false
+  },
+  "environment": {
+    "new_isolated_environment": true,
+    "dependency_versions_match_previous": true,
+    "pip_check": "PASS",
+    "signed_python_launcher_verified": true,
+    "global_runtime_modified": false
+  },
+  "committed_source_sha256": {
+    "src/jobops/onboarding_server.py": "bfb1884b7ab295c5a5b145a948b26624b93176ec55e3f76c15180537d214ed98",
+    "tests/test_onboarding_shutdown.py": "9324f71d071e5e74b3b2c5d7dcf9be24bf9148e22f05fc2e88a9e7657420d55f",
+    "tests/test_onboarding_shutdown_faults.py": "a2d489c3bb3ff75f78bb0bd42dbe134c721abd4b08220e4dfdf607d1e93773ab",
+    "tests/standard_resume_ui_server.py": "f060e4dbe027d5f53e9f2c10654205750a4ffbf8259cd37fd5cc9aa33b3fa2bb",
+    "tests/standard_resume_ui_e2e.cjs": "54c2a64ed5b79622dd418c35030154acf5fcc7a0d9809b4c1e9287b8583c0688",
+    "scripts/run-javascript-e2e.cjs": "d6c09eaeb82b503f48689ec7404c308a0b5012037924d37b4f5a6dbaab4f27cf"
+  },
+  "logs": {
+    "before": {
+      "raw_sha256": "81375d8558a88bfc9c350d1105805fbacb38e8185a312fee9e31ff03d114b758",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-before-20261031.txt",
+      "portable_sha256": "2b437f9e7e077af61a6a420e8c1999324a5471baae1c94a8c44ac5fd5795cc75"
+    },
+    "after": {
+      "raw_sha256": "d7dbcd2f52e9c235d5dac29d748fc09c25c3186d4a63d4f80b39293c5dad0891",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-after-20261031.txt",
+      "portable_sha256": "4808412888be80bcbe8c5f292d1ce6a496c7b8c5d22f1d6fa6ed32b9b88d7f35"
+    },
+    "after-owned-close": {
+      "raw_sha256": "37fabb16a47c14ed441f26d54facab86b7a0e3297dc4de1963212f1adffe7bde",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-after-owned-close-20261031.txt",
+      "portable_sha256": "5cf1c92c9acc50965445fa13c8def61f6e9baf1b967bec545ebc6933f2e215c4"
+    },
+    "faults-before": {
+      "raw_sha256": "bceeae39e92d199762f22843fe590ad6040389281d33e189c7e940e1dd41148c",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-faults-before-20261031.txt",
+      "portable_sha256": "a21f405e0f7f7c359ab31f92663959232269f6bbc66352dfd33b9935eab3644d"
+    },
+    "started-fault-before": {
+      "raw_sha256": "ea9ac4a94eab370df82210e0443fce9acd80139607f40fe503da7816ce0da1dc",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-started-fault-before-20261031.txt",
+      "portable_sha256": "355b087704d46035452ef2b39e822e76ca17ddfd4b5dd921f7f038e184254552"
+    },
+    "final": {
+      "raw_sha256": "c94983b242ea37bd986f6dbf17849f550535abfd5f8449ccd10f4f79f2e36132",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-final-20261031.txt",
+      "portable_sha256": "caa9043676cdfae405f98f4a9a61adcea8e66e6c90f1a4c44c1a9fbc7561cbce"
+    },
+    "final-all": {
+      "raw_sha256": "be6fb302db5f8b9a7bdbc1199646fa4cc19b21685d80d8558857c96e483185df",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-final-all-20261031.txt",
+      "portable_sha256": "f3d6d476eae445bb66f2594fd1e01c5b142b5faaf7b152ad7407b1af11103851"
+    },
+    "diagnostics-before": {
+      "raw_sha256": "0692542df4a6074def17e61c2ebf9bbe6b123e814bda02c8099026624547b936",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-diagnostics-before-20261031.txt",
+      "portable_sha256": "a4e7d18c486eed18375e77dc7de0f74621aec20b5b4b357fad4458094e53c6d5"
+    },
+    "final-diagnostics": {
+      "raw_sha256": "250c6fa21dcb1571111b1c0f4a81ec26513ec344e872c64b2256d78d4ca816e6",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-final-diagnostics-20261031.txt",
+      "portable_sha256": "b3507b2c30dc8c1304ac4708f71ed53899835264a84d6cf7a3af5ae008532432"
+    },
+    "existing-center": {
+      "raw_sha256": "d7f4bc9fa7388606be83cfb5e98fb91308c0aa21b39a69d4de5834034b1609ea",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-existing-center-20261031.txt",
+      "portable_sha256": "20d3eac8ee74968b9b35707c27e89ab66385fa14c9642026b6f11ae6db8841ab"
+    },
+    "standard-resume-ui": {
+      "raw_sha256": "c0dadd2e56759e644cbf793cf97bd7043721eb33e6c97a274a089e2e6b4f7766",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-standard-resume-ui-20261031.txt",
+      "portable_sha256": "994044a910ba211325a991ce5d850fbfebd1c269efb42bdcfc93b543f9edcb3b"
+    },
+    "javascript-full": {
+      "raw_sha256": "52627a2039850763d21592e41bf69cab60933ddaaf7bfaa3849e7cd7a79286e5",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-javascript-full-20261031.txt",
+      "portable_sha256": "4591b6e60a5c13441a89a70053e988ebfd4622819c6d946b83932576388e163d"
+    },
+    "javascript-final": {
+      "raw_sha256": "b8c01b6a5e2e21f4cd731e5f19ac3a426e71201747d5b30f7910c1ac54b9517b",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-javascript-final-20261031.txt",
+      "portable_sha256": "98d0c7df2b9dd0009cd7113d4366559e99e5a98ccceb52afc82d2726daffc50e"
+    },
+    "public-docs": {
+      "raw_sha256": "cee705272625aedf8bf2e2e3c44728534dd9348630623ee485f56a31fdbede17",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-public-docs-20261031.txt",
+      "portable_sha256": "579fec209ab2cac3b8a1c5c1573bcaf08c55709abb2d7ac97b796dfbb7aa06b6"
+    },
+    "public-boundary-runtime": {
+      "raw_sha256": "8c6b79cd55b9550096a233ed25ba7efc43a13a47114c9038c84982644aed7cee",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-public-boundary-runtime-20261031.txt",
+      "portable_sha256": "7a6abf1cfa36ad0590d4c4892ccdf6746759d2c370c45b1ab5bc41176ca140b6"
+    },
+    "docs": {
+      "raw_sha256": "5908c79981b1361a56b0a2d7bedb0e9bd7fc9a2efdfb1968be756dd713e25fab",
+      "portable_path": "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-docs-20261031.txt",
+      "portable_sha256": "0022ee81eaae586301bd919619db568337b011018f4f635ccdae17bcdd457edb"
+    }
+  },
+  "new_model_calls": 0,
+  "real_external_actions": 0,
+  "production_actions": 0,
+  "schema_migration": "NONE",
+  "release_authorized": false,
+  "hosted_ci": "PENDING_DELIVERY",
+  "remaining": [
+    "New-runtime full Python regression and exact-head hosted CI",
+    "Separately started guided workers, blocked application operations and abrupt/power-loss shutdown",
+    "Exclusive cause and repeat stability of original hosted directory cleanup failure",
+    "Full 36-material quality targets, independent first-time users, live ATS and connected mailbox",
+    "Trusted production signing and independent clean Windows installation/upgrade/retention/rollback"
+  ],
+  "goal_complete": false,
+  "portable_log_transforms": [
+    "LF line endings",
+    "Workstation user path redaction",
+    "Trailing display whitespace removed; raw logs retained"
+  ]
+}

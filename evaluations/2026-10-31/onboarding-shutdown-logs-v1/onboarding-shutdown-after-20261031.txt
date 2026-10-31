@@ -1,0 +1,28 @@
+test_buffered_second_request_is_not_admitted_after_close_starts (test_onboarding_shutdown.OnboardingShutdownTests.test_buffered_second_request_is_not_admitted_after_close_starts) ... ok
+test_close_waits_for_an_accepted_mutation_before_returning (test_onboarding_shutdown.OnboardingShutdownTests.test_close_waits_for_an_accepted_mutation_before_returning) ... ok
+test_idle_keep_alive_connection_is_stopped_before_close_returns (test_onboarding_shutdown.OnboardingShutdownTests.test_idle_keep_alive_connection_is_stopped_before_close_returns) ... FAIL
+test_service_close_error_does_not_skip_request_drain (test_onboarding_shutdown.OnboardingShutdownTests.test_service_close_error_does_not_skip_request_drain) ... ok
+test_successful_close_is_idempotent (test_onboarding_shutdown.OnboardingShutdownTests.test_successful_close_is_idempotent) ... ok
+test_unfinished_request_body_is_not_committed_during_shutdown (test_onboarding_shutdown.OnboardingShutdownTests.test_unfinished_request_body_is_not_committed_during_shutdown) ... FAIL
+test_unused_listener_closes_without_starting_the_serve_loop (test_onboarding_shutdown.OnboardingShutdownTests.test_unused_listener_closes_without_starting_the_serve_loop) ... ok
+
+======================================================================
+FAIL: test_idle_keep_alive_connection_is_stopped_before_close_returns (test_onboarding_shutdown.OnboardingShutdownTests.test_idle_keep_alive_connection_is_stopped_before_close_returns)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 126, in test_idle_keep_alive_connection_is_stopped_before_close_returns
+    self.assertTrue(f["closed"].wait(3))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_unfinished_request_body_is_not_committed_during_shutdown (test_onboarding_shutdown.OnboardingShutdownTests.test_unfinished_request_body_is_not_committed_during_shutdown)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown.py", line 158, in test_unfinished_request_body_is_not_committed_during_shutdown
+    self.assertTrue(f["closed"].wait(3))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 7 tests in 6.624s
+
+FAILED (failures=2)

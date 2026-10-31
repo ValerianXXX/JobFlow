@@ -1,0 +1,33 @@
+test_concurrent_close_calls_share_one_completed_service_close (test_onboarding_shutdown_faults.ShutdownFaultTests.test_concurrent_close_calls_share_one_completed_service_close) ... ok
+test_disconnect_error_still_drains_before_propagating (test_onboarding_shutdown_faults.ShutdownFaultTests.test_disconnect_error_still_drains_before_propagating) ... ok
+test_expected_socket_disconnect_is_quiet_while_closing (test_onboarding_shutdown_faults.ShutdownFaultTests.test_expected_socket_disconnect_is_quiet_while_closing) ... ok
+test_started_worker_remains_owned_when_start_reports_an_error (test_onboarding_shutdown_faults.ShutdownFaultTests.test_started_worker_remains_owned_when_start_reports_an_error) ... ok
+test_storage_errors_are_not_hidden_while_closing (test_onboarding_shutdown_faults.ShutdownFaultTests.test_storage_errors_are_not_hidden_while_closing) ...
+  test_storage_errors_are_not_hidden_while_closing (test_onboarding_shutdown_faults.ShutdownFaultTests.test_storage_errors_are_not_hidden_while_closing) (error='OSError') ... FAIL
+  test_storage_errors_are_not_hidden_while_closing (test_onboarding_shutdown_faults.ShutdownFaultTests.test_storage_errors_are_not_hidden_while_closing) (error='PermissionError') ... FAIL
+test_thread_start_failure_does_not_poison_later_server_close (test_onboarding_shutdown_faults.ShutdownFaultTests.test_thread_start_failure_does_not_poison_later_server_close) ... ok
+
+======================================================================
+FAIL: test_storage_errors_are_not_hidden_while_closing (test_onboarding_shutdown_faults.ShutdownFaultTests.test_storage_errors_are_not_hidden_while_closing) (error='OSError')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown_faults.py", line 23, in test_storage_errors_are_not_hidden_while_closing
+    report.assert_called_once_with(None, None)
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\unittest\mock.py", line 944, in assert_called_once_with
+    raise AssertionError(msg)
+AssertionError: Expected 'handle_error' to be called once. Called 0 times.
+
+======================================================================
+FAIL: test_storage_errors_are_not_hidden_while_closing (test_onboarding_shutdown_faults.ShutdownFaultTests.test_storage_errors_are_not_hidden_while_closing) (error='PermissionError')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-ui-lifecycle\tests\test_onboarding_shutdown_faults.py", line 23, in test_storage_errors_are_not_hidden_while_closing
+    report.assert_called_once_with(None, None)
+  File "<USER>\AppData\Local\Programs\Python\Python311\Lib\unittest\mock.py", line 944, in assert_called_once_with
+    raise AssertionError(msg)
+AssertionError: Expected 'handle_error' to be called once. Called 0 times.
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.408s
+
+FAILED (failures=2)

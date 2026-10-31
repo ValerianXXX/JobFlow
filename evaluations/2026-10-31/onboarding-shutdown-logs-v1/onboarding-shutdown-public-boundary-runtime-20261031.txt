@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "readiness_scope": "PUBLIC_REPOSITORY_BOUNDARY_ONLY",
+  "public_repository_ready": true,
+  "public_release_ready": false,
+  "public_release_blockers": [],
+  "tree": {
+    "status": "PASS",
+    "tracked_file_count": 898,
+    "finding_count": 0,
+    "findings": []
+  },
+  "history": {
+    "status": "PASS",
+    "commit_count": 363,
+    "historical_path_count": 899,
+    "unique_blob_count": 3075,
+    "scanned_text_blob_count": 2754,
+    "scanned_document_blob_count": 89,
+    "finding_count": 0,
+    "findings": []
+  },
+  "author_identity": {
+    "status": "PASS",
+    "policy": "PUBLIC_EMAIL_HASHES_APPROVED",
+    "identity_count": 3,
+    "non_noreply_identity_count": 1,
+    "unapproved_identity_count": 0,
+    "approved_public_email_count": 1,
+    "malformed_record_count": 0,
+    "private_identity_values_emitted": 0
+  }
+}
