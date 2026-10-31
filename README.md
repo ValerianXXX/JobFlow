@@ -10,66 +10,31 @@ Browser Companion **0.9.2** is published on [Chrome Web Store](https://chromeweb
 
 See the [compatibility and recovery matrix](docs/compatibility.md) and [October 27 release verification](docs/modernization-2026-10-27.md). CI now detects version drift across Python, JavaScript, lockfiles, the extension and its UI. The source demo is available through the Development setup below while signed installation remains blocked.
 
-The source branch includes these reviewable capabilities. They are not a new signed desktop release.
+The source branch includes these reviewable capabilities. They are not a new
+signed desktop release. GitHub releases were rechecked on October 31: v0.7.0
+still contains source/checksum assets only; v0.6.0 remains the latest stable tag.
+Use the **Development setup** below to evaluate this branch.
 
-[Installer regression evidence](docs/launcher-handoff-2026-10-31.md) retains a
-local full-suite failure and repairs its synthetic mutation handoff within the
-original total test deadline. It does not establish production-signed or
-independent clean-Windows installation acceptance.
+The latest material-intake change rejects pages represented only by pagination
+or substantial raster areas missing from the text layer. Default, fallback and
+optional local parsers share the check; bilingual guidance explains recovery
+without enabling a visual provider automatically. [Page-content evidence and
+limits](docs/pdf-page-content-2026-10-31.md) distinguish this structural check
+from OCR accuracy and full-material factual acceptance.
 
-Material review now checks recognized numeric units, scales, currencies and
-literal metric order against cited source text. Unsupported candidates are
-filtered with a reason and remain subject to user review. The
-[quantity-grounding record](docs/quantity-binding-2026-10-31.md) includes frozen
-failures and a two-response PDF/DPAPI replay with unchanged retained candidates;
-it does not establish complete material understanding or a new model-quality gain.
-
-Local shutdown drains accepted HTTP requests and their background application
-preparation before returning. Identical capture requests share one result;
-changed forms cannot reuse an older packet. Uncertain launches are polled without
-resubmission, with persistent Chinese/English recovery guidance. The
-[preparation lifecycle record](docs/guided-preparation-lifecycle-2026-10-31.md)
-contains the fixed before/after contracts, synthetic browser observations,
-current check scope and rollback instructions. It does not establish signed
-installation, independent-user acceptance or complete material understanding.
-
-Release preparation also includes [native runtime checks](docs/runtime-revalidation-2026-10-30.md),
-[authenticated Node selection](docs/release-node-selection-2026-10-31.md),
-[HTTP shutdown ownership](docs/onboarding-shutdown-2026-10-31.md), and
-[concurrent release-output drainage](docs/release-command-streams-2026-10-31.md).
-Their dated records retain earlier failures and successful checks separately;
-an earlier branch's pass is not substituted for this branch's unfinished checks.
-The [native trust timing investigation](docs/release-trust-timing-2026-10-31.md)
-records the three failed hosted Windows runs, an independent bounded probe and
-an explicit system-module repair. Its focused hosted probe now completes in
-4.734 seconds with all nine native trust/module contracts passing. Full Windows
-regression, signed distribution and clean-machine acceptance remain separate.
-The [bundle-fixture path follow-up](docs/bundle-fixture-paths-2026-10-31.md)
-repairs copying, indexing and cleanup in deep Windows test checkouts without
-changing the release program or its approval gates. Earlier full-run failures
-remain recorded; this maintenance change makes no material-quality claim.
-
-Documented work duration now excludes gaps, overlapping jobs and repeated Claims. Partial dates retain bounds; internship time and skill-specific or full-time requirements require separate review. New Profiles use version 3 while older Profiles remain readable; older generated tenure values need a reviewed revision before supporting a years requirement. [Duration rules, regression evidence and rollback](docs/experience-duration-2026-10-29.md) also record the six-sample Profile-hint check without claiming complete material understanding.
-
-The [loopback rejection repair](docs/probe-rejection-2026-10-29.md) addresses a
-Windows connection-abort regression, rejects duplicate pairing request lengths
-and bounds rejected-body reads with one deadline. Local HTTP checks are separate
-from installed-browser and clean-Windows release acceptance.
-
-The [full-regression follow-up](docs/test-isolation-2026-10-29.md) retains an initial
-local run with seven failures and two errors, explains its environment and PDF-test
-isolation defects, and records the focused repairs. It does not replace the missing
-full-material semantic acceptance or clean-Windows release acceptance.
-
-The [focus-recovery follow-up](docs/busy-focus-recovery-2026-10-29.md) fixes a
-hosted onboarding failure after saving and an emergency interruption settle.
-Its ten frozen browser cases pass; independent-user and release acceptance
-remain separate requirements.
+Material review also checks recognized numeric units, scales, currencies and
+literal metric order against cited source text. [Quantity-grounding evidence](docs/quantity-binding-2026-10-31.md)
+retains frozen failures and unchanged synthetic response replays. Application
+preparation has [bounded recovery and request ownership](docs/guided-preparation-lifecycle-2026-10-31.md).
+Detailed historical changes, installer failures and dated checks remain in the
+[changelog](CHANGELOG.md) and linked evidence records, including the
+[launcher test handoff](docs/launcher-handoff-2026-10-31.md).
 
 | Capability | Available source behavior | Verification and limits |
 | --- | --- | --- |
 | Materials and facts | Optional PDF/image transcription, entity-linked candidates, encrypted originals and separate source/Claim review | [Source-fact review](docs/source-fact-review-2026-10-29.md) accounts for 241/282 source facts in candidates across six exposed development files. Twelve identity/contact facts are outside the Claim channel; the latest separate replay retains their unconfirmed names and emails. Full-material acceptance remains open. |
 | Profile source review | Preserve a full name as written, scope contact hints to the applicant header, and link imported fields to saved source lines | [Identity and contact verification](docs/profile-source-hints-2026-10-30.md): six original synthetic sources retain both fields through actual DPAPI and reopen. This is source retention, not legal identity, model-quality improvement or completed Profile acceptance. Manual edits and language changes preserve review boundaries. |
+| Documented duration | Exclude gaps, overlaps and duplicate Claims; retain bounds for partial dates | [Duration rules](docs/experience-duration-2026-10-29.md): new Profiles use version 3; old generated tenure needs reviewed revision. Calendar coverage does not prove full-time or skill-specific experience. |
 | Omission review | Click uncited ranges, candidate citations or source notes to inspect the saved, numbered analysis text; compare original PDF/image pages separately | [Transcript review](docs/analysis-text-review-2026-10-30.md): encrypted, hash-bound snapshots survive confirmation/reopen, and changed analysis invalidates old coordinates. Old imports, segmented input, large transcripts and ChatGPT exports have explicit limits. Input coverage and citations never certify fact completeness. |
 | Source constraints | Retain excerpts separately from Claims; compare saved Profile answers, record follow-up/reasons, and reopen a decision | [Private context review](docs/context-review-2026-10-30.md) binds decisions to the source analysis and saved answer; changed answers invalidate prior comparisons and unknown remains unknown. Actual local HTTP/DPAPI browser checks use synthetic data. The earlier [model comparison](docs/fact-preservation-2026-10-30.md) remains separate; full-material accuracy and human review effort are unproven. |
 | Claim responsibility | Reject direct actor swaps and recognized passive actions assigned to an unsupported performer | [Two additional template observations](docs/template-pilot-2026-10-30.md) exposed one attribution error. Replay filters that candidate and preserves the other 68; the omitted fact remains available in the source. This bounded check does not prove semantic correctness. |

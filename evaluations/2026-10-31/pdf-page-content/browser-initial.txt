@@ -1,0 +1,1 @@
+PDF regions UI PASS: real upload, parser, original render, confirmation gate, Chinese desktop, English mobile, pending Claims after reload, zero external actions and clean teardown; model replay only.

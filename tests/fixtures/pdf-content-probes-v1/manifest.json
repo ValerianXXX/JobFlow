@@ -1,0 +1,89 @@
+{
+  "synthetic_only": true,
+  "purpose": "Text extraction coverage regression, not model quality or whole-material acceptance",
+  "expected_visible_raster_facts": [
+    "SYNTHETIC MATERIAL - NO REAL APPLICANT",
+    "Cedar Example Lab - analyst - 2024 to 2025",
+    "The team served 12 stores.",
+    "My contribution saved 120 hours.",
+    "The team budget was USD 3000.",
+    "I had no spending authority."
+  ],
+  "cases": [
+    {
+      "id": "scan-footer",
+      "file": "scan-footer.pdf",
+      "sha256": "d81d2842795e8c1f44e67ac57d9885fc42e6f01075154030e9445af85481878e",
+      "must_block_text_only": true
+    },
+    {
+      "id": "scan-header",
+      "file": "scan-header.pdf",
+      "sha256": "25827396f3f2df0859dc5f385f5726ad4077462f099e88f3f3282421ebcd5ea0",
+      "must_block_text_only": true
+    },
+    {
+      "id": "pagination-only",
+      "file": "pagination-only.pdf",
+      "sha256": "4540fe2b9577e72e02034fd6ee5298b74a991eae0270106698d64fb16a4cdad6",
+      "must_block_text_only": true
+    },
+    {
+      "id": "tiled-scan",
+      "file": "tiled-scan.pdf",
+      "sha256": "1cf631189713f441cb61409d367966006076ee35fc97bb67fd5ef8896cbd7d4b",
+      "must_block_text_only": true
+    },
+    {
+      "id": "rotated-scan",
+      "file": "rotated-scan.pdf",
+      "sha256": "94da53b1944ffb16253b584ede2cbcfadc539ace3c67ef8bcf2ee341945b8f1d",
+      "must_block_text_only": true
+    },
+    {
+      "id": "text-only",
+      "file": "text-only.pdf",
+      "sha256": "85e832edbc0396bc66e29e719c23314b5f9c8ebc02e9bd759ea89408fe92117a",
+      "must_block_text_only": false
+    },
+    {
+      "id": "small-logo",
+      "file": "small-logo.pdf",
+      "sha256": "a7c7b861a2a9c611de0fa82f00b8fdbbe26b0b540cf44d51cb9c665855d0a2d1",
+      "must_block_text_only": false
+    },
+    {
+      "id": "searchable-raster",
+      "file": "searchable-raster.pdf",
+      "sha256": "4b9c1d1b2c97808d2ba8a422de7550249f0cc50e364f8db68a623b02fc168f37",
+      "must_block_text_only": false
+    },
+    {
+      "id": "overlapping-stamps",
+      "file": "overlapping-stamps.pdf",
+      "sha256": "da9233f0ac4759881689742114e0231d40a20a20a7b37e34916c3759a1b08105",
+      "must_block_text_only": false
+    },
+    {
+      "id": "off-page-raster",
+      "file": "off-page-raster.pdf",
+      "sha256": "ea4c9ac0d265e75fc148fbf260cc52cb5ec60aea3540221d454bdad4a0642eed",
+      "must_block_text_only": false
+    },
+    {
+      "id": "mixed-pages",
+      "file": "mixed-pages.pdf",
+      "sha256": "6a4706edc201e85c0a2bdb0eb7f3f2091acb9a09c432847e5a944eca61035c33",
+      "must_block_text_only": true
+    }
+  ],
+  "pre_implementation_fixture_correction": {
+    "original_commit": "b454948",
+    "changed_positive_cases": [
+      "small-logo",
+      "searchable-raster",
+      "overlapping-stamps"
+    ],
+    "reason": "Use invisible searchable text instead of duplicated visible lines and actual decorative logos instead of miniaturized fact images. All six rejection inputs and expected outcomes unchanged."
+  }
+}

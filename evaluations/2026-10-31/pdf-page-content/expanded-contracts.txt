@@ -1,0 +1,17 @@
+test_fallback_runtime_cannot_bypass_content_guard (test_pdf_content_coverage.PdfContentCoverageTests.test_fallback_runtime_cannot_bypass_content_guard) ... ok
+test_frozen_synthetic_files_have_not_changed (test_pdf_content_coverage.PdfContentCoverageTests.test_frozen_synthetic_files_have_not_changed) ... ok
+test_geometry_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_geometry_worker_rejects_incomplete_page_content) ... ok
+test_helper_missing_content_report_is_not_accepted_as_complete (test_pdf_content_coverage.PdfContentCoverageTests.test_helper_missing_content_report_is_not_accepted_as_complete) ... ok
+test_limits_and_nonfinite_geometry_do_not_emit_text (test_pdf_content_coverage.PdfContentCoverageTests.test_limits_and_nonfinite_geometry_do_not_emit_text) ... ok
+test_logical_and_layout_routes_reject_unread_raster_or_only_pagination (test_pdf_content_coverage.PdfContentCoverageTests.test_logical_and_layout_routes_reject_unread_raster_or_only_pagination) ... ok
+test_missing_invalid_or_zero_page_helper_evidence_fails_closed (test_pdf_content_coverage.PdfContentCoverageTests.test_missing_invalid_or_zero_page_helper_evidence_fails_closed) ... ok
+test_native_route_also_keeps_existing_numbered_page_gap_boundary (test_pdf_content_coverage.PdfContentCoverageTests.test_native_route_also_keeps_existing_numbered_page_gap_boundary) ... ok
+test_non_strict_diagnostic_still_exposes_actual_partial_text (test_pdf_content_coverage.PdfContentCoverageTests.test_non_strict_diagnostic_still_exposes_actual_partial_text) ... ok
+test_opt_in_worker_failure_never_invokes_configured_visual_provider (test_pdf_content_coverage.PdfContentCoverageTests.test_opt_in_worker_failure_never_invokes_configured_visual_provider) ... ok
+test_optional_native_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_optional_native_worker_rejects_incomplete_page_content) ... ok
+test_text_small_decorations_and_searchable_raster_keep_review_boundary (test_pdf_content_coverage.PdfContentCoverageTests.test_text_small_decorations_and_searchable_raster_keep_review_boundary) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 17.565s
+
+OK

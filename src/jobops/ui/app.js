@@ -10,6 +10,7 @@ const STRINGS = {
     sourceContextUnavailable: "本次没有可用的约束核对记录，请查看原件并手动补充资料。",
     sourceContextFiltered: "有 {count} 条模型标注未通过来源或范围校验，未保留。",
     documentIncomplete: "文档存在无法读取的页面或页码不连续。请检查原文件是否缺页，补齐资料后重试；扫描内容可在确认数据发送路径后使用视觉读取。本次未分析或导入部分内容。",
+    documentImageTextMissing: "部分页面没有可读取的正文，或有图片区域未被文字层覆盖。请核对原始页面，确认数据发送路径后选择视觉读取，或提供内容完整的可编辑文档。本次未导入，也未将部分文字交给模型分析。",
     visualSourceConfirm: "我已对照原始页面核对所选内容的姓名、日期、金额、数字及本人／团队归属；图片转录可能出错。",
     sourceEvidenceDetails: "查看证据位置详情",
     aiOperatorCommandLabel: "一句话交给 AI", aiOperatorCommandHelp: "可以直接输入“帮我处理这个岗位”并粘贴公司岗位链接。AI 会连续理解与决策；浏览器、材料和安全门仍由 JobFlow 执行。", aiOperatorCommandDefault: "帮我处理这个岗位", aiOperatorDelegated: "由 JobFlow 接力执行", aiOperatorUserGate: "到这里才需要你",
@@ -87,6 +88,7 @@ const STRINGS = {
     sourceContextUnavailable: "No constraint review record is available. Check the original and enter any missing Profile information yourself.",
     sourceContextFiltered: "{count} model annotations failed source or range validation and were not retained.",
     documentIncomplete: "Some pages are unreadable or printed pagination is incomplete. Check the original for missing pages and supply the complete source. Scans can use the optional visual route after confirming where data is sent. No partial content was analyzed or imported.",
+    documentImageTextMissing: "Some pages lack readable body text or contain image areas missing from the text layer. Check the original pages, choose visual reading after confirming where data is sent, or supply a complete editable document. No partial source was imported or sent for model analysis.",
     visualSourceConfirm: "I checked the selected claims, names, dates, amounts, numbers and individual/team ownership against the original pages. Visual transcription can be wrong.",
     sourceEvidenceDetails: "Show evidence position details",
     aiOperatorCommandLabel: "Give AI one instruction", aiOperatorCommandHelp: "Type “Handle this job for me” and paste the company job link. AI keeps understanding and deciding; JobFlow retains browser, material, and safety authority.", aiOperatorCommandDefault: "Handle this job for me", aiOperatorDelegated: "Continues through JobFlow", aiOperatorUserGate: "Needs you only here",
@@ -1445,6 +1447,7 @@ function sourceAnalysisErrorMessage(error, sourceType="") {
   if(error?.code==="SERVICE_RESTART_REQUIRED")return localizedErrorMessage(error);
   const quality=error?.details?.document_quality||{};
   const qualityCodes=Array.isArray(quality.reason_codes)?quality.reason_codes:[];
+  if(error?.code==="LOCAL_PARSER_NEEDS_OCR"||qualityCodes.some(code=>["PAGE_BODY_TEXT_MISSING","PAGE_RASTER_TEXT_MISSING"].includes(code)))return t("documentImageTextMissing");
   if(error?.code==="LOCAL_PARSER_INCOMPLETE_PAGINATION"||qualityCodes.some(code=>["PAGE_TEXT_MISSING","PRINTED_PAGINATION_INCOMPLETE"].includes(code)))return t("documentIncomplete");
   if(error?.code==="ONBOARDING_DOCUMENT_QUALITY_FAILED"||quality.status==="FAIL")return t(qualityCodes.includes("OCR_REQUIRED")?"documentOcrRequired":"documentExtractionRisk");
   if(error?.code==="AI_STRUCTURED_CAPABILITY_FAILED")return t("aiCapabilityFailed");

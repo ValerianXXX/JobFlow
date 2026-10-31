@@ -1,0 +1,6 @@
+test_text_small_decorations_and_searchable_raster_keep_review_boundary (test_pdf_content_coverage.PdfContentCoverageTests.test_text_small_decorations_and_searchable_raster_keep_review_boundary) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.461s
+
+OK

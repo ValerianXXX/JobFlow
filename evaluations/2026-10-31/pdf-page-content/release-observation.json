@@ -1,0 +1,131 @@
+{
+  "verified_at_utc": "2026-10-31 23:34:44 UTC",
+  "source": "https://api.github.com/repos/ValerianXXX/JobFlow/releases?per_page=5",
+  "releases": [
+    {
+      "tag": "v0.7.0",
+      "prerelease": true,
+      "draft": false,
+      "published_at": "2026-09-02T02:30:29Z",
+      "url": "https://github.com/ValerianXXX/JobFlow/releases/tag/v0.7.0",
+      "assets": [
+        {
+          "name": "JobFlow-v0.7.0-f22cd1029312-source.zip",
+          "sha256": "sha256:fd4e9a3baff0100df269fd6ec6ac446bb717266ba66aac898d5d19269ab4f3e5",
+          "size": 2710719
+        },
+        {
+          "name": "SHA256SUMS-v0.7.0.txt",
+          "sha256": "sha256:102d7c105159fb597c86dd27878bb4023b683f06a515a5ed6b4c2b97c4b19d0a",
+          "size": 105
+        }
+      ]
+    },
+    {
+      "tag": "v0.6.0",
+      "prerelease": false,
+      "draft": false,
+      "published_at": "2026-08-20T04:24:19Z",
+      "url": "https://github.com/ValerianXXX/JobFlow/releases/tag/v0.6.0",
+      "assets": [
+        {
+          "name": "JobFlow-update-manifest.json",
+          "sha256": "sha256:d9f7f1aa2df63bb9165c3feb6d57381c80657063dc19533c7b8ff8b9307eef19",
+          "size": 440
+        },
+        {
+          "name": "JobFlow-update-manifest.sig.json",
+          "sha256": "sha256:44a01938a4d104bdc0e5c8d4a853b3ad93633e5bb3a4b07e536c9c281a7c9a85",
+          "size": 673
+        },
+        {
+          "name": "JobFlow-v0.6.0-7217d02531c3-source.zip",
+          "sha256": "sha256:b97aab1a63bdcf061d93b26e9e4a7c37e82d7113f578ae7f8b063b7e2d7949bf",
+          "size": 1815188
+        },
+        {
+          "name": "SHA256SUMS-v0.6.0.txt",
+          "sha256": "sha256:1627ed7c970accbbcd77a414946908feed0d9c0e37871e3e75622a5522534f55",
+          "size": 299
+        }
+      ]
+    },
+    {
+      "tag": "v0.5.1",
+      "prerelease": false,
+      "draft": false,
+      "published_at": "2026-08-19T23:46:57Z",
+      "url": "https://github.com/ValerianXXX/JobFlow/releases/tag/v0.5.1",
+      "assets": [
+        {
+          "name": "JobFlow-update-manifest.json",
+          "sha256": "sha256:c790ff0b7da2bf2be9e50a3f46c253f25292eea84900f6fb7e7680a5f2f7d0c2",
+          "size": 440
+        },
+        {
+          "name": "JobFlow-update-manifest.sig.json",
+          "sha256": "sha256:5ffb14188a9dc3577eac8c5404a285d984022fd77afd08bfd5bc8fff0737b814",
+          "size": 673
+        },
+        {
+          "name": "JobFlow-v0.5.1-5244e8a8761c-source.zip",
+          "sha256": "sha256:77be16fb4d65bf350814f52a392a587b0d30f1a4eecf172edfe8ffb8fc88a3d1",
+          "size": 1754943
+        },
+        {
+          "name": "SHA256SUMS-v0.5.1.txt",
+          "sha256": "sha256:470b676077dc7ef4a4105479ffc0476f5e9fe30e043c1f2ac8a22ab7634fe41a",
+          "size": 299
+        }
+      ]
+    },
+    {
+      "tag": "v0.5.0",
+      "prerelease": false,
+      "draft": false,
+      "published_at": "2026-08-19T20:56:57Z",
+      "url": "https://github.com/ValerianXXX/JobFlow/releases/tag/v0.5.0",
+      "assets": [
+        {
+          "name": "JobFlow-update-manifest.json",
+          "sha256": "sha256:7c5e88b8d1f4879e46f81a0b570c6bf42a123c6eea7462a4b890d4834892d8d2",
+          "size": 440
+        },
+        {
+          "name": "JobFlow-update-manifest.sig.json",
+          "sha256": "sha256:ca87f8cc86fb34d1420f54c28e160432949164bff7a166af9854f3f0bf1112da",
+          "size": 673
+        },
+        {
+          "name": "JobFlow-v0.5.0-d3ae976d53f6-source.zip",
+          "sha256": "sha256:d0ea1adf94396ea48c9280709566fbb112413afc75f709e8f1060d31607a8a07",
+          "size": 1752788
+        },
+        {
+          "name": "SHA256SUMS-v0.5.0.txt",
+          "sha256": "sha256:38ce194700c23f144554966daf37c274b91c5ce5ac734b3c74c959805107f859",
+          "size": 105
+        }
+      ]
+    },
+    {
+      "tag": "v0.4.1",
+      "prerelease": false,
+      "draft": false,
+      "published_at": "2026-08-17T08:43:42Z",
+      "url": "https://github.com/ValerianXXX/JobFlow/releases/tag/v0.4.1",
+      "assets": [
+        {
+          "name": "JobFlow-v0.4.1-6cf9351114b0-source.zip",
+          "sha256": "sha256:54d8021ff3fb0dd5164f84e62dfc08e1f953f4d21337816ac4186ab4da3bf529",
+          "size": 1652329
+        },
+        {
+          "name": "SHA256SUMS-v0.4.1.txt",
+          "sha256": "sha256:06971bef37ef9c202784fb89ae71b81be57ab2830f562b1fe7df51b0aa176f1f",
+          "size": 105
+        }
+      ]
+    }
+  ]
+}

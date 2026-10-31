@@ -1,0 +1,96 @@
+test_fallback_runtime_cannot_bypass_content_guard (test_pdf_content_coverage.PdfContentCoverageTests.test_fallback_runtime_cannot_bypass_content_guard) ... FAIL
+test_frozen_synthetic_files_have_not_changed (test_pdf_content_coverage.PdfContentCoverageTests.test_frozen_synthetic_files_have_not_changed) ... ok
+test_geometry_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_geometry_worker_rejects_incomplete_page_content) ...
+  test_geometry_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_geometry_worker_rejects_incomplete_page_content) (case='scan-footer') ... FAIL
+test_geometry_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_geometry_worker_rejects_incomplete_page_content) ... ERROR
+test_logical_and_layout_routes_reject_unread_raster_or_only_pagination (test_pdf_content_coverage.PdfContentCoverageTests.test_logical_and_layout_routes_reject_unread_raster_or_only_pagination) ...
+  test_logical_and_layout_routes_reject_unread_raster_or_only_pagination (test_pdf_content_coverage.PdfContentCoverageTests.test_logical_and_layout_routes_reject_unread_raster_or_only_pagination) (case='scan-footer', layout=False) ... FAIL
+test_logical_and_layout_routes_reject_unread_raster_or_only_pagination (test_pdf_content_coverage.PdfContentCoverageTests.test_logical_and_layout_routes_reject_unread_raster_or_only_pagination) ... ERROR
+test_non_strict_diagnostic_still_exposes_actual_partial_text (test_pdf_content_coverage.PdfContentCoverageTests.test_non_strict_diagnostic_still_exposes_actual_partial_text) ... ok
+test_opt_in_worker_failure_never_invokes_configured_visual_provider (test_pdf_content_coverage.PdfContentCoverageTests.test_opt_in_worker_failure_never_invokes_configured_visual_provider) ...
+  test_opt_in_worker_failure_never_invokes_configured_visual_provider (test_pdf_content_coverage.PdfContentCoverageTests.test_opt_in_worker_failure_never_invokes_configured_visual_provider) (parser='pdf_regions') ... FAIL
+  test_opt_in_worker_failure_never_invokes_configured_visual_provider (test_pdf_content_coverage.PdfContentCoverageTests.test_opt_in_worker_failure_never_invokes_configured_visual_provider) (parser='docling_native') ... FAIL
+test_optional_native_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_optional_native_worker_rejects_incomplete_page_content) ...
+  test_optional_native_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_optional_native_worker_rejects_incomplete_page_content) (case='scan-footer') ... FAIL
+test_optional_native_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_optional_native_worker_rejects_incomplete_page_content) ... ERROR
+test_text_small_decorations_and_searchable_raster_keep_review_boundary (test_pdf_content_coverage.PdfContentCoverageTests.test_text_small_decorations_and_searchable_raster_keep_review_boundary) ... ok
+
+======================================================================
+ERROR: test_geometry_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_geometry_worker_rejects_incomplete_page_content)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-page-content\tests\test_pdf_content_coverage.py", line 55, in test_geometry_worker_rejects_incomplete_page_content
+    self.assertEqual(caught.exception.code, 'LOCAL_PARSER_NEEDS_OCR')
+                     ^^^^^^^^^^^^^^^^
+AttributeError: '_AssertRaisesContext' object has no attribute 'exception'
+
+======================================================================
+ERROR: test_logical_and_layout_routes_reject_unread_raster_or_only_pagination (test_pdf_content_coverage.PdfContentCoverageTests.test_logical_and_layout_routes_reject_unread_raster_or_only_pagination)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-page-content\tests\test_pdf_content_coverage.py", line 34, in test_logical_and_layout_routes_reject_unread_raster_or_only_pagination
+    self.assertEqual(caught.exception.code, 'ONBOARDING_DOCUMENT_QUALITY_FAILED')
+                     ^^^^^^^^^^^^^^^^
+AttributeError: '_AssertRaisesContext' object has no attribute 'exception'
+
+======================================================================
+ERROR: test_optional_native_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_optional_native_worker_rejects_incomplete_page_content)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-page-content\tests\test_pdf_content_coverage.py", line 61, in test_optional_native_worker_rejects_incomplete_page_content
+    self.assertEqual(caught.exception.code, 'LOCAL_PARSER_NEEDS_OCR')
+                     ^^^^^^^^^^^^^^^^
+AttributeError: '_AssertRaisesContext' object has no attribute 'exception'
+
+======================================================================
+FAIL: test_fallback_runtime_cannot_bypass_content_guard (test_pdf_content_coverage.PdfContentCoverageTests.test_fallback_runtime_cannot_bypass_content_guard)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-page-content\tests\test_pdf_content_coverage.py", line 64, in test_fallback_runtime_cannot_bypass_content_guard
+    with patch.dict(sys.modules, {'pdfplumber': None}), self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_geometry_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_geometry_worker_rejects_incomplete_page_content) (case='scan-footer')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-page-content\tests\test_pdf_content_coverage.py", line 53, in test_geometry_worker_rejects_incomplete_page_content
+    with self.subTest(case=name), self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_logical_and_layout_routes_reject_unread_raster_or_only_pagination (test_pdf_content_coverage.PdfContentCoverageTests.test_logical_and_layout_routes_reject_unread_raster_or_only_pagination) (case='scan-footer', layout=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-page-content\tests\test_pdf_content_coverage.py", line 32, in test_logical_and_layout_routes_reject_unread_raster_or_only_pagination
+    with self.subTest(case=case['id'], layout=layout), self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_opt_in_worker_failure_never_invokes_configured_visual_provider (test_pdf_content_coverage.PdfContentCoverageTests.test_opt_in_worker_failure_never_invokes_configured_visual_provider) (parser='pdf_regions')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-page-content\tests\test_pdf_content_coverage.py", line 72, in test_opt_in_worker_failure_never_invokes_configured_visual_provider
+    with self.assertRaises(JobOpsError):
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_opt_in_worker_failure_never_invokes_configured_visual_provider (test_pdf_content_coverage.PdfContentCoverageTests.test_opt_in_worker_failure_never_invokes_configured_visual_provider) (parser='docling_native')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-page-content\tests\test_pdf_content_coverage.py", line 72, in test_opt_in_worker_failure_never_invokes_configured_visual_provider
+    with self.assertRaises(JobOpsError):
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_optional_native_worker_rejects_incomplete_page_content (test_pdf_content_coverage.PdfContentCoverageTests.test_optional_native_worker_rejects_incomplete_page_content) (case='scan-footer')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-page-content\tests\test_pdf_content_coverage.py", line 59, in test_optional_native_worker_rejects_incomplete_page_content
+    with self.subTest(case=name), self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+----------------------------------------------------------------------
+Ran 8 tests in 26.094s
+
+FAILED (failures=6, errors=3)

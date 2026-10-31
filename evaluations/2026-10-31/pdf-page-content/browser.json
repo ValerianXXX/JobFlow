@@ -1,0 +1,59 @@
+{
+  "synthetic_only": true,
+  "model": "RECORDED_RESPONSE_REPLAY",
+  "desktop": "zh",
+  "mobile": "en",
+  "content_rejections": [
+    {
+      "language": "中文",
+      "fixture": "scan-footer",
+      "status": 400,
+      "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED"
+    },
+    {
+      "language": "中文",
+      "fixture": "scan-header",
+      "status": 400,
+      "code": "LOCAL_PARSER_NEEDS_OCR"
+    },
+    {
+      "language": "中文",
+      "fixture": "pagination-only",
+      "status": 400,
+      "code": "LOCAL_PARSER_NEEDS_OCR"
+    },
+    {
+      "language": "EN",
+      "fixture": "scan-footer",
+      "status": 400,
+      "code": "ONBOARDING_DOCUMENT_QUALITY_FAILED"
+    },
+    {
+      "language": "EN",
+      "fixture": "scan-header",
+      "status": 400,
+      "code": "LOCAL_PARSER_NEEDS_OCR"
+    },
+    {
+      "language": "EN",
+      "fixture": "pagination-only",
+      "status": 400,
+      "code": "LOCAL_PARSER_NEEDS_OCR"
+    }
+  ],
+  "source_hash_bound": true,
+  "unconfirmed_selection": "BLOCKED",
+  "candidate_count": 5,
+  "after_reload": {
+    "decisions": [
+      "PENDING",
+      "PENDING",
+      "PENDING",
+      "PENDING",
+      "PENDING"
+    ],
+    "sources": 1
+  },
+  "page_errors": [],
+  "external_requests": []
+}

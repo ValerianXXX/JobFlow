@@ -4,6 +4,14 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Share bounded PDF page-content checks across default extraction, fallback,
+  geometry and optional native parsing. Reject pagination-only pages and large
+  raster areas with no overlapping text before model analysis; preserve resource
+  limits, original review and explicit visual opt-in. Include separate synthetic
+  counterexamples, unchanged complete-corpus regression and actual bilingual
+  browser checks. No OCR/model accuracy improvement is inferred.
+  [Evidence, recovery and limits](docs/pdf-page-content-2026-10-31.md).
+
 - Synchronize the synthetic late-launcher mutation test with an explicit
   acknowledgement within its original combined 45-second deadline. Preserve
   success/content assertions, add exact-byte and ordering checks, and release
