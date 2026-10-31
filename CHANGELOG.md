@@ -4,6 +4,12 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Allow an explicit canonical `-NodePath` in protected signing handoff while
+  retaining authenticated file locks, publisher policy and all signature gates.
+  Add an isolated checksum-pinned test prerequisite override without replacing
+  the host runtime. Preserve the failed 1,485-test run and unresolved bootstrap
+  timeout; focused path/trust checks pass. [Evidence and remaining checks](docs/release-node-selection-2026-10-31.md).
+
 - Separate current mail evidence from recognized quotes, forwarded history,
   negation and conditional examples; preserve raw evidence and citation offsets.
   Make review decisions transactional in memory and add one-page encrypted cursor
