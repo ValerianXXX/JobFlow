@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$Stage,
+    [string]$NodePath,
     [string]$CompleteRuntimeArchivePath,
     [string]$RuntimeClosurePath,
     [string]$RuntimeBuildEvidencePath,
@@ -18,6 +19,7 @@ param(
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $projectRoot = $null
+$script:explicitNodePath = $PSBoundParameters.ContainsKey("NodePath")
 
 function Get-KnownFolderPath([Environment+SpecialFolder]$Folder, [string]$Code) {
     $value = [Environment]::GetFolderPath($Folder)
@@ -76,6 +78,13 @@ function Find-GitApplication {
 }
 
 function Find-NodeApplication {
+    if ($script:explicitNodePath) {
+        # An explicit tool must stand on its own: never fall back after a bad
+        # selection. The caller still obtains the same authenticated file lock.
+        $absolute = Assert-ExplicitAbsoluteInputFile $script:NodePath 268435456 "JOBFLOW_RELEASE_NODE_NOT_TRUSTED"
+        if ([IO.Path]::GetFileName($absolute) -cne "node.exe") { throw "JOBFLOW_RELEASE_NODE_NOT_TRUSTED" }
+        return $absolute
+    }
     $profile = Get-KnownFolderPath ([Environment+SpecialFolder]::UserProfile) "JOBFLOW_RELEASE_NODE_NOT_FOUND"
     $programFiles = Get-KnownFolderPath ([Environment+SpecialFolder]::ProgramFiles) "JOBFLOW_RELEASE_NODE_NOT_FOUND"
     foreach ($candidate in @(

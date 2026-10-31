@@ -12,6 +12,7 @@ import unittest
 from pathlib import Path
 
 from _support import PROJECT
+from _release_node_fixture import pinned_node_path
 
 
 class ReleasePackagingTests(unittest.TestCase):
@@ -140,13 +141,7 @@ class ReleasePackagingTests(unittest.TestCase):
 @unittest.skipUnless(os.name == "nt", "Windows CI prerequisite staging")
 class WindowsCiNodeStagingTests(unittest.TestCase):
     def _node_executable(self) -> Path:
-        candidates = [
-            Path.home() / ".cache" / "codex-runtimes" / "codex-primary-runtime" / "dependencies" / "node" / "bin" / "node.exe",
-            Path(shutil.which("node") or "__missing_ci_node__"),
-        ]
-        source = next((path for path in candidates if path.is_file()), None)
-        self.assertIsNotNone(source, "Install the checksum-pinned signed Node test prerequisite")
-        return source
+        return pinned_node_path()
 
     def _run_staging(
         self, root: Path, source: Path | None = None, *, search_path: list[Path] | None = None,
