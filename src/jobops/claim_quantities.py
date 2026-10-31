@@ -68,10 +68,21 @@ def _key(value: str) -> str:
 def _quantities(text: str):
     for match in NUMBER_TOKEN_RE.finditer(text):
         raw = match.group(0)
-        before, after = text[:match.start()], text[match.end():]
-        currency_match = _CURRENCY_BEFORE.search(before[-30:] + raw[:1] if raw[:1] in '$£€¥' else before[-30:])
-        currency = CURRENCIES[_key(currency_match[1])] if currency_match else None
+        # Unit tokens are adjacent; do not repeatedly copy the whole document
+        # around every occurrence. Unbounded prefixes must not create quadratic
+        # allocation as a long cited range gains more quantities.
+        before = text[max(0, match.start() - 40):match.start()]
+        after = text[match.end():match.end() + 80]
         sign = '-1' if before.endswith(('-', '−')) and (len(before) < 2 or not before[-2].isalnum()) else '1'
+        currency_match = _CURRENCY_BEFORE.search(before[:-1] if sign == '-1' else before)
+        currency = CURRENCIES[_key(currency_match[1])] if currency_match else None
+        symbol = raw[:1] if raw[:1] in '$£€¥' else None
+        if symbol:
+            compatible = {'$': {'USD', 'CAD', 'AUD', 'HKD', 'DOLLAR'}, '£': {'GBP', 'POUND'},
+                          '€': {'EUR'}, '¥': {'JPY', 'CNY', 'YEN_OR_YUAN'}}[symbol]
+            symbol_currency = CURRENCIES[symbol]
+            currency = (symbol_currency if currency is None else currency if currency in compatible
+                        else currency + '/' + symbol_currency)
         scale_match = _SCALE_AFTER.match(after) or (_SHORT_SCALE_AFTER.match(after) if currency else None)
         scale = SCALES[scale_match[1]] if scale_match else '1'
         suffix = after[scale_match.end():] if scale_match else after
