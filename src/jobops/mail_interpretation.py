@@ -32,7 +32,7 @@ NEGATION = {
 }
 
 
-def active_message_text(subject: str, body: str) -> tuple[str, set[str]]:
+def active_message_text(subject: str, body: str, ignored_body_ranges=()) -> tuple[str, set[str]]:
     """Mask, rather than remove, ignored content so evidence uses original offsets."""
     original = subject + "\n" + body
     characters = list(original)
@@ -46,6 +46,10 @@ def active_message_text(subject: str, body: str) -> tuple[str, set[str]]:
 
     if FORWARD_SUBJECT.match(subject):
         mask(0, len(subject), "FORWARDED_SUBJECT_IGNORED")
+    for start, end in ignored_body_ranges:
+        if type(start) is not int or type(end) is not int or not 0 <= start < end <= len(body):
+            raise ValueError("Invalid mail evidence range.")
+        mask(len(subject) + 1 + start, len(subject) + 1 + end, "HTML_QUOTED_HISTORY_IGNORED")
     offset = len(subject) + 1
     lines = body.splitlines(keepends=True)
     for index, line in enumerate(lines):
@@ -63,8 +67,8 @@ def active_message_text(subject: str, body: str) -> tuple[str, set[str]]:
     return "".join(characters), reasons
 
 
-def interpret_status(subject: str, body: str) -> dict:
-    active, reasons = active_message_text(subject, body)
+def interpret_status(subject: str, body: str, *, ignored_body_ranges=()) -> dict:
+    active, reasons = active_message_text(subject, body, ignored_body_ranges)
     matches = []
     for clause in re.finditer(r"[^.!?。！？;；\r\n]+", active):
         text = clause.group()
