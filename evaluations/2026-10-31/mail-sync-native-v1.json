@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "store": "REAL_WINDOWS_DPAPI",
+  "synthetic_messages": 3,
+  "page_size": 1,
+  "same_timestamp_pages": true,
+  "review_save_fault_recovered": true,
+  "checkpoint_save_fault_recovered": true,
+  "review_preserved_after_restart": true,
+  "duplicate_added_on_retry": 0,
+  "known_plaintext_probe": "PASS",
+  "temporary_state_removed": true,
+  "application_state_changed": false,
+  "mailbox_access": false,
+  "model_requests": 0,
+  "real_external_actions": 0,
+  "elapsed_seconds": 17.144,
+  "python": "3.11.3",
+  "platform": "Windows",
+  "source_commit": "d3ee30c0ad31fa24c190660395f0c701352b5ff9"
+}

@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-10-31",
+  "scope": "SYNTHETIC_MAIL_PROPOSALS_AND_PRIVATE_RECOVERY",
+  "runtime_commit": "d3ee30c0ad31fa24c190660395f0c701352b5ff9",
+  "base_commit": "a916f4d916a6995ec152ba017a39fcff83ee12c1",
+  "base_pr": "https://github.com/ValerianXXX/JobFlow/pull/29",
+  "frozen_contract_commits": [
+    "b95d1d9",
+    "3710b0f",
+    "5408940"
+  ],
+  "corpus_sha256": "9ec7f6cf20b32691c61a3ff150a910f5b91222af2edbcbbf3cdfdae095812220",
+  "corpus_before": {
+    "cases": 120,
+    "status_error": 39,
+    "incorrect_confident_association": 30,
+    "missed_confident_proposal": 12,
+    "missing_candidate_count": 0,
+    "extra_candidate_count": 14,
+    "unique_matchable": 90,
+    "unique_candidate_found": 90,
+    "uncertain": 50,
+    "human_review_required": 120,
+    "application_state_changed": 0,
+    "real_external_actions": 0,
+    "unique_candidate_recall": 1.0,
+    "median_ms": 0.0358
+  },
+  "corpus_after": {
+    "cases": 120,
+    "status_error": 0,
+    "incorrect_confident_association": 0,
+    "missed_confident_proposal": 0,
+    "missing_candidate_count": 0,
+    "extra_candidate_count": 0,
+    "unique_matchable": 90,
+    "unique_candidate_found": 90,
+    "uncertain": 68,
+    "human_review_required": 120,
+    "application_state_changed": 0,
+    "real_external_actions": 0,
+    "unique_candidate_recall": 1.0,
+    "median_ms": 0.0568
+  },
+  "development_set_not_blind_holdout": true,
+  "legacy": {
+    "cases": 60,
+    "distinct_templates": 10,
+    "status_errors": 0,
+    "incorrect_confident_associations": 0
+  },
+  "targeted_contracts": {
+    "methods": 21,
+    "status": "PASS",
+    "seconds": 0.675
+  },
+  "baseline_existing_tests": 8,
+  "existing_workbench_tests": 8,
+  "documentation_tests": 5,
+  "native": {
+    "status": "PASS",
+    "store": "REAL_WINDOWS_DPAPI",
+    "synthetic_messages": 3,
+    "page_size": 1,
+    "same_timestamp_pages": true,
+    "review_save_fault_recovered": true,
+    "checkpoint_save_fault_recovered": true,
+    "review_preserved_after_restart": true,
+    "duplicate_added_on_retry": 0,
+    "known_plaintext_probe": "PASS",
+    "temporary_state_removed": true,
+    "application_state_changed": false,
+    "mailbox_access": false,
+    "model_requests": 0,
+    "real_external_actions": 0,
+    "elapsed_seconds": 17.144,
+    "python": "3.11.3",
+    "platform": "Windows",
+    "source_commit": "d3ee30c0ad31fa24c190660395f0c701352b5ff9"
+  },
+  "browser": {
+    "status": "PASS",
+    "syntheticOnly": true,
+    "store": "REAL_WINDOWS_DPAPI",
+    "mailboxAccess": false,
+    "externalRequests": 0,
+    "modelRequests": 0,
+    "sizes": [
+      "1365x900",
+      "390x844"
+    ],
+    "locales": [
+      "zh",
+      "en"
+    ],
+    "manualLinkReloadUndo": true,
+    "applicationStateChanged": false,
+    "independentHumanAcceptance": false
+  },
+  "full_python": {
+    "status": "RUNNING_AT_RECEIPT_CREATION",
+    "log": "reports/mail-review-python-full-20261031.log",
+    "source_commit": "d3ee30c0ad31fa24c190660395f0c701352b5ff9"
+  },
+  "full_javascript": {
+    "status": "RUNNING_AT_RECEIPT_CREATION",
+    "log": "reports/mail-review-javascript-full-20261031.log",
+    "new_mail_suite_passed": true
+  },
+  "hosted_ci": "NOT_YET_STARTED_AT_RECEIPT_CREATION",
+  "retained_failures": [
+    "Frozen semantic/review contract: 47 failed assertions across seven methods",
+    "Eleven paging methods: missing interface",
+    "Integration: five HTML history failures, missing private kind, stale inbox rejection",
+    "Browser harness: nonexistent locale dropdown; corrected to existing EN button"
+  ],
+  "test_only_capture_corrections": [
+    "Wait for actual locale save and busy indicator before screenshots",
+    "Wait for undo HTTP response before reading saved state"
+  ],
+  "checks_not_claimed": [
+    "Authenticated mailbox or provider API",
+    "Independent user acceptance",
+    "Held-out language accuracy",
+    "Measured human review time",
+    "Signed package or clean-Windows acceptance"
+  ],
+  "model_requests": 0,
+  "mailbox_access": false,
+  "production_actions": false,
+  "source_files": {
+    "src/jobops/mail_tracking.py": "318348f35cfbe33ef5d223952c62a4ebf2a55b6c86358458ad374692c4e4de9c",
+    "src/jobops/mail_interpretation.py": "bba064b653431039b210e93275b3c1d0722e87612157033bf6099a33f94a3850",
+    "src/jobops/mail_sync.py": "5002584d96de5eb3a3cb1488460e54d627b7bc1c9589803abb2981d6fe5e49f1",
+    "src/jobops/private_onboarding.py": "c30690065c5fac46fed40993b3f7420fb8741776d56186dfa6dda4ecf9574575",
+    "tests/mail_review_corpus.py": "a7e77792d0a74d930ccc307e05d6ffef9ffa9069819b34099541ca1bfc81426c",
+    "tests/test_mail_review_contract.py": "da47d08ff75a9aaa50dcc0b1906aa8e808398445471b3c2ca766238c21b7dc9a",
+    "tests/test_mail_sync_contract.py": "f13babf47c4a4e95764044178dea5e32f296f9234287a0dd060c6097f4d44f29",
+    "scripts/evaluate-mail-review.py": "fce51e55cae366ab04d4940b648bdabae5c80f16f54444a49cc344711db80357",
+    "scripts/evaluate-mail-sync.py": "447eb7074260d0ef31e0eae8cfae9e70e43ce2c52e1a68c7c060fca6b5a97fd5",
+    "tests/mail_review_ui_e2e.cjs": "66aad19a2811639fbaed3e484a73ceea2af7c6d146a25ef98c7a8b5170a3cf3c",
+    "tests/workbench_ui_server.py": "ca6151a25ec3629b4aa06db3222e3f5a24d24f9a200e5026d8715b3f28b74ca8"
+  },
+  "source_hash_basis": "LF_CANONICAL_BYTES",
+  "local_logs": {
+    "reports/mail-integration-after-20261031.log": "5bbea9a9409133cde871c16db130b143290f88ab07d10db6a3396d2d01ad7bda",
+    "reports/mail-integration-before-20261031.log": "ceeb652c5b5d22f30b4c2efb4783c32e19ec0793c6aa39e022d974d015c98e17",
+    "reports/mail-native-20261031.log": "1e4361ee0c7b86603afe60e15ae7571a05ae43bf9c851d3142f3b1fff5f9f3d1",
+    "reports/mail-review-baseline-20261031.log": "785d2e65ce88db43b2e751ecf9a054cc4cedfacc264add6871595ee0ad171314",
+    "reports/mail-review-before-20261031.log": "ea28cb7bcf8426732f0b28d993ec23015c76df8d482eb766352cd8cc5fdbd75d",
+    "reports/mail-review-docs-20261031.log": "85d5f7e4c3f2e4f74c5b4cd77e5956d6c474a5c961ae08c85ff4965aea94e1be",
+    "reports/mail-review-first-20261031.log": "374b1f364d2ceeea39ce36048741892f1e7f00b21669442e7b307aefa8105d8d",
+    "reports/mail-review-ui-after-20261031.log": "4f73ce07b8e76f42ae2ad0d4ac401da829a86d413f24e433dd5a4944af25f092",
+    "reports/mail-review-ui-first-20261031.log": "4afeabd3bd41a04aa0032dbbe0886c2c03b80002ec1c1c2e8af538ef80ac6c6c",
+    "reports/mail-sync-after-20261031.log": "2f9a4b28ad7863af785bdb15e5492fe499bf274c628374e3c0335a3f0aec7583",
+    "reports/mail-sync-before-20261031.log": "b9b885456f3f19fae5478689b25a08ba6324eb2de973b2b2bee8841381aadebf",
+    "reports/mail-workbench-20261031.log": "98f273644a464c6d5b41f073a37909cd18d1260af6ce9baaceed739b030603c7"
+  },
+  "screenshots": {
+    "docs/screenshots/mail-review-desktop-zh-20261031.png": "6e293d9cee99e523254e851940314868a6bdcf95ad9b6fd88e929665335db77c",
+    "docs/screenshots/mail-review-mobile-en-20261031.png": "f2bc1a7a3348d3d234b76be7943dbcf2c938fa2fc0c7134dbb6dbcdf27ca0a35"
+  },
+  "official_sources_checked": "2026-10-31",
+  "rollback": "Stop local work, preserve same-account encrypted state and index, ordinary reviewed revert. Older code cannot resume new cursors."
+}

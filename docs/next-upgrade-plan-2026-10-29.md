@@ -181,6 +181,12 @@ route live-verified. A receipt-less run is not a completed business outcome.
 
 ## M3: mailbox evidence, without confusing OAuth with authenticity
 
+October 31 source follow-up: the [mail review and paging contract](mail-review-and-sync-2026-10-31.md)
+implements an additional frozen 120-case comparison, reversible failed-save handling
+and private scoped cursor recovery. The original 60 fixtures remain unchanged.
+This does not complete the provider authorization, real delivery or user-effort
+acceptance below; no mailbox was accessed.
+
 Start with one provider. Gmail fits a Gmail-only pilot if its OAuth setup is
 available; otherwise build the same contract against the approved available
 provider. Do not interpret the author's Git email as mailbox authorization.
