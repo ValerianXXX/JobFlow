@@ -157,3 +157,24 @@ class MailSyncContractTests(unittest.TestCase):
                 with self.assertRaises(JobOpsError):
                     inbox.collect_page(adapter, APPLICATIONS, limit=limit)
         read.assert_not_called()
+
+    def test_real_private_registry_accepts_and_resumes_checkpoint_kind(self):
+        from test_onboarding_center import OnboardingCenterTests
+        from jobops.mail_sync import SyntheticPagedStatusAdapter
+        with _support.project_temp() as root:
+            _, private, _, _, _ = OnboardingCenterTests().make_service(root)
+            inbox = ApplicationStatusInbox(private)
+            adapter = SyntheticPagedStatusAdapter([StatusMessage(**mail_contract_cases()[0]["message"])])
+            first = inbox.collect_page(adapter, APPLICATIONS)
+            restored = ApplicationStatusInbox(private, prior_review_ref=first["review_ref"])
+            self.assertEqual(restored.collect_page(adapter, APPLICATIONS, checkpoint_ref=first["checkpoint_ref"])["added"], 0)
+
+    def test_resume_cursor_requires_the_events_already_retained_with_it(self):
+        private, inbox, adapter, _ = self.setup_inbox(2)
+        first = inbox.collect_page(adapter, APPLICATIONS, limit=1)
+        empty = ApplicationStatusInbox(private)
+        with patch.object(adapter, "read_page") as read:
+            with self.assertRaises(JobOpsError) as error:
+                empty.collect_page(adapter, APPLICATIONS, checkpoint_ref=first["checkpoint_ref"])
+        self.assertEqual(error.exception.code, "MAIL_SYNC_INBOX_STALE")
+        read.assert_not_called()

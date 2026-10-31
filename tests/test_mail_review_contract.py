@@ -33,6 +33,40 @@ class MemoryPrivate:
 
 
 class MailReviewContractTests(unittest.TestCase):
+    def test_html_history_is_excluded_without_changing_retained_evidence_identity(self):
+        from dataclasses import asdict
+        from email.message import EmailMessage
+        from jobops.mail_tracking import LocalEmlAdapter
+        from jobops.util import canonical_json
+        fixtures = [
+            ("<p>We are not moving forward.</p><blockquote>We invite you to an interview.</blockquote>", "REJECTED"),
+            ("<div>邀请您参加面试。</div><blockquote>本次申请未通过。</blockquote>", "INTERVIEW_INVITED"),
+            ("<p>Please wait.</p><div class='gmail_quote'>Interview invitation.</div>", "UNKNOWN"),
+            ("<div>Please wait.</div><div type='cite'><p>Application received.</p></div>", "UNKNOWN"),
+            ("<blockquote>Interview invitation.</blockquote><p>We are not moving forward.</p>", "REJECTED"),
+            ("<p>We invite you to an interview.</p><blockquote>Interview invitation.</blockquote>", "INTERVIEW_INVITED"),
+        ]
+        for body, expected in fixtures:
+            with self.subTest(body=body):
+                message = EmailMessage()
+                message["From"] = "Synthetic <recruiting@north.example.test>"
+                message["Date"] = "Sat, 31 Oct 2026 08:00:00 -0400"
+                message["Subject"] = "REQ-42"
+                message.set_content(body, subtype="html")
+                adapter = LocalEmlAdapter(message.as_bytes())
+                evidence = canonical_json(asdict(adapter.message))
+                original_identity = sha256_bytes(evidence)
+                private = MemoryPrivate()
+                inbox = ApplicationStatusInbox(private)
+                inbox.collect(adapter, APPLICATIONS)
+                event = inbox.events[0]
+                self.assertEqual(event["status_proposal"], expected)
+                self.assertIsNone(event["application_id"])
+                self.assertEqual(event["event_id"], original_identity)
+                self.assertEqual(private.get_bytes(event["evidence_ref"]), evidence)
+                self.assertEqual(private.get_bytes(event["original_ref"]), adapter.raw)
+                self.assertEqual(inbox.collect(adapter, APPLICATIONS)["added"], 0)
+
     def test_frozen_bilingual_corpus(self):
         cases = mail_contract_cases()
         self.assertEqual(len(cases), 120)
