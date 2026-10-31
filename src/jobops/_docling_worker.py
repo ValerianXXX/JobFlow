@@ -10,6 +10,28 @@ import sys
 
 
 def parse_native_pdf(raw: bytes) -> dict:
+    import pdfplumber
+    from .document_coverage import require_complete_page_text
+    from .pdf_content_coverage import inspect_pdf_page_content, require_pdf_content_reports, local_content_failure_code
+    from .errors import JobOpsError
+
+    # The native parser does not transcribe images. Inspect original pages in
+    # this existing bounded worker before its text-only conversion can accept
+    # a page represented only by a header/footer. Never enable remote OCR here.
+    with pdfplumber.open(io.BytesIO(raw)) as pdf:
+        if not 1 <= len(pdf.pages) <= 6:
+            raise ValueError('LOCAL_PARSER_LIMIT')
+        parts = [page.extract_text() or '' for page in pdf.pages]
+        try:
+            require_complete_page_text(parts)
+        except JobOpsError as error:
+            codes = error.details.get('document_quality', {}).get('reason_codes', [])
+            code = 'LOCAL_PARSER_INCOMPLETE_PAGINATION' if 'PRINTED_PAGINATION_INCOMPLETE' in codes else 'LOCAL_PARSER_NEEDS_OCR'
+            raise ValueError(code) from error
+        try:
+            require_pdf_content_reports([inspect_pdf_page_content(page, part) for page, part in zip(pdf.pages, parts)], len(parts))
+        except JobOpsError as error:
+            raise ValueError(local_content_failure_code(error)) from error
     from importlib.metadata import version
     from docling.document_converter import DocumentConverter, NativePdfFormatOption
     from docling.datamodel.pipeline_options import NativePdfPipelineOptions
@@ -104,6 +126,7 @@ def main() -> int:
             in {
                 "LOCAL_PARSER_NEEDS_OCR",
                 "LOCAL_PARSER_INCOMPLETE",
+                "LOCAL_PARSER_INCOMPLETE_PAGINATION",
                 "LOCAL_PARSER_PROVENANCE_INVALID",
                 "LOCAL_PARSER_LIMIT",
                 "LOCAL_PARSER_REQUEST_INVALID",

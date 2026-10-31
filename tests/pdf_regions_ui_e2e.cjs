@@ -46,6 +46,32 @@ const root = path.resolve(__dirname, "..");
     });
     await page.goto(url);
     await page.waitForFunction(()=>state.data && !document.querySelector("#documentFile").disabled);
+    const contentRejections=[];
+    for (const [language, message] of [["中文","图片区域未被文字层覆盖"],["EN","image areas missing from the text layer"]]) {
+      await page.setViewportSize(language==="EN"?{width:390,height:844}:{width:1365,height:900});
+      await page.getByText(language,{exact:true}).click();
+      for(const [fixture,code] of [["scan-footer","ONBOARDING_DOCUMENT_QUALITY_FAILED"],["scan-header","LOCAL_PARSER_NEEDS_OCR"],["pagination-only","LOCAL_PARSER_NEEDS_OCR"]]) {
+        const count=await page.evaluate(()=>window.syntheticImportReceipts.length);
+        await page.locator("#documentFile").setInputFiles([]);
+        await page.locator("#documentFile").setInputFiles(path.join(root,"tests","fixtures","pdf-content-probes-v1",fixture+".pdf"));
+        await page.waitForFunction(expected=>window.syntheticImportReceipts.length===expected,count+1);
+        const receipt=await page.evaluate(()=>window.syntheticImportReceipts.at(-1));
+        assert.equal(receipt.status,400,JSON.stringify(receipt));
+        assert.equal(JSON.parse(receipt.body).code,code);
+        await page.waitForFunction(text=>document.querySelector("#toast").textContent.includes(text),message);
+        await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector("#toast")).opacity)>=.99);
+        assert.equal(await page.locator(".source-preview").count(),0);
+        assert.equal(await page.evaluate(()=>state.data.sources.length),0);
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true);
+        const toast=await page.locator("#toast").boundingBox();
+        assert.ok(toast.x>=0&&toast.x+toast.width<=page.viewportSize().width&&toast.y>=0&&toast.y+toast.height<=page.viewportSize().height);
+        contentRejections.push({language,fixture,status:receipt.status,code});
+        if(fixture==="scan-header")await page.screenshot({path:path.join(artifacts,language==="EN"?"content-rejected-en.png":"content-rejected-zh.png")});
+      }
+    }
+    await page.setViewportSize({width:1365,height:900});
+    await page.getByText("中文",{exact:true}).click();
+    await page.evaluate(()=>{window.syntheticImportReceipts=[];});
     await page.locator("#documentFile").setInputFiles(path.join(root,"tests","fixtures","complete-materials-v1","challenge-en-missing_middle.pdf"));
     await page.waitForFunction(()=>window.syntheticImportReceipts.length===1);
     const incomplete=await page.evaluate(()=>window.syntheticImportReceipts[0]);
@@ -128,7 +154,7 @@ const root = path.resolve(__dirname, "..");
     assert.deepEqual(snapshot.decisions,Array(5).fill("PENDING"));
     assert.equal(snapshot.sources,1);
     assert.deepEqual(pageErrors,[]);assert.deepEqual(externalRequests,[]);
-    writeFileSync(path.join(artifacts,"browser.json"),JSON.stringify({synthetic_only:true,model:"RECORDED_RESPONSE_REPLAY",desktop:"zh",mobile:"en",source_hash_bound:true,unconfirmed_selection:"BLOCKED",candidate_count:5,after_reload:snapshot,page_errors:pageErrors,external_requests:externalRequests},null,2)+"\n");
+    writeFileSync(path.join(artifacts,"browser.json"),JSON.stringify({synthetic_only:true,model:"RECORDED_RESPONSE_REPLAY",desktop:"zh",mobile:"en",content_rejections:contentRejections,source_hash_bound:true,unconfirmed_selection:"BLOCKED",candidate_count:5,after_reload:snapshot,page_errors:pageErrors,external_requests:externalRequests},null,2)+"\n");
   } catch(error) {
     if(page){await page.screenshot({path:path.join(artifacts,"failure.png"),fullPage:true});writeFileSync(path.join(artifacts,"failure.txt"),String(error)+"\n"+await page.locator("body").innerText());}
     throw error;

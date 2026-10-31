@@ -150,6 +150,7 @@ def extract_pdf_text(
                     "", page_count, page_limit=page_limit, character_limit=character_limit,
                 )
             parts: list[str] = []
+            content_reports: list[list[str]] = []
             used = 0
             for page in pdf.pages:
                 part = page.extract_text(layout=layout) or ""
@@ -161,9 +162,14 @@ def extract_pdf_text(
                         character_limit=character_limit,
                     )
                 parts.append(part)
+                if require_complete_pages:
+                    from .pdf_content_coverage import inspect_pdf_page_content
+                    content_reports.append(inspect_pdf_page_content(page, part))
             if require_complete_pages:
                 from .document_coverage import require_complete_page_text
+                from .pdf_content_coverage import require_pdf_content_reports
                 require_complete_page_text(parts)
+                require_pdf_content_reports(content_reports, page_count)
             return "\n".join(parts), page_count
     except ModuleNotFoundError:
         from .util import project_root
@@ -201,6 +207,8 @@ def extract_pdf_text(
                         if "\n".join(decoded) != base64.b64decode(result["text_base64"]).decode("utf-8"):
                             raise JobOpsError("PDF_PAGE_COVERAGE_UNAVAILABLE", "The local PDF helper returned inconsistent page coverage.")
                         require_complete_page_text(decoded)
+                        from .pdf_content_coverage import require_pdf_content_reports
+                        require_pdf_content_reports(result.get('page_content_reports'), int(result['page_count']))
                     return _bounded_pdf_result(
                         base64.b64decode(result["text_base64"]).decode("utf-8"),
                         int(result["page_count"]),

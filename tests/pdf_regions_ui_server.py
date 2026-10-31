@@ -31,6 +31,9 @@ FIXTURE = json.loads((ROOT / "tests/fixtures/cjk-column-response-v1.json").read_
 COMPLETE_CORPUS = json.loads((ROOT / "tests/fixtures/complete-materials-v1/manifest.json").read_text(encoding="utf-8"))
 INCOMPLETE_SOURCE_HASH = next(case["sha256"] for case in COMPLETE_CORPUS["challenges"] if case["id"] == "challenge-en-missing_middle")
 VISUAL_SOURCE_HASH = next(case["sha256"] for case in COMPLETE_CORPUS["cases"] if case["id"] == "mixed-portfolio_capture")
+CONTENT_MANIFEST = json.loads((ROOT / 'tests/fixtures/pdf-content-probes-v1/manifest.json').read_text())
+CONTENT_PARSERS = {'scan-footer': '', 'scan-header': 'pdf_regions', 'pagination-only': 'docling_native'}
+CONTENT_INPUTS = {case['sha256']: CONTENT_PARSERS[case['id']] for case in CONTENT_MANIFEST['cases'] if case['id'] in CONTENT_PARSERS}
 
 
 class RecordedSyntheticEngine(AIAnalysisEngine):
@@ -65,6 +68,10 @@ class RecordedSyntheticEngine(AIAnalysisEngine):
 
 class FixedInputService(OnboardingCenterService):
     def preview_source(self, source_type, extension, data, **kwargs):
+        digest = hashlib.sha256(data).hexdigest()
+        if source_type == 'resume' and extension == '.pdf' and digest in CONTENT_INPUTS:
+            with patch.dict(os.environ, {'JOBFLOW_DOCUMENT_PARSER': CONTENT_INPUTS[digest], 'JOBFLOW_VISUAL_ENABLE': 'false'}):
+                return super().preview_source(source_type, extension, data, **kwargs)
         if source_type == "resume" and extension == ".png" and hashlib.sha256(data).hexdigest() == VISUAL_SOURCE_HASH:
             with patch.dict(os.environ, {"JOBFLOW_DOCUMENT_PARSER": "", "JOBFLOW_VISUAL_ENABLE": "true",
                                          "JOBFLOW_VISUAL_ALLOW_CONFIGURED_PROVIDER": "true", "JOBFLOW_VISUAL_MAX_REPAIR": "1"}):

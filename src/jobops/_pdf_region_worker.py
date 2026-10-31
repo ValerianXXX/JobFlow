@@ -127,6 +127,7 @@ def parse_region_pdf(raw: bytes) -> dict:
 
     pages = []
     physical_page_text = []
+    content_reports = []
     total_characters = 0
     with pdfplumber.open(io.BytesIO(raw)) as pdf:
         if not 1 <= len(pdf.pages) <= 6:
@@ -163,6 +164,8 @@ def parse_region_pdf(raw: bytes) -> dict:
                 rules.append((min(left, right), max(left, right)))
             physical_rows = _rows(words)
             physical_page_text.append("\n".join(" ".join(w["text"] for w in row) for row in physical_rows))
+            from .pdf_content_coverage import inspect_pdf_page_content
+            content_reports.append(inspect_pdf_page_content(page, physical_page_text[-1]))
             if len(physical_rows) > 500:
                 raise ValueError("LOCAL_PARSER_LIMIT")
             rows, reordered = _ordered_rows(physical_rows, float(page.width), rules)
@@ -187,6 +190,11 @@ def parse_region_pdf(raw: bytes) -> dict:
         require_complete_page_text(physical_page_text)
     except JobOpsError as error:
         raise ValueError("LOCAL_PARSER_INCOMPLETE_PAGINATION") from error
+    from .pdf_content_coverage import require_pdf_content_reports, local_content_failure_code
+    try:
+        require_pdf_content_reports(content_reports, len(pages))
+    except JobOpsError as error:
+        raise ValueError(local_content_failure_code(error)) from error
     return {"pages": pages, "parser_version": "pdf-regions-3", "backend_version": version("pdfplumber")}
 
 
