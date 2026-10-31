@@ -12,31 +12,21 @@ See the [compatibility and recovery matrix](docs/compatibility.md) and [October 
 
 The source branch includes these reviewable capabilities. They are not a new signed desktop release.
 
-Local shutdown now stops further HTTP admission and waits for accepted request
-writers before returning. This addresses a reproduced cleanup race; fixed
-synthetic contracts and an actual DPAPI/browser flow verify the behavior.
-[Evidence, unfinished lifecycle work and rollback](docs/onboarding-shutdown-2026-10-31.md)
-distinguish this repair from full-suite, signing and independent-user acceptance.
+Local shutdown drains accepted HTTP requests and their background application
+preparation before returning. Identical capture requests share one result;
+changed forms cannot reuse an older packet. Uncertain launches are polled without
+resubmission, with persistent Chinese/English recovery guidance. The
+[preparation lifecycle record](docs/guided-preparation-lifecycle-2026-10-31.md)
+contains the fixed before/after contracts, synthetic browser observations,
+current check scope and rollback instructions. It does not establish signed
+installation, independent-user acceptance or complete material understanding.
 
-The [runtime revalidation follow-up](docs/runtime-revalidation-2026-10-30.md)
-preserves a failed 1,352-test full run, repairs native staged-file validation for
-deep paths, and corrects the public-English guide. Focused native execution and
-documentation checks pass. The subsequent full run at `b97dbe0` completed 1,361
-tests with no failures and four native-symlink skips; later changes need their own
-checks. This does not establish signed-release or clean-Windows acceptance.
-
-The later mail-review full run failed five release-tool prerequisites and one
-bootstrap timeout test. [Isolated Node selection](docs/release-node-selection-2026-10-31.md)
-adds an explicit authenticated tool path without replacing the host runtime or
-changing trusted signers. Its later local run completed 1,490 tests without
-failures and with four native-symlink skips. The original timeout remains
-unexplained; the newer HTTP shutdown change requires its own complete checks.
-
-Two hosted Node probes subsequently exceeded their unchanged 30-second budgets.
-The [release-command follow-up](docs/release-command-streams-2026-10-31.md) repairs
-a separately reproduced output-pipe deadlock and adds contained, stage-diagnosed
-trust probes. Local stream/trust checks pass; the hosted timeout cause and new
-complete checks remain open.
+Release preparation also includes [native runtime checks](docs/runtime-revalidation-2026-10-30.md),
+[authenticated Node selection](docs/release-node-selection-2026-10-31.md),
+[HTTP shutdown ownership](docs/onboarding-shutdown-2026-10-31.md), and
+[concurrent release-output drainage](docs/release-command-streams-2026-10-31.md).
+Their dated records retain earlier failures and successful checks separately;
+an earlier branch's pass is not substituted for this branch's unfinished checks.
 
 Documented work duration now excludes gaps, overlapping jobs and repeated Claims. Partial dates retain bounds; internship time and skill-specific or full-time requirements require separate review. New Profiles use version 3 while older Profiles remain readable; older generated tenure values need a reviewed revision before supporting a years requirement. [Duration rules, regression evidence and rollback](docs/experience-duration-2026-10-29.md) also record the six-sample Profile-hint check without claiming complete material understanding.
 

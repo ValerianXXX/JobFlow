@@ -1,0 +1,6 @@
+test_guided_form_preparation_runs_once_in_background_and_is_pollable (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_guided_form_preparation_runs_once_in_background_and_is_pollable) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.235s
+
+OK

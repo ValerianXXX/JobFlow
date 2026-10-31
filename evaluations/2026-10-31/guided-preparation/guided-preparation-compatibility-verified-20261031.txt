@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "findings": [],
+  "source_version": "0.7.0",
+  "required_companion_version": "0.9.2",
+  "latest_stable": "0.6.0",
+  "stable_accepts_source_companion": false,
+  "stable_usable_by_bootstrap": false,
+  "scope": "OFFLINE_SOURCE_CONSISTENCY_ONLY",
+  "public_release_ready": false
+}

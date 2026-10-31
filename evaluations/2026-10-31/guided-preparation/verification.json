@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-31T18:02:29.665245+00:00",
+  "repository": "ValerianXXX/JobFlow",
+  "branch": "codex/jobflow-preparation-lifecycle-20261031",
+  "base": "295033772538453df0036d6479e00c216746d1f9",
+  "base_draft_pr": "https://github.com/ValerianXXX/JobFlow/pull/33",
+  "runtime_commit": "2f60e9537a2eb1017998517f0376e44526cd22b6",
+  "status": "TARGETED_AND_BROWSER_CHECKS_PASS_FULL_REGRESSION_RUNNING",
+  "source_hash_scope": "git blob bytes at runtime_commit",
+  "source_sha256": {
+    "src/jobops/guided_preparation.py": "a27ff77e65d3088e0eaa574bc686ef42438c9dccf729bceb540119beb93e21eb",
+    "src/jobops/onboarding_center.py": "b683fd7b89824576766c1fcfd9ae35d7092ff5d3817e6a2127fdf735f40a509e",
+    "src/jobops/onboarding_server.py": "bfb1884b7ab295c5a5b145a948b26624b93176ec55e3f76c15180537d214ed98",
+    "browser-companion/service-worker.js": "b515c958f34fb6a409ecaa83a6b1d144bf59663ec04063dafbe80b6914f41d8d",
+    "browser-companion/popup.js": "6da85bd69929c9343b79736d539d3a81e2abd12f76f5156b6f3efc881927d104",
+    "browser-companion/popup.html": "d155420b24179ee5033a5b61bd02587d0df3e9040cd88755efe55f88407746bb",
+    "browser-companion/popup.css": "bd36318051ca55dbd91671c2736ad98eb7559c03292ccc4c2d6a87e1495eeeb4",
+    "tests/test_guided_preparation_lifecycle.py": "b99ecca792f255c65a3abddd224ccaf938abe7e9fd565aa03f41fee78b41070d",
+    "tests/test_real_profile_offline_application.py": "2c2dbb97be76ff7a70a247e215c489cb7d9d61f35b3c1695f7871fa9d935c649",
+    "tests/browser_companion_guided_autopilot_e2e.cjs": "940233120449912b19b7f153295928501b0b838cbc68087ea329e909fc957bf5",
+    "tests/browser_companion_popup_e2e.cjs": "2f2110f3096d4134aba6b7ef1d8257015187fb46186d96796abb4264f595595c",
+    "tests/guided_preparation_popup_preview.py": "c5286b3fb518127730c6554870d754abf3f7fcb6b8307b7bc87b1bea6aea3732"
+  },
+  "contracts": {
+    "initial_frozen_commit": "dbeea07753fe38ce6f4cca47d28a24e3ba267108",
+    "initial_before": {
+      "run": 11,
+      "passed": 1,
+      "failures": 8,
+      "errors": 2,
+      "seconds": 3.253
+    },
+    "initial_after": {
+      "run": 11,
+      "passed": 11,
+      "seconds": 3.062
+    },
+    "additional_frozen_commit": "87531075e15a2dd90b23eea03525f34e0dd08054",
+    "combined_before_followup": {
+      "run": 18,
+      "passed": 17,
+      "failures": 1,
+      "seconds": 5.22
+    },
+    "combined_after": {
+      "run": 18,
+      "passed": 18,
+      "seconds": 5.175
+    },
+    "final_existing_preparation": {
+      "run": 1,
+      "passed": 1,
+      "seconds": 0.235
+    },
+    "companion_uncertain_start": {
+      "before": "FAIL",
+      "after": "PASS",
+      "capture_posts": 1,
+      "status_queries": 1,
+      "resubmissions": 0
+    },
+    "popup_frozen_commit": "4d337acc922b7448f99b2fc118daf051ab6e6917",
+    "popup_recovery": {
+      "before": "FAIL",
+      "after": "PASS",
+      "bilingual_states": 4
+    },
+    "input_change_semantics": "Existing different-URL repeat now explicitly rejected; exact retry and one-operation assertion retained"
+  },
+  "checks": {
+    "javascript": {
+      "status": "PASS",
+      "suites": 17,
+      "exit_code": 0,
+      "scope": "Existing mixed VM harness and actual browser/loopback/DPAPI synthetic suites"
+    },
+    "documentation": {
+      "status": "PASS",
+      "tests": 5,
+      "seconds": 0.043
+    },
+    "health": {
+      "status": "JOBFLOW_READY",
+      "passed": 12,
+      "total": 12,
+      "private_values_read": 0,
+      "network_actions": 0
+    },
+    "compatibility": {
+      "status": "PASS",
+      "scope": "OFFLINE_SOURCE_CONSISTENCY_ONLY",
+      "public_release_ready": false
+    },
+    "public_boundary": {
+      "status": "PASS",
+      "unapproved_identities": 0,
+      "approved_historical_non_noreply_exceptions": 1,
+      "new_identity_approval": false
+    },
+    "wheel": {
+      "status": "BUILT",
+      "sha256": "c2d52129d1b46e55875ec74e7a4b57a513cd5fa54ac1f7d223245e5354aec243",
+      "published": false
+    },
+    "extension": {
+      "status": "BUILT_NOT_PUBLISHED",
+      "version": "0.9.2",
+      "sha256": "850fd1bc05f4e803fbe3bd5e30a174daea72b6c138a5bf5216d094f18c467d9a",
+      "files": 11,
+      "private_binding_files": 0,
+      "new_reviewed_version_required_before_store_upload": true
+    },
+    "full_python": {
+      "status": "RUNNING",
+      "runtime_commit": "2f60e9537a2eb1017998517f0376e44526cd22b6",
+      "session_id": 87660,
+      "log": "reports/guided-preparation-full-20261031.log",
+      "started_at": "2026-10-31T17:55:16.432747+00:00",
+      "not_counted_as_pass": true
+    }
+  },
+  "browser_observation": {
+    "browser": "ChatGPT in-app browser",
+    "operator": "agent",
+    "product_assets": "actual popup HTML/CSS/JavaScript",
+    "chrome_api": "synthetic preview shim",
+    "installed_companion": false,
+    "real_employer": false,
+    "independent_human": false,
+    "states": [
+      "unconfirmed",
+      "changed",
+      "failed",
+      "ready"
+    ],
+    "language_switch": [
+      "zh",
+      "en"
+    ],
+    "changed_form_message_after_reopen": "PASS",
+    "changed_form_generation_button_disabled": "PASS",
+    "unconfirmed_repeat_generation_disabled": "PASS",
+    "ready_redirects_to_local_review": "PASS",
+    "failed_preview_click": "SYNTHETIC_PREVIEW_ONLY; no real operation or permission grant",
+    "preview_server_closed": true,
+    "screenshots": {
+      "popup-changed-after-en.png": "cea9c644c7dcaf169633dea1eb6e080fb8ab839639f5dcdde86dbc06ae6f2be3",
+      "popup-changed-after-zh.png": "b5d10c5de401e4b77cc3997904996bdf2f5e310c23752436cd998b43932c1ce4",
+      "popup-changed-before.png": "084ff5e1a8c1bae2a5ce117f1a87f0201b69b1f485ebadc1ade19d2d912d9647",
+      "popup-failed-preview-action.png": "5f9784a740c41b290d5d0c43fc7b21717397bfcdfb9bbdab8e67ec4a24330439",
+      "popup-ready.png": "3b7e1263155f37c85658202a39cfed221b0f019ff2c2bdceb5ca4985dcb3d29d",
+      "popup-unconfirmed-after-zh.png": "965888bef5ec18c42c340344df4bc359abc66781d47c04a1d2c2f9df3672547b",
+      "popup-unconfirmed-en.png": "235733f269c87ea493df90b65896d1178ea95351336a3c20d24a61c4554ca733",
+      "popup-unconfirmed-zh.png": "c5b2297991eed563b02e4d52acd3751fd7bbb2b939d7c84216b7def82cd81018"
+    },
+    "diagnostic_before_files": [
+      "popup-changed-before.png",
+      "popup-unconfirmed-zh.png",
+      "popup-unconfirmed-en.png"
+    ]
+  },
+  "environment": {
+    "python": "3.11.3",
+    "os": "Windows",
+    "own_editable_source_verified": true,
+    "dependencies_changed": false,
+    "signed_launcher_verified": true,
+    "pip_check": "PASS",
+    "javascript_tree": {
+      "status": "PASS",
+      "packages": [
+        "playwright",
+        "playwright-core"
+      ],
+      "file_count": 173,
+      "total_bytes": 18516238,
+      "tree_sha256": "sha256:df85481a30bcbc0f7276548d245eba0980d136c8085ca4a3662cb6f3c568302f"
+    },
+    "node_for_complete_browser_and_native_checks": "24.19.0",
+    "node_sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+  },
+  "setup_attempts": [
+    {
+      "log": "guided-preparation-compatibility-20261031.log",
+      "result": "Nonexistent script name; no compatibility check executed. Correct module invocation logged separately."
+    },
+    {
+      "log": "guided-preparation-public-boundary-20261031.log",
+      "result": "RELEASE_GIT_PATH_REQUIRED; rerun supplied the existing authenticated Git path without policy changes."
+    }
+  ],
+  "model_calls": 0,
+  "cost_benefit_measured": false,
+  "material_quality_benefit_claimed": false,
+  "real_external_actions": 0,
+  "automatic_preparation_retry": false,
+  "final_submit": "USER_ONLY",
+  "remaining": [
+    "Full current local/hosted regression outcomes",
+    "No installed Companion + real employer uncertain-launch acceptance",
+    "No forced termination, hard shutdown deadline, power-loss guarantee, durable worker restart or mid-preparation cancel",
+    "Additional six-call material quota awaits user decision; prior campaign remains closed",
+    "Complete 36-material quality and independent first-use acceptance remain open",
+    "Trusted production signing and independent clean Windows environment unavailable",
+    "No release, store upload, default merge, production deployment or migration approved by this stage"
+  ],
+  "logs": {
+    "guided-preparation-before-20261031.log": {
+      "raw_sha256": "a32dce6404de0b049e005e6435545028d1d3d7a5a9396fc0dcfe61e33f05a4ac",
+      "portable_file": "guided-preparation-before-20261031.txt",
+      "portable_sha256": "d68e3a786d4c7c3bfed4b64fed781fe044bf85cb9ea906c613f1e18538a6afea"
+    },
+    "guided-preparation-after-20261031.log": {
+      "raw_sha256": "a1a48a503212c8b87ad2a75d01f8e7d3d311d02514d420137a7782d6190ee4ae",
+      "portable_file": "guided-preparation-after-20261031.txt",
+      "portable_sha256": "a4310a8281b24d97ebe986779b1feb8f07b9ba66dbf143c2c05310de0757cec3"
+    },
+    "guided-preparation-races-before-20261031.log": {
+      "raw_sha256": "ddb844f4038773f92d16cb546a9b59ec18d966d5b241260b1dcda7a4eb819139",
+      "portable_file": "guided-preparation-races-before-20261031.txt",
+      "portable_sha256": "6a43d9f8189593d9d323a6ff2a790dafb3e9eb0847911bbeecef0957421baa96"
+    },
+    "guided-preparation-final-20261031.log": {
+      "raw_sha256": "a23eda64424b767385f7c307b10ce33a3653e70915941daf14b12cd3e964fc31",
+      "portable_file": "guided-preparation-final-20261031.txt",
+      "portable_sha256": "39d119cffcf4c0321e53604d5cea9594acac5574429abe5953000c50f78a14d4"
+    },
+    "guided-preparation-existing-contract-final-20261031.log": {
+      "raw_sha256": "1ee93781cdb79d084952cb3d5d75af9a22e3ace8bbf0db855421423902ac1ccb",
+      "portable_file": "guided-preparation-existing-contract-final-20261031.txt",
+      "portable_sha256": "100b4544def5c45d98bb3938ba7032a3f496c8eaa411099ad195ca199adc108e"
+    },
+    "guided-preparation-companion-before-20261031.log": {
+      "raw_sha256": "758f54e5115559673ff06297c23236bab4f07113248471fd51a2ef730e4e9e63",
+      "portable_file": "guided-preparation-companion-before-20261031.txt",
+      "portable_sha256": "dce76c031d718d81ba065c515105474c1e1cbfa31f6e6eb19900782a547543c6"
+    },
+    "guided-preparation-companion-after-20261031.log": {
+      "raw_sha256": "82b0d5158329e0a101a9d9a854361eb8b4f5ac21bc987c9954c4a0f0b6b68e47",
+      "portable_file": "guided-preparation-companion-after-20261031.txt",
+      "portable_sha256": "0deb032db812fe0bb932ed18509e6e20a351a90dbd7f90f399704050afc91001"
+    },
+    "guided-preparation-popup-before-20261031.log": {
+      "raw_sha256": "31a331d27f2e1b3c6e74e1f24a3073f3975efb000f4dafdfd52555a35dc4710f",
+      "portable_file": "guided-preparation-popup-before-20261031.txt",
+      "portable_sha256": "5624e2ff80e8e2b7848f42cdb3f2628f58f43a966808d5cb31cba2bb4d69d153"
+    },
+    "guided-preparation-popup-after-20261031.log": {
+      "raw_sha256": "8434a0477d873faf9dc46de7c2b3b1a94a101b19270ecfb358e52011b7fe4115",
+      "portable_file": "guided-preparation-popup-after-20261031.txt",
+      "portable_sha256": "29e406543f587a6c67e0058bb9fdc6737d24d9771e6e71c05eebae47ee4403ef"
+    },
+    "guided-preparation-javascript-full-20261031.log": {
+      "raw_sha256": "477d955a74bb8b7f833d8a2814522ca1c201e76153104f9d982749ecf4d37ca4",
+      "portable_file": "guided-preparation-javascript-full-20261031.txt",
+      "portable_sha256": "501b3910c69207d3d6e4ea3d3834c5170af39e2db976a298db17c52f8efb14ce"
+    },
+    "guided-preparation-docs-20261031.log": {
+      "raw_sha256": "e25604befeb3983ead3e4924011b9cb0b7bbc5034e8081007983767403e0cd1b",
+      "portable_file": "guided-preparation-docs-20261031.txt",
+      "portable_sha256": "644ff1c22ac9f9a4dee42dc13682090395cf2fe6b57cb54330ff94511c2f85e5"
+    },
+    "guided-preparation-compatibility-20261031.log": {
+      "raw_sha256": "590bfa40c849235c731b176a4970c5baac0ac669febf7f79a4bfc536a800d884",
+      "portable_file": "guided-preparation-compatibility-20261031.txt",
+      "portable_sha256": "18f58de763972dccee2e8e4a9c3ae31bf7c7601dae88795cef37942b2d5a1071"
+    },
+    "guided-preparation-compatibility-verified-20261031.log": {
+      "raw_sha256": "21a2b8f40d9752b7e3b8f434b4f3d37eb3c917fdb10bfd3c9e512828228a745c",
+      "portable_file": "guided-preparation-compatibility-verified-20261031.txt",
+      "portable_sha256": "bd0117ded429ae77a602530fb30c597528a2f0d7c492de8b89196dc2b6eb02bd"
+    },
+    "guided-preparation-public-boundary-20261031.log": {
+      "raw_sha256": "1983c30b62851f2128c0cecedb514d4e62eac02bb7eaf07ba14e36fc14fe9876",
+      "portable_file": "guided-preparation-public-boundary-20261031.txt",
+      "portable_sha256": "f812ee99db9550cb38161ba1b1607d834c69f2b4652f04ae57ba22d510c92bb9"
+    },
+    "guided-preparation-public-boundary-verified-20261031.log": {
+      "raw_sha256": "c5177c35ffc0393b20e326858c0f260d5c0cc8b819ae1d6bef9fd2803c9407d3",
+      "portable_file": "guided-preparation-public-boundary-verified-20261031.txt",
+      "portable_sha256": "9f989ec0e13652801fe8601b8220c3ff14f50fcc87a48b29b67d3919745fd41c"
+    },
+    "guided-preparation-extension-package-20261031.log": {
+      "raw_sha256": "11e5368b77d0726f96f147a031b9caf67934393af4c2832581b6f53bb44357e4",
+      "portable_file": "guided-preparation-extension-package-20261031.txt",
+      "portable_sha256": "52860e7f0797c7ca29f3a303644c9f52efd8bbf4ed19efd6b2999030b32205b6"
+    },
+    "guided-preparation-wheel-20261031.log": {
+      "raw_sha256": "06d6105e5f3810fd59feecac7d927c8e677cf126c2188dbd5d39a5fe010cd999",
+      "portable_file": "guided-preparation-wheel-20261031.txt",
+      "portable_sha256": "3aca403e9764704bed54402dcbb38d99ed1ca7ab643545a6f4177591f9019875"
+    },
+    "guided-preparation-health-20261031.log": {
+      "raw_sha256": "4ea94282b35ec2b1d028a83aae5b239c995ca5f23abeb7df014857f2ea624bea",
+      "portable_file": "guided-preparation-health-20261031.txt",
+      "portable_sha256": "afa9b5a76a6b18928eaa9755de4efd648685b4de7d7091d629c4b2763619b8c0"
+    }
+  }
+}

@@ -4,6 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Own and drain background guided preparations before closing their dependencies;
+  reject new admission during shutdown, retain started workers across uncertain
+  launch errors, and clear jobs that never started. Bind cached packets to the
+  exact captured input, including concurrent replays. Poll uncertain launches
+  without resending forms and keep bilingual recovery reasons visible when the
+  popup reopens. [Contracts, browser preview and remaining limits](docs/guided-preparation-lifecycle-2026-10-31.md).
+
 - Drain release-command stdout and stderr concurrently, preserving both outputs
   and actual child status. Contain native Node trust-probe descendants and retain
   the existing 30-second budget and all signature/hash/path assertions. Preserve

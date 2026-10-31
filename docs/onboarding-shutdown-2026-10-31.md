@@ -1,5 +1,9 @@
 # Onboarding request shutdown — 2026-10-31
 
+The later [guided-preparation follow-up](guided-preparation-lifecycle-2026-10-31.md)
+extends ownership to separately started preparation workers. This record retains
+the earlier HTTP-only implementation and its original verification scope.
+
 An accepted local HTTP request could still write after the onboarding server
 reported closure. Temporary fixture cleanup could consequently overlap a writer;
 normal application shutdown also lacked an HTTP request completion barrier.

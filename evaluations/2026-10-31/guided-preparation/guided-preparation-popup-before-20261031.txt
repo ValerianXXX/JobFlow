@@ -1,0 +1,2 @@
+AssertionError [ERR_ASSERTION]: GUIDED_PREPARATION_INPUT_CHANGED must survive reopening or refreshing the popup
+    at <project>\tests\browser_companion_popup_e2e.cjs:206:12

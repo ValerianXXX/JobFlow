@@ -1,0 +1,7 @@
+AssertionError [ERR_ASSERTION]: uncertain launch must query the existing job
++ actual - expected
+
++ 'BLOCKED'
+- 'PREPARING_APPLICATION'
+
+    at <project>\tests\browser_companion_guided_autopilot_e2e.cjs:259:10
