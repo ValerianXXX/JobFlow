@@ -4,6 +4,12 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Drain release-command stdout and stderr concurrently, preserving both outputs
+  and actual child status. Contain native Node trust-probe descendants and retain
+  the existing 30-second budget and all signature/hash/path assertions. Preserve
+  the original hosted timeouts and disclosed fixture capture correction; their
+  exclusive cause remains unproven. [Reproduction and limits](docs/release-command-streams-2026-10-31.md).
+
 - Drain accepted onboarding HTTP requests before reporting server closure; stop
   new/keep-alive admission, disconnect only owned sockets and retain request
   ownership across startup/close failures. Keep cleanup assertions and prior

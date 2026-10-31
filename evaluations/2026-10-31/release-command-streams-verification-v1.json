@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-31T16:22:20.194675+00:00",
+  "status": "NATIVE_STREAM_AND_TRUST_PASS_RELATED_REGRESSION_RUNNING",
+  "branch": "codex/jobflow-release-io-20261031",
+  "base_commit": "d6be2d2ad1c7c90326dbe10a02f33c65bdaa798a",
+  "runtime_commit": "a6a7cdfc830e71bcf12c17f04f15a6e7f317e496",
+  "initial_frozen": "fa7482c2dd8bdcc7579c8919b85f16a786a56893",
+  "corrected_fixture_frozen": "c297135cc2431d32ba1edf5f4ab177d4f03b6862",
+  "initial": {
+    "errors": 4,
+    "seconds": 37.356,
+    "fixture_correction": "Detached launcher explicitly captures and forwards output; assertions unchanged"
+  },
+  "before": {
+    "passed": 1,
+    "errors": 3,
+    "seconds": 37.364
+  },
+  "after": {
+    "passed": 4,
+    "seconds": 4.923,
+    "frozen_source_unchanged": true,
+    "each_probe_timeout_seconds": 12,
+    "large_ascii_stream_characters": 100000,
+    "exact_stdout_stderr_hashes_and_exit_codes": true,
+    "owned_process_tree": true
+  },
+  "existing_node_trust": {
+    "passed": 5,
+    "seconds": 20.894,
+    "each_probe_timeout_seconds": 30,
+    "all_existing_assertions_retained": true,
+    "trust_policy_changed": false,
+    "descendants_contained": true,
+    "allowlisted_failure_stage_note": true
+  },
+  "docs": {
+    "passed": 5,
+    "seconds": 0.054
+  },
+  "related_regression": {
+    "status": "RUNNING",
+    "session_id": 82051,
+    "log": "reports/release-command-regression-20261031.log",
+    "modules": [
+      "test_release_packaging.py",
+      "test_signed_update_presign_v2.py"
+    ]
+  },
+  "historical_hosted": {
+    "run_url": "https://github.com/ValerianXXX/JobFlow/actions/runs/41209739080",
+    "jobs": [
+      {
+        "matrix_python": "3.11",
+        "job_id": 124562016511,
+        "raw_saved_log_sha256": "e1e239b8d86edd80bf2539f19a183cb304ede5308cd4826a05541ba74d194382",
+        "tests_run": 1490,
+        "errors": 2,
+        "seconds": 6018.161,
+        "failure": "Two explicit trusted-Node harnesses timed out after 30 seconds"
+      },
+      {
+        "matrix_python": "3.12",
+        "job_id": 124562016539,
+        "raw_saved_log_sha256": "aee038a6e482f5791fc1455fb73e3d6d66fd412358aaeff028afbcd2c54f7419",
+        "tests_run": 1490,
+        "errors": 2,
+        "seconds": 6104.833,
+        "failure": "Two explicit trusted-Node harnesses timed out after 30 seconds"
+      }
+    ],
+    "source_candidate": "PASS",
+    "python_313": "RUNNING_AT_OBSERVATION",
+    "exclusive_timeout_cause_proven": false
+  },
+  "new_hosted_ci": "PENDING_DELIVERY",
+  "new_complete_local_python": "NOT_RUN_BASE_BRANCH_FULL_RUN_STILL_ACTIVE",
+  "new_ui_or_browser": "NOT_RUN_NO_UI_CHANGE",
+  "model_calls": 0,
+  "production_actions": 0,
+  "committed_source_sha256": {
+    "scripts/build-signed-update-bundle.ps1": "7e89ad4989eeb7135d41709939848bd6199e7061da0eadadd5efcb6fefcec281",
+    "tests/test_release_command_streams.py": "e339804666f84089ecd5aa00cf71a9eb41aeaeeb4459d74d5801af7dba198fbd",
+    "tests/test_release_node_path.py": "6dd57686a42cf29f18119354793fdccf1a48c0b223c24a38294cf9959a40ad3e"
+  },
+  "logs": {
+    "release-command-streams-before": {
+      "raw_sha256": "b83cc179462893c45724464f4ef888b3f6c5f42a8bfe25f4482046a3f9ab5188",
+      "portable_path": "evaluations/2026-10-31/release-command-streams-logs-v1/release-command-streams-before-20261031.txt",
+      "portable_lf_sha256": "5910b988d225e28fb92d3e00ea50939e60de77a743bb5b2ed979571278cfa22d"
+    },
+    "release-command-streams-baseline": {
+      "raw_sha256": "d04bd9ac74f1719173bebec6b997267229374f2c46c06caa019fb816e24b85ad",
+      "portable_path": "evaluations/2026-10-31/release-command-streams-logs-v1/release-command-streams-baseline-20261031.txt",
+      "portable_lf_sha256": "b98109025280dabc1406066c507e716e677a1308156f6c9548ffc23d7445b965"
+    },
+    "release-command-streams-after": {
+      "raw_sha256": "9fd2c0c887a9f0eb226101bb1518758ffd38a299900f5b3d18b7e937374486fd",
+      "portable_path": "evaluations/2026-10-31/release-command-streams-logs-v1/release-command-streams-after-20261031.txt",
+      "portable_lf_sha256": "839d463c24244404b219a1ba246bc6d85a31545a5bfe0dce97fd94ee14a23a4e"
+    },
+    "release-command-node-path": {
+      "raw_sha256": "b5014dfe725ff53e775de2f85fb1de360e54c1085c9ed5a808ec42ca44ad95f1",
+      "portable_path": "evaluations/2026-10-31/release-command-streams-logs-v1/release-command-node-path-20261031.txt",
+      "portable_lf_sha256": "79244d64d7a1d8bfd871fb68dc7d4ca207bed0b808ccf39530bde24746a2e86f"
+    },
+    "release-command-docs": {
+      "raw_sha256": "2aa6ad942f2f3616a58afa4ed72d100b5b3f1b2716c0ea575a6aa26ac8c90385",
+      "portable_path": "evaluations/2026-10-31/release-command-streams-logs-v1/release-command-docs-20261031.txt",
+      "portable_lf_sha256": "bce4dce0d6e1a52cdaebcb23e12c711f7d10672118f9ec2681ff2fb956bb27af"
+    }
+  },
+  "portable_log_transforms": [
+    "LF line endings",
+    "Workstation user path redaction",
+    "Trailing display whitespace removed"
+  ],
+  "remaining": [
+    "Related native regression and exact-delivery full hosted checks",
+    "Hosted Node timeout cause and repeat stability",
+    "Production command hard deadlines/output caps are not introduced by this repair",
+    "Full material quality, live providers, independent users, trusted signing and clean Windows acceptance"
+  ],
+  "goal_complete": false
+}

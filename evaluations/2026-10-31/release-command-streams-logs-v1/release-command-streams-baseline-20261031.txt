@@ -1,0 +1,48 @@
+test_empty_stdout_still_drains_large_stderr (test_release_command_streams.ReleaseCommandStreamTests.test_empty_stdout_still_drains_large_stderr) ... ERROR
+test_large_both_streams_preserve_exact_bytes (test_release_command_streams.ReleaseCommandStreamTests.test_large_both_streams_preserve_exact_bytes) ... ERROR
+test_large_stderr_before_stdout_does_not_deadlock (test_release_command_streams.ReleaseCommandStreamTests.test_large_stderr_before_stdout_does_not_deadlock) ... ERROR
+test_small_outputs_and_nonzero_status_remain_distinct (test_release_command_streams.ReleaseCommandStreamTests.test_small_outputs_and_nonzero_status_remain_distinct) ... ok
+
+======================================================================
+ERROR: test_empty_stdout_still_drains_large_stderr (test_release_command_streams.ReleaseCommandStreamTests.test_empty_stdout_still_drains_large_stderr)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-template-pilot\tests\test_release_command_streams.py", line 78, in test_empty_stdout_still_drains_large_stderr
+    self.run_streams("", "E" * 100_000, stderr_first=True, child_exit=11)
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-template-pilot\tests\test_release_command_streams.py", line 59, in run_streams
+    result = run_release_python(launcher, str(powershell), str(script), cwd=PROJECT,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-template-pilot\src\jobops\release_smoke_process.py", line 340, in run_release_python
+    raise JobOpsError("RELEASE_SMOKE_PROCESS_TIMEOUT", "The synthetic release process exceeded its time budget.") from None
+jobops.errors.JobOpsError: The synthetic release process exceeded its time budget.
+
+======================================================================
+ERROR: test_large_both_streams_preserve_exact_bytes (test_release_command_streams.ReleaseCommandStreamTests.test_large_both_streams_preserve_exact_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-template-pilot\tests\test_release_command_streams.py", line 75, in test_large_both_streams_preserve_exact_bytes
+    self.run_streams("O" * 100_000, "E" * 100_000, stderr_first=False, child_exit=0)
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-template-pilot\tests\test_release_command_streams.py", line 59, in run_streams
+    result = run_release_python(launcher, str(powershell), str(script), cwd=PROJECT,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-template-pilot\src\jobops\release_smoke_process.py", line 340, in run_release_python
+    raise JobOpsError("RELEASE_SMOKE_PROCESS_TIMEOUT", "The synthetic release process exceeded its time budget.") from None
+jobops.errors.JobOpsError: The synthetic release process exceeded its time budget.
+
+======================================================================
+ERROR: test_large_stderr_before_stdout_does_not_deadlock (test_release_command_streams.ReleaseCommandStreamTests.test_large_stderr_before_stdout_does_not_deadlock)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-template-pilot\tests\test_release_command_streams.py", line 72, in test_large_stderr_before_stdout_does_not_deadlock
+    self.run_streams("synthetic result", "E" * 100_000, stderr_first=True, child_exit=9)
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-template-pilot\tests\test_release_command_streams.py", line 59, in run_streams
+    result = run_release_python(launcher, str(powershell), str(script), cwd=PROJECT,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<USER>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-template-pilot\src\jobops\release_smoke_process.py", line 340, in run_release_python
+    raise JobOpsError("RELEASE_SMOKE_PROCESS_TIMEOUT", "The synthetic release process exceeded its time budget.") from None
+jobops.errors.JobOpsError: The synthetic release process exceeded its time budget.
+
+----------------------------------------------------------------------
+Ran 4 tests in 37.364s
+
+FAILED (errors=3)

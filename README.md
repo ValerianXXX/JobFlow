@@ -32,6 +32,12 @@ changing trusted signers. Its later local run completed 1,490 tests without
 failures and with four native-symlink skips. The original timeout remains
 unexplained; the newer HTTP shutdown change requires its own complete checks.
 
+Two hosted Node probes subsequently exceeded their unchanged 30-second budgets.
+The [release-command follow-up](docs/release-command-streams-2026-10-31.md) repairs
+a separately reproduced output-pipe deadlock and adds contained, stage-diagnosed
+trust probes. Local stream/trust checks pass; the hosted timeout cause and new
+complete checks remain open.
+
 Documented work duration now excludes gaps, overlapping jobs and repeated Claims. Partial dates retain bounds; internship time and skill-specific or full-time requirements require separate review. New Profiles use version 3 while older Profiles remain readable; older generated tenure values need a reviewed revision before supporting a years requirement. [Duration rules, regression evidence and rollback](docs/experience-duration-2026-10-29.md) also record the six-sample Profile-hint check without claiming complete material understanding.
 
 The [loopback rejection repair](docs/probe-rejection-2026-10-29.md) addresses a
