@@ -1,0 +1,232 @@
+{
+  "observed_at": "2026-10-31T19:27:07.702964+00:00",
+  "status": "RELATED_NATIVE_SUITE_PASS_FULL_HOSTED_ACCEPTANCE_PENDING",
+  "branch": "codex/jobflow-fixture-paths-20261031",
+  "base": "6bee3e47aa38538a9cc03d611224eea4a9ee1170",
+  "frozen": "7860e0e26c1b884b9ed33ed66344e89f3789f360",
+  "runtime": "d057edd905a7e5f58c34c7d2c6f6c66b89a07a3c",
+  "baseline_full": {
+    "branch": "codex/jobflow-preparation-lifecycle-20261031",
+    "delivery": "3c9ac3f892ebdeeb62c0c3d095b639960675b283",
+    "tests": 1525,
+    "errors": 2,
+    "skipped": 4,
+    "seconds": 3859.662,
+    "status": "FAILED",
+    "failure_boundary": "Tracked-file copy before intended builder assertions",
+    "destination_characters": [
+      263,
+      260
+    ],
+    "four_skips": "Windows symlink capability unavailable"
+  },
+  "native_path_probe": {
+    "python_version": "3.11.3",
+    "project_path_characters": 100,
+    "tracked_count": 979,
+    "longest_relative_characters": 107,
+    "longest_relative_paths": [
+      "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-public-boundary-runtime-20261031.txt",
+      "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-started-fault-before-20261031.txt",
+      "evaluations/2026-10-31/onboarding-shutdown-logs-v1/onboarding-shutdown-diagnostics-before-20261031.txt"
+    ],
+    "cases": [
+      {
+        "characters": 259,
+        "ordinary_copy": "PASS",
+        "extended_copy": "PASS",
+        "bytes_equal": true,
+        "mtime_equal": true
+      },
+      {
+        "characters": 260,
+        "ordinary_copy": "FileNotFoundError",
+        "winerror": null,
+        "extended_copy": "PASS",
+        "bytes_equal": true,
+        "mtime_equal": true
+      },
+      {
+        "characters": 263,
+        "ordinary_copy": "FileNotFoundError",
+        "winerror": null,
+        "extended_copy": "PASS",
+        "bytes_equal": true,
+        "mtime_equal": true
+      },
+      {
+        "characters": 300,
+        "ordinary_copy": "FileNotFoundError",
+        "winerror": null,
+        "extended_copy": "PASS",
+        "bytes_equal": true,
+        "mtime_equal": true
+      }
+    ],
+    "no_os_or_git_config_changes": true,
+    "runtime_source_unchanged": true
+  },
+  "frozen_contracts": {
+    "methods": 3,
+    "before_failures": 1,
+    "before_errors": 2,
+    "before_seconds": 0.518,
+    "after_passed": 3,
+    "after_seconds": 0.634,
+    "unchanged": true
+  },
+  "deep_integration": {
+    "tracked_files_observed": 980,
+    "copy_byte_or_mtime_mismatches": 0,
+    "parent_characters": 150,
+    "maximum_inventory_destination_characters": 268,
+    "intermediate": {
+      "passed": 1,
+      "errors": 1,
+      "seconds": 36.399,
+      "cause": "Ordinary-path synthetic signing-key timestamp assertion"
+    },
+    "final": {
+      "passed": 2,
+      "seconds": 33.67,
+      "owned_cleanup_verified": true
+    }
+  },
+  "related_suite": {
+    "tests": 60,
+    "passed": 60,
+    "skipped": 0,
+    "seconds": 272.32,
+    "python": "3.11.3",
+    "platform": "Windows",
+    "node_sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+  },
+  "initial_suite_observation": {
+    "tests": 60,
+    "failures": 2,
+    "seconds": 136.767,
+    "cause": "Invocation omitted the already-required pinned JOBFLOW_TEST_NODE_PATH; actual trust rejection retained",
+    "correction": "Same unchanged 60 tests with the existing exact-hash Node prerequisite; no gate or timeout changes"
+  },
+  "documentation": {
+    "tests": 5,
+    "passed": 5,
+    "seconds": 0.042
+  },
+  "invariants": {
+    "production_paths_changed": 0,
+    "existing_test_methods": 34,
+    "per_method_assertion_counts_unchanged": true,
+    "assertions": {
+      "test_release_signer_cannot_silently_rotate_an_existing_key": 4,
+      "test_signed_release_bundle_builder_requires_exact_clean_candidate": 59,
+      "test_published_store_versions_match_without_claiming_desktop_acceptance": 5,
+      "test_ci_git_prerequisite_pins_archive_executable_and_existing_signer": 9,
+      "test_manifest_and_signature_prewrite_hardlinks_never_truncate_the_sentinel": 5,
+      "test_bundle_builder_sha256_helper_does_not_depend_on_powershell_modules": 3,
+      "test_candidate_json_types_are_rejected_instead_of_coerced": 4,
+      "test_archive_identity_handle_blocks_write_and_replacement_after_hash": 5,
+      "test_candidate_version_must_equal_pyproject_version": 2,
+      "test_fixed_output_hardlink_is_atomically_replaced_without_touching_its_other_name": 3,
+      "test_fixed_output_reparse_leaf_is_rejected_without_touching_target": 4,
+      "test_temporary_output_hardlink_replacement_is_rejected": 3,
+      "test_interrupted_two_output_commit_is_durably_recovered": 9,
+      "test_transaction_lock_rejects_a_concurrent_builder": 5,
+      "test_post_commit_validation_failure_restores_the_previous_pair": 4,
+      "test_protected_handoff_has_no_local_signing_path": 4,
+      "test_python_path_excludes_git_closure_while_git_path_keeps_required_helpers": 7,
+      "test_signed_manifest_archive_identity_rejects_coercive_types": 2,
+      "test_bundle_builder_fails_closed_before_signer_or_formal_outputs": 8,
+      "test_runtime_closure_guard_precedes_ignored_archive_processing": 4,
+      "test_production_channel_has_a_strong_self_identifying_public_key": 3,
+      "test_local_development_key_is_distinct_from_the_production_pin": 2,
+      "test_legacy_local_publisher_state_is_never_read_or_migrated": 4,
+      "test_development_signer_output_is_rejected_even_when_its_key_is_explicitly_trusted": 2,
+      "test_development_key_cannot_replace_the_default_production_trust_anchor": 2,
+      "test_development_signer_refuses_a_matching_project_pin_before_output": 3,
+      "test_generic_production_sign_action_is_not_exposed_by_the_local_helper": 3,
+      "test_initialize_reuses_the_same_dpapi_key_without_rotation": 2,
+      "test_release_signer_supports_deep_source_archive_paths": 4,
+      "test_signed_manifest_and_archive_verify_and_current_version_is_not_reinstalled": 5,
+      "test_manifest_signature_archive_and_channel_tampering_fail_closed": 8,
+      "test_noncanonical_or_downgrade_metadata_never_installs": 3,
+      "test_archive_derived_payload_attestation_is_exact": 8,
+      "test_payload_inventory_rejects_aliases_unsafe_paths_and_links": 8
+    },
+    "global_git_or_windows_settings_changed": false,
+    "release_approval_changes": false
+  },
+  "source_lf_sha256": {
+    "tests/test_signed_update_fixture_paths.py": "a869d3b194f3b2946bcaf44a738ec272e47b81f3da9bed95dd976538c706c2d1",
+    "tests/test_signed_updates.py": "62739df661b3b7a4b83349404d018a5d0ad433651379ef51ed41334ab5b94c76",
+    "scripts/build-signed-update-bundle.ps1": "74c8d2367312df1662e18218d7ccf8b9427106195da2b77bcbd330ed8b2ae008"
+  },
+  "artifacts": [
+    {
+      "source": "reports/fixture-path-probe-before-20261031.json",
+      "raw_sha256": "23266c1574dfc4c7138948abdbfa479811a2c02b3537ed132ff5da0d33a3f9b2",
+      "portable": "evaluations/2026-10-31/bundle-fixture-paths/fixture-path-probe-before-20261031.json",
+      "portable_sha256": "b5c114b68de9888ff34c97dc7338ba97cfa7abd592c555908df03585419bd3c8"
+    },
+    {
+      "source": "reports/fixture-path-contracts-before-20261031.log",
+      "raw_sha256": "fad0880d13bf87791433d2799b4fe6062477efd835634788c971b859298b6af1",
+      "portable": "evaluations/2026-10-31/bundle-fixture-paths/fixture-path-contracts-before-20261031.txt",
+      "portable_sha256": "b329a7a60c38ce62fcab0ada00829a5a7556b7560335736f39b6fcba8539b119"
+    },
+    {
+      "source": "reports/fixture-path-contracts-frozen-before-20261031.log",
+      "raw_sha256": "c7a6b29230a60a3f495e9825fa149ada3fc8b31f7ba71fdf153db95dd701b608",
+      "portable": "evaluations/2026-10-31/bundle-fixture-paths/fixture-path-contracts-frozen-before-20261031.txt",
+      "portable_sha256": "28d0b2741001ad4550f9ee2419d323b39fcb484218a06ded2f1fe6d32372d22f"
+    },
+    {
+      "source": "reports/fixture-path-contracts-after-20261031.log",
+      "raw_sha256": "8656906912faac75dea7a0dc321d681ac1da4fa1d493d38cf3c39c54ba69b707",
+      "portable": "evaluations/2026-10-31/bundle-fixture-paths/fixture-path-contracts-after-20261031.txt",
+      "portable_sha256": "840436f06ffa587a76ef731721178da5e10c49bd64bbf994e944e605ce46ee2d"
+    },
+    {
+      "source": "reports/fixture-deep-integration-after-20261031.log",
+      "raw_sha256": "6b7e188714c22a5fa84c45a059624b45fe054b8fd08d40e9f4c64c9e6dec5ba1",
+      "portable": "evaluations/2026-10-31/bundle-fixture-paths/fixture-deep-integration-after-20261031.txt",
+      "portable_sha256": "c7027f8aed7f195272eca3a325f91e2f481a4011e4888b74a9a8a96082f6afef"
+    },
+    {
+      "source": "reports/fixture-deep-integration-final-20261031.log",
+      "raw_sha256": "038a83d0624cd37ae5a730608a211cb08d0e625ea646e168a9b679645c4b9f5c",
+      "portable": "evaluations/2026-10-31/bundle-fixture-paths/fixture-deep-integration-final-20261031.txt",
+      "portable_sha256": "a1e3b8b2db67998bf3ca943598e558e5d68466a721471b28eaa25e413636d79f"
+    },
+    {
+      "source": "reports/fixture-signed-suite-20261031.log",
+      "raw_sha256": "b32aaf8d65081a1afe43c12567728abab7dd5682705b0ae4905f7ecef0e5f266",
+      "portable": "evaluations/2026-10-31/bundle-fixture-paths/fixture-signed-suite-20261031.txt",
+      "portable_sha256": "3a23384df6d18ccbb50acb3f7c81357377ebb0f731728423d6efc023b4bbf862"
+    },
+    {
+      "source": "reports/fixture-signed-suite-pinned-20261031.log",
+      "raw_sha256": "198bc1279f184342a9ff4b48aecbf4ca0af3fca2bb926d9690c04bb8a936a601",
+      "portable": "evaluations/2026-10-31/bundle-fixture-paths/fixture-signed-suite-pinned-20261031.txt",
+      "portable_sha256": "88b22d6b2d47e460ae7a02906d7145dd0969cc55c652c6fdf877f04e3fb96556"
+    },
+    {
+      "source": "reports/fixture-public-docs-20261031.log",
+      "raw_sha256": "7d2fec1b428a04f661359d725eaad74d601b8f8a40f299e7776f29fbbaf17642",
+      "portable": "evaluations/2026-10-31/bundle-fixture-paths/fixture-public-docs-20261031.txt",
+      "portable_sha256": "b878feb8a3c949eac0a324dc133144a040a5429f35e0a69d91cfa95a0c5ec67d"
+    }
+  ],
+  "new_model_calls": 0,
+  "ai_quality_benefit_measured": false,
+  "real_customer_data": false,
+  "production_actions": 0,
+  "migration": false,
+  "remaining": [
+    "New delivery full hosted Windows matrix",
+    "Complete material accuracy and independent first-use acceptance",
+    "Pending additional six-call decision; old campaign stays closed",
+    "Trusted production signing and independent clean Windows environment"
+  ],
+  "whole_goal_complete": false
+}

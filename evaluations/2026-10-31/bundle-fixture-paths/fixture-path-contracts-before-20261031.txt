@@ -1,0 +1,127 @@
+test_fixture_git_indexes_long_file_without_persisting_configuration (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_fixture_git_indexes_long_file_without_persisting_configuration) ... FAIL
+test_fixture_git_indexes_long_file_without_persisting_configuration (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_fixture_git_indexes_long_file_without_persisting_configuration) ... ERROR
+test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata) ... ERROR
+test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata) ... ERROR
+test_tracked_parent_beyond_legacy_limit_is_created_and_copied (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_tracked_parent_beyond_legacy_limit_is_created_and_copied) ... ERROR
+test_tracked_parent_beyond_legacy_limit_is_created_and_copied (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_tracked_parent_beyond_legacy_limit_is_created_and_copied) ... ERROR
+
+======================================================================
+ERROR: test_fixture_git_indexes_long_file_without_persisting_configuration (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_fixture_git_indexes_long_file_without_persisting_configuration)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_signed_update_fixture_paths.py", line 25, in _cleanup_owned_root
+    self.temporary.cleanup()
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\tempfile.py", line 908, in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\tempfile.py", line 890, in _rmtree
+    _shutil.rmtree(name, onerror=onerror)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 759, in rmtree
+    return _rmtree_unsafe(path, onerror)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 617, in _rmtree_unsafe
+    _rmtree_unsafe(fullname, onerror)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 626, in _rmtree_unsafe
+    onerror(os.rmdir, path, sys.exc_info())
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 624, in _rmtree_unsafe
+    os.rmdir(path)
+OSError: [WinError 145] 目录不是空的。: '$PROJECT_ROOT\\tests\\.tmp\\fixture-path-3c6u65i8\\fixture'
+
+======================================================================
+ERROR: test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_signed_update_fixture_paths.py", line 59, in test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata
+    self._copy_and_verify(source, fixture, relative, content, mtime)
+  File "$PROJECT_ROOT\tests\test_signed_update_fixture_paths.py", line 47, in _copy_and_verify
+    self.fixture_tools._copy_bundle_source(fixture)
+  File "$PROJECT_ROOT\tests\test_signed_updates.py", line 205, in _copy_bundle_source
+    shutil.copy2(source, destination)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 436, in copy2
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 256, in copyfile
+    with open(src, 'rb') as fsrc:
+         ^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '$PROJECT_ROOT\\tests\\.tmp\\fixture-path-9bl34una\\source\\data\\xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.bin'
+
+======================================================================
+ERROR: test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_signed_update_fixture_paths.py", line 25, in _cleanup_owned_root
+    self.temporary.cleanup()
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\tempfile.py", line 908, in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\tempfile.py", line 890, in _rmtree
+    _shutil.rmtree(name, onerror=onerror)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 759, in rmtree
+    return _rmtree_unsafe(path, onerror)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 617, in _rmtree_unsafe
+    _rmtree_unsafe(fullname, onerror)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 617, in _rmtree_unsafe
+    _rmtree_unsafe(fullname, onerror)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 626, in _rmtree_unsafe
+    onerror(os.rmdir, path, sys.exc_info())
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 624, in _rmtree_unsafe
+    os.rmdir(path)
+OSError: [WinError 145] 目录不是空的。: '$PROJECT_ROOT\\tests\\.tmp\\fixture-path-9bl34una\\source\\data'
+
+======================================================================
+ERROR: test_tracked_parent_beyond_legacy_limit_is_created_and_copied (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_tracked_parent_beyond_legacy_limit_is_created_and_copied)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: '$PROJECT_ROOT\\tests\\.tmp\\fixture-path-gv7t_7mh\\fixture\\dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_signed_update_fixture_paths.py", line 66, in test_tracked_parent_beyond_legacy_limit_is_created_and_copied
+    self._copy_and_verify(source, fixture, relative, content, mtime)
+  File "$PROJECT_ROOT\tests\test_signed_update_fixture_paths.py", line 47, in _copy_and_verify
+    self.fixture_tools._copy_bundle_source(fixture)
+  File "$PROJECT_ROOT\tests\test_signed_updates.py", line 204, in _copy_bundle_source
+    destination.parent.mkdir(parents=True, exist_ok=True)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\pathlib.py", line 1121, in mkdir
+    self.mkdir(mode, parents=False, exist_ok=exist_ok)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: '$PROJECT_ROOT\\tests\\.tmp\\fixture-path-gv7t_7mh\\fixture\\dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'
+
+======================================================================
+ERROR: test_tracked_parent_beyond_legacy_limit_is_created_and_copied (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_tracked_parent_beyond_legacy_limit_is_created_and_copied)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_signed_update_fixture_paths.py", line 25, in _cleanup_owned_root
+    self.temporary.cleanup()
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\tempfile.py", line 908, in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\tempfile.py", line 890, in _rmtree
+    _shutil.rmtree(name, onerror=onerror)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 759, in rmtree
+    return _rmtree_unsafe(path, onerror)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 617, in _rmtree_unsafe
+    _rmtree_unsafe(fullname, onerror)
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 626, in _rmtree_unsafe
+    onerror(os.rmdir, path, sys.exc_info())
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\shutil.py", line 624, in _rmtree_unsafe
+    os.rmdir(path)
+OSError: [WinError 145] 目录不是空的。: '$PROJECT_ROOT\\tests\\.tmp\\fixture-path-gv7t_7mh\\source'
+
+======================================================================
+FAIL: test_fixture_git_indexes_long_file_without_persisting_configuration (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_fixture_git_indexes_long_file_without_persisting_configuration)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_signed_update_fixture_paths.py", line 78, in test_fixture_git_indexes_long_file_without_persisting_configuration
+    self.fixture_tools._git(fixture, "add", "--all")
+  File "$PROJECT_ROOT\tests\test_signed_updates.py", line 142, in _git
+    raise AssertionError(completed.stderr + completed.stdout)
+AssertionError: fatal: unable to stat 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.bin': Filename too long
+
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.639s
+
+FAILED (failures=1, errors=5)

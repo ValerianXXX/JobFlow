@@ -1,0 +1,8 @@
+test_fixture_git_indexes_long_file_without_persisting_configuration (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_fixture_git_indexes_long_file_without_persisting_configuration) ... ok
+test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_tracked_leaf_beyond_legacy_limit_keeps_bytes_and_metadata) ... ok
+test_tracked_parent_beyond_legacy_limit_is_created_and_copied (test_signed_update_fixture_paths.SignedUpdateFixturePathTests.test_tracked_parent_beyond_legacy_limit_is_created_and_copied) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.634s
+
+OK

@@ -22,7 +22,9 @@ The first experimental contract run also exposed cleanup failures. Its raw obser
 
 The [machine-readable receipt](../evaluations/2026-10-31/bundle-fixture-paths/verification.json) binds the source and portable logs. Exact terminal results are recorded there; pending checks are not treated as successful. The deep integration runner uses a 150-character parent directory, verifies all tracked copies, invokes both original tests and verifies removal of its owned temporary directories. It uses actual Windows filesystem, Git, PowerShell and synthetic DPAPI fixture operations; no production signing is performed.
 
-The parent PR #34 Windows 3.12 CI passed 1,525 Python cases in 3,324.258 seconds, its browser checks and build steps. That shorter/different host result does not erase the local full-run failure. PR #35's exact delivery passed its native trust checks and source-candidate job; its full Windows matrix was still running when this follow-up began. Results belong to their recorded revision and host.
+The deep rerun passed both original cases in 33.670 seconds, including their untouched-key and absent-output assertions. The complete related `test_signed_update*.py` group passed **60/60**, with zero skips, in **272.320 seconds**. All 34 existing signed-update test names and per-method assertion counts remain present. An earlier invocation of the same group failed two cases because it omitted the existing pinned `JOBFLOW_TEST_NODE_PATH` prerequisite; that actual trust rejection remains recorded. The corrected invocation used the existing exact-hash Node 24.19.0 binary, with no code, assertion, policy or timeout changes between the two suite runs.
+
+The parent PR #34 Windows 3.12 and 3.13 CI passed 1,525 Python cases in 3,324.258 and 3,834.935 seconds respectively, their browser checks and build steps. Those different-host results do not erase the local full-run failure; the 3.11 job remained pending at the latest observation. PR #35's exact delivery passed its native trust checks and source-candidate job; its full Windows matrix was still running when this follow-up began. Results belong to their recorded revision and host.
 
 ## Run and review
 
@@ -32,9 +34,10 @@ Use the project's supported Windows development setup and existing authenticated
 python -m unittest discover -s tests -p test_signed_update_fixture_paths.py -v
 python -m unittest discover -s tests -p test_signed_updates.py -v
 python -m unittest discover -s tests -p test_public_docs.py -v
+python evaluations/2026-10-31/bundle-fixture-paths/run-deep-check.py
 ```
 
-The first command creates synthetic long paths regardless of a short checkout. It neither enables an OS policy nor downloads/replaces tools. The second retains the full signed-update checks, including the two originally failing cases. Use the pinned fixture Node prerequisite documented in [native Node selection](release-node-selection-2026-10-31.md) when running the full repository suite. No new configuration is required.
+The first command creates synthetic long paths regardless of a short checkout. It neither enables an OS policy nor downloads/replaces tools. The second retains the full signed-update checks, including the two originally failing cases. The final command repeats the full tracked-inventory and deep integration probe; its file count reflects the revision being checked. Use the pinned fixture Node prerequisite documented in [native Node selection](release-node-selection-2026-10-31.md) when running the full repository or `test_signed_update*.py` suite. No new configuration is required.
 
 References checked October 31, 2026: [Microsoft's Windows path semantics](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation) and [Git for Windows long-path guidance](https://gitforwindows.org/faq#i-get-errors-trying-to-check-out-files-with-long-path-names). The helper pattern comes from this repository's existing MIT-licensed deep-source-archive test at the base revision. No third-party code or dependency was imported.
 

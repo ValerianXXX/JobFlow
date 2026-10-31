@@ -1,0 +1,21 @@
+{"stage": "all-tracked-copy", "tracked_files": 980, "mismatches": 0, "deep_parent_characters": 150, "maximum_destination_characters": 268, "tracked_list_sha256": "6205043728335b574e3d2571807427e2dc55caf95a7ea8c57a1908764238a515"}
+test_bundle_builder_fails_closed_before_signer_or_formal_outputs (test_signed_updates.SignedUpdateTests.test_bundle_builder_fails_closed_before_signer_or_formal_outputs) ... ERROR
+test_runtime_closure_guard_precedes_ignored_archive_processing (test_signed_updates.SignedUpdateTests.test_runtime_closure_guard_precedes_ignored_archive_processing) ... ok
+
+======================================================================
+ERROR: test_bundle_builder_fails_closed_before_signer_or_formal_outputs (test_signed_updates.SignedUpdateTests.test_bundle_builder_fails_closed_before_signer_or_formal_outputs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_signed_updates.py", line 1033, in test_bundle_builder_fails_closed_before_signer_or_formal_outputs
+    key_mtime_before = key_path.stat().st_mtime_ns
+                       ^^^^^^^^^^^^^^^
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\pathlib.py", line 1013, in stat
+    return os.stat(self, follow_symlinks=follow_symlinks)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: '$PROJECT_ROOT\\tests\\.tmp\\deep-xxxxxxxxxxxxxxxxxxxxxxxxx6e1a_j6r\\jobflow-bundle-e2e-6pvfbhtj\\signer\\LocalAppData\\JobOps\\DevelopmentFixtureSigning\\development-fixture-signing-key.dpapi'
+
+----------------------------------------------------------------------
+Ran 2 tests in 36.399s
+
+FAILED (errors=1)
+{"stage": "cleanup", "owned_deep_root_removed": true}
