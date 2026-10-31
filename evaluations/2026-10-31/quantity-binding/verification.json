@@ -1,0 +1,193 @@
+{
+  "observed_at": "2026-10-31T21:16:03.418478+00:00",
+  "status": "RELATED_CONTRACTS_AND_OFFLINE_REPLAY_PASS_FULL_REGRESSION_RUNNING",
+  "scope": "Synthetic literal quantity grounding, not whole-material or model acceptance",
+  "base": "c3a195e73731d272c81eb2fdbe7327d279c99c36",
+  "frozen": "acf05572d09dc48b424f894bd0b6ea332cd2b1a9",
+  "initial_implementation_with_boundary_failures": "4f9d6fc644b56412c3f3548d28ec6e6f17a16121",
+  "runtime": "2201250558e631935812d13be74889fd4656a6a1",
+  "branch": "codex/jobflow-quantity-evidence-20261031",
+  "baseline": {
+    "methods": 18,
+    "passed": 18,
+    "skipped": 0,
+    "seconds": 0.017,
+    "interpreter": "prepared sibling Python 3.11.3 with this source on PYTHONPATH; full validation uses own environment"
+  },
+  "first_frozen_contracts": {
+    "methods": 13,
+    "before_failed_assertions_including_subtests": 19,
+    "before_seconds": 0.017,
+    "first_after_passed": 13,
+    "first_after_seconds": 0.015
+  },
+  "additional_currency_boundaries": {
+    "methods": 3,
+    "before_failures": 2,
+    "before_seconds": 0.064
+  },
+  "final_quantity_contracts": {
+    "methods": 16,
+    "passed": 16,
+    "skipped": 0,
+    "seconds": 0.073
+  },
+  "all_ai_related": {
+    "methods": 80,
+    "passed": 80,
+    "skipped": 0,
+    "seconds": 1.851
+  },
+  "environment": {
+    "python": "3.11.3",
+    "platform": "Windows",
+    "own_populated_venv": true,
+    "declared_extras": [
+      "build",
+      "mcp",
+      "document"
+    ],
+    "pip_check": "PASS",
+    "node_install": "Copied unchanged locked packages from the prepared template worktree into this worktree; no links; verified existing policy tree hash",
+    "javascript_files": 173,
+    "javascript_bytes": 18516238,
+    "javascript_tree_sha256": "df85481a30bcbc0f7276548d245eba0980d136c8085ca4a3662cb6f3c568302f",
+    "safe_start_audit": "PASS",
+    "knowledge_location": "ENV_MANIFEST_INVALID at deliberate absent sentinel; no private vault accessed"
+  },
+  "replay": {
+    "cases": 2,
+    "live_provider_calls": 0,
+    "new_model_cost_usd": 0,
+    "original_billed_cost_usd": null,
+    "same_response_candidates_before": [
+      34,
+      34
+    ],
+    "same_response_candidates_after": [
+      34,
+      34
+    ],
+    "source_and_review_outputs_equal": true,
+    "actual_pdf_and_dpapi": true,
+    "independent_human_acceptance": false,
+    "whole_material_acceptance": false,
+    "whole_material_recall_gain": null
+  },
+  "full_regression_at_receipt": {
+    "status": "RUNNING_ON_IDENTICAL_RUNTIME_IN_ORIGINAL_WORKTREE",
+    "log": "reports/quantity-full-regression-20261031.log",
+    "runtime_source_frozen": "2201250558e631935812d13be74889fd4656a6a1",
+    "not_counted_as_pass": true,
+    "evidence_branch": "codex/jobflow-quantity-binding-20261031",
+    "evidence_packaging_public_gate": "FAILED; retained separately, not a runtime pass"
+  },
+  "hosted_at_receipt": {
+    "status": "NOT_DISPATCHED",
+    "not_counted_as_pass": true
+  },
+  "production_actions": 0,
+  "new_live_provider_calls": 0,
+  "new_dependencies": 0,
+  "ui_changes": 0,
+  "database_migrations": 0,
+  "remaining": [
+    "Unrecognized units and general semantic metric/entity/date associations",
+    "Complete material coverage and independent user acceptance",
+    "Additional six-call budget decision pending",
+    "Trusted production signing",
+    "Independent clean-Windows install upgrade retention rollback",
+    "Full regression and hosted checks belong to their own eventual observations"
+  ],
+  "observations": {
+    "quantity-grounding-baseline": {
+      "raw_local_sha256": "b409e2b0b819eb39e4b47a6cc57b157e5eed718b3ce78dcc62318c7d0f50318f",
+      "portable_sha256": "5465dcde3dfce0d604c5fd2cfe56cb205561bf665d6c7c6871249c2c00752e80",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-grounding-baseline.txt"
+    },
+    "quantity-binding-before": {
+      "raw_local_sha256": "2b0bcc06473b0d9da19ea282a5addfc0cccfa70e5c060db7fe8381e2639a09cd",
+      "portable_sha256": "d35bfdc3402da64b7860c953b9a59969c7e966a9fb11712d9d68286d5538f80d",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-binding-before.txt"
+    },
+    "quantity-binding-after-initial": {
+      "raw_local_sha256": "6e304a5748a72bbf46771ebca08b80ac95118f8ecd14e47bb7630a33be2fe6cc",
+      "portable_sha256": "40bae55f96aa0da5ec99e403429c3586165e75084880b09e5bb4da2801aadec5",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-binding-after-initial.txt"
+    },
+    "quantity-boundaries-before": {
+      "raw_local_sha256": "6eeb552ad89043fefa5a2655216470b336291301cc19438eb35c8509e332e258",
+      "portable_sha256": "76f2046b95070b6b74c93d99860a0cc7f6434cc00340af36f1dc7e517307d3d6",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-boundaries-before.txt"
+    },
+    "quantity-binding-after": {
+      "raw_local_sha256": "b5d826b4188406d678023cd9b28701869cc8642b2ddc99e04b9f6fd86061f6d5",
+      "portable_sha256": "b515ee691b047fd765fd12809258cda0cecf45846d55e184f4517b372f5d1222",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-binding-after.txt"
+    },
+    "quantity-ai-related": {
+      "raw_local_sha256": "561db4651faaf5020f40ed261ff2044defad25420c0d61e239017b735d9cf335",
+      "portable_sha256": "0cccef0d4801aed2ab2093ec87dbe1020f46de14b648eb03ef39387a18878009",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-ai-related.txt"
+    },
+    "quantity-safe-start-audit": {
+      "raw_local_sha256": "9e585b9d4fb4dc7b3ef6d5358a52b587f5412b7cc677eb3dc0f29fe02023ec6b",
+      "portable_sha256": "0a261e00ce5889d0d26fd033a1c10fd27be1b34b338534cb13970b0d84bdb6d8",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-safe-start-audit.txt"
+    },
+    "quantity-safe-start-locate": {
+      "raw_local_sha256": "3b3d39e18aa6a812a7d13adf97f9559f5cbd198b7e61097adcd46ab8418145ca",
+      "portable_sha256": "2d4e51e1d593f507abd37985092cb7425f362d03f584095d3d0ac531095b0de9",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-safe-start-locate.txt"
+    },
+    "quantity-dependency-check": {
+      "raw_local_sha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf",
+      "portable_sha256": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-dependency-check.txt"
+    },
+    "quantity-node-dependencies": {
+      "raw_local_sha256": "79d00b00cc659f5eab9a2cdf4b5e84a236ff4c150ba6333ca88addf21bafc944",
+      "portable_sha256": "d215ad02df090c807bf2c829628be0de3e269d36fb733b2ed973e24e79b9015b",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-node-dependencies.txt"
+    },
+    "quantity-template-replay": {
+      "raw_local_sha256": "7e84f946e205a4af21464ca7223cde5e170eaa77e62fd8bbafa9381f9daeeed9",
+      "portable_sha256": "9ec0e3a8634cadcffac4c5be019067568d865156358ef0fbed2a650a8b87b214",
+      "path": "evaluations/2026-10-31/quantity-binding/quantity-template-replay.txt"
+    }
+  },
+  "source_sha256": {
+    "src/jobops/ai_runtime.py": "37c6d20937c3ac4961a4c086df65fb432b44039cef563a7f38e1813f28e85d09",
+    "src/jobops/claim_quantities.py": "ead972f7ba909afbe9f7ce3b06b3492a1de7cc559a6696769b5e188368c05991",
+    "tests/test_ai_quantity_binding.py": "24e629876593e45d32e2a53ed3bf494d671febc2983faeb4b4f0e24b3fff2e57",
+    "tests/test_ai_quantity_boundaries.py": "cce43ecaf8a37115ad7957d678ca2c8ecd7ac4e0d393f1be451dd8360c86479b",
+    "scripts/replay-template-pilot.py": "207170ead813ae31c79a3ba8855ceb518c1feb0a94de628f0edf71653e34e74a",
+    "package-lock.json": "f37badf6bf968f9b1471169490efce66c6d41a8f187e4665424313209d2a42fa",
+    "pyproject.toml": "2c6e1d1ad47800893c61f6ebe9c46613d510375e21ae82b1f1228e9a0674515c",
+    "config/release-toolchain.json": "146f0946644a50ec541c8f8f08a84755d852ed019053f6f9156b2c974c4c5598",
+    "docs/quantity-binding-2026-10-31.md": "f2bd8945d2552f611721224a7b6dc8af6898f790348fd19a5d219d37cd599779",
+    ".gitattributes": "e23ffce94cca9631f517bc57ec3c43d65d857aa75f541d14007aa460de355ee0"
+  },
+  "artifact_sha256": {
+    "evaluations/2026-10-31/quantity-binding/packaging-recovery.json": "2ade540a0f8d1b91270ef80702135274a16bd4ce57a5a3a29a1d707dac42cf33",
+    "evaluations/2026-10-31/quantity-binding/quantity-ai-related.txt": "0cccef0d4801aed2ab2093ec87dbe1020f46de14b648eb03ef39387a18878009",
+    "evaluations/2026-10-31/quantity-binding/quantity-binding-after-initial.txt": "40bae55f96aa0da5ec99e403429c3586165e75084880b09e5bb4da2801aadec5",
+    "evaluations/2026-10-31/quantity-binding/quantity-binding-after.txt": "b515ee691b047fd765fd12809258cda0cecf45846d55e184f4517b372f5d1222",
+    "evaluations/2026-10-31/quantity-binding/quantity-binding-before.txt": "d35bfdc3402da64b7860c953b9a59969c7e966a9fb11712d9d68286d5538f80d",
+    "evaluations/2026-10-31/quantity-binding/quantity-boundaries-before.txt": "76f2046b95070b6b74c93d99860a0cc7f6434cc00340af36f1dc7e517307d3d6",
+    "evaluations/2026-10-31/quantity-binding/quantity-dependency-check.txt": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09",
+    "evaluations/2026-10-31/quantity-binding/quantity-grounding-baseline.txt": "5465dcde3dfce0d604c5fd2cfe56cb205561bf665d6c7c6871249c2c00752e80",
+    "evaluations/2026-10-31/quantity-binding/quantity-node-dependencies.txt": "d215ad02df090c807bf2c829628be0de3e269d36fb733b2ed973e24e79b9015b",
+    "evaluations/2026-10-31/quantity-binding/quantity-safe-start-audit.txt": "0a261e00ce5889d0d26fd033a1c10fd27be1b34b338534cb13970b0d84bdb6d8",
+    "evaluations/2026-10-31/quantity-binding/quantity-safe-start-locate.txt": "2d4e51e1d593f507abd37985092cb7425f362d03f584095d3d0ac531095b0de9",
+    "evaluations/2026-10-31/quantity-binding/quantity-template-replay.txt": "9ec0e3a8634cadcffac4c5be019067568d865156358ef0fbed2a650a8b87b214",
+    "evaluations/2026-10-31/quantity-binding/recorded-response-replay.json": "0fa1149cc4e82d82bcab8e5387faf3602c08a43401b3d1005ddb6c7e2205c142",
+    "evaluations/2026-10-31/quantity-binding/replay-comparison.json": "cbc6db1cfa9bfd6f52a8c7dde1a258cb239b63ebc2a1212c619c3e0f8848786a"
+  },
+  "packaging_recovery": "evaluations/2026-10-31/quantity-binding/packaging-recovery.json",
+  "portable_log_transforms": [
+    "UTF-8 and LF",
+    "Replace workspace and home roots with placeholders",
+    "Strip trailing whitespace only; preserve messages, failures and counts; raw local SHA256 retained"
+  ]
+}

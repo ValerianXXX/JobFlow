@@ -4,6 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Bind recognized literal numeric units, scale, sign and currency to the cited
+  coefficient; reject exchanged values in otherwise identical metric clauses.
+  Preserve the original numeric parser, bounded wrap recovery, unselected valid
+  candidates and manual approval. Retain pre-fix failures, currency-boundary
+  failures and an unchanged two-response synthetic PDF/DPAPI replay. No new
+  model calls, dependencies or data migration. [Evidence, scope and rollback](docs/quantity-binding-2026-10-31.md).
+
 - Preserve every tracked file in deep Windows signed-update test fixtures using
   extended filesystem paths, invocation-scoped Git long-path support and bounded
   cleanup. Keep original signing/output assertions and record before/after native

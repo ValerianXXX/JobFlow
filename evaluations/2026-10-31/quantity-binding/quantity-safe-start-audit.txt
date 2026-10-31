@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "audited_at": "2026-10-31T21:07:13.683452Z",
+  "platform": {
+    "system": "Windows",
+    "release": "10",
+    "architecture": "AMD64"
+  },
+  "python": {
+    "version": "3.11.3",
+    "executable": "$PROJECT_ROOT/.venv/Scripts/python.exe",
+    "sqlite_builtin": true
+  },
+  "commands": [
+    {
+      "name": "git",
+      "present": true,
+      "path": "$EXTERNAL_PATH/git.EXE",
+      "health": "AVAILABLE_NOT_EXECUTED"
+    },
+    {
+      "name": "pandoc",
+      "present": true,
+      "path": "$EXTERNAL_PATH/pandoc.EXE",
+      "health": "AVAILABLE_NOT_EXECUTED"
+    },
+    {
+      "name": "pdftoppm",
+      "present": true,
+      "path": "$EXTERNAL_PATH/pdftoppm.EXE",
+      "health": "AVAILABLE_NOT_EXECUTED"
+    },
+    {
+      "name": "pdftotext",
+      "present": false,
+      "path": null,
+      "health": "MISSING_NOT_REQUIRED"
+    },
+    {
+      "name": "sqlite3",
+      "present": false,
+      "path": null,
+      "health": "MISSING_NOT_REQUIRED"
+    },
+    {
+      "name": "node",
+      "present": true,
+      "path": "$EXTERNAL_PATH/node.EXE",
+      "health": "AVAILABLE_NOT_EXECUTED"
+    },
+    {
+      "name": "npm",
+      "present": false,
+      "path": null,
+      "health": "MISSING_NOT_REQUIRED"
+    }
+  ],
+  "document_modules": {
+    "python_docx": true,
+    "pypdf": true,
+    "pdfplumber": true,
+    "reportlab": false
+  },
+  "browser_candidates": [
+    {
+      "name": "edge",
+      "present": true,
+      "path": "$EXTERNAL_PATH/msedge.exe"
+    },
+    {
+      "name": "chrome-user",
+      "present": false,
+      "path": "$EXTERNAL_PATH/chrome.exe"
+    },
+    {
+      "name": "chrome-system",
+      "present": true,
+      "path": "$EXTERNAL_PATH/chrome.exe"
+    }
+  ],
+  "database_strategy": "python_stdlib_sqlite3",
+  "external_action_policy": "DISABLED",
+  "install_actions": [],
+  "summary": "Healthy existing components are reused; no installation or login was attempted.",
+  "external_action_audit": {
+    "attempt_count": 0,
+    "real_external_actions": 0,
+    "status": "PASS",
+    "evidence": "append-only external_action_attempts"
+  },
+  "state_path": "$PROJECT_ROOT/state/environment-audit.json",
+  "next_safe_action": "locate"
+}
