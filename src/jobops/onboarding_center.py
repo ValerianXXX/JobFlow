@@ -2360,6 +2360,8 @@ class OnboardingCenterService:
                 "Only the fixed JobFlow Browser Companion may capture a page.",
             )
         try:
+            if not isinstance(payload, dict):
+                raise TypeError("Captured form must be an object")
             snapshot = deepcopy(payload)
             fingerprint = sha256_bytes(canonical_json(snapshot))
         except (TypeError, ValueError, RecursionError):
@@ -2368,6 +2370,12 @@ class OnboardingCenterService:
         if cached is not None:
             return cached
         with self._lock:
+            # A competing request may have completed while this request waited
+            # for the service lock. Recheck its bound result before interpreting
+            # the now-advanced lease as a request for new work.
+            cached = self._guided_preparations.cached(token, fingerprint)
+            if cached is not None:
+                return cached
             lease = self._guided_lease(token)
             if not lease.get("paired") or lease.get("status") not in {
                 "AWAITING_APPLICATION_FORM_CAPTURE", "FORM_CAPTURE_FAILED", "PREPARING_APPLICATION",
