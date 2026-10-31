@@ -163,7 +163,8 @@ class SignedUpdateTests(unittest.TestCase):
             project=project,
         )
         completed = subprocess.run(
-            [str(GIT), *arguments], cwd=project, env=environment, capture_output=True, text=True,
+            [str(GIT), "-c", "core.longpaths=true", *arguments],
+            cwd=project, env=environment, capture_output=True, text=True,
             encoding="utf-8", errors="replace", check=False,
         )
         if completed.returncode != 0:
@@ -227,8 +228,8 @@ class SignedUpdateTests(unittest.TestCase):
         fixture.mkdir(parents=True)
         tracked = self._git(PROJECT, "ls-files").splitlines()
         for relative in tracked:
-            source = PROJECT / relative
-            destination = fixture / relative
+            source = Path(_windows_extended_path(PROJECT / relative))
+            destination = Path(_windows_extended_path(fixture / relative))
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
 
@@ -1029,7 +1030,7 @@ class SignedUpdateTests(unittest.TestCase):
                 "DevelopmentFixtureSigning" / "development-fixture-signing-key.dpapi"
             )
             key_before = _read_bytes(key_path)
-            key_mtime_before = key_path.stat().st_mtime_ns
+            key_mtime_before = Path(_windows_extended_path(key_path)).stat().st_mtime_ns
             poison = root / "caller-controlled-tool-environment"
             environment.update(
                 {
@@ -1069,7 +1070,7 @@ class SignedUpdateTests(unittest.TestCase):
             self.assertFalse(manifest.exists())
             self.assertFalse(signature.exists())
             self.assertEqual(_read_bytes(key_path), key_before)
-            self.assertEqual(key_path.stat().st_mtime_ns, key_mtime_before)
+            self.assertEqual(Path(_windows_extended_path(key_path)).stat().st_mtime_ns, key_mtime_before)
             leftovers = [
                 path.name for path in (fixture / "dist").iterdir()
                 if path.name.endswith((".tmp", ".bak", ".rollback", ".transaction.json"))

@@ -32,6 +32,10 @@ records the three failed hosted Windows runs, an independent bounded probe and
 an explicit system-module repair. Its focused hosted probe now completes in
 4.734 seconds with all nine native trust/module contracts passing. Full Windows
 regression, signed distribution and clean-machine acceptance remain separate.
+The [bundle-fixture path follow-up](docs/bundle-fixture-paths-2026-10-31.md)
+repairs copying, indexing and cleanup in deep Windows test checkouts without
+changing the release program or its approval gates. Earlier full-run failures
+remain recorded; this maintenance change makes no material-quality claim.
 
 Documented work duration now excludes gaps, overlapping jobs and repeated Claims. Partial dates retain bounds; internship time and skill-specific or full-time requirements require separate review. New Profiles use version 3 while older Profiles remain readable; older generated tenure values need a reviewed revision before supporting a years requirement. [Duration rules, regression evidence and rollback](docs/experience-duration-2026-10-29.md) also record the six-sample Profile-hint check without claiming complete material understanding.
 
