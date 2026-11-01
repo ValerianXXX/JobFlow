@@ -104,6 +104,23 @@ the source context remain unchanged.
   `setuptools 65.5.0` below the declared build minimum. The isolated environment
   now uses the existing validated `wheel 0.48.0` / `setuptools 80.10.2`; no product
   dependency requirement was weakened. Logs of both earlier starts are retained.
+- The next hosted source-candidate job (`41298935701`, job `124825933496`)
+  stopped at `PUBLIC_REPOSITORY_BOUNDARY_FAILED`: the two redacted test receipts
+  had been published with the forbidden `.log` suffix. Current copies now use
+  `.txt`. History is preserved. The history scanner recognizes only those two
+  fixed path/SHA-256 pairs and still checks their text; any other path or changed
+  historical version remains blocked, as do all current `.log` files. This is
+  not an identity or release-approval exception. The separately frozen
+  [history protocol](public-test-receipts-protocol-2026-11-01.md) and three real-Git
+  tests cover unchanged public bytes, another path and changed-then-restored
+  history. Existing public boundary checks remain enabled.
+  The frozen history fixture initially failed one of three tests. After the
+  correction, 20 public-boundary tests and 53 release-related tests pass. An
+  explicit authenticated-Git audit of the actual 433-commit local history also
+  passes, with zero current/history findings and no new identity exception.
+  The [history-boundary receipt](../evaluations/2026-11-01/assertion-validation/history-boundary/verification.json)
+  preserves the earlier failure and narrow scope; repository readiness still
+  does not authorize a public release.
 - A wheel built without publishing contains the exact final guard, runtime and
   UI source bytes; JavaScript syntax checks passed. Browser evidence, related
   logs, preparation failures and final artifact hashes are recorded in the

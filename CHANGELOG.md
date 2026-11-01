@@ -13,6 +13,10 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
   Preserve English status prefixes before Chinese actions; describe an AI retry
   as a new analysis request rather than claiming the result was corrected.
   [Frozen comparison, replay, validation and limitations](docs/assertion-status-2026-11-01.md).
+  Retain the failed full-run evidence using `.txt` receipts. Recognize only the
+  two exact already-published test-receipt path/hash pairs in historical scans;
+  current logs, changed historical bytes and all other privacy checks stay
+  blocked or enforced. No author-identity or production-release approval changes.
 
 - Add final application-file preview and explicit download inside the local review
   packet. Revalidate the packet, application association and encrypted file before
