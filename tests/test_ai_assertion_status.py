@@ -93,6 +93,16 @@ class AssertionStatusTests(unittest.TestCase):
         self.assertFalse(_statement_grounding_report("申请人核验这个合成项目。", source)["valid"])
         self.assertTrue(_statement_grounding_report("申请人没有核验这个合成项目。", source)["valid"])
 
+    def test_english_status_prefix_survives_a_chinese_action(self):
+        for source, statement, expected in (
+            ("The applicant did not 处理这些合成客户资料和账户信息。", "The applicant 处理这些合成客户资料和账户信息。", False),
+            ("The applicant will 部署这个合成项目的演示程序和帮助页面。", "The applicant 已部署这个合成项目的演示程序和帮助页面。", False),
+            ("The applicant did not 处理这些合成客户资料和账户信息。", "The applicant 没有处理这些合成客户资料和账户信息。", True),
+            ("The applicant 没有处理这些合成客户资料和账户信息。", "The applicant did not 处理这些合成客户资料和账户信息。", True),
+        ):
+            with self.subTest(statement=statement, expected=expected):
+                self.assertEqual(_statement_grounding_report(statement, source)["valid"], expected)
+
 
 if __name__ == "__main__":
     unittest.main()
