@@ -684,6 +684,9 @@ body.is-busy :is(#emergencyStop,#cancelGuidedIntake,#pauseAuthorizedDiscovery,#k
 }
 
 @media (max-width: 440px) {
+  .claim-row { grid-template-columns: 1fr; }
+  .claim-row > .claim-decision { grid-column: auto; }
+  .claim-merge-picker { padding-top: 0; }
   .ats-capability-list { grid-template-columns: 1fr; }
   .offline-discovery-controls,.offline-application-grid,.official-candidate-item { grid-template-columns: 1fr; }
   .guided-intake-board { padding: 15px; }

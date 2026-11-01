@@ -36,6 +36,7 @@ from .candidate_profile import (
     unique_values,
 )
 from .candidate_coverage import source_reference_coverage
+from .claim_wording import dependent_claim_ids, wording_hash, wording_provenance, wording_record
 from .source_context import DocumentAnalysisResult, bind_context_notes, safe_context_summary
 from .context_decisions import prepare_review as prepare_context_review, review_state as context_review_state, track_answer_versions
 from .experience import documented_experience
@@ -375,6 +376,8 @@ def _evidence_preview(statement: str, excerpt: str) -> dict[str, Any]:
 
 
 def _is_ai_qualified_claim(item: dict[str, Any]) -> bool:
+    # Legacy admission flag: AI analysis ancestry, not verification of later user wording.
+    # Current wording is described separately by claim_wording.wording_provenance.
     return (
         item.get("ai_validated") is True
         and item.get("analysis_mode") == STRICT_AI_ANALYSIS_MODE
@@ -1646,6 +1649,16 @@ class OnboardingCenterService:
                 "entity_id": item.get("entity_id"), "entity": item.get("entity"),
                 "claim_kind": item.get("claim_kind"),
             })
+            current = output[-1]
+            original = {**current, "statement": item.get("resume_statement") or fallback,
+                        "category": item.get("category", "optional")}
+            candidate_hash = wording_hash(original)
+            record = override.get("wording_provenance")
+            if record is None:
+                origin = "AI_CANDIDATE" if wording_hash(current) == candidate_hash else "USER_EDITED"
+                record = wording_record(current, origin, candidate_sha256=candidate_hash)
+            current["wording_provenance"] = wording_provenance(current, record)
+            current["source_review_required"] = bool(override.get("source_review_required"))
         output.extend({
             "claim_id": item["claim_id"], "category": item["category"],
             "statement": item.get("statement"), "lifecycle_status": "AI_FILTERED_REQUIRES_CONFIRMATION",
@@ -1656,6 +1669,18 @@ class OnboardingCenterService:
             "entity_id": item.get("entity_id"), "entity": item.get("entity"),
             "claim_kind": item.get("claim_kind"),
         } for item in state.get("material_claims", []) if _is_ai_qualified_claim(item))
+        materials = {item["claim_id"]: item for item in state.get("material_claims", []) if _is_ai_qualified_claim(item)}
+        for current in output:
+            if current["claim_id"] in materials:
+                stored = materials[current["claim_id"]]
+                legacy = {"derived-merge": "USER_MERGED", "derived-split": "USER_SPLIT"}.get(stored.get("source_id"), "UNVERIFIED")
+                current["wording_provenance"] = wording_provenance(current, stored.get("wording_provenance"), legacy_origin=legacy)
+                current["source_review_required"] = bool(stored.get("source_review_required"))
+            origin = current["wording_provenance"]["origin"]
+            if origin != "AI_CANDIDATE":
+                current["lifecycle_status"] = f"{origin}_REQUIRES_CONFIRMATION"
+                if current["claim_id"] in materials:
+                    current["source_kind"] = "user_wording_with_source_ancestry" if origin.startswith("USER_") else "legacy_material_origin_unverified"
         return output
 
     def _conflicts_for_ui(self, state: dict[str, Any]) -> list[dict[str, Any]]:
@@ -4492,6 +4517,11 @@ class OnboardingCenterService:
                 selected_item["entity"] = revised_entity
                 selected_item["entity_id"] = revised_entity["entity_id"]
                 selected_item["applicant_category_override"] = True
+            candidate_hash = wording_hash(original)
+            selected_item["wording_provenance"] = wording_record(
+                selected_item, "AI_CANDIDATE" if wording_hash(selected_item) == candidate_hash else "USER_EDITED",
+                candidate_sha256=candidate_hash,
+            )
             selected.append(selected_item)
         if pending.get("replace_existing"):
             state["material_claims"] = [item for item in state.get("material_claims", []) if item.get("source_id") != source_id]
@@ -4537,6 +4567,7 @@ class OnboardingCenterService:
                 "confidence": item.get("confidence", "LOW"), "claim_kind": item.get("claim_kind"),
                 "entity_id": item.get("entity_id"), "entity": deepcopy(item.get("entity")),
                 "applicant_category_override": bool(item.get("applicant_category_override")),
+                "wording_provenance": deepcopy(item["wording_provenance"]),
             }
             state["material_claims"].append(claim)
             known_claims.add(claim_id)
@@ -5144,8 +5175,6 @@ class OnboardingCenterService:
         reference, state = self.ensure_state()
         self._assert_editable(state)
         profile_review = payload.get("profile_review")
-        if profile_review in {"PENDING", "CONFIRMED"}:
-            state["profile_review"] = profile_review
         edits = payload.get("claim_edits", {})
         if not isinstance(edits, dict):
             raise JobOpsError("CLAIM_EDIT_INVALID", "Claim edits must be an object.")
@@ -5154,6 +5183,8 @@ class OnboardingCenterService:
             if item.get("claim_id") and _is_ai_qualified_claim(item)
         }
         material = {item["claim_id"]: item for item in state.get("material_claims", []) if _is_ai_qualified_claim(item)}
+        previous = {item["claim_id"]: item for item in self._claims_for_ui(state)}
+        changed: set[str] = set()
         for claim_id, edit in edits.items():
             if claim_id not in base_ids and claim_id not in material or not isinstance(edit, dict):
                 raise JobOpsError("CLAIM_EDIT_INVALID", "A Claim edit references an unknown Claim.")
@@ -5162,6 +5193,11 @@ class OnboardingCenterService:
             deleted = edit.get("deleted") is True
             if not deleted and (not _complete_claim_text(statement) or category not in ALLOWED_CATEGORIES):
                 raise JobOpsError("CLAIM_EDIT_INVALID", "An active Claim needs text and a category.")
+            before = previous[claim_id]
+            wording_changed = (statement, category) != (before["statement"], before["category"])
+            if not wording_changed and deleted == before["deleted"]:
+                continue
+            changed.add(claim_id)
             if claim_id in material:
                 entity = material[claim_id].get("entity")
                 if entity and category not in ENTITY_CATEGORIES:
@@ -5179,10 +5215,22 @@ class OnboardingCenterService:
                     material[claim_id]["applicant_category_override"] = True
                 material[claim_id].update({"statement": statement, "category": category, "deleted": deleted})
                 material[claim_id]["approved_for_external"] = False
+                target = material[claim_id]
             else:
-                state.setdefault("claim_overrides", {})[claim_id] = {
+                target = state.setdefault("claim_overrides", {}).setdefault(claim_id, {})
+                target.update({
                     "statement": statement, "category": category, "deleted": deleted, "updated_at": iso_utc(),
-                }
+                })
+            if wording_changed:
+                updated = {**before, **target}
+                origin = before["wording_provenance"]
+                target["wording_provenance"] = wording_record(updated, "USER_EDITED", candidate_sha256=origin["candidate_sha256"])
+                # Preserve the original derivation snapshots, even after a manual revision.
+                target["wording_provenance"]["parents"] = deepcopy(origin["parents"])
+            if claim_id in material:
+                material[claim_id]["decision"] = "REJECTED" if deleted else "PENDING"
+            else:
+                state["claim_decisions"][claim_id] = "REJECTED" if deleted else "PENDING"
             if deleted:
                 if claim_id in state.get("claim_decisions", {}):
                     state["claim_decisions"][claim_id] = "REJECTED"
@@ -5190,6 +5238,16 @@ class OnboardingCenterService:
                     material[claim_id]["decision"] = "REJECTED"
                 if claim_id in state.get("conflict_resolutions", {}):
                     state["conflict_resolutions"][claim_id].update({"status": "RESOLVED", "resolution": "EXCLUDE", "manual_value": None})
+        descendants = dependent_claim_ids(previous.values(), changed)
+        for claim_id in descendants:
+            target = material.get(claim_id)
+            if target is not None:
+                target.update({"decision": "REJECTED" if target.get("deleted") else "PENDING",
+                               "approved_for_external": False, "source_review_required": True})
+        if changed:
+            state["profile_review"] = "PENDING"
+        if profile_review in {"PENDING", "CONFIRMED"} and not descendants:
+            state["profile_review"] = profile_review
         decisions = payload.get("claim_decisions", {})
         if not isinstance(decisions, dict):
             raise JobOpsError("CLAIM_REVIEW_INVALID", "Claim decisions must be an object.")
@@ -5197,10 +5255,20 @@ class OnboardingCenterService:
         for claim_id, decision in decisions.items():
             if decision not in {"PENDING", "CONFIRMED", "REJECTED"}:
                 raise JobOpsError("CLAIM_REVIEW_INVALID", "Claim review decisions must be pending, confirmed, or rejected.")
+            # The UI sends all decisions. A descendant's old confirmation cannot confirm
+            # a newly changed ancestor in this same request; require a subsequent review.
+            if claim_id in descendants:
+                continue
+            if claim_id in previous:
+                current_deleted = material[claim_id].get("deleted") if claim_id in material else state.get("claim_overrides", {}).get(claim_id, {}).get("deleted", False)
+                if current_deleted:
+                    decision = "REJECTED"
             if claim_id in known:
                 state["claim_decisions"][claim_id] = decision
             elif claim_id in material:
                 material[claim_id]["decision"] = decision
+                if decision in {"CONFIRMED", "REJECTED"}:
+                    material[claim_id]["source_review_required"] = False
             else:
                 raise JobOpsError("CLAIM_REVIEW_INVALID", "A Claim decision references an unknown Claim.")
         resolutions = payload.get("conflict_resolutions", {})
@@ -5274,6 +5342,9 @@ class OnboardingCenterService:
                 "entity_id": ui_claims[claim_ids[0]].get("entity_id"),
                 "entity": deepcopy(ui_claims[claim_ids[0]].get("entity")),
             })
+            state["material_claims"][-1]["wording_provenance"] = wording_record(
+                state["material_claims"][-1], "USER_MERGED", parents=[ui_claims[parent] for parent in claim_ids],
+            )
             created.append(claim_id)
         elif action == "SPLIT":
             statements = payload.get("statements", [])
@@ -5295,6 +5366,9 @@ class OnboardingCenterService:
                     "entity_id": ui_claims[claim_ids[0]].get("entity_id"),
                     "entity": deepcopy(ui_claims[claim_ids[0]].get("entity")),
                 })
+                state["material_claims"][-1]["wording_provenance"] = wording_record(
+                    state["material_claims"][-1], "USER_SPLIT", parents=[ui_claims[claim_ids[0]]],
+                )
                 created.append(claim_id)
         else:
             raise JobOpsError("CLAIM_TRANSFORM_INVALID", "Unsupported Claim transformation.")
