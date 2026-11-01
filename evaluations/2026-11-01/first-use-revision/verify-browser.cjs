@@ -183,6 +183,9 @@ let child,browser,page,stdout='',stderr='',exitPromise;
   fs.writeFileSync(path.join(out,'review-packet.json'),JSON.stringify(packet,null,2)+'\n');
   assert.equal(packet.status,'AWAITING_APPROVAL');assert.equal(packet.application_status,'AWAITING_APPROVAL');
   assert.equal(packet.packet.material_plan.all_uploads_and_submission_blocked,true);
+  const selectedFacts=packet.packet.resume_bullets.map(item=>item.text);
+  assert.equal(selectedFacts.length,2);assert.equal(new Set(selectedFacts).size,2);
+  report.expected_final_facts=selectedFacts;
   await page.screenshot({path:path.join(out,'application-awaiting-approval.png')});
   const id=packet.application_id;await page.reload();await page.locator(`.open-review-packet[data-id="${id}"]`).waitFor();
   await page.locator(`.open-review-packet[data-id="${id}"]`).click();await idle();
@@ -209,6 +212,12 @@ let child,browser,page,stdout='',stderr='',exitPromise;
   if(stderr)fs.writeFileSync(path.join(out,'server-stderr.txt'),stderr);
   report.bound_source_unchanged=git('diff',report.observed_head,'--',...boundPaths)==='';
   if(!report.bound_source_unchanged){report.status='FAILED';process.exitCode=1;}
+  if(report.status==='PASS'){
+   const python=process.env.JOBFLOW_TEST_PYTHON||path.join(root,'.venv/Scripts/python.exe');
+   const program='import json,sys; from docx import Document; p=json.load(sys.stdin); paragraphs=[x.text for x in Document(p["file"]).paragraphs]; print(json.dumps([paragraphs.count(f) for f in p["facts"]]))';
+   const counts=JSON.parse(execFileSync(python,['-c',program],{cwd:root,windowsHide:true,encoding:'utf8',input:JSON.stringify({file:path.join(out,'native-qa-1/resume.docx'),facts:report.expected_final_facts})}));
+   assert.deepEqual(counts,[1,1]);report.final_docx_fact_occurrences=counts;
+  }
   save();
  }
-})().catch(error=>{process.stderr.write(String(error)+'\n');process.exitCode=1;});
+})().catch(error=>{report.status='FAILED';report.error=String(error);save();process.stderr.write(String(error)+'\n');process.exitCode=1;});

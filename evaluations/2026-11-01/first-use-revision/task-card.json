@@ -1,5 +1,5 @@
 {
-  "protocol": "EMPTY_PROFILE_TO_APPLICATION_REPLAY_UI_V1",
+  "protocol": "EMPTY_PROFILE_TO_APPLICATION_REPLAY_UI_V2",
   "synthetic_only": true,
   "runtime_commit": "95b8be63e7bdb479e4043e04ef0c0026beb36899",
   "source": "tests/fixtures/material-layout-probes-v1/zh-columns.pdf",
@@ -94,5 +94,6 @@
   "application_fixtures": "tests/fixtures/first-use-revision-v1",
   "visual_review": "Pause before adoption until every actual exported page has been inspected and hash-bound by the assistant. This is synthetic browser simulation, not an independent human.",
   "expected_endpoint": "AWAITING_APPROVAL",
-  "new_cloud_calls": 0
+  "new_cloud_calls": 0,
+  "v2_additional_assertion": "After V1 reached the packet, actual visual inspection found duplicated resume wording. V2 keeps all task inputs and adds two distinct packet facts and exactly one occurrence of each in the actual generated DOCX. V1 browser PASS remains recorded with a separate material-review failure."
 }
