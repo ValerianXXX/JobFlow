@@ -121,6 +121,12 @@ the source context remain unchanged.
   The [history-boundary receipt](../evaluations/2026-11-01/assertion-validation/history-boundary/verification.json)
   preserves the earlier failure and narrow scope; repository readiness still
   does not authorize a public release.
+  The subsequent [source-candidate result](../evaluations/2026-11-01/assertion-validation/history-boundary/source-candidate-followup.json)
+  on `b04201d` passes: two archives match, all 1,366 packaged files pass the
+  boundary check, and the isolated loopback health/UI/offline-discovery smoke
+  passes with zero uploads or external actions. The changed checker and tests
+  exactly match their packaged Git bytes. This is a source package, not a signed
+  Windows installer or independent installation/upgrade acceptance.
 - A wheel built without publishing contains the exact final guard, runtime and
   UI source bytes; JavaScript syntax checks passed. Browser evidence, related
   logs, preparation failures and final artifact hashes are recorded in the
