@@ -315,6 +315,7 @@ class JobOpsOrchestrator:
         original evidence remains separate from the new editable layout.
         """
         from .external_claims import validate_external_claim_set_snapshot
+        from .runtime_schema import validate_schema
 
         def invalid() -> None:
             raise JobOpsError(
@@ -353,7 +354,7 @@ class JobOpsOrchestrator:
         prior_claim_ref = str(draft.get("claim_set_ref", ""))
         self._assert_private_reference(prior_claim_ref, kinds={"external_claim_set"}, synthetic=False)
         prior_claims = self._load_json_ref(prior_claim_ref)
-        validate_named("external-claim-set", prior_claims, self.schemas)
+        validate_schema(prior_claims, load_json(self.schemas / "external-claim-set.schema.json"))
         # This proves historical adoption, not permission to use today's facts.
         # _real_application_context separately requires the current unexpired
         # Claim set and exact current Profile/master/tailoring bindings.

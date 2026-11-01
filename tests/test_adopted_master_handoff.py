@@ -181,7 +181,13 @@ class AdoptedMasterHandoffTests(unittest.TestCase):
         prior = json.loads(self.onboarding.read_bytes(draft["claim_set_ref"]))
         prior["expires_at"] = "2020-01-01T00:00:00Z"
         prior["content_hash"] = sha256_bytes(canonical_json({key: value for key, value in prior.items() if key != "content_hash"}))
+        with self.service.database.connect() as connection:
+            prior_updated = connection.execute("SELECT updated_at FROM private_refs WHERE secure_ref=?", (draft["claim_set_ref"],)).fetchone()[0]
         self.onboarding.rotate(draft["claim_set_ref"], canonical_json(prior))
+        # Keep historical chronology: rotating a fixture must not accidentally
+        # make its old permission the latest current approval in this test.
+        with self.service.database.connect() as connection:
+            connection.execute("UPDATE private_refs SET updated_at=? WHERE secure_ref=?", (prior_updated, draft["claim_set_ref"]))
         draft["claim_set_hash"] = prior["content_hash"]
         self.onboarding.rotate(draft_ref, canonical_json(draft))
         refs = self.assert_admitted()
