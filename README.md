@@ -15,6 +15,14 @@ signed desktop release. GitHub releases were rechecked on October 31: v0.7.0
 still contains source/checksum assets only; v0.6.0 remains the latest stable tag.
 Use the **Development setup** below to evaluate this branch.
 
+Material review now rejects recognized negation and planned-action conflicts:
+for example, “did not manage” cannot become “managed”, and “proposed deploying”
+cannot become “deployed”. It explains the skipped candidates in Chinese/English
+while preserving the source and leaving retained candidates unselected. The
+[fixed counterexamples, historical-output replay and remaining gaps](docs/assertion-status-2026-11-01.md)
+describe this bounded check; it is not general semantic verification or full
+material-understanding acceptance.
+
 PDF-first users can adopt a generated DOCX and continue into application
 preparation. The handoff now verifies the exact adoption receipt and original
 PDF instead of rejecting every generated master. Current material permission

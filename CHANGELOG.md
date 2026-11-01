@@ -4,6 +4,14 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Preserve explicit negation and prospective-action status when checking Claim
+  candidates against cited text. Reject recognized conflicts, including a
+  negation/plan prefix omitted by a bounded physical-line citation, without
+  rewriting Claims or rejecting readable source files. Keep complete negative
+  predicates and literal short Chinese additive clauses reviewable. Explain
+  status conflicts in both UI languages and label source counts as candidates.
+  [Frozen comparison, replay, validation and limitations](docs/assertion-status-2026-11-01.md).
+
 - Add final application-file preview and explicit download inside the local review
   packet. Revalidate the packet, application association and encrypted file before
   returning bytes; reject stale/revoked/changed data and discard late preview replies.
