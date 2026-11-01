@@ -1,0 +1,14 @@
+test_windows_adapter_uses_only_a_fixed_action_argument (test_authorized_discovery_tasks.AuthorizedDiscoveryTaskTests.test_windows_adapter_uses_only_a_fixed_action_argument) ... FAIL
+
+======================================================================
+FAIL: test_windows_adapter_uses_only_a_fixed_action_argument (test_authorized_discovery_tasks.AuthorizedDiscoveryTaskTests.test_windows_adapter_uses_only_a_fixed_action_argument)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-resume-selection\tests\test_authorized_discovery_tasks.py", line 152, in test_windows_adapter_uses_only_a_fixed_action_argument
+    self.assertNotIn(forbidden, serialized.casefold())
+AssertionError: 'resume' unexpectedly found in '["c:\\\\windows\\\\system32\\\\windowspowershell\\\\v1.0\\\\powershell.exe", "-nologo", "-noprofile", "-noninteractive", "-executionpolicy", "bypass", "-file", "$WORKSPACE_ROOT\\\\jobflow-resume-selection\\\\scripts\\\\windows-runtime\\\\manage-authorized-discovery-task.ps1", "-action", "register"]'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.009s
+
+FAILED (failures=1)

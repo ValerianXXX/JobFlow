@@ -24,3 +24,6 @@ evaluations/2026-10-31/mail-outcome/*.txt text eol=lf
 evaluations/2026-10-31/claim-wording/*.txt text eol=lf
 evaluations/2026-11-01/resume-selection/*.txt text eol=lf
 evaluations/2026-11-01/resume-selection/*.json text eol=lf
+evaluations/2026-11-01/first-use/*.txt text eol=lf
+evaluations/2026-11-01/first-use/*.json text eol=lf
+evaluations/2026-11-01/first-use/*.cjs text eol=lf

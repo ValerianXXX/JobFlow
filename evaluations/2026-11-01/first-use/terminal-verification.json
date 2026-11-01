@@ -1,0 +1,31 @@
+{
+  "observed_at_utc": "2026-11-01T05:36:14.141195+00:00",
+  "status": "PASS",
+  "runtime": "8df8d155fe438937f8c856590a3fd7b016f4764a",
+  "observed_head": "16f393b4ee0286f0430577a653b2aff437a71eb6",
+  "observed_product_tree": "ea49bc182ee34d234d1c9ce40e8eeca7141bb711",
+  "product_and_release_runtime_unchanged": true,
+  "bound_source_unchanged": true,
+  "published_runner_sha256": "0567ad79f299e0be151d15664413776af6e749d1177a97575987cc02c4d95dba",
+  "published_result_sha256": "d637f5f78a5cb8b0b6ca19330e6374c06feccc024c087562bb618c2f557c0a19",
+  "earlier_pending_harness_archive": "initial-published-harness.cjs.txt",
+  "earlier_pending_harness_sha256": "695e5b0b64b5db4c9065120fc99e17a78c1be6dad6c8fc5a46cc33d8cb73c544",
+  "original_artifacts_verified": 8,
+  "relative_links_verified": 8,
+  "new_model_calls": 0,
+  "recorded_response_replays_across_all_attempts": 4,
+  "distinct_task_cards": 1,
+  "failed_harness_attempts_retained": 1,
+  "successful_repetitions": 3,
+  "repetition_reasons": [
+    "Correct missing UI navigation",
+    "Verify repository-relative published runner",
+    "Verify actual-head/source binding in the published runner"
+  ],
+  "independent_human": false,
+  "fresh_model_quality_observation": false,
+  "whole_goal_complete": false,
+  "full_python": "Original unchanged full run still running with known path-word assertion failure; exact delivery CI pending",
+  "production_actions": [],
+  "actual_total_cost_usd": null
+}

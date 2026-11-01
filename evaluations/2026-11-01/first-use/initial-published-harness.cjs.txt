@@ -1,0 +1,122 @@
+"use strict";
+const assert=require('node:assert/strict');
+const {spawn}=require('node:child_process');
+const fs=require('node:fs');
+const path=require('node:path');
+const crypto=require('node:crypto');
+const root=path.resolve(__dirname,'../../..');
+const {chromium}=require('playwright');
+const task=JSON.parse(fs.readFileSync(path.join(__dirname,'task-card.json'),'utf8'));
+const out=path.join(root,'reports/empty-profile-replay',process.env.JOBFLOW_OBSERVATION_ID||new Date().toISOString().replace(/[:.]/g,'-'));
+fs.mkdirSync(out,{recursive:true});
+assert.equal(fs.existsSync(path.join(out,'result.json')),false,'Preserve previous observations');
+const report={protocol:task.protocol,synthetic_only:true,model:task.model,new_model_calls:0,independent_human:false,steps:[],runtime:task.runtime_commit};
+const save=()=>fs.writeFileSync(path.join(out,'result.json'),JSON.stringify(report,null,2)+'\n');
+const checkpoint=(step,detail)=>{report.steps.push({step,at:new Date().toISOString(),...detail});save();process.stdout.write(JSON.stringify(report.steps.at(-1))+'\n');};
+let child,browser,page,stdout='',stderr='',exitPromise;
+(async()=>{
+ try{
+  const python=process.env.JOBFLOW_TEST_PYTHON||path.join(root,'.venv/Scripts/python.exe');
+  child=spawn(python,[path.join(root,'tests/pdf_regions_ui_server.py'),'--stdio-control'],{cwd:root,windowsHide:true,stdio:['pipe','pipe','pipe']});
+  exitPromise=new Promise(resolve=>child.once('exit',resolve));
+  child.stdout.on('data',chunk=>{stdout+=chunk;});child.stderr.on('data',chunk=>{stderr+=chunk;});
+  const url=await new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>reject(new Error('Fixture startup deadline')),120000);
+   child.once('error',e=>{clearTimeout(timer);reject(e);});
+   child.once('exit',code=>{clearTimeout(timer);reject(new Error('Fixture startup exit '+code));});
+   child.stdout.on('data',()=>{if(stdout.includes('\n')){clearTimeout(timer);resolve(JSON.parse(stdout.split('\n')[0]).url);}});
+  });
+  browser=await chromium.launch({channel:'msedge',headless:true});
+  page=await browser.newPage({viewport:{width:1365,height:900}});page.setDefaultTimeout(45000);
+  const origin=new URL(url).origin,external=[],errors=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.route('**/*',route=>{if(route.request().url().startsWith(origin+'/'))return route.continue();external.push(route.request().url());return route.abort();});
+  const idle=()=>page.locator('#activityIndicator').waitFor({state:'hidden'});
+  await page.goto(url);await page.waitForFunction(()=>state.data&&!document.querySelector('#documentFile').disabled);
+  const initial=await page.evaluate(()=>({sources:state.data.sources.length,claims:state.data.claims.length,status:state.data.status}));
+  assert.deepEqual(initial,task.expected_initial);checkpoint('empty_workspace',initial);
+  await page.locator('#documentFile').setInputFiles(path.join(root,task.source));
+  await page.locator('.source-preview').waitFor();await idle();
+  assert.equal(await page.locator('.preview-select').count(),5);assert.equal(await page.locator('.preview-select:checked').count(),0);
+  await page.locator('.source-review-open').click();await page.waitForFunction(()=>document.querySelector('.source-original img')?.naturalWidth>0);
+  await page.locator('.source-original').screenshot({path:path.join(out,'original.png')});
+  await page.locator('.visual-source-confirm').check();await page.locator('.include-all-preview').click();
+  await page.waitForFunction(()=>state.data?.claims?.length===5);await idle();
+  await page.reload();await page.waitForFunction(()=>state.data?.claims?.length===5);await idle();
+  const retained=await page.evaluate(()=>({sources:state.data.sources.length,decisions:state.data.claims.map(x=>x.decision),status:state.data.status}));
+  assert.deepEqual(retained.decisions,Array(5).fill('PENDING'));assert.equal(retained.status,'IN_PROGRESS');checkpoint('retained_unapproved_after_reload',retained);
+  await page.locator('[data-locale="en"]').click();await idle();
+  await page.locator('.step[data-target="questionnaire"]').click();
+  for(const detail of await page.locator('#questionGroups details').all()){
+   if(await detail.getAttribute('open')===null)await detail.locator(':scope > summary').click();
+  }
+  const fields=await page.evaluate(()=>state.data.catalog.fields.map(f=>({id:f.id,type:f.input_type})));
+  assert.equal(fields.length,Object.keys(task.answers).length+task.decline.length+task.not_applicable.length);
+  for(const field of fields){
+   const row=page.locator(`[data-question="${field.id}"]`);
+   if(Object.hasOwn(task.answers,field.id)){
+    const input=row.locator('.answer-input');
+    if(field.type==='select')await input.selectOption(task.answers[field.id]);else await input.fill(task.answers[field.id]);
+    await row.locator('.status-select').selectOption('CONFIRMED');
+   }else if(task.decline.includes(field.id)){
+    await row.locator('.status-select').selectOption('PREFER_NOT_TO_ANSWER');
+    await row.locator('.policy-select').selectOption('do_not_store');
+   }else{
+    assert.ok(task.not_applicable.includes(field.id));await row.locator('.status-select').selectOption('NOT_APPLICABLE');
+   }
+  }
+  await page.locator('#saveAnswers').click();await idle();
+  const saved=await page.evaluate(()=>({resolved:state.data.completion,answerCount:Object.keys(state.data.answers).length,status:state.data.status}));
+  assert.equal(saved.status,'IN_PROGRESS');checkpoint('answers_saved_through_ui',saved);
+  await page.locator('.step[data-target="finish"]').click();
+  await page.locator('#finalConfirm').check();
+  const prematureResponse=page.waitForResponse(response=>response.url().endsWith('/api/complete'));
+  await page.locator('#completeOnboarding').click();
+  const rejected=await prematureResponse;const rejectedBody=await rejected.json();await idle();
+  assert.equal(rejected.status(),400);assert.equal(rejectedBody.code,'PROFILE_REVIEW_REQUIRED');
+  assert.equal(await page.evaluate(()=>state.data.status),'IN_PROGRESS');
+  checkpoint('premature_completion_blocked',{http:rejected.status(),code:rejectedBody.code,status:'IN_PROGRESS'});
+  await page.locator('.step[data-target="review"]').click();
+  for(const decision of await page.locator('.claim-decision').all())await decision.selectOption('CONFIRMED');
+  await page.locator('#profileReview').check();await page.locator('#saveReview').click();await idle();
+  const review=await page.evaluate(()=>({decisions:state.data.claims.map(x=>x.decision),profile:state.data.profile_review,status:state.data.status,readiness:state.data.readiness}));
+  assert.deepEqual(review.decisions,Array(5).fill('CONFIRMED'));assert.equal(review.profile,'CONFIRMED');checkpoint('review_saved_through_ui',review);
+  await page.locator('#finalConfirm').check();
+  await page.locator('#completeOnboarding:not([disabled])').waitFor();await page.locator('#completeOnboarding').click();await idle();
+  await page.waitForFunction(()=>state.data?.status==='ONBOARDING_COMPLETE');
+  checkpoint('completed_from_empty',{status:await page.evaluate(()=>state.data.status)});
+  await page.locator('#externalClaimConfirm').check();await page.locator('#approveExternalClaims:not([disabled])').click();await idle();
+  await page.locator('#createStandardResume:not([disabled])').waitFor();
+  const choices=page.locator('.standard-resume-choice');assert.equal(await choices.count(),5);
+  for(let i=2;i<5;i++)await choices.nth(i).uncheck();
+  await page.locator('#createStandardResume').click();await idle();await page.locator('#standardResumeDraft').waitFor();
+  const preview=await page.evaluate(()=>state.standardResume.preview);
+  assert.equal(preview.claim_count,2);assert.equal(preview.excluded_claim_count,3);
+  const downloadPromise=page.waitForEvent('download');await page.locator('#downloadStandardResume').click();
+  const download=await downloadPromise;await download.saveAs(path.join(out,'selected-from-empty.docx'));
+  checkpoint('first_resume_from_empty',{selected:preview.claim_count,excluded:preview.excluded_claim_count,layout:preview.layout,wording:preview.sections.flatMap(x=>x.items.map(y=>y.text)),docx_sha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(out,'selected-from-empty.docx'))).digest('hex')});
+  await page.screenshot({path:path.join(out,'desktop-completed.png')});
+  await page.reload();await page.locator('#restoreStandardResume:not([disabled])').waitFor();await page.locator('#restoreStandardResume').click();await idle();
+  assert.equal(await page.locator('.standard-resume-choice:checked').count(),2);
+  assert.equal(await page.locator('#standardResumeConfirm').isChecked(),false);
+  await page.setViewportSize({width:390,height:844});await page.locator('#standardResumePanel').scrollIntoViewIfNeeded();
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true);
+  await page.screenshot({path:path.join(out,'mobile-restored.png')});
+  assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
+  checkpoint('restored_without_consent',{selected:2,external_requests:external.length,page_errors:errors.length});
+  report.status='PASS';
+ }catch(error){
+  report.status='FAILED';report.error=String(error);if(page){await page.screenshot({path:path.join(out,'failure.png'),fullPage:true}).catch(()=>{});fs.writeFileSync(path.join(out,'failure.txt'),String(error)+'\n'+await page.locator('body').innerText().catch(()=>''));}throw error;
+ }finally{
+  if(browser)await browser.close();
+  if(child){child.stdin.end('stop\n');const result=await Promise.race([exitPromise,new Promise(resolve=>setTimeout(()=>resolve('timeout'),20000))]);
+   report.fixture_exit=result;if(result==='timeout'){child.kill();report.cleanup_status='TIMEOUT';}else{
+    report.server=JSON.parse(stdout.trim().split(/\r?\n/).at(-1));
+    assert.equal(result,0);assert.equal(report.server.temporary_state_removed,true);
+    assert.equal(report.server.real_model_calls,0);assert.equal(report.server.database_counts.external_action_attempts,0);
+   }
+  }
+  if(stderr)fs.writeFileSync(path.join(out,'server-stderr.txt'),stderr);
+  save();
+ }
+})().catch(error=>{process.stderr.write(String(error)+'\n');process.exitCode=1;});

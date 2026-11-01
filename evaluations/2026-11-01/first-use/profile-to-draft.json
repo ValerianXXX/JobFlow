@@ -1,0 +1,111 @@
+{
+  "protocol": "EMPTY_PROFILE_REPLAY_UI_V1",
+  "synthetic_only": true,
+  "model": "Pinned recorded CJK response; no fresh inference",
+  "new_model_calls": 0,
+  "independent_human": false,
+  "steps": [
+    {
+      "step": "empty_workspace",
+      "at": "2026-11-01T05:24:18.403Z",
+      "sources": 0,
+      "claims": 0,
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "retained_unapproved_after_reload",
+      "at": "2026-11-01T05:24:26.629Z",
+      "sources": 1,
+      "decisions": [
+        "PENDING",
+        "PENDING",
+        "PENDING",
+        "PENDING",
+        "PENDING"
+      ],
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "answers_saved_through_ui",
+      "at": "2026-11-01T05:24:33.780Z",
+      "resolved": {
+        "total": 25,
+        "resolved": 25,
+        "remaining": 0,
+        "remaining_fields": [],
+        "percent": 100
+      },
+      "answerCount": 40,
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "premature_completion_blocked",
+      "at": "2026-11-01T05:24:35.512Z",
+      "http": 400,
+      "code": "PROFILE_REVIEW_REQUIRED",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "review_saved_through_ui",
+      "at": "2026-11-01T05:24:38.503Z",
+      "decisions": [
+        "CONFIRMED",
+        "CONFIRMED",
+        "CONFIRMED",
+        "CONFIRMED",
+        "CONFIRMED"
+      ],
+      "profile": "CONFIRMED",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "completed_from_empty",
+      "at": "2026-11-01T05:24:44.484Z",
+      "status": "ONBOARDING_COMPLETE"
+    },
+    {
+      "step": "first_resume_from_empty",
+      "at": "2026-11-01T05:24:53.720Z",
+      "selected": 2,
+      "excluded": 3,
+      "layout": "STANDARD_SINGLE_COLUMN_V2",
+      "wording": [
+        "在合成青杉实验室02担任分析员期间，团队核验了14家门店。",
+        "合成青杉实验室02的分析员任职日期为2023-2024。"
+      ],
+      "docx_sha256": "e8cd7a26f8fc51e94e2705bac402670243f7e8392d20354bc00dfd1a53bb36fe"
+    },
+    {
+      "step": "restored_without_consent",
+      "at": "2026-11-01T05:24:58.197Z",
+      "selected": 2,
+      "external_requests": 0,
+      "page_errors": 0
+    }
+  ],
+  "runtime": "8df8d155fe438937f8c856590a3fd7b016f4764a",
+  "status": "PASS",
+  "fixture_exit": 0,
+  "server": {
+    "synthetic_only": true,
+    "real_model_calls": 0,
+    "recorded_response_replays": 1,
+    "invalid_visual_responses": 0,
+    "source_count": 1,
+    "material_claim_count": 5,
+    "claim_decisions": [
+      "CONFIRMED",
+      "CONFIRMED",
+      "CONFIRMED",
+      "CONFIRMED",
+      "CONFIRMED"
+    ],
+    "database_counts": {
+      "applications": 0,
+      "claims": 0,
+      "approvals": 0,
+      "external_action_attempts": 0
+    },
+    "temporary_state_removed": true
+  }
+}
