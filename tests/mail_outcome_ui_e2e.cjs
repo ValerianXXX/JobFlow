@@ -42,6 +42,27 @@ const root = path.resolve(__dirname, "..");
       assert.equal(response.status(), expected, await response.text());
       return response.json();
     };
+    const capture = async (card, name) => {
+      // Capture actual viewports: a tall element screenshot can composite the
+      // sticky page header over card content that was never covered on screen.
+      await card.locator("h4").evaluate(element => {
+        const header = document.querySelector(".topbar").getBoundingClientRect();
+        window.scrollBy(0, element.getBoundingClientRect().top - header.height - 16);
+      });
+      await page.waitForFunction(() => getComputedStyle(document.querySelector("#toast")).opacity === "0");
+      const heading = await card.locator("h4").boundingBox();
+      const topbar = await page.locator(".topbar").boundingBox();
+      assert.ok(heading.y >= topbar.y + topbar.height, "Card title must be below the sticky header");
+      await page.screenshot({path: path.join(artifacts, name + "-result.png")});
+      await card.locator(".mail-actions").evaluate(element => {
+        window.scrollBy(0, element.getBoundingClientRect().bottom - window.innerHeight + 20);
+      });
+      for (const control of await card.locator(".mail-actions button").all()) {
+        const box = await control.boundingBox();
+        assert.ok(box.y >= topbar.height && box.y + box.height <= page.viewportSize().height);
+      }
+      await page.screenshot({path: path.join(artifacts, name + "-controls.png")});
+    };
     await page.goto(url);
     await page.getByRole("button", {name: "查看状态收件箱", exact: true}).click();
     const panel = page.locator("#statusInboxPanel");
@@ -83,7 +104,7 @@ const root = path.resolve(__dirname, "..");
       user_confirmed: true, expected_review_ref: initial.review_ref}, 400);
     assert.equal(stale.code, "MAIL_REVIEW_STALE");
     await page.waitForFunction(() => getComputedStyle(document.querySelector("#toast")).opacity === "0");
-    await english.screenshot({path: path.join(artifacts, "desktop-zh.png")});
+    await capture(english, "desktop-zh");
 
     await page.reload();
     await page.getByRole("button", {name: "查看状态收件箱", exact: true}).click();
@@ -97,7 +118,7 @@ const root = path.resolve(__dirname, "..");
     await english.scrollIntoViewIfNeeded();
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true);
     assert.match(await english.locator(".mail-user-outcome").innerText(), /Your recorded message outcome: Interview invitation/);
-    await english.screenshot({path: path.join(artifacts, "mobile-en.png")});
+    await capture(english, "mobile-en");
     const chinese = panel.locator(".mail-event").filter({hasText: "请选一个时间与招聘小组交谈。"});
     await chinese.locator(".mail-application").selectOption("APP-DEFACED00001");
     await chinese.locator(".mail-outcome-status").selectOption("INTERVIEW_INVITED");

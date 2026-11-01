@@ -217,12 +217,18 @@ class MailOutcomeServiceTests(unittest.TestCase):
         private, inbox, _, _ = helper.make_inbox()
         helper.record(inbox)
         evidence = json.loads(private.get_bytes(inbox.events[0]['evidence_ref']))
-        for mutation in ('span', 'hash', 'application', 'status'):
+        for mutation in ('span', 'shifted-span', 'boolean-offset', 'quote-hash', 'hash', 'application', 'status'):
             with self.subTest(mutation=mutation):
                 event = deepcopy(inbox.events[0])
                 record = event['review_history'][-1]
                 if mutation == 'span':
                     record['outcome']['evidence_span']['start'] = -1
+                elif mutation == 'shifted-span':
+                    record['outcome']['evidence_span']['start'] += 1
+                elif mutation == 'boolean-offset':
+                    record['outcome']['evidence_span']['start'] = False
+                elif mutation == 'quote-hash':
+                    record['outcome']['quote_sha256'] = 'sha256:' + '0' * 64
                 elif mutation == 'hash':
                     record['outcome']['evidence_sha256'] = 'sha256:' + '0' * 64
                 elif mutation == 'application':
