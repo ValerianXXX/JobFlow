@@ -1,0 +1,134 @@
+FFFFFFFFFFFEEFF
+======================================================================
+ERROR: test_options_are_available_only_with_current_resume_approval (test_standard_resume_selection.StandardResumeSelectionTests.test_options_are_available_only_with_current_resume_approval)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 83, in test_options_are_available_only_with_current_resume_approval
+    options = service.bootstrap()["standard_resume"]["claim_options"]
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+KeyError: 'claim_options'
+
+======================================================================
+ERROR: test_reversed_selection_is_canonical_and_default_still_includes_all (test_standard_resume_selection.StandardResumeSelectionTests.test_reversed_selection_is_canonical_and_default_still_includes_all)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 65, in test_reversed_selection_is_canonical_and_default_still_includes_all
+    self.assertEqual(reordered["preview"]["included_claim_ids"], sorted(ids))
+                     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'included_claim_ids'
+
+======================================================================
+FAIL: test_distinct_selections_never_reuse_the_other_draft_and_repeat_is_idempotent (test_standard_resume_selection.StandardResumeSelectionTests.test_distinct_selections_never_reuse_the_other_draft_and_repeat_is_idempotent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 53, in test_distinct_selections_never_reuse_the_other_draft_and_repeat_is_idempotent
+    self.assertNotEqual(first["draft_ref"], second["draft_ref"])
+AssertionError: 'secure-ref:SYNTHETIC0011' == 'secure-ref:SYNTHETIC0011'
+
+======================================================================
+FAIL: test_invalid_selection_rejects_before_creating_or_reusing_a_draft (test_standard_resume_selection.StandardResumeSelectionTests.test_invalid_selection_rejects_before_creating_or_reusing_a_draft) (kind='list', value=[])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 74, in test_invalid_selection_rejects_before_creating_or_reusing_a_draft
+    with self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_invalid_selection_rejects_before_creating_or_reusing_a_draft (test_standard_resume_selection.StandardResumeSelectionTests.test_invalid_selection_rejects_before_creating_or_reusing_a_draft) (kind='list', value=['CLM-SYNTHETIC01', 'CLM-SYNTHETIC01'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 74, in test_invalid_selection_rejects_before_creating_or_reusing_a_draft
+    with self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_invalid_selection_rejects_before_creating_or_reusing_a_draft (test_standard_resume_selection.StandardResumeSelectionTests.test_invalid_selection_rejects_before_creating_or_reusing_a_draft) (kind='list', value=['UNKNOWN-CLAIM'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 74, in test_invalid_selection_rejects_before_creating_or_reusing_a_draft
+    with self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_invalid_selection_rejects_before_creating_or_reusing_a_draft (test_standard_resume_selection.StandardResumeSelectionTests.test_invalid_selection_rejects_before_creating_or_reusing_a_draft) (kind='list', value=['CLM-SYNTHETIC01', 4])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 74, in test_invalid_selection_rejects_before_creating_or_reusing_a_draft
+    with self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_invalid_selection_rejects_before_creating_or_reusing_a_draft (test_standard_resume_selection.StandardResumeSelectionTests.test_invalid_selection_rejects_before_creating_or_reusing_a_draft) (kind='str', value='CLM-SYNTHETIC01')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 74, in test_invalid_selection_rejects_before_creating_or_reusing_a_draft
+    with self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_invalid_selection_rejects_before_creating_or_reusing_a_draft (test_standard_resume_selection.StandardResumeSelectionTests.test_invalid_selection_rejects_before_creating_or_reusing_a_draft) (kind='NoneType', value=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 74, in test_invalid_selection_rejects_before_creating_or_reusing_a_draft
+    with self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_invalid_selection_rejects_before_creating_or_reusing_a_draft (test_standard_resume_selection.StandardResumeSelectionTests.test_invalid_selection_rejects_before_creating_or_reusing_a_draft) (kind='bool', value=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 74, in test_invalid_selection_rejects_before_creating_or_reusing_a_draft
+    with self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_invalid_selection_rejects_before_creating_or_reusing_a_draft (test_standard_resume_selection.StandardResumeSelectionTests.test_invalid_selection_rejects_before_creating_or_reusing_a_draft) (kind='dict', value={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 74, in test_invalid_selection_rejects_before_creating_or_reusing_a_draft
+    with self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_modified_selection_receipt_cannot_be_downloaded_or_adopted (test_standard_resume_selection.StandardResumeSelectionTests.test_modified_selection_receipt_cannot_be_downloaded_or_adopted) (operation='standard_resume_file')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 99, in test_modified_selection_receipt_cannot_be_downloaded_or_adopted
+    with self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_modified_selection_receipt_cannot_be_downloaded_or_adopted (test_standard_resume_selection.StandardResumeSelectionTests.test_modified_selection_receipt_cannot_be_downloaded_or_adopted) (operation='adopt_standard_resume')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 99, in test_modified_selection_receipt_cannot_be_downloaded_or_adopted
+    with self.assertRaises(JobOpsError) as caught:
+AssertionError: JobOpsError not raised
+
+======================================================================
+FAIL: test_subset_adoption_keeps_original_evidence_and_requires_new_approvals (test_standard_resume_selection.StandardResumeSelectionTests.test_subset_adoption_keeps_original_evidence_and_requires_new_approvals)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 108, in test_subset_adoption_keeps_original_evidence_and_requires_new_approvals
+    self.assertEqual(result["preview"]["claim_count"], 1)
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_subset_retains_exact_wording_and_never_changes_approved_registry_or_source (test_standard_resume_selection.StandardResumeSelectionTests.test_subset_retains_exact_wording_and_never_changes_approved_registry_or_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\tests\test_standard_resume_selection.py", line 37, in test_subset_retains_exact_wording_and_never_changes_approved_registry_or_source
+    self.assertEqual(preview_ids(result), [ids[0]])
+AssertionError: Lists differ: ['CLM-SYNTHETIC01', 'CLM-SYNTHETIC02'] != ['CLM-SYNTHETIC01']
+
+First list contains 1 additional elements.
+First extra element 1:
+'CLM-SYNTHETIC02'
+
+- ['CLM-SYNTHETIC01', 'CLM-SYNTHETIC02']
++ ['CLM-SYNTHETIC01']
+
+----------------------------------------------------------------------
+Ran 7 tests in 17.029s
+
+FAILED (failures=13, errors=2)

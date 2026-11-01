@@ -1,0 +1,1 @@
+Standard resume UI: PASS (synthetic PDF profile, actual DPAPI, bilingual, download, adoption, reload)
