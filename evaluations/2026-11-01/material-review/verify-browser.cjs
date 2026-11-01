@@ -7,7 +7,7 @@ const crypto=require('node:crypto');
 const root=path.resolve(__dirname,'../../..');
 const {chromium}=require('playwright');
 const task=JSON.parse(fs.readFileSync(path.join(__dirname,'task-card.json'),'utf8'));
-const out=path.join(root,'reports/material-review-native',process.env.JOBFLOW_OBSERVATION_ID||new Date().toISOString().replace(/[:.]/g,'-'));
+const out=path.join(root,'reports/first-use-revision',process.env.JOBFLOW_OBSERVATION_ID||new Date().toISOString().replace(/[:.]/g,'-'));
 fs.mkdirSync(out,{recursive:true});
 assert.equal(fs.existsSync(path.join(out,'result.json')),false,'Preserve previous observations');
 const git=(...args)=>execFileSync('git',args,{cwd:root,windowsHide:true,encoding:'utf8'}).trim();
@@ -245,10 +245,14 @@ let child,browser,page,stdout='',stderr='',exitPromise;
   report.status='FAILED';report.error=String(error);if(page){await page.screenshot({path:path.join(out,'failure.png'),fullPage:true}).catch(()=>{});fs.writeFileSync(path.join(out,'failure.txt'),String(error)+'\n'+await page.locator('body').innerText().catch(()=>''));}throw error;
  }finally{
   if(browser)await browser.close();
+  if(stderr)fs.writeFileSync(path.join(out,'server-stderr.txt'),stderr);
   if(child){child.stdin.end('stop\n');const result=await Promise.race([exitPromise,new Promise(resolve=>setTimeout(()=>resolve('timeout'),20000))]);
    report.fixture_exit=result;if(result==='timeout'){child.kill();report.cleanup_status='TIMEOUT';}else{
-    report.server=JSON.parse(stdout.trim().split(/\r?\n/).at(-1));
-    assert.equal(result,0);assert.equal(report.server.temporary_state_removed,true);
+    assert.equal(result,0,'Synthetic fixture exited without successful cleanup');
+    const receipt=stdout.trim().split(/\r?\n/).at(-1);
+    assert.ok(receipt,'Synthetic fixture did not emit its cleanup receipt');
+    report.server=JSON.parse(receipt);
+    assert.equal(report.server.temporary_state_removed,true);
     assert.equal(report.server.real_model_calls,0);assert.equal(report.server.database_counts.external_action_attempts,0);assert.equal(report.server.database_counts.approvals,0);
    }
   }
@@ -263,4 +267,4 @@ let child,browser,page,stdout='',stderr='',exitPromise;
   }
   save();
  }
-})().catch(error=>{report.status='FAILED';report.error=String(error);save();process.stderr.write(String(error)+'\n');process.exitCode=1;});
+})().catch(error=>{report.status='FAILED';report.error=report.error||String(error);save();process.stderr.write(String(error)+'\n');process.exitCode=1;});
