@@ -1,0 +1,1 @@
+Mail review HTTP/DPAPI UI PASS: negation, plain/HTML history, review/reload/undo, bilingual desktop/mobile; no external actions.

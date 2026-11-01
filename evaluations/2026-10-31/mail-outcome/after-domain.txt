@@ -1,0 +1,17 @@
+test_corrupt_outcome_span_or_binding_is_not_displayed_as_a_user_result (test_mail_outcome.MailOutcomeServiceTests.test_corrupt_outcome_span_or_binding_is_not_displayed_as_a_user_result) ... ok
+test_public_service_review_reload_stale_rejection_and_undo_preserve_protected_state (test_mail_outcome.MailOutcomeServiceTests.test_public_service_review_reload_stale_rejection_and_undo_preserve_protected_state) ... ok
+test_changed_or_unreadable_evidence_cannot_receive_a_review (test_mail_outcome.MailOutcomeTests.test_changed_or_unreadable_evidence_cannot_receive_a_review) ... ok
+test_confirmation_and_an_existing_application_are_required (test_mail_outcome.MailOutcomeTests.test_confirmation_and_an_existing_application_are_required) ... ok
+test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) ... ok
+test_failed_save_keeps_prior_journal_and_allows_explicit_retry (test_mail_outcome.MailOutcomeTests.test_failed_save_keeps_prior_journal_and_allows_explicit_retry) ... ok
+test_later_link_dismiss_or_undo_retires_current_outcome_without_erasing_history (test_mail_outcome.MailOutcomeTests.test_later_link_dismiss_or_undo_retires_current_outcome_without_erasing_history) ... ok
+test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) ... ok
+test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) ... ok
+test_reimport_and_paging_keep_review_and_original_interpretation (test_mail_outcome.MailOutcomeTests.test_reimport_and_paging_keep_review_and_original_interpretation) ... ok
+test_revised_result_keeps_prior_result_and_marks_uncertainty_explicitly (test_mail_outcome.MailOutcomeTests.test_revised_result_keeps_prior_result_and_marks_uncertainty_explicitly) ... ok
+test_unicode_quote_offsets_are_python_characters_not_browser_utf16 (test_mail_outcome.MailOutcomeTests.test_unicode_quote_offsets_are_python_characters_not_browser_utf16) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.853s
+
+OK

@@ -20,3 +20,4 @@ MANIFEST.in text eol=lf
 evaluations/2026-10-31/quantity-binding/*.txt text eol=lf
 evaluations/2026-10-31/launcher-handoff/*.txt text eol=lf
 evaluations/2026-10-31/pdf-page-content/*.txt text eol=lf
+evaluations/2026-10-31/mail-outcome/*.txt text eol=lf

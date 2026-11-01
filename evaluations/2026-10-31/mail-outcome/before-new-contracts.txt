@@ -1,0 +1,459 @@
+test_corrupt_outcome_span_or_binding_is_not_displayed_as_a_user_result (test_mail_outcome.MailOutcomeServiceTests.test_corrupt_outcome_span_or_binding_is_not_displayed_as_a_user_result) ... ERROR
+test_public_service_review_reload_stale_rejection_and_undo_preserve_protected_state (test_mail_outcome.MailOutcomeServiceTests.test_public_service_review_reload_stale_rejection_and_undo_preserve_protected_state) ... ERROR
+test_changed_or_unreadable_evidence_cannot_receive_a_review (test_mail_outcome.MailOutcomeTests.test_changed_or_unreadable_evidence_cannot_receive_a_review) ...
+  test_changed_or_unreadable_evidence_cannot_receive_a_review (test_mail_outcome.MailOutcomeTests.test_changed_or_unreadable_evidence_cannot_receive_a_review) (replacement=b'not json') ... ERROR
+  test_changed_or_unreadable_evidence_cannot_receive_a_review (test_mail_outcome.MailOutcomeTests.test_changed_or_unreadable_evidence_cannot_receive_a_review) (replacement=b'{"body":"PRIVATE_ERROR_DETAIL","subject":"changed"}') ... ERROR
+test_confirmation_and_an_existing_application_are_required (test_mail_outcome.MailOutcomeTests.test_confirmation_and_an_existing_application_are_required) ...
+  test_confirmation_and_an_existing_application_are_required (test_mail_outcome.MailOutcomeTests.test_confirmation_and_an_existing_application_are_required) (overrides={'confirmed': False}) ... ERROR
+  test_confirmation_and_an_existing_application_are_required (test_mail_outcome.MailOutcomeTests.test_confirmation_and_an_existing_application_are_required) (overrides={'confirmed': 1}) ... ERROR
+  test_confirmation_and_an_existing_application_are_required (test_mail_outcome.MailOutcomeTests.test_confirmation_and_an_existing_application_are_required) (overrides={'application_id': None}) ... ERROR
+  test_confirmation_and_an_existing_application_are_required (test_mail_outcome.MailOutcomeTests.test_confirmation_and_an_existing_application_are_required) (overrides={'application_id': 'APP-UNKNOWN'}) ... ERROR
+test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) ...
+  test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='APPLICATION_RECEIVED', body='Your materials are safely in our queue.') ... ERROR
+  test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='APPLICATION_RECEIVED', body='我们已将你的资料放入待审列表。') ... ERROR
+  test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='REJECTED', body='We have chosen another candidate for this opening.') ... ERROR
+  test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='REJECTED', body='这个岗位已经由另一位候选人获得。') ... ERROR
+  test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='INTERVIEW_INVITED', body='Please choose a time to speak with our hiring panel.') ... ERROR
+  test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='INTERVIEW_INVITED', body='请选一个时间与招聘小组交谈。') ... ERROR
+  test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='UNKNOWN', body='We will be in touch when the review ends.') ... ERROR
+  test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='UNKNOWN', body='评估结束后我们会再联系。') ... ERROR
+test_failed_save_keeps_prior_journal_and_allows_explicit_retry (test_mail_outcome.MailOutcomeTests.test_failed_save_keeps_prior_journal_and_allows_explicit_retry) ... ERROR
+test_later_link_dismiss_or_undo_retires_current_outcome_without_erasing_history (test_mail_outcome.MailOutcomeTests.test_later_link_dismiss_or_undo_retires_current_outcome_without_erasing_history) ... ERROR
+test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) ...
+  test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status='SUBMITTED') ... ERROR
+  test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status='CONFIRMED') ... ERROR
+  test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status='APPROVED') ... ERROR
+  test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status='OFFER') ... ERROR
+  test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status='') ... ERROR
+  test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status=None) ... ERROR
+  test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status=True) ... ERROR
+  test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status=[]) ... ERROR
+  test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status={}) ... ERROR
+test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) ...
+  test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='Please choose a time to speak with our hiring panel. This is synthetic evidence.', quote='') ... ERROR
+  test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='Please choose a time to speak with our hiring panel. This is synthetic evidence.', quote='   ') ... ERROR
+  test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='Please choose a time to speak with our hiring panel. This is synthetic evidence.', quote='not in the message') ... ERROR
+  test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='Please choose a time to speak with our hiring panel. This is synthetic evidence.', quote='xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') ... ERROR
+  test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='Please choose a time to speak with our hiring panel. This is synthetic evidence.', quote=None) ... ERROR
+  test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='repeat repeat', quote='repeat') ... ERROR
+  test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='aaaaa', quote='aaa') ... ERROR
+test_reimport_and_paging_keep_review_and_original_interpretation (test_mail_outcome.MailOutcomeTests.test_reimport_and_paging_keep_review_and_original_interpretation) ... ERROR
+test_revised_result_keeps_prior_result_and_marks_uncertainty_explicitly (test_mail_outcome.MailOutcomeTests.test_revised_result_keeps_prior_result_and_marks_uncertainty_explicitly) ... ERROR
+test_unicode_quote_offsets_are_python_characters_not_browser_utf16 (test_mail_outcome.MailOutcomeTests.test_unicode_quote_offsets_are_python_characters_not_browser_utf16) ... ERROR
+
+======================================================================
+ERROR: test_corrupt_outcome_span_or_binding_is_not_displayed_as_a_user_result (test_mail_outcome.MailOutcomeServiceTests.test_corrupt_outcome_span_or_binding_is_not_displayed_as_a_user_result)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 215, in test_corrupt_outcome_span_or_binding_is_not_displayed_as_a_user_result
+    from jobops.mail_review import current_user_outcome
+ModuleNotFoundError: No module named 'jobops.mail_review'
+
+======================================================================
+ERROR: test_public_service_review_reload_stale_rejection_and_undo_preserve_protected_state (test_mail_outcome.MailOutcomeServiceTests.test_public_service_review_reload_stale_rejection_and_undo_preserve_protected_state)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 192, in test_public_service_review_reload_stale_rejection_and_undo_preserve_protected_state
+    result = service.review_status_message(payload)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\src\jobops\onboarding_center.py", line 224, in wrapper
+    return method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\src\jobops\onboarding_center.py", line 915, in review_status_message
+    return inbox.review(str(payload.get("event_id", "")), application_id=payload.get("application_id"),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\src\jobops\mail_tracking.py", line 353, in review
+    raise JobOpsError(
+jobops.errors.JobOpsError: Explicitly confirm or reject the evidence link.
+
+======================================================================
+ERROR: test_changed_or_unreadable_evidence_cannot_receive_a_review (test_mail_outcome.MailOutcomeTests.test_changed_or_unreadable_evidence_cannot_receive_a_review) (replacement=b'not json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 117, in test_changed_or_unreadable_evidence_cannot_receive_a_review
+    self.record(inbox)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_changed_or_unreadable_evidence_cannot_receive_a_review (test_mail_outcome.MailOutcomeTests.test_changed_or_unreadable_evidence_cannot_receive_a_review) (replacement=b'{"body":"PRIVATE_ERROR_DETAIL","subject":"changed"}')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 117, in test_changed_or_unreadable_evidence_cannot_receive_a_review
+    self.record(inbox)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_confirmation_and_an_existing_application_are_required (test_mail_outcome.MailOutcomeTests.test_confirmation_and_an_existing_application_are_required) (overrides={'confirmed': False})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 89, in test_confirmation_and_an_existing_application_are_required
+    self.record(inbox, **overrides)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_confirmation_and_an_existing_application_are_required (test_mail_outcome.MailOutcomeTests.test_confirmation_and_an_existing_application_are_required) (overrides={'confirmed': 1})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 89, in test_confirmation_and_an_existing_application_are_required
+    self.record(inbox, **overrides)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_confirmation_and_an_existing_application_are_required (test_mail_outcome.MailOutcomeTests.test_confirmation_and_an_existing_application_are_required) (overrides={'application_id': None})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 89, in test_confirmation_and_an_existing_application_are_required
+    self.record(inbox, **overrides)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_confirmation_and_an_existing_application_are_required (test_mail_outcome.MailOutcomeTests.test_confirmation_and_an_existing_application_are_required) (overrides={'application_id': 'APP-UNKNOWN'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 89, in test_confirmation_and_an_existing_application_are_required
+    self.record(inbox, **overrides)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='APPLICATION_RECEIVED', body='Your materials are safely in our queue.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 54, in test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence
+    result = self.record(inbox, reported_status=status, evidence_quote=body)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='APPLICATION_RECEIVED', body='我们已将你的资料放入待审列表。')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 54, in test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence
+    result = self.record(inbox, reported_status=status, evidence_quote=body)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='REJECTED', body='We have chosen another candidate for this opening.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 54, in test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence
+    result = self.record(inbox, reported_status=status, evidence_quote=body)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='REJECTED', body='这个岗位已经由另一位候选人获得。')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 54, in test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence
+    result = self.record(inbox, reported_status=status, evidence_quote=body)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='INTERVIEW_INVITED', body='Please choose a time to speak with our hiring panel.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 54, in test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence
+    result = self.record(inbox, reported_status=status, evidence_quote=body)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='INTERVIEW_INVITED', body='请选一个时间与招聘小组交谈。')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 54, in test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence
+    result = self.record(inbox, reported_status=status, evidence_quote=body)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='UNKNOWN', body='We will be in touch when the review ends.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 54, in test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence
+    result = self.record(inbox, reported_status=status, evidence_quote=body)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence (test_mail_outcome.MailOutcomeTests.test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence) (status='UNKNOWN', body='评估结束后我们会再联系。')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 54, in test_eight_bilingual_manual_outcomes_keep_original_proposal_and_exact_evidence
+    result = self.record(inbox, reported_status=status, evidence_quote=body)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_failed_save_keeps_prior_journal_and_allows_explicit_retry (test_mail_outcome.MailOutcomeTests.test_failed_save_keeps_prior_journal_and_allows_explicit_retry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 127, in test_failed_save_keeps_prior_journal_and_allows_explicit_retry
+    self.record(inbox)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_later_link_dismiss_or_undo_retires_current_outcome_without_erasing_history (test_mail_outcome.MailOutcomeTests.test_later_link_dismiss_or_undo_retires_current_outcome_without_erasing_history)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 154, in test_later_link_dismiss_or_undo_retires_current_outcome_without_erasing_history
+    from jobops.mail_review import current_user_outcome
+ModuleNotFoundError: No module named 'jobops.mail_review'
+
+======================================================================
+ERROR: test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status='SUBMITTED')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 78, in test_protected_or_unrecognized_statuses_cannot_be_saved
+    self.record(inbox, reported_status=status)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status='CONFIRMED')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 78, in test_protected_or_unrecognized_statuses_cannot_be_saved
+    self.record(inbox, reported_status=status)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status='APPROVED')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 78, in test_protected_or_unrecognized_statuses_cannot_be_saved
+    self.record(inbox, reported_status=status)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status='OFFER')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 78, in test_protected_or_unrecognized_statuses_cannot_be_saved
+    self.record(inbox, reported_status=status)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 78, in test_protected_or_unrecognized_statuses_cannot_be_saved
+    self.record(inbox, reported_status=status)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 78, in test_protected_or_unrecognized_statuses_cannot_be_saved
+    self.record(inbox, reported_status=status)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 78, in test_protected_or_unrecognized_statuses_cannot_be_saved
+    self.record(inbox, reported_status=status)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status=[])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 78, in test_protected_or_unrecognized_statuses_cannot_be_saved
+    self.record(inbox, reported_status=status)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_protected_or_unrecognized_statuses_cannot_be_saved (test_mail_outcome.MailOutcomeTests.test_protected_or_unrecognized_statuses_cannot_be_saved) (status={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 78, in test_protected_or_unrecognized_statuses_cannot_be_saved
+    self.record(inbox, reported_status=status)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='Please choose a time to speak with our hiring panel. This is synthetic evidence.', quote='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 99, in test_quote_must_be_bounded_present_and_unambiguous
+    self.record(inbox, evidence_quote=quote)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='Please choose a time to speak with our hiring panel. This is synthetic evidence.', quote='   ')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 99, in test_quote_must_be_bounded_present_and_unambiguous
+    self.record(inbox, evidence_quote=quote)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='Please choose a time to speak with our hiring panel. This is synthetic evidence.', quote='not in the message')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 99, in test_quote_must_be_bounded_present_and_unambiguous
+    self.record(inbox, evidence_quote=quote)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='Please choose a time to speak with our hiring panel. This is synthetic evidence.', quote='xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 99, in test_quote_must_be_bounded_present_and_unambiguous
+    self.record(inbox, evidence_quote=quote)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='Please choose a time to speak with our hiring panel. This is synthetic evidence.', quote=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 99, in test_quote_must_be_bounded_present_and_unambiguous
+    self.record(inbox, evidence_quote=quote)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='repeat repeat', quote='repeat')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 99, in test_quote_must_be_bounded_present_and_unambiguous
+    self.record(inbox, evidence_quote=quote)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_quote_must_be_bounded_present_and_unambiguous (test_mail_outcome.MailOutcomeTests.test_quote_must_be_bounded_present_and_unambiguous) (body='aaaaa', quote='aaa')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 99, in test_quote_must_be_bounded_present_and_unambiguous
+    self.record(inbox, evidence_quote=quote)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_reimport_and_paging_keep_review_and_original_interpretation (test_mail_outcome.MailOutcomeTests.test_reimport_and_paging_keep_review_and_original_interpretation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 137, in test_reimport_and_paging_keep_review_and_original_interpretation
+    self.record(inbox)
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+======================================================================
+ERROR: test_revised_result_keeps_prior_result_and_marks_uncertainty_explicitly (test_mail_outcome.MailOutcomeTests.test_revised_result_keeps_prior_result_and_marks_uncertainty_explicitly)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 172, in test_revised_result_keeps_prior_result_and_marks_uncertainty_explicitly
+    from jobops.mail_review import current_user_outcome
+ModuleNotFoundError: No module named 'jobops.mail_review'
+
+======================================================================
+ERROR: test_unicode_quote_offsets_are_python_characters_not_browser_utf16 (test_mail_outcome.MailOutcomeTests.test_unicode_quote_offsets_are_python_characters_not_browser_utf16)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 106, in test_unicode_quote_offsets_are_python_characters_not_browser_utf16
+    self.record(inbox, evidence_quote='  ' + quote + '\n')
+  File "<WORKSPACE>\JobFlow-mail-outcome\tests\test_mail_outcome.py", line 46, in record
+    return inbox.record_outcome(inbox.events[0]['event_id'], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApplicationStatusInbox' object has no attribute 'record_outcome'
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.755s
+
+FAILED (errors=37)

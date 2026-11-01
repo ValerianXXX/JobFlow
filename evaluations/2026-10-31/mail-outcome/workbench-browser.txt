@@ -1,0 +1,1 @@
+Workbench HTTP/DPAPI UI PASS: bilingual, desktop/mobile, source review, snapshot integrity, mail link/reload/undo/clear, UI approval through synthetic receipt; no external requests.

@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "syntheticOnly": true,
+  "store": "REAL_WINDOWS_DPAPI",
+  "mailboxAccess": false,
+  "externalRequests": 0,
+  "modelRequests": 0,
+  "locales": [
+    "zh",
+    "en"
+  ],
+  "viewports": [
+    "1365x900",
+    "390x844"
+  ],
+  "outcomesRecorded": 3,
+  "originalProposalRetained": true,
+  "exactQuoteRequired": true,
+  "ambiguousQuoteRejected": true,
+  "staleReviewRejected": true,
+  "keyboardControls": true,
+  "reloadAndUndo": true,
+  "applicationStateChanged": false,
+  "independentHumanAcceptance": false
+}

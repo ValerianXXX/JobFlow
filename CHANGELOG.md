@@ -4,6 +4,15 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Add explicit human message outcomes with a uniquely located original passage,
+  source and quote hashes, and reversible review history. Preserve the automated
+  proposal, unauthenticated local EML boundary and protected application state.
+  The bilingual inbox supports correction, uncertainty, reload and undo; stale
+  requests and failed saves cannot publish a replacement result. UI protocol 41
+  prevents mixing earlier cached assets with the new review action. No mailbox,
+  model, dependency or database migration is added.
+  [Evidence, reproduction and rollback](docs/mail-outcome-review-2026-10-31.md).
+
 - Share bounded PDF page-content checks across default extraction, fallback,
   geometry and optional native parsing. Reject pagination-only pages and large
   raster areas with no overlapping text before model analysis; preserve resource

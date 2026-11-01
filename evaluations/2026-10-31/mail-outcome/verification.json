@@ -1,0 +1,275 @@
+{
+  "schema": "MAIL_OUTCOME_REVIEW_VERIFICATION_V1",
+  "observedAtUtc": "2026-11-01T00:29:29.679022+00:00",
+  "studyDateLocal": "2026-10-31",
+  "timeZone": "America/New_York",
+  "baseCommit": "2848a2e8ca3332260eb27ae7bba926743a47155b",
+  "probeFreezeCommit": "ab715c795e6cbbdefa7b028c61fbed1751bebb96",
+  "runtimeCommit": "9e0ebd57e9d083bb981d2d9cd723f3e974f0f958",
+  "testCheckpoint": "36d7ffdc97d7fcdfe3b8236807cde4e06242fda2",
+  "python": "3.11.3",
+  "uiProtocol": 41,
+  "browserCompanion": "0.9.2/protocol-2",
+  "baseline": {
+    "relatedMethodsPassed": 37,
+    "newMethods": 12,
+    "newSubcaseErrors": 37,
+    "interpretation": "New method/module and outcome action unavailable; not 37 historical product defects."
+  },
+  "implementation": {
+    "relatedMethodsPassed": 128,
+    "additionalFinalMethodsPassed": 12,
+    "additionalMethodsOverlapRelatedSuite": true,
+    "manualBilingualExamples": 8,
+    "mailInterpreterLabelsChanged": false,
+    "priorInterpreterCorpusCases": 120,
+    "priorEmlCases": 60,
+    "newModelProviderCalls": 0,
+    "independentHumanAcceptance": false,
+    "modelQualityGainMeasured": false,
+    "userTimeOrCostGainMeasured": false
+  },
+  "browser": {
+    "store": "REAL_WINDOWS_DPAPI",
+    "transport": "ACTUAL_LOOPBACK_HTTP",
+    "syntheticOnly": true,
+    "initialFunctionalPassRetained": true,
+    "currentViewportCaptures": [
+      "1365x900/zh",
+      "390x844/en"
+    ],
+    "mailOutcomesRecorded": 3,
+    "mailActionApplicationStateChanged": false,
+    "reimportPagingAndFailedSave": "RELATED_CONTRACT_TESTS; no real mailbox",
+    "legacyMailBrowser": "PASS",
+    "workbenchBrowser": "PASS_INCLUDING_SEPARATE_SYNTHETIC_APPLICATION_REHEARSAL",
+    "physicalMobileDevice": false,
+    "authenticatedMailbox": false,
+    "realExternalActions": 0,
+    "originalImagesModified": false
+  },
+  "build": {
+    "initialBuildModuleUnavailable": true,
+    "existingPipOfflineWheel": "PASS",
+    "newDependenciesInstalled": false,
+    "productionSigned": false,
+    "file": "jobflow_local-0.7.0-py3-none-any.whl",
+    "bytes": 832152,
+    "sha256": "2602b67eedcd257bd1667e035e3e42f3a7d2f1ceb1a726a71f314beb6b412b83",
+    "packagedRuntimeBytesMatched": [
+      "src/jobops/__init__.py",
+      "src/jobops/mail_review.py",
+      "src/jobops/mail_tracking.py",
+      "src/jobops/onboarding_center.py",
+      "src/jobops/ui/app.js",
+      "src/jobops/ui/workbench.js",
+      "src/jobops/ui/styles.css"
+    ]
+  },
+  "fullChecks": {
+    "candidateFullHosted": "PENDING_DRAFT_CREATION",
+    "priorPR39LocalFull": "RUNNING_SEPARATELY; no pass transferred to this change",
+    "productionSigning": "OWNER_CONFIRMED_UNAVAILABLE",
+    "independentCleanWindows": "OWNER_CONFIRMED_UNAVAILABLE"
+  },
+  "publicLogTransform": "Case-insensitive workspace/user-profile path replacement, LF normalization and trailing-space removal; no lines omitted. Original local hashes retained.",
+  "sourceFiles": {
+    "src/jobops/__init__.py": {
+      "gitBlobSha256": "52bae17227444fca94dfe8ccde011ff2cc31808c5ec62ca67c03a13300194f54",
+      "localBytesSha256": "52bae17227444fca94dfe8ccde011ff2cc31808c5ec62ca67c03a13300194f54"
+    },
+    "src/jobops/mail_review.py": {
+      "gitBlobSha256": "e10704e444ce88194ca31cf76bf537aaea36036b237be61c4f1c4eb6c108971b",
+      "localBytesSha256": "e10704e444ce88194ca31cf76bf537aaea36036b237be61c4f1c4eb6c108971b"
+    },
+    "src/jobops/mail_tracking.py": {
+      "gitBlobSha256": "3e77bf525de7c51bc08ce91d748b578d4f36fd3d1e91f561556e3b41a9fbe24f",
+      "localBytesSha256": "3e77bf525de7c51bc08ce91d748b578d4f36fd3d1e91f561556e3b41a9fbe24f"
+    },
+    "src/jobops/onboarding_center.py": {
+      "gitBlobSha256": "36b698ad877a4babc3e1839bfaa61d634d124e899f49641180219b7317f8d790",
+      "localBytesSha256": "36b698ad877a4babc3e1839bfaa61d634d124e899f49641180219b7317f8d790"
+    },
+    "src/jobops/ui/app.js": {
+      "gitBlobSha256": "13eb6b37ee45b9c861ff8afc8e4bbe08114b338afd0b7c071f223cca08f1adac",
+      "localBytesSha256": "13eb6b37ee45b9c861ff8afc8e4bbe08114b338afd0b7c071f223cca08f1adac"
+    },
+    "src/jobops/ui/workbench.js": {
+      "gitBlobSha256": "ef60a0d4ac0b34eb9d7187d64d123e04d0b270617559b27c347b23f44803dd83",
+      "localBytesSha256": "ef60a0d4ac0b34eb9d7187d64d123e04d0b270617559b27c347b23f44803dd83"
+    },
+    "src/jobops/ui/styles.css": {
+      "gitBlobSha256": "0fb2458f8473a549359b993998ecd20639fbc3bc4963feb270e4b49f87f58238",
+      "localBytesSha256": "0fb2458f8473a549359b993998ecd20639fbc3bc4963feb270e4b49f87f58238"
+    },
+    "tests/test_mail_outcome.py": {
+      "gitBlobSha256": "cd70f12c0800aacc2339ca1d087a50711440e019b231cabea10ee330acf2313e",
+      "localBytesSha256": "cd70f12c0800aacc2339ca1d087a50711440e019b231cabea10ee330acf2313e"
+    },
+    "tests/mail_outcome_ui_e2e.cjs": {
+      "gitBlobSha256": "3dfad64c261689fc34b3ac3bb82a7408b22bea077938be230439411e71f0351a",
+      "localBytesSha256": "3dfad64c261689fc34b3ac3bb82a7408b22bea077938be230439411e71f0351a"
+    },
+    "tests/workbench_ui_server.py": {
+      "gitBlobSha256": "75ad5fa86b908ade87bcaaf045ba4883cbcb43e5f39113c50bace471525f1ba4",
+      "localBytesSha256": "75ad5fa86b908ade87bcaaf045ba4883cbcb43e5f39113c50bace471525f1ba4"
+    }
+  },
+  "testLogs": {
+    "baseline-existing": {
+      "file": "baseline-existing.txt",
+      "exitCode": 0,
+      "testMethods": 37,
+      "seconds": 7.493
+    },
+    "before-new-contracts": {
+      "file": "before-new-contracts.txt",
+      "exitCode": 1,
+      "testMethods": 12,
+      "seconds": 0.755
+    },
+    "after-domain": {
+      "file": "after-domain.txt",
+      "exitCode": 0,
+      "testMethods": 12,
+      "seconds": 0.853
+    },
+    "related-checks": {
+      "file": "related-checks.txt",
+      "exitCode": 0,
+      "testMethods": 128,
+      "seconds": 130.885
+    },
+    "final-contracts": {
+      "file": "final-contracts.txt",
+      "exitCode": 0,
+      "testMethods": 12,
+      "seconds": 0.874
+    },
+    "browser-first": {
+      "file": "browser-first.txt",
+      "exitCode": 0
+    },
+    "browser-final": {
+      "file": "browser-final.txt",
+      "exitCode": 0
+    },
+    "legacy-mail-browser": {
+      "file": "legacy-mail-browser.txt",
+      "exitCode": 0
+    },
+    "workbench-browser": {
+      "file": "workbench-browser.txt",
+      "exitCode": 0
+    },
+    "build-module-unavailable": {
+      "file": "build-module-unavailable.txt",
+      "exitCode": 1
+    },
+    "offline-wheel-build": {
+      "file": "offline-wheel-build.txt",
+      "exitCode": 0
+    }
+  },
+  "artifacts": {
+    "baseline-existing.txt": {
+      "bytes": 6190,
+      "sha256": "5bfb867150e02af287d7d50c4486c5a957dc23999299e0bc8868f14a41ddb611",
+      "originalLocalSha256": "b78342954c1b921d3ad44ceadaab168f9f226998c4d0d537a38843aa68a09c3b"
+    },
+    "before-new-contracts.txt": {
+      "bytes": 42405,
+      "sha256": "198972f999c14d162a1eaaefc310b8278db11b83032ffa7f09bbfaffd361a8ad",
+      "originalLocalSha256": "1fae9d7b675a117ea795ff7153478f17f49c13de486576a0381ce7cfecc619a3"
+    },
+    "after-domain.txt": {
+      "bytes": 2255,
+      "sha256": "8bb72d1ecad2e184982185e23ef7ee150966d4e6972b6448e9cdffe66d5a9e58",
+      "originalLocalSha256": "fd9461c62b5e63dfa8dde4a9db5a066bfdc3b532e757ce6c69a5b5129d24975a"
+    },
+    "related-checks.txt": {
+      "bytes": 23005,
+      "sha256": "2b69d66a16c84731a964ce50d80ce7d3ab55de535fb5143c483b5f7f62c439a0",
+      "originalLocalSha256": "8949e9575646ceab139a219351e58938253cafe5a71061ecbe2e43d846d0f4ff"
+    },
+    "final-contracts.txt": {
+      "bytes": 2255,
+      "sha256": "7ff81c055c097014924444931119ccd9307fa4abd67066b2d360e3d501f56267",
+      "originalLocalSha256": "e5b3a8184f6ae645b36ef0d076ca69c8f2bac3608a04faed507c3fae5a4d4017"
+    },
+    "browser-first.txt": {
+      "bytes": 109,
+      "sha256": "8d614a035c6f7e2335e69c5766f06866cbe42b42abd9b3095244ffbae3d740ec",
+      "originalLocalSha256": "9331ea3bfb00df7a9b9186b37eb0023f4da634637dd25c20e1160a057518f733"
+    },
+    "browser-final.txt": {
+      "bytes": 109,
+      "sha256": "2271efe90c2b9fadae315999bb84e60916f9061b69e2afe0a179b48225260702",
+      "originalLocalSha256": "ba209b288fdf656fcb5b4c1103ccf97f4042ba317a2e20ca894de3649b26666e"
+    },
+    "legacy-mail-browser.txt": {
+      "bytes": 129,
+      "sha256": "c4005c8a37e0e3d7464ba5674f86d9240746c8e895bde555a26d7ffe78539725",
+      "originalLocalSha256": "4f73ce07b8e76f42ae2ad0d4ac401da829a86d413f24e433dd5a4944af25f092"
+    },
+    "workbench-browser.txt": {
+      "bytes": 182,
+      "sha256": "0d33ea7d81bb7025f132b6ffe83603955ba789a668cb37db54a3f185ccca51fe",
+      "originalLocalSha256": "c01db059fa4dd3b33999ed06dd15d4ea08a435cf873132fca0680733cac02bf9"
+    },
+    "build-module-unavailable.txt": {
+      "bytes": 86,
+      "sha256": "a02d9cb050c77a4ed625d0d0627178d2e548c58f0703a60baf838ca0b4a019ab",
+      "originalLocalSha256": "e22c2f4338fe99a48a6a509ea40930b82ce04a8fe764b9611c844c038d36fc3d"
+    },
+    "offline-wheel-build.txt": {
+      "bytes": 681,
+      "sha256": "1d124288d691256f5a6d6114f96a55fe402f11436a260cff3bfd4b23ce023ff1",
+      "originalLocalSha256": "c9e032c1001c59135de9e51e5c2fd259a8b5bac523a440d16146161b72a17c4e"
+    },
+    "initial-browser-verification.json": {
+      "bytes": 529,
+      "sha256": "5abd2262734927b5c9fc78d443bbbe5785f226133d376f89e80cf4c6bc72c482"
+    },
+    "browser-verification.json": {
+      "bytes": 529,
+      "sha256": "5abd2262734927b5c9fc78d443bbbe5785f226133d376f89e80cf4c6bc72c482"
+    },
+    "initial-capture/desktop-zh.png": {
+      "bytes": 59995,
+      "sha256": "5e90dff6f6e971cb7042e719c989a0f2b65c2cd4528957936f3cc039983335aa",
+      "quality": "STICKY_HEADER_COMPOSITING_LIMITATION"
+    },
+    "initial-capture/mobile-en.png": {
+      "bytes": 49688,
+      "sha256": "9ad098da968020589a5a6e71cef45431646ecdb8cbbb585e9cf0425cca4af129",
+      "quality": "STICKY_HEADER_COMPOSITING_LIMITATION"
+    },
+    "desktop-zh-result.png": {
+      "bytes": 70105,
+      "sha256": "961fa91b22750443fee2331a34f398970d733b17b95d626f22e37956f7f0745f",
+      "quality": "ACTUAL_VIEWPORT_INSPECTED_BY_CODING_ASSISTANT"
+    },
+    "desktop-zh-controls.png": {
+      "bytes": 71177,
+      "sha256": "98b413365bc8a4bc320bda8937eba1d567869773fc1da5aad4768dae7329927d",
+      "quality": "ACTUAL_VIEWPORT_INSPECTED_BY_CODING_ASSISTANT"
+    },
+    "mobile-en-result.png": {
+      "bytes": 37785,
+      "sha256": "bb00e397d38b8a6727e5501e6aab7ec1c44c762a76b4a7330677ead37593b5f9",
+      "quality": "ACTUAL_VIEWPORT_INSPECTED_BY_CODING_ASSISTANT"
+    },
+    "mobile-en-controls.png": {
+      "bytes": 32580,
+      "sha256": "f6f44203162c9f892303dd08eabb793741189fe848235b4ace82931ae6033c4c",
+      "quality": "ACTUAL_VIEWPORT_INSPECTED_BY_CODING_ASSISTANT"
+    }
+  },
+  "remaining": [
+    "Authenticated read-only provider and sender proof",
+    "Held-out interpretation and independent users",
+    "Prospective review effort, user edits and business outcomes",
+    "Complete JobFlow material/ATS/release acceptance"
+  ]
+}
