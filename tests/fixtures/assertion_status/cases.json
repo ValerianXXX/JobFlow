@@ -1,0 +1,489 @@
+{
+  "schema_version": 1,
+  "protocol": "SOURCE_ASSERTION_STATUS_V1",
+  "synthetic_only": true,
+  "scope": "Literal negation and proposed/future versus completed action in cited source clauses; not general entailment or model accuracy.",
+  "frozen_before_runtime_change": true,
+  "cases": [
+    {
+      "id": "en-negative",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The applicant did not manage the project budget.",
+      "statement": "The applicant managed the project budget.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-invented-negative",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The applicant managed the project budget.",
+      "statement": "The applicant did not manage the project budget.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-never",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The applicant never processed synthetic customer records.",
+      "statement": "The applicant processed synthetic customer records.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-contraction",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The applicant didn't approve the synthetic research report.",
+      "statement": "The applicant approved the synthetic research report.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-no-passive",
+      "group": "contradiction",
+      "language": "en",
+      "source": "No customer data was processed in this synthetic prototype.",
+      "statement": "Customer data was processed in this synthetic prototype.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-negative-passive-agent",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The synthetic research report was not approved by the applicant.",
+      "statement": "The applicant approved the synthetic research report.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-not-completed",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The candidate has not completed the synthetic billing review.",
+      "statement": "The applicant completed the synthetic billing review.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-proposed",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The applicant proposed deploying the public service to production.",
+      "statement": "The applicant deployed the public service to production.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-planned",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The applicant planned to test the synthetic recovery workflow.",
+      "statement": "The applicant tested the synthetic recovery workflow.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-intended",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The applicant intended to review the synthetic research report.",
+      "statement": "The applicant reviewed the synthetic research report.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-team-proposed",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The team proposed publishing the synthetic evidence catalog.",
+      "statement": "The team published the synthetic evidence catalog.",
+      "expected_valid": false
+    },
+    {
+      "id": "en-future",
+      "group": "contradiction",
+      "language": "en",
+      "source": "The applicant will test the synthetic recovery workflow.",
+      "statement": "The applicant tested the synthetic recovery workflow.",
+      "expected_valid": false
+    },
+    {
+      "id": "zh-negative",
+      "group": "contradiction",
+      "language": "zh",
+      "source": "申请人没有负责这项项目的预算审批和支付执行。",
+      "statement": "申请人负责这项项目的预算审批和支付执行。",
+      "expected_valid": false
+    },
+    {
+      "id": "zh-never-completed",
+      "group": "contradiction",
+      "language": "zh",
+      "source": "申请人未曾完成这份合成账单的审核和检查工作。",
+      "statement": "申请人完成这份合成账单的审核和检查工作。",
+      "expected_valid": false
+    },
+    {
+      "id": "zh-not-yet",
+      "group": "contradiction",
+      "language": "zh",
+      "source": "申请人尚未核验这个合成项目的来源和检查记录。",
+      "statement": "申请人已经核验这个合成项目的来源和检查记录。",
+      "expected_valid": false
+    },
+    {
+      "id": "zh-never",
+      "group": "contradiction",
+      "language": "zh",
+      "source": "申请人从未处理这个合成项目中的客户资料和账户信息。",
+      "statement": "申请人处理这个合成项目中的客户资料和账户信息。",
+      "expected_valid": false
+    },
+    {
+      "id": "zh-not-manage",
+      "group": "contradiction",
+      "language": "zh",
+      "source": "申请人不管理这项合成项目的预算审批和支付执行。",
+      "statement": "申请人管理这项合成项目的预算审批和支付执行。",
+      "expected_valid": false
+    },
+    {
+      "id": "zh-invented-negative",
+      "group": "contradiction",
+      "language": "zh",
+      "source": "申请人批准了这项合成项目的预算审批和支付执行。",
+      "statement": "申请人没有批准这项合成项目的预算审批和支付执行。",
+      "expected_valid": false
+    },
+    {
+      "id": "zh-planned",
+      "group": "contradiction",
+      "language": "zh",
+      "source": "申请人计划部署这个合成项目的演示程序和帮助页面。",
+      "statement": "申请人已部署这个合成项目的演示程序和帮助页面。",
+      "expected_valid": false
+    },
+    {
+      "id": "zh-proposed",
+      "group": "contradiction",
+      "language": "zh",
+      "source": "申请人提出开发这个合成项目的报告生成和导出功能。",
+      "statement": "申请人开发了这个合成项目的报告生成和导出功能。",
+      "expected_valid": false
+    },
+    {
+      "id": "zh-intended",
+      "group": "contradiction",
+      "language": "zh",
+      "source": "申请人拟核验这个合成项目的来源和检查记录。",
+      "statement": "申请人已经核验这个合成项目的来源和检查记录。",
+      "expected_valid": false
+    },
+    {
+      "id": "zh-future",
+      "group": "contradiction",
+      "language": "zh",
+      "source": "申请人将检查这个合成项目的来源和证据记录。",
+      "statement": "申请人已检查这个合成项目的来源和证据记录。",
+      "expected_valid": false
+    },
+    {
+      "id": "mixed-negative",
+      "group": "contradiction",
+      "language": "mixed",
+      "source": "The applicant 未完成 API 合成接口验证与文档记录。",
+      "statement": "The applicant 完成了 API 合成接口验证与文档记录。",
+      "expected_valid": false
+    },
+    {
+      "id": "mixed-planned",
+      "group": "contradiction",
+      "language": "mixed",
+      "source": "申请人计划部署 public service 到合成测试环境。",
+      "statement": "申请人已部署 public service 到合成测试环境。",
+      "expected_valid": false
+    },
+    {
+      "id": "en-negative-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The applicant did not manage the project budget.",
+      "statement": "The applicant did not manage the project budget.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-invented-negative-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The applicant managed the project budget.",
+      "statement": "The applicant managed the project budget.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-never-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The applicant never processed synthetic customer records.",
+      "statement": "The applicant never processed synthetic customer records.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-contraction-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The applicant didn't approve the synthetic research report.",
+      "statement": "The applicant didn't approve the synthetic research report.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-no-passive-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "No customer data was processed in this synthetic prototype.",
+      "statement": "No customer data was processed in this synthetic prototype.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-negative-passive-agent-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The synthetic research report was not approved by the applicant.",
+      "statement": "The synthetic research report was not approved by the applicant.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-not-completed-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The candidate has not completed the synthetic billing review.",
+      "statement": "The candidate has not completed the synthetic billing review.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-proposed-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The applicant proposed deploying the public service to production.",
+      "statement": "The applicant proposed deploying the public service to production.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-planned-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The applicant planned to test the synthetic recovery workflow.",
+      "statement": "The applicant planned to test the synthetic recovery workflow.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-intended-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The applicant intended to review the synthetic research report.",
+      "statement": "The applicant intended to review the synthetic research report.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-team-proposed-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The team proposed publishing the synthetic evidence catalog.",
+      "statement": "The team proposed publishing the synthetic evidence catalog.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-future-preserved",
+      "group": "unchanged-control",
+      "language": "en",
+      "source": "The applicant will test the synthetic recovery workflow.",
+      "statement": "The applicant will test the synthetic recovery workflow.",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-negative-preserved",
+      "group": "unchanged-control",
+      "language": "zh",
+      "source": "申请人没有负责这项项目的预算审批和支付执行。",
+      "statement": "申请人没有负责这项项目的预算审批和支付执行。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-never-completed-preserved",
+      "group": "unchanged-control",
+      "language": "zh",
+      "source": "申请人未曾完成这份合成账单的审核和检查工作。",
+      "statement": "申请人未曾完成这份合成账单的审核和检查工作。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-not-yet-preserved",
+      "group": "unchanged-control",
+      "language": "zh",
+      "source": "申请人尚未核验这个合成项目的来源和检查记录。",
+      "statement": "申请人尚未核验这个合成项目的来源和检查记录。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-never-preserved",
+      "group": "unchanged-control",
+      "language": "zh",
+      "source": "申请人从未处理这个合成项目中的客户资料和账户信息。",
+      "statement": "申请人从未处理这个合成项目中的客户资料和账户信息。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-not-manage-preserved",
+      "group": "unchanged-control",
+      "language": "zh",
+      "source": "申请人不管理这项合成项目的预算审批和支付执行。",
+      "statement": "申请人不管理这项合成项目的预算审批和支付执行。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-invented-negative-preserved",
+      "group": "unchanged-control",
+      "language": "zh",
+      "source": "申请人批准了这项合成项目的预算审批和支付执行。",
+      "statement": "申请人批准了这项合成项目的预算审批和支付执行。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-planned-preserved",
+      "group": "unchanged-control",
+      "language": "zh",
+      "source": "申请人计划部署这个合成项目的演示程序和帮助页面。",
+      "statement": "申请人计划部署这个合成项目的演示程序和帮助页面。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-proposed-preserved",
+      "group": "unchanged-control",
+      "language": "zh",
+      "source": "申请人提出开发这个合成项目的报告生成和导出功能。",
+      "statement": "申请人提出开发这个合成项目的报告生成和导出功能。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-intended-preserved",
+      "group": "unchanged-control",
+      "language": "zh",
+      "source": "申请人拟核验这个合成项目的来源和检查记录。",
+      "statement": "申请人拟核验这个合成项目的来源和检查记录。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-future-preserved",
+      "group": "unchanged-control",
+      "language": "zh",
+      "source": "申请人将检查这个合成项目的来源和证据记录。",
+      "statement": "申请人将检查这个合成项目的来源和证据记录。",
+      "expected_valid": true
+    },
+    {
+      "id": "mixed-negative-preserved",
+      "group": "unchanged-control",
+      "language": "mixed",
+      "source": "The applicant 未完成 API 合成接口验证与文档记录。",
+      "statement": "The applicant 未完成 API 合成接口验证与文档记录。",
+      "expected_valid": true
+    },
+    {
+      "id": "mixed-planned-preserved",
+      "group": "unchanged-control",
+      "language": "mixed",
+      "source": "申请人计划部署 public service 到合成测试环境。",
+      "statement": "申请人计划部署 public service 到合成测试环境。",
+      "expected_valid": true
+    },
+    {
+      "id": "en-negative-alias",
+      "group": "supported-control",
+      "language": "en",
+      "source": "The applicant did not manage the project budget.",
+      "statement": "The candidate did not manage the project budget.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-proposed-alias",
+      "group": "supported-control",
+      "language": "en",
+      "source": "The candidate proposed deploying the public service to production.",
+      "statement": "The applicant proposed deploying the public service to production.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-passive-negative-equivalent",
+      "group": "supported-control",
+      "language": "en",
+      "source": "The synthetic research report was not approved by the applicant.",
+      "statement": "The applicant did not approve the synthetic research report.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-passive-positive-equivalent",
+      "group": "supported-control",
+      "language": "en",
+      "source": "The synthetic research report was approved by the applicant.",
+      "statement": "The applicant approved the synthetic research report.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-not-only",
+      "group": "supported-control",
+      "language": "en",
+      "source": "The applicant not only reviewed the synthetic report but also prepared the public summary.",
+      "statement": "The applicant reviewed the synthetic report.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-distinct-objects",
+      "group": "supported-control",
+      "language": "en",
+      "source": "The applicant did not approve the synthetic budget. The applicant approved the synthetic research report.",
+      "statement": "The applicant approved the synthetic research report.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-distinct-actors",
+      "group": "supported-control",
+      "language": "en",
+      "source": "The team did not approve the synthetic research report. The applicant approved the synthetic research report.",
+      "statement": "The applicant approved the synthetic research report.",
+      "expected_valid": true
+    },
+    {
+      "id": "en-distinct-periods",
+      "group": "supported-control",
+      "language": "en",
+      "source": "The applicant did not manage the synthetic budget in 2023. The applicant managed the synthetic budget in 2024.",
+      "statement": "The applicant managed the synthetic budget in 2024.",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-negative-alias",
+      "group": "supported-control",
+      "language": "zh",
+      "source": "申请人没有负责这项项目的预算审批和支付执行。",
+      "statement": "本人没有负责这项项目的预算审批和支付执行。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-not-only",
+      "group": "supported-control",
+      "language": "zh",
+      "source": "申请人不仅核验了这个合成项目的来源，还记录了检查过程。",
+      "statement": "申请人核验了这个合成项目的来源。",
+      "expected_valid": true
+    },
+    {
+      "id": "zh-distinct-objects",
+      "group": "supported-control",
+      "language": "zh",
+      "source": "申请人没有核验合成预算的审批条件。申请人核验了合成报告的来源记录。",
+      "statement": "申请人核验了合成报告的来源记录。",
+      "expected_valid": true
+    },
+    {
+      "id": "mixed-negative-alias",
+      "group": "supported-control",
+      "language": "mixed",
+      "source": "The applicant 未完成 API 合成接口验证与文档记录。",
+      "statement": "The candidate 未完成 API 合成接口验证与文档记录。",
+      "expected_valid": true
+    }
+  ]
+}
