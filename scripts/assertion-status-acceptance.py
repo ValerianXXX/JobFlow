@@ -126,7 +126,9 @@ def main() -> None:
             boot = service.bootstrap()
             _, state = service.ensure_state()
             record.update(source_count=len(state["sources"]), pending_count=len(state["pending_sources"]),
-                          claim_count=len(boot["claims"]), master_resume_present=bool(boot.get("master_resume")),
+                          claim_count=len(boot["claims"]),
+                          master_resume_present=boot["application_readiness"]["master_resume"]["present"],
+                          master_resume_editable=boot["application_readiness"]["master_resume"]["editable_docx"],
                           sources=[{"source_id": row["source_id"], "extraction_summary": row["extraction_summary"],
                                     "original_bytes_match": sha256_bytes(store.get_bytes(row["secure_ref"]))
                                     in service.allowed_documents} for row in state["sources"]])

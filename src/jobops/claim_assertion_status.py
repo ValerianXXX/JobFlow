@@ -100,13 +100,16 @@ def _active(actor: str, action: str) -> _Assertion | None:
     if match:
         return _Assertion(actor, _EN_VERBS[match[1]], _object_key(match[2]), negative, prospective)
 
-    negative = prospective = False
     negation = re.match(r"^(?:尚未|从未|未曾|没有|并未|未|不)", action)
     if negation:
+        if negative or prospective:
+            return None  # Mixed double negation/modal scope is not literal evidence.
         negative, action = True, action[negation.end():]
     else:
         plan = re.match(r"^(?:计划|提出|拟|将)", action)
         if plan:
+            if negative:
+                return None
             prospective, action = True, action[plan.end():]
         else:
             action = re.sub(r"^(?:已经|已)", "", action)
