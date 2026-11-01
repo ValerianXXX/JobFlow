@@ -1,0 +1,1753 @@
+{
+  "observed_at_utc": "2026-11-01T11:24:51.338140+00:00",
+  "protocol": "SOURCE_ASSERTION_SCOPE_V1",
+  "synthetic_only": true,
+  "measurement": "FROZEN_DEVELOPMENT_COUNTEREXAMPLES_NOT_BLINDED_ACCURACY",
+  "source_commit": "9dc91be5935cb916e3db9403a9c19e3671172511",
+  "fixture_lf_sha256": "52cb85ff82c1350e60a4946e688127eb4a3a6174fc7453321c60bf784295fa6c",
+  "source_lf_sha256": {
+    "src/jobops/ai_runtime.py": "c12e3147a32819f06757ba110bdb35f2f98bffb0ecdb1a3383e14bedaaebaeb6",
+    "src/jobops/claim_assertion_status.py": "eb020dd62c5a22aacdcaa4162177b7b8b3e68c365774ee59d57efa5a017fe77c",
+    "scripts/evaluate-assertion-scope.py": "9fb6456be14102864c048e69e37cd737a84f90116c1b5be91df37df5063464d8"
+  },
+  "elapsed_ms": 72.031,
+  "summary": {
+    "unsafe": 36,
+    "unsafe_accepted": 35,
+    "supported": 48,
+    "supported_filtered": 0
+  },
+  "by_family": {
+    "literal_actor": {
+      "unsafe": 12,
+      "unsafe_accepted": 12,
+      "supported": 12,
+      "supported_filtered": 0
+    },
+    "modality": {
+      "unsafe": 12,
+      "unsafe_accepted": 12,
+      "supported": 12,
+      "supported_filtered": 0
+    },
+    "nearby_control": {
+      "unsafe": 0,
+      "unsafe_accepted": 0,
+      "supported": 12,
+      "supported_filtered": 0
+    },
+    "proposal": {
+      "unsafe": 12,
+      "unsafe_accepted": 11,
+      "supported": 12,
+      "supported_filtered": 0
+    }
+  },
+  "by_language": {
+    "en": {
+      "unsafe": 25,
+      "unsafe_accepted": 25,
+      "supported": 35,
+      "supported_filtered": 0
+    },
+    "mixed": {
+      "unsafe": 4,
+      "unsafe_accepted": 4,
+      "supported": 5,
+      "supported_filtered": 0
+    },
+    "zh": {
+      "unsafe": 7,
+      "unsafe_accepted": 6,
+      "supported": 8,
+      "supported_filtered": 0
+    }
+  },
+  "new_provider_calls": 0,
+  "fresh_model_comparison": false,
+  "historical_model_cost": "UNKNOWN",
+  "full_material_acceptance": false,
+  "independent_human_acceptance": false,
+  "cases": [
+    {
+      "id": "proposal-01",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-01-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-02",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-02-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-03",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-03-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-04",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-04-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-05",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-05-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-06",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-06-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-07",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-07-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-08",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-08-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-09",
+      "group": "proposal",
+      "language": "zh",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 17,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-09-unchanged",
+      "group": "proposal",
+      "language": "zh",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 25,
+        "required_grounding_token_count": 13,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-10",
+      "group": "proposal",
+      "language": "zh",
+      "expected_valid": false,
+      "actual_valid": false,
+      "diagnostics": {
+        "valid": false,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 1,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 15,
+        "required_grounding_token_count": 10,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-10-unchanged",
+      "group": "proposal",
+      "language": "zh",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 21,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-11",
+      "group": "proposal",
+      "language": "mixed",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 15,
+        "required_grounding_token_count": 10,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-11-unchanged",
+      "group": "proposal",
+      "language": "mixed",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 23,
+        "required_grounding_token_count": 12,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-12",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 2,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "proposal-12-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-01",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-01-unchanged",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-02",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-02-unchanged",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 6,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-03",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-03-unchanged",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-04",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-04-unchanged",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-05",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-05-unchanged",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-06",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-06-unchanged",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-07",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-07-unchanged",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-08",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-08-unchanged",
+      "group": "modality",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-09",
+      "group": "modality",
+      "language": "zh",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 17,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-09-unchanged",
+      "group": "modality",
+      "language": "zh",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 23,
+        "required_grounding_token_count": 12,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-10",
+      "group": "modality",
+      "language": "zh",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 17,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-10-unchanged",
+      "group": "modality",
+      "language": "zh",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 23,
+        "required_grounding_token_count": 12,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-11",
+      "group": "modality",
+      "language": "zh",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 15,
+        "required_grounding_token_count": 10,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-11-unchanged",
+      "group": "modality",
+      "language": "zh",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 21,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-12",
+      "group": "modality",
+      "language": "mixed",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 15,
+        "required_grounding_token_count": 10,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "modality-12-unchanged",
+      "group": "modality",
+      "language": "mixed",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 20,
+        "required_grounding_token_count": 10,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-01",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-01-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 7,
+        "required_grounding_token_count": 4,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-02",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-02-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 6,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-03",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-03-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 6,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-04",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-04-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 8,
+        "required_grounding_token_count": 4,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-05",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-05-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-06",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-06-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-07",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-07-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-08",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-08-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-09",
+      "group": "literal_actor",
+      "language": "zh",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 16,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-09-unchanged",
+      "group": "literal_actor",
+      "language": "zh",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 22,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-10",
+      "group": "literal_actor",
+      "language": "zh",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 16,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-10-unchanged",
+      "group": "literal_actor",
+      "language": "zh",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 22,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-11",
+      "group": "literal_actor",
+      "language": "mixed",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 17,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-11-unchanged",
+      "group": "literal_actor",
+      "language": "mixed",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 22,
+        "required_grounding_token_count": 11,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-12",
+      "group": "literal_actor",
+      "language": "mixed",
+      "expected_valid": false,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "literal_actor-12-unchanged",
+      "group": "literal_actor",
+      "language": "mixed",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 10,
+        "required_grounding_token_count": 5,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-01",
+      "group": "nearby_control",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-02",
+      "group": "nearby_control",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-03",
+      "group": "nearby_control",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-04",
+      "group": "nearby_control",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-05",
+      "group": "nearby_control",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-06",
+      "group": "nearby_control",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 6,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-07",
+      "group": "nearby_control",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-08",
+      "group": "nearby_control",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 5,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-09",
+      "group": "nearby_control",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-10",
+      "group": "nearby_control",
+      "language": "en",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-11",
+      "group": "nearby_control",
+      "language": "zh",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 19,
+        "required_grounding_token_count": 12,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "nearby-control-12",
+      "group": "nearby_control",
+      "language": "mixed",
+      "expected_valid": true,
+      "actual_valid": true,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 15,
+        "required_grounding_token_count": 10,
+        "numeric_format_normalization_count": 0
+      }
+    }
+  ]
+}

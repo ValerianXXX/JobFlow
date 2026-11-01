@@ -4,6 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Preserve bounded proposal nouns, capability/inability and explicit performers
+  when reviewing AI candidates. Do not turn a proposal or ability into completed
+  work or infer that a different named role is the applicant. A historical replay
+  exposed and fixed an ordinary-summary false rejection; all 265 prior candidates
+  remain unchanged. No model or dependency migration.
+  [Frozen comparison, failures, limits and reproduction](docs/assertion-scope-2026-11-01.md).
+
 - Preserve explicit negation and prospective-action status when checking Claim
   candidates against cited text. Reject recognized conflicts, including a
   negation/plan prefix omitted by a bounded physical-line citation, without

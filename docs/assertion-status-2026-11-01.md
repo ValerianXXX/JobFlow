@@ -162,6 +162,10 @@ production signing, installation or ATS submission.
 
 ## Known gaps and release boundary
 
+The [subsequent scope milestone](assertion-scope-2026-11-01.md) handles bounded
+forms of the three probes below and preserves these earlier observations.
+The paragraph below describes this document's original `2ac8c48` runtime.
+
 Zero literal conflicts is **not** semantic entailment. Nominalized plans,
 inability, unrecognized named actors, implicit/quoted/conditional assertions,
 complex coordination, different paraphrases and cross-language entailment remain
