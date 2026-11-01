@@ -591,7 +591,7 @@ Object.assign(STRINGS.en,{
   documentPdfFailed:"PDF conversion did not finish. Your DOCX draft remains available. Check the selected local converter and document compatibility before retrying.",
   generatingStandardResume:"Generating the standard resume…", exportingStandardResume:"Converting PDF and rendering its page…", adoptingStandardResume:"Creating a new profile revision…"
 });
-const UI_PROTOCOL_VERSION = 40;
+const UI_PROTOCOL_VERSION = 41;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",

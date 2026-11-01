@@ -22,11 +22,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--stdio-control", action="store_true")
     parser.add_argument("--mail-review-fixture", action="store_true")
+    parser.add_argument("--mail-outcome-fixture", action="store_true")
     args = parser.parse_args()
     project = Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix="jobflow-workbench-ui-") as temporary:
         service = create_demo_service(project, Path(temporary))
-        if args.mail_review_fixture:
+        if args.mail_outcome_fixture:
+            for body in (
+                "Please choose a time to speak with our hiring panel. This is synthetic evidence.",
+                "请选一个时间与招聘小组交谈。这是合成邮件。",
+                "Repeated phrase. First section. Repeated phrase. Second section.",
+            ):
+                raw = eml(body)
+                assert OnboardingCenterService.import_status_eml(service, raw)["added"] == 1
+        elif args.mail_review_fixture:
             for body, html in [
                 ("This is not an interview invitation.", False),
                 ("邀请您参加面试。\n> 本次申请未通过。", False),
