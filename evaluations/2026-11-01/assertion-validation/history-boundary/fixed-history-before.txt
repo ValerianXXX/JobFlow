@@ -1,0 +1,19 @@
+test_a_changed_historical_version_stays_blocked_after_safe_bytes_return (test_public_test_receipt_history.PublishedReceiptHistoryTests.test_a_changed_historical_version_stays_blocked_after_safe_bytes_return) ... ok
+test_exact_public_receipts_have_reviewable_history_without_relaxing_current_paths (test_public_test_receipt_history.PublishedReceiptHistoryTests.test_exact_public_receipts_have_reviewable_history_without_relaxing_current_paths) ... FAIL
+test_same_public_bytes_at_another_log_path_stay_blocked (test_public_test_receipt_history.PublishedReceiptHistoryTests.test_same_public_bytes_at_another_log_path_stay_blocked) ... ok
+
+======================================================================
+FAIL: test_exact_public_receipts_have_reviewable_history_without_relaxing_current_paths (test_public_test_receipt_history.PublishedReceiptHistoryTests.test_exact_public_receipts_have_reviewable_history_without_relaxing_current_paths)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<workspace>\JobFlow-assertion-review\tests\test_public_test_receipt_history.py", line 46, in test_exact_public_receipts_have_reviewable_history_without_relaxing_current_paths
+    self.assertEqual(result['status'], 'PASS', result['findings'])
+AssertionError: 'FAIL' != 'PASS'
+- FAIL
++ PASS
+ : [{'kind': 'private_or_generated_file_tracked', 'path': 'evaluations/2026-11-01/assertion-validation/earlier-runtime-terminal-failure.log'}, {'kind': 'private_or_generated_file_tracked', 'path': 'evaluations/2026-11-01/assertion-validation/public-docs-followup.log'}]
+
+----------------------------------------------------------------------
+Ran 3 tests in 2.339s
+
+FAILED (failures=1)

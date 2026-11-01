@@ -27,6 +27,16 @@ ALLOWED_RUNTIME_SENTINELS = {
 }
 PRIVATE_ROOTS = {"state", "reports", "workspace"}
 FORBIDDEN_SUFFIXES = {".db", ".dpapi", ".sqlite", ".sqlite3", ".pyc", ".zip", ".7z", ".rar", ".log"}
+# These two already-published, redacted test receipts were accidentally named
+# .log in b0a5106. Current copies use .txt. Recognize only these immutable
+# historical path/content pairs; every other log and changed version still
+# fails. This is neither an author-identity nor a release-approval exception.
+HISTORICAL_PUBLIC_TEST_RECEIPTS = {
+    "evaluations/2026-11-01/assertion-validation/earlier-runtime-terminal-failure.log":
+        "484076235ba5d485e8178aa72bb45311ac545f6fa5384b9f8ee5818e16677f21",
+    "evaluations/2026-11-01/assertion-validation/public-docs-followup.log":
+        "88682a9fbfc4bf9dcc42ae6687419ddc6dd0f75bf7ca250cf5c754677c58259d",
+}
 FORBIDDEN_PARTS = {"__pycache__", ".pytest_cache", ".venv", "venv", "dist", "build"}
 FORBIDDEN_BINDING_FILENAMES = {
     "browser-companion-binding.json",
@@ -399,6 +409,11 @@ def _scan_historical_document(project: Path, label: str, suffix: str, payload: b
 def verify_public_history(project: Path, *, git_path: Path | None = None) -> dict[str, Any]:
     paths, blob_paths, findings, commit_count = _history_inventory(project, git_path=git_path)
     findings.extend(validate_public_paths(paths))
+    receipt_versions = {
+        path: {oid for oid, aliases in blob_paths.items() if path in aliases}
+        for path in HISTORICAL_PUBLIC_TEST_RECEIPTS if path in paths
+    }
+    verified_receipt_versions: dict[str, set[str]] = {path: set() for path in receipt_versions}
     scanned_text_blobs = 0
     scanned_document_blobs = 0
     requests: list[tuple[str, int]] = []
@@ -407,6 +422,7 @@ def verify_public_history(project: Path, *, git_path: Path | None = None) -> dic
         relevant = sorted(
             alias for alias in aliases
             if PurePosixPath(alias).suffix.casefold() in TEXT_SUFFIXES | HISTORY_DOCUMENT_SUFFIXES
+            or alias in HISTORICAL_PUBLIC_TEST_RECEIPTS
         )
         if not relevant:
             continue
@@ -426,6 +442,9 @@ def verify_public_history(project: Path, *, git_path: Path | None = None) -> dic
         git_path=git_path,
     ):
         label, suffix = request_metadata[object_id]
+        for path in blob_paths[object_id] & HISTORICAL_PUBLIC_TEST_RECEIPTS.keys():
+            if payload is not None and hashlib.sha256(payload).hexdigest() == HISTORICAL_PUBLIC_TEST_RECEIPTS[path]:
+                verified_receipt_versions[path].add(object_id)
         if payload is None:
             kind = (
                 "oversized_historical_document"
@@ -443,6 +462,15 @@ def verify_public_history(project: Path, *, git_path: Path | None = None) -> dic
             findings.append({"kind": "undecodable_historical_text", "path": label})
             continue
         findings.extend(validate_public_text(label, text))
+    recognized_receipts = {
+        path for path, versions in receipt_versions.items()
+        if versions and versions == verified_receipt_versions[path]
+    }
+    # Only the historical suffix finding is resolved. Text/secret checks above,
+    # symlinks, invalid paths and current-tree log restrictions remain intact.
+    findings = [item for item in findings if not (
+        item["kind"] == "private_or_generated_file_tracked" and item["path"] in recognized_receipts
+    )]
     unique = sorted({(item["kind"], item["path"]) for item in findings})
     return {
         "status": "PASS" if not unique else "FAIL",
@@ -451,6 +479,11 @@ def verify_public_history(project: Path, *, git_path: Path | None = None) -> dic
         "unique_blob_count": len(blob_paths),
         "scanned_text_blob_count": scanned_text_blobs,
         "scanned_document_blob_count": scanned_document_blobs,
+        "historical_public_test_receipts": [
+            {"path": path, "sha256": HISTORICAL_PUBLIC_TEST_RECEIPTS[path],
+             "verified_versions": len(receipt_versions[path])}
+            for path in sorted(recognized_receipts)
+        ],
         "finding_count": len(unique),
         "findings": [{"kind": kind, "path": path} for kind, path in unique],
     }

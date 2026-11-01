@@ -1,0 +1,73 @@
+{
+  "observed_at_utc": "2026-11-01T11:10:42.232246+00:00",
+  "frozen_contract_commit": "85c08cf",
+  "original_hosted_failure": {
+    "head": "b0a5106bf98175b7e3c8b5472729479a404ddaa0",
+    "run": "https://github.com/ValerianXXX/JobFlow/actions/runs/41298935701",
+    "job": 124825933496,
+    "code": "PUBLIC_REPOSITORY_BOUNDARY_FAILED",
+    "cause": "Two public test receipts were added with forbidden .log suffixes"
+  },
+  "fixed_history_contracts_before": {
+    "tests": 3,
+    "failures": 1,
+    "passed": 2,
+    "seconds": 2.339
+  },
+  "public_boundary_contracts_after": {
+    "tests": 20,
+    "failures": 0,
+    "seconds": 3.426
+  },
+  "release_related_contracts_after": {
+    "tests": 53,
+    "failures": 0,
+    "seconds": 1.428
+  },
+  "repository_boundary_after": {
+    "status": "PASS",
+    "commits": 433,
+    "current_findings": 0,
+    "history_findings": 0,
+    "identity": "PASS",
+    "public_release_ready": false
+  },
+  "earlier_audit_setup_error": "RELEASE_GIT_PATH_REQUIRED; preserved locally; rerun with explicit authenticated Git",
+  "unchanged_controls": [
+    "Current .log paths forbidden",
+    "All changed historical receipt bytes forbidden",
+    "Same bytes at another .log path forbidden",
+    "All historical versions inspected",
+    "Secret, identity, symlink, native tool trust and production readiness checks retained"
+  ],
+  "new_live_model_calls": 0,
+  "production_release_approved": false,
+  "whole_goal_complete": false,
+  "candidate_build": "PENDING_AFTER_CODE_COMMIT",
+  "source_sha256": {
+    "src/jobops/public_release.py": "d6fd5f4b6f93cd0b689859b6eda9ff3470a4999966823aa3bde29cce92a6ff00",
+    "tests/test_public_test_receipt_history.py": "098a1447588029def19d43245df0da14baadd5d91d7d5b0a39a20281c8810067"
+  },
+  "files": [
+    {
+      "path": "fixed-history-before.txt",
+      "sha256": "b251a93a232b8ab7c9d0e445daf5d812e44c4b24da791934a8a7d820246e2b2c",
+      "original_local_sha256": "810f623bdd10f712ee25551e2a57f66bfc652b8642f851effb3c8f07c4d2ee65"
+    },
+    {
+      "path": "public-boundary-after.txt",
+      "sha256": "913876da04ba6d56bc906a01252f2cf1c924da66c77de81cfc5827384096b929",
+      "original_local_sha256": "3182b250ebeaf4c09c595690a7b978ca085a36bcd04bc4b54ff9152f0c391459"
+    },
+    {
+      "path": "release-related-after.txt",
+      "sha256": "eb01df2634de45cb3628271720c45bbb8a062da4d4e51543141737fff97a2588",
+      "original_local_sha256": "7337451bc6e41540119e4c0ad12d62c898d5ffc0a2398e80233b1aaa308ab520"
+    },
+    {
+      "path": "repository-boundary-after.json",
+      "sha256": "6d9a9c6b17b08493fd6a2a6db61d8fe7e20aa80359cbdfebd9500daef16f4362",
+      "original_local_sha256": "c28e6f367ed32b4aee6b685b964f718cb5ace958d0842538e78a2b10880b20ec"
+    }
+  ]
+}

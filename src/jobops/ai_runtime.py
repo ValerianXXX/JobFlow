@@ -15,6 +15,10 @@ from .claim_attribution import (
     explicit_attribution_conflict_count as _explicit_attribution_conflict_count,
     unsupported_passive_actor_count,
 )
+from .claim_assertion_status import (
+    has_bounded_action_predicate, is_explicit_assertion_prefix_wrap,
+    source_assertion_conflict_count, short_cjk_additive_clause_supported,
+)
 from .errors import JobOpsError
 from .claim_quantities import NUMBER_TOKEN_RE, canonical_number as _canonical_number, numeric_context_report
 from .source_context import DocumentAnalysisResult, SourceContextAccumulator
@@ -406,7 +410,8 @@ def _field_is_grounded(value: str, source_excerpt: str) -> bool:
 
 
 def _has_entity_predicate(statement: str) -> bool:
-    return bool(ENTITY_VERB_RE.search(statement) or any(item in statement for item in CHINESE_ENTITY_VERBS))
+    return bool(ENTITY_VERB_RE.search(statement) or any(item in statement for item in CHINESE_ENTITY_VERBS)
+                or has_bounded_action_predicate(statement))
 
 
 def _near_duplicate(left: str, right: str) -> bool:
@@ -471,12 +476,14 @@ def _merge_candidate_filter_diagnostics(
 def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str, Any]:
     # A Chinese sentence can express a complete fact in fewer than 20 code
     # points. For this narrow exception require a predicate AND an unchanged
-    # whole source sentence, never a substring that could drop its negation.
+    # whole source sentence or the unchanged first clause of 不仅…，还…,
+    # never a substring that could drop its negation.
     short_cjk_source_sentence = bool(
         12 <= len(statement) < 20
         and len(re.findall(r"[\u4e00-\u9fff]", statement)) >= 8
         and _has_entity_predicate(statement)
-        and statement in [part.strip() for part in re.split(r"(?<=[。！？])|\n", source_excerpt)]
+        and (statement in [part.strip() for part in re.split(r"(?<=[。！？])|\n", source_excerpt)]
+             or short_cjk_additive_clause_supported(statement, source_excerpt))
     )
     format_complete = bool((20 <= len(statement) <= 2_000 or short_cjk_source_sentence) and statement[-1:] in ".?!。！？")
     if statement.endswith((",", ";", ":", "-", "–", "—")) or "|" in statement or "http://" in statement.casefold() or "https://" in statement.casefold():
@@ -499,12 +506,15 @@ def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str
     shared_tokens = len(claim_tokens & source_tokens)
     attribution_conflicts = _explicit_attribution_conflict_count(statement, source_excerpt)
     actor_inferences = unsupported_passive_actor_count(statement, source_excerpt)
+    assertion_conflicts = source_assertion_conflict_count(statement, _numeric_text(source_excerpt))
     return {
         "valid": bool(format_complete and not unsupported_numbers and not quantities['unsupported_numeric_context_count']
-                      and not attribution_conflicts and not actor_inferences and (not claim_tokens or shared_tokens >= required)),
+                      and not attribution_conflicts and not actor_inferences and not assertion_conflicts
+                      and (not claim_tokens or shared_tokens >= required)),
         **quantities,
         "explicit_attribution_conflict_count": attribution_conflicts,
         "unsupported_actor_inference_count": actor_inferences,
+        "source_assertion_conflict_count": assertion_conflicts,
         "statement_format_complete": format_complete,
         "unsupported_number_count": len(unsupported_numbers),
         "shared_grounding_token_count": shared_tokens,
@@ -543,20 +553,22 @@ def _bounded_statement_grounding(
         "citation_adjustment": None,
         "adjacent_line_expansion_attempted": False,
     })
-    if (original["valid"] or not original["statement_format_complete"]
+    if (not original["statement_format_complete"]
         or original["explicit_attribution_conflict_count"] or original["unsupported_actor_inference_count"]
-        or original["explicit_numeric_context_conflict_count"]):
+        or original["explicit_numeric_context_conflict_count"] or original["source_assertion_conflict_count"]):
         return original
 
     expanded_start, expanded_end = start_index, end_index
     before = after = 0
     while before < MAX_GROUNDING_ADJACENT_LINES and expanded_start > 0:
-        if not _looks_like_wrapped_pair(source_lines[expanded_start - 1], source_lines[expanded_start]):
+        if not (_looks_like_wrapped_pair(source_lines[expanded_start - 1], source_lines[expanded_start])
+                or is_explicit_assertion_prefix_wrap(source_lines[expanded_start - 1], source_lines[expanded_start])):
             break
         expanded_start -= 1
         before += 1
     while after < MAX_GROUNDING_ADJACENT_LINES and expanded_end + 1 < len(source_lines):
-        if not _looks_like_wrapped_pair(source_lines[expanded_end], source_lines[expanded_end + 1]):
+        if not (_looks_like_wrapped_pair(source_lines[expanded_end], source_lines[expanded_end + 1])
+                or is_explicit_assertion_prefix_wrap(source_lines[expanded_end], source_lines[expanded_end + 1])):
             break
         expanded_end += 1
         after += 1
@@ -565,6 +577,17 @@ def _bounded_statement_grounding(
 
     expanded_excerpt = "\n".join(source_lines[expanded_start:expanded_end + 1])
     expanded = _statement_grounding_report(statement, expanded_excerpt)
+    if original["valid"]:
+        # A narrow citation can omit an immediately wrapped negation/intent
+        # prefix. Inspect that bounded context even when token overlap passes.
+        # Do not otherwise change accepted citations or borrow neighboring facts.
+        if expanded["source_assertion_conflict_count"]:
+            return {**original, "valid": False,
+                    "source_assertion_conflict_count": expanded["source_assertion_conflict_count"],
+                    "adjacent_line_expansion_attempted": True,
+                    "expanded_line_start": line_number_start + expanded_start,
+                    "expanded_line_end": line_number_start + expanded_end}
+        return original
     expanded.update({
         "line_start": line_number_start + expanded_start,
         "line_end": line_number_start + expanded_end,
@@ -582,6 +605,7 @@ def _bounded_statement_grounding(
         "explicit_numeric_context_conflict_count": expanded["explicit_numeric_context_conflict_count"],
         "explicit_attribution_conflict_count": expanded["explicit_attribution_conflict_count"],
         "unsupported_actor_inference_count": expanded["unsupported_actor_inference_count"],
+        "source_assertion_conflict_count": expanded["source_assertion_conflict_count"],
         "shared_grounding_token_count": expanded["shared_grounding_token_count"],
     }}
 
@@ -1094,6 +1118,7 @@ class LocalSubprocessAIEngine(AIAnalysisEngine):
                     else "UNSUPPORTED_NUMERIC_CONTEXT" if grounding["unsupported_numeric_context_count"]
                     else "ATTRIBUTION_CONFLICT" if grounding["explicit_attribution_conflict_count"]
                     else "UNSUPPORTED_ACTOR" if grounding["unsupported_actor_inference_count"]
+                    else "SOURCE_ASSERTION_CONFLICT" if grounding["source_assertion_conflict_count"]
                     else "STATEMENT_FRAGMENT" if not grounding["statement_format_complete"]
                     else "CITED_LINE_GROUNDING"
                 )

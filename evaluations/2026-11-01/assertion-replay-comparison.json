@@ -1,0 +1,131 @@
+{
+  "synthetic_only": true,
+  "live_provider_calls": 0,
+  "new_model_quality_measurement": false,
+  "whole_material_acceptance": false,
+  "independent_human_acceptance": false,
+  "original_model_cost_unknown": true,
+  "rows": [
+    {
+      "observation": "initial",
+      "case": "en-chronological",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 34,
+      "after_candidates": 34,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    },
+    {
+      "observation": "initial",
+      "case": "zh-chronological",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 33,
+      "after_candidates": 33,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    },
+    {
+      "observation": "initial",
+      "case": "mixed-paired_columns",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 33,
+      "after_candidates": 33,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    },
+    {
+      "observation": "initial",
+      "case": "en-scanned_pages",
+      "before_status": "BLOCKED",
+      "after_status": "BLOCKED",
+      "before_candidates": 0,
+      "after_candidates": 0,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    },
+    {
+      "observation": "initial",
+      "case": "zh-scanned_pages",
+      "before_status": "BLOCKED",
+      "after_status": "BLOCKED",
+      "before_candidates": 0,
+      "after_candidates": 0,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    },
+    {
+      "observation": "initial",
+      "case": "mixed-portfolio_capture",
+      "before_status": "BLOCKED",
+      "after_status": "BLOCKED",
+      "before_candidates": 0,
+      "after_candidates": 0,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    },
+    {
+      "observation": "visual",
+      "case": "en-scanned_pages",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 34,
+      "after_candidates": 34,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    },
+    {
+      "observation": "visual",
+      "case": "zh-scanned_pages",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 30,
+      "after_candidates": 30,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    },
+    {
+      "observation": "visual",
+      "case": "mixed-portfolio_capture",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 33,
+      "after_candidates": 33,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    },
+    {
+      "observation": "fact-preservation",
+      "case": "en-chronological",
+      "before_status": "SOURCE_SAVED_AND_REOPENED",
+      "after_status": "SOURCE_SAVED_AND_REOPENED",
+      "before_candidates": 34,
+      "after_candidates": 34,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    },
+    {
+      "observation": "fact-preservation",
+      "case": "zh-chronological",
+      "before_status": "SOURCE_SAVED_AND_REOPENED",
+      "after_status": "SOURCE_SAVED_AND_REOPENED",
+      "before_candidates": 34,
+      "after_candidates": 34,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_after_unselected": true
+    }
+  ]
+}

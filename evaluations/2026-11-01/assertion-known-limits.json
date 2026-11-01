@@ -1,0 +1,67 @@
+{
+  "synthetic_only": true,
+  "purpose": "NON_GATING_KNOWN_LIMIT_PROBES_AFTER_IMPLEMENTATION",
+  "not_part_of_frozen_60_case_denominator": true,
+  "live_provider_calls": 0,
+  "whole_material_acceptance": false,
+  "remaining_work": "These unsupported paraphrases still need source review and broader semantic evaluation; zero literal conflicts must never be presented as entailment.",
+  "cases": [
+    {
+      "id": "nominalized-plan",
+      "source": "The applicant proposed a deployment of the public service to production.",
+      "statement": "The applicant deployed the public service to production.",
+      "supported_by_source": false,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "inability",
+      "source": "The applicant was unable to manage the synthetic project budget.",
+      "statement": "The applicant managed the synthetic project budget.",
+      "supported_by_source": false,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 3,
+        "required_grounding_token_count": 2,
+        "numeric_format_normalization_count": 0
+      }
+    },
+    {
+      "id": "unrecognized-named-actor",
+      "source": "The synthetic manager did not process the project records.",
+      "statement": "The synthetic manager processed the project records.",
+      "supported_by_source": false,
+      "diagnostics": {
+        "valid": true,
+        "unsupported_numeric_context_count": 0,
+        "explicit_numeric_context_conflict_count": 0,
+        "explicit_attribution_conflict_count": 0,
+        "unsupported_actor_inference_count": 0,
+        "source_assertion_conflict_count": 0,
+        "statement_format_complete": true,
+        "unsupported_number_count": 0,
+        "shared_grounding_token_count": 4,
+        "required_grounding_token_count": 3,
+        "numeric_format_normalization_count": 0
+      }
+    }
+  ]
+}

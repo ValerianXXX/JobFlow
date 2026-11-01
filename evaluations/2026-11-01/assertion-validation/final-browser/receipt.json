@@ -1,0 +1,125 @@
+{
+  "synthetic_only": true,
+  "mode": "FIXED_ADAPTER_ACTUAL_HTTP_UI_AND_DPAPI",
+  "live_provider_calls": 0,
+  "model_quality_measured": false,
+  "seeded_approvals": false,
+  "started_at": "2026-11-01T09:45:02.978298+00:00",
+  "fixture_calls": [
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "input_sha256": "sha256:56fa104f44c11b725a85e1898b446b21b943becd2a5928a019e4417faaf9f7ae"
+    },
+    {
+      "task": "JOBOPS_REPAIR_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "input_sha256": "sha256:56fa104f44c11b725a85e1898b446b21b943becd2a5928a019e4417faaf9f7ae"
+    }
+  ],
+  "fixture_sha256": {
+    "english": "sha256:9603d234123aa293c745f9388597d3cc709055d455fe39dda36f5be25666986d",
+    "chinese": "sha256:048fde4eae1431b6f6c5700ed987f4f43b9a9379b621991669e53432f07e5044",
+    "all-filtered": "sha256:aa64d033a27555d03ca45ac3ff903301842c309b136b47247d51b36a4c45499f"
+  },
+  "source_count": 1,
+  "pending_count": 0,
+  "claim_count": 0,
+  "master_resume_present": true,
+  "master_resume_editable": true,
+  "sources": [
+    {
+      "source_id": "SRC-6A26AF14D494",
+      "extraction_summary": {
+        "ai_candidates": 0,
+        "ai_chunking_applied": false,
+        "ai_chunks": 1,
+        "ai_covered_characters": 178,
+        "ai_entities": 1,
+        "ai_input_characters": 178,
+        "ai_input_truncated": false,
+        "ai_repair_attempted": true,
+        "ai_repair_count": 1,
+        "ai_repair_succeeded": true,
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "automatic_claim_selection": false,
+        "candidate_filter_applied": true,
+        "claim_candidates": 0,
+        "classification_review_candidate_count": 0,
+        "document_page_count": null,
+        "document_quality": {
+          "character_count": 178,
+          "characters_per_page": null,
+          "contains_document_text": false,
+          "control_character_count": 0,
+          "extension": ".docx",
+          "long_line_count": 0,
+          "nonempty_line_count": 4,
+          "page_count": null,
+          "private_use_glyph_count": 0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "replacement_character_count": 0,
+          "schema_version": 1,
+          "short_line_ratio": 0.0,
+          "status": "PASS",
+          "unique_line_ratio": 1.0,
+          "wordish_character_count": 153
+        },
+        "filtered_candidate_count": 2,
+        "filtered_candidate_reasons": {
+          "SOURCE_ASSERTION_CONFLICT": 2
+        },
+        "filtered_noise_lines": 0,
+        "grounding_ratio_minimum": 0.5,
+        "intake_mode": "STANDARD_MEMORY",
+        "near_duplicate_ratio": 0.85,
+        "non_claim_blocks": 0,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6",
+        "quality_gate_version": 5,
+        "raw_lines": 4,
+        "reconstructed_blocks": 1,
+        "segmented_oversize_lines": 0,
+        "source_context_review": {
+          "automatic_claim_creation": false,
+          "automatic_profile_update": false,
+          "contract_version": 1,
+          "duplicates": 0,
+          "filtered": 0,
+          "missing_chunks": 1,
+          "proposed": 0,
+          "provided_chunks": 0,
+          "retained": 0,
+          "semantic_completeness_verified": false,
+          "status": "NOT_PROVIDED"
+        },
+        "source_reference_coverage": {
+          "cited_source_lines": 0,
+          "fact_completeness_verified": false,
+          "invalid_reference_count": 0,
+          "nonempty_source_lines": 4,
+          "range_list_truncated": false,
+          "schema_version": 1,
+          "semantic_recall": null,
+          "status": "LINE_REFERENCES_ONLY",
+          "uncited_line_ranges": [
+            {
+              "line_end": 4,
+              "line_start": 1
+            }
+          ],
+          "uncited_source_lines": 4
+        },
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0
+      },
+      "original_bytes_match": true
+    }
+  ],
+  "database_counts": {
+    "applications": 0,
+    "claims": 0,
+    "approvals": 0,
+    "external_action_attempts": 0
+  },
+  "temporary_state_removed": true,
+  "finished_at": "2026-11-01T09:52:50.939789+00:00"
+}

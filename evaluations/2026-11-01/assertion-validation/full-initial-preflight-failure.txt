@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "<USERPROFILE>\AppData\Local\Programs\Python\Python311\Lib\importlib\metadata\__init__.py", line 563, in from_name
+    return next(cls.discover(name=name))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StopIteration
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<WORKSPACE>\task-artifacts\run-jobflow-assertion-full-20261101.py", line 20, in <module>
+    versions = {name: importlib.metadata.version(name) for name in ('mcp', 'anyio', 'docling-slim', 'docling-parse', 'pypdf', 'pypdfium2', 'python-docx', 'setuptools', 'wheel')}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<WORKSPACE>\task-artifacts\run-jobflow-assertion-full-20261101.py", line 20, in <dictcomp>
+    versions = {name: importlib.metadata.version(name) for name in ('mcp', 'anyio', 'docling-slim', 'docling-parse', 'pypdf', 'pypdfium2', 'python-docx', 'setuptools', 'wheel')}
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<USERPROFILE>\AppData\Local\Programs\Python\Python311\Lib\importlib\metadata\__init__.py", line 1008, in version
+    return distribution(distribution_name).version
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<USERPROFILE>\AppData\Local\Programs\Python\Python311\Lib\importlib\metadata\__init__.py", line 981, in distribution
+    return Distribution.from_name(distribution_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<USERPROFILE>\AppData\Local\Programs\Python\Python311\Lib\importlib\metadata\__init__.py", line 565, in from_name
+    raise PackageNotFoundError(name)
+importlib.metadata.PackageNotFoundError: No package metadata was found for wheel

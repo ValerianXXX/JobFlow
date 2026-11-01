@@ -1,0 +1,41 @@
+{
+  "synthetic_only": true,
+  "adapter": "FIXED_SYNTHETIC_RESPONSES",
+  "live_provider_calls": 0,
+  "journeys": [
+    {
+      "case": "english",
+      "notice": "Skipped 2 candidate(s) whose negation or planned-action status conflicts with the cited source. You can still save the source; review the original and remaining candidates.",
+      "candidates": [
+        "The applicant did not manage the project budget.",
+        "The applicant proposed deploying the public service to production."
+      ],
+      "selected": [
+        false,
+        false
+      ],
+      "source_view": "Browser tab: 11, Title: \"JobFlow · Job pipeline\", URL: \"[LOOPBACK_SESSION]\".\n0 AXWebArea JobFlow · Job pipeline, URL: [LOOPBACK_SESSION]\n\t1 container Saved text used for this analysis\n\t\t2 container\n\t\t\t3 heading Saved text used for this analysis, Value: 3, ID: analysisTextTitle\n\t\t\t\t4 text Saved text used for this analysis\n\t\t\t5 button Close and clear\n\t\t6 text These are the extracted text lines sent for analysis, including blank lines. They may contain extraction errors. Compare the original file to verify layout, facts and omissions. Opening this view does not confirm any facts.\n\t\t16 text Showing lines 1–4 of 4\n\t\t8 container Saved text used for this analysis\n\t\t\t17 text 1\n\t\t\t18 text Synthetic Assertion Review english\n\t\t\t19 text 2\n\t\t\t20 text Analyst 2023-2024\n\t\t\t21 text 3\n\t\t\t22 text The applicant did not manage the project budget.\n\t\t\t23 text 4\n\t\t\t24 text The applicant proposed deploying the public service to production.\n\t\t9 container\n\t\t\t10 button (disabled) Previous lines\n\t\t\t11 button (disabled) Next lines\n\t\t\t12 container\n\t\t\t\t13 text Line number\n\t\t\t\t14 stepper (settable, integer) Line number, Value: 1\n\t\t\t15 button Go to line\n\nThe focused UI element is 8 container Saved text used for this analysis"
+    },
+    {
+      "case": "chinese",
+      "notice": "有 2 条候选的否定或计划状态与所引原文冲突，已跳过。原文件仍可保存；请核对原文和剩余候选。",
+      "candidates": [
+        "申请人没有负责这项项目的预算审批和支付执行。",
+        "申请人计划部署这个合成项目的演示程序和帮助页面。"
+      ],
+      "selected": [
+        false,
+        false
+      ]
+    },
+    {
+      "case": "all-filtered",
+      "notice": "有 2 条候选的否定或计划状态与所引原文冲突，已跳过。原文件仍可保存；请核对原文和剩余候选。",
+      "candidate_count": 0,
+      "can_save_source": true,
+      "include_all_enabled": false
+    }
+  ],
+  "reloaded_sources": "resume-01.docx\nresume · 2 AI 候选 · 所选文字已送入 AI · 1 个分块\n输入分析已返回\n用 AI 重新分析\n删除材料\n原文中的约束与待核实事项\n\n以下内容来自原文，仍需你核对。它们不会自动填写资料、成为 Claim 或获得对外使用批准。行号对应分析文本；扫描件还需对照原始页面。\n\n本次没有可用的约束核对记录，请查看原件并手动补充资料。\n\n核对分析原文\nresume-02.docx\nresume · 2 AI 候选 · 所选文字已送入 AI · 1 个分块\n输入分析已返回\n用 AI 重新分析\n删除材料\n原文中的约束与待核实事项\n\n以下内容来自原文，仍需你核对。它们不会自动填写资料、成为 Claim 或获得对外使用批准。行号对应分析文本；扫描件还需对照原始页面。\n\n本次没有可用的约束核对记录，请查看原件并手动补充资料。\n\n核对分析原文\nresume-03.docx\nresume · 0 AI 候选 · 所选文字已送入 AI · 1 个分块\n输入分析已返回\n用 AI 重新分析\n删除材料\n原文中的约束与待核实事项\n\n以下内容来自原文，仍需你核对。它们不会自动填写资料、成为 Claim 或获得对外使用批准。行号对应分析文本；扫描件还需对照原始页面。\n\n本次没有可用的约束核对记录，请查看原件并手动补充资料。\n\n核对分析原文",
+  "claim_review": "Browser tab: 11, Title: \"JobFlow · 找工流水线\", URL: \"[LOOPBACK_SESSION]\".\nThe following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 18-20, 23-25, 28-30, 33-35, 38, 211-270\n+\t\t419 container review\n+\t\t\t420 text 03\n+\t\t\t421 heading 集中处理资料与 Claim, Value: 2\n+\t\t\t\t422 text 集中处理资料与 Claim\n+\t\t\t423 text 只显示经过 AI 归并和完整性检查的 Claim。工作、实习、教育和项目分别归类；确认不等于自动对外提交。\n+\t\t\t424 text 已审阅 Claim\n+\t\t\t425 text 0 / 0\n+\t\t\t426 text 已解决冲突\n+\t\t\t427 text 0 / 0\n+\t\t\t428 text Claim 可编辑审阅\n+\t\t\t429 text 左侧勾选框只用于把同一实体中的多条 Claim 合并，不代表确认或采用；确认状态仍由右侧下拉框决定。\n+\t\t\t430 button 合并已勾选项, ID: mergeClaims\n+\t\t\t431 container conflictSection\n+\t\t\t\t432 heading 需要单独解决的冲突, Value: 3\n+\t\t\t\t\t433 text 需要单独解决的冲突\n+\t\t\t\t434 text 只有两个相关来源对同一事实给出不同答案时，才算冲突；系统会直接说明哪个字段、两边各写了什么。\n+\t\t\t\t435 text 目前没有真正需要处理的冲突\n+\t\t\t436 container\n+\t\t\t\t437 checkbox (settable, integer) Description: 我已审阅 Candidate Profile 确认简历、项目、技能、教育及成果栏目；未解决冲突除外。, Value: 0, ID: profileReview\n+\t\t\t\t438 text 我已审阅 Candidate Profile 确认简历、项目、技能、教育及成果栏目；未解决冲突除外。\n+\t\t\t439 button 保存审阅结果, ID: saveReview\nThe focused UI element is 205 button 3 资料与 Claim 审阅"
+}

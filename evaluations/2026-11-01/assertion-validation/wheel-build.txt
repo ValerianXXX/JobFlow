@@ -1,0 +1,12 @@
+Processing <USERPROFILE>\documents\codex\2026-10-27\github-ai-agent-github-valerianxxx-1\jobflow-assertion-review
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: jobflow-local
+  Building wheel for jobflow-local (pyproject.toml): started
+  Building wheel for jobflow-local (pyproject.toml): finished with status 'done'
+  Created wheel for jobflow-local: filename=jobflow_local-0.7.0-py3-none-any.whl size=853734 sha256=965ddd71ed86207abb8ee4b818f093fa6f66423229af5c9f07f9c61c92aa3d00
+  Stored in directory: <USERPROFILE>\appdata\local\pip\cache\wheels\e9\5b\0e\a43419fa3ea4b1ab9f6af97549abba927ab7a98295a0123a68
+Successfully built jobflow-local
+
+[notice] A new release of pip available: 22.3.1 -> 26.2.2
+[notice] To update, run: <WORKSPACE>\JobFlow-fact-polarity\.venv\Scripts\python.exe -m pip install --upgrade pip

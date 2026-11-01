@@ -1,0 +1,238 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFF
+======================================================================
+FAIL: test_all_conflicting_candidates_can_be_filtered_without_rejecting_source_protocol (test_ai_assertion_status.AssertionStatusTests.test_all_conflicting_candidates_can_be_filtered_without_rejecting_source_protocol)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 50, in test_all_conflicting_candidates_can_be_filtered_without_rejecting_source_protocol
+    self.assertEqual(candidates, [])
+AssertionError: Lists differ: [{'candidate_id': 'EXT-ABE709533C72', 'sta[854 chars]0'}}] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+{'candidate_id': 'EXT-ABE709533C72', 'statement': 'The applicant managed the project budget.', 'category': 'project', 'claim_kind': 'responsibility', 'confidence': 'HIGH', 'selected': False, 'selection_reason': 'AI_DERIVED_REQUIRES_CONFIRMATION', 'ai_reason': '', 'provenance': {'line_start': 3, 'line_end': 3, 'ai_line_start': 3, 'ai_line_end': 3, 'citation_adjustment': None, 'numeric_format_normalizations': 0, 'structural_normalizations': [], 'classification_review_required': False, 'human_confirmation_required': True}, 'entity_id': 'ENT-0B6D5D0806D0', 'entity': {'entity_key': 'synthetic', 'entity_type': 'project', 'organization': 'Synthetic Project', 'role': 'Analyst', 'start_date': '2023', 'end_date': '2024', 'line_start': 1, 'line_end': 2, 'normalization_codes': [], 'classification_review_required': False, 'entity_fingerprint': 'ENTKEY-75DFCCA23164', 'entity_id': 'ENT-0B6D5D0806D0'}}
+
+Diff is 1266 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_candidate_filter_does_not_discard_valid_candidate_or_rewrite_source (test_ai_assertion_status.AssertionStatusTests.test_candidate_filter_does_not_discard_valid_candidate_or_rewrite_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 34, in test_candidate_filter_does_not_discard_valid_candidate_or_rewrite_source
+    self.assertEqual([c["statement"] for c in candidates], [source])
+AssertionError: Lists differ: ['The applicant managed the project budget.'] != ['The applicant did not manage the project budget.']
+
+First differing element 0:
+'The applicant managed the project budget.'
+'The applicant did not manage the project budget.'
+
+- ['The applicant managed the project budget.']
+?                       -
+
++ ['The applicant did not manage the project budget.']
+?                 ++++++++
+
+
+======================================================================
+FAIL: test_explicit_conflict_cannot_borrow_an_adjacent_positive_clause (test_ai_assertion_status.AssertionStatusTests.test_explicit_conflict_cannot_borrow_an_adjacent_positive_clause)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 57, in test_explicit_conflict_cannot_borrow_an_adjacent_positive_clause
+    self.assertFalse(report["valid"])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-negative')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-never')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-contraction')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-no-passive')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-negative-passive-agent')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-not-completed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-proposed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-planned')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-intended')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-team-proposed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='en-future')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-negative')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-never-completed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-not-yet')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-never')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-not-manage')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-invented-negative')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-planned')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-proposed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-intended')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-future')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='mixed-negative')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='mixed-planned')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) (case='zh-not-only')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 20, in test_frozen_contradictions_and_supported_controls
+    self.assertEqual(actual["valid"], case["expected_valid"])
+AssertionError: False != True
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.021s
+
+FAILED (failures=27)

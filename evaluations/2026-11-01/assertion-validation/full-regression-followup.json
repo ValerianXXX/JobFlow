@@ -1,0 +1,40 @@
+{
+  "observed_at_utc": "2026-11-01T10:45:50.665767+00:00",
+  "earlier_runtime": "26d22b0fb5592c5928d4e258b21838105c8d1636",
+  "earlier_run_status": "FAILED",
+  "tests": 1634,
+  "passed": 1629,
+  "failures": 1,
+  "errors": 0,
+  "skipped": 4,
+  "seconds": 4027.76,
+  "failure": "test_public_github_text_is_english_only found a literal Chinese example in the new public document",
+  "skip_scope": "Four original file/archive symlink privilege checks; no skip added or weakened",
+  "local_full_log_sha256": "b1e39dd29a0aa435eaaa7dc854c1e1a022ddf144aa99cd5ab9dd156661f293a3",
+  "public_log_scope": "Terminal failure excerpt; workspace path redacted. Full original log retained locally.",
+  "doc_fix": "Describe the Chinese additive construction in English; corpus, runtime and assertions unchanged",
+  "focused_followup": {
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.049
+  },
+  "current_product_runtime": "2ac8c485cad4d04d1453e80d3b8876c81f0117df",
+  "full_final_runtime_acceptance": false,
+  "final_head_hosted_checks": "PENDING",
+  "new_provider_calls": 0,
+  "whole_goal_complete": false,
+  "files": [
+    {
+      "path": "earlier-runtime-terminal-failure.txt",
+      "historical_path": "earlier-runtime-terminal-failure.log",
+      "sha256": "484076235ba5d485e8178aa72bb45311ac545f6fa5384b9f8ee5818e16677f21"
+    },
+    {
+      "path": "public-docs-followup.txt",
+      "historical_path": "public-docs-followup.log",
+      "sha256": "88682a9fbfc4bf9dcc42ae6687419ddc6dd0f75bf7ca250cf5c754677c58259d"
+    }
+  ]
+}

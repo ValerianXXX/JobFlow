@@ -1,0 +1,17 @@
+# Source assertion status protocol — 2026-11-01
+
+`SOURCE_ASSERTION_STATUS_V1` is a local host-validator experiment with public synthetic text only. It makes no model calls and is not evidence of end-to-end material understanding, independent human acceptance or the full 95% supported-fact recall goal.
+
+Before runtime changes, freeze `tests/fixtures/assertion_status/cases.json`, `tests/test_ai_assertion_status.py` and `scripts/evaluate-assertion-status.py`. The set contains 24 explicit contradictions (12 English, 10 Chinese, 2 mixed), their 24 unchanged-source controls, and 12 additional supported rewrites or nearby-actor/object/time controls. These are development counterexamples, not a blinded test or representative population. Preserve both baseline and after outputs; do not change labels to pass.
+
+The observed defect is that word overlap may accept removal of negation, invention of negation, or promotion of a proposed/future action into an accomplished action. Measure incorrectly accepted contradictions and incorrectly filtered supported controls separately by language. Keep all 60 cases in each denominator. A count of zero on this set is not proof that other contradiction types are absent.
+
+The planned host guard may compare only bounded explicit assertion forms and literal action objects/qualifiers. It must not generate Claims, repair wording, infer a missing actor, rewrite original evidence or call a new model. Out-of-vocabulary paraphrases, implicit negation, complex logical scope, discourse, nested quotations and nominalized plans remain outside this experiment. Unknown semantics must not be reported as verified entailment.
+
+Integration checks require valid candidates to remain unselected, unsupported candidates to be counted without their wording, readable source protocol to survive even when all candidates are filtered, and explicit source conflict to prevent adjacent-line rescue. Existing AI retry limits and separate Claim/material/external-action approval remain unchanged.
+
+Replay the pinned historical initial and visual responses (197 previously retained candidates across the existing exposed synthetic material arms) and the two fact-preservation responses (68 candidates) through both parent and changed validators. Compare candidate statements and source context, report every removed or added candidate, and review any change. Same-output replay is a regression check, never a fresh model comparison. Keep original model costs unknown where they were unknown; zero applies only to this offline guard run.
+
+Run related tests during implementation and required full checks once the milestone is stable. Public synthetic browser/service checks must identify their fixture adapter and separate them from live Hermes, real resumes, independent users, signed installation and clean Windows acceptance. No production release, signing, migration or deployment is authorized by this experiment.
+
+Baseline at parent `e62995b7d627c1b5c11b60be93be3d04a1a4de1d`: 23/24 contradictions were incorrectly accepted, and 1/36 supported controls was rejected. The correct Chinese `not only` first clause is shorter than the current 20-code-point general format minimum; retain this label and investigate narrow literal support, not removal of the example or relaxation of all short-sentence rules. The four integration/test methods had 27 failing assertions/subtests. Fixture LF SHA-256: `93d3076899fe29a0aea20908fe009793c0a638c4d5318480ee82597672861450`. The machine-readable baseline retains all 60 rows and diagnostics.
