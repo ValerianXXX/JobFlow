@@ -62,6 +62,37 @@ class AssertionStatusTests(unittest.TestCase):
         self.assertEqual(report["line_start"], 1)
         self.assertEqual(report["line_end"], 1)
 
+    def test_a_citation_cannot_omit_the_wrapped_negation_prefix(self):
+        for lines, statement in (
+            (["The applicant did not", "manage the project budget."], "The applicant managed the project budget."),
+            (["申请人没有", "负责这项项目的预算审批和支付执行。"], "申请人负责这项项目的预算审批和支付执行。"),
+            (["申请人计划", "部署这个合成项目的演示程序和帮助页面。"], "申请人已部署这个合成项目的演示程序和帮助页面。"),
+        ):
+            with self.subTest(lines=lines):
+                report = _bounded_statement_grounding(statement, lines, line_start=2, line_end=2, line_number_start=1)
+                self.assertFalse(report["valid"])
+                self.assertEqual(report.get("source_assertion_conflict_count"), 1)
+
+    def test_a_multiline_citation_preserves_negation(self):
+        report = _statement_grounding_report("申请人负责这项项目的预算审批和支付执行。",
+                                             "申请人没有\n负责这项项目的预算审批和支付执行。")
+        self.assertFalse(report["valid"])
+
+    def test_neighboring_bullet_or_blank_line_does_not_supply_negation(self):
+        for lines in (
+            ["The applicant did not", "", "manage the project budget."],
+            ["The applicant did not", "- The applicant managed the project budget."],
+        ):
+            report = _bounded_statement_grounding("The applicant managed the project budget.", lines,
+                line_start=len(lines), line_end=len(lines), line_number_start=1)
+            self.assertTrue(report["valid"])
+            self.assertFalse(report["adjacent_line_expansion_attempted"])
+
+    def test_short_additive_clause_cannot_drop_negation(self):
+        source = "申请人不仅没有核验这个合成项目，还没有记录来源。"
+        self.assertFalse(_statement_grounding_report("申请人核验这个合成项目。", source)["valid"])
+        self.assertTrue(_statement_grounding_report("申请人没有核验这个合成项目。", source)["valid"])
+
 
 if __name__ == "__main__":
     unittest.main()
