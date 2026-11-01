@@ -3397,6 +3397,21 @@ class OnboardingCenterService:
         }
 
     @_synchronized
+    def application_materials(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from .application_material_review import ApplicationMaterialReviewManager
+        return ApplicationMaterialReviewManager(self.database, self.onboarding, self.schemas).describe(payload)
+
+    @_synchronized
+    def application_material_page(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from .application_material_review import ApplicationMaterialReviewManager
+        return ApplicationMaterialReviewManager(self.database, self.onboarding, self.schemas).page(payload)
+
+    @_synchronized
+    def application_material_file(self, payload: dict[str, Any]) -> tuple[bytearray, dict[str, Any]]:
+        from .application_material_review import ApplicationMaterialReviewManager
+        return ApplicationMaterialReviewManager(self.database, self.onboarding, self.schemas).file(payload)
+
+    @_synchronized
     def preview_application_narrative(self, payload: dict[str, Any]) -> dict[str, Any]:
         return ApplicationFieldResolutionManager(
             self.database, self.onboarding,

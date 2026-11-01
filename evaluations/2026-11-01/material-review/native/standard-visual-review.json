@@ -1,0 +1,14 @@
+{
+  "synthetic_only": true,
+  "pages": [
+    {
+      "file": "standard-page-1.png",
+      "result": "PASS",
+      "sha256": "160f6b0ac26e1b5276e6197bd092dd85a98d7552429930449fd905b9c66adc21",
+      "page": 1,
+      "reason": "Actually viewed the complete current native page. The two selected synthetic facts retain team ownership, 14 stores and 2023-2024 dates. No visible clipping, overlap or missing text. Sparse two-fact test layout, not professional resume-quality acceptance."
+    }
+  ],
+  "independent_human": false,
+  "reviewer": "ASSISTANT_VISUAL_REVIEW"
+}

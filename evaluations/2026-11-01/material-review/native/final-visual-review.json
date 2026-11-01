@@ -1,0 +1,37 @@
+{
+  "facts": "Two distinct resume facts preserve team budget 12502 USD and applicant testing 26 scenarios. The full Cover Letter page preserves the wrapped citation and footer.",
+  "reviewer": "ASSISTANT_VISUAL_REVIEW",
+  "files": [
+    {
+      "file": "product-resume-page-1.png",
+      "sha256": "27693dfb99ecad475d7e6654b5674c2d1d61b8621b9ba1617693e341157455b9"
+    },
+    {
+      "file": "product-cover_letter-page-1.png",
+      "sha256": "95bd2c3d4c4284f313e2ec614cb2c1139e376b2824e9673026df37ccda21b424"
+    },
+    {
+      "file": "product-resume-preview.png",
+      "sha256": "deb6578e7c104149a0dd884e58de9d4e842c57ee29cd20fabb4c77de853880bc"
+    },
+    {
+      "file": "product-cover_letter-preview.png",
+      "sha256": "1dba9274793018dcf3d80938b185a1ca1297938b2719a263853ecdb1d6fb31c2"
+    },
+    {
+      "file": "final-material-mobile-zh.png",
+      "sha256": "2d3259846caed10d43091ca3879226dbecc58dece0f186adc6cf3bd4548a4808"
+    }
+  ],
+  "limits": [
+    "Replay Cover Letter repeats its opening fact and mixes languages; writing quality not accepted",
+    "No independent human or live model observation",
+    "No application approval or external submission"
+  ],
+  "observed_at_utc": "2026-11-01T07:09:23.3400945Z",
+  "result": "PASS",
+  "synthetic_only": true,
+  "independent_human": false,
+  "scope": "Final native pages and product viewing controls, not persuasive writing or applicant qualification",
+  "layout": "Full page images have no visible clipping or overlap. Desktop preview contains the actual saved pages. At 200 percent mobile zoom the larger page is inside an internal scrolling viewport."
+}

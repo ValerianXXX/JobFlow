@@ -1,0 +1,159 @@
+test_corrupt_ciphertext_is_not_returned (test_application_material_review.ApplicationMaterialReviewTests.test_corrupt_ciphertext_is_not_returned) ... ERROR
+test_http_requires_local_session_and_origin_and_returns_no_store_bytes (test_application_material_review.ApplicationMaterialReviewTests.test_http_requires_local_session_and_origin_and_returns_no_store_bytes) ... ERROR
+test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) ... ERROR
+test_list_and_download_are_bound_and_do_not_grant_approval (test_application_material_review.ApplicationMaterialReviewTests.test_list_and_download_are_bound_and_do_not_grant_approval) ... ERROR
+test_material_must_belong_to_this_application (test_application_material_review.ApplicationMaterialReviewTests.test_material_must_belong_to_this_application) ... ERROR
+test_packet_change_during_render_discards_the_image (test_application_material_review.ApplicationMaterialReviewTests.test_packet_change_during_render_discards_the_image) ... ERROR
+test_packet_content_cannot_change_while_retaining_its_old_hash (test_application_material_review.ApplicationMaterialReviewTests.test_packet_content_cannot_change_while_retaining_its_old_hash) ... ERROR
+test_preview_uses_real_second_pdf_page_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_preview_uses_real_second_pdf_page_without_writes) ... ERROR
+test_revocation_during_read_is_rechecked (test_application_material_review.ApplicationMaterialReviewTests.test_revocation_during_read_is_rechecked) ... ERROR
+test_revoked_wrong_kind_or_changed_hash_is_unavailable (test_application_material_review.ApplicationMaterialReviewTests.test_revoked_wrong_kind_or_changed_hash_is_unavailable) ... ERROR
+test_stale_hash_and_arbitrary_selector_never_decrypt_material (test_application_material_review.ApplicationMaterialReviewTests.test_stale_hash_and_arbitrary_selector_never_decrypt_material) ... ERROR
+
+======================================================================
+ERROR: test_corrupt_ciphertext_is_not_returned (test_application_material_review.ApplicationMaterialReviewTests.test_corrupt_ciphertext_is_not_returned)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+======================================================================
+ERROR: test_http_requires_local_session_and_origin_and_returns_no_store_bytes (test_application_material_review.ApplicationMaterialReviewTests.test_http_requires_local_session_and_origin_and_returns_no_store_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+======================================================================
+ERROR: test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+======================================================================
+ERROR: test_list_and_download_are_bound_and_do_not_grant_approval (test_application_material_review.ApplicationMaterialReviewTests.test_list_and_download_are_bound_and_do_not_grant_approval)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+======================================================================
+ERROR: test_material_must_belong_to_this_application (test_application_material_review.ApplicationMaterialReviewTests.test_material_must_belong_to_this_application)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+======================================================================
+ERROR: test_packet_change_during_render_discards_the_image (test_application_material_review.ApplicationMaterialReviewTests.test_packet_change_during_render_discards_the_image)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+======================================================================
+ERROR: test_packet_content_cannot_change_while_retaining_its_old_hash (test_application_material_review.ApplicationMaterialReviewTests.test_packet_content_cannot_change_while_retaining_its_old_hash)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+======================================================================
+ERROR: test_preview_uses_real_second_pdf_page_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_preview_uses_real_second_pdf_page_without_writes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+======================================================================
+ERROR: test_revocation_during_read_is_rechecked (test_application_material_review.ApplicationMaterialReviewTests.test_revocation_during_read_is_rechecked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+======================================================================
+ERROR: test_revoked_wrong_kind_or_changed_hash_is_unavailable (test_application_material_review.ApplicationMaterialReviewTests.test_revoked_wrong_kind_or_changed_hash_is_unavailable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+======================================================================
+ERROR: test_stale_hash_and_arbitrary_selector_never_decrypt_material (test_application_material_review.ApplicationMaterialReviewTests.test_stale_hash_and_arbitrary_selector_never_decrypt_material)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 41, in setUp
+    self.orchestrator = JobOpsOrchestrator(PROJECT, self.database, self.onboarding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\orchestrator.py", line 187, in __init__
+    self.onboarding.assert_outside_project(self.project)
+  File "$WORKSPACE_ROOT\JobFlow-material-review\src\jobops\private_onboarding.py", line 42, in assert_outside_project
+    raise JobOpsError(
+jobops.errors.JobOpsError: The DPAPI private root and project directory must be completely separate.
+
+----------------------------------------------------------------------
+Ran 11 tests in 2.118s
+
+FAILED (errors=11)

@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\first_use_revision_ui_server.py", line 151, in <module>
+    main()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\first_use_revision_ui_server.py", line 71, in main
+    raise ValueError("Synthetic artifacts must remain inside this checkout's report directory.")
+ValueError: Synthetic artifacts must remain inside this checkout's report directory.

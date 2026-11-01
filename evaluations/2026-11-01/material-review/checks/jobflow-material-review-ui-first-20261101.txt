@@ -1,0 +1,128 @@
+AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /file_upload_stop|private_fixed|AI: material_upload/. Input:
+
+'检查最终申请材料\n' +
+  '\n' +
+  '这里是这份申请包保存的文件。预览和下载不会上传文件、批准或提交申请。\n' +
+  '\n' +
+  '下载的副本不再由 JobFlow 加密保存，请妥善保管。\n' +
+  '\n' +
+  '岗位简历 · PDF\n' +
+  'jobflow-resume.pdf\n' +
+  '预览 PDF\n' +
+  '下载 PDF\n' +
+  '岗位简历 · DOCX\n' +
+  'jobflow-resume.docx\n' +
+  '下载 DOCX\n' +
+  '求职信 · PDF\n' +
+  'jobflow-cover-letter.pdf\n' +
+  '预览 PDF\n' +
+  '下载 PDF\n' +
+  '求职信 · DOCX\n' +
+  'jobflow-cover-letter.docx\n' +
+  '下载 DOCX\n' +
+  '作品集 · PDF\n' +
+  'jobflow-portfolio.pdf\n' +
+  '预览 PDF\n' +
+  '下载 PDF\n' +
+  '\n' +
+  '岗位\n' +
+  'ID\n' +
+  'JOB-29FDAD731F16\n' +
+  '状态\n' +
+  'AWAITING_APPROVAL\n' +
+  'URL\n' +
+  'https://example.com/careers/entry-data-analyst\n' +
+  '匹配分析\n' +
+  '总体匹配\n' +
+  '80\n' +
+  '状态\n' +
+  'RECOMMEND\n' +
+  'All modeled hard conditions passed.\n' +
+  'function: 100.0 - target-function matches=2\n' +
+  'capability: 100.0 - passed 3/3 parsed hard requirements\n' +
+  'evidence: 50.0 - 2 revalidated claim mappings\n' +
+  'industry: 50.0 - industry matches=0\n' +
+  'level: 90.0 - parsed JD level compared with confirmed target levels\n' +
+  'location: 90.0 - eligibility location gate mapped to score\n' +
+  'preference: 80.0 - confirmed work-mode preference compared with JD location\n' +
+  '硬性缺口\n' +
+  '\n' +
+  '无\n' +
+  '\n' +
+  '简历表述与证据\n' +
+  'Analyzes synthetic datasets with reproducible methods.\n' +
+  'Claim: CLM-SYNTHETIC-01 · 证据: {"excerpt":"Analyzes synthetic datasets with reproducible methods.","excerpt_fingerprint":"sha256:23d59a6845a3fce2bb3bd39c876723b2858bccc7d60701a0d17ef62a8d25a4ab","fingerprint":"sha256:576190ac35d8f6bdf5b24c113ee2d602976dd59f06ddfa2c7a7ff715ee14cb83","heading":"Synthetic Evidence","relative_path":"case.md","source_id":"personal_redacted"}\n' +
+  'Built a synthetic SQL and Python analysis with documented checks.\n' +
+  'Claim: CLM-SYNTHETIC-02 · 证据: {"excerpt":"Built a synthetic SQL and Python analysis with documented checks.","excerpt_fingerprint":"sha256:bc5843296a800e6f5f94734207adff19d444f201321fad36e67933e7ff625e05","fingerprint":"sha256:576190ac35d8f6bdf5b24c113ee2d602976dd59f06ddfa2c7a7ff715ee14cb83","heading":"Synthetic Evidence","relative_path":"case.md","source_id":"personal_redacted"}\n' +
+  'Created a local-only queue capacity simulation.\n' +
+  'Claim: CLM-SYNTHETIC-03 · 证据: {"excerpt":"Created a local-only queue capacity simulation.","excerpt_fingerprint":"sha256:73dbe423da0b534250828d31fee5e1cbd33237a74d17e2a03ad4fddcfd44308c","fingerprint":"sha256:576190ac35d8f6bdf5b24c113ee2d602976dd59f06ddfa2c7a7ff715ee14cb83","heading":"Synthetic Evidence","relative_path":"case.md","source_id":"personal_redacted"}\n' +
+  'Python, SQL, and structured analysis.\n' +
+  'Claim: CLM-SYNTHETIC-04 · 证据: {"excerpt":"Python, SQL, and structured analysis.","excerpt_fingerprint":"sha256:8fc8629d1aebb5dc441a8378043daa40a17bbc600048143950730c90beb0d8c0","fingerprint":"sha256:576190ac35d8f6bdf5b24c113ee2d602976dd59f06ddfa2c7a7ff715ee14cb83","heading":"Synthetic Evidence","relative_path":"case.md","source_id":"personal_redacted"}\n' +
+  'Completed a synthetic degree fixture.\n' +
+  'Claim: CLM-SYNTHETIC-05 · 证据: {"excerpt":"Completed a synthetic degree fixture.","excerpt_fingerprint":"sha256:4b47ef23efc0cc72672b680f6f6a6aaa385b2807cb991b3f5e5e5da2829b9540","fingerprint":"sha256:576190ac35d8f6bdf5b24c113ee2d602976dd59f06ddfa2c7a7ff715ee14cb83","heading":"Synthetic Evidence","relative_path":"case.md","source_id":"personal_redacted"}\n' +
+  '准备预填的字段\n' +
+  'Full name\n' +
+  'private_fixed · 来自本机加密 Profile / Answer Bank；不显示明文 · 已准备，等待本次一次批准\n' +
+  'GitHub URL\n' +
+  'ordinary_fixed · 来自你确认的公开链接；只显示内容哈希 · 已准备，等待本次一次批准\n' +
+  'Portfolio URL\n' +
+  'ordinary_fixed · 来自你确认的公开链接；只显示内容哈希 · 已准备，等待本次一次批准\n' +
+  '完整表单字段\n' +
+  'Full name · 使用你核对过的个人资料\n' +
+  'GitHub URL · 按已核对的答案准备\n' +
+  'Portfolio URL · 按已核对的答案准备\n' +
+  'Resume · 上传前需要你的批准\n' +
+  'Cover Letter · 上传前需要你的批准\n' +
+  'Portfolio work sample · 上传前需要你的批准\n' +
+  'Submit application · 最终提交由你亲自完成\n' +
+  '必须停下确认的敏感字段\n' +
+  'Resume · 上传前需要你的批准\n' +
+  'Cover Letter · 上传前需要你的批准\n' +
+  'Portfolio work sample · 上传前需要你的批准\n' +
+  'Submit application · 最终提交由你亲自完成\n' +
+  '待上传材料\n' +
+  'jobflow-resume-d3379d666b0c.pdf · resume · sha256:3f32a2de\n' +
+  'jobflow-cover-letter-d3379d666b0c.pdf · cover_letter · sha256:3f32a2de\n' +
+  'synthetic-portfolio.pdf · portfolio · sha256:f733cbd6\n' +
+  '岗位材料计划\n' +
+  '岗位简历\n' +
+  '由同一份已批准母版生成岗位副本\n' +
+  '求职信\n' +
+  '该岗位必需 · 已按岗位临时生成\n' +
+  '作品集文件\n' +
+  '已绑定加密文件\n' +
+  '真实上传与提交\n' +
+  '已锁定，等待逐岗位批准\n' +
+  'GitHub 链接 · 已绑定已确认公开值（仅显示哈希）\n' +
+  '作品集链接 · 已绑定已确认公开值（仅显示哈希）\n' +
+  '自动投递步骤\n' +
+  '\n' +
+  '已形成完整计划，等待你的审阅\n' +
+  '\n' +
+  '1. 实时确认岗位仍开放\n' +
+  '尚未执行 · 需要另行授权只读访问 · 1\n' +
+  '2. 以访客方式进入申请\n' +
+  '已规划 · 岗位复验后继续 · 1\n' +
+  '3. 填写可安全复用的字段\n' +
+  '只生成建议 · 受当前审阅包约束 · 3\n' +
+  '4. 上传岗位简历及按需材料\n' +
+  '已停止等待批准 · 需要单独批准上传 · 3\n' +
+  '5. 处理敏感或未知问题\n' +
+  '无需执行 · 无额外门禁 · 0\n' +
+  '6. 最终提交\n' +
+  '已停止等待批准 · 需要新鲜的最终提交批准 · 1\n' +
+  '\n' +
+  '这份申请等待时，JobFlow 会继续处理其他岗位，直到达到你设置的上限。\n' +
+  '\n' +
+  '审批将绑定的动作\n' +
+  'upload_material\n' +
+  'submit_application\n' +
+  '官网与 ATS 路径\n' +
+  'Route\n' +
+  'OFFICIAL_TO_APPROVED_ATS\n' +
+  'Guest\n' +
+  'GUEST_SELECTED\n' +
+  'Account\n' +
+  'NONE'
+
+    at $WORKSPACE_ROOT\JobFlow-material-review\tests\material_review_ui_e2e.cjs:44:12

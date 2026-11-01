@@ -1,0 +1,9 @@
+Processing $WORKSPACE_ROOT\jobflow-material-review
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: jobflow-local
+  Building wheel for jobflow-local (pyproject.toml): started
+  Building wheel for jobflow-local (pyproject.toml): finished with status 'done'
+  Created wheel for jobflow-local: filename=jobflow_local-0.7.0-py3-none-any.whl size=849444 sha256=5d1b7ad8d6a25988baa7247d78c6377d9a61e4b48bba43e02202ee1281dc4d34
+  Stored in directory: $USER_HOME\appdata\local\pip\cache\wheels\3f\c2\c8\0dd217c3a70abe682aad24ab1e3f1738465d317e01900ee9e3
+Successfully built jobflow-local

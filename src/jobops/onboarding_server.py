@@ -595,6 +595,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
             asset, content_type = "workbench.js", "text/javascript; charset=utf-8"
         elif relative == "analysis-text.js":
             asset, content_type = "analysis-text.js", "text/javascript; charset=utf-8"
+        elif relative == "material-review.js":
+            asset, content_type = "material-review.js", "text/javascript; charset=utf-8"
         elif relative == "context-review.js":
             asset, content_type = "context-review.js", "text/javascript; charset=utf-8"
         elif relative == "styles.css":
@@ -819,6 +821,19 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.complete_synthetic_execution(self._json_body())
             elif route == "review-packet":
                 result = self.server.service.review_packet(str(self._json_body().get("application_id", "")))
+            elif route == "application-materials":
+                result = self.server.service.application_materials(self._json_body())
+            elif route == "application-material-page":
+                result = self.server.service.application_material_page(self._json_body())
+            elif route == "application-material-file":
+                raw = None
+                try:
+                    raw, descriptor = self.server.service.application_material_file(self._json_body())
+                    self._send_bytes(HTTPStatus.OK, raw, descriptor["content_type"])
+                finally:
+                    if raw is not None:
+                        raw[:] = b"\0" * len(raw)
+                return
             elif route == "application-narrative-preview":
                 result = self.server.service.preview_application_narrative(self._json_body())
             elif route == "resolve-application-fields":

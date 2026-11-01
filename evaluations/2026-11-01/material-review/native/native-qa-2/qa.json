@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "docx_name": "cover-letter.docx",
+  "pdf_name": "cover-letter.pdf",
+  "docx_hash": "sha256:1c6518a6ac6752a82df426340110d03f3baac2e79ac059373e94a00b8dc76e3f",
+  "pdf_hash": "sha256:19d0926106853dd5b21649eecebd015e653478b580777b9beb5e895cfbbde5dc",
+  "page_count": 1,
+  "page_limit": 2,
+  "ats_text_present": true,
+  "placeholders": [],
+  "text_difference_ratio": 0.0168,
+  "visual_record_hash": "sha256:f8a393e72be6a0a1e65a447cc1bbf489e735977ab511cea333745283816b3ca7",
+  "visual_inspection": "PASS",
+  "reading_order_issue_count": 0
+}

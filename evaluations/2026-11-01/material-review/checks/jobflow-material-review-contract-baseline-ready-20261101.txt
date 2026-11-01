@@ -1,0 +1,249 @@
+test_corrupt_ciphertext_is_not_returned (test_application_material_review.ApplicationMaterialReviewTests.test_corrupt_ciphertext_is_not_returned) ... ERROR
+test_http_requires_local_session_and_origin_and_returns_no_store_bytes (test_application_material_review.ApplicationMaterialReviewTests.test_http_requires_local_session_and_origin_and_returns_no_store_bytes) ...
+  test_http_requires_local_session_and_origin_and_returns_no_store_bytes (test_application_material_review.ApplicationMaterialReviewTests.test_http_requires_local_session_and_origin_and_returns_no_store_bytes) (session=True, origin='http://127.0.0.1:64074') ... FAIL
+test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) ...
+  test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page=0) ... ERROR
+  test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page=-1) ... ERROR
+  test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page=True) ... ERROR
+  test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page='1') ... ERROR
+  test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page=3) ... ERROR
+  test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page=61) ... ERROR
+test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) ... ERROR
+test_list_and_download_are_bound_and_do_not_grant_approval (test_application_material_review.ApplicationMaterialReviewTests.test_list_and_download_are_bound_and_do_not_grant_approval) ... ERROR
+test_material_must_belong_to_this_application (test_application_material_review.ApplicationMaterialReviewTests.test_material_must_belong_to_this_application) ... ERROR
+test_packet_change_during_render_discards_the_image (test_application_material_review.ApplicationMaterialReviewTests.test_packet_change_during_render_discards_the_image) ... ERROR
+test_packet_content_cannot_change_while_retaining_its_old_hash (test_application_material_review.ApplicationMaterialReviewTests.test_packet_content_cannot_change_while_retaining_its_old_hash) ... ERROR
+test_preview_uses_real_second_pdf_page_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_preview_uses_real_second_pdf_page_without_writes) ... ERROR
+test_revocation_during_read_is_rechecked (test_application_material_review.ApplicationMaterialReviewTests.test_revocation_during_read_is_rechecked) ... ERROR
+test_revoked_wrong_kind_or_changed_hash_is_unavailable (test_application_material_review.ApplicationMaterialReviewTests.test_revoked_wrong_kind_or_changed_hash_is_unavailable) ...
+  test_revoked_wrong_kind_or_changed_hash_is_unavailable (test_application_material_review.ApplicationMaterialReviewTests.test_revoked_wrong_kind_or_changed_hash_is_unavailable) (column='status') ... ERROR
+  test_revoked_wrong_kind_or_changed_hash_is_unavailable (test_application_material_review.ApplicationMaterialReviewTests.test_revoked_wrong_kind_or_changed_hash_is_unavailable) (column='kind') ... ERROR
+  test_revoked_wrong_kind_or_changed_hash_is_unavailable (test_application_material_review.ApplicationMaterialReviewTests.test_revoked_wrong_kind_or_changed_hash_is_unavailable) (column='content_sha256') ... ERROR
+test_stale_hash_and_arbitrary_selector_never_decrypt_material (test_application_material_review.ApplicationMaterialReviewTests.test_stale_hash_and_arbitrary_selector_never_decrypt_material) ... ERROR
+
+======================================================================
+ERROR: test_corrupt_ciphertext_is_not_returned (test_application_material_review.ApplicationMaterialReviewTests.test_corrupt_ciphertext_is_not_returned)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 154, in test_corrupt_ciphertext_is_not_returned
+    self.expect_block(lambda: self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'}))
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 154, in <lambda>
+    self.expect_block(lambda: self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'}))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_file'
+
+======================================================================
+ERROR: test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in test_invalid_page_and_nonpreview_format_fail_without_writes
+    self.expect_block(lambda: self.service.application_material_page(
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in <lambda>
+    self.expect_block(lambda: self.service.application_material_page(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_page'
+
+======================================================================
+ERROR: test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page=-1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in test_invalid_page_and_nonpreview_format_fail_without_writes
+    self.expect_block(lambda: self.service.application_material_page(
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in <lambda>
+    self.expect_block(lambda: self.service.application_material_page(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_page'
+
+======================================================================
+ERROR: test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in test_invalid_page_and_nonpreview_format_fail_without_writes
+    self.expect_block(lambda: self.service.application_material_page(
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in <lambda>
+    self.expect_block(lambda: self.service.application_material_page(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_page'
+
+======================================================================
+ERROR: test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page='1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in test_invalid_page_and_nonpreview_format_fail_without_writes
+    self.expect_block(lambda: self.service.application_material_page(
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in <lambda>
+    self.expect_block(lambda: self.service.application_material_page(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_page'
+
+======================================================================
+ERROR: test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page=3)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in test_invalid_page_and_nonpreview_format_fail_without_writes
+    self.expect_block(lambda: self.service.application_material_page(
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in <lambda>
+    self.expect_block(lambda: self.service.application_material_page(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_page'
+
+======================================================================
+ERROR: test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes) (page=61)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in test_invalid_page_and_nonpreview_format_fail_without_writes
+    self.expect_block(lambda: self.service.application_material_page(
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 104, in <lambda>
+    self.expect_block(lambda: self.service.application_material_page(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_page'
+
+======================================================================
+ERROR: test_invalid_page_and_nonpreview_format_fail_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_invalid_page_and_nonpreview_format_fail_without_writes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 106, in test_invalid_page_and_nonpreview_format_fail_without_writes
+    self.expect_block(lambda: self.service.application_material_page(
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 106, in <lambda>
+    self.expect_block(lambda: self.service.application_material_page(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_page'
+
+======================================================================
+ERROR: test_list_and_download_are_bound_and_do_not_grant_approval (test_application_material_review.ApplicationMaterialReviewTests.test_list_and_download_are_bound_and_do_not_grant_approval)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 78, in test_list_and_download_are_bound_and_do_not_grant_approval
+    result = self.service.application_materials(self.request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_materials'
+
+======================================================================
+ERROR: test_material_must_belong_to_this_application (test_application_material_review.ApplicationMaterialReviewTests.test_material_must_belong_to_this_application)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 135, in test_material_must_belong_to_this_application
+    result = self.service.application_materials(self.request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_materials'
+
+======================================================================
+ERROR: test_packet_change_during_render_discards_the_image (test_application_material_review.ApplicationMaterialReviewTests.test_packet_change_during_render_discards_the_image)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 178, in test_packet_change_during_render_discards_the_image
+    self.service.application_material_page({**self.request, 'material_id': 'resume.pdf', 'page': 1})
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_page'
+
+======================================================================
+ERROR: test_packet_content_cannot_change_while_retaining_its_old_hash (test_application_material_review.ApplicationMaterialReviewTests.test_packet_content_cannot_change_while_retaining_its_old_hash)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 130, in test_packet_content_cannot_change_while_retaining_its_old_hash
+    self.expect_block(lambda: self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'}))
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 130, in <lambda>
+    self.expect_block(lambda: self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'}))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_file'
+
+======================================================================
+ERROR: test_preview_uses_real_second_pdf_page_without_writes (test_application_material_review.ApplicationMaterialReviewTests.test_preview_uses_real_second_pdf_page_without_writes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 94, in test_preview_uses_real_second_pdf_page_without_writes
+    result = self.service.application_material_page({**self.request, 'material_id': 'resume.pdf', 'page': 2})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_page'
+
+======================================================================
+ERROR: test_revocation_during_read_is_rechecked (test_application_material_review.ApplicationMaterialReviewTests.test_revocation_during_read_is_rechecked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 166, in test_revocation_during_read_is_rechecked
+    self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'})
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_file'
+
+======================================================================
+ERROR: test_revoked_wrong_kind_or_changed_hash_is_unavailable (test_application_material_review.ApplicationMaterialReviewTests.test_revoked_wrong_kind_or_changed_hash_is_unavailable) (column='status')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 148, in test_revoked_wrong_kind_or_changed_hash_is_unavailable
+    self.expect_block(lambda: self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'}))
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 148, in <lambda>
+    self.expect_block(lambda: self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'}))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_file'
+
+======================================================================
+ERROR: test_revoked_wrong_kind_or_changed_hash_is_unavailable (test_application_material_review.ApplicationMaterialReviewTests.test_revoked_wrong_kind_or_changed_hash_is_unavailable) (column='kind')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 148, in test_revoked_wrong_kind_or_changed_hash_is_unavailable
+    self.expect_block(lambda: self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'}))
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 148, in <lambda>
+    self.expect_block(lambda: self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'}))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_file'
+
+======================================================================
+ERROR: test_revoked_wrong_kind_or_changed_hash_is_unavailable (test_application_material_review.ApplicationMaterialReviewTests.test_revoked_wrong_kind_or_changed_hash_is_unavailable) (column='content_sha256')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 148, in test_revoked_wrong_kind_or_changed_hash_is_unavailable
+    self.expect_block(lambda: self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'}))
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 148, in <lambda>
+    self.expect_block(lambda: self.service.application_material_file({**self.request, 'material_id': 'resume.pdf'}))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_file'
+
+======================================================================
+ERROR: test_stale_hash_and_arbitrary_selector_never_decrypt_material (test_application_material_review.ApplicationMaterialReviewTests.test_stale_hash_and_arbitrary_selector_never_decrypt_material)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 117, in test_stale_hash_and_arbitrary_selector_never_decrypt_material
+    self.expect_block(lambda: self.service.application_material_file(
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 71, in expect_block
+    operation()
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 117, in <lambda>
+    self.expect_block(lambda: self.service.application_material_file(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OnboardingCenterService' object has no attribute 'application_material_file'
+
+======================================================================
+FAIL: test_http_requires_local_session_and_origin_and_returns_no_store_bytes (test_application_material_review.ApplicationMaterialReviewTests.test_http_requires_local_session_and_origin_and_returns_no_store_bytes) (session=True, origin='http://127.0.0.1:64074')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-material-review\tests\test_application_material_review.py", line 202, in test_http_requires_local_session_and_origin_and_returns_no_store_bytes
+    self.assertEqual(response.status, expected)
+AssertionError: 404 != 200
+
+----------------------------------------------------------------------
+Ran 11 tests in 8.325s
+
+FAILED (failures=1, errors=18)
