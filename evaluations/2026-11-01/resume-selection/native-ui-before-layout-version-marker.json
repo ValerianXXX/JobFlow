@@ -1,0 +1,37 @@
+{
+  "synthetic_only": true,
+  "seeded_completed_profile": true,
+  "ai_extraction_tested": false,
+  "live_submission": false,
+  "word_conversion": "NOT_RUN",
+  "docx_sha256": "sha256:5f681b00c9186c41ee5d39ea8d5c0fa48c85be1718d5cefa8f62f5c278631c5d",
+  "capabilities": {
+    "docx_generation": true,
+    "pdf_export": "DETECTED_NOT_VERIFIED",
+    "pdf_export_provider": "LIBREOFFICE",
+    "pdf_export_configuration": "VALID",
+    "page_preview": true,
+    "application_pdf_renderer": true,
+    "automatic_installation": false,
+    "real_external_actions": 0
+  },
+  "pdf_sha256": "sha256:e8d5a3d402a618cda5263f7b62e9b2bbc8458efcb53d9c28b90eec7cab4fd4b4",
+  "render_sha256": "sha256:67d9b330d81bd55a99c10df10ea3d65fe9927a2e22c4691ab6809fcf51f4839e",
+  "pdf_conversion": "REAL_LOCAL_LIBREOFFICE_PASSED",
+  "page_indicator": "第 1 / 1 页 · LibreOffice",
+  "selection": {
+    "eligible": 2,
+    "included": 1,
+    "restored_same_draft": true,
+    "keyboard_focus_retained": true,
+    "changed_selection_clears_old_preview_and_consent": true,
+    "empty_selection_disabled": true
+  },
+  "desktop_zh": true,
+  "mobile_en": true,
+  "download_verified": true,
+  "adoption_persisted": true,
+  "session_and_origin_checks": true,
+  "browser_errors": [],
+  "external_requests": []
+}

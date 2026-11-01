@@ -70,6 +70,12 @@ Public signed updates remain blocked until external publisher evidence and a pro
 
 ## Recovery
 
+The pure `resume_selection` module projects a canonical subset of current
+approved resume-use Claims without changing their registry. The builder formats
+the chosen wording; onboarding owns encrypted snapshots, restores, source
+checks and adoption. Draft identity includes selection, locale and layout
+revision. See [selection, compatibility and recovery](standard-resume-selection-2026-11-01.md).
+
 Claim wording history is handled by the pure `claim_wording` module; the existing
 onboarding service owns encrypted persistence and review transitions. AI ancestry,
 current wording origin, user review and external material approval remain separate.

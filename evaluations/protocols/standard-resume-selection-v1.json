@@ -1,0 +1,24 @@
+{
+  "protocol": "STANDARD_RESUME_SELECTION_V1",
+  "frozen_at": "2026-11-01",
+  "baseline": "04c630375ff61f299fc1752bc5a9c547b14efc38",
+  "question": "Can a PDF-source applicant choose an exact subset of approved facts for a standard resume without changing source facts or reusing a different draft?",
+  "inputs": "Existing approved synthetic PDF service plus two 48-Claim English/Chinese synthetic formatting fixtures",
+  "fixed_selected_indices": [0, 1, 2, 8, 9, 10, 16, 17, 18, 24, 25, 26],
+  "checks": [
+    "Exact selected wording and source IDs; omitted facts remain in the approved registry",
+    "Distinct selections produce distinct draft bindings; equivalent selections reuse a draft",
+    "Empty, repeated, unknown or malformed IDs reject without private writes",
+    "Changing the selection clears the old visible preview, PDF and adoption confirmation",
+    "Fresh profile/evidence/approval checks remain required at generation, file access and adoption",
+    "Actual native local DOCX/PDF rendering preserves selected wording and counts every output page"
+  ],
+  "model_requests": 0,
+  "external_business_actions": 0,
+  "boundaries": [
+    "Selection is a formatting choice, not fact approval or an AI recommendation",
+    "No automatic summarization, fact deletion, translation or page-count guarantee",
+    "Synthetic seeded approvals do not establish material extraction accuracy or novice completion",
+    "Keep the >=95 percent full-material recall target and all external release gates unchanged"
+  ]
+}

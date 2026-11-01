@@ -1,0 +1,229 @@
+{
+  "observed_at_utc": "2026-11-01T05:10:45.129199+00:00",
+  "protocol": "STANDARD_RESUME_SELECTION_V1",
+  "baseline": "04c630375ff61f299fc1752bc5a9c547b14efc38",
+  "frozen": "d2131d680c27b26b7e487ca44d887b354a758897",
+  "runtime": "8df8d155fe438937f8c856590a3fd7b016f4764a",
+  "synthetic_only": true,
+  "new_model_calls": 0,
+  "real_business_actions": 0,
+  "whole_goal_complete": false,
+  "actual_total_cost_usd": null,
+  "independent_human": false,
+  "comparison": {
+    "languages": [
+      "en",
+      "zh"
+    ],
+    "authored_statements_per_fixture": 48,
+    "explicitly_selected_statements": 12,
+    "before_pages_each": 6,
+    "after_pages_each": 2,
+    "selected_wording_retained": 24,
+    "selected_wording_expected": 24,
+    "intentionally_unselected_statements_per_fixture": 36,
+    "source_statement_hashes_unchanged": true,
+    "ai_quality_improvement_measured": false
+  },
+  "contracts": {
+    "baseline_methods": 7,
+    "baseline_failed_assertions": 13,
+    "baseline_errors": 2,
+    "related_passed": 31,
+    "related_seconds": 53.794,
+    "final_selection_passed": 9,
+    "final_selection_seconds": 23.261,
+    "final_nine_overlap_related": true
+  },
+  "final_render_review": {
+    "pages": 4,
+    "all_png_hashes_identical_to_inspected_final_layout": true,
+    "clipping_observed": false,
+    "selected_wording_missing": false,
+    "initial_english_split_retained": true,
+    "final_ordinary_bullets_kept_together": true
+  },
+  "browser": {
+    "native_http_dpapi": true,
+    "seeded_completed_profile": true,
+    "actual_libreoffice_preview": true,
+    "keyboard": true,
+    "mobile_width": 390,
+    "restored_same_saved_draft": true,
+    "changed_selection_clears_consent": true,
+    "in_app_browser_actual_controls": true,
+    "owned_tab_closed": true,
+    "owned_server_exit": 0,
+    "owned_temporary_state_removed": true,
+    "initial_closed_stdin_fixture_exited_cleanly": true,
+    "locale_on_completed_profile_reload": "Stored English locale; Chinese-only click had no match, then actual English restore was used; language persistence remains open"
+  },
+  "runtime_metadata": {
+    "python": "3.11.3",
+    "libreoffice": "26.8.2",
+    "rendering_pypdf": "5.9.0",
+    "rendering_pypdfium2": "5.14.0",
+    "full_test_env_pypdfium2": "5.13.0",
+    "mcp": "2.3.0",
+    "anyio": "4.15.1",
+    "docling-slim": "2.144.0",
+    "docling-parse": "7.24.0",
+    "pip_check": "PASS",
+    "reused_javascript_files_hash_matched": 180
+  },
+  "earlier_full_regression": {
+    "local_status": "FAILED",
+    "tests": 1581,
+    "failures": 3,
+    "errors": 2,
+    "skips": 4,
+    "seconds": 3957.262,
+    "source_unchanged": true,
+    "missing_extras_confirmed": [
+      "anyio",
+      "mcp",
+      "docling-slim",
+      "docling-parse"
+    ],
+    "hosted_311_status": "FAILED",
+    "hosted_tests": 1582,
+    "hosted_failures": 2,
+    "hosted_seconds": 2503.833,
+    "hosted_job": 124745312098,
+    "cache_marker_assertions_retained_and_updated": 2,
+    "raw_local_sha256": "2a195562090b18e384354eae277b1f6a50d84d7e11f1604bfef6c71de379ec63",
+    "raw_hosted_sha256": "8d2717eb6b0fa94bbba865a02786061aba3602145b4c82aa7d33fe717b8c79b4",
+    "later_targeted_passes_do_not_relabel_original_runs": true
+  },
+  "complete_javascript": "PENDING_AT_RECEIPT_CREATION",
+  "complete_python": "PENDING_SEPARATE_RUN_WITH_DECLARED_EXTRAS",
+  "hosted_ci": "PENDING_EXACT_DELIVERY",
+  "git_blob_sha256": {
+    "evaluations/protocols/standard-resume-selection-v1.json": "0d3451d64f8e13501b347a7b196458b4b4e0850b43acd165bac1db39387c6fab",
+    "scripts/evaluate-standard-resume-selection.py": "c7d3f3a6068ad4737c493dbce11353188d7a206a5108ccbfd9be0fa1e64daf9a",
+    "src/jobops/__init__.py": "f5d0f755ef9c75695fee015574807395cb84c5af613f0e97bbcadba924fb31ee",
+    "src/jobops/document_builder.py": "7aa1c1e65f7f8b38bfeea7cd08d8b73dee7a8a3f635726733e38e788487add18",
+    "src/jobops/onboarding_center.py": "3b41e393eca331d67d13c7ef52db81969bf1fccdda6300bbd2cb3b1622b20cf1",
+    "src/jobops/onboarding_server.py": "a370d6bd921b34b7fa2db1942f8ea8ba6fa7d60c6e7ed8051380e03389455e64",
+    "src/jobops/resume_selection.py": "a83da3ce6d0722f706f28fb715a2710d0a2c708369cc9719ff5821e849b99fd2",
+    "src/jobops/ui/app.js": "fc49792f8a03743ad078213c8b9eaab50f1749ead0e22ac16b9a48f8d98f16b8",
+    "src/jobops/ui/index.html": "1b762f62e6a95596ba94a0d2db369310e9e7b58a14a0fcc8225ca27fc18f175c",
+    "src/jobops/ui/styles.css": "5b0b30691dc227ad587eb847eaab0a5e9565297433191118ead9176a575117ac",
+    "tests/onboarding_ui_e2e.cjs": "d15d3c6d947d4b2cc70a723da96018f723401c6c4363ed3346fadd6e344da1ab",
+    "tests/standard_resume_ui_e2e.cjs": "08ddb9a790880d6e8b7cbd6bd997eb53cd7f000b450c35b483ec30593c71af8a",
+    "tests/test_onboarding_center.py": "d577cb6a7f04a751194734e3b50650f7a19cd952d562e29b8ea47b57d9c279f7",
+    "tests/test_standard_resume_selection.py": "0951ada064efe52982723d5faf225bc352d4f7c77f27f4908a147e348b2acc7d"
+  },
+  "artifacts": {
+    "before.txt": {
+      "raw_sha256": "7eac678dacc74e751980239166d539775428c3b5507e3bbb3052cfbd71a21e0e",
+      "committed_sha256": "08819b37ad1f3428b88fe65b363f1df21c541d6277f581bfe6471246c7dc2b43"
+    },
+    "after.txt": {
+      "raw_sha256": "d759351da0fe845c4f979ad81cdf85123a38966105780ffea44fdf6b2eb7ff0e",
+      "committed_sha256": "3114d6fe70d5629c2112a0e80f82be734d9865b31cf6c885c83e83d15c62a9b2"
+    },
+    "related.txt": {
+      "raw_sha256": "a7dd16d5d6ae8a1bd3be9e30ae0c3383ce1e036a462530584eb1dbcb0105f050",
+      "committed_sha256": "482cb2a8d55021ce57f06af67ad66fb41449ea398297751017415095e79f2bfc"
+    },
+    "final-contracts.txt": {
+      "raw_sha256": "4f83de5ee68c417f62487d543cd7f15b90675051a4614ab0f0390795d0bf5c07",
+      "committed_sha256": "5abee578abf360e8b08338bd78ffa1a3bf4ddb6045708752f2d7c3d3c980cd58"
+    },
+    "render-before.txt": {
+      "raw_sha256": "d68862a29d7c01eedc8c55d376e98eb474fb6ef556f9ed1233a7a9def4131ff8",
+      "committed_sha256": "a8aaa817af4836e3e8e9e05f792a3074060bb0a1a4705a965964af28041be9a2"
+    },
+    "render-before-configured.txt": {
+      "raw_sha256": "9e4e4243a9d18f798df0cbef68ac013f7bfce5fb3b3b22e027e60f9d36d2881f",
+      "committed_sha256": "342bfca41369e734b1358aeed0e71afec1e461326581255d9a6899a60cf94ab4"
+    },
+    "render-runtime.txt": {
+      "raw_sha256": "1f07901a0b6c9bb295e512eb3c55f51cc02e0f0476d6bde9498997719d1b15fd",
+      "committed_sha256": "99101663685c8d896d238c4b95246b26b8fd993e94dace97cb5ba3c9cd187567"
+    },
+    "ui.txt": {
+      "raw_sha256": "c0dadd2e56759e644cbf793cf97bd7043721eb33e6c97a274a089e2e6b4f7766",
+      "committed_sha256": "994044a910ba211325a991ce5d850fbfebd1c269efb42bdcfc93b543f9edcb3b"
+    },
+    "before.json": {
+      "raw_sha256": "90865e686adf55af510b50f296037199af33f56d196326c732876419043d3a9e",
+      "committed_sha256": "90865e686adf55af510b50f296037199af33f56d196326c732876419043d3a9e"
+    },
+    "initial-selected.json": {
+      "raw_sha256": "0401818097ed45cfc93818ff8a6bde29eec9aa3dfc7863df4575fc2f4d61f84a",
+      "committed_sha256": "0401818097ed45cfc93818ff8a6bde29eec9aa3dfc7863df4575fc2f4d61f84a"
+    },
+    "after.json": {
+      "raw_sha256": "095bd80e533332462b28b3fdccce7f24e0e41290c04fb944544e9c0e677c5a8f",
+      "committed_sha256": "095bd80e533332462b28b3fdccce7f24e0e41290c04fb944544e9c0e677c5a8f"
+    },
+    "before-en.pdf": {
+      "raw_sha256": "6eaced8f81948e468f7a05a0049feb8f7d08ae4bfaabb1299cd801665bbcc271",
+      "committed_sha256": "6eaced8f81948e468f7a05a0049feb8f7d08ae4bfaabb1299cd801665bbcc271"
+    },
+    "initial-selected-en.pdf": {
+      "raw_sha256": "a6abb51f3a2bfbcc14843c218475b8aa2474c1f0c7a57a3787a4d6940852a93b",
+      "committed_sha256": "a6abb51f3a2bfbcc14843c218475b8aa2474c1f0c7a57a3787a4d6940852a93b"
+    },
+    "selected-en.docx": {
+      "raw_sha256": "7788d57634d435d500a2c17a590ad838343ada3259ed7eb90d136d3f93faa678",
+      "committed_sha256": "7788d57634d435d500a2c17a590ad838343ada3259ed7eb90d136d3f93faa678"
+    },
+    "selected-en.pdf": {
+      "raw_sha256": "d848183d33cb6fbe004f1507355910fe46a24ba9376f1cd46afe5ac844ed098c",
+      "committed_sha256": "d848183d33cb6fbe004f1507355910fe46a24ba9376f1cd46afe5ac844ed098c"
+    },
+    "selected-en-page-1.png": {
+      "raw_sha256": "5c68af77bdc6d1a861b4982d578f1c7dee8cff50210094d733c64be0967ffdc1",
+      "committed_sha256": "5c68af77bdc6d1a861b4982d578f1c7dee8cff50210094d733c64be0967ffdc1"
+    },
+    "selected-en-page-2.png": {
+      "raw_sha256": "b6c4a0158b53f2ea4c947751ebfb0ac5eeff25270b155b0236c4ea9053742dca",
+      "committed_sha256": "b6c4a0158b53f2ea4c947751ebfb0ac5eeff25270b155b0236c4ea9053742dca"
+    },
+    "before-zh.pdf": {
+      "raw_sha256": "9f6c3d0767b4fb9538e2a71c586574123dc5f7019cff5235283afa164fbbea76",
+      "committed_sha256": "9f6c3d0767b4fb9538e2a71c586574123dc5f7019cff5235283afa164fbbea76"
+    },
+    "initial-selected-zh.pdf": {
+      "raw_sha256": "44a2efe0ccb38783ca50b7dd78e1b865b22a6488606dbf7d889ed40def2562df",
+      "committed_sha256": "44a2efe0ccb38783ca50b7dd78e1b865b22a6488606dbf7d889ed40def2562df"
+    },
+    "selected-zh.docx": {
+      "raw_sha256": "5688eb3d182289bdbb51ab420fba719ceede3d372e6517dbb261783f22be725c",
+      "committed_sha256": "5688eb3d182289bdbb51ab420fba719ceede3d372e6517dbb261783f22be725c"
+    },
+    "selected-zh.pdf": {
+      "raw_sha256": "ffcbebdd112d606c0044d8f6a5e65e48763cb482fd8026f12f5516f034aba5ed",
+      "committed_sha256": "ffcbebdd112d606c0044d8f6a5e65e48763cb482fd8026f12f5516f034aba5ed"
+    },
+    "selected-zh-page-1.png": {
+      "raw_sha256": "3da1e8b130d2aba5f8b0b26620395f98343b44674a8a5dc34707515a37a730dd",
+      "committed_sha256": "3da1e8b130d2aba5f8b0b26620395f98343b44674a8a5dc34707515a37a730dd"
+    },
+    "selected-zh-page-2.png": {
+      "raw_sha256": "ffe465864b65fc7c381d066cf93718f8d780475084f0cd6799967e899ce9e86d",
+      "committed_sha256": "ffe465864b65fc7c381d066cf93718f8d780475084f0cd6799967e899ce9e86d"
+    },
+    "native-ui-before-layout-version-marker.json": {
+      "raw_sha256": "289e3dcc1c73febb959c938f75fef379f4fd69ae7e88c76514b057b5215f669c",
+      "committed_sha256": "289e3dcc1c73febb959c938f75fef379f4fd69ae7e88c76514b057b5215f669c"
+    },
+    "mobile-en-restored-selection.png": {
+      "raw_sha256": "1c757c2035ede6e25b2df7469d47ac01b134bec0d912682e7325eabb61cf470a",
+      "committed_sha256": "1c757c2035ede6e25b2df7469d47ac01b134bec0d912682e7325eabb61cf470a"
+    },
+    "interactive-restored-selection-zh.jpg": {
+      "raw_sha256": "d1d34068e03b28711aca2a89833d5a6f86beec01fa16687932a19a4df9bc4af5",
+      "committed_sha256": "d1d34068e03b28711aca2a89833d5a6f86beec01fa16687932a19a4df9bc4af5"
+    }
+  },
+  "limitations": [
+    "No new complete-material model observations or >=95 percent recall proof",
+    "No live ATS, mailbox, independent applicants, production signing or clean Windows acceptance",
+    "No general page-count guarantee or automatic fact ranking",
+    "New layout changes need review; rollback requires coherent backup as documented"
+  ]
+}

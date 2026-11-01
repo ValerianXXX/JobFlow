@@ -1,0 +1,33 @@
+{
+  "observed_at_utc": "2026-11-01T05:15:52.137453+00:00",
+  "runtime": "8df8d155fe438937f8c856590a3fd7b016f4764a",
+  "synthetic_only": true,
+  "whole_goal_complete": false,
+  "new_model_calls": 0,
+  "actual_total_cost_usd": null,
+  "complete_javascript": {
+    "status": "PASS",
+    "suite_count": 19,
+    "exit_code": 0,
+    "raw_sha256": "4250959754a86973c24dc5a1c3388d31e21d0184b72859c2a5cd70da8d04741e",
+    "public_log": "javascript-all.txt",
+    "public_sha256": "59c3698b0a2608c409c327e58efe0f111ee2b63826e5f711c48030186813156e",
+    "source_changed_during_run": false
+  },
+  "public_staged_boundary": {
+    "status": "PASS",
+    "public_release_ready": false,
+    "tree_findings": 0,
+    "history_findings": 0,
+    "identity": "PASS",
+    "raw_sha256": "b76a3693edd9efa216e33a167c1c11235004fdd749606d4d4f63dbff7cedff71",
+    "scope": "Staged files before this terminal supplement; exact delivery scan follows commit"
+  },
+  "hashes_rechecked": {
+    "runtime_git_blobs": 14,
+    "artifacts": 26
+  },
+  "full_python": "PENDING_SEPARATE_RUN_WITH_DECLARED_EXTRAS",
+  "hosted_ci": "PENDING_EXACT_DELIVERY",
+  "earlier_receipt_retained": true
+}

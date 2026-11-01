@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "$PROJECT_ROOT\scripts\evaluate-standard-resume-selection.py", line 105, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "$PROJECT_ROOT\scripts\evaluate-standard-resume-selection.py", line 73, in main
+    export_docx_to_pdf(docx, pdf, ROOT / ".agents/skills/job-application-operator/scripts/export-docx-pdf.ps1")
+  File "$PROJECT_ROOT\src\jobops\document_builder.py", line 890, in export_docx_to_pdf
+    export_with_libreoffice(docx_path, pdf_path)
+  File "$PROJECT_ROOT\src\jobops\local_pdf_export.py", line 178, in export_with_libreoffice
+    raise JobOpsError("DOCX_PDF_EXPORT_UNAVAILABLE", "The selected local LibreOffice executable is unavailable.")
+jobops.errors.JobOpsError: The selected local LibreOffice executable is unavailable.

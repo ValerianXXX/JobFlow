@@ -670,15 +670,16 @@ def _assert_external_claims(value: dict[str, Any], *, use: str) -> list[tuple[st
 
 def build_standard_resume(
     path: Path, *, profile: dict[str, Any], claim_set: dict[str, Any], locale: str,
+    included_claim_ids: object = None,
 ) -> dict[str, Any]:
     """Compose a new layout, never a reconstruction of the source PDF.
 
     Only exact externally approved wording enters professional sections. The
     caller binds the completed profile and verifies every encrypted source.
     """
-    from .external_claims import approved_external_claims
+    from .resume_selection import STANDARD_RESUME_LAYOUT, select_resume_claims
 
-    approved = approved_external_claims(claim_set, use="resume")
+    approved, selection = select_resume_claims(claim_set, included_claim_ids)
     if not isinstance(locale, str) or locale not in {"zh", "en"}:
         raise JobOpsError("STANDARD_RESUME_LOCALE_INVALID", "Choose Chinese or English headings.")
     name = profile.get("candidate_display_name")
@@ -723,12 +724,13 @@ def build_standard_resume(
         for item in items:
             wording = str(item["allowed_wording"][0])
             _bullet(document, wording, num_id)
+            document.paragraphs[-1].paragraph_format.keep_together = True
             preview.append({"claim_id": item["claim_id"], "text": wording,
                             "source_count": len(item["source_bindings"])})
         sections.append({"category": category, "title": title, "items": preview})
     _save_document_atomic(document, path)
-    return {"layout": "STANDARD_SINGLE_COLUMN_V1", "locale": locale, "name": name.strip(),
-            "contacts": contacts, "sections": sections, "claim_count": len(approved),
+    return {"layout": STANDARD_RESUME_LAYOUT, "locale": locale, "name": name.strip(),
+            "contacts": contacts, "sections": sections, "claim_count": len(approved), **selection,
             "model_calls": 0, "cost_usd": 0, "preserves_original_layout": False}
 
 

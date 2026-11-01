@@ -1,0 +1,2 @@
+{"locale": "en", "page_count": 2, "matched": 12, "expected": 12, "pass": true}
+{"locale": "zh", "page_count": 2, "matched": 12, "expected": 12, "pass": true}

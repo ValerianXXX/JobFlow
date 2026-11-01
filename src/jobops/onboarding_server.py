@@ -831,6 +831,8 @@ class OnboardingRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.service.approve_external_claims(self._json_body())
             elif route == "standard-resume-draft":
                 result = self.server.service.create_standard_resume(self._json_body())
+            elif route == "standard-resume-restore":
+                result = self.server.service.restore_standard_resume(self._json_body())
             elif route == "standard-resume-pdf":
                 result = self.server.service.standard_resume_pdf(self._json_body())
             elif route == "adopt-standard-resume":

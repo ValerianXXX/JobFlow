@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>JobFlow · 找工流水线</title>
-  <link rel="stylesheet" href="styles.css?v=20261031-jobflow-v50-claim-wording">
+  <link rel="stylesheet" href="styles.css?v=20261101-jobflow-v51-resume-selection">
 </head>
 <body>
   <a class="skip-link" href="#mainContent" data-i18n="skipToMain">跳到主要内容</a>
@@ -85,7 +85,14 @@
           <strong data-i18n="standardResumeTitle">只有 PDF？生成可编辑的标准简历</strong>
           <p data-i18n="standardResumeBody">用已批准的事实生成新的单栏版式，原始 PDF 和证据保留。先预览，再决定是否采用为新母版。</p>
           <p id="standardResumeStatus"></p>
+          <fieldset id="standardResumeSelection" class="standard-resume-selection">
+            <legend data-i18n="standardResumeSelectionTitle">选择放入本次简历的事实</legend>
+            <p data-i18n="standardResumeSelectionHint">未选事实和证据仍会保留。更改选择后须重新生成预览，实际页数以导出后的页面为准。</p>
+            <div class="standard-resume-actions"><button id="standardResumeSelectAll" type="button" class="secondary" data-i18n="standardResumeSelectAll">全选</button><button id="standardResumeSelectNone" type="button" class="secondary" data-i18n="standardResumeSelectNone">清空选择</button><span id="standardResumeSelectionCount" role="status"></span></div>
+            <div id="standardResumeChoices"></div>
+          </fieldset>
           <button id="createStandardResume" class="primary" type="button" data-i18n="createStandardResume">生成标准简历预览</button>
+          <button id="restoreStandardResume" class="secondary" type="button" data-i18n="restoreStandardResume">恢复已保存草稿</button>
           <section id="standardResumeDraft" class="hidden" aria-live="polite">
             <div id="standardResumeText" class="standard-resume-text"></div>
             <div class="standard-resume-actions">
@@ -560,7 +567,7 @@
       <span class="activity-progress" aria-hidden="true"><i id="activityProgress"></i></span>
     </span>
   </div>
-  <script src="app.js?v=20261031-jobflow-v50-claim-wording"></script>
+  <script src="app.js?v=20261101-jobflow-v51-resume-selection"></script>
   <script src="context-review.js?v=20261030-context-review"></script>
   <script src="workbench.js?v=20261028-workspace-inbox"></script>
   <script src="analysis-text.js?v=20261030-profile-sources"></script>

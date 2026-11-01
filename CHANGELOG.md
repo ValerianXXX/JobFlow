@@ -4,6 +4,15 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Let PDF-source applicants choose exact approved facts for a standard resume,
+  preserve unselected evidence, and restore the saved draft after reload. Bind
+  cache reuse to the selection, approval, locale and layout; clear old previews
+  and consent after selection changes. Keep ordinary bullet paragraphs together.
+  UI protocol 43 pairs v51 assets with the new restore action. No new dependency,
+  model, service or database migration. Retain full-suite failures and correct
+  obsolete cache-marker expectations without removing checks.
+  [Evidence, setup and downgrade constraints](docs/standard-resume-selection-2026-11-01.md).
+
 - Bind current Claim wording to its original candidate or human transformation;
   preserve parent snapshots and original evidence. Reset affected review decisions
   and Profile confirmation after edits/restoration, including transitive descendants;
