@@ -23,7 +23,7 @@ from jobops.errors import JobOpsError
 from jobops.onboarding_center import OnboardingCenterService
 from jobops.orchestrator import JobOpsOrchestrator
 from jobops.private_onboarding import PrivateOnboarding
-from jobops.util import canonical_json
+from jobops.util import canonical_json, sha256_bytes
 
 
 class AdoptedMasterHandoffTests(unittest.TestCase):
@@ -144,6 +144,54 @@ class AdoptedMasterHandoffTests(unittest.TestCase):
         onboarding_fixtures.OnboardingCenterTests.prepare_completion(self.service)
         self.service.complete(user_confirmed=True)
         self.assert_rejected()
+
+    def test_legacy_master_citations_still_bind_only_to_the_original_pdf(self):
+        # A legacy-source contract mutation only; the native journey uses normal
+        # UPLOADED_MATERIAL bindings and never rewrites an approval fixture.
+        refs = self.assert_admitted()
+        reference = refs["external_claim_set_ref"]
+        claims = json.loads(self.onboarding.read_bytes(reference))
+        for claim in claims["claims"]:
+            for binding in claim["source_bindings"]:
+                binding["kind"] = "MASTER_RESUME"
+        claims["content_hash"] = sha256_bytes(canonical_json({key: value for key, value in claims.items() if key != "content_hash"}))
+        self.onboarding.rotate(reference, canonical_json(claims))
+        self.assert_admitted()
+        unrelated = self.onboarding.import_bytes("onboarding_source_document", b"unrelated synthetic source", synthetic=False)
+        claims["claims"][0]["source_bindings"][0].update({"secure_ref": unrelated["secure_ref"], "content_sha256": unrelated["content_sha256"]})
+        claims["content_hash"] = sha256_bytes(canonical_json({key: value for key, value in claims.items() if key != "content_hash"}))
+        self.onboarding.rotate(reference, canonical_json(claims))
+        with self.assertRaises(JobOpsError) as rejected:
+            self.orchestrator.current_real_application_references()
+        self.assertEqual(rejected.exception.code, "APPLICATION_CLAIM_MASTER_BINDING_MISMATCH")
+
+    def test_synthetic_or_revoked_draft_cannot_be_promoted_by_real_state(self):
+        reference = self.draft["draft_ref"]
+        for column, value in (("synthetic", 1), ("status", "REVOKED")):
+            with self.subTest(boundary=column):
+                with self.service.database.connect() as connection:
+                    connection.execute("UPDATE private_refs SET " + column + "=? WHERE secure_ref=?", (value, reference))
+                self.assert_rejected()
+                with self.service.database.connect() as connection:
+                    connection.execute("UPDATE private_refs SET synthetic=0,status='ACTIVE' WHERE secure_ref=?", (reference,))
+
+    def test_expired_generation_receipt_is_history_but_current_permission_must_be_live(self):
+        draft_ref = self.draft["draft_ref"]
+        draft = json.loads(self.onboarding.read_bytes(draft_ref))
+        prior = json.loads(self.onboarding.read_bytes(draft["claim_set_ref"]))
+        prior["expires_at"] = "2020-01-01T00:00:00Z"
+        prior["content_hash"] = sha256_bytes(canonical_json({key: value for key, value in prior.items() if key != "content_hash"}))
+        self.onboarding.rotate(draft["claim_set_ref"], canonical_json(prior))
+        draft["claim_set_hash"] = prior["content_hash"]
+        self.onboarding.rotate(draft_ref, canonical_json(draft))
+        refs = self.assert_admitted()
+        current = json.loads(self.onboarding.read_bytes(refs["external_claim_set_ref"]))
+        current["expires_at"] = "2020-01-01T00:00:00Z"
+        current["content_hash"] = sha256_bytes(canonical_json({key: value for key, value in current.items() if key != "content_hash"}))
+        self.onboarding.rotate(refs["external_claim_set_ref"], canonical_json(current))
+        with self.assertRaises(JobOpsError) as rejected:
+            self.orchestrator.current_real_application_references()
+        self.assertEqual(rejected.exception.code, "EXTERNAL_CLAIM_SET_EXPIRED")
 
 
 if __name__ == "__main__":

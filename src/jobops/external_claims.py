@@ -129,7 +129,12 @@ def build_external_claim_set(
     return content
 
 
-def validate_external_claim_set_integrity(value: dict[str, Any]) -> None:
+def validate_external_claim_set_snapshot(value: dict[str, Any]) -> None:
+    """Validate a historical approval receipt, without granting current use.
+
+    Runtime material use must call validate_external_claim_set_integrity below;
+    a once-approved artifact's lineage may outlive the original permission.
+    """
     expected = value.get("content_hash")
     material = {key: item for key, item in value.items() if key != "content_hash"}
     if expected != sha256_bytes(canonical_json(material)):
@@ -141,6 +146,10 @@ def validate_external_claim_set_integrity(value: dict[str, Any]) -> None:
         for item in value.get("claims", [])
     ):
         raise JobOpsError("EXTERNAL_CLAIM_APPROVAL_INVALID", "External Claim use must be explicitly approved by the applicant.")
+
+
+def validate_external_claim_set_integrity(value: dict[str, Any]) -> None:
+    validate_external_claim_set_snapshot(value)
     if parse_iso(str(value.get("expires_at"))) <= datetime.now(timezone.utc):
         raise JobOpsError("EXTERNAL_CLAIM_SET_EXPIRED", "The external Claim approval has expired.")
 

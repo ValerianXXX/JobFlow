@@ -255,7 +255,7 @@ class JobOpsOrchestrator:
         *,
         claim_set: dict[str, Any],
     ) -> dict[str, object]:
-        """Accept the dedicated master kind or an exactly bound UI-designated DOCX source.
+        """Accept a dedicated, uploaded, or explicitly adopted standard master.
 
         The onboarding center retains uploaded documents as onboarding sources and
         records the chosen editable master in its encrypted state.  That path is
@@ -265,7 +265,7 @@ class JobOpsOrchestrator:
 
         metadata = self._assert_private_reference(
             reference,
-            kinds={"master_resume_docx", "onboarding_source_document"},
+            kinds={"master_resume_docx", "onboarding_source_document", "generated_resume_docx"},
             synthetic=False,
         )
         if metadata["kind"] == "master_resume_docx":
@@ -299,7 +299,79 @@ class JobOpsOrchestrator:
                 "APPLICATION_MASTER_SOURCE_BINDING_INVALID",
                 "The editable Master Resume selected in JobFlow no longer matches its approved encrypted state.",
             )
+        if metadata["kind"] == "generated_resume_docx":
+            original = self._assert_standard_master_adoption(reference, metadata, state, descriptor)
+            metadata = {**metadata, "adopted_original_evidence": original}
         return metadata
+
+    def _assert_standard_master_adoption(
+        self, reference: str, metadata: dict[str, object],
+        state: dict[str, Any], descriptor: dict[str, Any],
+    ) -> dict[str, object]:
+        """Revalidate the existing adoption receipt without rewriting old states.
+
+        Generated application files are not implicitly masters. Only the exact
+        DOCX adopted from an approved PDF draft can cross this boundary. Its
+        original evidence remains separate from the new editable layout.
+        """
+        from .external_claims import validate_external_claim_set_snapshot
+
+        def invalid() -> None:
+            raise JobOpsError(
+                "APPLICATION_STANDARD_MASTER_ADOPTION_INVALID",
+                "The generated master does not match its explicit adoption and original evidence.",
+            )
+
+        draft_ref = state.get("adopted_standard_resume_ref")
+        if state.get("status") != "ONBOARDING_COMPLETE" or not isinstance(draft_ref, str) or not draft_ref:
+            invalid()
+        self._assert_private_reference(draft_ref, kinds={"standard_resume_draft"}, synthetic=False)
+        draft = self._load_json_ref(draft_ref)
+        original = draft.get("original_master")
+        base = state.get("base_claim_source")
+        if (
+            draft.get("docx_ref") != reference
+            or draft.get("docx_sha256") != metadata["content_sha256"]
+            or draft.get("template_fingerprint") != descriptor.get("template_fingerprint")
+            or not isinstance(original, dict) or not isinstance(base, dict)
+            or original.get("extension") != ".pdf" or original.get("editable_docx") is not False
+            or descriptor.get("derived_from") != original.get("secure_ref")
+            or base.get("secure_ref") != original.get("secure_ref")
+            or base.get("sha256") != original.get("sha256")
+        ):
+            invalid()
+        original_metadata = self._assert_private_reference(
+            str(original.get("secure_ref", "")),
+            kinds={"master_resume_pdf", "onboarding_source_document"}, synthetic=False,
+        )
+        if original_metadata["content_sha256"] != original.get("sha256"):
+            invalid()
+        prior_state_ref = str(draft.get("onboarding_state_ref", ""))
+        self._assert_private_reference(prior_state_ref, kinds={"onboarding_center_state"}, synthetic=False)
+        if self._load_json_ref(prior_state_ref).get("status") != "ONBOARDING_COMPLETE":
+            invalid()
+        prior_claim_ref = str(draft.get("claim_set_ref", ""))
+        self._assert_private_reference(prior_claim_ref, kinds={"external_claim_set"}, synthetic=False)
+        prior_claims = self._load_json_ref(prior_claim_ref)
+        validate_named("external-claim-set", prior_claims, self.schemas)
+        # This proves historical adoption, not permission to use today's facts.
+        # _real_application_context separately requires the current unexpired
+        # Claim set and exact current Profile/master/tailoring bindings.
+        validate_external_claim_set_snapshot(prior_claims)
+        prior_master = prior_claims["master_resume"]
+        if (
+            prior_claims["onboarding_state_ref"] != prior_state_ref
+            or prior_claims["content_hash"] != draft.get("claim_set_hash")
+            or prior_master["secure_ref"] != original["secure_ref"]
+            or prior_master["sha256"] != original["sha256"]
+            or prior_master["editable_docx"] is not False
+        ):
+            invalid()
+        profile_ref = str(prior_claims["profile_ref"])
+        self._assert_private_reference(profile_ref, kinds={"candidate_profile"}, synthetic=False)
+        if sha256_bytes(canonical_json(self._load_json_ref(profile_ref))) != draft.get("profile_hash"):
+            invalid()
+        return {**original_metadata, "secure_ref": original["secure_ref"]}
 
     def _real_application_context(
         self,
@@ -355,12 +427,16 @@ class JobOpsOrchestrator:
             for binding in claim.get("source_bindings", []):
                 reference = str(binding["secure_ref"])
                 if binding["kind"] == "MASTER_RESUME":
-                    if reference != resolved_master:
+                    original = master_metadata.get("adopted_original_evidence")
+                    if reference == resolved_master:
+                        source_metadata = master_metadata
+                    elif isinstance(original, dict) and reference == original["secure_ref"]:
+                        source_metadata = original
+                    else:
                         raise JobOpsError(
                             "APPLICATION_CLAIM_MASTER_BINDING_MISMATCH",
                             "An approved Claim points to a different Master Resume than the current application.",
                         )
-                    source_metadata = master_metadata
                 else:
                     source_metadata = self._assert_private_reference(
                         reference,
