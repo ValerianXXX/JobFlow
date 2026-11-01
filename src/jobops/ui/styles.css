@@ -746,6 +746,13 @@ body.is-busy :is(#emergencyStop,#cancelGuidedIntake,#pauseAuthorizedDiscovery,#k
 .standard-resume-text h3{text-align:center}.standard-resume-text h4{margin:1rem 0 .4rem}
 .standard-resume-text li{margin:.6rem 0}.standard-resume-text small{display:block;color:#526477;font-size:.8rem}
 .standard-resume-actions{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem;margin:.8rem 0}
+.standard-resume-selection{min-width:0;margin:12px 0;border:1px solid #bccbd0;border-radius:8px;padding:12px}
+.standard-resume-selection legend{font-weight:600}.standard-resume-selection p{margin:4px 0}
+#standardResumeChoices{max-height:320px;overflow:auto}
+#standardResumeChoices label{display:flex;align-items:flex-start;gap:10px;padding:10px 4px;border-bottom:1px solid #e1e8ed;white-space:normal}
+#standardResumeChoices input{flex:0 0 auto;width:18px;height:18px;margin:3px 0}
+#standardResumeChoices span{min-width:0;overflow-wrap:anywhere}#standardResumeChoices small{display:block;color:#526477}
+#standardResumeChoices :focus-visible{outline:3px solid #29748b;outline-offset:2px}
 #standardResumePages img{display:block;max-width:100%;height:auto;margin:.6rem auto;border:1px solid #cbd5e1}
 #standardResumeDraft>label{display:flex;align-items:flex-start;gap:.6rem;margin:1rem 0;line-height:1.6}
 #standardResumeDraft>label input{flex:0 0 auto;margin-top:.35rem}

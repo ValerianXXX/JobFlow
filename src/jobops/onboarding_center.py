@@ -3576,6 +3576,12 @@ class OnboardingCenterService:
                                   and external_claims.get("current") and "resume" in external_claims.get("allowed_uses", [])),
                 "review_hash": review_hash,
                 "claim_set_hash": external_claims.get("content_hash"),
+                "saved_draft_available": bool(self._latest_ref("standard_resume_draft")),
+                "claim_options": [{"claim_id": item["claim_id"], "text": item["statement"],
+                                   "category": item["category"], "source_count": len(item["source_bindings"])}
+                                  for item in approval_claims]
+                    if (state.get("status") == COMPLETE and master and not master.get("editable_docx")
+                        and external_claims.get("current") and "resume" in external_claims.get("allowed_uses", [])) else [],
             },
             "support_incidents": self.support_incidents.public_state(),
             "dashboard": dashboard,
@@ -4973,6 +4979,8 @@ class OnboardingCenterService:
                 "profile_ref": profile_ref, "profile": profile, "claim_ref": claim_ref, "claims": claims}
 
     def _read_standard_resume(self, reference: str) -> tuple[dict[str, Any], dict[str, Any]]:
+        from .resume_selection import validate_resume_selection
+
         metadata = self.onboarding.reference_metadata(reference)
         if metadata.get("kind") != "standard_resume_draft":
             raise JobOpsError("STANDARD_RESUME_DRAFT_INVALID", "Choose a standard resume draft from this profile.")
@@ -4985,6 +4993,7 @@ class OnboardingCenterService:
             raise JobOpsError("STANDARD_RESUME_DRAFT_STALE", "The approved profile or evidence changed; generate a fresh draft.")
         if sha256_bytes(self.onboarding.read_bytes(draft["docx_ref"])) != draft["docx_sha256"]:
             raise JobOpsError("STANDARD_RESUME_DRAFT_INVALID", "The generated document binding changed.")
+        draft["preview"] = validate_resume_selection(draft["preview"], context["claims"])
         return draft, context
 
     @staticmethod
@@ -4992,6 +5001,7 @@ class OnboardingCenterService:
         return {"status": "STANDARD_RESUME_DRAFT", "draft_ref": reference,
                 "docx_sha256": draft["docx_sha256"], "preview": draft["preview"],
                 "claim_set_hash": draft["claim_set_hash"],
+                "selection_hash": draft["preview"]["selection_hash"],
                 "pdf_available": bool(draft.get("pdf_ref")), "materials_validated": False,
                 "pdf_provider": draft.get("pdf_provider"),
                 "real_external_actions": 0}
@@ -4999,16 +5009,22 @@ class OnboardingCenterService:
     @_synchronized
     def create_standard_resume(self, payload: dict[str, Any]) -> dict[str, Any]:
         from .document_builder import build_standard_resume
+        from .resume_selection import STANDARD_RESUME_LAYOUT, select_resume_claims
 
         context = self._standard_resume_context()
         if payload.get("expected_review_hash") != context["review_hash"]:
             raise JobOpsError("EXTERNAL_CLAIM_REVIEW_STALE", "Review the current approved wording first.")
+        if "included_claim_ids" in payload and payload["included_claim_ids"] is None:
+            raise JobOpsError("STANDARD_RESUME_SELECTION_INVALID", "Choose one or more currently approved facts.")
+        _, selection = select_resume_claims(context["claims"], payload.get("included_claim_ids"))
         locale = payload.get("locale", context["state"].get("locale", "zh"))
         previous = self._latest_ref("standard_resume_draft")
         if previous:
             try:
                 old, _ = self._read_standard_resume(previous)
-                if old["preview"]["locale"] == locale:
+                if (old["preview"]["locale"] == locale
+                        and old["preview"]["layout"] == STANDARD_RESUME_LAYOUT
+                        and old["preview"]["selection_hash"] == selection["selection_hash"]):
                     return self._standard_resume_preview(previous, old)
             except JobOpsError:
                 pass  # A stale draft remains private; it is never reused.
@@ -5016,7 +5032,8 @@ class OnboardingCenterService:
         try:
             with self.onboarding.staging_directory() as staging:
                 path = staging / "standard-resume.docx"
-                preview = build_standard_resume(path, profile=context["profile"], claim_set=context["claims"], locale=locale)
+                preview = build_standard_resume(path, profile=context["profile"], claim_set=context["claims"], locale=locale,
+                                                included_claim_ids=selection["included_claim_ids"])
                 fingerprint = sha256_bytes(canonical_json(template_fingerprint(path).as_dict()))
                 record = self.onboarding.import_bytes("generated_resume_docx", path.read_bytes(), synthetic=False)
             if not record.get("deduplicated"):
@@ -5034,6 +5051,16 @@ class OnboardingCenterService:
         except Exception:
             self._rollback_private_writes(created)
             raise
+
+    @_synchronized
+    def restore_standard_resume(self, payload: dict[str, Any]) -> dict[str, Any]:
+        reference = self._latest_ref("standard_resume_draft")
+        if not reference:
+            raise JobOpsError("STANDARD_RESUME_DRAFT_INVALID", "Create a standard resume draft first.")
+        draft, context = self._read_standard_resume(reference)
+        if payload.get("expected_review_hash") != context["review_hash"]:
+            raise JobOpsError("EXTERNAL_CLAIM_REVIEW_STALE", "Review the current approved wording first.")
+        return self._standard_resume_preview(reference, draft)
 
     @_synchronized
     def standard_resume_pdf(self, payload: dict[str, Any]) -> dict[str, Any]:

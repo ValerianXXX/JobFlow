@@ -37,6 +37,10 @@ class StandardResumeSelectionTests(unittest.TestCase):
             self.assertEqual(preview_ids(result), [ids[0]])
             self.assertEqual(result["preview"]["excluded_claim_count"], len(ids) - 1)
             paragraphs = [p.text for p in Document(io.BytesIO(service.standard_resume_file(result))).paragraphs]
+            document = Document(io.BytesIO(service.standard_resume_file(result)))
+            for paragraph in document.paragraphs:
+                if paragraph._p.pPr is not None and paragraph._p.pPr.numPr is not None:
+                    self.assertTrue(paragraph.paragraph_format.keep_together)
             for section in before["preview"]["sections"]:
                 for item in section["items"]:
                     self.assertEqual(item["text"] in paragraphs, item["claim_id"] == ids[0])
@@ -112,6 +116,38 @@ class StandardResumeSelectionTests(unittest.TestCase):
             self.assertEqual(state["base_claim_source"]["secure_ref"], original["secure_ref"])
             self.assertFalse(service.bootstrap()["external_claim_approval"]["current"])
             self.assertEqual(service.redacted_status()["real_external_actions"], 0)
+
+    def test_restore_saved_selection_is_read_only_and_requires_current_review(self):
+        with project_temp() as root:
+            service, onboarding, _, _ = approved_pdf_service(root)
+            first = preview_ids(generate(service))[0]
+            result = selected(service, [first])
+            before = onboarding.read_bytes(result["draft_ref"])
+            request = {"expected_review_hash": service.bootstrap()["standard_resume"]["review_hash"]}
+            restored = service.restore_standard_resume(request)
+            self.assertEqual(restored, result)
+            self.assertEqual(onboarding.read_bytes(result["draft_ref"]), before)
+            with self.assertRaises(JobOpsError) as caught:
+                service.restore_standard_resume({"expected_review_hash": "stale"})
+            self.assertEqual(caught.exception.code, "EXTERNAL_CLAIM_REVIEW_STALE")
+
+    def test_legacy_all_fact_draft_is_read_without_rewriting_its_receipt(self):
+        with project_temp() as root:
+            service, onboarding, _, _ = approved_pdf_service(root)
+            result = generate(service)
+            legacy = json.loads(onboarding.read_bytes(result["draft_ref"]))
+            legacy["preview"]["layout"] = "STANDARD_SINGLE_COLUMN_V1"
+            for key in ("included_claim_ids", "eligible_claim_count", "excluded_claim_count", "selection_hash"):
+                legacy["preview"].pop(key, None)
+            original = canonical_json(legacy)
+            onboarding.rotate(result["draft_ref"], original)
+            restored = service.restore_standard_resume({"expected_review_hash": service.bootstrap()["standard_resume"]["review_hash"]})
+            self.assertEqual(restored["draft_ref"], result["draft_ref"])
+            self.assertEqual(restored["selection_hash"], result["selection_hash"])
+            self.assertEqual(onboarding.read_bytes(result["draft_ref"]), original)
+            regenerated = generate(service)
+            self.assertNotEqual(regenerated["draft_ref"], result["draft_ref"])
+            self.assertEqual(regenerated["preview"]["layout"], "STANDARD_SINGLE_COLUMN_V2")
 
 
 if __name__ == "__main__":

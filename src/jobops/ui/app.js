@@ -555,6 +555,9 @@ Object.assign(STRINGS.zh,{
   standardResumeTitle:"只有 PDF？生成可编辑的标准简历", standardResumeBody:"用已批准的事实生成新的单栏版式，原始 PDF 和证据保留。先预览，再决定是否采用为新母版。",
   createStandardResume:"生成标准简历预览", standardResumeReady:"已具备生成条件。只排版已批准的原句，不调用模型。",
   standardResumeNeedsApproval:"先完成资料确认，并批准事实用于简历，再生成标准版式。",
+  standardResumeSelectionTitle:"选择放入本次简历的事实", standardResumeSelectionHint:"未选事实和证据仍会保留。更改选择后须重新生成预览，实际页数以导出后的页面为准。",
+  standardResumeSelectAll:"全选", standardResumeSelectNone:"清空选择", standardResumeSelectionCount:"已选 {selected} / {total} 项",
+  standardResumeSelectionInvalid:"请选择至少一项当前已批准的事实，不可重复选择。", restoreStandardResume:"恢复已保存草稿",
   standardResumeQa:"文字预览不等于版面验收。用于申请前仍须检查实际导出的每一页，并完成现有材料审核。",
   downloadStandardResume:"保存 DOCX 副本", previewStandardResumePdf:"转换并检查 PDF 页面",
   standardResumeConsent:"我已核对内容，同意采用新标准版式并开始资料修订；之后重新确认资料、材料授权和改写位置。",
@@ -575,6 +578,9 @@ Object.assign(STRINGS.en,{
   standardResumeTitle:"Only a PDF? Create an editable standard resume", standardResumeBody:"Create a new single-column layout from approved facts. Your original PDF and evidence stay intact. Preview it before choosing it as a new master.",
   createStandardResume:"Preview a standard resume", standardResumeReady:"Ready to format the exact approved wording. No model call is needed.",
   standardResumeNeedsApproval:"Complete your profile review and approve facts for resume use first.",
+  standardResumeSelectionTitle:"Choose facts for this resume", standardResumeSelectionHint:"Unselected facts and evidence stay saved. Regenerate the preview after changing your selection; inspect the exported pages for the actual length.",
+  standardResumeSelectAll:"Select all", standardResumeSelectNone:"Clear selection", standardResumeSelectionCount:"Selected {selected} of {total}",
+  standardResumeSelectionInvalid:"Choose at least one different, currently approved fact.", restoreStandardResume:"Restore saved draft",
   standardResumeQa:"Text preview is not layout validation. Before using it in an application, inspect every exported page and complete the existing material review.",
   downloadStandardResume:"Save a DOCX copy", previewStandardResumePdf:"Convert and inspect PDF pages",
   standardResumeConsent:"I reviewed the content and choose this new standard layout. Start a profile revision so I can reconfirm my profile, material approval and editing positions.",
@@ -603,7 +609,7 @@ Object.assign(STRINGS.en,{
   claimOriginUnknown:"Current wording history is incomplete; review the original source",
   claimSourceChanged:"Upstream content changed. Recheck the original material and this Claim. Save the upstream edit before confirming this Claim."
 });
-const UI_PROTOCOL_VERSION = 42;
+const UI_PROTOCOL_VERSION = 43;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",
@@ -1132,6 +1138,7 @@ Object.assign(STRINGS.en, {
 });
 Object.assign(LOCAL_ERROR_KEYS, {
   STANDARD_RESUME_CONFIRMATION_REQUIRED:"standardResumeConfirmFirst",
+  STANDARD_RESUME_SELECTION_INVALID:"standardResumeSelectionInvalid",
   STANDARD_RESUME_DRAFT_STALE:"standardResumeStale", STANDARD_RESUME_DRAFT_INVALID:"standardResumeStale",
   STANDARD_RESUME_SOURCE_CHANGED:"standardResumeStale", STANDARD_RESUME_PDF_REQUIRED:"standardResumeStale",
   DOCUMENT_PDF_EXPORT_UNAVAILABLE:"documentWordMissing", DOCUMENT_PDF_EXPORT_FAILED:"documentPdfFailed",
@@ -1659,6 +1666,14 @@ function renderApplicationReadiness(){
   renderGuidedIntake();
 }
 
+function clearStandardResumePreview(){
+  state.standardResume=null;state.standardResumePage=null;
+  document.querySelector("#standardResumeText").replaceChildren();
+  document.querySelector("#standardResumePageImage").removeAttribute("src");
+  document.querySelector("#standardResumeConfirm").checked=false;
+  document.querySelector("#adoptStandardResume").disabled=true;
+}
+
 function renderStandardResume(){
   const capability=state.data?.document_capabilities||{}, standard=state.data?.standard_resume||{};
   const message=capability.pdf_export_configuration==="INVALID"?"documentPdfConfigurationInvalid":
@@ -1670,12 +1685,24 @@ function renderStandardResume(){
   document.querySelector("#documentCapabilities").textContent=messages.join(" ");
   document.querySelector("#standardResumePanel").classList.toggle("hidden",!standard.offered||state.data?.demo_mode===true);
   document.querySelector("#standardResumeStatus").textContent=t(standard.available?"standardResumeReady":"standardResumeNeedsApproval");
-  document.querySelector("#createStandardResume").disabled=!standard.available||capability.docx_generation===false;
+  const options=standard.available&&Array.isArray(standard.claim_options)?standard.claim_options:[];
+  if(!standard.available||state.standardResumeSelection?.claimSetHash!==standard.claim_set_hash){
+    state.standardResumeSelection={claimSetHash:standard.claim_set_hash,ids:new Set(options.map(item=>item.claim_id))};
+    state.standardResumeOptionsKey=null;
+  }
+  const selection=state.standardResumeSelection, optionsKey=JSON.stringify([standard.claim_set_hash,state.locale,options]);
+  const choices=document.querySelector("#standardResumeChoices");
+  if(state.standardResumeOptionsKey!==optionsKey){
+    choices.innerHTML=options.map(item=>`<label><input type="checkbox" class="standard-resume-choice" data-claim="${escapeHtml(item.claim_id)}"><span>${escapeHtml(item.text)}<small>${escapeHtml(t("standardResumeSources").replace("{count}",String(item.source_count)))}</small></span></label>`).join("");
+    state.standardResumeOptionsKey=optionsKey;
+  }
+  choices.querySelectorAll(".standard-resume-choice").forEach(input=>{input.checked=selection.ids.has(input.dataset.claim);});
+  document.querySelector("#standardResumeSelection").disabled=!standard.available;
+  document.querySelector("#standardResumeSelectionCount").textContent=t("standardResumeSelectionCount").replace("{selected}",String(selection.ids.size)).replace("{total}",String(options.length));
+  document.querySelector("#createStandardResume").disabled=!standard.available||capability.docx_generation===false||!selection.ids.size;
+  document.querySelector("#restoreStandardResume").disabled=!standard.available||!standard.saved_draft_available;
   if(!standard.available||(state.standardResume&&state.standardResume.claim_set_hash!==standard.claim_set_hash)){
-    state.standardResume=null;state.standardResumePage=null;
-    document.querySelector("#standardResumeText").replaceChildren();
-    document.querySelector("#standardResumePageImage").removeAttribute("src");
-    document.querySelector("#standardResumeConfirm").checked=false;
+    clearStandardResumePreview();
   }
   const draft=state.standardResume;
   document.querySelector("#standardResumeDraft").classList.toggle("hidden",!draft);
@@ -3284,13 +3311,24 @@ document.addEventListener("click", async event => {
     }catch(error){handleUiError(error);}
     return;
   }
-  const standardAction=event.target.closest("#createStandardResume,#downloadStandardResume,#previewStandardResumePdf,#standardResumePrevious,#standardResumeNext,#adoptStandardResume");
+  const selectStandard=event.target.closest("#standardResumeSelectAll,#standardResumeSelectNone");
+  if(selectStandard){
+    state.standardResumeSelection.ids=new Set(selectStandard.id==="standardResumeSelectAll"?(state.data?.standard_resume?.claim_options||[]).map(item=>item.claim_id):[]);
+    clearStandardResumePreview();renderStandardResume();return;
+  }
+  const standardAction=event.target.closest("#createStandardResume,#restoreStandardResume,#downloadStandardResume,#previewStandardResumePdf,#standardResumePrevious,#standardResumeNext,#adoptStandardResume");
   if(standardAction){
     const post=body=>({method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
     try{
-      if(standardAction.id==="createStandardResume"){
+      if(["createStandardResume","restoreStandardResume"].includes(standardAction.id)){
         await withActivity("generatingStandardResume",async()=>{
-          state.standardResume=await api("standard-resume-draft",post({expected_review_hash:state.data?.standard_resume?.review_hash,locale:state.locale}));
+          const restore=standardAction.id==="restoreStandardResume";
+          state.standardResume=await api(restore?"standard-resume-restore":"standard-resume-draft",post({
+            expected_review_hash:state.data?.standard_resume?.review_hash,locale:state.locale,
+            ...(!restore?{included_claim_ids:[...state.standardResumeSelection.ids]}:{})
+          }));
+          state.standardResumeSelection={claimSetHash:state.standardResume.claim_set_hash,ids:new Set(state.standardResume.preview.included_claim_ids)};
+          if(state.data?.standard_resume)state.data.standard_resume.saved_draft_available=true;
           state.standardResumePage=null;document.querySelector("#standardResumeConfirm").checked=false;
         });
         renderStandardResume();scrollToElement(document.querySelector("#standardResumeDraft"),{block:"start"});
@@ -3687,6 +3725,11 @@ document.addEventListener("change",event=>{
   else if(event.target.matches("#applicationFieldResolutionConfirm,.application-field-value")){updateApplicationFieldResolutionButton();}
   if(event.target.matches("#externalClaimConfirm")){renderApplicationReadiness();}
   if(event.target.matches("#standardResumeConfirm")){renderStandardResume();}
+  if(event.target.matches(".standard-resume-choice")){
+    const ids=state.standardResumeSelection.ids,claimId=event.target.dataset.claim;
+    if(event.target.checked)ids.add(claimId);else ids.delete(claimId);
+    clearStandardResumePreview();renderStandardResume();
+  }
   if(event.target.matches("#browserAssistConfirm")){
     const selected=state.browserAssistSelection;
     const canRepeatPairingHelp=state.companionPairing?.kind==="assist"&&state.companionPairing.paired!==true&&state.companionPairing.session?.application_id===selected?.application_id;
