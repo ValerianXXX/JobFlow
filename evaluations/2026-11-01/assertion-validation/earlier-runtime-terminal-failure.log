@@ -1,0 +1,12 @@
+======================================================================
+FAIL: test_public_github_text_is_english_only (test_public_docs.PublicDocumentationTests.test_public_github_text_is_english_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_public_docs.py", line 55, in test_public_github_text_is_english_only
+    self.assertIsNone(CJK_TEXT.search(text), str(path.relative_to(PROJECT)))
+AssertionError: <re.Match object; span=(1430, 1431), match='不'> is not None : docs\assertion-status-2026-11-01.md
+
+----------------------------------------------------------------------
+Ran 1634 tests in 4027.760s
+
+FAILED (failures=1, skipped=4)
