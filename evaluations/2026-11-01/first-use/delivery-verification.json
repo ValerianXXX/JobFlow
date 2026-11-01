@@ -1,0 +1,52 @@
+{
+  "observed_at_utc": "2026-11-01T05:39:38.149899+00:00",
+  "runtime": "8df8d155fe438937f8c856590a3fd7b016f4764a",
+  "product_runtime_unchanged": true,
+  "original_local_test_commit": "16f393b4ee0286f0430577a653b2aff437a71eb6",
+  "original_branch_retained_unpublished": true,
+  "history_rewritten": false,
+  "force_push": false,
+  "public_policy_changed": false,
+  "reserved_test_domain_corrected": true,
+  "local_path_redaction_extended_to_four_escaped_backslashes": true,
+  "test_file_sha256": "56fff25638c6dfa04be56dcffa8bc29f35afd348b57a2e108be1b903cda9aac7",
+  "related_tests": {
+    "status": "PASS",
+    "tests": 37,
+    "seconds": 5.581,
+    "raw_log_sha256": "9b56a6b5f93174ffafe43a14a75f07efa93972ca5ddf0f832e66b4f35b6ee94e"
+  },
+  "public_artifact_sha256": {
+    "discovery-after.txt": "81c53e01fe00c3fed57b2655f8be97660b84d2b8c2fe1ae2d97a4d7f49a4e35d",
+    "discovery-before.txt": "c781000459bdded7cad211615c88ff9af5ddaf3c26dad6f6867f67251b42d90f",
+    "discovery-delivery.txt": "d4458aa4ba1cb48f1c2635acd1d9b38ac36e4ea5364c800dac4b1997d8df3c96",
+    "initial-failed.json": "7a9be05049299d10fc15ec2577c341369f79e91a9090a78d5b098c5e30c904e5",
+    "initial-published-harness.cjs.txt": "695e5b0b64b5db4c9065120fc99e17a78c1be6dad6c8fc5a46cc33d8cb73c544",
+    "mobile-restored.png": "f95197e7c16797299f3080b4535e4444ff0f96d3e718f7e31e9b61a41632b960",
+    "original-source.png": "bac0a86dd21adfbffbe9bae8493c774275c92f159f39933e55f81768c8d90fd5",
+    "profile-to-draft.json": "a2eb1f33e644fcfbd38ad916731f7208c1efa3d9b7117c3e32e07f7414659c1f",
+    "published-runner-result.json": "d637f5f78a5cb8b0b6ca19330e6374c06feccc024c087562bb618c2f557c0a19",
+    "selected-from-empty.docx": "e8cd7a26f8fc51e94e2705bac402670243f7e8392d20354bc00dfd1a53bb36fe",
+    "task-card.json": "aa8ccf9db62f48c1af04d4040f431689f187f15a1a71435eb9d5594f8808e689",
+    "terminal-verification.json": "ac65a23e15b84fc7d9ac29d6ead488e09c8e1a13e95297e9c068873719dd414a",
+    "verification.json": "6212acd8f35a8edfb0ac9654b10d55bce9388a00bcb2e2ce94fca62afea7f3b9",
+    "verify-browser.cjs": "0567ad79f299e0be151d15664413776af6e749d1177a97575987cc02c4d95dba"
+  },
+  "initial_public_scan": {
+    "status": "FAIL",
+    "findings": [
+      "email in the command-mutation test and its unpublished local history"
+    ],
+    "raw_log_sha256": "77b20e044c45ab82a3e009a8d6af0153e17e29b491bf3dfb78f76000a2a19950"
+  },
+  "new_cloud_calls": 0,
+  "whole_goal_complete": false,
+  "exact_delivery_ci": "PENDING",
+  "local_history_isolation": {
+    "shared_worktree_scan": "FAIL on unpublished sibling branch history; current staged tree PASS",
+    "delivery_repository": "Fresh single-branch clone of the published parent",
+    "original_local_repositories_and_refs": "retained unchanged",
+    "public_scan_disabled": false,
+    "policy_exemption_added": false
+  }
+}

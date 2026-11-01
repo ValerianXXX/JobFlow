@@ -50,6 +50,11 @@ retained pending evidence and exercised a separate synthetic application rehears
 It is coding-assistant simulation, not an independent user study or a live
 employer submission. The [next development plan](docs/next-upgrade-plan-2026-10-29.md)
 retains the missing full-material, route-specific ATS, mailbox and user acceptance.
+A later [empty-profile check](docs/first-use-verification-2026-11-01.md) follows
+one continuous synthetic path through source review, answers, Profile completion,
+explicit material permission, selected DOCX download and draft restoration.
+It replays a recorded model response and stops before PDF review, adoption and
+application preparation; those remaining steps are not inferred as passing.
 An optional Docling parser also remains available; its earlier comparison found
 no extraction-quality gain. The new `pdf_regions` option requires no new package.
 

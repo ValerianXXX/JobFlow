@@ -1,0 +1,80 @@
+{
+  "observed_at_utc": "2026-11-01T05:31:28.394374+00:00",
+  "runtime": "8df8d155fe438937f8c856590a3fd7b016f4764a",
+  "parent_delivery": "c8445a910f30d5027cee884dd220231d54cb172e",
+  "test_contract_commit": "16f393b4ee0286f0430577a653b2aff437a71eb6",
+  "test_file_sha256": "4cb1bfdd98ee844038075ac988382c7f67e4133da4fb08b4e3347334b27f385f",
+  "artifacts": {
+    "task-card.json": {
+      "raw_sha256": "aa8ccf9db62f48c1af04d4040f431689f187f15a1a71435eb9d5594f8808e689",
+      "public_sha256": "aa8ccf9db62f48c1af04d4040f431689f187f15a1a71435eb9d5594f8808e689"
+    },
+    "initial-failed.json": {
+      "raw_sha256": "7a9be05049299d10fc15ec2577c341369f79e91a9090a78d5b098c5e30c904e5",
+      "public_sha256": "7a9be05049299d10fc15ec2577c341369f79e91a9090a78d5b098c5e30c904e5"
+    },
+    "profile-to-draft.json": {
+      "raw_sha256": "a2eb1f33e644fcfbd38ad916731f7208c1efa3d9b7117c3e32e07f7414659c1f",
+      "public_sha256": "a2eb1f33e644fcfbd38ad916731f7208c1efa3d9b7117c3e32e07f7414659c1f"
+    },
+    "discovery-before.txt": {
+      "raw_sha256": "ee7c4dd3917905d3d3787d8a152792de050819422696814dd2cdfca226f12cb3",
+      "public_sha256": "c781000459bdded7cad211615c88ff9af5ddaf3c26dad6f6867f67251b42d90f"
+    },
+    "discovery-after.txt": {
+      "raw_sha256": "014f79efcafcb2ab8e6ae6b983daa59b42f2bf21b6da87ad3c29f7917030a43c",
+      "public_sha256": "81c53e01fe00c3fed57b2655f8be97660b84d2b8c2fe1ae2d97a4d7f49a4e35d"
+    },
+    "mobile-restored.png": {
+      "raw_sha256": "f95197e7c16797299f3080b4535e4444ff0f96d3e718f7e31e9b61a41632b960",
+      "public_sha256": "f95197e7c16797299f3080b4535e4444ff0f96d3e718f7e31e9b61a41632b960"
+    },
+    "original-source.png": {
+      "raw_sha256": "bac0a86dd21adfbffbe9bae8493c774275c92f159f39933e55f81768c8d90fd5",
+      "public_sha256": "bac0a86dd21adfbffbe9bae8493c774275c92f159f39933e55f81768c8d90fd5"
+    },
+    "selected-from-empty.docx": {
+      "raw_sha256": "e8cd7a26f8fc51e94e2705bac402670243f7e8392d20354bc00dfd1a53bb36fe",
+      "public_sha256": "e8cd7a26f8fc51e94e2705bac402670243f7e8392d20354bc00dfd1a53bb36fe"
+    }
+  },
+  "published_runner_sha256": "695e5b0b64b5db4c9065120fc99e17a78c1be6dad6c8fc5a46cc33d8cb73c544",
+  "original_corrected_runner_sha256": "9b5f39402a69b56f2c54728a6f9959fe41ab6dfa9a9ca665ed539def5813cd37",
+  "runner_path_adaptations": [
+    "Repository-relative root and task card",
+    "Declared Playwright resolution",
+    "Optional project interpreter override",
+    "Unique ignored reports output"
+  ],
+  "published_runner_verification": "PENDING_SEPARATE_RUN",
+  "synthetic_only": true,
+  "new_model_calls": 0,
+  "actual_total_cost_usd": null,
+  "complete_application_workflow": false,
+  "independent_human": false,
+  "whole_goal_complete": false,
+  "prior_full_local": "RUNNING_WITH_OBSERVED_PATH_WORD_FALSE_POSITIVE; original run will retain its result",
+  "contract_tests": {
+    "passed": 37,
+    "failed": 0,
+    "seconds": 5.464,
+    "path_action_pairs": 9,
+    "rejected_command_mutations": 6,
+    "unsupported_actions_blocked": 4
+  },
+  "actual_windows_task_registration": false,
+  "product_runtime_changed": false,
+  "limitations": [
+    "Recorded AI response is not a new model observation",
+    "Same-path PDF rendering, adoption, revision and application packet remain untested here",
+    "Signing, clean Windows and independent applicants remain unavailable or unverified",
+    "UI language reset after completed Profile reload remains open"
+  ],
+  "publication_correction": {
+    "initial_receipt_sha256": "c33720a5a0f22eba3346891882b09923c1b698c836d5d547824e01f7c380716a",
+    "escaped_local_path_redacted": true,
+    "old_test_commit_unpublished": true,
+    "historical_test_outcomes_unchanged": true,
+    "reason": "Use an allowed reserved test domain for one command-mutation fixture; public scanner policy unchanged"
+  }
+}

@@ -93,6 +93,22 @@ class GuardedFakeTask(FakeTask):
 
 
 class AuthorizedDiscoveryTaskTests(unittest.TestCase):
+    def assert_fixed_task_command(self, adapter, command, action):
+        # Local directory names may contain words such as "resume". Both path
+        # slots must match the configured values exactly; only flags and the
+        # fixed action are data-bearing command arguments.
+        self.assertEqual(command, [
+            adapter.powershell_path,
+            "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+            "-File", str(adapter.script), "-Action", action,
+        ])
+        arguments = json.dumps(command[1:7] + command[8:]).casefold()
+        for forbidden in (
+            "secure-ref:", "example.com", "credit risk", "authorization_id",
+            "application", "resume", "submit",
+        ):
+            self.assertNotIn(forbidden, arguments)
+
     def test_unexpected_runner_failure_cleanup_is_best_effort_and_capability_reducing(self) -> None:
         class PausedControl:
             @staticmethod
@@ -137,6 +153,7 @@ class AuthorizedDiscoveryTaskTests(unittest.TestCase):
             result = adapter.register()
             self.assertEqual(result["status"], "REGISTERED")
             self.assertEqual(len(calls), 1)
+            self.assert_fixed_task_command(adapter, calls[0][0], "Register")
             serialized = json.dumps(calls[0][0])
             self.assertIn("manage-authorized-discovery-task.ps1", serialized)
             self.assertIn("Register", calls[0][0])
@@ -145,11 +162,58 @@ class AuthorizedDiscoveryTaskTests(unittest.TestCase):
                 calls[0][1]["creationflags"],
                 getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
-            for forbidden in (
-                "secure-ref:", "example.com", "credit risk", "authorization_id",
-                "application", "resume", "submit",
-            ):
-                self.assertNotIn(forbidden, serialized.casefold())
+
+    def test_fixed_task_command_accepts_configured_directory_names_for_each_action(self):
+        with project_temp() as temp:
+            lock = temp / "state" / ".authorized-discovery-task.lock"
+            lock.parent.mkdir()
+            source = PROJECT / "scripts" / "windows-runtime" / "manage-authorized-discovery-task.ps1"
+            for directory in ("plain", "resume application submit", "资料 credit risk 工作区"):
+                script = temp / directory / source.name
+                script.parent.mkdir()
+                script.write_bytes(source.read_bytes())
+                for action, status in (("Register", "REGISTERED"), ("Status", "REGISTERED"), ("Remove", "NOT_REGISTERED")):
+                    with self.subTest(directory=directory, action=action):
+                        calls = []
+                        def run(command, **kwargs):
+                            calls.append(command)
+                            return CompletedProcess(command, 0, task_payload(status), "")
+                        adapter = WindowsAuthorizedDiscoveryTask(PROJECT, process_runner=run, script_path=script, lock_path=lock)
+                        result = getattr(adapter, action.lower())()
+                        self.assertEqual(result["status"], status)
+                        self.assertEqual(len(calls), 1)
+                        self.assert_fixed_task_command(adapter, calls[0], action)
+
+    def test_fixed_task_contract_rejects_added_data_and_changed_path_or_action(self):
+        with project_temp() as temp:
+            lock = temp / "state" / ".authorized-discovery-task.lock"
+            lock.parent.mkdir()
+            captured = []
+            def run(command, **kwargs):
+                captured.append(command)
+                return CompletedProcess(command, 0, task_payload("REGISTERED"), "")
+            adapter = WindowsAuthorizedDiscoveryTask(PROJECT, process_runner=run,
+                script_path=PROJECT / "scripts/windows-runtime/manage-authorized-discovery-task.ps1", lock_path=lock)
+            adapter.register()
+            original = captured[0]
+            mutations = [original + ["secure-ref:synthetic"], original + ["--email", "applicant@example.test"]]
+            for index, replacement in ((0, "unconfigured-powershell.exe"), (6, "-Command"),
+                                       (7, str(temp / "unconfigured.ps1")), (9, "Submit")):
+                changed = list(original)
+                changed[index] = replacement
+                mutations.append(changed)
+            for changed in mutations:
+                with self.subTest(command=changed), self.assertRaises(AssertionError):
+                    self.assert_fixed_task_command(adapter, changed, "Register")
+
+    def test_unknown_task_actions_never_reach_the_process_runner(self):
+        runner = mock.Mock(side_effect=AssertionError("An unsupported action reached the runner"))
+        adapter = WindowsAuthorizedDiscoveryTask(PROJECT, process_runner=runner)
+        for action in ("", "Submit", "Register secure-ref:synthetic", "Register; Status"):
+            with self.subTest(action=action), self.assertRaises(JobOpsError) as caught:
+                adapter._invoke(action)
+            self.assertEqual(caught.exception.code, "DISCOVERY_TASK_ACTION_INVALID")
+        runner.assert_not_called()
 
     def test_parent_held_task_lock_reenters_without_opening_a_second_file_lock(self) -> None:
         with project_temp() as temp:

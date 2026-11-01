@@ -4,6 +4,13 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Add a reproducible empty-profile browser check through the first selected
+  resume draft, using fixed synthetic answers and a recorded model response.
+  Correct the discovery command test's directory-name false positive while
+  requiring exact executable/script paths, flags and action. Reject added private
+  arguments, altered paths and unsupported actions. Product runtime is unchanged.
+  [First-use evidence and limits](docs/first-use-verification-2026-11-01.md).
+
 - Let PDF-source applicants choose exact approved facts for a standard resume,
   preserve unselected evidence, and restore the saved draft after reload. Bind
   cache reuse to the selection, approval, locale and layout; clear old previews

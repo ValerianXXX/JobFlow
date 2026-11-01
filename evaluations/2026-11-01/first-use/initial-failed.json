@@ -1,0 +1,55 @@
+{
+  "protocol": "EMPTY_PROFILE_REPLAY_UI_V1",
+  "synthetic_only": true,
+  "model": "Pinned recorded CJK response; no fresh inference",
+  "new_model_calls": 0,
+  "independent_human": false,
+  "steps": [
+    {
+      "step": "empty_workspace",
+      "at": "2026-11-01T05:22:21.963Z",
+      "sources": 0,
+      "claims": 0,
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "retained_unapproved_after_reload",
+      "at": "2026-11-01T05:22:30.599Z",
+      "sources": 1,
+      "decisions": [
+        "PENDING",
+        "PENDING",
+        "PENDING",
+        "PENDING",
+        "PENDING"
+      ],
+      "status": "IN_PROGRESS"
+    }
+  ],
+  "runtime": "8df8d155fe438937f8c856590a3fd7b016f4764a",
+  "status": "FAILED",
+  "error": "TimeoutError: locator.click: Timeout 45000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#questionGroups details').first().locator(':scope > summary')\u001b[22m\n\u001b[2m    - locator resolved to <summary>4 optional profile items (fill only when useful)</summary>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    88 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+  "fixture_exit": 0,
+  "server": {
+    "synthetic_only": true,
+    "real_model_calls": 0,
+    "recorded_response_replays": 1,
+    "invalid_visual_responses": 0,
+    "source_count": 1,
+    "material_claim_count": 5,
+    "claim_decisions": [
+      "PENDING",
+      "PENDING",
+      "PENDING",
+      "PENDING",
+      "PENDING"
+    ],
+    "database_counts": {
+      "applications": 0,
+      "claims": 0,
+      "approvals": 0,
+      "external_action_attempts": 0
+    },
+    "temporary_state_removed": true
+  }
+}
