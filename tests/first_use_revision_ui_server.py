@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from unittest.mock import patch
 
 from pdf_regions_ui_server import ROOT, FixedInputService, RecordedSyntheticEngine
 from jobops.db import JobOpsDB
@@ -23,6 +24,7 @@ from jobops.errors import JobOpsError
 from jobops.onboarding_server import create_server
 from jobops.private_onboarding import PrivateOnboarding
 from jobops.secure_store import WindowsDPAPIStore
+import jobops.orchestrator as orchestrator_module
 
 FIXTURES = ROOT / "tests/fixtures/first-use-revision-v1"
 ALLOWED_TASKS = {"JOBFLOW_APPLICATION_MATERIAL_DECISION_V1", "JOBFLOW_FORM_SEMANTIC_REVIEW_V1"}
@@ -88,6 +90,23 @@ def main():
         store = WindowsDPAPIStore(script_root / "secure-store.ps1", local_app_data=root / "local")
         service = JourneyService(project, database, PrivateOnboarding(database, store), ai_engine=engine)
         server = create_server(service, token="synthetic-first-use-revision")
+        native_qa = orchestrator_module.structural_qa
+        qa_count = 0
+
+        def capture_native_qa(docx, pdf, pages, **kwargs):
+            nonlocal qa_count
+            # Observation only: retain actual synthetic inputs before the real
+            # failure cleanup. Never substitute a result or alter a QA gate.
+            result = native_qa(docx, pdf, pages, **kwargs)
+            qa_count += 1
+            destination = artifact_dir / f"native-qa-{qa_count}"
+            destination.mkdir()
+            shutil.copy2(docx, destination / docx.name)
+            shutil.copy2(pdf, destination / pdf.name)
+            for number, page in enumerate(pages, 1):
+                shutil.copy2(page, destination / f"page-{number}.png")
+            (destination / "qa.json").write_text(json.dumps(result.as_dict(), indent=2), encoding="utf-8")
+            return result
 
         def stop_on_input():
             sys.stdin.readline()
@@ -97,7 +116,8 @@ def main():
             threading.Thread(target=stop_on_input, daemon=True).start()
         print(json.dumps({"url": f"http://127.0.0.1:{server.server_port}/session/synthetic-first-use-revision/", "synthetic_only": True}), flush=True)
         try:
-            server.serve_forever()
+            with patch.object(orchestrator_module, "structural_qa", capture_native_qa):
+                server.serve_forever()
         finally:
             server.server_close()
             _, state = service.ensure_state()
@@ -120,6 +140,7 @@ def main():
                 "material_claim_count": len(state.get("material_claims", [])),
                 "claim_decisions": [c.get("decision") for c in state.get("material_claims", [])],
                 "database_counts": counts, "generated_artifacts": artifacts,
+                "actual_native_qa_observations": qa_count, "qa_results_overridden": False,
             }
             service.close()
     receipt["temporary_state_removed"] = not root.exists()
