@@ -2,6 +2,7 @@
 
 const STRINGS = {
   zh: {
+    assertionStatusNotice: "有 {count} 条候选的否定或计划状态与所引原文冲突，已跳过。原文件仍可保存；请核对原文和剩余候选。",
     sourceContextTitle: "原文中的约束与待核实事项",
     sourceContextHelp: "以下内容来自原文，仍需你核对。它们不会自动填写资料、成为 Claim 或获得对外使用批准。行号对应分析文本；扫描件还需对照原始页面。",
     sourceContextConstraint: "求职约束", sourceContextGap: "来源限制与待核实事项", sourceContextUnconfirmed: "待核对",
@@ -80,6 +81,7 @@ const STRINGS = {
     browserAssistManualNavigation: "这个 Next/Continue 必须由你亲自点击。进入下一页后，再点浏览器伴侣中的“继续分析当前页”。",
   },
   en: {
+    assertionStatusNotice: "Skipped {count} candidate(s) whose negation or planned-action status conflicts with the cited source. You can still save the source; review the original and remaining candidates.",
     sourceContextTitle: "Constraints and verification needs from the source",
     sourceContextHelp: "These source excerpts still need your review. They do not automatically fill Profile answers, become Claims or authorize external use. Lines refer to analyzed text; check scans against the original page too.",
     sourceContextConstraint: "Work constraint", sourceContextGap: "Source limits and verification needs", sourceContextUnconfirmed: "Needs review",
@@ -2682,6 +2684,7 @@ function renderSourcePreviews(){
       ${candidates.length?`<div class="preview-bulk-actions"><button class="text-action select-all-preview" data-id="${escapeHtml(preview.source_id)}">${escapeHtml(t("selectAllClaims"))}</button><button class="text-action clear-all-preview" data-id="${escapeHtml(preview.source_id)}">${escapeHtml(t("clearAllClaims"))}</button></div>`:""}
       ${summary.visual_verification_required?`<label class="visual-source-review"><input type="checkbox" class="visual-source-confirm">${escapeHtml(t("visualSourceConfirm"))}</label><details class="source-region-details"><summary>${escapeHtml(t("sourceEvidenceDetails"))}</summary><p>${escapeHtml((Array.isArray(summary.visual_regions)?summary.visual_regions:[]).slice(0,1000).filter(region=>region&&typeof region==="object").map(region=>`page ${region.page}, line ${region.line_start}, box [${Array.isArray(region.bbox)?region.bbox.slice(0,4).join(", "):""}]`).join("; "))}</p></details>`:""}
       ${Number(summary.filtered_candidate_count||0)>0?`<p class="preview-filter-notice">${escapeHtml(t("filteredCandidateNotice").replace("{count}",String(Number(summary.filtered_candidate_count||0))))}</p>`:""}
+      ${Number(summary.filtered_candidate_reasons?.SOURCE_ASSERTION_CONFLICT||0)>0?`<p class="preview-assertion-notice">${escapeHtml(t("assertionStatusNotice").replace("{count}",String(Number(summary.filtered_candidate_reasons.SOURCE_ASSERTION_CONFLICT))))}</p>`:""}
       ${sourceReferenceCoverageMarkup(summary)}
       ${sourceContextMarkup(preview.context_notes,summary.source_context_review)}
       <div class="preview-candidates">${candidates.length?candidates.map(item=>`<label class="preview-candidate"><span class="preview-choice"><input class="preview-select" type="checkbox" data-candidate="${escapeHtml(item.candidate_id)}" ${item.selected?"checked":""}><small>${escapeHtml(t("includeAsClaim"))}</small></span><span>${item.entity?`<strong class="entity-label">${escapeHtml(categoryLabel(item.category))} · ${escapeHtml(entityLabel(item))}</strong>`:""}<textarea class="preview-statement" aria-label="${escapeHtml(t("editText"))}">${escapeHtml(item.statement)}</textarea><span class="preview-meta"><select class="preview-category" aria-label="${escapeHtml(t("category"))}">${categoryOptions(item.category,Boolean(item.entity))}</select><small>${escapeHtml(item.selection_reason==="AI_DERIVED_REQUIRES_CONFIRMATION"?t("selectedByDefault"):t("needsReview"))} · lines ${item.provenance?.line_start||"—"}–${item.provenance?.line_end||"—"}${item.provenance?.numeric_format_normalizations?` · ${escapeHtml(t("numericFormatReview"))}`:""}${item.provenance?.citation_adjustment==="ADJACENT_WRAPPED_LINES"?` · ${escapeHtml(t("adjacentWrapReview"))}`:""}</small></span></span></label>`).join(""):`<p class="preview-empty">${escapeHtml(t("previewEmpty"))}</p>`}</div>
