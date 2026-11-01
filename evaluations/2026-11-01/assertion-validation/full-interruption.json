@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-11-01T09:34:59.946974+00:00",
+  "status": "INTERRUPTED_BEFORE_COMPLETION",
+  "attempt": 2,
+  "reason": "The isolated venv retained setuptools 65.5.0, below pyproject build backend minimum 77; stopped owned suite before build checks, installed existing validated 80.10.2, and strengthened preflight. No tests or requirements removed.",
+  "owned_stopped_pids": [
+    26924,
+    25640
+  ],
+  "is_product_test_pass": false,
+  "original_log": "jobflow-assertion-full-attempt2-20261101.log",
+  "original_running_receipt": "jobflow-assertion-full-attempt2-observation-20261101.json"
+}

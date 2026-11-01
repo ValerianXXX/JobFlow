@@ -1,0 +1,52 @@
+FFFF.F....
+======================================================================
+FAIL: test_a_citation_cannot_omit_the_wrapped_negation_prefix (test_ai_assertion_status.AssertionStatusTests.test_a_citation_cannot_omit_the_wrapped_negation_prefix) (lines=['The applicant did not', 'manage the project budget.'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 73, in test_a_citation_cannot_omit_the_wrapped_negation_prefix
+    self.assertFalse(report["valid"])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_a_citation_cannot_omit_the_wrapped_negation_prefix (test_ai_assertion_status.AssertionStatusTests.test_a_citation_cannot_omit_the_wrapped_negation_prefix) (lines=['申请人没有', '负责这项项目的预算审批和支付执行。'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 73, in test_a_citation_cannot_omit_the_wrapped_negation_prefix
+    self.assertFalse(report["valid"])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_a_citation_cannot_omit_the_wrapped_negation_prefix (test_ai_assertion_status.AssertionStatusTests.test_a_citation_cannot_omit_the_wrapped_negation_prefix) (lines=['申请人计划', '部署这个合成项目的演示程序和帮助页面。'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 73, in test_a_citation_cannot_omit_the_wrapped_negation_prefix
+    self.assertFalse(report["valid"])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_a_multiline_citation_preserves_negation (test_ai_assertion_status.AssertionStatusTests.test_a_multiline_citation_preserves_negation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 79, in test_a_multiline_citation_preserves_negation
+    self.assertFalse(report["valid"])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_candidate_filter_does_not_discard_valid_candidate_or_rewrite_source (test_ai_assertion_status.AssertionStatusTests.test_candidate_filter_does_not_discard_valid_candidate_or_rewrite_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-fact-polarity\tests\test_ai_assertion_status.py", line 37, in test_candidate_filter_does_not_discard_valid_candidate_or_rewrite_source
+    self.assertEqual([c["statement"] for c in candidates], [source])
+AssertionError: Lists differ: [] != ['The applicant did not manage the project budget.']
+
+Second list contains 1 additional elements.
+First extra element 0:
+'The applicant did not manage the project budget.'
+
+- []
++ ['The applicant did not manage the project budget.']
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.029s
+
+FAILED (failures=5)

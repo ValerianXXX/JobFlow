@@ -1,0 +1,11 @@
+{
+  "wheel_sha256": "965ddd71ed86207abb8ee4b818f093fa6f66423229af5c9f07f9c61c92aa3d00",
+  "source_files_match": {
+    "jobops/claim_assertion_status.py": true,
+    "jobops/ai_runtime.py": true,
+    "jobops/ui/app.js": true
+  },
+  "built_without_publishing": true,
+  "source_commit": "2ac8c485cad4d04d1453e80d3b8876c81f0117df",
+  "production_signing": false
+}

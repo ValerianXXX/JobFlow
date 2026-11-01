@@ -26,6 +26,8 @@ exception still requires a complete predicate and exact clause wording; it
 cannot drop a negation. Filtered wording is not logged: only
 `SOURCE_ASSERTION_CONFLICT` counts are retained. The bilingual preview explains
 the skipped candidates; source cards say “AI candidates”, not confirmed Claims.
+An analysis retry now says that a replacement was requested. It no longer says
+the first result was corrected when the replacement still leaves zero candidates.
 
 ## Fixed before/after comparison
 
@@ -61,25 +63,50 @@ were exercised. See the [11-arm comparison](../evaluations/2026-11-01/assertion-
 and its full before/after files. This is a validator regression check, not a new
 model sample or independent fact recoding.
 
+Self-review also found four mixed-language counterexamples: an English `did not`
+or `will` prefix was lost when parsing a Chinese action. Commit `6c5a03d` freezes
+the two unsupported promotions and two valid equivalent rewrites; all four fail
+before the fix and pass in `2ac8c48`. The original 60-case set is unchanged. The
+[final 60-case run](../evaluations/2026-11-01/assertion-status-final.json) and
+[final 11-arm replay](../evaluations/2026-11-01/assertion-final-replay-comparison.json)
+repeat the relevant checks after that code change. All 265 prior candidates and
+the source context remain unchanged.
+
 ## Validation status
 
 - Original 80 AI-related tests passed on the current parent before modification.
-  After the change, 88 AI-related tests passed, including the eight frozen and
-  boundary methods. Seven existing passive-attribution and three Chinese
-  validator tests also passed.
+  The first guard milestone passed 88; the final delivery passes **89**, including
+  nine assertion-status methods and their counterexamples. Seven existing
+  passive-attribution and three Chinese validator tests also passed.
 - Actual browser checks use the fixed synthetic adapter in
   `scripts/assertion-status-acceptance.py`, the normal upload/confirmation routes
   and an isolated Windows DPAPI store. English and Chinese DOCX uploads each
   leave the two supported statements unselected and show two filtered conflicts.
   The original English four-line analysis was opened and checked. Saving a source
-  with no selected Claims succeeds; a browser reload preserves it. The scenario
-  with no accepted candidates is being completed separately below.
-- A full 1,634-test regression is running against runtime `26d22b0`. Its result
-  is pending, not a PASS. The first launch stopped during preflight because
+  with no selected Claims succeeds; a browser reload preserves all three sources,
+  including one with no accepted candidates. The real bootstrap response confirms
+  an editable DOCX master, zero confirmed Claims, no material-use permission and
+  zero external actions. That zero-candidate source uses exactly one replacement
+  fixture response. The final bilingual retry-copy check repeats that scenario.
+  These are actual HTTP/browser/DPAPI checks with a fake analysis adapter, not
+  independent-human or live-model acceptance.
+- A full **1,634-test** regression is running against the earlier guard milestone
+  `26d22b0` in its unchanged checkout. Its result is pending, not a PASS of the
+  final delivery: `2ac8c48` also contains the mixed-prefix fix, one additional test
+  method, two retry strings and the harness observation correction. Final-head
+  hosted checks remain necessary. The first launch stopped during preflight because
   `wheel` was missing; the next run was intentionally stopped after discovering
   `setuptools 65.5.0` below the declared build minimum. The isolated environment
   now uses the existing validated `wheel 0.48.0` / `setuptools 80.10.2`; no product
   dependency requirement was weakened. Logs of both earlier starts are retained.
+- A wheel built without publishing contains the exact final guard, runtime and
+  UI source bytes; JavaScript syntax checks passed. Browser evidence, related
+  logs, preparation failures and final artifact hashes are recorded in the
+  [validation receipt](../evaluations/2026-11-01/assertion-validation/verification.json).
+  An early harness observation queried a nonexistent top-level master field and
+  reported false. Its original receipt is preserved; the actual nested bootstrap
+  readiness response reports an editable master. The harness now reads that
+  authoritative field, and the final zero-candidate scenario verifies it again.
 
 ## Reproduction and configuration
 

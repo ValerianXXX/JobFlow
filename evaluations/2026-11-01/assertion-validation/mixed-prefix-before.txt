@@ -1,0 +1,37 @@
+....FFFF....
+======================================================================
+FAIL: test_english_status_prefix_survives_a_chinese_action (test_ai_assertion_status.AssertionStatusTests.test_english_status_prefix_survives_a_chinese_action) (statement='The applicant 处理这些合成客户资料和账户信息。', expected=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-assertion-review\tests\test_ai_assertion_status.py", line 104, in test_english_status_prefix_survives_a_chinese_action
+    self.assertEqual(_statement_grounding_report(statement, source)["valid"], expected)
+AssertionError: True != False
+
+======================================================================
+FAIL: test_english_status_prefix_survives_a_chinese_action (test_ai_assertion_status.AssertionStatusTests.test_english_status_prefix_survives_a_chinese_action) (statement='The applicant 已部署这个合成项目的演示程序和帮助页面。', expected=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-assertion-review\tests\test_ai_assertion_status.py", line 104, in test_english_status_prefix_survives_a_chinese_action
+    self.assertEqual(_statement_grounding_report(statement, source)["valid"], expected)
+AssertionError: True != False
+
+======================================================================
+FAIL: test_english_status_prefix_survives_a_chinese_action (test_ai_assertion_status.AssertionStatusTests.test_english_status_prefix_survives_a_chinese_action) (statement='The applicant 没有处理这些合成客户资料和账户信息。', expected=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-assertion-review\tests\test_ai_assertion_status.py", line 104, in test_english_status_prefix_survives_a_chinese_action
+    self.assertEqual(_statement_grounding_report(statement, source)["valid"], expected)
+AssertionError: False != True
+
+======================================================================
+FAIL: test_english_status_prefix_survives_a_chinese_action (test_ai_assertion_status.AssertionStatusTests.test_english_status_prefix_survives_a_chinese_action) (statement='The applicant did not 处理这些合成客户资料和账户信息。', expected=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<WORKSPACE>\JobFlow-assertion-review\tests\test_ai_assertion_status.py", line 104, in test_english_status_prefix_survives_a_chinese_action
+    self.assertEqual(_statement_grounding_report(statement, source)["valid"], expected)
+AssertionError: False != True
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.029s
+
+FAILED (failures=4)

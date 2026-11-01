@@ -1,0 +1,332 @@
+{
+  "observed_at": "2026-11-01T09:54:25.506969+00:00",
+  "runtime_commit": "2ac8c485cad4d04d1453e80d3b8876c81f0117df",
+  "synthetic_only": true,
+  "new_live_provider_calls": 0,
+  "independent_human_acceptance": false,
+  "whole_material_acceptance": false,
+  "frozen_contradictions": {
+    "before_incorrectly_accepted": 23,
+    "after_incorrectly_accepted": 0,
+    "denominator": 24
+  },
+  "frozen_supported_controls": {
+    "before_incorrectly_filtered": 1,
+    "after_incorrectly_filtered": 0,
+    "denominator": 36
+  },
+  "final_related_tests": 89,
+  "historical_candidates_unchanged": 265,
+  "local_full_regression": {
+    "runtime": "26d22b0fb5592c5928d4e258b21838105c8d1636",
+    "status_at_capture": "RUNNING",
+    "collected": 1634,
+    "is_final_delivery_acceptance": false
+  },
+  "final_head_hosted_checks": "PENDING",
+  "known_limit_probes_still_accepted": 3,
+  "browser": {
+    "initial_saved_sources": 3,
+    "final_repeat_saved_sources": 1,
+    "confirmed_claims": 0,
+    "external_actions": 0,
+    "initial_master_probe_invalid": "The harness queried an absent top-level field; the preserved HTTP observation uses application_readiness.master_resume and shows present/editable true.",
+    "final_master_probe_corrected": true,
+    "notes": "Fixed synthetic response adapter. Initial selector wait used the wrong DOM role; native UI interaction recovered. Initial screenshot did not frame the notice; the retained conflict-review image does."
+  },
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 8,
+      "sha256": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da"
+    },
+    {
+      "path": "earlier-runtime-full-progress.json",
+      "bytes": 1002,
+      "sha256": "4a3b2d3133e8b5a5b95959294187c8dd9308e4e69793cd95baa0760abe53a548"
+    },
+    {
+      "path": "final-browser/all-filtered.docx",
+      "bytes": 36682,
+      "sha256": "aa64d033a27555d03ca45ac3ff903301842c309b136b47247d51b36a4c45499f"
+    },
+    {
+      "path": "final-browser/browser-observation.json",
+      "bytes": 2506,
+      "sha256": "48e9f8f4d0095657f00b188732e5ffb50db0108e1cf932f0055cf8e49db11caa"
+    },
+    {
+      "path": "final-browser/http-observation.json",
+      "bytes": 2082,
+      "sha256": "b35ff3f128afc184326e7d28882890754acba4d781ee31a591bb0faf46ae0fa1"
+    },
+    {
+      "path": "final-browser/receipt.json",
+      "bytes": 4188,
+      "sha256": "b10179c330485a999c5470dee576e0c04befd89076ed415b1f373cb23fc77ebe"
+    },
+    {
+      "path": "final-browser/zero-candidates-chinese.png",
+      "bytes": 74004,
+      "sha256": "9d0a49f9fcdc68d3375a80fc0606b3fb9aca2cc60fa1bbbd9e7a98e80bf4fb8c"
+    },
+    {
+      "path": "final-browser/zero-candidates-english.png",
+      "bytes": 85746,
+      "sha256": "336ee89832f30087b5528177e5069968eadc4cc78bd3bab5d1eb2950edc88c23"
+    },
+    {
+      "path": "final-related-after.txt",
+      "bytes": 188,
+      "sha256": "9f7537973d721d5c6f5ba4273eba0e459051ea6ca9bd5a974a2cef876b3f391e"
+    },
+    {
+      "path": "frozen-before.txt",
+      "bytes": 17569,
+      "sha256": "e8c1959f67e5548e96ece738c2a83a04a085cfb8162816bfece36e039b312c5c"
+    },
+    {
+      "path": "full-initial-preflight-failure.txt",
+      "bytes": 1829,
+      "sha256": "373c0687e47a9da47414475770fdae9c159448d7edd00422c5ad9b3607acb624"
+    },
+    {
+      "path": "full-interruption.json",
+      "bytes": 603,
+      "sha256": "f04c4aeb9a04aab5518137879c99995fd0ff74f14e91185e3b7e750d07f13cd6"
+    },
+    {
+      "path": "initial-browser/all-filtered.docx",
+      "bytes": 36682,
+      "sha256": "d25ddfa30b3aa2bdcd742af45c61ae32d3acb58c2b87f3b1d3924ca6d7b9088c"
+    },
+    {
+      "path": "initial-browser/browser-observation.json",
+      "bytes": 5925,
+      "sha256": "a6262360b0f1375539d34b1c1bf24a474edcdc4c2ca5bcb4a8323ee0d3a0fb4f"
+    },
+    {
+      "path": "initial-browser/chinese-conflict-review.png",
+      "bytes": 71979,
+      "sha256": "6946e69f0deaeeb915e4bdc885462f6106c5c9efc70ac26da1b7226f25c7d385"
+    },
+    {
+      "path": "initial-browser/chinese.docx",
+      "bytes": 36780,
+      "sha256": "17858aa5d1ff8b4e5ecf36b774712a41ed9504407db3b25f5c279e287bff590b"
+    },
+    {
+      "path": "initial-browser/english-original.png",
+      "bytes": 65405,
+      "sha256": "07d72b6cf9e74a7fbe695008503abd3b857ac0b49194e0540cf33acc9749228e"
+    },
+    {
+      "path": "initial-browser/english.docx",
+      "bytes": 36686,
+      "sha256": "06531f877a32687a517d8a2c1f8733b59cc5862a2c687d7ece0ee8d3006d663e"
+    },
+    {
+      "path": "initial-browser/http-observation.json",
+      "bytes": 2082,
+      "sha256": "b91f3ebdc5190f754072b03bacae9f89951d05f7ca4fa647f5144c6ac0dfd218"
+    },
+    {
+      "path": "initial-browser/receipt.json",
+      "bytes": 10170,
+      "sha256": "5c3fb916e0bc032ab7fbce0c63cdb6c17cca3d19f405a99cf3de9d8abf234b09"
+    },
+    {
+      "path": "initial-related-after.txt",
+      "bytes": 187,
+      "sha256": "d24eed08a6a89adb5cea7d3f2454638302cdc93c2c3a89d58fd8bbe00a7803b6"
+    },
+    {
+      "path": "mixed-prefix-before.txt",
+      "bytes": 2935,
+      "sha256": "24bfe932b92a9c8feda42c9dc6440d2518393746984af578527ed8c9c6c81a58"
+    },
+    {
+      "path": "parent-related.txt",
+      "bytes": 179,
+      "sha256": "8bf14e398f1711cca1f6aff1d90aaa58444cd26ec36e8fba3dde3d12edadac26"
+    },
+    {
+      "path": "prototype-first.txt",
+      "bytes": 998,
+      "sha256": "1f227593b0fc3afb1ee33bf0c5b6d36d18e7602cdef7b042a0c26d414278acaa"
+    },
+    {
+      "path": "wheel-build.txt",
+      "bytes": 922,
+      "sha256": "8da73598ac3c09c24894dc76be12ba7b8ea6ffdefb8dfc507b18bca33c311f53"
+    },
+    {
+      "path": "wheel-verification.json",
+      "bytes": 359,
+      "sha256": "629baccafe2143f0da1e51b754898fd7f6ab7745316dadad92c7ba3e07eaa366"
+    },
+    {
+      "path": "wrap-counterexamples-before.txt",
+      "bytes": 3455,
+      "sha256": "97a98d66b3f05871050535faf5a8c806d8d2dfaec1a015389561c60d78ddd189"
+    }
+  ],
+  "original_artifacts": [
+    {
+      "file": "frozen-before.txt",
+      "original_local_file": "jobflow-assertion-status-frozen-before-20261101.log",
+      "original_sha256": "b3031219456986630d76d4ef2da58f9ab24c04def7cfb2685fde472520b62d3b",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "parent-related.txt",
+      "original_local_file": "jobflow-assertion-status-parent45-related-before-20261101.log",
+      "original_sha256": "06b53f2b844eeb63b8b2c2672e825cab4f2d47f00e2927dd828e88214aacaae4",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "prototype-first.txt",
+      "original_local_file": "jobflow-assertion-status-implementation-1-20261101.log",
+      "original_sha256": "004e0e00335b8f34d174f893f24d3a257544fe0bdb1bd55da68a382b09be2e00",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "wrap-counterexamples-before.txt",
+      "original_local_file": "jobflow-assertion-status-wrap-counterexamples-20261101.log",
+      "original_sha256": "5cb1076850b95dda32bca4bad396dcfcdf92fc712b1e0af99b1e3f9c73f61db0",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "initial-related-after.txt",
+      "original_local_file": "jobflow-assertion-status-related-after-20261101.log",
+      "original_sha256": "cab28cfaccb2cadad1a490047e471269dbc71ceb9928d3a93dc14dd15fa84a63",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "mixed-prefix-before.txt",
+      "original_local_file": "jobflow-assertion-mixed-prefix-before-20261101.log",
+      "original_sha256": "5a6eae1608e59c5878f4d0d2a6c6e7b55d2fec6557735383568e48496f2dbd0f",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "final-related-after.txt",
+      "original_local_file": "jobflow-assertion-final-related-20261101.log",
+      "original_sha256": "9885c1a41744b12c71480adb086b6e2d3fb683061457818fef8f9c84d536d639",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "full-initial-preflight-failure.txt",
+      "original_local_file": "jobflow-assertion-full-20261101.log",
+      "original_sha256": "a75cda7b5a22d6e903c10cb80aab351669115aea987de45e2dd5b2786704be2b",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "wheel-build.txt",
+      "original_local_file": "jobflow-assertion-final-wheel-20261101.log",
+      "original_sha256": "0c9821b697789faf5e330128c919d4d61b6a7312e74955c2c55e9723b3bc3163",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "full-interruption.json",
+      "original_local_file": "jobflow-assertion-full-attempt2-interruption-20261101.json",
+      "original_sha256": "7377f985550ccf489992ab1512a8ae0d136b6a97cfa189ae6e92c1a28ce53231",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "earlier-runtime-full-progress.json",
+      "original_local_file": "jobflow-assertion-full-attempt3-observation-20261101.json",
+      "original_sha256": "4cbd478b0c17e9de43b3f5d4ed8aefbe54f86996574fc362b04cba3bed24dd89",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "wheel-verification.json",
+      "original_local_file": "jobflow-assertion-wheel-verification-20261101.json",
+      "original_sha256": "a7c2026c330461bb2b411c9cb4e0d966b95a550e3662f96a02164272b31b9079",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "initial-browser/receipt.json",
+      "original_local_file": "jobflow-assertion-browser-attempt2-20261101/receipt.json",
+      "original_sha256": "ca85a9ed85308804eb59ed944f2cd84975bf46eb41330a5ceb0a7f41f7d027d1",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "initial-browser/http-observation.json",
+      "original_local_file": "jobflow-assertion-browser-attempt2-20261101/http-observation.json",
+      "original_sha256": "f644df68e00e01b59ef239651329ad197184ce3b1ff1d5e019801445f499f221",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "initial-browser/browser-observation.json",
+      "original_local_file": "jobflow-assertion-browser-attempt2-20261101/browser-observation.json",
+      "original_sha256": "f04b9b6e3e6438aa448015ebe958a280fa71a34c426365b6c767757b505783f1",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "final-browser/receipt.json",
+      "original_local_file": "jobflow-assertion-browser-final-20261101/receipt.json",
+      "original_sha256": "58a7589c931eb837658d6f4c5edeb14f464ba2b2ec391e39f6c8c47b5789c66a",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "final-browser/http-observation.json",
+      "original_local_file": "jobflow-assertion-browser-final-20261101/http-observation.json",
+      "original_sha256": "b14c3fb570b054d132b5045b271c00dd8ed84aa09bf10fc37f697834ba0d4303",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "final-browser/browser-observation.json",
+      "original_local_file": "jobflow-assertion-browser-final-20261101/browser-observation.json",
+      "original_sha256": "6ff95130317bc2734598843dc9d28827b9f025b3bfcbbc471f558a2705f67943",
+      "transformation": "LF normalization and local path/session redaction"
+    },
+    {
+      "file": "initial-browser/english.docx",
+      "original_local_file": "jobflow-assertion-browser-attempt2-20261101/english.docx",
+      "original_sha256": "06531f877a32687a517d8a2c1f8733b59cc5862a2c687d7ece0ee8d3006d663e",
+      "transformation": "none"
+    },
+    {
+      "file": "initial-browser/chinese.docx",
+      "original_local_file": "jobflow-assertion-browser-attempt2-20261101/chinese.docx",
+      "original_sha256": "17858aa5d1ff8b4e5ecf36b774712a41ed9504407db3b25f5c279e287bff590b",
+      "transformation": "none"
+    },
+    {
+      "file": "initial-browser/all-filtered.docx",
+      "original_local_file": "jobflow-assertion-browser-attempt2-20261101/all-filtered.docx",
+      "original_sha256": "d25ddfa30b3aa2bdcd742af45c61ae32d3acb58c2b87f3b1d3924ca6d7b9088c",
+      "transformation": "none"
+    },
+    {
+      "file": "initial-browser/english-original.png",
+      "original_local_file": "jobflow-assertion-browser-attempt2-20261101/english-original.png",
+      "original_sha256": "07d72b6cf9e74a7fbe695008503abd3b857ac0b49194e0540cf33acc9749228e",
+      "transformation": "none"
+    },
+    {
+      "file": "initial-browser/chinese-conflict-review.png",
+      "original_local_file": "jobflow-assertion-browser-attempt2-20261101/chinese-conflict-review.png",
+      "original_sha256": "6946e69f0deaeeb915e4bdc885462f6106c5c9efc70ac26da1b7226f25c7d385",
+      "transformation": "none"
+    },
+    {
+      "file": "final-browser/all-filtered.docx",
+      "original_local_file": "jobflow-assertion-browser-final-20261101/all-filtered.docx",
+      "original_sha256": "aa64d033a27555d03ca45ac3ff903301842c309b136b47247d51b36a4c45499f",
+      "transformation": "none"
+    },
+    {
+      "file": "final-browser/zero-candidates-chinese.png",
+      "original_local_file": "jobflow-assertion-browser-final-20261101/zero-candidates-chinese.png",
+      "original_sha256": "9d0a49f9fcdc68d3375a80fc0606b3fb9aca2cc60fa1bbbd9e7a98e80bf4fb8c",
+      "transformation": "none"
+    },
+    {
+      "file": "final-browser/zero-candidates-english.png",
+      "original_local_file": "jobflow-assertion-browser-final-20261101/zero-candidates-english.png",
+      "original_sha256": "336ee89832f30087b5528177e5069968eadc4cc78bd3bab5d1eb2950edc88c23",
+      "transformation": "none"
+    }
+  ]
+}

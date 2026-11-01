@@ -1,0 +1,73 @@
+{
+  "application_readiness": {
+    "schema_version": 1,
+    "status": "NEEDS_ONBOARDING",
+    "blockers": [
+      {
+        "code": "ONBOARDING_INCOMPLETE",
+        "stage": "PROFILE",
+        "user_action_required": "COMPLETE_ONBOARDING"
+      },
+      {
+        "code": "CONFIRMED_CLAIMS_MISSING",
+        "stage": "CLAIMS",
+        "user_action_required": "CONFIRM_AT_LEAST_ONE_CLAIM"
+      },
+      {
+        "code": "MASTER_TAILORING_MANIFEST_REQUIRED",
+        "stage": "MATERIALS",
+        "user_action_required": "BUILD_SAFE_TAILORING_MANIFEST"
+      }
+    ],
+    "onboarding_complete": false,
+    "ai_structured_ready": true,
+    "master_resume": {
+      "present": true,
+      "editable_docx": true,
+      "template_fingerprint_present": true,
+      "tailoring_mode": "MANIFEST_REQUIRED",
+      "template_slot_count": 0,
+      "tailoring_manifest_current": false,
+      "tailoring_block_count": 0
+    },
+    "claims": {
+      "confirmed_count": 0,
+      "review_hash": null,
+      "external_approval_current": false,
+      "externally_approved_count": 0
+    },
+    "queue": {
+      "pending_limit": 10,
+      "awaiting_approval": 0,
+      "slots_available": 10,
+      "continues_after_awaiting_approval": true
+    },
+    "capabilities": {
+      "saved_official_job_discovery": true,
+      "offline_application_preparation": false,
+      "tailored_resume_generation": false,
+      "on_demand_cover_letter_generation": false,
+      "review_packet_generation": false,
+      "live_site_access": false,
+      "real_prefill": false,
+      "real_upload": false,
+      "final_submission": false
+    },
+    "generated_at": "2026-11-01T09:52:48.778059Z",
+    "real_external_actions": 0
+  },
+  "claim_quality": {
+    "strict_ai_only": true,
+    "active_ai_claims": 0,
+    "quarantined_legacy_claims": 0,
+    "suppressed_invalid_conflicts": 0
+  },
+  "real_external_actions": 0,
+  "knowledge_write_operations": 0,
+  "synthetic_only": true,
+  "source_count": 1,
+  "pending_count": 0,
+  "profile_review": "PENDING",
+  "confirmed_claim_count": 0,
+  "material_permission_current": false
+}
