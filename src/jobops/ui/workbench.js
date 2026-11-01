@@ -7,6 +7,8 @@
   };
   Object.assign(copy.zh,{zoomSource:"放大原图",fitSource:"适应宽度"});
   Object.assign(copy.en,{zoomSource:"Zoom original",fitSource:"Fit width"});
+  Object.assign(copy.zh,{userOutcome:"你记录的消息结果",chooseOutcome:"按邮件内容记录结果",quoteLabel:"依据：复制邮件中的原句（最多 500 字）",recordOutcome:"保存消息结果",outcomeNote:"这是你的解读，不认证发件人，也不证明已经提交。重新关联、忽略或撤销审阅会清除当前人工结果；历史记录仍保留。",outcomeRequired:"请选择消息结果，并复制一段邮件原文作为依据。",quoteRequired:"请复制这封邮件中实际出现的原句，不要改写。",quoteAmbiguous:"这段原文出现多次，请多复制一些上下文以明确位置。",outcomeSaved:"消息结果及原文依据已保存，申请执行状态未改变。",outcomeInvalid:"已存的消息结果需要检查。请保留原始邮件；申请执行状态未改变。"});
+  Object.assign(copy.en,{userOutcome:"Your recorded message outcome",chooseOutcome:"Record an outcome from this message",quoteLabel:"Evidence: copy an exact passage from this message (up to 500 characters)",recordOutcome:"Save message outcome",outcomeNote:"This records your interpretation, not sender authentication or proof of submission. Relinking, dismissing or undoing review clears the current human outcome; history remains.",outcomeRequired:"Choose a message outcome and copy an exact passage as evidence.",quoteRequired:"Copy a passage that actually appears in this message, without rewriting it.",quoteAmbiguous:"That passage appears more than once. Copy more surrounding text to identify its location.",outcomeSaved:"Message outcome and source passage saved. Application execution state is unchanged.",outcomeInvalid:"The stored message outcome needs inspection. Keep the original message; application execution state is unchanged."});
   const label = key => copy[state.locale === "en" ? "en" : "zh"][key] || key;
   const esc = value => escapeHtml(String(value ?? "—"));
   const post = (path, value={}) => api(path, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(value)});
@@ -33,8 +35,10 @@
     panel.innerHTML=`<header class="subheading"><h3 tabindex="-1">${esc(label("mailTitle"))}</h3>${button("close-inbox","close")}</header><p>${esc(label("mailNote"))}</p>
       <div class="mail-import"><label>${esc(label("chooseMail"))}<input id="statusMailFile" type="file" accept=".eml" ${state.data?.demo_mode?"disabled":""}></label>${button("import-mail","importMail",state.data?.demo_mode?"disabled":"")}${button("refresh-inbox","refresh")}</div>
       ${inbox.events.length?inbox.events.map(e=>`<article class="mail-event" data-mail-event="${esc(e.event_id)}"><h4>${esc(e.subject)}</h4><p><strong>${esc(label("statusProposal"))}: ${esc(statusLabel(e.status_proposal))}</strong> · ${esc(label(e.review_status==="USER_MANUALLY_ASSOCIATED"?"linked":e.review_status==="USER_LINK_REJECTED"?"ignored":"pending"))}</p><small>${esc(label("dateHeader"))}: ${esc(e.received_at)}</small><details><summary>${esc(label("messageText"))}</summary><pre>${esc(e.body)}</pre></details>
+      ${e.user_outcome?`<div class="mail-user-outcome"><strong>${esc(label("userOutcome"))}: ${esc(statusLabel(e.user_outcome.status))}</strong><blockquote>${esc(e.user_outcome.quote)}</blockquote><small>${esc(e.user_outcome.reviewed_at)}</small></div>`:""}
       <label>${esc(label("select"))}<select class="mail-application"><option value="">—</option>${inbox.applications.map(a=>`<option value="${esc(a.application_id)}" ${e.application_id===a.application_id?"selected":""}>${esc(a.title)} · ${esc(a.company)} · ${esc(a.application_id)}</option>`).join("")}</select></label>
-      <label class="mail-confirm-label"><input class="mail-confirm" type="checkbox">${esc(label("confirm"))}</label><div class="mail-actions">${button("link-mail","link")}${button("reject-mail","reject")}${button("undo-mail","undo")}</div><small>${esc(e.evidence_sha256)}</small></article>`).join(""):`<p>${esc(label("mailEmpty"))}</p>`}`;
+      <fieldset class="mail-outcome-editor"><legend>${esc(label("chooseOutcome"))}</legend><label>${esc(label("userOutcome"))}<select class="mail-outcome-status"><option value="">—</option>${["APPLICATION_RECEIVED","REJECTED","INTERVIEW_INVITED","UNKNOWN"].map(value=>`<option value="${value}" ${e.user_outcome?.status===value?"selected":""}>${esc(statusLabel(value))}</option>`).join("")}</select></label><label>${esc(label("quoteLabel"))}<textarea class="mail-outcome-quote" rows="3" maxlength="500">${esc(e.user_outcome?.quote||"")}</textarea></label><p class="muted">${esc(label("outcomeNote"))}</p></fieldset>
+      <label class="mail-confirm-label"><input class="mail-confirm" type="checkbox">${esc(label("confirm"))}</label><div class="mail-actions">${button("record-outcome","recordOutcome")}${button("link-mail","link")}${button("reject-mail","reject")}${button("undo-mail","undo")}</div><small>${esc(e.evidence_sha256)}</small></article>`).join(""):`<p>${esc(label("mailEmpty"))}</p>`}`;
     panel.classList.remove("hidden");
   }
   function decorateSources(){
@@ -80,16 +84,18 @@
         if(state.data?.demo_mode)throw {code:"DEMO_FILE_INTAKE_DISABLED"};
         const file=document.querySelector("#statusMailFile").files[0];if(!file||file.size>2*1024*1024||!file.name.toLowerCase().endsWith(".eml"))throw {code:"MAIL_FILE_INVALID"};
         await api("import-status-eml",{method:"POST",headers:{"Content-Type":"application/octet-stream"},body:file});inbox=await post("status-inbox");renderInbox();
-      }else if(["link-mail","reject-mail","undo-mail"].includes(action)){
+      }else if(["link-mail","reject-mail","undo-mail","record-outcome"].includes(action)){
         const root=control.closest(".mail-event"), appId=root.querySelector(".mail-application").value;
-        if(!root.querySelector(".mail-confirm").checked||(action==="link-mail"&&!appId))throw {code:"MAIL_CONFIRM_REQUIRED"};
-        await post("review-status-message",{event_id:root.dataset.mailEvent,application_id:appId||null,decision:{"link-mail":"MANUAL_LINK","reject-mail":"REJECT_LINK","undo-mail":"CLEAR_REVIEW"}[action],user_confirmed:true,expected_review_ref:inbox.review_ref});
-        inbox=await post("status-inbox");renderInbox();notice("saved");return;
+        if(!root.querySelector(".mail-confirm").checked||(["link-mail","record-outcome"].includes(action)&&!appId))throw {code:"MAIL_CONFIRM_REQUIRED"};
+        const outcome=action==="record-outcome"?{reported_status:root.querySelector(".mail-outcome-status").value,evidence_quote:root.querySelector(".mail-outcome-quote").value}:{};
+        if(action==="record-outcome"&&(!outcome.reported_status||!outcome.evidence_quote.trim()))throw {code:"MAIL_OUTCOME_REQUIRED"};
+        await post("review-status-message",{event_id:root.dataset.mailEvent,application_id:appId||null,decision:{"link-mail":"MANUAL_LINK","reject-mail":"REJECT_LINK","undo-mail":"CLEAR_REVIEW","record-outcome":"RECORD_OUTCOME"}[action],...outcome,user_confirmed:true,expected_review_ref:inbox.review_ref});
+        inbox=await post("status-inbox");renderInbox();notice(action==="record-outcome"?"outcomeSaved":"saved");return;
       }else if(action==="source-page")await showSource(control.closest(".source-preview"),Number(control.dataset.page));
       else if(action==="zoom-source"){const zoomed=control.closest(".source-original").querySelector(".source-page-image").classList.toggle("source-zoomed");control.textContent=label(zoomed?"fitSource":"zoomSource");control.setAttribute("aria-pressed",String(zoomed));}
       else if(action==="hide-source"){const root=control.closest(".source-preview"),viewer=root.querySelector(".source-original");viewer.replaceChildren();viewer.classList.add("hidden");root.querySelector(".source-comparison").classList.remove("show-original");}
       notice(null);
-    }catch(error){const key=error.code==="MAIL_REVIEW_STALE"?"stale":error.code==="MAIL_CONFIRM_REQUIRED"?"confirmFirst":action==="source-page"?"sourceFailure":error.code==="DEMO_FILE_INTAKE_DISABLED"?"demoImport":"failed";notice(key);showToast(label(key),true);}
+    }catch(error){const key=({MAIL_REVIEW_STALE:"stale",MAIL_CONFIRM_REQUIRED:"confirmFirst",MAIL_OUTCOME_REQUIRED:"outcomeRequired",MAIL_OUTCOME_STATUS_INVALID:"outcomeRequired",MAIL_OUTCOME_EVIDENCE_REQUIRED:"quoteRequired",MAIL_OUTCOME_EVIDENCE_AMBIGUOUS:"quoteAmbiguous",MAIL_OUTCOME_RECORD_INVALID:"outcomeInvalid",DEMO_FILE_INTAKE_DISABLED:"demoImport"})[error.code]||(action==="source-page"?"sourceFailure":"failed");notice(key);showToast(label(key),true);}
     finally{control.disabled=false;}
   });
   window.JobFlowWorkbench={decorate, locale(){decorate();renderWorkspace();renderInbox();notice(noticeKey);document.querySelectorAll(".source-original").forEach(viewer=>{viewer.replaceChildren();viewer.classList.add("hidden");viewer.parentElement.classList.remove("show-original");});}};

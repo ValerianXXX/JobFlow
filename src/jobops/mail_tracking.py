@@ -398,13 +398,41 @@ class ApplicationStatusInbox:
             linked=decision == "MANUAL_LINK",
             review_status="USER_MANUALLY_ASSOCIATED" if decision == "MANUAL_LINK" else "UNCERTAIN")
 
-    def _save_review(self, event_id, application_id, decision, *, linked, review_status):
+    def record_outcome(self, event_id, *, application_id, reported_status, evidence_quote,
+                       allowed_application_ids, confirmed=False):
+        """Record an explicit human interpretation; never authenticate mail or submit."""
+        import json
+        from .mail_review import OUTCOME_STATUSES, build_user_outcome
+
+        if confirmed is not True:
+            raise JobOpsError("MAIL_STATUS_REVIEW_REQUIRED", "Confirm the message, application and outcome before saving.")
+        if not isinstance(reported_status, str) or reported_status not in OUTCOME_STATUSES:
+            raise JobOpsError("MAIL_OUTCOME_STATUS_INVALID", "Choose one supported message outcome; application execution states are unavailable.")
+        event = next((item for item in self.events if item["event_id"] == event_id), None)
+        if event is None or not isinstance(application_id, str) or application_id not in allowed_application_ids:
+            raise JobOpsError("MAIL_STATUS_LINK_INVALID", "Choose an existing application.")
+        try:
+            reader = getattr(self.private, "read_bytes", self.private.store.get_bytes)
+            raw = reader(event["evidence_ref"])
+            if len(raw) > 256_000:
+                raise ValueError()
+            evidence = json.loads(raw)
+        except Exception:
+            raise JobOpsError("MAIL_EVIDENCE_MISMATCH", "The retained message is unavailable for review.") from None
+        outcome = build_user_outcome(event, evidence, reported_status, evidence_quote)
+        return self._save_review(event_id, application_id, "RECORD_OUTCOME", linked=True,
+                                 review_status="USER_MANUALLY_ASSOCIATED", outcome=outcome)
+
+    def _save_review(self, event_id, application_id, decision, *, linked, review_status, outcome=None):
         from copy import deepcopy
         from .util import iso_utc
 
         updated = deepcopy(self.events)
         event = next(item for item in updated if item["event_id"] == event_id)
-        event["review_history"].append({"decision": decision, "application_id": application_id, "reviewed_at": iso_utc()})
+        record = {"decision": decision, "application_id": application_id, "reviewed_at": iso_utc()}
+        if outcome is not None:
+            record["outcome"] = deepcopy(outcome)
+        event["review_history"].append(record)
         event["application_id"] = application_id if linked else None
         event["review_status"] = review_status
         try:

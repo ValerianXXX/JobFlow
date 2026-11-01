@@ -881,6 +881,7 @@ class OnboardingCenterService:
 
     @_synchronized
     def status_inbox(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+        from .mail_review import current_user_outcome
         reference, inbox = self._status_inbox()
         # Private message bodies are decrypted only for an explicit local UI request.
         # Bootstrap, diagnostics and MCP never call this private read model.
@@ -892,7 +893,8 @@ class OnboardingCenterService:
             rows.append({key: event.get(key) for key in ("event_id", "received_at", "status_proposal", "application_id",
                 "review_status", "source_kind", "timestamp_kind", "review_history", "evidence_sha256")})
             rows[-1].update(subject=evidence.get("subject", ""), body=evidence.get("body", ""),
-                            authenticated_sender=evidence.get("authenticated_sender") is True)
+                            authenticated_sender=evidence.get("authenticated_sender") is True,
+                            user_outcome=current_user_outcome(event, evidence))
         return {"review_ref": reference, "events": rows, "applications": self._mail_application_choices(),
                 "application_state_changed": False}
 
@@ -908,6 +910,11 @@ class OnboardingCenterService:
         if not reference or payload.get("expected_review_ref") != reference:
             raise JobOpsError("MAIL_REVIEW_STALE", "The inbox changed. Reload it before confirming a link.")
         decision = payload.get("decision")
+        if decision == "RECORD_OUTCOME":
+            return inbox.record_outcome(str(payload.get("event_id", "")), application_id=payload.get("application_id"),
+                reported_status=payload.get("reported_status"), evidence_quote=payload.get("evidence_quote"),
+                allowed_application_ids={item["application_id"] for item in self._mail_application_choices()},
+                confirmed=payload.get("user_confirmed") is True)
         if decision in {"MANUAL_LINK", "CLEAR_REVIEW"}:
             return inbox.manual_review(str(payload.get("event_id", "")), application_id=payload.get("application_id"),
                 decision=decision, allowed_application_ids={item["application_id"] for item in self._mail_application_choices()},
