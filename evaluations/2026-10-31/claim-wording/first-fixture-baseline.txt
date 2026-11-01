@@ -1,0 +1,100 @@
+test_changed_ancestor_resets_descendants_even_if_stale_confirmations_are_submitted (test_claim_wording_review.ClaimWordingReviewTests.test_changed_ancestor_resets_descendants_even_if_stale_confirmations_are_submitted) ... FAIL
+test_edit_without_new_confirmation_resets_only_affected_review (test_claim_wording_review.ClaimWordingReviewTests.test_edit_without_new_confirmation_resets_only_affected_review) ... FAIL
+test_explicit_confirmation_of_direct_edit_is_bound_to_that_wording (test_claim_wording_review.ClaimWordingReviewTests.test_explicit_confirmation_of_direct_edit_is_bound_to_that_wording) ... ERROR
+test_hash_mismatched_origin_is_visible_as_unknown_after_reload (test_claim_wording_review.ClaimWordingReviewTests.test_hash_mismatched_origin_is_visible_as_unknown_after_reload) ... ERROR
+test_import_choice_records_original_candidate_separately_from_user_edit (test_claim_wording_review.ClaimWordingReviewTests.test_import_choice_records_original_candidate_separately_from_user_edit) ...
+  test_import_choice_records_original_candidate_separately_from_user_edit (test_claim_wording_review.ClaimWordingReviewTests.test_import_choice_records_original_candidate_separately_from_user_edit) (edited=False) ... ERROR
+  test_import_choice_records_original_candidate_separately_from_user_edit (test_claim_wording_review.ClaimWordingReviewTests.test_import_choice_records_original_candidate_separately_from_user_edit) (edited=True) ... ERROR
+test_legacy_derived_wording_does_not_become_an_ai_validated_candidate (test_claim_wording_review.ClaimWordingReviewTests.test_legacy_derived_wording_does_not_become_an_ai_validated_candidate) ... ERROR
+test_merge_and_split_preserve_parent_snapshots_without_claiming_new_model_work (test_claim_wording_review.ClaimWordingReviewTests.test_merge_and_split_preserve_parent_snapshots_without_claiming_new_model_work) ... ERROR
+test_noop_save_keeps_confirmed_wording_and_profile (test_claim_wording_review.ClaimWordingReviewTests.test_noop_save_keeps_confirmed_wording_and_profile) ... ok
+test_restore_without_new_confirmation_does_not_keep_rejection_or_old_approval (test_claim_wording_review.ClaimWordingReviewTests.test_restore_without_new_confirmation_does_not_keep_rejection_or_old_approval) ... FAIL
+
+======================================================================
+ERROR: test_explicit_confirmation_of_direct_edit_is_bound_to_that_wording (test_claim_wording_review.ClaimWordingReviewTests.test_explicit_confirmation_of_direct_edit_is_bound_to_that_wording)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER_HOME>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-claim-review-origin\tests\test_claim_wording_review.py", line 48, in test_explicit_confirmation_of_direct_edit_is_bound_to_that_wording
+    self.assertEqual(current['wording_provenance']['origin'], 'USER_EDITED')
+                     ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'wording_provenance'
+
+======================================================================
+ERROR: test_hash_mismatched_origin_is_visible_as_unknown_after_reload (test_claim_wording_review.ClaimWordingReviewTests.test_hash_mismatched_origin_is_visible_as_unknown_after_reload)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER_HOME>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-claim-review-origin\tests\test_claim_wording_review.py", line 171, in test_hash_mismatched_origin_is_visible_as_unknown_after_reload
+    self.assertEqual(item['wording_provenance']['origin'], 'UNVERIFIED')
+                     ~~~~^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'wording_provenance'
+
+======================================================================
+ERROR: test_import_choice_records_original_candidate_separately_from_user_edit (test_claim_wording_review.ClaimWordingReviewTests.test_import_choice_records_original_candidate_separately_from_user_edit) (edited=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER_HOME>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-claim-review-origin\tests\test_claim_wording_review.py", line 81, in test_import_choice_records_original_candidate_separately_from_user_edit
+    candidate = preview['candidates'][0]
+                ~~~~~~~^^^^^^^^^^^^^^
+KeyError: 'candidates'
+
+======================================================================
+ERROR: test_import_choice_records_original_candidate_separately_from_user_edit (test_claim_wording_review.ClaimWordingReviewTests.test_import_choice_records_original_candidate_separately_from_user_edit) (edited=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER_HOME>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-claim-review-origin\tests\test_claim_wording_review.py", line 81, in test_import_choice_records_original_candidate_separately_from_user_edit
+    candidate = preview['candidates'][0]
+                ~~~~~~~^^^^^^^^^^^^^^
+KeyError: 'candidates'
+
+======================================================================
+ERROR: test_legacy_derived_wording_does_not_become_an_ai_validated_candidate (test_claim_wording_review.ClaimWordingReviewTests.test_legacy_derived_wording_does_not_become_an_ai_validated_candidate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER_HOME>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-claim-review-origin\tests\test_claim_wording_review.py", line 155, in test_legacy_derived_wording_does_not_become_an_ai_validated_candidate
+    self.assertEqual(item['wording_provenance']['origin'], 'USER_MERGED')
+                     ~~~~^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'wording_provenance'
+
+======================================================================
+ERROR: test_merge_and_split_preserve_parent_snapshots_without_claiming_new_model_work (test_claim_wording_review.ClaimWordingReviewTests.test_merge_and_split_preserve_parent_snapshots_without_claiming_new_model_work)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER_HOME>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-claim-review-origin\tests\test_claim_wording_review.py", line 101, in test_merge_and_split_preserve_parent_snapshots_without_claiming_new_model_work
+    origin = item['wording_provenance']
+             ~~~~^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'wording_provenance'
+
+======================================================================
+FAIL: test_changed_ancestor_resets_descendants_even_if_stale_confirmations_are_submitted (test_claim_wording_review.ClaimWordingReviewTests.test_changed_ancestor_resets_descendants_even_if_stale_confirmations_are_submitted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER_HOME>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-claim-review-origin\tests\test_claim_wording_review.py", line 135, in test_changed_ancestor_resets_descendants_even_if_stale_confirmations_are_submitted
+    self.assertTrue(all(c['decision'] == 'PENDING' and c['source_review_required'] for c in after))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_edit_without_new_confirmation_resets_only_affected_review (test_claim_wording_review.ClaimWordingReviewTests.test_edit_without_new_confirmation_resets_only_affected_review)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER_HOME>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-claim-review-origin\tests\test_claim_wording_review.py", line 31, in test_edit_without_new_confirmation_resets_only_affected_review
+    self.assertEqual(after['claims'][0]['decision'], 'PENDING')
+AssertionError: 'CONFIRMED' != 'PENDING'
+- CONFIRMED
++ PENDING
+
+
+======================================================================
+FAIL: test_restore_without_new_confirmation_does_not_keep_rejection_or_old_approval (test_claim_wording_review.ClaimWordingReviewTests.test_restore_without_new_confirmation_does_not_keep_rejection_or_old_approval)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<USER_HOME>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-claim-review-origin\tests\test_claim_wording_review.py", line 70, in test_restore_without_new_confirmation_does_not_keep_rejection_or_old_approval
+    self.assertEqual(after['claims'][0]['decision'], 'PENDING')
+AssertionError: 'REJECTED' != 'PENDING'
+- REJECTED
++ PENDING
+
+
+----------------------------------------------------------------------
+Ran 9 tests in 24.215s
+
+FAILED (failures=3, errors=6)

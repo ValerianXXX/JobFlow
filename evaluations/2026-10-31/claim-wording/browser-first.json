@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "synthetic_only": true,
+  "actual_loopback_http": true,
+  "actual_windows_dpapi": true,
+  "live_provider_calls": 0,
+  "original_ai_words": "SEEDED_FIXTURE_NOT_MODEL_OBSERVATION",
+  "edit_merge_split": true,
+  "ancestor_review_invalidation": true,
+  "subsequent_individual_review": true,
+  "reload_preserves": true,
+  "external_approval_granted": false,
+  "external_requests": [],
+  "browser_errors": [],
+  "locales": [
+    "zh",
+    "en"
+  ],
+  "viewport_widths": [
+    1280,
+    390
+  ],
+  "independent_human_acceptance": false
+}

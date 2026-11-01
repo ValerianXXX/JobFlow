@@ -1,0 +1,338 @@
+{
+  "schema": 1,
+  "observedAtUtc": "2026-11-01T03:58:52.805395+00:00",
+  "branch": "codex/jobflow-claim-review-delivery-20261031",
+  "base": "e19d3be086527d77cd229b480cd41fa3928a02c9",
+  "runtime": "5f49b0b6dfd933386284c258789b84e2d81cc338",
+  "executionRuntimeBeforeIdentityCorrection": "c50b5bf123219a8034e19ffbb32dd2bf9bbe27ad",
+  "gitTreesEqual": true,
+  "frozenTests": "80ee8bf51e388b68345544b65c1a9429c5a37684",
+  "frozenTestBytesUnchanged": true,
+  "newCommitIdentities": "All three authors and committers verified as owner-linked GitHub noreply before pushing",
+  "localIdentityAttempts": "Original local branches retained unpushed; no force push, reset, deletion or wider historical exception",
+  "before": {
+    "methods": 9,
+    "failures": 3,
+    "errorsIncludingSubcases": 6,
+    "seconds": 42.664
+  },
+  "after": {
+    "methods": 9,
+    "status": "PASS",
+    "seconds": 12.868
+  },
+  "related": {
+    "firstInvocation": {
+      "realTestsPassed": 100,
+      "moduleLoadErrors": 1,
+      "status": "FAILED",
+      "seconds": 88.473
+    },
+    "correctedContextModules": {
+      "passed": 13,
+      "seconds": 5.508
+    },
+    "passedTestsNotRerunToHideOriginalInvocation": true
+  },
+  "javascript": {
+    "status": "PASS",
+    "suites": [
+      "browser_companion_e2e.cjs",
+      "browser_companion_guided_autopilot_e2e.cjs",
+      "browser_companion_manual_navigation_e2e.cjs",
+      "browser_companion_one_confirmation_e2e.cjs",
+      "browser_companion_pair_bridge_e2e.cjs",
+      "browser_companion_pairing_e2e.cjs",
+      "browser_companion_popup_e2e.cjs",
+      "claim_wording_ui_e2e.cjs",
+      "context_review_ui_e2e.cjs",
+      "mail_outcome_ui_e2e.cjs",
+      "mail_review_ui_e2e.cjs",
+      "onboarding_analysis_text_e2e.cjs",
+      "onboarding_busy_focus_e2e.cjs",
+      "onboarding_source_context_e2e.cjs",
+      "onboarding_source_coverage_e2e.cjs",
+      "onboarding_ui_e2e.cjs",
+      "pdf_regions_ui_e2e.cjs",
+      "standard_resume_ui_e2e.cjs",
+      "workbench_ui_e2e.cjs"
+    ]
+  },
+  "browser": {
+    "status": "PASS",
+    "synthetic_only": true,
+    "actual_loopback_http": true,
+    "actual_windows_dpapi": true,
+    "live_provider_calls": 0,
+    "original_ai_words": "SEEDED_FIXTURE_NOT_MODEL_OBSERVATION",
+    "edit_merge_split": true,
+    "ancestor_review_invalidation": true,
+    "subsequent_individual_review": true,
+    "reload_preserves": true,
+    "external_approval_granted": false,
+    "external_requests": [],
+    "browser_errors": [],
+    "locales": [
+      "zh",
+      "en"
+    ],
+    "viewport_widths": [
+      1280,
+      390
+    ],
+    "independent_human_acceptance": false
+  },
+  "interactiveBrowser": {
+    "status": "PASS",
+    "steps": [
+      "edit synthetic Chinese statement",
+      "save",
+      "reload",
+      "reopen review"
+    ],
+    "changedClaim": "PENDING",
+    "otherClaims": [
+      "CONFIRMED",
+      "CONFIRMED"
+    ],
+    "profileConfirmed": false,
+    "temporaryStateRemoved": true
+  },
+  "completeLocalSuite": {
+    "status": "RUNNING",
+    "collected": 1581,
+    "session": 84375,
+    "runtime": "c50b5bf123219a8034e19ffbb32dd2bf9bbe27ad",
+    "sourceUnchangedRequired": true
+  },
+  "hostedChecks": {
+    "status": "NOT_YET_REQUESTED"
+  },
+  "unsignedWheel": {
+    "name": "jobflow_local-0.7.0-py3-none-any.whl",
+    "bytes": 835428,
+    "sha256": "9fdcbc175a024111b870910d897c3c8a6caf914e338abec69d41bfa662b6ed26",
+    "packagedChangedFilesMatch": 6,
+    "productionSigning": false
+  },
+  "sourceFiles": [
+    {
+      "path": "src/jobops/__init__.py",
+      "gitBlobSha256": "0acffd42287ccb430d885da1b32b3e8739d9664be4913e1cf69561ca94b558ba",
+      "testedBytesSha256": "0acffd42287ccb430d885da1b32b3e8739d9664be4913e1cf69561ca94b558ba",
+      "wheelMatchesTestedBytes": true
+    },
+    {
+      "path": "src/jobops/claim_wording.py",
+      "gitBlobSha256": "1d488b903bce0aadda9c27cfca76236afa631c2a11756eddfb5285b2a1784392",
+      "testedBytesSha256": "1d488b903bce0aadda9c27cfca76236afa631c2a11756eddfb5285b2a1784392",
+      "wheelMatchesTestedBytes": true
+    },
+    {
+      "path": "src/jobops/onboarding_center.py",
+      "gitBlobSha256": "cbf2b5b4c549411df712533c0183ba98a0dc9a9c9c16da6196e3c58a0e423f10",
+      "testedBytesSha256": "cbf2b5b4c549411df712533c0183ba98a0dc9a9c9c16da6196e3c58a0e423f10",
+      "wheelMatchesTestedBytes": true
+    },
+    {
+      "path": "src/jobops/ui/app.js",
+      "gitBlobSha256": "a299e5105a67ef2d46e721067a425ab4e3965bf631d21bdc90bd2f24991b4997",
+      "testedBytesSha256": "a299e5105a67ef2d46e721067a425ab4e3965bf631d21bdc90bd2f24991b4997",
+      "wheelMatchesTestedBytes": true
+    },
+    {
+      "path": "src/jobops/ui/index.html",
+      "gitBlobSha256": "b86bf74a1fea6ad3d7f590a567b05586b1a77276dcdb771235fd2a276e2d763c",
+      "testedBytesSha256": "b86bf74a1fea6ad3d7f590a567b05586b1a77276dcdb771235fd2a276e2d763c",
+      "wheelMatchesTestedBytes": true
+    },
+    {
+      "path": "src/jobops/ui/styles.css",
+      "gitBlobSha256": "4fdd247cc99db27b91b4370783c01fc3660fd9431ad187f4e44cebc2a2cc04e6",
+      "testedBytesSha256": "4fdd247cc99db27b91b4370783c01fc3660fd9431ad187f4e44cebc2a2cc04e6",
+      "wheelMatchesTestedBytes": true
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "first-fixture-baseline.txt",
+      "sha256": "ad72b97ecd0e960db1e89f5ae92f9e79f90d14cbac7e4c1baedeede3d127176f",
+      "rawSha256": "df6e014b97eaa24d375c29d4d0ba4de5403d0ca6d37d128721b3c1b80606bb5c",
+      "bytes": 9089,
+      "transformation": "All absolute user-home prefixes replaced with <USER_HOME>; LF/trailing spaces normalized",
+      "initialRedactionSha256": "15441513a58b4506f22cf77b21a43517faa35fdeb2f5055e02dc3857b26e272c"
+    },
+    {
+      "path": "frozen-baseline.txt",
+      "sha256": "ac496e991cc5955f352d05c1858171d82863bbb59c08f32d0de0b0fb12e9914f",
+      "rawSha256": "8b452cdb222722c2c13ca3503f5f566c396d4297d0cd18cc82b6bd85113e17b8",
+      "bytes": 9111,
+      "transformation": "All absolute user-home prefixes replaced with <USER_HOME>; LF/trailing spaces normalized",
+      "initialRedactionSha256": "36ba3ddf007f1a364f643db5896f9875a798db9d098d7e575655f7fc96e047bb"
+    },
+    {
+      "path": "existing-baseline.txt",
+      "sha256": "d70949e2f6391b3c76e999cc575062db5a6d504d859f3fe8fda94604925ae700",
+      "rawSha256": "bbdb8655663d44e3335dfcdef5a734784bcf16962366992fe40c61b69088e150",
+      "bytes": 1443,
+      "transformation": "Account path redacted; LF and trailing spaces normalized"
+    },
+    {
+      "path": "frozen-after.txt",
+      "sha256": "1c10988d7c488cac196309ee5d12f6658b2aef6a511ff1af9a2d5bb4a34d88c9",
+      "rawSha256": "53da5c800c2383f6008f031b9da66f3462eeb785af22386c4dad4a7df8af39a9",
+      "bytes": 1882,
+      "transformation": "Account path redacted; LF and trailing spaces normalized"
+    },
+    {
+      "path": "related-first-invocation.txt",
+      "sha256": "f6aec30373d6da927877fa681fb29e8818ed5d3668169a8b55bc3cedbdcc1936",
+      "rawSha256": "bb12e658a87732d2cadb602d1d8e61a264b04064ee4b19978d08d16ecb145a31",
+      "bytes": 19398,
+      "transformation": "All absolute user-home prefixes replaced with <USER_HOME>; LF/trailing spaces normalized",
+      "initialRedactionSha256": "6511ec9446db23e11a2e4a98b3df84412b6df5fd4b25c23dcb496db85114b37b"
+    },
+    {
+      "path": "related-context-modules.txt",
+      "sha256": "86572400bd92420f76887642e5d8a32137c41b77dcb77b68504a5a62aa6e5996",
+      "rawSha256": "fdceb907ec9298b90ef8e18fc0671410165247c0ad1bef630f433d1186adb6fa",
+      "bytes": 2476,
+      "transformation": "Account path redacted; LF and trailing spaces normalized"
+    },
+    {
+      "path": "javascript-all.txt",
+      "sha256": "4dde2bbca730b37d29282a4194b0c0de05047f441db8a3105c598d2b0a52f864",
+      "rawSha256": "4ddcf60abadef8ea44b6ea62a2008ce8749b60aa0a16ffa179256e288372ca5c",
+      "bytes": 8317,
+      "transformation": "All absolute user-home prefixes replaced with <USER_HOME>; LF/trailing spaces normalized",
+      "initialRedactionSha256": "a9db9fd6ff38efaf08219473a4ed6b9d603c6d97bf08140188707fc7bebc3782"
+    },
+    {
+      "path": "browser-first.txt",
+      "sha256": "2e37fb10d53df404e56f047f10fdd28fedf932aa56d917d97bf5a438deb06776",
+      "rawSha256": "9517cabc6fa6565567dcbec392ce098685120ae7f746a8b7175dece9d120f1e2",
+      "bytes": 109,
+      "transformation": "Account path redacted; LF and trailing spaces normalized"
+    },
+    {
+      "path": "browser-first.json",
+      "sha256": "ac5525bfdead343b43cd82715bcd56572f508d708f128690e967b0c10bd65608",
+      "rawSha256": "ac5525bfdead343b43cd82715bcd56572f508d708f128690e967b0c10bd65608",
+      "bytes": 555,
+      "transformation": "Account path redacted; LF and trailing spaces normalized"
+    },
+    {
+      "path": "wheel-build.txt",
+      "sha256": "79c610d91953ff3ceeaa96edafda0eadf789b9150069c3c857c0634efc9e811d",
+      "rawSha256": "7ee4c3d0f6576cf1aef3e0f394ee231f23c8090a9a6429ef679655a32fbb53bd",
+      "bytes": 749,
+      "transformation": "All absolute user-home prefixes replaced with <USER_HOME>; LF/trailing spaces normalized",
+      "initialRedactionSha256": "14d74fef58c73086dd12deb3199d65e5e000e4d7b41b47c784d4fcf17732902f"
+    },
+    {
+      "path": "environment.txt",
+      "sha256": "c0d67d7ad6e48a769e5f4c4e7679a226403108e8f7b0092cea723eafd132a7b9",
+      "rawSha256": "55c212e98e34425a82c804bd992acfcab9c87d0beea65418e2ff45abf56e2047",
+      "bytes": 3749,
+      "transformation": "All absolute user-home prefixes replaced with <USER_HOME>; LF/trailing spaces normalized",
+      "initialRedactionSha256": "4d37aa01604922559ed0fdc350efad3e176dfae04ae07b3a1d0f3e3f9e343f19"
+    },
+    {
+      "path": "interactive-reload-zh.txt",
+      "sha256": "e1919a04a4de86f3e722e644afee8535ac086537c02c6c7a90701d4682684c92",
+      "rawSha256": "a92ecb5e1ba710b033ba19a49f92663f10517a8c13a5baf93901eeba6ba3109e",
+      "bytes": 4636,
+      "transformation": "Account path redacted; LF and trailing spaces normalized"
+    },
+    {
+      "path": "mobile-before.png",
+      "sha256": "04c29ebea6c3f43fe7421cd99aaa55fba83ecb382400c698d3504b802d150e1e",
+      "rawSha256": "04c29ebea6c3f43fe7421cd99aaa55fba83ecb382400c698d3504b802d150e1e",
+      "bytes": 48923,
+      "transformation": "None"
+    },
+    {
+      "path": "interactive-reload-zh.jpg",
+      "sha256": "883dc157bacdbc584e9314b463c68b4303d28e0bd507fd367a44a0579a8b549f",
+      "rawSha256": "883dc157bacdbc584e9314b463c68b4303d28e0bd507fd367a44a0579a8b549f",
+      "bytes": 49830,
+      "transformation": "None"
+    },
+    {
+      "path": "browser-result.json",
+      "sha256": "ac5525bfdead343b43cd82715bcd56572f508d708f128690e967b0c10bd65608",
+      "rawSha256": "ac5525bfdead343b43cd82715bcd56572f508d708f128690e967b0c10bd65608",
+      "bytes": 555,
+      "transformation": "Account path redacted; LF and trailing spaces normalized"
+    },
+    {
+      "path": "browser-desktop-en.png",
+      "sha256": "c24fc1ab997bbec0bb7788661fb1f8372370c144ad480eb9a9542d11248d3f20",
+      "rawSha256": "c24fc1ab997bbec0bb7788661fb1f8372370c144ad480eb9a9542d11248d3f20",
+      "bytes": 70350,
+      "transformation": "None"
+    },
+    {
+      "path": "browser-mobile-zh.png",
+      "sha256": "ede3552201e0c01b5b43aca5327d46e6dfbc6cc9076493d0e4c305ce2027c026",
+      "rawSha256": "ede3552201e0c01b5b43aca5327d46e6dfbc6cc9076493d0e4c305ce2027c026",
+      "bytes": 49339,
+      "transformation": "None"
+    },
+    {
+      "path": "browser-mobile-zh-claim.png",
+      "sha256": "5861415844a9d12448503813f6cb9e5d30487dda1289c6ff932e252e268f1d2e",
+      "rawSha256": "5861415844a9d12448503813f6cb9e5d30487dda1289c6ff932e252e268f1d2e",
+      "bytes": 15115,
+      "transformation": "None"
+    },
+    {
+      "path": "boundary-first-command.json",
+      "rawSha256": "1983c30b62851f2128c0cecedb514d4e62eac02bb7eaf07ba14e36fc14fe9876",
+      "sha256": "f812ee99db9550cb38161ba1b1607d834c69f2b4652f04ae57ba22d510c92bb9",
+      "bytes": 62,
+      "transformation": "LF normalized"
+    },
+    {
+      "path": "boundary-initial-redaction.json",
+      "rawSha256": "1a7ec7cd635fec94026eda8f893e31b5652d1c7591ae48ad4acd8d1a6a808854",
+      "sha256": "1ecacd2af9fc7770f13b893924087275ab2a57d92d590b49f126b7b09a4af40d",
+      "bytes": 1705,
+      "transformation": "LF normalized"
+    },
+    {
+      "path": "boundary-current-tree.json",
+      "sha256": "f158b9911b0ee9a03eb5a19bb8053d4f06e3629014ca08e70ebdc7e70c17c502",
+      "rawSha256": "4b20f58157b3938a56c3e7bfb31872eb6345f2c066aece8419c9266dd2bf6132",
+      "transformation": "Normalized JSON and LF"
+    }
+  ],
+  "newLiveModelCalls": 0,
+  "modelQualityGainClaimed": false,
+  "independentHumanAcceptance": false,
+  "schemaMigration": false,
+  "productionDeployment": false,
+  "limits": [
+    "Full-material factual acceptance remains open",
+    "No live ATS or authenticated mailbox acceptance",
+    "Production signing and independent clean Windows unavailable",
+    "Complete local and hosted regression pending"
+  ],
+  "artifactVerification": {
+    "hashesChecked": 27,
+    "relativeLinksChecked": 71,
+    "accountPathsRedacted": true
+  },
+  "boundaryPreparation": {
+    "firstCommand": "Missing required trusted Git path; original failure retained",
+    "firstScan": "Six absolute user-home placeholders still violated the existing public policy",
+    "correction": "Replace full home prefixes; preserve raw logs and both prior scan results; policy unchanged"
+  },
+  "publicBoundary": {
+    "status": "PASS",
+    "treeFindings": 0,
+    "historyFindings": 0,
+    "authorIdentity": "PASS",
+    "publicReleaseReady": false
+  }
+}

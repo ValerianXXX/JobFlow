@@ -1,0 +1,18 @@
+test_disabled_chat_export_cannot_retain_conversation_quotes (test_source_context_persistence.SourceContextBoundaryTests.test_disabled_chat_export_cannot_retain_conversation_quotes) ... ok
+test_global_chunk_coordinates_and_cap_are_preserved (test_source_context_persistence.SourceContextBoundaryTests.test_global_chunk_coordinates_and_cap_are_preserved) ... ok
+test_result_copy_keeps_separate_notes_without_mutable_alias (test_source_context_persistence.SourceContextBoundaryTests.test_result_copy_keeps_separate_notes_without_mutable_alias) ... ok
+test_source_binding_rejects_stale_or_forged_text_and_resets_approval (test_source_context_persistence.SourceContextBoundaryTests.test_source_binding_rejects_stale_or_forged_text_and_resets_approval) ... ok
+test_delete_removes_only_that_sources_context (test_source_context_persistence.SourceContextPersistenceTests.test_delete_removes_only_that_sources_context) ... ok
+test_failed_commit_does_not_promote_pending_notes (test_source_context_persistence.SourceContextPersistenceTests.test_failed_commit_does_not_promote_pending_notes) ... ok
+test_legacy_state_without_context_is_usable (test_source_context_persistence.SourceContextPersistenceTests.test_legacy_state_without_context_is_usable) ... ok
+test_preview_commit_reload_keep_context_private_and_answers_unchanged (test_source_context_persistence.SourceContextPersistenceTests.test_preview_commit_reload_keep_context_private_and_answers_unchanged) ... ok
+test_reanalysis_is_pending_until_confirmed_and_discard_preserves_previous_notes (test_source_context_persistence.SourceContextPersistenceTests.test_reanalysis_is_pending_until_confirmed_and_discard_preserves_previous_notes) ... ok
+test_dropping_a_fact_is_rejected (test_source_context_review.SourceContextReviewTests.test_dropping_a_fact_is_rejected) ... ok
+test_prior_status_cannot_be_rewritten_to_hide_a_new_omission (test_source_context_review.SourceContextReviewTests.test_prior_status_cannot_be_rewritten_to_hide_a_new_omission) ... ok
+test_receipt_keeps_new_omissions_visible_and_does_not_certify_semantics (test_source_context_review.SourceContextReviewTests.test_receipt_keeps_new_omissions_visible_and_does_not_certify_semantics) ... ok
+test_unknown_context_reference_cannot_inflate_retention (test_source_context_review.SourceContextReviewTests.test_unknown_context_reference_cannot_inflate_retention) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 5.508s
+
+OK

@@ -4,6 +4,15 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Bind current Claim wording to its original candidate or human transformation;
+  preserve parent snapshots and original evidence. Reset affected review decisions
+  and Profile confirmation after edits/restoration, including transitive descendants;
+  stale descendant confirmations require a subsequent review. Preserve no-op saves
+  and explicitly confirmed direct edits. Show honest bilingual origin labels and
+  use full-width Claim editing on narrow screens. UI protocol 42 upgrades backend
+  and assets together. No new model, dependency or database migration.
+  [Evidence, compatibility and rollback](docs/claim-wording-review-2026-10-31.md).
+
 - Add explicit human message outcomes with a uniquely located original passage,
   source and quote hashes, and reversible review history. Preserve the automated
   proposal, unauthenticated local EML boundary and protected application state.

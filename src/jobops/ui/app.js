@@ -591,7 +591,19 @@ Object.assign(STRINGS.en,{
   documentPdfFailed:"PDF conversion did not finish. Your DOCX draft remains available. Check the selected local converter and document compatibility before retrying.",
   generatingStandardResume:"Generating the standard resume…", exportingStandardResume:"Converting PDF and rendering its page…", adoptingStandardResume:"Creating a new profile revision…"
 });
-const UI_PROTOCOL_VERSION = 41;
+Object.assign(STRINGS.zh,{
+  claimOriginAi:"原始 AI 候选措辞，事实仍需核对", claimOriginEdited:"用户改写，未重新进行 AI 分析",
+  claimOriginMerged:"用户合并，未重新进行 AI 分析", claimOriginSplit:"用户拆分，未重新进行 AI 分析",
+  claimOriginUnknown:"当前措辞来源记录不完整，请对照原件核对",
+  claimSourceChanged:"上游内容已改变，请重新核对原始材料与这条经历。保存上游修改后，再确认此条。"
+});
+Object.assign(STRINGS.en,{
+  claimOriginAi:"Original AI candidate wording; facts still need review", claimOriginEdited:"User edited; no new AI analysis",
+  claimOriginMerged:"User merged; no new AI analysis", claimOriginSplit:"User split; no new AI analysis",
+  claimOriginUnknown:"Current wording history is incomplete; review the original source",
+  claimSourceChanged:"Upstream content changed. Recheck the original material and this Claim. Save the upstream edit before confirming this Claim."
+});
+const UI_PROTOCOL_VERSION = 42;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",
@@ -2650,18 +2662,47 @@ function renderSourcePreviews(){
   });
 }
 
+function claimWordingLabel(item){
+  const origin=item.draft_wording_changed?"USER_EDITED":item.wording_provenance?.origin;
+  const keys={AI_CANDIDATE:"claimOriginAi",USER_EDITED:"claimOriginEdited",USER_MERGED:"claimOriginMerged",USER_SPLIT:"claimOriginSplit"};
+  return t(keys[origin]||"claimOriginUnknown");
+}
+function invalidateClaimDraft(id){
+  const affected=new Set([id]), descendants=new Set();
+  let grew=true;
+  while(grew){
+    grew=false;
+    for(const claim of state.data.claims){
+      if((claim.provenance_claim_ids||[]).some(parent=>affected.has(parent))){
+        descendants.add(claim.claim_id);
+        if(!affected.has(claim.claim_id)){affected.add(claim.claim_id);grew=true;}
+      }
+    }
+  }
+  for(const claim of state.data.claims.filter(item=>affected.has(item.claim_id))){
+    claim.decision=claim.deleted?"REJECTED":"PENDING";
+    state.claimDraft[claim.claim_id]=claim.decision;
+    if(descendants.has(claim.claim_id))claim.source_review_required=true;
+    const row=document.querySelector(`[data-claim-row="${CSS.escape(claim.claim_id)}"]`);
+    const control=row?.querySelector(".claim-decision");if(control)control.value=claim.decision;
+    const notice=row?.querySelector(".claim-source-review");if(notice)notice.classList.toggle("hidden",!claim.source_review_required);
+  }
+  document.querySelector("#profileReview").checked=false;
+  updateReviewProgress();
+}
 function renderClaims() {
   const quality=state.data.claim_quality||{};
   const qualityBanner=document.querySelector("#claimQualityBanner");
   if((quality.quarantined_legacy_claims||0)>0){qualityBanner.classList.remove("hidden");qualityBanner.textContent=t("legacyQuarantined").replace("{count}",quality.quarantined_legacy_claims);}else{qualityBanner.classList.add("hidden");qualityBanner.textContent="";}
   const byCategory={};
-  state.data.claims.forEach(item => { (byCategory[item.category] ||= []).push(item); state.claimDraft[item.claim_id]=item.decision; });
+  state.data.claims.forEach(item => { item.decision=state.claimDraft[item.claim_id]??item.decision; (byCategory[item.category] ||= []).push(item); state.claimDraft[item.claim_id]=item.decision; });
   document.querySelector("#claimGroups").innerHTML=Object.entries(byCategory).map(([category, claims])=>`<section class="claim-group" data-category="${escapeHtml(category)}">
     <div class="claim-group-header"><div><h3>${escapeHtml(categoryLabel(category))} · ${claims.filter(item=>!item.deleted).length} ${escapeHtml(t("entityClaims"))}</h3><small>${escapeHtml(t("claimEditHelp"))}</small></div><div class="claim-group-actions"><button data-batch="CONFIRMED"${disabledAttr(isReadonly())}>${escapeHtml(t("confirmAll"))}</button><button data-batch="REJECTED"${disabledAttr(isReadonly())}>${escapeHtml(t("rejectAll"))}</button></div></div>
     ${claims.map(item=>`<div class="claim-row ${item.conflict?"claim-row-conflict":""} ${item.deleted?"claim-row-deleted":""}" data-claim-row="${escapeHtml(item.claim_id)}">
       <label class="claim-merge-picker"><input class="claim-merge-select" type="checkbox" data-claim="${escapeHtml(item.claim_id)}" aria-label="${escapeHtml(t("selectForMerge"))}"${disabledAttr(isReadonly()||item.deleted)}><span>${escapeHtml(t("selectForMerge"))}</span></label>
       <div class="claim-edit-area">${item.entity?`<strong class="entity-label">${escapeHtml(entityLabel(item))}</strong>`:""}<textarea class="claim-statement" data-claim="${escapeHtml(item.claim_id)}" aria-label="${escapeHtml(t("editText"))}"${disabledAttr(isReadonly()||item.deleted)}>${escapeHtml(item.statement || "")}</textarea>
-        <div class="claim-meta-row"><select class="claim-category" data-claim="${escapeHtml(item.claim_id)}" aria-label="${escapeHtml(t("category"))}"${disabledAttr(isReadonly()||item.deleted)}>${categoryOptions(item.category,Boolean(item.entity))}</select><small>${escapeHtml(item.lifecycle_status)} · ${item.evidence_count} ${escapeHtml(t("evidence"))}${item.deleted?` · ${escapeHtml(t("rejected"))}`:""}</small></div>
+        <div class="claim-meta-row"><select class="claim-category" data-claim="${escapeHtml(item.claim_id)}" aria-label="${escapeHtml(t("category"))}"${disabledAttr(isReadonly()||item.deleted)}>${categoryOptions(item.category,Boolean(item.entity))}</select><small><span class="claim-wording-origin">${escapeHtml(claimWordingLabel(item))}</span> · ${item.evidence_count} ${escapeHtml(t("evidence"))}${item.deleted?` · ${escapeHtml(t("rejected"))}`:""}</small></div>
+        <small class="claim-source-review${item.source_review_required?"":" hidden"}">${escapeHtml(t("claimSourceChanged"))}</small>
         ${item.conflict?`<div class="claim-conflict-notice"><span>!</span><strong>${escapeHtml(t("conflictLabel"))}</strong><button type="button" class="conflict-jump" data-conflict-target="${escapeHtml(item.conflict_id)}">${escapeHtml(t("reviewThisConflict"))}</button></div>`:""}
         <div class="claim-inline-actions"><button type="button" class="text-action toggle-split" data-id="${escapeHtml(item.claim_id)}"${disabledAttr(isReadonly()||item.deleted)}>${escapeHtml(t("splitClaim"))}</button><button type="button" class="text-action toggle-delete" data-id="${escapeHtml(item.claim_id)}"${disabledAttr(isReadonly())}>${escapeHtml(item.deleted?t("restoreClaim"):t("deleteClaim"))}</button></div>
         <div class="claim-split-editor hidden"><small>${escapeHtml(t("splitHelp"))}</small><textarea class="split-statements" aria-label="${escapeHtml(t("splitInputLabel"))}"></textarea><button type="button" class="secondary apply-split" data-id="${escapeHtml(item.claim_id)}">${escapeHtml(t("applySplit"))}</button></div>
@@ -3601,7 +3642,7 @@ document.addEventListener("click", async event => {
   const batch=event.target.closest("[data-batch]");
   if (batch) { batch.closest(".claim-group").querySelectorAll(".claim-decision:not(:disabled)").forEach(el=>{el.value=batch.dataset.batch;state.claimDraft[el.dataset.claim]=el.value;}); updateReviewProgress(); return; }
   const toggleDelete=event.target.closest(".toggle-delete");
-  if(toggleDelete){collectClaimEdits();const item=state.data.claims.find(claim=>claim.claim_id===toggleDelete.dataset.id);item.deleted=!item.deleted;state.claimEditDraft[item.claim_id]={statement:item.statement||"",category:item.category,deleted:item.deleted};state.claimDraft[item.claim_id]=item.deleted?"REJECTED":"PENDING";item.decision=state.claimDraft[item.claim_id];renderClaims();return;}
+  if(toggleDelete){collectClaimEdits();const item=state.data.claims.find(claim=>claim.claim_id===toggleDelete.dataset.id);item.deleted=!item.deleted;state.claimEditDraft[item.claim_id]={statement:item.statement||"",category:item.category,deleted:item.deleted};invalidateClaimDraft(item.claim_id);renderClaims();return;}
   const toggleSplit=event.target.closest(".toggle-split");
   if(toggleSplit){event.target.closest("[data-claim-row]").querySelector(".claim-split-editor").classList.toggle("hidden");return;}
   const applySplit=event.target.closest(".apply-split");
@@ -3666,7 +3707,9 @@ document.addEventListener("input",event=>{
   if(!event.target.matches(".claim-statement,.claim-category"))return;
   const row=event.target.closest("[data-claim-row]"),id=row.dataset.claimRow,item=state.data.claims.find(claim=>claim.claim_id===id);
   state.claimEditDraft[id]={statement:row.querySelector(".claim-statement").value,category:row.querySelector(".claim-category").value,deleted:Boolean(item.deleted)};
-  state.claimDraft[id]="PENDING";const decision=row.querySelector(".claim-decision");if(decision&&!decision.disabled)decision.value="PENDING";updateReviewProgress();
+  item.draft_wording_changed=state.claimEditDraft[id].statement!==item.statement||state.claimEditDraft[id].category!==item.category;
+  row.querySelector(".claim-wording-origin").textContent=claimWordingLabel(item);
+  invalidateClaimDraft(id);
 });
 
 window.addEventListener("pagehide",()=>clearApplicationNarrativePreviews());

@@ -1,0 +1,82 @@
+Browser tab: 7, Title: "JobFlow · 找工流水线", URL: "http://127.0.0.1:58378/session/synthetic-claim-wording-session/".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 18-20, 23-25, 28-30, 33-35, 38, 211-243
++		392 container review
++			393 text 03
++			394 heading 集中处理资料与 Claim, Value: 2
++				395 text 集中处理资料与 Claim
++			396 text 只显示经过 AI 归并和完整性检查的 Claim。工作、实习、教育和项目分别归类；确认不等于自动对外提交。
++			397 text 已审阅 Claim
++			398 text 2 / 3
++			399 text 已解决冲突
++			400 text 0 / 0
++			401 text Claim 可编辑审阅
++			402 text 左侧勾选框只用于把同一实体中的多条 Claim 合并，不代表确认或采用；确认状态仍由右侧下拉框决定。
++			403 button 合并已勾选项, ID: mergeClaims
++			404 container conflictSection
++				405 heading 需要单独解决的冲突, Value: 3
++					406 text 需要单独解决的冲突
++				407 text 只有两个相关来源对同一事实给出不同答案时，才算冲突；系统会直接说明哪个字段、两边各写了什么。
++				408 text 目前没有真正需要处理的冲突
++			409 container
++				410 heading 项目 · 3 条 Claim, Value: 3
++					411 text 项目 · 3 条 Claim
++				412 text 左侧勾选框只用于把同一实体中的多条 Claim 合并，不代表确认或采用；确认状态仍由右侧下拉框决定。
++				413 button 整组确认
++				414 button 整组排除
++				415 checkbox (settable, integer) Description: 选择用于合并, Value: 0
++				416 text 选择用于合并 Synthetic Organization · Contributor
++				417 text entry area (settable) Description: 可编辑 Claim 表述, Value: The applicant prepared a synthetic project with 12 review records.
++				418 pop up button (collapsed, settable) Description: 经历类型, Value: 项目, Secondary Actions: Expand
++					419 menu
++						420 正式工作
++						421 实习
++						422 教育
++						423 (selected) 项目
++				424 text 原始 AI 候选措辞，事实仍需核对  · 0 证据
++				425 button 拆分
++				426 button 删除
++				427 pop up button (collapsed, settable) Description: Claim 审阅决定, Value: 已确认, Secondary Actions: Expand
++					428 menu
++						429 待审阅
++						430 (selected) 已确认
++						431 排除
++				432 checkbox (settable, integer) Description: 选择用于合并, Value: 0
++				433 text 选择用于合并 Synthetic Organization · Contributor
++				434 text entry area (settable) Description: 可编辑 Claim 表述, Value: The applicant documented the synthetic team's contribution to 3 reports.
++				435 pop up button (collapsed, settable) Description: 经历类型, Value: 项目, Secondary Actions: Expand
++					436 menu
++						437 正式工作
++						438 实习
++						439 教育
++						440 (selected) 项目
++				441 text 原始 AI 候选措辞，事实仍需核对  · 0 证据
++				442 button 拆分
++				443 button 删除
++				444 pop up button (collapsed, settable) Description: Claim 审阅决定, Value: 已确认, Secondary Actions: Expand
++					445 menu
++						446 待审阅
++						447 (selected) 已确认
++						448 排除
++				449 checkbox (settable, integer) Description: 选择用于合并, Value: 0
++				450 text 选择用于合并 Synthetic Organization · Contributor
++				451 text entry area (settable) Description: 可编辑 Claim 表述, Value: 申请人核对了合成项目的原始记录；这段修改后的表述仍需要重新审阅。
++				452 pop up button (collapsed, settable) Description: 经历类型, Value: 项目, Secondary Actions: Expand
++					453 menu
++						454 正式工作
++						455 实习
++						456 教育
++						457 (selected) 项目
++				458 text 用户改写，未重新进行 AI 分析  · 0 证据
++				459 button 拆分
++				460 button 删除
++				461 pop up button (collapsed, settable) Description: Claim 审阅决定, Value: 待审阅, Secondary Actions: Expand
++					462 menu
++						463 (selected) 待审阅
++						464 已确认
++						465 排除
++			466 container
++				467 checkbox (settable, integer) Description: 我已审阅 Candidate Profile 确认简历、项目、技能、教育及成果栏目；未解决冲突除外。, Value: 0, ID: profileReview
++				468 text 我已审阅 Candidate Profile 确认简历、项目、技能、教育及成果栏目；未解决冲突除外。
++			469 button 保存审阅结果, ID: saveReview
+The focused UI element is 205 button 3 资料与 Claim 审阅

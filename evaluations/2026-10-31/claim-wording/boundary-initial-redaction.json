@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "status": "FAIL",
+  "readiness_scope": "PUBLIC_REPOSITORY_BOUNDARY_ONLY",
+  "public_repository_ready": false,
+  "public_release_ready": false,
+  "public_release_blockers": [
+    "PUBLIC_TREE_BOUNDARY_FAILED"
+  ],
+  "tree": {
+    "status": "FAIL",
+    "tracked_file_count": 1106,
+    "finding_count": 6,
+    "findings": [
+      {
+        "kind": "absolute_user_path",
+        "path": "evaluations/2026-10-31/claim-wording/environment.txt"
+      },
+      {
+        "kind": "absolute_user_path",
+        "path": "evaluations/2026-10-31/claim-wording/first-fixture-baseline.txt"
+      },
+      {
+        "kind": "absolute_user_path",
+        "path": "evaluations/2026-10-31/claim-wording/frozen-baseline.txt"
+      },
+      {
+        "kind": "absolute_user_path",
+        "path": "evaluations/2026-10-31/claim-wording/javascript-all.txt"
+      },
+      {
+        "kind": "absolute_user_path",
+        "path": "evaluations/2026-10-31/claim-wording/related-first-invocation.txt"
+      },
+      {
+        "kind": "absolute_user_path",
+        "path": "evaluations/2026-10-31/claim-wording/wheel-build.txt"
+      }
+    ]
+  },
+  "history": {
+    "status": "PASS",
+    "commit_count": 409,
+    "historical_path_count": 1087,
+    "unique_blob_count": 3344,
+    "scanned_text_blob_count": 2977,
+    "scanned_document_blob_count": 103,
+    "finding_count": 0,
+    "findings": []
+  },
+  "author_identity": {
+    "status": "PASS",
+    "policy": "PUBLIC_EMAIL_HASHES_APPROVED",
+    "identity_count": 3,
+    "non_noreply_identity_count": 1,
+    "unapproved_identity_count": 0,
+    "approved_public_email_count": 1,
+    "malformed_record_count": 0,
+    "private_identity_values_emitted": 0
+  }
+}
