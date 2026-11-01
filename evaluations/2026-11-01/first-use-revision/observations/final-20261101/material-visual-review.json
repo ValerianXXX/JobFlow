@@ -1,0 +1,9 @@
+{
+  "synthetic_only": true,
+  "reviewer": "ASSISTANT_VISUAL_REVIEW",
+  "independent_human": false,
+  "workflow_result": "PASS",
+  "material_result": "FAIL",
+  "page_sha256": "8ddfb7b24075c443e683d5a1f7a172715eb622929666d7247e21b0f88b499ff3",
+  "reason": "The actual final resume contains the same approved team-budget sentence twice. Text/layout QA and reaching AWAITING_APPROVAL do not establish material acceptance. Original browser PASS is preserved; this supplemental visual failure prevents overall acceptance."
+}

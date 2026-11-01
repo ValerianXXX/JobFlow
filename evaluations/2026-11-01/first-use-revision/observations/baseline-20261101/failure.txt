@@ -1,0 +1,298 @@
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+400 !== 200
+
+Skip to main content
+J
+JobFlow
+Job application pipeline
+Local only · DPAPI encrypted
+AI connected
+中文
+EN
+
+JOBFLOW SETUP
+
+Set it up once. Apply continuously.
+
+Build a complete profile from resumes and project materials, AI sources, and your direct answers. Private content is decrypted only on this computer and never written to ordinary project files.
+
+Core profile progress
+25 / 25
+Read only · v2
+CURRENT NEXT STEP
+Browser Companion not detected; install it from the extension store and run the JobFlow installer once
+Job capture and post-review assisted filling use the same JobFlow J extension. Load it once; JobFlow detects and connects it automatically.
+Review the cause and retry
+This is a completed read-only snapshot
+
+Historical versions are never overwritten. Create a new editable revision to change information.
+
+Create editable revision
+1
+Sources
+2
+Missing details
+3
+Profile & Claim review
+4
+Finish
+
+04
+
+Complete JobFlow setup
+
+After setup, JobFlow can continuously prepare roles and build the approval queue. Each approved application still needs separate consent before user-present fill and attachment; only you can click the final Submit button.
+
+Core answers
+25/25
+Claim review
+5/5
+Conflict review
+0/0
+Profile confirmation
+Complete
+I confirm these answers and review decisions are accurate and authorize encrypted storage as my current Candidate Profile and Answer Bank.
+Complete JobFlow setup
+
+JobFlow setup is complete. Setup itself performed no external action; later, only per-application fill and attachment can run, while you retain the final Submit click.
+
+JOBFLOW CONTROL
+
+Local application control center
+
+See readiness, approval queues, and user-present company/ATS application status in one place. Every application requires its own authorization.
+
+Final Submit and automatic retry always locked
+Refresh status
+Profile readiness
+Complete
+AI connected
+Awaiting you
+0
+Local review packets only
+Available capacity
+10
+limit 10
+Waiting in line
+0
+Other jobs continue until the limit
+Application readiness
+Shows whether profile, AI, Master Resume, Claim authorization, and the safe material template form a complete local loop.
+Offline application preparation is ready
+No local preparation blockers remain
+Allow confirmed Claims in application materials
+
+This permits only the exact Claim wording you confirmed to generate resumes, Cover Letters, and application answers. It does not open a site, upload, or submit.
+
+I reviewed these Claims and allow their current wording in generated application materials.
+Approve material use
+Current authorization · 5 Claims
+Selected LibreOffice detected; conversion is not verified. Convert and inspect every page; layout may differ from Word.
+Build safe resume tailoring positions
+
+AI proposes only original resume paragraphs mapped to confirmed Claims. Once you approve them, JobFlow may edit only those positions in job-specific copies; the master stays unchanged.
+
+Review AI-proposed positions
+Safe tailoring positions approved · 2
+
+NEXT JOB
+
+State the goal; run to final review
+JobFlow searches and verifies official company roles, enters the safe Apply route, reads the form, and prepares materials. Review once; only you click final Submit.
+Not started
+Give AI one instruction
+ Describe the role direction and location, or paste a company job link. JobFlow searches in a visible tab, verifies the official page, follows Apply, and prepares the application.
+Existing company job link (optional)
+
+I confirm this job goal and allow JobFlow for 30 minutes to perform visible search, read the official job and application form, and prepare materials. After packet approval it may prefill and upload, but only I click final Submit.
+
+Confirm and run
+
+Not started Browser Companion not detected; install it from the extension store and run the JobFlow installer once
+
+1
+Search and verify official roles
+JobFlow uses a visible browser search and keeps only company careers pages.
+2
+Read the role and enter Apply
+After verification, JobFlow follows the safe Apply route published by the company.
+3
+Read the form and prepare materials
+Build the job resume and requested materials, then list only questions that truly need you.
+4
+Review once, then keep filling
+Approval starts continuous page-by-page prefill and upload, stopping before final Submit.
+
+AUTHORIZED DISCOVERY
+
+Find roles on company careers pages
+For a time window you explicitly authorize, periodically read the public company careers pages you list and place matching roles in a candidate inbox.
+Not authorized
+
+Enter careers pages and keywords, then authorize once. You can pause or revoke at any time.
+
+This grants read-only network requests only. It never opens an application form, creates an application, fills fields, uploads files, or submits; a role enters the existing workflow only after you choose it.
+Company careers pages or public ATS boards (one per line)
+Supports public HTTPS company careers pages and Greenhouse, Lever, Ashby, or SmartRecruiters board-root URLs. JobFlow selects the corresponding read-only public jobs source. Do not paste login pages, search sessions, individual application forms, or token-bearing URLs.
+Role keywords
+Location keywords (optional)
+Exclude keywords (optional)
+Read interval (minutes)
+Authorization window (hours)
+Maximum new per run
+Candidate inbox limit
+For this time window, I authorize JobFlow to read these public careers pages. A supported ATS board-root URL may use its corresponding read-only public jobs endpoint. Only public job summaries are saved; applications, browser filling, file uploads, and submission are not authorized.
+Authorize read-only discovery
+Candidate role inbox
+Only public job summaries appear here. Choosing Handle this role starts the existing one-review workflow.
+0
+
+No matching roles yet.
+
+Pending-approval limit
+JobFlow pauses new intake at this number and continues after you resolve one item.
+Maximum waiting
+Save limit
+User-present continuous processing
+Save a local processing cadence; when it is due, you still click Run now. JobFlow does not register a Windows task or visit websites in the background.
+Not configured
+
+After setup, every run still needs your click; no background task is created.
+
+The authorization window covers only already-saved local work. It does not authorize browser, network, upload, or final-submit actions.
+Reminder interval (minutes)
+Authorization window (hours)
+Save processing cadence
+Process local queue now
+Pause new job intake
+Applications awaiting approval
+Only safe job summaries appear here; private answers and document bodies never do.
+0
+
+No application currently needs your approval. Offline-processed roles will appear here.
+
+Active safety boundary
+Real-site visits
+0
+Real external actions
+0
+Knowledge writes
+0
+Run mode
+Local prep + user-present assist
+External-action master switch
+Off
+Stop all external actions now
+Waiting roles
+Roles wait here at capacity and resume in order when a slot opens.
+0
+
+No role is currently waiting for queue capacity.
+
+Recent queue decisions
+Shows local state changes and never labels approval as submission.
+0
+
+No queue decision has been completed yet.
+
+Automatic-application execution status
+Shows only safe status, the latest checkpoint, and the next step; no private answers, file content, or site session is exposed.
+0
+
+No automatic-application execution record exists yet. Review approval is never shown as submission.
+
+Advanced diagnostics and offline QA
+Ordinary use does not need this area. Provide local snapshots only for development tests or when browser import is unavailable.
+Expand
+Prepare one offline application
+Choose a saved JD, official-company job page, and application form. JobFlow only creates local materials and a review packet.
+Stops at review
+Official company job URL
+Original application-form URL
+Guest application available
+Unknown
+Yes
+No
+Job description (JD)
+Saved official job page
+Saved application form
+One exact company excerpt from the official page
+It must occur in the selected official page and is never treated as personal experience.
+Readiness passed; choose the saved job files to continue.
+Generate materials and add to review
+Official-site and ATS capability boundary
+Each provider shows only the stages covered by its checked-in evidence. Shared browser capability is not presented as live provider acceptance.
+6
+
+Shared browser runtime passed synthetic tests for prefill, attachment, explicit non-final navigation, and modern-component rebinding. This is not live-site acceptance.
+
+Company
+Synthetic vertical
+Locally verified: job discovery · route binding · form analysis · value-free plan · review packet · DOM prefill · file attachment · non-final navigation · multi-page resume · result observation · component rebinding
+Every listed offline stage has evidence
+Shared user-present runtime: current page still revalidated
+No current local live-page acceptance evidence exists within 30 days; only offline engineering evidence is shown.
+Final Submit: you only
+Greenhouse
+Synthetic vertical
+Locally verified: job discovery · route binding · form analysis · value-free plan · review packet · DOM prefill · file attachment · non-final navigation · multi-page resume · result observation · component rebinding
+Every listed offline stage has evidence
+Shared user-present runtime: current page still revalidated
+No current local live-page acceptance evidence exists within 30 days; only offline engineering evidence is shown.
+Final Submit: you only
+Lever
+Synthetic vertical
+Locally verified: job discovery · route binding · form analysis · value-free plan · review packet · DOM prefill · file attachment · non-final navigation · multi-page resume · result observation · component rebinding
+Every listed offline stage has evidence
+Shared user-present runtime: current page still revalidated
+No current local live-page acceptance evidence exists within 30 days; only offline engineering evidence is shown.
+Final Submit: you only
+Workday
+Saved multi-step sequence
+Locally verified: job discovery · route binding · form analysis · value-free plan · review packet · DOM prefill · file attachment · non-final navigation · multi-page resume · result observation · component rebinding
+Every listed offline stage has evidence
+Shared user-present runtime: current page still revalidated
+No current local live-page acceptance evidence exists within 30 days; only offline engineering evidence is shown.
+Final Submit: you only
+Ashby
+Synthetic vertical
+Locally verified: job discovery · route binding · form analysis · value-free plan · review packet · DOM prefill · file attachment · non-final navigation · multi-page resume · result observation · component rebinding
+Every listed offline stage has evidence
+Shared user-present runtime: current page still revalidated
+No current local live-page acceptance evidence exists within 30 days; only offline engineering evidence is shown.
+Final Submit: you only
+Smartrecruiters
+Synthetic vertical
+Locally verified: job discovery · route binding · form analysis · value-free plan · review packet · DOM prefill · file attachment · non-final navigation · multi-page resume · result observation · component rebinding
+Every listed offline stage has evidence
+Shared user-present runtime: current page still revalidated
+No current local live-page acceptance evidence exists within 30 days; only offline engineering evidence is shown.
+Final Submit: you only
+Parse a saved company careers page
+
+Reads only local HTML, a saved-page JSON envelope, or Greenhouse, Lever, Ashby, and SmartRecruiters job JSON; page code is not executed, the snapshot is not retained, and no network is used.
+
+Official company domain
+Original URL of saved page
+Careers-page snapshot
+Parse jobs read-only
+Check signed updates
+
+Checks the fixed GitHub release channel only after an explicit click. Downloads must pass signature, hash, and version checks; a failed post-switch health check rolls back automatically.
+
+Install the fixed version first
+JobFlow is running from a source folder. Install it in the fixed per-user location to enable one-click signed updates.
+Privacy-safe incident history and support
+
+Off by default. When enabled, JobFlow keeps only fixed error codes, versions, and times on this device. It never records messages, stacks, URLs, paths, or job data, and never uploads automatically.
+
+Keep up to 32 redacted error codes on this device
+Download diagnostics
+Clear local history
+Open support page
+Local incident capture is off, so no new record is saved or sent. 0 prior record(s) remain until you clear them.
+Application records and updates
+Open status inbox
+
+Complete every item in Application readiness first.

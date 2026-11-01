@@ -1,0 +1,105 @@
+test_adopted_generated_master_is_accepted_without_changing_original_evidence (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_adopted_generated_master_is_accepted_without_changing_original_evidence) ... ok
+test_adoption_requires_current_completed_state_and_original_binding (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_adoption_requires_current_completed_state_and_original_binding) ... ok
+test_changed_original_pdf_is_rejected (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_changed_original_pdf_is_rejected) ... ok
+test_current_material_permission_is_still_required (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_current_material_permission_is_still_required) ... ok
+test_draft_file_hash_and_original_approval_must_all_agree (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_draft_file_hash_and_original_approval_must_all_agree) ... ok
+test_expired_generation_receipt_is_history_but_current_permission_must_be_live (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_expired_generation_receipt_is_history_but_current_permission_must_be_live) ... ERROR
+test_generated_file_without_explicit_adoption_is_rejected (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_generated_file_without_explicit_adoption_is_rejected) ... ok
+test_later_confirmed_revision_keeps_the_same_adoption_lineage (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_later_confirmed_revision_keeps_the_same_adoption_lineage) ... ok
+test_legacy_master_citations_still_bind_only_to_the_original_pdf (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_legacy_master_citations_still_bind_only_to_the_original_pdf) ... ok
+test_synthetic_or_revoked_draft_cannot_be_promoted_by_real_state (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_synthetic_or_revoked_draft_cannot_be_promoted_by_real_state) ... ok
+test_wrong_kind_adoption_receipt_is_rejected (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_wrong_kind_adoption_receipt_is_rejected) ... ok
+test_bilingual_layout_preserves_exact_numbers_and_has_no_invented_sections (test_standard_resume.StandardResumeTests.test_bilingual_layout_preserves_exact_numbers_and_has_no_invented_sections) ... ok
+test_capability_discovery_does_not_claim_real_conversion_or_launch_programs (test_standard_resume.StandardResumeTests.test_capability_discovery_does_not_claim_real_conversion_or_launch_programs) ... ok
+test_corrupted_evidence_or_changed_profile_blocks_draft_reuse (test_standard_resume.StandardResumeTests.test_corrupted_evidence_or_changed_profile_blocks_draft_reuse) ... ok
+test_missing_or_wrong_use_approval_cannot_generate (test_standard_resume.StandardResumeTests.test_missing_or_wrong_use_approval_cannot_generate) ... ok
+test_pdf_commit_failure_rolls_back_new_encrypted_output (test_standard_resume.StandardResumeTests.test_pdf_commit_failure_rolls_back_new_encrypted_output) ... ok
+test_pdf_failure_keeps_docx_and_redacts_converter_errors (test_standard_resume.StandardResumeTests.test_pdf_failure_keeps_docx_and_redacts_converter_errors) ... ok
+test_pdf_to_docx_revision_preserves_original_evidence_and_requires_new_approvals (test_standard_resume.StandardResumeTests.test_pdf_to_docx_revision_preserves_original_evidence_and_requires_new_approvals) ... ok
+test_revision_write_failure_keeps_completed_state_and_allows_retry (test_standard_resume.StandardResumeTests.test_revision_write_failure_keeps_completed_state_and_allows_retry) ... ok
+test_stale_confirmation_and_foreign_reference_do_not_change_completed_profile (test_standard_resume.StandardResumeTests.test_stale_confirmation_and_foreign_reference_do_not_change_completed_profile) ... ok
+test_resume_selection (unittest.loader._FailedTest.test_resume_selection) ... ERROR
+test_external_claims (unittest.loader._FailedTest.test_external_claims) ... ERROR
+test_ai_operator_material_and_form_turns_are_bound_to_one_real_preparation (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_ai_operator_material_and_form_turns_are_bound_to_one_real_preparation) ... ok
+test_browser_companion_reload_during_user_submit_window_becomes_unknown_and_never_retries (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_browser_companion_reload_during_user_submit_window_becomes_unknown_and_never_retries) ... ok
+test_browser_companion_reload_revokes_pre_submit_checkpoints_and_allows_new_lease (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_browser_companion_reload_revokes_pre_submit_checkpoints_and_allows_new_lease) ... ok
+test_completed_user_context_generates_encrypted_review_materials_without_external_actions (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_completed_user_context_generates_encrypted_review_materials_without_external_actions) ... ok
+test_dynamic_questions_create_supplemental_review_without_losing_confirmed_fields (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_dynamic_questions_create_supplemental_review_without_losing_confirmed_fields) ... ok
+test_expired_unchanged_packet_is_renewed_only_by_fresh_start_confirmation (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_expired_unchanged_packet_is_renewed_only_by_fresh_start_confirmation) ... ok
+test_failed_preparation_releases_slot_and_deletes_new_encrypted_materials (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_failed_preparation_releases_slot_and_deletes_new_encrypted_materials) ... ok
+test_guided_browser_discovery_ambiguity_accepts_only_a_displayed_candidate (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_guided_browser_discovery_ambiguity_accepts_only_a_displayed_candidate) ... ok
+test_guided_browser_discovery_selects_only_an_official_company_job_page (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_guided_browser_discovery_selects_only_an_official_company_job_page) ... ok
+test_guided_browser_intake_builds_one_review_packet_without_page_actions (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_guided_browser_intake_builds_one_review_packet_without_page_actions) ... ok
+test_guided_browser_intake_can_replace_an_unrecoverable_pairing_lease (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_guided_browser_intake_can_replace_an_unrecoverable_pairing_lease) ... ok
+test_guided_browser_intake_cancel_releases_wrong_url_without_external_actions (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_guided_browser_intake_cancel_releases_wrong_url_without_external_actions) ... ok
+test_guided_form_preparation_runs_once_in_background_and_is_pollable (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_guided_form_preparation_runs_once_in_background_and_is_pollable) ... ok
+test_guided_search_skips_a_closed_or_ai_rejected_role_and_verifies_the_next_ranked_page (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_guided_search_skips_a_closed_or_ai_rejected_role_and_verifies_the_next_ranked_page) ... ok
+test_initial_semantic_equivalence_rebinds_ephemeral_control_refs (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_initial_semantic_equivalence_rebinds_ephemeral_control_refs) ... ok
+test_legacy_review_requires_explicit_rebuild_before_browser_assist (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_legacy_review_requires_explicit_rebuild_before_browser_assist) ... ok
+test_local_ai_agent_uses_same_approved_page_tools_and_cannot_submit (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_local_ai_agent_uses_same_approved_page_tools_and_cannot_submit) ... ok
+test_local_ui_bundle_builds_route_and_review_packet_without_retaining_input_files (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_local_ui_bundle_builds_route_and_review_packet_without_retaining_input_files) ... ok
+test_manual_navigation_challenge_rejects_forgery_and_different_job_identity (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_manual_navigation_challenge_rejects_forgery_and_different_job_identity) ... ok
+test_manual_real_profile_tick_prepares_saved_local_evidence_and_is_idempotent (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_manual_real_profile_tick_prepares_saved_local_evidence_and_is_idempotent) ... ok
+test_partial_page_apply_is_audited_once_and_requires_explicit_restart (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_partial_page_apply_is_audited_once_and_requires_explicit_restart) ... ok
+test_process_close_during_user_submit_window_becomes_unknown_without_retry (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_process_close_during_user_submit_window_becomes_unknown_without_retry) ... ok
+test_reserved_example_route_never_creates_live_acceptance_evidence (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_reserved_example_route_never_creates_live_acceptance_evidence) ... ok
+test_resume_contact_fields_are_ready_without_reasking_in_single_review (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_resume_contact_fields_are_ready_without_reasking_in_single_review) ... ok
+test_review_decision_automatically_fills_freed_slot_from_recorded_local_batch (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_review_decision_automatically_fills_freed_slot_from_recorded_local_batch) ... ok
+test_successful_upload_control_replacement_does_not_create_false_dynamic_review (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_successful_upload_control_replacement_does_not_create_false_dynamic_review) ... ok
+test_ui_deferred_bundle_is_encrypted_then_automatically_consumed_after_review (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_ui_deferred_bundle_is_encrypted_then_automatically_consumed_after_review) ... ok
+test_ui_deferred_retention_failure_rolls_back_the_queue_admission (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_ui_deferred_retention_failure_rolls_back_the_queue_admission) ... ok
+test_ui_designated_docx_master_is_accepted_only_through_its_approved_state_binding (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_ui_designated_docx_master_is_accepted_only_through_its_approved_state_binding) ... ok
+test_unreadable_result_requires_manual_answer_and_never_retries (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_unreadable_result_requires_manual_answer_and_never_retries) ... ok
+test_user_present_company_assist_prefills_uploads_and_stops_before_submit (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_user_present_company_assist_prefills_uploads_and_stops_before_submit) ... ok
+test_v2_handoffs_cross_origin_and_repeated_page_fail_closed (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_v2_handoffs_cross_origin_and_repeated_page_fail_closed) ... ok
+test_v2_workday_multi_page_handoff_navigation_upload_and_human_submit (test_real_profile_offline_application.RealProfileOfflineApplicationTests.test_v2_workday_multi_page_handoff_navigation_upload_and_human_submit) ... ok
+
+======================================================================
+ERROR: test_expired_generation_receipt_is_history_but_current_permission_must_be_live (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_expired_generation_receipt_is_history_but_current_permission_must_be_live)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_adopted_master_handoff.py", line 187, in test_expired_generation_receipt_is_history_but_current_permission_must_be_live
+    refs = self.assert_admitted()
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_adopted_master_handoff.py", line 70, in assert_admitted
+    result = self.orchestrator.current_real_application_references()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\orchestrator.py", line 472, in current_real_application_references
+    context = self._real_application_context(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\orchestrator.py", line 396, in _real_application_context
+    validate_named("external-claim-set", claim_set, self.schemas)
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\runtime_schema.py", line 819, in validate_named
+    semantic_validate(name, value)
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\runtime_schema.py", line 342, in semantic_validate
+    validate_external_claim_set_integrity(value)
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\external_claims.py", line 154, in validate_external_claim_set_integrity
+    raise JobOpsError("EXTERNAL_CLAIM_SET_EXPIRED", "The external Claim approval has expired.")
+jobops.errors.JobOpsError: The external Claim approval has expired.
+
+======================================================================
+ERROR: test_resume_selection (unittest.loader._FailedTest.test_resume_selection)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_resume_selection
+Traceback (most recent call last):
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\unittest\loader.py", line 154, in loadTestsFromName
+    module = __import__(module_name)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'test_resume_selection'
+
+
+======================================================================
+ERROR: test_external_claims (unittest.loader._FailedTest.test_external_claims)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_external_claims
+Traceback (most recent call last):
+  File "$USER_HOME\AppData\Local\Programs\Python\Python311\Lib\unittest\loader.py", line 154, in loadTestsFromName
+    module = __import__(module_name)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'test_external_claims'
+
+
+----------------------------------------------------------------------
+Ran 55 tests in 688.107s
+
+FAILED (errors=3)

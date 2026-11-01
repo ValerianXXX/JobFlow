@@ -1,0 +1,57 @@
+test_adopted_generated_master_is_accepted_without_changing_original_evidence (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_adopted_generated_master_is_accepted_without_changing_original_evidence) ... ERROR
+test_adoption_requires_current_completed_state_and_original_binding (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_adoption_requires_current_completed_state_and_original_binding) ... ok
+test_changed_original_pdf_is_rejected (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_changed_original_pdf_is_rejected) ... ok
+test_current_material_permission_is_still_required (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_current_material_permission_is_still_required) ... ok
+test_draft_file_hash_and_original_approval_must_all_agree (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_draft_file_hash_and_original_approval_must_all_agree) ... ok
+test_generated_file_without_explicit_adoption_is_rejected (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_generated_file_without_explicit_adoption_is_rejected) ... ok
+test_later_confirmed_revision_keeps_the_same_adoption_lineage (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_later_confirmed_revision_keeps_the_same_adoption_lineage) ... ERROR
+test_wrong_kind_adoption_receipt_is_rejected (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_wrong_kind_adoption_receipt_is_rejected) ... ok
+
+======================================================================
+ERROR: test_adopted_generated_master_is_accepted_without_changing_original_evidence (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_adopted_generated_master_is_accepted_without_changing_original_evidence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_adopted_master_handoff.py", line 84, in test_adopted_generated_master_is_accepted_without_changing_original_evidence
+    self.assert_admitted()
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_adopted_master_handoff.py", line 70, in assert_admitted
+    result = self.orchestrator.current_real_application_references()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\orchestrator.py", line 396, in current_real_application_references
+    context = self._real_application_context(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\orchestrator.py", line 343, in _real_application_context
+    master_metadata = self._assert_real_master_reference(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\orchestrator.py", line 266, in _assert_real_master_reference
+    metadata = self._assert_private_reference(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\orchestrator.py", line 242, in _assert_private_reference
+    raise JobOpsError(
+jobops.errors.JobOpsError: An application input reference has the wrong kind, state, or synthetic boundary.
+
+======================================================================
+ERROR: test_later_confirmed_revision_keeps_the_same_adoption_lineage (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_later_confirmed_revision_keeps_the_same_adoption_lineage)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_adopted_master_handoff.py", line 95, in test_later_confirmed_revision_keeps_the_same_adoption_lineage
+    self.assert_admitted()
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_adopted_master_handoff.py", line 70, in assert_admitted
+    result = self.orchestrator.current_real_application_references()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\orchestrator.py", line 396, in current_real_application_references
+    context = self._real_application_context(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\orchestrator.py", line 343, in _real_application_context
+    master_metadata = self._assert_real_master_reference(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\orchestrator.py", line 266, in _assert_real_master_reference
+    metadata = self._assert_private_reference(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\src\jobops\orchestrator.py", line 242, in _assert_private_reference
+    raise JobOpsError(
+jobops.errors.JobOpsError: An application input reference has the wrong kind, state, or synthetic boundary.
+
+----------------------------------------------------------------------
+Ran 8 tests in 30.834s
+
+FAILED (errors=2)

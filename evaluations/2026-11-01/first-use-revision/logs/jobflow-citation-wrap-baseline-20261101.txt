@@ -1,0 +1,101 @@
+test_actual_native_cover_letter_retains_reading_order (test_document_citation_wrap.DocumentCitationWrapTests.test_actual_native_cover_letter_retains_reading_order) ... FAIL
+test_changed_or_reordered_citation_atoms_remain_rejected (test_document_citation_wrap.DocumentCitationWrapTests.test_changed_or_reordered_citation_atoms_remain_rejected) ... ok
+test_digits_and_ordinary_words_are_never_glued_across_whitespace (test_document_citation_wrap.DocumentCitationWrapTests.test_digits_and_ordinary_words_are_never_glued_across_whitespace) ... ok
+test_hyphenated_text_wrap_keeps_its_separator (test_document_citation_wrap.DocumentCitationWrapTests.test_hyphenated_text_wrap_keeps_its_separator) ... FAIL
+test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) ...
+  test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='analyst-', newline="'\\n'") ... FAIL
+  test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='analyst-', newline="'\\r\\n'") ... FAIL
+  test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='https://', newline="'\\n'") ... FAIL
+  test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='https://', newline="'\\r\\n'") ... FAIL
+  test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='example.', newline="'\\n'") ... FAIL
+  test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='example.', newline="'\\r\\n'") ... FAIL
+  test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='careers/', newline="'\\n'") ... FAIL
+  test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='careers/', newline="'\\r\\n'") ... FAIL
+
+======================================================================
+FAIL: test_actual_native_cover_letter_retains_reading_order (test_document_citation_wrap.DocumentCitationWrapTests.test_actual_native_cover_letter_retains_reading_order)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_document_citation_wrap.py", line 16, in test_actual_native_cover_letter_retains_reading_order
+    self.assertEqual(result.status, "PASS")
+AssertionError: 'FAIL' != 'PASS'
+- FAIL
++ PASS
+
+
+======================================================================
+FAIL: test_hyphenated_text_wrap_keeps_its_separator (test_document_citation_wrap.DocumentCitationWrapTests.test_hyphenated_text_wrap_keeps_its_separator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_document_citation_wrap.py", line 29, in test_hyphenated_text_wrap_keeps_its_separator
+    self.assertEqual(reading_order_issues(original, original.replace("evidence-based", "evidence-\nbased")), 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='analyst-', newline="'\\n'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_document_citation_wrap.py", line 25, in test_layout_wraps_at_retained_url_punctuation_are_equivalent
+    self.assertEqual(reading_order_issues(self.paragraph, wrapped), 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='analyst-', newline="'\\r\\n'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_document_citation_wrap.py", line 25, in test_layout_wraps_at_retained_url_punctuation_are_equivalent
+    self.assertEqual(reading_order_issues(self.paragraph, wrapped), 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='https://', newline="'\\n'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_document_citation_wrap.py", line 25, in test_layout_wraps_at_retained_url_punctuation_are_equivalent
+    self.assertEqual(reading_order_issues(self.paragraph, wrapped), 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='https://', newline="'\\r\\n'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_document_citation_wrap.py", line 25, in test_layout_wraps_at_retained_url_punctuation_are_equivalent
+    self.assertEqual(reading_order_issues(self.paragraph, wrapped), 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='example.', newline="'\\n'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_document_citation_wrap.py", line 25, in test_layout_wraps_at_retained_url_punctuation_are_equivalent
+    self.assertEqual(reading_order_issues(self.paragraph, wrapped), 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='example.', newline="'\\r\\n'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_document_citation_wrap.py", line 25, in test_layout_wraps_at_retained_url_punctuation_are_equivalent
+    self.assertEqual(reading_order_issues(self.paragraph, wrapped), 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='careers/', newline="'\\n'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_document_citation_wrap.py", line 25, in test_layout_wraps_at_retained_url_punctuation_are_equivalent
+    self.assertEqual(reading_order_issues(self.paragraph, wrapped), 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_layout_wraps_at_retained_url_punctuation_are_equivalent (test_document_citation_wrap.DocumentCitationWrapTests.test_layout_wraps_at_retained_url_punctuation_are_equivalent) (split='careers/', newline="'\\r\\n'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "$WORKSPACE_ROOT\JobFlow-first-use-revision\tests\test_document_citation_wrap.py", line 25, in test_layout_wraps_at_retained_url_punctuation_are_equivalent
+    self.assertEqual(reading_order_issues(self.paragraph, wrapped), 0)
+AssertionError: 1 != 0
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.326s
+
+FAILED (failures=10)

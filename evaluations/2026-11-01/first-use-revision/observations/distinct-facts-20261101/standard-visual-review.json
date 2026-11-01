@@ -1,0 +1,15 @@
+{
+  "synthetic_only": true,
+  "reviewer": "ASSISTANT_VISUAL_REVIEW",
+  "independent_human": false,
+  "pages": [
+    {
+      "file": "standard-page-1.png",
+      "sha256": "160f6b0ac26e1b5276e6197bd092dd85a98d7552429930449fd905b9c66adc21",
+      "page": 1,
+      "result": "PASS",
+      "reason": "Inspected the complete actual native-rendered page. Name and reserved synthetic contact are readable; both selected Chinese statements are intact, team responsibility and 14 stores remain explicit, 2023-2024 dates match the preview. No clipping, overlap, broken bullets, missing glyphs or unintended extra pages. Large whitespace is expected for this two-fact formatting probe, not a complete professional resume."
+    }
+  ],
+  "reused_exact_visual_evidence": "../baseline-20261101/standard-visual-review.json"
+}

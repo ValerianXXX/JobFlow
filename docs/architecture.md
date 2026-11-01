@@ -76,6 +76,15 @@ the chosen wording; onboarding owns encrypted snapshots, restores, source
 checks and adoption. Draft identity includes selection, locale and layout
 revision. See [selection, compatibility and recovery](standard-resume-selection-2026-11-01.md).
 
+Application admission recognizes a generated DOCX only through its explicit
+standard-resume adoption receipt. It revalidates the completed state, exact file
+hash, template fingerprint, historical generation approval and original PDF.
+Historical approval integrity proves where an artifact came from; it does not
+grant current material use. Current approval expiry, source integrity and
+tailoring bindings remain separately enforced. Original PDF citations stay
+bound to that PDF instead of becoming evidence for the generated layout. This
+also reads existing adopted revisions without rewriting their immutable state.
+
 Claim wording history is handled by the pure `claim_wording` module; the existing
 onboarding service owns encrypted persistence and review transitions. AI ancestry,
 current wording origin, user review and external material approval remain separate.

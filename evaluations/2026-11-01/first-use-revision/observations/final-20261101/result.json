@@ -1,0 +1,260 @@
+{
+  "protocol": "EMPTY_PROFILE_TO_APPLICATION_REPLAY_UI_V1",
+  "synthetic_only": true,
+  "model": "Pinned CJK document response and bounded existing fake application adapter; no fresh inference",
+  "new_model_calls": 0,
+  "independent_human": false,
+  "steps": [
+    {
+      "step": "empty_workspace",
+      "at": "2026-11-01T06:22:04.773Z",
+      "sources": 0,
+      "claims": 0,
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "retained_unapproved_after_reload",
+      "at": "2026-11-01T06:22:13.142Z",
+      "sources": 1,
+      "decisions": [
+        "PENDING",
+        "PENDING",
+        "PENDING",
+        "PENDING",
+        "PENDING"
+      ],
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "answers_saved_through_ui",
+      "at": "2026-11-01T06:22:20.647Z",
+      "resolved": {
+        "total": 25,
+        "resolved": 25,
+        "remaining": 0,
+        "remaining_fields": [],
+        "percent": 100
+      },
+      "answerCount": 40,
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "premature_completion_blocked",
+      "at": "2026-11-01T06:22:22.415Z",
+      "http": 400,
+      "code": "PROFILE_REVIEW_REQUIRED",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "review_saved_through_ui",
+      "at": "2026-11-01T06:22:25.419Z",
+      "decisions": [
+        "CONFIRMED",
+        "CONFIRMED",
+        "CONFIRMED",
+        "CONFIRMED",
+        "CONFIRMED"
+      ],
+      "profile": "CONFIRMED",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "completed_from_empty",
+      "at": "2026-11-01T06:22:31.418Z",
+      "status": "ONBOARDING_COMPLETE"
+    },
+    {
+      "step": "first_resume_from_empty",
+      "at": "2026-11-01T06:22:40.815Z",
+      "selected": 2,
+      "excluded": 3,
+      "layout": "STANDARD_SINGLE_COLUMN_V2",
+      "wording": [
+        "在合成青杉实验室02担任分析员期间，团队核验了14家门店。",
+        "合成青杉实验室02的分析员任职日期为2023-2024。"
+      ],
+      "docx_sha256": "faa0621fdcdd70ecb56cd404cc6c117a5d95d8686db8478046d7430a6a89d732"
+    },
+    {
+      "step": "restored_without_consent",
+      "at": "2026-11-01T06:22:45.483Z",
+      "selected": 2,
+      "external_requests": 0,
+      "page_errors": 0
+    },
+    {
+      "step": "awaiting_actual_visual_review",
+      "at": "2026-11-01T06:23:05.856Z",
+      "pages": [
+        {
+          "file": "standard-page-1.png",
+          "sha256": "160f6b0ac26e1b5276e6197bd092dd85a98d7552429930449fd905b9c66adc21",
+          "page": 1
+        }
+      ],
+      "docx_sha256": "sha256:faa0621fdcdd70ecb56cd404cc6c117a5d95d8686db8478046d7430a6a89d732",
+      "provider": "LIBREOFFICE",
+      "materials_validated": false
+    },
+    {
+      "step": "actual_pages_inspected",
+      "at": "2026-11-01T06:23:38.139Z",
+      "review_file": "standard-visual-review.json",
+      "pages": 1,
+      "independent_human": false
+    },
+    {
+      "step": "adopted_new_editable_revision",
+      "at": "2026-11-01T06:23:43.619Z",
+      "revision": 2,
+      "status": "IN_PROGRESS",
+      "profile": "PENDING",
+      "sources": 1,
+      "claims": 5,
+      "externalCurrent": false,
+      "tailoringCurrent": false
+    },
+    {
+      "step": "revision_completed_and_permissions_renewed",
+      "at": "2026-11-01T06:24:06.280Z",
+      "revision": 2,
+      "readiness": {
+        "schema_version": 1,
+        "status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION",
+        "blockers": [],
+        "onboarding_complete": true,
+        "ai_structured_ready": true,
+        "master_resume": {
+          "present": true,
+          "editable_docx": true,
+          "template_fingerprint_present": true,
+          "tailoring_mode": "APPROVED_BLOCK_MANIFEST",
+          "template_slot_count": 0,
+          "tailoring_manifest_current": true,
+          "tailoring_block_count": 2
+        },
+        "claims": {
+          "confirmed_count": 5,
+          "review_hash": "sha256:a2951668f9a2ede52f1f9d8dbfc56de03c418d403ff6e4c471d03386f6fbb9ed",
+          "external_approval_current": true,
+          "externally_approved_count": 5
+        },
+        "queue": {
+          "pending_limit": 10,
+          "awaiting_approval": 0,
+          "slots_available": 10,
+          "continues_after_awaiting_approval": true
+        },
+        "capabilities": {
+          "saved_official_job_discovery": true,
+          "offline_application_preparation": true,
+          "tailored_resume_generation": true,
+          "on_demand_cover_letter_generation": true,
+          "review_packet_generation": true,
+          "live_site_access": false,
+          "real_prefill": false,
+          "real_upload": false,
+          "final_submission": false
+        },
+        "generated_at": "2026-11-01T06:24:05.823269Z",
+        "real_external_actions": 0
+      },
+      "tailoring_candidates": 2
+    },
+    {
+      "step": "offline_application_response",
+      "at": "2026-11-01T06:24:48.853Z",
+      "http": 200,
+      "result": {
+        "status": "AWAITING_APPROVAL",
+        "application_id": "APP-948D2E6F9F13",
+        "review_packet_id": "RPK-4BFF4EF975FD",
+        "queue": {
+          "pending_limit": 10,
+          "awaiting_approval": 1,
+          "reserved_slots": 0,
+          "deferred_intake": 0,
+          "closed_applications": 0,
+          "slots_available": 9
+        },
+        "deferred_evidence_retained": false,
+        "real_external_actions": 0,
+        "network_actions": 0,
+        "next_safe_action": "OPEN_LOCAL_REVIEW_PACKET"
+      }
+    },
+    {
+      "step": "application_packet_restored_without_approval",
+      "at": "2026-11-01T06:24:54.906Z",
+      "application_status": "AWAITING_APPROVAL",
+      "external_requests": 0,
+      "page_errors": 0
+    }
+  ],
+  "reference_runtime": "95b8be63e7bdb479e4043e04ef0c0026beb36899",
+  "observed_head": "06d643eb71148ea7dfa14689d47ef68a0868c98a",
+  "observed_product_tree": "f083039b2e9fbdde58fcf572bf9ab41afb3b677b",
+  "runtime_matches_reference": false,
+  "started_at": "2026-11-01T06:22:02.375Z",
+  "harness_sha256": "a713cf66a30ae18dca9fdbe2e3ee0076a74299194ef3b8dc753007afba98b7e9",
+  "status": "PASS",
+  "completed_at": "2026-11-01T06:24:54.906Z",
+  "fixture_exit": 0,
+  "server": {
+    "synthetic_only": true,
+    "seeded_approval": false,
+    "real_model_calls": 0,
+    "recorded_response_replays": 1,
+    "synthetic_adapter_tasks": {
+      "JOBFLOW_APPLICATION_MATERIAL_DECISION_V1": 1,
+      "JOBFLOW_FORM_SEMANTIC_REVIEW_V1": 1
+    },
+    "revision_number": 2,
+    "status": "ONBOARDING_COMPLETE",
+    "source_count": 1,
+    "material_claim_count": 5,
+    "claim_decisions": [
+      "CONFIRMED",
+      "CONFIRMED",
+      "CONFIRMED",
+      "CONFIRMED",
+      "CONFIRMED"
+    ],
+    "database_counts": {
+      "applications": 1,
+      "claims": 0,
+      "approvals": 0,
+      "external_action_attempts": 0
+    },
+    "generated_artifacts": [
+      {
+        "file": "01-generated_cover_letter_docx.docx",
+        "sha256": "c53ad70ac502a11eb0f35f211fc22c81b7585eac610a1c95c389feb1856aba4b"
+      },
+      {
+        "file": "02-generated_cover_letter_pdf.pdf",
+        "sha256": "c8fa7f4b34b8e59c0b5cf8cef4a20f9ef524e6e29ed0a59ad2ca8f358118b974"
+      },
+      {
+        "file": "03-generated_resume_docx.docx",
+        "sha256": "faa0621fdcdd70ecb56cd404cc6c117a5d95d8686db8478046d7430a6a89d732"
+      },
+      {
+        "file": "04-generated_resume_docx.docx",
+        "sha256": "445ab546bcb0de743e75117730e50f409a5620998d9acd9055307a7cd68c989d"
+      },
+      {
+        "file": "05-generated_resume_pdf.pdf",
+        "sha256": "d1da1070d335959a5d7d068dd0940e5e48bad417dfbaf747655fd2299d76c052"
+      },
+      {
+        "file": "06-generated_resume_pdf.pdf",
+        "sha256": "71dadde867cd95265bb488bf80a52a3a8a9e1243c75ed2136fa858a450fe8724"
+      }
+    ],
+    "actual_native_qa_observations": 2,
+    "qa_results_overridden": false,
+    "temporary_state_removed": true
+  },
+  "bound_source_unchanged": true
+}
