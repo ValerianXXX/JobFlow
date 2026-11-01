@@ -1,0 +1,57 @@
+
+[notice] A new release of pip available: 22.3.1 -> 26.2.2
+[notice] To update, run: <USER_HOME>\Documents\Codex\2026-10-27\github-ai-agent-github-valerianxxx-1\JobFlow-page-content\.venv\Scripts\python.exe -m pip install --upgrade pip
+Obtaining file:///<USER_HOME>/Documents/Codex/2026-10-27/github-ai-agent-github-valerianxxx-1/JobFlow-claim-review-origin
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Collecting lxml<7,>=5
+  Using cached lxml-6.1.3-cp311-cp311-win_amd64.whl (4.0 MB)
+Collecting Pillow<12,>=10
+  Using cached pillow-11.3.0-cp311-cp311-win_amd64.whl (7.0 MB)
+Collecting pdfplumber<1,>=0.11
+  Using cached pdfplumber-0.11.9-py3-none-any.whl (60 kB)
+Collecting pypdf<6,>=4
+  Using cached pypdf-5.9.0-py3-none-any.whl (313 kB)
+Collecting python-docx<2,>=1.1
+  Using cached python_docx-1.2.0-py3-none-any.whl (252 kB)
+Collecting setuptools<81,>=77
+  Using cached setuptools-80.10.2-py3-none-any.whl (1.1 MB)
+Collecting wheel<1,>=0.43
+  Using cached wheel-0.48.0-py3-none-any.whl (33 kB)
+Collecting pdfminer.six==20251230
+  Using cached pdfminer_six-20251230-py3-none-any.whl (6.6 MB)
+Collecting pypdfium2>=4.18.0
+  Using cached pypdfium2-5.14.0-py3-none-win_amd64.whl (3.9 MB)
+Collecting charset-normalizer>=2.0.0
+  Using cached charset_normalizer-3.5.2-cp311-cp311-win_amd64.whl (214 kB)
+Collecting cryptography>=36.0.0
+  Using cached cryptography-50.0.2-cp311-abi3-win_amd64.whl (3.8 MB)
+Collecting typing_extensions>=4.9.0
+  Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Collecting packaging>=24.0
+  Using cached packaging-26.3-py3-none-any.whl (129 kB)
+Collecting cffi>=2.0.0
+  Using cached cffi-2.1.1-cp311-cp311-win_amd64.whl (185 kB)
+Collecting pycparser
+  Using cached pycparser-3.12-py3-none-any.whl (62 kB)
+Building wheels for collected packages: jobflow-local
+  Building editable for jobflow-local (pyproject.toml): started
+  Building editable for jobflow-local (pyproject.toml): finished with status 'done'
+  Created wheel for jobflow-local: filename=jobflow_local-0.7.0-0.editable-py3-none-any.whl size=10561 sha256=02c98cd03ec9e13e52f7be85f4fd35a1f0213fbd85387f693ce607a902a10ee6
+  Stored in directory: <USER_HOME>\AppData\Local\Temp\pip-ephem-wheel-cache-m7d2jriw\wheels\87\2e\17\3b377c4726fd6a47ad34a9a8e02afa0e443c86e387acdc9538
+Successfully built jobflow-local
+Installing collected packages: typing_extensions, setuptools, pypdfium2, pypdf, pycparser, Pillow, packaging, lxml, charset-normalizer, wheel, python-docx, cffi, cryptography, pdfminer.six, pdfplumber, jobflow-local
+  Attempting uninstall: setuptools
+    Found existing installation: setuptools 65.5.0
+    Uninstalling setuptools-65.5.0:
+      Successfully uninstalled setuptools-65.5.0
+Successfully installed Pillow-11.3.0 cffi-2.1.1 charset-normalizer-3.5.2 cryptography-50.0.2 jobflow-local-0.7.0 lxml-6.1.3 packaging-26.3 pdfminer.six-20251230 pdfplumber-0.11.9 pycparser-3.12 pypdf-5.9.0 pypdfium2-5.14.0 python-docx-1.2.0 setuptools-80.10.2 typing_extensions-4.16.0 wheel-0.48.0
+{'status': 'PASS', 'packages': ['playwright', 'playwright-core'], 'file_count': 173, 'total_bytes': 18516238, 'tree_sha256': 'sha256:df85481a30bcbc0f7276548d245eba0980d136c8085ca4a3662cb6f3c568302f'}
+No broken requirements found.
+OWNED_ENVIRONMENT_READY; no dependency constraints or trust policy changed

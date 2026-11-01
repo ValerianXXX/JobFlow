@@ -1,0 +1,9 @@
+Processing <USER_HOME>\documents\codex\2026-10-27\github-ai-agent-github-valerianxxx-1\jobflow-claim-review-origin
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: jobflow-local
+  Building wheel for jobflow-local (pyproject.toml): started
+  Building wheel for jobflow-local (pyproject.toml): finished with status 'done'
+  Created wheel for jobflow-local: filename=jobflow_local-0.7.0-py3-none-any.whl size=835428 sha256=9fdcbc175a024111b870910d897c3c8a6caf914e338abec69d41bfa662b6ed26
+  Stored in directory: <USER_HOME>\appdata\local\pip\cache\wheels\87\2e\17\3b377c4726fd6a47ad34a9a8e02afa0e443c86e387acdc9538
+Successfully built jobflow-local

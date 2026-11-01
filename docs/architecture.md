@@ -70,4 +70,10 @@ Public signed updates remain blocked until external publisher evidence and a pro
 
 ## Recovery
 
+Claim wording history is handled by the pure `claim_wording` module; the existing
+onboarding service owns encrypted persistence and review transitions. AI ancestry,
+current wording origin, user review and external material approval remain separate.
+Changing an ancestor invalidates derived reviews, including through deleted
+intermediate Claims. See [wording review and compatibility](claim-wording-review-2026-10-31.md).
+
 Persisted internal steps may resume after revalidation. Any interruption during an uncertain external write or submission window becomes `SUBMISSION_UNKNOWN`; JobFlow never retries it automatically.

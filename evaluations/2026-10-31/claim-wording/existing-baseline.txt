@@ -1,0 +1,12 @@
+test_application_narrative_requires_its_own_external_use_approval (test_external_claim_readiness.ExternalClaimReadinessTests.test_application_narrative_requires_its_own_external_use_approval) ... ok
+test_changed_review_cannot_reuse_old_approval_hash (test_external_claim_readiness.ExternalClaimReadinessTests.test_changed_review_cannot_reuse_old_approval_hash) ... ok
+test_explicit_external_claim_set_is_hash_bound_and_schema_valid (test_external_claim_readiness.ExternalClaimReadinessTests.test_explicit_external_claim_set_is_hash_bound_and_schema_valid) ... ok
+test_readiness_is_true_only_when_every_local_material_gate_is_ready (test_external_claim_readiness.ExternalClaimReadinessTests.test_readiness_is_true_only_when_every_local_material_gate_is_ready) ... ok
+test_claims_can_be_merged_and_split_without_overwriting_sources (test_onboarding_center.OnboardingCenterTests.test_claims_can_be_merged_and_split_without_overwriting_sources) ... ok
+test_completed_snapshot_requires_versioned_revision_for_edits (test_onboarding_center.OnboardingCenterTests.test_completed_snapshot_requires_versioned_revision_for_edits) ... ok
+test_external_claim_material_approval_is_explicit_encrypted_and_stale_on_revision (test_onboarding_center.OnboardingCenterTests.test_external_claim_material_approval_is_explicit_encrypted_and_stale_on_revision) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 13.032s
+
+OK
