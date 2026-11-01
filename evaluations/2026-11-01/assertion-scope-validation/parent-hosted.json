@@ -1,0 +1,52 @@
+{
+  "observedAtUtc": "2026-11-01 11:53:16 UTC",
+  "head": "9176cf72c95d447ce1e18cc8791d538a2e8e29dc",
+  "run": 41300954244,
+  "jobs": [
+    {
+      "id": 124831652917,
+      "name": "windows-tests (3.12)",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 124831653144,
+      "name": "windows-tests (3.11)",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 124831653153,
+      "name": "windows-tests (3.13)",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 124831653187,
+      "name": "native-tool-trust",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 124831653238,
+      "name": "source-candidate",
+      "status": "completed",
+      "conclusion": "failure"
+    }
+  ],
+  "failedCandidate": {
+    "id": 124831653238,
+    "code": "RELEASE_SMOKE_UI_FAILED",
+    "stage": "bootstrap",
+    "failure_kind": "timeout",
+    "elapsed_ms": 11766,
+    "bootstrap_ms": 5000,
+    "active_components": [
+      "bootstrap",
+      "encrypted_store"
+    ]
+  },
+  "source": "GitHub Actions job metadata and decoded candidate job output",
+  "scope": "Hosted predecessor release failure retained; neither a scope-model evaluation nor clean-Windows acceptance",
+  "checksWeakened": false
+}

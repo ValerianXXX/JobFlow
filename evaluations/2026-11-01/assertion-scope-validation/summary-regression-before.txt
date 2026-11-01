@@ -1,0 +1,14 @@
+test_historical_profile_summary_is_not_misparsed_as_an_actor (test_ai_assertion_scope.AssertionScopeTests.test_historical_profile_summary_is_not_misparsed_as_an_actor) ... FAIL
+
+======================================================================
+FAIL: test_historical_profile_summary_is_not_misparsed_as_an_actor (test_ai_assertion_scope.AssertionScopeTests.test_historical_profile_summary_is_not_misparsed_as_an_actor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 95, in test_historical_profile_summary_is_not_misparsed_as_an_actor
+    self.assertTrue(report['valid'])
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 1 test in 0.008s
+
+FAILED (failures=1)

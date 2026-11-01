@@ -1,0 +1,155 @@
+{
+  "runtime_commit": "9dc91be5935cb916e3db9403a9c19e3671172511",
+  "source_lf_sha256": {
+    "src/jobops/ai_runtime.py": "4de861b65a938ad0087b15e1cca275ee8c4c862b607d7910f30789850701a0d0",
+    "src/jobops/claim_assertion_status.py": "e6f228b652a3c7625a576800bc76a427049a06b54317a32322df03014c543d94",
+    "src/jobops/claim_attribution.py": "54cab7428e9a4ee5530db96cdbaca91f115848b24b5b927b357c13b061eb1d96",
+    "src/jobops/claim_quantities.py": "ead972f7ba909afbe9f7ce3b06b3492a1de7cc559a6696769b5e188368c05991"
+  },
+  "baseline_reused_after_exact_runtime_hash_verification": "assertion-final-replay-comparison.json at parent 9176cf7",
+  "synthetic_only": true,
+  "new_provider_calls": 0,
+  "historical_model_cost": "UNKNOWN",
+  "full_material_acceptance": false,
+  "independent_human_acceptance": false,
+  "elapsed_seconds": 45.906,
+  "rows": [
+    {
+      "observation": "initial",
+      "case": "en-chronological",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 34,
+      "after_candidates": 33,
+      "same_statements_and_order": false,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "531f8bb58fb5a9410943b9c51124746f6ac80716d1d18b768cda8f6293b6ccc1"
+    },
+    {
+      "observation": "initial",
+      "case": "zh-chronological",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 33,
+      "after_candidates": 33,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "5b2b0c1541f9f92b6eb2e8074f614ef009b88417968f1dceb85f657c5ab06d4f"
+    },
+    {
+      "observation": "initial",
+      "case": "mixed-paired_columns",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 33,
+      "after_candidates": 33,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "52da39df215e4e9875102ad63b6f9de5001ed56d45905fefb4ed017258e8163b"
+    },
+    {
+      "observation": "initial",
+      "case": "en-scanned_pages",
+      "before_status": "BLOCKED",
+      "after_status": "BLOCKED",
+      "before_candidates": 0,
+      "after_candidates": 0,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "observation": "initial",
+      "case": "zh-scanned_pages",
+      "before_status": "BLOCKED",
+      "after_status": "BLOCKED",
+      "before_candidates": 0,
+      "after_candidates": 0,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "observation": "initial",
+      "case": "mixed-portfolio_capture",
+      "before_status": "BLOCKED",
+      "after_status": "BLOCKED",
+      "before_candidates": 0,
+      "after_candidates": 0,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "observation": "visual",
+      "case": "en-scanned_pages",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 34,
+      "after_candidates": 34,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "d8dfff639ccdbcafeb0fba840c210515cae02f88e27c596f9d6ff966fa713fbe"
+    },
+    {
+      "observation": "visual",
+      "case": "zh-scanned_pages",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 30,
+      "after_candidates": 30,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "8107728cb61435a6de54b9f0bf2fcd680c4e4bf53e36da63b883fdda0b375981"
+    },
+    {
+      "observation": "visual",
+      "case": "mixed-portfolio_capture",
+      "before_status": "SOURCE_PREVIEW_READY",
+      "after_status": "SOURCE_PREVIEW_READY",
+      "before_candidates": 33,
+      "after_candidates": 33,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "4a59ed7bb48fa56a37d9b8b3e1734b8fdc67558c56a5fe2c3fab2f2b163e8f5e"
+    },
+    {
+      "observation": "fact-preservation",
+      "case": "en-chronological",
+      "before_status": "SOURCE_SAVED_AND_REOPENED",
+      "after_status": "SOURCE_SAVED_AND_REOPENED",
+      "before_candidates": 34,
+      "after_candidates": 33,
+      "same_statements_and_order": false,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "c6eea57410fde5e10baaef588d9745a594cd55da5eb991ff0360d69ab4026970"
+    },
+    {
+      "observation": "fact-preservation",
+      "case": "zh-chronological",
+      "before_status": "SOURCE_SAVED_AND_REOPENED",
+      "after_status": "SOURCE_SAVED_AND_REOPENED",
+      "before_candidates": 34,
+      "after_candidates": 34,
+      "same_statements_and_order": true,
+      "same_context_notes": true,
+      "all_unselected": true,
+      "candidate_statements_json_sha256": "1961e5cf602105c7b5c41100c1f1a78074f776b2b4fc4694a0c68fb2461014a9"
+    }
+  ],
+  "raw_local_observation_sha256": {
+    "fact-preservation.json": "a125b05747d5b87e3c8d8ef7f61fe28b5a9693d89e2f610072d6a061c975cdf9",
+    "initial.json": "fba8f5a2f04c870c54501c6769c000473f14f0b22712d5c37ab0c91251f8f8a5",
+    "visual.json": "c3390e628e6104a823a71e4c4a5e96fca037efc2f9f8e9ebad5f3577440ddaac"
+  }
+}

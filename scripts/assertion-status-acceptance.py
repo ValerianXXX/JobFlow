@@ -31,15 +31,20 @@ from jobops.secure_store import WindowsDPAPIStore
 from jobops.util import sha256_bytes
 
 
-def fixtures(output: Path) -> tuple[dict[str, dict], dict[str, bytes]]:
+def fixtures(output: Path, fixture: str = "status") -> tuple[dict[str, dict], dict[str, bytes]]:
     responses, documents = {}, {}
-    cases = json.loads((ROOT / "tests/fixtures/assertion_status/cases.json").read_text(encoding="utf8"))["cases"]
+    cases = json.loads((ROOT / f"tests/fixtures/assertion_{fixture}/cases.json").read_text(encoding="utf8"))["cases"]
     by_id = {row["id"]: row for row in cases}
-    for name, ids, keep_valid in (
+    scenarios = (
         ("english", ("en-negative", "en-proposed"), True),
         ("chinese", ("zh-negative", "zh-planned"), True),
         ("all-filtered", ("en-never", "en-planned"), False),
-    ):
+    ) if fixture == "status" else (
+        ("english", ("proposal-01", "modality-01", "literal_actor-05"), True),
+        ("chinese", ("proposal-09", "modality-09", "literal_actor-10"), True),
+        ("all-filtered", ("proposal-02", "modality-05", "literal_actor-07"), False),
+    )
+    for name, ids, keep_valid in scenarios:
         header = "Synthetic Assertion Review " + name
         lines = [header, "Analyst 2023-2024", *(by_id[item]["source"] for item in ids)]
         document = Document()
@@ -93,10 +98,11 @@ class FixtureService(OnboardingCenterService):
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--fixture", choices=("status", "scope"), default="status")
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
-    responses, documents = fixtures(output)
+    responses, documents = fixtures(output, args.fixture)
     engine = FixtureEngine(responses)
     record = {"synthetic_only": True, "mode": "FIXED_ADAPTER_ACTUAL_HTTP_UI_AND_DPAPI",
               "live_provider_calls": 0, "model_quality_measured": False, "seeded_approvals": False,

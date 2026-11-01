@@ -1,0 +1,21 @@
+test_a_narrow_citation_cannot_drop_modal_or_nominal_scope (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_drop_modal_or_nominal_scope) ... ok
+test_a_narrow_citation_cannot_omit_a_different_performer (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_omit_a_different_performer) ... ok
+test_actor_context_never_crosses_a_blank_or_bullet_boundary (test_ai_assertion_scope.AssertionScopeTests.test_actor_context_never_crosses_a_blank_or_bullet_boundary) ... ok
+test_candidate_filter_preserves_proposal_and_original_source (test_ai_assertion_scope.AssertionScopeTests.test_candidate_filter_preserves_proposal_and_original_source) ... ok
+test_different_literal_actor_is_counted_without_exposing_it (test_ai_assertion_scope.AssertionScopeTests.test_different_literal_actor_is_counted_without_exposing_it) ... ok
+test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) ... ok
+test_original_known_limit_observations_are_now_rejected_without_rewriting_them (test_ai_assertion_scope.AssertionScopeTests.test_original_known_limit_observations_are_now_rejected_without_rewriting_them) ... ok
+test_a_citation_cannot_omit_the_wrapped_negation_prefix (test_ai_assertion_status.AssertionStatusTests.test_a_citation_cannot_omit_the_wrapped_negation_prefix) ... ok
+test_a_multiline_citation_preserves_negation (test_ai_assertion_status.AssertionStatusTests.test_a_multiline_citation_preserves_negation) ... ok
+test_all_conflicting_candidates_can_be_filtered_without_rejecting_source_protocol (test_ai_assertion_status.AssertionStatusTests.test_all_conflicting_candidates_can_be_filtered_without_rejecting_source_protocol) ... ok
+test_candidate_filter_does_not_discard_valid_candidate_or_rewrite_source (test_ai_assertion_status.AssertionStatusTests.test_candidate_filter_does_not_discard_valid_candidate_or_rewrite_source) ... ok
+test_english_status_prefix_survives_a_chinese_action (test_ai_assertion_status.AssertionStatusTests.test_english_status_prefix_survives_a_chinese_action) ... ok
+test_explicit_conflict_cannot_borrow_an_adjacent_positive_clause (test_ai_assertion_status.AssertionStatusTests.test_explicit_conflict_cannot_borrow_an_adjacent_positive_clause) ... ok
+test_frozen_contradictions_and_supported_controls (test_ai_assertion_status.AssertionStatusTests.test_frozen_contradictions_and_supported_controls) ... ok
+test_neighboring_bullet_or_blank_line_does_not_supply_negation (test_ai_assertion_status.AssertionStatusTests.test_neighboring_bullet_or_blank_line_does_not_supply_negation) ... ok
+test_short_additive_clause_cannot_drop_negation (test_ai_assertion_status.AssertionStatusTests.test_short_additive_clause_cannot_drop_negation) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.068s
+
+OK

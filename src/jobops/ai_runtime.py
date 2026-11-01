@@ -18,6 +18,7 @@ from .claim_attribution import (
 from .claim_assertion_status import (
     has_bounded_action_predicate, is_explicit_assertion_prefix_wrap,
     source_assertion_conflict_count, short_cjk_additive_clause_supported,
+    unsupported_explicit_actor_count,
 )
 from .errors import JobOpsError
 from .claim_quantities import NUMBER_TOKEN_RE, canonical_number as _canonical_number, numeric_context_report
@@ -506,6 +507,8 @@ def _statement_grounding_report(statement: str, source_excerpt: str) -> dict[str
     shared_tokens = len(claim_tokens & source_tokens)
     attribution_conflicts = _explicit_attribution_conflict_count(statement, source_excerpt)
     actor_inferences = unsupported_passive_actor_count(statement, source_excerpt)
+    if not attribution_conflicts and not actor_inferences:
+        actor_inferences = unsupported_explicit_actor_count(statement, _numeric_text(source_excerpt))
     assertion_conflicts = source_assertion_conflict_count(statement, _numeric_text(source_excerpt))
     return {
         "valid": bool(format_complete and not unsupported_numbers and not quantities['unsupported_numeric_context_count']
@@ -581,9 +584,12 @@ def _bounded_statement_grounding(
         # A narrow citation can omit an immediately wrapped negation/intent
         # prefix. Inspect that bounded context even when token overlap passes.
         # Do not otherwise change accepted citations or borrow neighboring facts.
-        if expanded["source_assertion_conflict_count"]:
+        if (expanded["source_assertion_conflict_count"] or expanded["unsupported_actor_inference_count"]
+                or expanded["explicit_attribution_conflict_count"]):
             return {**original, "valid": False,
                     "source_assertion_conflict_count": expanded["source_assertion_conflict_count"],
+                    "unsupported_actor_inference_count": expanded["unsupported_actor_inference_count"],
+                    "explicit_attribution_conflict_count": expanded["explicit_attribution_conflict_count"],
                     "adjacent_line_expansion_attempted": True,
                     "expanded_line_start": line_number_start + expanded_start,
                     "expanded_line_end": line_number_start + expanded_end}

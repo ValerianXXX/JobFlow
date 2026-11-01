@@ -1,0 +1,766 @@
+{
+  "schema_version": 1,
+  "protocol": "SOURCE_ASSERTION_SCOPE_V1",
+  "synthetic_only": true,
+  "scope": "Explicit nominalized proposals, inability/capability and bounded literal actors. Development cases, not general entailment or a live-model benchmark.",
+  "original_60_case_fixture_unchanged": true,
+  "original_36_material_target_unchanged": true,
+  "cases": [
+    {
+      "id": "proposal-01",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant proposed a deployment of the public service to production.",
+      "statement": "The applicant deployed the public service to production.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-01-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant proposed a deployment of the public service to production.",
+      "statement": "The applicant proposed a deployment of the public service to production.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-02",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant planned an implementation of the synthetic review workflow.",
+      "statement": "The applicant implemented the synthetic review workflow.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-02-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant planned an implementation of the synthetic review workflow.",
+      "statement": "The applicant planned an implementation of the synthetic review workflow.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-03",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant intended the completion of the synthetic research report.",
+      "statement": "The applicant completed the synthetic research report.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-03-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant intended the completion of the synthetic research report.",
+      "statement": "The applicant intended the completion of the synthetic research report.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-04",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant proposed the publication of the synthetic training manual.",
+      "statement": "The applicant published the synthetic training manual.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-04-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant proposed the publication of the synthetic training manual.",
+      "statement": "The applicant proposed the publication of the synthetic training manual.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-05",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant planned an approval of the synthetic project budget.",
+      "statement": "The applicant approved the synthetic project budget.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-05-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant planned an approval of the synthetic project budget.",
+      "statement": "The applicant planned an approval of the synthetic project budget.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-06",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant proposed a delivery of the synthetic report to the team.",
+      "statement": "The applicant delivered the synthetic report to the team.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-06-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant proposed a delivery of the synthetic report to the team.",
+      "statement": "The applicant proposed a delivery of the synthetic report to the team.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-07",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant planned a review of the synthetic project records.",
+      "statement": "The applicant reviewed the synthetic project records.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-07-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant planned a review of the synthetic project records.",
+      "statement": "The applicant planned a review of the synthetic project records.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-08",
+      "group": "proposal",
+      "language": "en",
+      "source": "The candidate proposed management of the synthetic project budget.",
+      "statement": "The applicant managed the synthetic project budget.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-08-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "source": "The candidate proposed management of the synthetic project budget.",
+      "statement": "The candidate proposed management of the synthetic project budget.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-09",
+      "group": "proposal",
+      "language": "zh",
+      "source": "申请人提出部署这个合成项目的演示程序和帮助页面的计划。",
+      "statement": "申请人已部署这个合成项目的演示程序和帮助页面。",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-09-unchanged",
+      "group": "proposal",
+      "language": "zh",
+      "source": "申请人提出部署这个合成项目的演示程序和帮助页面的计划。",
+      "statement": "申请人提出部署这个合成项目的演示程序和帮助页面的计划。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-10",
+      "group": "proposal",
+      "language": "zh",
+      "source": "申请人计划核验这批合成项目的资料和来源记录。",
+      "statement": "申请人已核验这批合成项目的资料和来源记录。",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-10-unchanged",
+      "group": "proposal",
+      "language": "zh",
+      "source": "申请人计划核验这批合成项目的资料和来源记录。",
+      "statement": "申请人计划核验这批合成项目的资料和来源记录。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-11",
+      "group": "proposal",
+      "language": "mixed",
+      "source": "The applicant 提出部署这个合成项目的演示程序和帮助页面的计划。",
+      "statement": "The applicant 已部署这个合成项目的演示程序和帮助页面。",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-11-unchanged",
+      "group": "proposal",
+      "language": "mixed",
+      "source": "The applicant 提出部署这个合成项目的演示程序和帮助页面的计划。",
+      "statement": "The applicant 提出部署这个合成项目的演示程序和帮助页面的计划。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "proposal-12",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant proposed the deployment of the public service in 2025.",
+      "statement": "The applicant deployed the public service in 2025.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "proposal-12-unchanged",
+      "group": "proposal",
+      "language": "en",
+      "source": "The applicant proposed the deployment of the public service in 2025.",
+      "statement": "The applicant proposed the deployment of the public service in 2025.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-01",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant was unable to manage the synthetic project budget.",
+      "statement": "The applicant managed the synthetic project budget.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-01-unchanged",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant was unable to manage the synthetic project budget.",
+      "statement": "The applicant was unable to manage the synthetic project budget.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-02",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant could not process the synthetic project records.",
+      "statement": "The applicant processed the synthetic project records.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-02-unchanged",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant could not process the synthetic project records.",
+      "statement": "The applicant could not process the synthetic project records.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-03",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant cannot approve the synthetic research report.",
+      "statement": "The applicant approved the synthetic research report.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-03-unchanged",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant cannot approve the synthetic research report.",
+      "statement": "The applicant cannot approve the synthetic research report.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-04",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant failed to complete the synthetic research report.",
+      "statement": "The applicant completed the synthetic research report.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-04-unchanged",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant failed to complete the synthetic research report.",
+      "statement": "The applicant failed to complete the synthetic research report.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-05",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant was able to deploy the synthetic public service.",
+      "statement": "The applicant deployed the synthetic public service.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-05-unchanged",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant was able to deploy the synthetic public service.",
+      "statement": "The applicant was able to deploy the synthetic public service.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-06",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant could publish the synthetic training manual.",
+      "statement": "The applicant published the synthetic training manual.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-06-unchanged",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant could publish the synthetic training manual.",
+      "statement": "The applicant could publish the synthetic training manual.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-07",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant can review the synthetic project records.",
+      "statement": "The applicant reviewed the synthetic project records.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-07-unchanged",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant can review the synthetic project records.",
+      "statement": "The applicant can review the synthetic project records.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-08",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant was expected to deliver the synthetic research report.",
+      "statement": "The applicant delivered the synthetic research report.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-08-unchanged",
+      "group": "modality",
+      "language": "en",
+      "source": "The applicant was expected to deliver the synthetic research report.",
+      "statement": "The applicant was expected to deliver the synthetic research report.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-09",
+      "group": "modality",
+      "language": "zh",
+      "source": "申请人无法处理这批合成项目的客户资料和来源记录。",
+      "statement": "申请人已处理这批合成项目的客户资料和来源记录。",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-09-unchanged",
+      "group": "modality",
+      "language": "zh",
+      "source": "申请人无法处理这批合成项目的客户资料和来源记录。",
+      "statement": "申请人无法处理这批合成项目的客户资料和来源记录。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-10",
+      "group": "modality",
+      "language": "zh",
+      "source": "申请人未能完成这个合成项目的文档检查和报告交付。",
+      "statement": "申请人已完成这个合成项目的文档检查和报告交付。",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-10-unchanged",
+      "group": "modality",
+      "language": "zh",
+      "source": "申请人未能完成这个合成项目的文档检查和报告交付。",
+      "statement": "申请人未能完成这个合成项目的文档检查和报告交付。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-11",
+      "group": "modality",
+      "language": "zh",
+      "source": "申请人能够核验这批合成项目的资料和来源记录。",
+      "statement": "申请人已核验这批合成项目的资料和来源记录。",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-11-unchanged",
+      "group": "modality",
+      "language": "zh",
+      "source": "申请人能够核验这批合成项目的资料和来源记录。",
+      "statement": "申请人能够核验这批合成项目的资料和来源记录。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "modality-12",
+      "group": "modality",
+      "language": "mixed",
+      "source": "The applicant 无法部署这个合成项目的演示程序和帮助页面。",
+      "statement": "The applicant 已部署这个合成项目的演示程序和帮助页面。",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "modality-12-unchanged",
+      "group": "modality",
+      "language": "mixed",
+      "source": "The applicant 无法部署这个合成项目的演示程序和帮助页面。",
+      "statement": "The applicant 无法部署这个合成项目的演示程序和帮助页面。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-01",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic manager did not process the project records.",
+      "statement": "The synthetic manager processed the project records.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-01-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic manager did not process the project records.",
+      "statement": "The synthetic manager did not process the project records.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-02",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic manager will deploy the synthetic public service.",
+      "statement": "The synthetic manager deployed the synthetic public service.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-02-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic manager will deploy the synthetic public service.",
+      "statement": "The synthetic manager will deploy the synthetic public service.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-03",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic analyst was unable to manage the project budget.",
+      "statement": "The synthetic analyst managed the project budget.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-03-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic analyst was unable to manage the project budget.",
+      "statement": "The synthetic analyst was unable to manage the project budget.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-04",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "Jordan Example did not approve the synthetic research report.",
+      "statement": "Jordan Example approved the synthetic research report.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-04-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "Jordan Example did not approve the synthetic research report.",
+      "statement": "Jordan Example did not approve the synthetic research report.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-05",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic vendor completed the synthetic research report.",
+      "statement": "The applicant completed the synthetic research report.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-05-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic vendor completed the synthetic research report.",
+      "statement": "The synthetic vendor completed the synthetic research report.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-06",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic colleague reviewed the synthetic project records.",
+      "statement": "I reviewed the synthetic project records.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-06-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic colleague reviewed the synthetic project records.",
+      "statement": "The synthetic colleague reviewed the synthetic project records.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-07",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic contractor deployed the synthetic public service.",
+      "statement": "The team deployed the synthetic public service.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-07-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The synthetic contractor deployed the synthetic public service.",
+      "statement": "The synthetic contractor deployed the synthetic public service.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-08",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The applicant implemented the synthetic review workflow.",
+      "statement": "The synthetic manager implemented the synthetic review workflow.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-08-unchanged",
+      "group": "literal_actor",
+      "language": "en",
+      "source": "The applicant implemented the synthetic review workflow.",
+      "statement": "The applicant implemented the synthetic review workflow.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-09",
+      "group": "literal_actor",
+      "language": "zh",
+      "source": "合成项目经理没有处理这批合成项目的客户资料和来源记录。",
+      "statement": "合成项目经理已处理这批合成项目的客户资料和来源记录。",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-09-unchanged",
+      "group": "literal_actor",
+      "language": "zh",
+      "source": "合成项目经理没有处理这批合成项目的客户资料和来源记录。",
+      "statement": "合成项目经理没有处理这批合成项目的客户资料和来源记录。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-10",
+      "group": "literal_actor",
+      "language": "zh",
+      "source": "合成项目经理完成这个合成项目的文档检查和报告交付。",
+      "statement": "申请人完成这个合成项目的文档检查和报告交付。",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-10-unchanged",
+      "group": "literal_actor",
+      "language": "zh",
+      "source": "合成项目经理完成这个合成项目的文档检查和报告交付。",
+      "statement": "合成项目经理完成这个合成项目的文档检查和报告交付。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-11",
+      "group": "literal_actor",
+      "language": "mixed",
+      "source": "The synthetic manager 没有处理这批合成项目的客户资料和来源记录。",
+      "statement": "The synthetic manager 已处理这批合成项目的客户资料和来源记录。",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-11-unchanged",
+      "group": "literal_actor",
+      "language": "mixed",
+      "source": "The synthetic manager 没有处理这批合成项目的客户资料和来源记录。",
+      "statement": "The synthetic manager 没有处理这批合成项目的客户资料和来源记录。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "literal_actor-12",
+      "group": "literal_actor",
+      "language": "mixed",
+      "source": "合成项目经理 reviewed the synthetic project records.",
+      "statement": "The applicant reviewed the synthetic project records.",
+      "expected_valid": false,
+      "kind": "unsupported_promotion"
+    },
+    {
+      "id": "literal_actor-12-unchanged",
+      "group": "literal_actor",
+      "language": "mixed",
+      "source": "合成项目经理 reviewed the synthetic project records.",
+      "statement": "合成项目经理 reviewed the synthetic project records.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-01",
+      "group": "nearby_control",
+      "language": "en",
+      "source": "The applicant proposed a deployment of the synthetic public service. The applicant deployed the synthetic testing service.",
+      "statement": "The applicant deployed the synthetic testing service.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-02",
+      "group": "nearby_control",
+      "language": "en",
+      "source": "The applicant proposed a deployment of the synthetic public service in 2023. The applicant deployed the synthetic public service in 2024.",
+      "statement": "The applicant deployed the synthetic public service in 2024.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-03",
+      "group": "nearby_control",
+      "language": "en",
+      "source": "The applicant could not manage the synthetic project budget. The applicant managed the synthetic publication queue.",
+      "statement": "The applicant managed the synthetic publication queue.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-04",
+      "group": "nearby_control",
+      "language": "en",
+      "source": "The applicant was unable to deploy the synthetic service but later deployed the synthetic service.",
+      "statement": "The applicant later deployed the synthetic service.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-05",
+      "group": "nearby_control",
+      "language": "en",
+      "source": "The applicant did not plan to manage the synthetic budget. The applicant managed the synthetic budget.",
+      "statement": "The applicant managed the synthetic budget.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-06",
+      "group": "nearby_control",
+      "language": "en",
+      "source": "The applicant was not unable to manage the synthetic project budget.",
+      "statement": "The applicant was not unable to manage the synthetic project budget.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-07",
+      "group": "nearby_control",
+      "language": "en",
+      "source": "The synthetic manager did not process the project records. The applicant processed the project records.",
+      "statement": "The applicant processed the project records.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-08",
+      "group": "nearby_control",
+      "language": "en",
+      "source": "The synthetic manager did not process the project records. The synthetic manager processed the training records.",
+      "statement": "The synthetic manager processed the training records.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-09",
+      "group": "nearby_control",
+      "language": "en",
+      "source": "The candidate was unable to manage the synthetic project budget.",
+      "statement": "I could not manage the synthetic project budget.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-10",
+      "group": "nearby_control",
+      "language": "en",
+      "source": "The applicant proposed a deployment of the public service to production.",
+      "statement": "The applicant proposed deploying the public service to production.",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-11",
+      "group": "nearby_control",
+      "language": "zh",
+      "source": "申请人提出部署这个合成项目的演示程序和帮助页面的计划。",
+      "statement": "申请人计划部署这个合成项目的演示程序和帮助页面。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    },
+    {
+      "id": "nearby-control-12",
+      "group": "nearby_control",
+      "language": "mixed",
+      "source": "The applicant cannot 处理这批合成项目的客户资料和来源记录。",
+      "statement": "The applicant 无法处理这批合成项目的客户资料和来源记录。",
+      "expected_valid": true,
+      "kind": "supported_control"
+    }
+  ]
+}
