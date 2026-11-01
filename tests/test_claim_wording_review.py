@@ -78,7 +78,7 @@ class ClaimWordingReviewTests(unittest.TestCase):
                 preview = service.preview_source('project_case', '.txt',
                     b'I designed a synthetic workflow that connected research, approvals,\n'
                     b'implementation, and a 4,000-record evaluation set to improve review accuracy by 20%.\n')
-                candidate = preview['candidates'][0]
+                candidate = service.bootstrap()['pending_sources'][0]['candidates'][0]
                 statement = candidate['statement'] + (' The applicant added a synthetic clarification.' if edited else '')
                 service.commit_source(preview['source_id'], [{'candidate_id': candidate['candidate_id'],
                     'selected': True, 'statement': statement, 'category': candidate['category']}])
