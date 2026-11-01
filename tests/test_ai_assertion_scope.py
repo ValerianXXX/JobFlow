@@ -88,6 +88,13 @@ class AssertionScopeTests(unittest.TestCase):
             self.assertEqual(report['unsupported_actor_inference_count'], 0)
             self.assertFalse(report['adjacent_line_expansion_attempted'])
 
+    def test_historical_profile_summary_is_not_misparsed_as_an_actor(self):
+        report = _statement_grounding_report(
+            'The profile lists completed work separately from proposed future work.',
+            'This profile lists completed work separately from proposed future work.')
+        self.assertTrue(report['valid'])
+        self.assertEqual(report['unsupported_actor_inference_count'], 0)
+
 
 if __name__ == '__main__':
     unittest.main()
