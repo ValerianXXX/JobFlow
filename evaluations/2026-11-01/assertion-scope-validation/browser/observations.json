@@ -1,0 +1,21 @@
+{
+  "mode": "AGENT_OPERATED_BROWSER_SYNTHETIC_FIXED_ADAPTER",
+  "independent_human_test": false,
+  "real_model_test": false,
+  "initial_state": {
+    "sources": 0,
+    "claims": 0,
+    "approvals": 0
+  },
+  "observed_ui": [
+    "English: three unselected valid candidates, two status and one performer warning.",
+    "Citation dialog: original five synthetic text lines and non-confirmation explanation.",
+    "Chinese: three unselected valid candidates, two status and one performer warning.",
+    "All-filtered: no candidates, exactly one replacement requested, source confirmation available.",
+    "Source-only saves followed by reload: three originals retained; Claim review shows 0 / 0.",
+    "Desktop screenshot evidence retained; responsive 390 CSS-pixel coverage is from the separate automated UI contract."
+  ],
+  "actual_defect": "Actor warning used an unused reason code; frozen UI contract failed before repair.",
+  "interaction_notes": "After language switch a locator-based file chooser wait expired. Fresh AX button interaction recovered. An inspection assumed a native file input but found a button. Neither error changed product state or fixture counts.",
+  "cleanup": "Only the task-created tab and isolated service were closed; disposable state removed."
+}

@@ -1,0 +1,421 @@
+test_a_narrow_citation_cannot_drop_modal_or_nominal_scope (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_drop_modal_or_nominal_scope) ... 
+  test_a_narrow_citation_cannot_drop_modal_or_nominal_scope (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_drop_modal_or_nominal_scope) (lines=['The applicant was unable to', 'manage the synthetic project budget.']) ... FAIL
+  test_a_narrow_citation_cannot_drop_modal_or_nominal_scope (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_drop_modal_or_nominal_scope) (lines=['The applicant proposed a', 'deployment of the public service to production.']) ... FAIL
+  test_a_narrow_citation_cannot_drop_modal_or_nominal_scope (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_drop_modal_or_nominal_scope) (lines=['申请人无法', '处理这批合成项目的客户资料和来源记录。']) ... FAIL
+test_a_narrow_citation_cannot_omit_a_different_performer (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_omit_a_different_performer) ... FAIL
+test_actor_context_never_crosses_a_blank_or_bullet_boundary (test_ai_assertion_scope.AssertionScopeTests.test_actor_context_never_crosses_a_blank_or_bullet_boundary) ... ok
+test_candidate_filter_preserves_proposal_and_original_source (test_ai_assertion_scope.AssertionScopeTests.test_candidate_filter_preserves_proposal_and_original_source) ... FAIL
+test_different_literal_actor_is_counted_without_exposing_it (test_ai_assertion_scope.AssertionScopeTests.test_different_literal_actor_is_counted_without_exposing_it) ... FAIL
+test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) ... 
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-01') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-02') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-03') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-04') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-05') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-06') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-07') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-08') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-09') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-11') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-12') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-01') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-02') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-03') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-04') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-05') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-06') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-07') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-08') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-09') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-10') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-11') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-12') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-01') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-02') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-03') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-04') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-05') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-06') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-07') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-08') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-09') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-10') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-11') ... FAIL
+  test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-12') ... FAIL
+test_original_known_limit_observations_are_now_rejected_without_rewriting_them (test_ai_assertion_scope.AssertionScopeTests.test_original_known_limit_observations_are_now_rejected_without_rewriting_them) ... 
+  test_original_known_limit_observations_are_now_rejected_without_rewriting_them (test_ai_assertion_scope.AssertionScopeTests.test_original_known_limit_observations_are_now_rejected_without_rewriting_them) (case='nominalized-plan') ... FAIL
+  test_original_known_limit_observations_are_now_rejected_without_rewriting_them (test_ai_assertion_scope.AssertionScopeTests.test_original_known_limit_observations_are_now_rejected_without_rewriting_them) (case='inability') ... FAIL
+  test_original_known_limit_observations_are_now_rejected_without_rewriting_them (test_ai_assertion_scope.AssertionScopeTests.test_original_known_limit_observations_are_now_rejected_without_rewriting_them) (case='unrecognized-named-actor') ... FAIL
+
+======================================================================
+FAIL: test_a_narrow_citation_cannot_drop_modal_or_nominal_scope (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_drop_modal_or_nominal_scope) (lines=['The applicant was unable to', 'manage the synthetic project budget.'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 69, in test_a_narrow_citation_cannot_drop_modal_or_nominal_scope
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_a_narrow_citation_cannot_drop_modal_or_nominal_scope (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_drop_modal_or_nominal_scope) (lines=['The applicant proposed a', 'deployment of the public service to production.'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 69, in test_a_narrow_citation_cannot_drop_modal_or_nominal_scope
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_a_narrow_citation_cannot_drop_modal_or_nominal_scope (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_drop_modal_or_nominal_scope) (lines=['申请人无法', '处理这批合成项目的客户资料和来源记录。'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 69, in test_a_narrow_citation_cannot_drop_modal_or_nominal_scope
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_a_narrow_citation_cannot_omit_a_different_performer (test_ai_assertion_scope.AssertionScopeTests.test_a_narrow_citation_cannot_omit_a_different_performer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 77, in test_a_narrow_citation_cannot_omit_a_different_performer
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_candidate_filter_preserves_proposal_and_original_source (test_ai_assertion_scope.AssertionScopeTests.test_candidate_filter_preserves_proposal_and_original_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 47, in test_candidate_filter_preserves_proposal_and_original_source
+    self.assertEqual([c['statement'] for c in candidates], [source])
+AssertionError: Lists differ: ['The applicant deployed the public service to production[74 chars]on.'] != ['The applicant proposed a deployment of the public servi[14 chars]on.']
+
+First differing element 0:
+'The applicant deployed the public service to production.'
+'The applicant proposed a deployment of the public service to production.'
+
+First list contains 1 additional elements.
+First extra element 1:
+'The applicant proposed a deployment of the public service to production.'
+
+- ['The applicant deployed the public service to production.',
+-  'The applicant proposed a deployment of the public service to production.']
+? ^
+
++ ['The applicant proposed a deployment of the public service to production.']
+? ^
+
+
+======================================================================
+FAIL: test_different_literal_actor_is_counted_without_exposing_it (test_ai_assertion_scope.AssertionScopeTests.test_different_literal_actor_is_counted_without_exposing_it)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 57, in test_different_literal_actor_is_counted_without_exposing_it
+    self.assertFalse(report['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-01')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-02')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-03')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-04')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-05')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-06')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-07')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-08')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-09')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-11')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='proposal-12')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-01')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-02')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-03')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-04')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-05')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-06')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-07')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-08')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-09')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-10')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-11')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='modality-12')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-01')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-02')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-03')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-04')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-05')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-06')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-07')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-08')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-09')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-10')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-11')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_frozen_promotions_and_supported_controls (test_ai_assertion_scope.AssertionScopeTests.test_frozen_promotions_and_supported_controls) (case='literal_actor-12')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 23, in test_frozen_promotions_and_supported_controls
+    self.assertEqual(_statement_grounding_report(row['statement'], row['source'])['valid'], row['expected_valid'])
+AssertionError: True != False
+
+======================================================================
+FAIL: test_original_known_limit_observations_are_now_rejected_without_rewriting_them (test_ai_assertion_scope.AssertionScopeTests.test_original_known_limit_observations_are_now_rejected_without_rewriting_them) (case='nominalized-plan')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 31, in test_original_known_limit_observations_are_now_rejected_without_rewriting_them
+    self.assertFalse(_statement_grounding_report(case['statement'], case['source'])['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_original_known_limit_observations_are_now_rejected_without_rewriting_them (test_ai_assertion_scope.AssertionScopeTests.test_original_known_limit_observations_are_now_rejected_without_rewriting_them) (case='inability')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 31, in test_original_known_limit_observations_are_now_rejected_without_rewriting_them
+    self.assertFalse(_statement_grounding_report(case['statement'], case['source'])['valid'])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_original_known_limit_observations_are_now_rejected_without_rewriting_them (test_ai_assertion_scope.AssertionScopeTests.test_original_known_limit_observations_are_now_rejected_without_rewriting_them) (case='unrecognized-named-actor')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<PROJECT>\tests\test_ai_assertion_scope.py", line 31, in test_original_known_limit_observations_are_now_rejected_without_rewriting_them
+    self.assertFalse(_statement_grounding_report(case['statement'], case['source'])['valid'])
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.046s
+
+FAILED (failures=44)

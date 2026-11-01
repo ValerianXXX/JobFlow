@@ -1,0 +1,34 @@
+{
+  "startedAtUtc": "2026-11-01T11:52:18.053788+00:00",
+  "status": "RUNNING",
+  "runtime": "6847a898bcb33695b44ae5d97671c8f9b4d71b3a",
+  "collected": 1646,
+  "ownVenv": true,
+  "newLiveModelCalls": 0,
+  "versions": {
+    "mcp": "2.3.0",
+    "anyio": "4.15.1",
+    "docling-slim": "2.144.0",
+    "docling-parse": "7.24.0",
+    "pypdf": "5.9.0",
+    "pypdfium2": "5.13.0",
+    "python-docx": "1.2.0",
+    "setuptools": "80.10.2",
+    "wheel": "0.48.0"
+  },
+  "actualImportPreflight": "PASS",
+  "pipCheck": "PASS",
+  "nodeSha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237",
+  "nodeTree": {
+    "status": "PASS",
+    "packages": [
+      "playwright",
+      "playwright-core"
+    ],
+    "file_count": 173,
+    "total_bytes": 18516238,
+    "tree_sha256": "sha256:df85481a30bcbc0f7276548d245eba0980d136c8085ca4a3662cb6f3c568302f"
+  },
+  "scope": "Complete unchanged unittest discovery with scope and historical-summary regressions; no limits or checks weakened",
+  "wholeGoalComplete": false
+}

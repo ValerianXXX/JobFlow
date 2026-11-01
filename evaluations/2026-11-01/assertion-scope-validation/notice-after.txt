@@ -1,0 +1,1 @@
+{"status":"PASS","locales":["en","zh"],"widths":[1280,390],"protocol_reason_counts_visible":true,"candidates_unselected":true,"source_confirmation_available":true,"external_requests":0}

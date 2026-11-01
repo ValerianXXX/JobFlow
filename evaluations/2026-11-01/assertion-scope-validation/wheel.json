@@ -1,0 +1,14 @@
+{
+  "runtime": "6847a898bcb33695b44ae5d97671c8f9b4d71b3a",
+  "filename": "jobflow_local-0.7.0-py3-none-any.whl",
+  "sha256": "2f190d1aff7372c05aec258746fa3651c120aa89404255bdd231a03bded66b24",
+  "bytes": 856506,
+  "exact_source_files_match": {
+    "jobops/claim_assertion_status.py": true,
+    "jobops/ai_runtime.py": true,
+    "jobops/ui/app.js": true,
+    "jobops/ui/index.html": true
+  },
+  "built_without_publishing": true,
+  "production_signed": false
+}

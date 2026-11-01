@@ -1,0 +1,300 @@
+{
+  "synthetic_only": true,
+  "mode": "FIXED_ADAPTER_ACTUAL_HTTP_UI_AND_DPAPI",
+  "live_provider_calls": 0,
+  "model_quality_measured": false,
+  "seeded_approvals": false,
+  "started_at": "2026-11-01T11:35:59.837808+00:00",
+  "fixture_calls": [
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "input_sha256": "sha256:29289373deb63c1b07d6d5300d6467c32d7340f6f6b440ff31ce1958b71a1f57"
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "input_sha256": "sha256:3bcc29ddb6c9e323b4c666b47e214f644ee126bab82be0eaf8e73e69e76adce2"
+    },
+    {
+      "task": "JOBOPS_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "input_sha256": "sha256:9c34486ff5bee1e78bc4dbf01616bf242c026c48eebd66dcbf262f660130dceb"
+    },
+    {
+      "task": "JOBOPS_REPAIR_PRIVATE_DOCUMENT_UNDERSTANDING_V2",
+      "input_sha256": "sha256:9c34486ff5bee1e78bc4dbf01616bf242c026c48eebd66dcbf262f660130dceb"
+    }
+  ],
+  "fixture_sha256": {
+    "english": "sha256:febf1ff6ec6d82f066537139c9a5a015efe5ea8d80a5a2ca7a4322ccca84ac6b",
+    "chinese": "sha256:de5d23bae483d4a833ea167f7dc151e8e469993a0073c13d3712b7a3956d9a83",
+    "all-filtered": "sha256:2681f363247ac6760c0b96fdd2d173622b3260eb5d3f175388b3819e8a2ebd81"
+  },
+  "source_count": 3,
+  "pending_count": 0,
+  "claim_count": 0,
+  "master_resume_present": true,
+  "master_resume_editable": true,
+  "sources": [
+    {
+      "source_id": "SRC-D28384B7644A",
+      "extraction_summary": {
+        "ai_candidates": 3,
+        "ai_chunking_applied": false,
+        "ai_chunks": 1,
+        "ai_covered_characters": 252,
+        "ai_entities": 1,
+        "ai_input_characters": 252,
+        "ai_input_truncated": false,
+        "ai_repair_attempted": false,
+        "ai_repair_count": 0,
+        "ai_repair_succeeded": false,
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "automatic_claim_selection": false,
+        "candidate_filter_applied": true,
+        "claim_candidates": 3,
+        "classification_review_candidate_count": 0,
+        "document_page_count": null,
+        "document_quality": {
+          "character_count": 252,
+          "characters_per_page": null,
+          "contains_document_text": false,
+          "control_character_count": 0,
+          "extension": ".docx",
+          "long_line_count": 0,
+          "nonempty_line_count": 5,
+          "page_count": null,
+          "private_use_glyph_count": 0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "replacement_character_count": 0,
+          "schema_version": 1,
+          "short_line_ratio": 0.0,
+          "status": "PASS",
+          "unique_line_ratio": 1.0,
+          "wordish_character_count": 214
+        },
+        "filtered_candidate_count": 3,
+        "filtered_candidate_reasons": {
+          "SOURCE_ASSERTION_CONFLICT": 2,
+          "UNSUPPORTED_ACTOR": 1
+        },
+        "filtered_noise_lines": 0,
+        "grounding_ratio_minimum": 0.5,
+        "intake_mode": "STANDARD_MEMORY",
+        "near_duplicate_ratio": 0.85,
+        "non_claim_blocks": 0,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6",
+        "quality_gate_version": 5,
+        "raw_lines": 5,
+        "reconstructed_blocks": 1,
+        "segmented_oversize_lines": 0,
+        "source_context_review": {
+          "automatic_claim_creation": false,
+          "automatic_profile_update": false,
+          "contract_version": 1,
+          "duplicates": 0,
+          "filtered": 0,
+          "missing_chunks": 1,
+          "proposed": 0,
+          "provided_chunks": 0,
+          "retained": 0,
+          "semantic_completeness_verified": false,
+          "status": "NOT_PROVIDED"
+        },
+        "source_reference_coverage": {
+          "cited_source_lines": 5,
+          "fact_completeness_verified": false,
+          "invalid_reference_count": 0,
+          "nonempty_source_lines": 5,
+          "range_list_truncated": false,
+          "schema_version": 1,
+          "semantic_recall": null,
+          "status": "LINE_REFERENCES_ONLY",
+          "uncited_line_ranges": [],
+          "uncited_source_lines": 0
+        },
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0
+      },
+      "original_bytes_match": true
+    },
+    {
+      "source_id": "SRC-7E0D23EDC31C",
+      "extraction_summary": {
+        "ai_candidates": 3,
+        "ai_chunking_applied": false,
+        "ai_chunks": 1,
+        "ai_covered_characters": 131,
+        "ai_entities": 1,
+        "ai_input_characters": 131,
+        "ai_input_truncated": false,
+        "ai_repair_attempted": false,
+        "ai_repair_count": 0,
+        "ai_repair_succeeded": false,
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "automatic_claim_selection": false,
+        "candidate_filter_applied": true,
+        "claim_candidates": 3,
+        "classification_review_candidate_count": 0,
+        "document_page_count": null,
+        "document_quality": {
+          "character_count": 131,
+          "characters_per_page": null,
+          "contains_document_text": false,
+          "control_character_count": 0,
+          "extension": ".docx",
+          "long_line_count": 0,
+          "nonempty_line_count": 5,
+          "page_count": null,
+          "private_use_glyph_count": 0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "replacement_character_count": 0,
+          "schema_version": 1,
+          "short_line_ratio": 0.0,
+          "status": "PASS",
+          "unique_line_ratio": 1.0,
+          "wordish_character_count": 119
+        },
+        "filtered_candidate_count": 3,
+        "filtered_candidate_reasons": {
+          "SOURCE_ASSERTION_CONFLICT": 2,
+          "UNSUPPORTED_ACTOR": 1
+        },
+        "filtered_noise_lines": 0,
+        "grounding_ratio_minimum": 0.5,
+        "intake_mode": "STANDARD_MEMORY",
+        "near_duplicate_ratio": 0.85,
+        "non_claim_blocks": 0,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6",
+        "quality_gate_version": 5,
+        "raw_lines": 5,
+        "reconstructed_blocks": 1,
+        "segmented_oversize_lines": 0,
+        "source_context_review": {
+          "automatic_claim_creation": false,
+          "automatic_profile_update": false,
+          "contract_version": 1,
+          "duplicates": 0,
+          "filtered": 0,
+          "missing_chunks": 1,
+          "proposed": 0,
+          "provided_chunks": 0,
+          "retained": 0,
+          "semantic_completeness_verified": false,
+          "status": "NOT_PROVIDED"
+        },
+        "source_reference_coverage": {
+          "cited_source_lines": 5,
+          "fact_completeness_verified": false,
+          "invalid_reference_count": 0,
+          "nonempty_source_lines": 5,
+          "range_list_truncated": false,
+          "schema_version": 1,
+          "semantic_recall": null,
+          "status": "LINE_REFERENCES_ONLY",
+          "uncited_line_ranges": [],
+          "uncited_source_lines": 0
+        },
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0
+      },
+      "original_bytes_match": true
+    },
+    {
+      "source_id": "SRC-A1C908EEE221",
+      "extraction_summary": {
+        "ai_candidates": 0,
+        "ai_chunking_applied": false,
+        "ai_chunks": 1,
+        "ai_covered_characters": 258,
+        "ai_entities": 1,
+        "ai_input_characters": 258,
+        "ai_input_truncated": false,
+        "ai_repair_attempted": true,
+        "ai_repair_count": 1,
+        "ai_repair_succeeded": true,
+        "analysis_mode": "AI_CORE_ENTITY_ANALYSIS",
+        "automatic_claim_selection": false,
+        "candidate_filter_applied": true,
+        "claim_candidates": 0,
+        "classification_review_candidate_count": 0,
+        "document_page_count": null,
+        "document_quality": {
+          "character_count": 258,
+          "characters_per_page": null,
+          "contains_document_text": false,
+          "control_character_count": 0,
+          "extension": ".docx",
+          "long_line_count": 0,
+          "nonempty_line_count": 5,
+          "page_count": null,
+          "private_use_glyph_count": 0,
+          "reason_codes": [],
+          "recommendation": "READY_FOR_STRUCTURED_AI",
+          "replacement_character_count": 0,
+          "schema_version": 1,
+          "short_line_ratio": 0.0,
+          "status": "PASS",
+          "unique_line_ratio": 1.0,
+          "wordish_character_count": 220
+        },
+        "filtered_candidate_count": 3,
+        "filtered_candidate_reasons": {
+          "SOURCE_ASSERTION_CONFLICT": 2,
+          "UNSUPPORTED_ACTOR": 1
+        },
+        "filtered_noise_lines": 0,
+        "grounding_ratio_minimum": 0.5,
+        "intake_mode": "STANDARD_MEMORY",
+        "near_duplicate_ratio": 0.85,
+        "non_claim_blocks": 0,
+        "quality_contract": "ENTITY_DEDUPED_LINE_ANCHORED_V6",
+        "quality_gate_version": 5,
+        "raw_lines": 5,
+        "reconstructed_blocks": 1,
+        "segmented_oversize_lines": 0,
+        "source_context_review": {
+          "automatic_claim_creation": false,
+          "automatic_profile_update": false,
+          "contract_version": 1,
+          "duplicates": 0,
+          "filtered": 0,
+          "missing_chunks": 1,
+          "proposed": 0,
+          "provided_chunks": 0,
+          "retained": 0,
+          "semantic_completeness_verified": false,
+          "status": "NOT_PROVIDED"
+        },
+        "source_reference_coverage": {
+          "cited_source_lines": 0,
+          "fact_completeness_verified": false,
+          "invalid_reference_count": 0,
+          "nonempty_source_lines": 5,
+          "range_list_truncated": false,
+          "schema_version": 1,
+          "semantic_recall": null,
+          "status": "LINE_REFERENCES_ONLY",
+          "uncited_line_ranges": [
+            {
+              "line_end": 5,
+              "line_start": 1
+            }
+          ],
+          "uncited_source_lines": 5
+        },
+        "structural_normalization_codes": [],
+        "structural_normalization_count": 0
+      },
+      "original_bytes_match": true
+    }
+  ],
+  "database_counts": {
+    "applications": 0,
+    "claims": 0,
+    "approvals": 0,
+    "external_action_attempts": 0
+  },
+  "temporary_state_removed": true,
+  "finished_at": "2026-11-01T11:51:26.300131+00:00"
+}

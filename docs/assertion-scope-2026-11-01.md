@@ -89,6 +89,11 @@ the same 72 pinned packages as the parent environment. The available Node
 executable and copied task-owned Playwright tree pass exact hash verification;
 an unavailable npm executable is not reported as a successful fresh install.
 
+The [hash-linked validation receipt](../evaluations/2026-11-01/assertion-scope-validation/verification.json)
+contains the failed observations, focused results, browser originals/screenshots,
+runtime pins and a running full-regression snapshot. All four changed runtime/UI
+files match the built wheel exactly; no artifact was signed or published.
+
 ## Reproduction
 
 Use the existing development installation and create fresh observation paths:

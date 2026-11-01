@@ -1,0 +1,8 @@
+{
+  "actorNotices": [],
+  "candidates": 3,
+  "selected": 0,
+  "statusNotices": [
+    "Skipped 2 candidate(s) whose completion, negation, plan or capability status differs from the cited source. You can still save the source; review the original and remaining candidates."
+  ]
+}

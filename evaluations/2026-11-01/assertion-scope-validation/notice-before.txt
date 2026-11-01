@@ -1,0 +1,5 @@
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+0 !== 1
+
+    at <PROJECT>\tests\onboarding_assertion_scope_e2e.cjs:39:12
