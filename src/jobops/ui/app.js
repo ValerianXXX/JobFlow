@@ -609,7 +609,7 @@ Object.assign(STRINGS.en,{
   claimOriginUnknown:"Current wording history is incomplete; review the original source",
   claimSourceChanged:"Upstream content changed. Recheck the original material and this Claim. Save the upstream edit before confirming this Claim."
 });
-const UI_PROTOCOL_VERSION = 43;
+const UI_PROTOCOL_VERSION = 44;
 const AI_QUALITY_CONTRACT = "ENTITY_DEDUPED_LINE_ANCHORED_V6";
 const COMPANION_EXTENSION_IDS = [
   "hhlliaaafegldkmcgmaoaelabipcaooj",
@@ -2321,7 +2321,7 @@ function renderPrefillProposal(items){
       ?t("prefillPrivateSource")
       :item.redacted_summary==="PUBLIC_VALUE_HASH_PRESENT"?t("prefillPublicSource"):t("prefillMissing");
     const readiness=item.status==="READY"||item.status==="RESOLVED_FOR_APPLICATION"?t("prefillReady"):t("prefillMissing");
-    return `<strong>${escapeHtml(packetValue(item.label||item.id))}</strong><br><small>${escapeHtml(packetValue(item.classification))} · ${escapeHtml(source)} · ${escapeHtml(readiness)}</small>`;
+    return `<strong>${escapeHtml(packetValue(item.label||item.id))}</strong><br><small>${escapeHtml(packetFieldMeaning(item.classification))} · ${escapeHtml(source)} · ${escapeHtml(readiness)}</small>`;
   });
 }
 function materialStatusLabel(value){
@@ -2347,6 +2347,7 @@ function executionStateLabel(value){
   return keys[value]?t(keys[value]):packetValue(value);
 }
 function executionGateLabel(value){
+  if(value==="FRESH_EXPLICIT_SUBMISSION_APPROVAL")return state.locale==="zh"?"最终提交只由你亲自点击":"Only you may click Final Submit";
   const keys={SEPARATE_LIVE_READ_AUTHORIZATION:"gateLiveRead",NONE_AFTER_FRESHNESS:"gateAfterFreshness",USER_ACCOUNT_DECISION:"gateAccount",REVIEW_PACKET_APPROVAL:"gatePacket",SEPARATE_UPLOAD_AUTHORIZATION:"gateUpload",PER_APPLICATION_CONFIRMATION:"gatePerApplication",NONE:"gateNone",FRESH_EXPLICIT_SUBMISSION_APPROVAL:"gateSubmit"};
   return keys[value]?t(keys[value]):packetValue(value);
 }
@@ -2421,7 +2422,7 @@ function renderApplicationFieldResolution(result){
   document.querySelector("#applicationFieldResolutionConfirm").checked=false;
   if(!fields.length&&!unknowns.length){list.replaceChildren();panel.classList.add("hidden");return;}
   const fieldRows=fields.map(field=>`<article class="application-field-row" data-control-ref="${escapeHtml(field.control_ref)}">
-    <div><strong>${escapeHtml(field.label||field.answer_key||field.control_ref)}</strong><small>${escapeHtml(field.required?t("packetFieldRequired"):t("packetFieldOptional"))} · ${escapeHtml(field.classification)}</small></div>
+    <div><strong>${escapeHtml(field.label||field.answer_key||field.control_ref)}</strong><small>${escapeHtml(field.required?t("packetFieldRequired"):t("packetFieldOptional"))} · ${escapeHtml(packetFieldMeaning(field.classification))}</small></div>
     <label><span>${escapeHtml(t("packetFieldDecision"))}</span><select class="application-field-decision">${applicationFieldDecisionOptions(field)}</select></label>
     <div class="application-field-answer"><label><span>${escapeHtml(t("packetFieldValue"))}</span>${applicationFieldValueControl(field)}</label>${field.generated_narrative_available?`<div class="application-narrative-tools"><button class="text-action preview-application-narrative" type="button">${escapeHtml(t("packetFieldPreviewNarrative"))}</button><div class="application-narrative-preview hidden"><strong>${escapeHtml(t("packetFieldNarrativePreviewTitle"))}</strong><pre></pre><button class="text-action close-application-narrative-preview" type="button">${escapeHtml(t("packetFieldClosePreview"))}</button></div></div>`:""}</div>
   </article>`).join("");
@@ -2445,12 +2446,24 @@ function collectApplicationFieldResolutions(){
     .map(row=>({unknown_id:row.dataset.unknownId,decision:"ACKNOWLEDGED_UNKNOWN"}));
   return {fields:values,nonForm};
 }
+function packetFieldMeaning(value){
+  const labels={
+    ordinary_fixed:["可复用你已确认的答案","May reuse an answer you confirmed"],
+    private_fixed:["需使用你核对过的个人资料","Requires your reviewed personal details"],
+    file_upload_stop:["上传前需要你的批准","Your approval is required before upload"],
+    final_submit_stop:["最终提交由你亲自完成","Only you may submit the application"],
+    application_narrative_review:["核对求职信后确认","Review the Cover Letter before confirming"],
+    account_stop:["需要你处理账号或登录","You need to handle the account or sign-in"],
+    captcha_stop:["需要你完成页面验证","You need to complete the site's verification"]
+  };
+  return (labels[value]||["需要你逐项核对，尚未自动填写","Needs your review; not automatically filled"])[state.locale==="zh"?0:1];
+}
 function renderReviewPacket(){
   const result=state.reviewPacket;if(!result)return;
   const packet=result.packet||{},job=packet.job||result.job_summary||{},fit=packet.fit||{},route=packet.source_route||{},materialPlan=packet.material_plan||{},executionPlan=packet.execution_plan||{};
   document.querySelector("#reviewPacketTitle").textContent=`${packetValue(job.title)} · ${packetValue(job.company)}`;
   document.querySelector("#reviewPacketMeta").textContent=`${result.application_id} · ${t("packetVersion").replace("{version}",result.packet_version||"—")} · ${t("packetStatus")}: ${result.status} · ${t("packetCreated")}: ${result.created_at}`;
-  const materialPlanBody=`<dl class="packet-kv"><dt>${escapeHtml(t("materialResume"))}</dt><dd>${escapeHtml(materialStatusLabel(materialPlan.resume?.derivation))}</dd><dt>${escapeHtml(t("materialCoverLetter"))}</dt><dd>${escapeHtml(materialStatusLabel(materialPlan.cover_letter?.request_status))} · ${escapeHtml(materialStatusLabel(materialPlan.cover_letter?.generation_status))}</dd><dt>${escapeHtml(t("materialPortfolioFile"))}</dt><dd>${escapeHtml(materialStatusLabel(materialPlan.portfolio_file?.binding_status))}</dd><dt>${escapeHtml(t("materialExternalActions"))}</dt><dd>${escapeHtml(materialPlan.all_uploads_and_submission_blocked?t("materialBlocked"):t("packetNone"))}</dd></dl>${packetList(materialPlan.public_links,item=>`${escapeHtml(materialKindLabel(item.kind))} · ${escapeHtml(materialStatusLabel(item.binding_status))}`)}`;
+  const materialPlanBody=`<dl class="packet-kv"><dt>${escapeHtml(t("materialResume"))}</dt><dd>${escapeHtml(materialStatusLabel(materialPlan.resume?.derivation))}</dd><dt>${escapeHtml(t("materialCoverLetter"))}</dt><dd>${escapeHtml(materialStatusLabel(materialPlan.cover_letter?.request_status))} · ${escapeHtml(materialStatusLabel(materialPlan.cover_letter?.generation_status))}</dd><dt>${escapeHtml(t("materialPortfolioFile"))}</dt><dd>${escapeHtml(materialStatusLabel(materialPlan.portfolio_file?.binding_status))}</dd><dt>${escapeHtml(t("materialExternalActions"))}</dt><dd>${escapeHtml(materialPlan.all_uploads_and_submission_blocked?t("materialBlocked"):t("packetNone"))}</dd></dl>${materialPlan.public_links?.length?packetList(materialPlan.public_links,item=>`${escapeHtml(materialKindLabel(item.kind))} · ${escapeHtml(materialStatusLabel(item.binding_status))}`):""}`;
   const executionStatus={READY_FOR_REVIEW:"executionReady",NEEDS_USER_INPUT:"executionNeedsInput",NEEDS_ACCOUNT_APPROVAL:"executionNeedsAccount"}[executionPlan.status]||"packetNone";
   const executionBody=`<p><strong>${escapeHtml(t(executionStatus))}</strong></p>${packetList(executionPlan.steps,item=>`<strong>${escapeHtml(packetValue(item.sequence))}. ${escapeHtml(executionPhaseLabel(item.phase))}</strong><br><small>${escapeHtml(executionStateLabel(item.state))} · ${escapeHtml(executionGateLabel(item.gate))}${Number.isInteger(item.item_count)?` · ${escapeHtml(packetValue(item.item_count))}`:""}</small>`)}<p><small>${escapeHtml(t("executionQueueContinues"))}</small></p>`;
   const sections=[
@@ -2459,8 +2472,8 @@ function renderReviewPacket(){
     ["packetGaps",packetList(packet.hard_gaps,item=>escapeHtml(packetValue(item))),false],
     ["packetBullets",packetList(packet.resume_bullets,item=>`<strong>${escapeHtml(packetValue(item.text))}</strong><br><small>${escapeHtml(t("packetClaims"))}: ${escapeHtml(packetValue(item.claim_id))} · ${escapeHtml(t("packetEvidence"))}: ${escapeHtml(packetValue(item.evidence))}</small>`),true],
     ["packetPrefillProposal",renderPrefillProposal(packet.form_questions),true],
-    ["packetQuestions",packetList(packet.form_questions,item=>`${escapeHtml(packetValue(item.label||item.id))} · ${escapeHtml(packetValue(item.classification||item.action||item.status))}${item.ai_semantic_role?` · AI: ${escapeHtml(packetValue(item.ai_semantic_role))}`:""}`),false],
-    ["packetSensitive",packetList(packet.sensitive_fields,item=>`${escapeHtml(packetValue(item.label||item.id))} · ${escapeHtml(packetValue(item.classification||item.action||item.status))}`),false],
+    ["packetQuestions",packetList(packet.form_questions,item=>`${escapeHtml(packetValue(item.label||item.id))} · ${escapeHtml(packetFieldMeaning(item.classification||item.action||item.status))}`),false],
+    ["packetSensitive",packetList(packet.sensitive_fields,item=>`${escapeHtml(packetValue(item.label||item.id))} · ${escapeHtml(packetFieldMeaning(item.classification||item.action||item.status))}`),false],
     ["packetUploads",packetList(packet.uploads,item=>`${escapeHtml(packetValue(item.filename))} · ${escapeHtml(packetValue(item.purpose))} · ${escapeHtml(packetValue(item.sha256).slice(0,15))}`),false],
     ["packetMaterialPlan",materialPlanBody,true],
     ["packetExecutionPlan",executionBody,true],
@@ -2477,6 +2490,7 @@ function renderReviewPacket(){
   document.querySelector("#packetDecisionPanel").classList.toggle("hidden",!canDecide);
   if(!canDecide)state.reviewDecision="";
   const panel=document.querySelector("#reviewPacketPanel");panel.classList.remove("hidden");
+  window.JobFlowMaterialReview?.render(result);
   renderWorkflowNow();
 }
 
@@ -3478,7 +3492,7 @@ document.addEventListener("click", async event => {
       state.reviewDecision="";
       renderReviewPacket();
       scrollToElement(document.querySelector("#reviewPacketPanel"),{block:"start"});
-    }catch(error){state.reviewPacket=null;document.querySelector("#reviewPacketPanel").classList.add("hidden");renderWorkflowNow();handleUiError(error);}
+    }catch(error){window.JobFlowMaterialReview?.clear();state.reviewPacket=null;document.querySelector("#reviewPacketPanel").classList.add("hidden");renderWorkflowNow();handleUiError(error);}
     return;
   }
   const previewNarrative=event.target.closest(".preview-application-narrative");
@@ -3503,7 +3517,7 @@ document.addEventListener("click", async event => {
   const closeNarrativePreview=event.target.closest(".close-application-narrative-preview");
   if(closeNarrativePreview){clearApplicationNarrativePreviews(closeNarrativePreview.closest(".application-field-row")||document);return;}
   const closePacket=event.target.closest("#closeReviewPacket");
-  if(closePacket){clearApplicationNarrativePreviews();state.reviewPacket=null;state.reviewDecision="";document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#applicationFieldResolutionList").replaceChildren();document.querySelector("#applicationFieldResolutionPanel").classList.add("hidden");document.querySelector("#reviewPacketPanel").classList.add("hidden");renderWorkflowNow();return;}
+  if(closePacket){clearApplicationNarrativePreviews();window.JobFlowMaterialReview?.clear();state.reviewPacket=null;state.reviewDecision="";document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#applicationFieldResolutionList").replaceChildren();document.querySelector("#applicationFieldResolutionPanel").classList.add("hidden");document.querySelector("#reviewPacketPanel").classList.add("hidden");renderWorkflowNow();return;}
   const saveApplicationFields=event.target.closest("#saveApplicationFieldResolutions");
   if(saveApplicationFields){
     const packet=state.reviewPacket?.packet,resolutionDraft=collectApplicationFieldResolutions();
@@ -3555,7 +3569,7 @@ document.addEventListener("click", async event => {
             application_id:state.reviewPacket.application_id,decision,expected_packet_hash:packet.content_hash,user_confirmed:true
           })});
         }
-        state.reviewPacket=null;state.reviewDecision="";
+        window.JobFlowMaterialReview?.clear();state.reviewPacket=null;state.reviewDecision="";
         document.querySelector("#reviewPacketBody").replaceChildren();document.querySelector("#reviewPacketPanel").classList.add("hidden");
         await refreshLatest();
       },{estimatedSeconds:waitingCount>0?180:7});
