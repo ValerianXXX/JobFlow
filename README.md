@@ -21,6 +21,11 @@ PDF instead of rejecting every generated master. Current material permission
 and approved editing positions are still required. See the [continuous first-use
 verification, recovery and limits](docs/adopted-master-handoff-2026-11-01.md).
 
+Open a review packet to preview its final PDF pages and download the saved PDF
+or editable DOCX before deciding. Files are checked against that application;
+viewing them grants no upload or submission permission. Downloads become ordinary
+local copies. See [final-file review, setup and validation](docs/final-application-files-2026-11-01.md).
+
 The latest material-intake change rejects pages represented only by pagination
 or substantial raster areas missing from the text layer. Default, fallback and
 optional local parsers share the check; bilingual guidance explains recovery

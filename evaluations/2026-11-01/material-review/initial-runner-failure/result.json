@@ -1,0 +1,17 @@
+{
+  "protocol": "EMPTY_PROFILE_TO_FINAL_MATERIAL_REVIEW_V1",
+  "synthetic_only": true,
+  "model": "Pinned CJK document response and bounded existing fake application adapter; no fresh inference",
+  "new_model_calls": 0,
+  "independent_human": false,
+  "steps": [],
+  "reference_runtime": "d80e6c9d5e6b2ba4d012b5fecc33aea4bf3739ae",
+  "observed_head": "8d92c42e0c1ed6d5a3332eee90bcdd9947af3f51",
+  "observed_product_tree": "c5f5e684c69320ba49ad425d861fdce7059b18e5",
+  "runtime_matches_reference": false,
+  "started_at": "2026-11-01T07:01:25.915Z",
+  "harness_sha256": "a5f2a7d1b0c8e04ddededcd27b392a1921bd2e3db4209cf0cdd81160b6f6b772",
+  "status": "FAILED",
+  "error": "SyntaxError: Unexpected end of JSON input",
+  "fixture_exit": 1
+}

@@ -4,6 +4,14 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Add final application-file preview and explicit download inside the local review
+  packet. Revalidate the packet, application association and encrypted file before
+  returning bytes; reject stale/revoked/changed data and discard late preview replies.
+  Support Chinese/English paging, zoom, close/clear and mobile layouts. Explain
+  downloaded-copy privacy and use ordinary field descriptions. UI protocol 44 pairs
+  v52 assets with the new read-only routes. No new model, dependency or migration.
+  [Operation, evidence and rollback](docs/final-application-files-2026-11-01.md).
+
 - Fix application preparation after adopting a generated standard DOCX: accept
   only the exact adopted file bound to its completed state, original PDF and
   historical generation receipt. Preserve original evidence, require current

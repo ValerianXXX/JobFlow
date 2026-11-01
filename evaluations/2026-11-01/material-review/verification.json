@@ -1,0 +1,293 @@
+{
+  "runtime_commit": "8d92c42e0c1ed6d5a3332eee90bcdd9947af3f51",
+  "native_observed_head": "53c3b2bda6807d659adfa55b15db72bb88cd1128",
+  "frozen_contract_commit": "30c0d642ebab2ccb391e26cc3c6667bd266fd647",
+  "synthetic_only": true,
+  "independent_human": false,
+  "new_model_calls": 0,
+  "total_task_cost_usd": null,
+  "whole_product_accepted": false,
+  "migration_required": false,
+  "related_python": {
+    "tests": 98,
+    "status": "PASS",
+    "seconds": 56.572
+  },
+  "javascript": {
+    "suites": 20,
+    "status": "PASS",
+    "scope": "All suites discovered by the existing project runner"
+  },
+  "focused_ui": {
+    "status": "PASS",
+    "actual_http_and_pdf": true,
+    "store": "MEMORY_CONTRACT_DOUBLE"
+  },
+  "continuous_native": {
+    "status": "PASS",
+    "empty_start": true,
+    "seeded_approval": false,
+    "store": "WINDOWS_DPAPI",
+    "pdf_provider": "LIBREOFFICE",
+    "product_pdf_previews": 2,
+    "product_file_downloads": 4,
+    "download_bytes_match_packet": true,
+    "resume_fact_occurrences": [
+      1,
+      1
+    ],
+    "assistant_visual_review": "PASS",
+    "writing_quality_accepted": false,
+    "application_status": "AWAITING_APPROVAL",
+    "application_approvals": 0,
+    "external_action_attempts": 0,
+    "temporary_state_removed": true
+  },
+  "baseline": {
+    "ready_service_contract": "11 methods: one absent-route HTTP failure and 18 missing-method errors/subtest errors",
+    "initial_fixture_setup": "Two earlier setup invocations failed before the intended boundary; logs retained",
+    "first_ui": "Failed on remaining raw private_fixed label in prefill summary; product wording corrected",
+    "initial_native_runner": "Failed before UI because output was outside the reused fixture report subtree; same guard retained",
+    "first_wheel_command": "python -m build unavailable in the prepared interpreter; offline pip wheel used with existing backend"
+  },
+  "wheel": {
+    "file": "jobflow_local-0.7.0-py3-none-any.whl",
+    "sha256": "5d1b7ad8d6a25988baa7247d78c6377d9a61e4b48bba43e02202ee1281dc4d34",
+    "production_signed": false,
+    "packaged_runtime_files": [
+      {
+        "file": "src/jobops/__init__.py",
+        "sha256": "b3d0b5dd84d74f783e55abfc18392505a3321cd8f2f85e3d29b01e51bb64dfb2"
+      },
+      {
+        "file": "src/jobops/application_material_review.py",
+        "sha256": "cfd80f6688340c5852269575e4855eac25c77de1623b6864084b3512f4a35664"
+      },
+      {
+        "file": "src/jobops/onboarding_center.py",
+        "sha256": "2e7cf223d72f9563153ea791417c489c0ad6cf56585cc2300b5f2a6bcaa48267"
+      },
+      {
+        "file": "src/jobops/onboarding_server.py",
+        "sha256": "9ff122826fb24888a5e3916448dbd835e5cc1c9d47a3d3515e4d49a068505166"
+      },
+      {
+        "file": "src/jobops/ui/app.js",
+        "sha256": "3313ecb68e92e4dd64c75f8012c082333b23e972cc1ebb4dae386e949beb656d"
+      },
+      {
+        "file": "src/jobops/ui/index.html",
+        "sha256": "afe374fe6e85ae6066de822fb05146679ae57981e541d0cad41b9555494cbc0a"
+      },
+      {
+        "file": "src/jobops/ui/material-review.js",
+        "sha256": "d069c49cebec99dd887b52a946d85ed2082b886520447284e9cf3f82c67887b7"
+      },
+      {
+        "file": "src/jobops/ui/styles.css",
+        "sha256": "bcdcfe633b1844dc81ddb66a772c489f7e10911d10334746ed8679d8d3d57631"
+      }
+    ]
+  },
+  "public_copy_transforms": [
+    "Selected synthetic artifacts only",
+    "Local path prefixes redacted case-insensitively",
+    "UTF-8 LF text; copied logs exported as scanned .txt with trailing spaces removed; originals retained"
+  ],
+  "remaining": [
+    "Current full hosted Python matrix",
+    "36-material factual acceptance and independent first users",
+    "Fresh-model prose quality and authorized live ATS/mailbox",
+    "Trusted production signing and clean Windows install/upgrade/rollback"
+  ],
+  "artifacts": [
+    {
+      "file": "checks/jobflow-material-review-contract-baseline-20261101.txt",
+      "sha256": "7e0777b4c6bc8f876ef4d4f7342660c177bee3dd26c0be0f7b6c1c777f2e08ce"
+    },
+    {
+      "file": "checks/jobflow-material-review-contract-baseline-corrected-20261101.txt",
+      "sha256": "521d61445d8089a2d0bf04ac58efe59e3ba5ceb346c88ece7d37ebc063682548"
+    },
+    {
+      "file": "checks/jobflow-material-review-contract-baseline-ready-20261101.txt",
+      "sha256": "31390d1a17722f558399a8b16ce1c67fb91721265c5c46c9e1d0eb98b443d6f2"
+    },
+    {
+      "file": "checks/jobflow-material-review-contract-first-20261101.txt",
+      "sha256": "fbb9aa89d958cf33d6065794cd9509e96c971052a49ac8a1c0888a43b4de05f1"
+    },
+    {
+      "file": "checks/jobflow-material-review-javascript-20261101.txt",
+      "sha256": "bb76ff557b07effb0b234f7173c3fa39fa4f087c7b5a282969736ce2959fa803"
+    },
+    {
+      "file": "checks/jobflow-material-review-native-20261101.txt",
+      "sha256": "8f38a9397e6ad4a1f6c4b0fba4f6273c4f89d6f6af2561162a83ae82ecf16a4f"
+    },
+    {
+      "file": "checks/jobflow-material-review-native-corrected-20261101.txt",
+      "sha256": "87450b51af1a3d82fac2ced19221db2e241555bb374651b27ab291d1038dbbdd"
+    },
+    {
+      "file": "checks/jobflow-material-review-path-guard-diagnostic-20261101.txt",
+      "sha256": "c7c72d35ff39fc8fccb3029da4e382f7234d9656a516a1631726f963b07fb452"
+    },
+    {
+      "file": "checks/jobflow-material-review-public-docs-20261101.txt",
+      "sha256": "6b82dd689fec27a990fc883c10cdaa4174304eeb56d9d0f1c407eaaa9387a2e3"
+    },
+    {
+      "file": "checks/jobflow-material-review-related-20261101.txt",
+      "sha256": "a190fe319d71cfec084c7c23f0f2cff7bd9296bf789b5f424f0a950d97c83117"
+    },
+    {
+      "file": "checks/jobflow-material-review-ui-first-20261101.txt",
+      "sha256": "616527630ffb6d0d0254619a819e4eace2c63dc6e90f19cab9398e430fab48f4"
+    },
+    {
+      "file": "checks/jobflow-material-review-ui-second-20261101.txt",
+      "sha256": "ae2f3323ed924e00031bc306daa8a6ad3de82bd17bf54b414e018995fc05191d"
+    },
+    {
+      "file": "checks/jobflow-material-review-wheel-20261101.txt",
+      "sha256": "5000b17eced3d13660a3ed1dc938da5f4bb8577ea14d30f049b5edfe10d2157e"
+    },
+    {
+      "file": "checks/jobflow-material-review-wheel-pip-20261101.txt",
+      "sha256": "0a363be13f3e7d192f3023556b2c91f3fee8d2a5ea62953408eea9301b437ff8"
+    },
+    {
+      "file": "focused-ui/desktop-files-zh.png",
+      "sha256": "0eb03221729dc54b36605da8325e58c3d68f85a87213e854a1b53ba68f34edcb"
+    },
+    {
+      "file": "focused-ui/desktop-page2-zh.png",
+      "sha256": "32f613a9dd99d6dfc8b0db0a73b02ffc0dcfe3537893f9fbf9203b13a438d94a"
+    },
+    {
+      "file": "focused-ui/fixture-stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "focused-ui/fixture-stdout.txt",
+      "sha256": "7b3869ac02ce602dd4d408f812312f5518b1ec5a8fc00e15193ddd860a8ef354"
+    },
+    {
+      "file": "focused-ui/mobile-cover-zoom-en.png",
+      "sha256": "7b3f100e02c59ef44e70f3523f82943d36615ecf287435d25daaacee64648de2"
+    },
+    {
+      "file": "focused-ui/stale-packet-en.png",
+      "sha256": "dd8895640a3bf9ac501694eb1b6b0f75d84d9b038fd171a0fa979880547db9ca"
+    },
+    {
+      "file": "focused-ui/verification.json",
+      "sha256": "29935e6c0bcb3349a2235d558055a74f33ea16159aaf837db73e50243dd3a747"
+    },
+    {
+      "file": "initial-runner-failure/result.json",
+      "sha256": "2734ac6cbe38458876ac239e16bf716731db6a3606b9c6f6c118bc046298202e"
+    },
+    {
+      "file": "native/downloaded-cover_letter.docx",
+      "sha256": "1c6518a6ac6752a82df426340110d03f3baac2e79ac059373e94a00b8dc76e3f"
+    },
+    {
+      "file": "native/downloaded-cover_letter.pdf",
+      "sha256": "19d0926106853dd5b21649eecebd015e653478b580777b9beb5e895cfbbde5dc"
+    },
+    {
+      "file": "native/downloaded-resume.docx",
+      "sha256": "4d0fcfaab2dced3c1e4aa583ebadf3634a1299a0342620d9919bf69e89bd512f"
+    },
+    {
+      "file": "native/downloaded-resume.pdf",
+      "sha256": "95405d6f09f10851ab798bba7f4830f6a6c7b735877103f20e921af87b292cd8"
+    },
+    {
+      "file": "native/final-files-desktop-en.png",
+      "sha256": "ea305a92392589ea72dcc9f234642a6939fc1572b24e470e5642854988a70e49"
+    },
+    {
+      "file": "native/final-material-mobile-zh.png",
+      "sha256": "2d3259846caed10d43091ca3879226dbecc58dece0f186adc6cf3bd4548a4808"
+    },
+    {
+      "file": "native/final-visual-review.json",
+      "sha256": "7f0d84200b924e84de668c4a0773adbd866b01dcbb52c83c881333bae61d603e"
+    },
+    {
+      "file": "native/native-qa-1/page-1.png",
+      "sha256": "6798fbc884e2474b3d9e1ba877ee0a0667fdd511cf4c1e0b07c462685c080d9b"
+    },
+    {
+      "file": "native/native-qa-1/qa.json",
+      "sha256": "34c6d1b7ea1ef63918307fcfd0d1f18a3f047f66f38a866fa0b94c89d92c72e2"
+    },
+    {
+      "file": "native/native-qa-1/resume.docx",
+      "sha256": "4d0fcfaab2dced3c1e4aa583ebadf3634a1299a0342620d9919bf69e89bd512f"
+    },
+    {
+      "file": "native/native-qa-1/resume.pdf",
+      "sha256": "95405d6f09f10851ab798bba7f4830f6a6c7b735877103f20e921af87b292cd8"
+    },
+    {
+      "file": "native/native-qa-2/cover-letter.docx",
+      "sha256": "1c6518a6ac6752a82df426340110d03f3baac2e79ac059373e94a00b8dc76e3f"
+    },
+    {
+      "file": "native/native-qa-2/cover-letter.pdf",
+      "sha256": "19d0926106853dd5b21649eecebd015e653478b580777b9beb5e895cfbbde5dc"
+    },
+    {
+      "file": "native/native-qa-2/page-1.png",
+      "sha256": "444e2347eba844d4e0a7ffe54398fee88c61a6da9660510d395347cf0ea0f7dd"
+    },
+    {
+      "file": "native/native-qa-2/qa.json",
+      "sha256": "49ae14a584e4f19f04050f1d1eef75b1636e688df5a42e32050836957cd8d62f"
+    },
+    {
+      "file": "native/product-cover_letter-page-1.png",
+      "sha256": "95bd2c3d4c4284f313e2ec614cb2c1139e376b2824e9673026df37ccda21b424"
+    },
+    {
+      "file": "native/product-cover_letter-preview.png",
+      "sha256": "1dba9274793018dcf3d80938b185a1ca1297938b2719a263853ecdb1d6fb31c2"
+    },
+    {
+      "file": "native/product-resume-page-1.png",
+      "sha256": "27693dfb99ecad475d7e6654b5674c2d1d61b8621b9ba1617693e341157455b9"
+    },
+    {
+      "file": "native/product-resume-preview.png",
+      "sha256": "deb6578e7c104149a0dd884e58de9d4e842c57ee29cd20fabb4c77de853880bc"
+    },
+    {
+      "file": "native/result.json",
+      "sha256": "b34d783bcc166326bbc66cfa96615279a065817872c5aaeb41810f369d9be1f7"
+    },
+    {
+      "file": "native/review-packet.json",
+      "sha256": "caee21500113b3f9a56fdae7d6288bcbe491ba8c9e54b3252d4d81d646286b71"
+    },
+    {
+      "file": "native/standard-page-1.png",
+      "sha256": "160f6b0ac26e1b5276e6197bd092dd85a98d7552429930449fd905b9c66adc21"
+    },
+    {
+      "file": "native/standard-visual-review.json",
+      "sha256": "a332829db0cc237790dce8f6c93a6332cb8b8b0680f86f3bfb9004cf5170c455"
+    },
+    {
+      "file": "task-card.json",
+      "sha256": "8867e084a4458756c4e42e87716d139ad0f198d6cb7bdef4d638255e747c246a"
+    },
+    {
+      "file": "verify-browser.cjs",
+      "sha256": "5d0981cff09681adb83662f283c72c75ca952936e8dfa46087ce0170d67d3c01"
+    }
+  ]
+}

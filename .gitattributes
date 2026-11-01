@@ -29,3 +29,5 @@ evaluations/2026-11-01/first-use/*.json text eol=lf
 evaluations/2026-11-01/first-use/*.cjs text eol=lf
 evaluations/2026-11-01/first-use-revision/**/*.txt text eol=lf
 evaluations/2026-11-01/first-use-revision/*.cjs text eol=lf
+evaluations/2026-11-01/material-review/**/*.txt text eol=lf
+evaluations/2026-11-01/material-review/*.cjs text eol=lf

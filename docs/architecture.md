@@ -85,6 +85,15 @@ tailoring bindings remain separately enforced. Original PDF citations stay
 bound to that PDF instead of becoming evidence for the generated layout. This
 also reads existing adopted revisions without rewriting their immutable state.
 
+The `application_material_review` reader resolves only final files from the latest
+hash-bound review packet and its per-application material records. It verifies
+encrypted-reference status/kind and content, then rechecks the binding after reads
+and rendering. The onboarding server supplies the existing local-session/origin
+boundary. The separate `material-review.js` view clears images and drops stale
+responses; explicit download verifies the blob before saving it. Reading files
+does not reuse an upload authorization or mutate approval/execution state. See
+[limits and rollback](final-application-files-2026-11-01.md).
+
 Claim wording history is handled by the pure `claim_wording` module; the existing
 onboarding service owns encrypted persistence and review transitions. AI ancestry,
 current wording origin, user review and external material approval remain separate.
