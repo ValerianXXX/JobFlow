@@ -1,0 +1,442 @@
+{
+  "runtime_commit": "4db4c2a454d189cede1ee1c87e4726eef3defcc4",
+  "synthetic_only": true,
+  "distinct_task_cards": 1,
+  "independent_human": false,
+  "new_model_calls": 0,
+  "total_task_cost_usd": null,
+  "public_copy_transforms": [
+    "Local path prefixes redacted",
+    "Text encoded as UTF-8 with LF",
+    "Selected synthetic logs exported as scanned .txt evidence with trailing line spaces removed; original .log files remain local and unmodified"
+  ],
+  "artifact_hash_scope": "Published LF-normalized Git bytes. Where original Windows protocol bytes differ only by CRLF, their observed hash is recorded separately; historical run receipts keep the original harness hash.",
+  "observations": [
+    {
+      "id": "baseline-20261101",
+      "workflow_status": "FAILED",
+      "material_status": "NOT_ACCEPTED",
+      "head": "50282f024ecc09f727bfb6fdbc6fb6fb424eddd3",
+      "source_tree": "ea49bc182ee34d234d1c9ce40e8eeca7141bb711",
+      "product_runtime_changed": false,
+      "fixture_exit": 0,
+      "cleanup": true,
+      "new_model_calls": 0
+    },
+    {
+      "id": "admission-fixed-20261101",
+      "workflow_status": "FAILED",
+      "material_status": "NOT_ACCEPTED",
+      "head": "2f769d4640201e7ca63ae639c8bd3dfdd75b9a07",
+      "source_tree": "16e7621c2a73cca3c200a948380a7b64a0556ecb",
+      "product_runtime_changed": true,
+      "fixture_exit": 0,
+      "cleanup": true,
+      "new_model_calls": 0
+    },
+    {
+      "id": "native-qa-capture-20261101",
+      "workflow_status": "FAILED",
+      "material_status": "NOT_ACCEPTED",
+      "head": "6e1085b9cee4d5d307f8af5074d7b198afc2c9a7",
+      "source_tree": "16e7621c2a73cca3c200a948380a7b64a0556ecb",
+      "product_runtime_changed": true,
+      "fixture_exit": 0,
+      "cleanup": true,
+      "new_model_calls": 0
+    },
+    {
+      "id": "final-20261101",
+      "workflow_status": "PASS",
+      "material_status": "FAIL",
+      "head": "06d643eb71148ea7dfa14689d47ef68a0868c98a",
+      "source_tree": "f083039b2e9fbdde58fcf572bf9ab41afb3b677b",
+      "product_runtime_changed": true,
+      "fixture_exit": 0,
+      "cleanup": true,
+      "new_model_calls": 0
+    },
+    {
+      "id": "distinct-facts-20261101",
+      "workflow_status": "PASS",
+      "material_status": "PASS",
+      "head": "af4077d52bfef2b1e5b5a289b5aec3f236d447da",
+      "source_tree": "39e419bb081d3bda0fae5cf50924da061cc56449",
+      "product_runtime_changed": true,
+      "fixture_exit": 0,
+      "cleanup": true,
+      "new_model_calls": 0
+    }
+  ],
+  "native_pdf_provider": {
+    "name": "LibreOffice",
+    "local_version_directory": "26.8.2",
+    "soffice_com_sha256": "4f133aba4d8db66122ec34bc17eeaa8b274cfa5ded03feb384953f6ae357d4cf"
+  },
+  "wheel": {
+    "file": "jobflow_local-0.7.0-py3-none-any.whl",
+    "sha256": "d4f7b7df363dd73df8b62342571b3c92df01a21d96c5370205afd1af624da180",
+    "production_signed": false,
+    "packaged_runtime_files": [
+      {
+        "file": "src/jobops/orchestrator.py",
+        "sha256": "8503d586416a86e778c85aedc6d96c0f1713d68dde372268db1f9aff7f8e2a48"
+      },
+      {
+        "file": "src/jobops/external_claims.py",
+        "sha256": "4fbe4c9796fcc9a4566b9b6c8607d85353077bf7f4f38f3968267e6733c4266c"
+      },
+      {
+        "file": "src/jobops/document_qa.py",
+        "sha256": "68a796d361790b592ca7922a5a125d738fcadd2dd2c43bd743e177ff922baf44"
+      },
+      {
+        "file": "src/jobops/resume_tailoring.py",
+        "sha256": "2e5710e513af3beee44b7f85cad86fca0205e076e2f20cafe47536438382f1cd"
+      }
+    ]
+  },
+  "whole_product_accepted": false,
+  "migration_required": false,
+  "source_audit": "PASS",
+  "knowledge_location": "KNOWLEDGE_ROOT_NOT_FOUND",
+  "test_notes": [
+    "Original contract setup omitted explicit candidate selection and accidentally imported another test class; interrupted invocation and its output remain retained.",
+    "Corrected frozen eight-method baseline failed in two positive admission cases. Those eight passed after admission repair.",
+    "Related invocation ran 55 tests: 52 passed, one expiry test fixture had reordered a historical reference, and two requested module names were nonexistent. Original failure is retained.",
+    "Correct module names ran 13 selection/readiness tests successfully. The expiry test preserves historical chronology and exposed the need for historical-only schema validation; all 21 final adoption/citation/order methods passed.",
+    "The original native Cover Letter fixture and failed QA receipt remain unchanged after the reading-order repair.",
+    "V1 browser PASS had a separate actual visual-review FAIL for repeated resume wording. V2 keeps task inputs and adds distinct packet/DOCX fact assertions; five frozen assignment methods failed before repair and nine related methods passed after it.",
+    "JavaScript/UI code is unchanged; prior JavaScript passes are not newly repeated results. New continuous native browser observations are recorded separately.",
+    "V2 completed and restored AWAITING_APPROVAL; the two intended facts each occur once in the actual final DOCX. Both final native PDF pages were inspected by the assistant; this is not independent human acceptance or model writing-quality evaluation."
+  ],
+  "remaining": [
+    "Final job-specific material viewer/download in the product UI",
+    "Complete current hosted regression",
+    "Independent users and fresh model/36-material factual acceptance",
+    "Authorized live ATS/mailbox",
+    "Trusted production signing and clean Windows install/upgrade/rollback"
+  ],
+  "artifacts": [
+    {
+      "file": "logs/jobflow-adopted-master-baseline-20261101.txt",
+      "sha256": "958f5a83caba48a513b0d4463bbc94218a6ba6a701958b3236c1a633cbb7f25a"
+    },
+    {
+      "file": "logs/jobflow-adopted-master-corrected-baseline-20261101.txt",
+      "sha256": "ea5f7df9e368736f0e016091b8b296bbc3aea6effc0d2213c7bd48a037230eb5"
+    },
+    {
+      "file": "logs/jobflow-adopted-master-extra-20261101.txt",
+      "sha256": "2c517af2159b324c385c395c84e7d8cca1c18aaedcef7e442e0479c4b37f4c6c"
+    },
+    {
+      "file": "logs/jobflow-adopted-master-fixed-20261101.txt",
+      "sha256": "82360cd500593d585352e90d8a657a9cb1046fb5c16277ae3331b5bf2bce9142"
+    },
+    {
+      "file": "logs/jobflow-adopted-master-public-docs-20261101.txt",
+      "sha256": "6566ed3c7e318a4c3fe27500604fadea28f5a2b22dcc3b29a684db390f5124aa"
+    },
+    {
+      "file": "logs/jobflow-adopted-master-related-20261101.txt",
+      "sha256": "63bc5b0b95e8b91b01bd0c8150307f7fd7c8fc186b4e67da6e9e7202592f1f2a"
+    },
+    {
+      "file": "logs/jobflow-adopted-master-selection-readiness-20261101.txt",
+      "sha256": "9e5c20446c878da891b057b1ee935ea93563380ed5ccead7edcd0a116dc8aebb"
+    },
+    {
+      "file": "logs/jobflow-citation-wrap-baseline-20261101.txt",
+      "sha256": "d97e01ee6fd37e4888f9d8400e427824a34257aa5f06c64f1b4ab910ccccc307"
+    },
+    {
+      "file": "logs/jobflow-distinct-tailoring-baseline-20261101.txt",
+      "sha256": "fc88d21aed9935f7d67aeaea7d0673e468a88c244bc71ed0772470dfac4a99b5"
+    },
+    {
+      "file": "logs/jobflow-distinct-tailoring-fixed-20261101.txt",
+      "sha256": "428e5020cdb73836d020b74bb698a7117514c1d06669fb453b19311d8ba635cb"
+    },
+    {
+      "file": "logs/jobflow-handoff-citation-final-targeted-20261101.txt",
+      "sha256": "0b07308f01e453d3ead2cd850e9c468bc89234b0280192c6f62ece187bd003af"
+    },
+    {
+      "file": "logs/jobflow-handoff-delivery-docs-20261101.txt",
+      "sha256": "c9030070e99d9488b3f6527f97b742b837e95fed4d5376f048c34e75439b2e42"
+    },
+    {
+      "file": "logs/jobflow-handoff-final-docs-20261101.txt",
+      "sha256": "60db9fe318ecc130dfe97cec77c202dd8ce70f86a6d7384db16058ef16175b84"
+    },
+    {
+      "file": "observations/admission-fixed-20261101/failure.txt",
+      "sha256": "d2768997247342b279311350b3b9f47f4bda626ae44f48c7c4991d1b0b2f301d"
+    },
+    {
+      "file": "observations/admission-fixed-20261101/result.json",
+      "sha256": "ca57899df2de3a9d6e25e381f95b2a257a5634bb669b2a33e2b17e6c30920a61"
+    },
+    {
+      "file": "observations/admission-fixed-20261101/standard-page-1.png",
+      "sha256": "160f6b0ac26e1b5276e6197bd092dd85a98d7552429930449fd905b9c66adc21"
+    },
+    {
+      "file": "observations/admission-fixed-20261101/standard-visual-review.json",
+      "sha256": "be334674e06d0d0301c2bde87c504b808a4cb7bb32a153cc282e79ca446c5853"
+    },
+    {
+      "file": "observations/baseline-20261101/failure.txt",
+      "sha256": "16f7077edf988f8cadb78295468965a539d9916e54bc3b89c8451c502564e625"
+    },
+    {
+      "file": "observations/baseline-20261101/result.json",
+      "sha256": "75cc879a19ca94d2263cc0df66cfba72ff0092d9bd14f48578d013f03e852b80"
+    },
+    {
+      "file": "observations/baseline-20261101/standard-page-1.png",
+      "sha256": "160f6b0ac26e1b5276e6197bd092dd85a98d7552429930449fd905b9c66adc21"
+    },
+    {
+      "file": "observations/baseline-20261101/standard-visual-review.json",
+      "sha256": "c965b5525763e00f10e24f36ec3dbc48218702b05f782094a01a97e9afd17cfa"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/01-generated_cover_letter_docx.docx",
+      "sha256": "db4aa73c470da077088545e98230513522eeb03fb2e1a0bb87308d721bd8f7ee"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/02-generated_cover_letter_pdf.pdf",
+      "sha256": "421073829ba2054ea66bf6055956d21dbcabbcdd40319d3d86773ed697e2c59c"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/03-generated_resume_docx.docx",
+      "sha256": "8c55c9beb67214ab89787146d9a30e0981604c657116c75824c4f8b19b175868"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/04-generated_resume_docx.docx",
+      "sha256": "bf74e10b52e007f1cd28c634aad6c02767a4a5779c5f7868d9d74eb8e9e75384"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/05-generated_resume_pdf.pdf",
+      "sha256": "8f02ce46192e0776e4f45d42961038063bbd489ed9856738d33538c2b6ef2db7"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/06-generated_resume_pdf.pdf",
+      "sha256": "67a55c4ce3c3eb888cfc2be3487660a6e25f52340e3774cdb1fbedbd45bfbbe7"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/application-awaiting-approval.png",
+      "sha256": "b2712e56779b960a7841b396615b8e27c8c74621284440911a4791c95f6d6dc2"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/material-visual-review.json",
+      "sha256": "bec9dbaa9df03f48252647ddc9e3210b87faced7a148b25cf65e3fc41ac2401e"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/mobile-restored-packet.png",
+      "sha256": "1d6dc3126bd5c29bb58ea14fb7ab1f2d674f9f172f7dea846c848dec0978ecc9"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/native-qa-1/page-1.png",
+      "sha256": "6798fbc884e2474b3d9e1ba877ee0a0667fdd511cf4c1e0b07c462685c080d9b"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/native-qa-1/qa.json",
+      "sha256": "8ac181fa50fccd8bc3e292652c0fcf0d8973526131816471bf8a8f309e995d73"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/native-qa-1/resume.docx",
+      "sha256": "bf74e10b52e007f1cd28c634aad6c02767a4a5779c5f7868d9d74eb8e9e75384"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/native-qa-1/resume.pdf",
+      "sha256": "67a55c4ce3c3eb888cfc2be3487660a6e25f52340e3774cdb1fbedbd45bfbbe7"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/native-qa-2/cover-letter.docx",
+      "sha256": "db4aa73c470da077088545e98230513522eeb03fb2e1a0bb87308d721bd8f7ee"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/native-qa-2/cover-letter.pdf",
+      "sha256": "421073829ba2054ea66bf6055956d21dbcabbcdd40319d3d86773ed697e2c59c"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/native-qa-2/page-1.png",
+      "sha256": "444e2347eba844d4e0a7ffe54398fee88c61a6da9660510d395347cf0ea0f7dd"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/native-qa-2/qa.json",
+      "sha256": "7701e17c92692499a1c7eab0d96f25ac3176d9746f4e4de3f654d0d30f51bc41"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/result.json",
+      "sha256": "68f7c1dce4dd3697fce665c51c97fee1dbe99b3d2bbfc3cfb6d748ecb09e54f7"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/review-packet.json",
+      "sha256": "51607ef3d8eb603c097f2e1642822ba84bb29835e7555e433885ff0ca5eb188b"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/selected-from-empty.docx",
+      "sha256": "8c55c9beb67214ab89787146d9a30e0981604c657116c75824c4f8b19b175868"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/standard-page-1.png",
+      "sha256": "160f6b0ac26e1b5276e6197bd092dd85a98d7552429930449fd905b9c66adc21"
+    },
+    {
+      "file": "observations/distinct-facts-20261101/standard-visual-review.json",
+      "sha256": "be334674e06d0d0301c2bde87c504b808a4cb7bb32a153cc282e79ca446c5853"
+    },
+    {
+      "file": "observations/final-20261101/01-generated_cover_letter_docx.docx",
+      "sha256": "c53ad70ac502a11eb0f35f211fc22c81b7585eac610a1c95c389feb1856aba4b"
+    },
+    {
+      "file": "observations/final-20261101/02-generated_cover_letter_pdf.pdf",
+      "sha256": "c8fa7f4b34b8e59c0b5cf8cef4a20f9ef524e6e29ed0a59ad2ca8f358118b974"
+    },
+    {
+      "file": "observations/final-20261101/03-generated_resume_docx.docx",
+      "sha256": "faa0621fdcdd70ecb56cd404cc6c117a5d95d8686db8478046d7430a6a89d732"
+    },
+    {
+      "file": "observations/final-20261101/04-generated_resume_docx.docx",
+      "sha256": "445ab546bcb0de743e75117730e50f409a5620998d9acd9055307a7cd68c989d"
+    },
+    {
+      "file": "observations/final-20261101/05-generated_resume_pdf.pdf",
+      "sha256": "d1da1070d335959a5d7d068dd0940e5e48bad417dfbaf747655fd2299d76c052"
+    },
+    {
+      "file": "observations/final-20261101/06-generated_resume_pdf.pdf",
+      "sha256": "71dadde867cd95265bb488bf80a52a3a8a9e1243c75ed2136fa858a450fe8724"
+    },
+    {
+      "file": "observations/final-20261101/application-awaiting-approval.png",
+      "sha256": "0c9f622f0c64cc1c24e3673809c4a1b97b9906507a9e0415caef5eeed869e573"
+    },
+    {
+      "file": "observations/final-20261101/material-visual-review.json",
+      "sha256": "5e0d906aab5af8ef2bc5fe24731567a107d9366db87eb385f1f40f7425fa9260"
+    },
+    {
+      "file": "observations/final-20261101/mobile-restored-packet.png",
+      "sha256": "4b576ace1d3287116224d228af316e737633db1627501a53c4cde72c6228cf65"
+    },
+    {
+      "file": "observations/final-20261101/native-qa-1/page-1.png",
+      "sha256": "8ddfb7b24075c443e683d5a1f7a172715eb622929666d7247e21b0f88b499ff3"
+    },
+    {
+      "file": "observations/final-20261101/native-qa-1/qa.json",
+      "sha256": "7ea583ddb14b73f402ac4b7a2227c3f8f239427e0ecebfb8eababaf3e9a70cdc"
+    },
+    {
+      "file": "observations/final-20261101/native-qa-1/resume.docx",
+      "sha256": "445ab546bcb0de743e75117730e50f409a5620998d9acd9055307a7cd68c989d"
+    },
+    {
+      "file": "observations/final-20261101/native-qa-1/resume.pdf",
+      "sha256": "71dadde867cd95265bb488bf80a52a3a8a9e1243c75ed2136fa858a450fe8724"
+    },
+    {
+      "file": "observations/final-20261101/native-qa-2/cover-letter.docx",
+      "sha256": "c53ad70ac502a11eb0f35f211fc22c81b7585eac610a1c95c389feb1856aba4b"
+    },
+    {
+      "file": "observations/final-20261101/native-qa-2/cover-letter.pdf",
+      "sha256": "c8fa7f4b34b8e59c0b5cf8cef4a20f9ef524e6e29ed0a59ad2ca8f358118b974"
+    },
+    {
+      "file": "observations/final-20261101/native-qa-2/page-1.png",
+      "sha256": "444e2347eba844d4e0a7ffe54398fee88c61a6da9660510d395347cf0ea0f7dd"
+    },
+    {
+      "file": "observations/final-20261101/native-qa-2/qa.json",
+      "sha256": "d20d0f3dafbf22019c52ccc7651f6355da5dae24a92b445bf068bb496dd27f96"
+    },
+    {
+      "file": "observations/final-20261101/result.json",
+      "sha256": "591ab2535538f6e02432251dfbe632484a357778ed413d9d3952e931d884f2ce"
+    },
+    {
+      "file": "observations/final-20261101/review-packet.json",
+      "sha256": "4407875f821b591dbbc07245b3176fbcc3db8e9be688566bdbd7f290510d4235"
+    },
+    {
+      "file": "observations/final-20261101/selected-from-empty.docx",
+      "sha256": "faa0621fdcdd70ecb56cd404cc6c117a5d95d8686db8478046d7430a6a89d732"
+    },
+    {
+      "file": "observations/final-20261101/standard-page-1.png",
+      "sha256": "160f6b0ac26e1b5276e6197bd092dd85a98d7552429930449fd905b9c66adc21"
+    },
+    {
+      "file": "observations/final-20261101/standard-visual-review.json",
+      "sha256": "be334674e06d0d0301c2bde87c504b808a4cb7bb32a153cc282e79ca446c5853"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/failure.txt",
+      "sha256": "d2768997247342b279311350b3b9f47f4bda626ae44f48c7c4991d1b0b2f301d"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/native-qa-1/page-1.png",
+      "sha256": "8ddfb7b24075c443e683d5a1f7a172715eb622929666d7247e21b0f88b499ff3"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/native-qa-1/qa.json",
+      "sha256": "3d8865b6999495f4d5d76103c3616908100c3738cae699cda7a6ebcec1013ad6"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/native-qa-1/resume.docx",
+      "sha256": "d3871e62b8f7dc014c4be9d78dd5d81999c68e074d7715645c5e6bf475966669"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/native-qa-1/resume.pdf",
+      "sha256": "1fc469dcbb4002350a37bd0a28ae6fae25a258db92df0b032d27d1ab85112876"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/native-qa-2/cover-letter.docx",
+      "sha256": "5f7ecd9be1c587a7d38c873ffd943c51402e676ebe8134eb26d8343e68bd8995"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/native-qa-2/cover-letter.pdf",
+      "sha256": "4643f777d46adab669b832a48d0c80b781b1df2a8069cfccdc6421b732674815"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/native-qa-2/page-1.png",
+      "sha256": "444e2347eba844d4e0a7ffe54398fee88c61a6da9660510d395347cf0ea0f7dd"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/native-qa-2/qa.json",
+      "sha256": "d932f8aede61852f68d89ef1597ab01635ac6bf09c04896c8a9f9781498f6016"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/result.json",
+      "sha256": "e18b13c4e19e99efaaf1028a7279e379d03421b0cc2b7e8d91d7b444394d47d5"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/standard-page-1.png",
+      "sha256": "160f6b0ac26e1b5276e6197bd092dd85a98d7552429930449fd905b9c66adc21"
+    },
+    {
+      "file": "observations/native-qa-capture-20261101/standard-visual-review.json",
+      "sha256": "be334674e06d0d0301c2bde87c504b808a4cb7bb32a153cc282e79ca446c5853"
+    },
+    {
+      "file": "task-card.json",
+      "sha256": "7f6c9b8565ac5eb7901db5c122cb9e898b7db6086959b3fe8442e75a19ebbacf",
+      "observed_windows_bytes_sha256": "edecdc4a4963a03fa3e2343a5524ce74bd9e9391ff7c9c1f341a21ad565b93af",
+      "transform": "CRLF to LF only; protocol logic and task inputs unchanged"
+    },
+    {
+      "file": "verify-browser.cjs",
+      "sha256": "48830fdae7f13ff6c743cd6a7d1bded4d5b2fc38ec712080ac956bd2204d4fed",
+      "observed_windows_bytes_sha256": "b265fcf2d67f06535682e634663bb99bbc25aa1fd2134ad5531b1bed7e4793e8",
+      "transform": "CRLF to LF only; protocol logic and task inputs unchanged"
+    }
+  ]
+}

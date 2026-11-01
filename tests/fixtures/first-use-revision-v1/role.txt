@@ -1,0 +1,16 @@
+SYNTHETIC TEST DATA - NOT A REAL JOB POSTING
+
+Company: Example Analytics Lab
+Role: Entry Level Research Analyst
+Location: New York
+Compensation: $110,000 - $130,000
+Work authorization: Authorized candidates only
+
+Responsibilities:
+- Review supplied research evidence and document its limitations.
+- Prepare clear reports with source references.
+
+Preferred:
+- Experience checking store-level data.
+
+This fictional role specifies no degree, programming-language or minimum-years requirement.

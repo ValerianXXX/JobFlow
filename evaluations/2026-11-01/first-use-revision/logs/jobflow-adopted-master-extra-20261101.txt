@@ -1,0 +1,7 @@
+test_legacy_master_citations_still_bind_only_to_the_original_pdf (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_legacy_master_citations_still_bind_only_to_the_original_pdf) ... ok
+test_synthetic_or_revoked_draft_cannot_be_promoted_by_real_state (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_synthetic_or_revoked_draft_cannot_be_promoted_by_real_state) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 7.797s
+
+OK

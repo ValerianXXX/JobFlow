@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import Any
 
 from .errors import JobOpsError
@@ -11,6 +12,14 @@ TAILORABLE_CATEGORIES = (
     "summary", "work", "internship", "education", "project", "skill", "certification", "language",
 )
 MAX_TAILORING_BLOCKS = 200
+
+
+@dataclass(frozen=True)
+class _RankedClaim:
+    priority: int
+    score: int
+    claim_id: str
+    wording: str
 
 
 def _normalized(value: str) -> str:
@@ -185,7 +194,7 @@ def choose_tailoring_replacements(
     if not job_tokens:
         raise JobOpsError("TAILORING_JOB_TEXT_INVALID", "The saved job description has no usable relevance terms.")
     preference = {claim_id: index for index, claim_id in enumerate(preferred_claim_ids or [])}
-    by_category: dict[str, list[tuple[int, int, str, dict[str, Any]]]] = {}
+    by_category: dict[str, list[_RankedClaim]] = {}
     for claim in claims:
         wording = str(claim["allowed_wording"][0]).strip()
         claim_tokens = _tokens(wording)
@@ -194,24 +203,25 @@ def choose_tailoring_replacements(
         if score < 1 and claim_id not in preference:
             continue
         category = str(claim.get("category", ""))
-        by_category.setdefault(category, []).append((
-            preference.get(claim_id, len(preference) + 1_000), -score, claim_id, claim,
+        by_category.setdefault(category, []).append(_RankedClaim(
+            preference.get(claim_id, len(preference) + 1_000), score, claim_id, wording,
         ))
     for values in by_category.values():
-        values.sort(key=lambda item: (item[0], item[1], item[2]))
+        values.sort(key=lambda item: (item.priority, -item.score, item.claim_id))
 
     used: set[str] = set()
+    used_wordings: set[str] = set()
     replacements: list[dict[str, str]] = []
     for block in sorted(manifest.get("blocks", []), key=lambda item: (str(item["part_name"]), int(item["paragraph_index"]))):
-        candidates = [item for item in by_category.get(str(block["category"]), []) if item[1] not in used]
+        candidates = [item for item in by_category.get(str(block["category"]), [])
+                      if item.claim_id not in used and item.wording not in used_wordings
+                      and len(item.wording) <= int(block["maximum_characters"])]
         if not candidates:
             continue
-        _, _, claim_id, claim = candidates[0]
-        wording = str(claim["allowed_wording"][0]).strip()
-        if len(wording) > int(block["maximum_characters"]):
-            continue
-        used.add(claim_id)
-        replacements.append({"block_ref": str(block["block_ref"]), "claim_id": claim_id})
+        selected = candidates[0]
+        used.add(selected.claim_id)
+        used_wordings.add(selected.wording)
+        replacements.append({"block_ref": str(block["block_ref"]), "claim_id": selected.claim_id})
     if not replacements:
         raise JobOpsError(
             "TAILORING_RELEVANCE_INSUFFICIENT",

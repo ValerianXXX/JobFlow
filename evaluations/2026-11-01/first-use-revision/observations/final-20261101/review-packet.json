@@ -1,0 +1,572 @@
+{
+  "status": "AWAITING_APPROVAL",
+  "application_status": "AWAITING_APPROVAL",
+  "application_id": "APP-948D2E6F9F13",
+  "packet_id": "RPK-4BFF4EF975FD",
+  "packet_version": 1,
+  "created_at": "2026-11-01T06:24:48.836061Z",
+  "stopped_fields": 0,
+  "job_summary": {
+    "company": "Example Analytics Lab",
+    "title": "Entry Level Research Analyst",
+    "location": "New York"
+  },
+  "packet": {
+    "ai_operator": {
+      "automatic_retry": false,
+      "final_submit": "USER_ONLY",
+      "operator_task_id": null,
+      "private_values_exposed": 0,
+      "real_external_actions": 0,
+      "schema_version": 1,
+      "turns": [
+        {
+          "application_id": "APP-948D2E6F9F13",
+          "automatic_retry": false,
+          "decision_point": "JOB_AND_MATERIAL_DECISION",
+          "final_submit": "USER_ONLY",
+          "operator_run_id": "AOR-5AB335230156",
+          "private_values_exposed": 0,
+          "real_external_actions": 0,
+          "result_hash": "sha256:fed2055e77c295582482e8af3e6e2e4d77a72440450fa31cd03ccb38e58bf1fb",
+          "schema_version": 1,
+          "selected_tool": "jobflow.plan_resume_changes",
+          "task_id": "APP-948D2E6F9F13",
+          "task_state_hash": "sha256:aa101231cc6666bf03ad40989cb44fcd7215f668bf4f9fd5d71d43932ce4db9c",
+          "turn_id": "AOT-646D1BC7512B"
+        },
+        {
+          "application_id": "APP-948D2E6F9F13",
+          "automatic_retry": false,
+          "decision_point": "CURRENT_FORM_SEMANTIC_REVIEW",
+          "final_submit": "USER_ONLY",
+          "operator_run_id": "AOR-5AB335230156",
+          "private_values_exposed": 0,
+          "real_external_actions": 0,
+          "result_hash": "sha256:773a506285d24a8f86512cbf5068fc0afae9f5a7e130f005c4bfdc24ea0c506d",
+          "schema_version": 1,
+          "selected_tool": "jobflow.inspect_application_form",
+          "task_id": "APP-948D2E6F9F13",
+          "task_state_hash": "sha256:694523d32caf725adedc149a7de94b73221bd646665dc03874bc4e57ac043cff",
+          "turn_id": "AOT-73922D1C3DAF"
+        }
+      ]
+    },
+    "application_id": "APP-948D2E6F9F13",
+    "content_hash": "sha256:9d49b30b1366c59ff8033c8f6fbfd7b13e8e51bf90ca0d1c5ad11ff0da4e57e9",
+    "execution_bundle_content_hash": "sha256:b30147ca65439c27c4b2c47b8cf1812a697317369b35da63324321cccfa45e1a",
+    "execution_plan": {
+      "application_id": "APP-948D2E6F9F13",
+      "blockers": [],
+      "browser_actions": 0,
+      "browser_plan_hash": "sha256:f47a7bcc1a2ca19e8d85ca377b7bf34bf48ea372e08692d30ba24a7e77b50678",
+      "field_summary": {
+        "account": 0,
+        "compensation": 0,
+        "fillable": 2,
+        "final_submit": 1,
+        "legal_or_signature": 0,
+        "navigation": 0,
+        "sensitive_review": 0,
+        "unknown": 0,
+        "upload": 2,
+        "voluntary_disclosure": 0,
+        "work_authorization": 0
+      },
+      "form_snapshot_hash": "sha256:df7970671440008bc45fc8563fa03fe0d35f27590aa7b940c1c4c328c0a5e6f9",
+      "live_transport_registered": false,
+      "material_plan_hash": "sha256:4fdade89b7b817c6e51ab314dca57dd0aa48a69563e30d00c0435b03d9447f9a",
+      "mode": "PREPARE_AND_QUEUE",
+      "network_actions": 0,
+      "plan_hash": "sha256:92b521f7b4648fe7a2f5ccb830f07d0960d9543e2a7637be34cd40380e43ec12",
+      "provider": "company",
+      "queue_behavior": {
+        "continue_other_jobs": true,
+        "current_job_waits_for_user": true,
+        "pause_new_intake_at_limit": true,
+        "pending_limit": 10
+      },
+      "real_external_actions": 0,
+      "route_hash": "sha256:a73b0f88114949e89d4d3e1ffd5dbf019cb9f4a2fd459c5383f3d18c7ab32f95",
+      "schema_version": 1,
+      "status": "READY_FOR_REVIEW",
+      "steps": [
+        {
+          "browser_actions": 0,
+          "gate": "SEPARATE_LIVE_READ_AUTHORIZATION",
+          "item_count": 1,
+          "network_actions": 0,
+          "phase": "LIVE_FRESHNESS_RECHECK",
+          "real_external_actions": 0,
+          "sequence": 1,
+          "state": "NOT_EXECUTED"
+        },
+        {
+          "browser_actions": 0,
+          "gate": "NONE_AFTER_FRESHNESS",
+          "item_count": 1,
+          "network_actions": 0,
+          "phase": "GUEST_APPLICATION_ENTRY",
+          "real_external_actions": 0,
+          "sequence": 2,
+          "state": "PLANNED"
+        },
+        {
+          "browser_actions": 0,
+          "gate": "REVIEW_PACKET_APPROVAL",
+          "item_count": 2,
+          "network_actions": 0,
+          "phase": "SAFE_FIELD_PREFILL",
+          "real_external_actions": 0,
+          "sequence": 3,
+          "state": "PROPOSED_ONLY"
+        },
+        {
+          "browser_actions": 0,
+          "gate": "SEPARATE_UPLOAD_AUTHORIZATION",
+          "item_count": 2,
+          "network_actions": 0,
+          "phase": "MATERIAL_UPLOAD",
+          "real_external_actions": 0,
+          "sequence": 4,
+          "state": "BLOCKED"
+        },
+        {
+          "browser_actions": 0,
+          "gate": "NONE",
+          "item_count": 0,
+          "network_actions": 0,
+          "phase": "PROTECTED_AND_UNKNOWN_FIELDS",
+          "real_external_actions": 0,
+          "sequence": 5,
+          "state": "NOT_REQUIRED"
+        },
+        {
+          "browser_actions": 0,
+          "gate": "FRESH_EXPLICIT_SUBMISSION_APPROVAL",
+          "item_count": 1,
+          "network_actions": 0,
+          "phase": "FINAL_SUBMISSION",
+          "real_external_actions": 0,
+          "sequence": 6,
+          "state": "BLOCKED"
+        }
+      ],
+      "stop_before_final_submission": true,
+      "upload_purposes": [
+        "resume",
+        "cover_letter"
+      ]
+    },
+    "external_actions": [
+      "upload_material",
+      "submit_application"
+    ],
+    "fit": {
+      "dimensions": {
+        "capability": {
+          "calculation": "passed 0/0 parsed hard requirements",
+          "confidence": "LOW",
+          "decision_impact": "Unknown or failed hard requirements keep the recommendation conditional or blocked.",
+          "evidence": [],
+          "gaps": [],
+          "score": 50
+        },
+        "evidence": {
+          "calculation": "0 revalidated claim mappings",
+          "confidence": "LOW",
+          "decision_impact": "External materials may use only revalidated approved evidence.",
+          "evidence": [],
+          "gaps": [
+            "no revalidated claim mappings"
+          ],
+          "score": 0
+        },
+        "function": {
+          "calculation": "target-function matches=1",
+          "confidence": "MEDIUM",
+          "decision_impact": "Shapes role alignment but cannot override hard gates.",
+          "evidence": [
+            "analyst"
+          ],
+          "gaps": [],
+          "score": 75
+        },
+        "industry": {
+          "calculation": "industry matches=1",
+          "confidence": "MEDIUM",
+          "decision_impact": "Contextual signal only.",
+          "evidence": [
+            "research"
+          ],
+          "gaps": [],
+          "score": 70
+        },
+        "level": {
+          "calculation": "parsed JD level compared with confirmed target levels",
+          "confidence": "MEDIUM",
+          "decision_impact": "Verified mismatch is a hard gate.",
+          "evidence": [
+            "entry"
+          ],
+          "gaps": [],
+          "score": 90
+        },
+        "location": {
+          "calculation": "eligibility location gate mapped to score",
+          "confidence": "HIGH",
+          "decision_impact": "Verified mismatch is a hard gate.",
+          "evidence": [
+            "PASS"
+          ],
+          "gaps": [],
+          "score": 90
+        },
+        "preference": {
+          "calculation": "confirmed work-mode preference compared with JD location",
+          "confidence": "MEDIUM",
+          "decision_impact": "Preference affects prioritization after eligibility.",
+          "evidence": [
+            "hybrid"
+          ],
+          "gaps": [
+            "work-mode preference not confirmed in JD"
+          ],
+          "score": 50
+        }
+      },
+      "eligibility_status": "ELIGIBLE",
+      "explanation": [
+        "All modeled hard conditions passed.",
+        "function: 75.0 - target-function matches=1",
+        "capability: 50.0 - passed 0/0 parsed hard requirements",
+        "evidence: 0.0 - 0 revalidated claim mappings",
+        "industry: 70.0 - industry matches=1",
+        "level: 90.0 - parsed JD level compared with confirmed target levels",
+        "location: 90.0 - eligibility location gate mapped to score",
+        "preference: 50.0 - confirmed work-mode preference compared with JD location"
+      ],
+      "hard_gaps": [],
+      "overall_score": 53.5,
+      "recommendation": "CONDITIONAL",
+      "unknowns": []
+    },
+    "form_questions": [
+      {
+        "action": "PREFILL_FROM_SECURE_STORE",
+        "ai_semantic_reason": "The role is based only on the sanitized prompt and deterministic JobFlow classification.",
+        "ai_semantic_role": "identity",
+        "answer_key": "full_name",
+        "classification": "private_fixed",
+        "control_type": "text",
+        "gate": "PREFILL_ALLOWED",
+        "id": "CTL-102A9BD82A6A",
+        "label": "Full name",
+        "max_length": null,
+        "max_length_status": "ABSENT",
+        "options": [],
+        "prompt_hash": "sha256:0110ff81de36057d76e9aaaa67c02807706bb498678f7d92ac4f6728f2acce10",
+        "reason": "SECURE_REFERENCE_REQUIRED",
+        "redacted_summary": "PRIVATE_VALUE_PRESENT",
+        "required": true,
+        "secure_ref": "secure-ref:8f3faffcda66453c886936ae95c3d990",
+        "status": "READY",
+        "untrusted_prompt_display_only": true
+      },
+      {
+        "action": "PREFILL_FROM_SECURE_STORE",
+        "ai_semantic_reason": "The role is based only on the sanitized prompt and deterministic JobFlow classification.",
+        "ai_semantic_role": "identity",
+        "answer_key": "email",
+        "classification": "private_fixed",
+        "control_type": "email",
+        "gate": "PREFILL_ALLOWED",
+        "id": "CTL-513B07521C1E",
+        "label": "Email",
+        "max_length": null,
+        "max_length_status": "ABSENT",
+        "options": [],
+        "prompt_hash": "sha256:7906b81b83e8090118c23e980e2f38df8c2812eab6552cb1878a74e89612f02f",
+        "reason": "SECURE_REFERENCE_REQUIRED",
+        "redacted_summary": "PRIVATE_VALUE_PRESENT",
+        "required": true,
+        "secure_ref": "secure-ref:8f3faffcda66453c886936ae95c3d990",
+        "status": "READY",
+        "untrusted_prompt_display_only": true
+      },
+      {
+        "action": "STOP",
+        "ai_semantic_reason": "The role is based only on the sanitized prompt and deterministic JobFlow classification.",
+        "ai_semantic_role": "material_upload",
+        "answer_key": "resume",
+        "classification": "file_upload_stop",
+        "control_type": "file",
+        "gate": "STOP_REQUIRED",
+        "id": "CTL-34AA8EA15F1D",
+        "label": "Resume",
+        "max_length": null,
+        "max_length_status": "ABSENT",
+        "options": [],
+        "prompt_hash": "sha256:13b839c1ac586e5637a3ea2f639f30753085feb0a117a26189f1f2f6c92f5904",
+        "reason": "FILE_UPLOAD_EXTERNAL_ACTION",
+        "redacted_summary": "UNANSWERED",
+        "required": true,
+        "secure_ref": null,
+        "status": "STOPPED",
+        "untrusted_prompt_display_only": true
+      },
+      {
+        "action": "STOP",
+        "ai_semantic_reason": "The role is based only on the sanitized prompt and deterministic JobFlow classification.",
+        "ai_semantic_role": "material_upload",
+        "answer_key": "cover_letter",
+        "classification": "file_upload_stop",
+        "control_type": "file",
+        "gate": "STOP_REQUIRED",
+        "id": "CTL-FA00DAAA82A6",
+        "label": "Cover Letter",
+        "max_length": null,
+        "max_length_status": "ABSENT",
+        "options": [],
+        "prompt_hash": "sha256:270f9f35e2e61ca9cad0edb7776e95160158e9625e2266b5f72145ce70a3e4a8",
+        "reason": "FILE_UPLOAD_EXTERNAL_ACTION",
+        "redacted_summary": "UNANSWERED",
+        "required": true,
+        "secure_ref": null,
+        "status": "STOPPED",
+        "untrusted_prompt_display_only": true
+      },
+      {
+        "action": "STOP",
+        "ai_semantic_reason": "The role is based only on the sanitized prompt and deterministic JobFlow classification.",
+        "ai_semantic_role": "final_submit",
+        "answer_key": "UNKNOWN",
+        "classification": "final_submit_stop",
+        "control_type": "submit",
+        "gate": "STOP_REQUIRED",
+        "id": "CTL-FCEF9B148FC8",
+        "label": "Submit application",
+        "max_length": null,
+        "max_length_status": "ABSENT",
+        "options": [],
+        "prompt_hash": "sha256:d156a735372d4dc64a124b7e6dc6ffda2b9b4ba685f4bcf2bbfe6e21e6753b66",
+        "reason": "FINAL_SUBMIT_EXTERNAL_ACTION",
+        "redacted_summary": "UNANSWERED",
+        "required": false,
+        "secure_ref": null,
+        "status": "STOPPED",
+        "untrusted_prompt_display_only": true
+      }
+    ],
+    "hard_gaps": [],
+    "jd_captured_at": "2026-11-01T06:24:16.467093Z",
+    "job": {
+      "company": "Example Analytics Lab",
+      "job_id": "JOB-AFAF9C426242",
+      "official_url": "https://example.com/careers/analyst-first-use",
+      "title": "Entry Level Research Analyst"
+    },
+    "master_resume_diff": {
+      "block_changes": [
+        {
+          "block_ref": "RBL-71114ED7E035",
+          "claim_id": "CLM-5E2325A5513E",
+          "replacement_sha256": "sha256:480ba1edfdf451049a4197aa3f32960bf79a2f4871fc693cb3888fcfcf341d0e"
+        },
+        {
+          "block_ref": "RBL-C2FC0A89712E",
+          "claim_id": "CLM-5E2325A5513E",
+          "replacement_sha256": "sha256:480ba1edfdf451049a4197aa3f32960bf79a2f4871fc693cb3888fcfcf341d0e"
+        }
+      ],
+      "changed_parts": [
+        "docProps/core.xml",
+        "word/document.xml"
+      ],
+      "claim_set_content_hash": "sha256:2c78a9662878aabdd441e6e7b74e66011df0184956ba8202bc3103dc22b9fb74",
+      "diff_sha256": "sha256:91ca6e4b724e5de49cc5e89f40f9e709315a8fbda9c6ce2f4536bd98479f76fc",
+      "manifest_content_hash": "sha256:c5a3e513bb4d17a0542e46d4f048637eb639541389e9fd7872304fffab50aeac",
+      "master_sha256": "sha256:faa0621fdcdd70ecb56cd404cc6c117a5d95d8686db8478046d7430a6a89d732",
+      "output_sha256": "sha256:445ab546bcb0de743e75117730e50f409a5620998d9acd9055307a7cd68c989d",
+      "preserved": {
+        "hyperlinks": true,
+        "page_geometry": true,
+        "styles": true,
+        "table_grids": true,
+        "unexplained_package_changes": []
+      }
+    },
+    "material_plan": {
+      "all_uploads_and_submission_blocked": true,
+      "cover_letter": {
+        "docx_secure_ref": "secure-ref:f04cc423c9cc404ba1ed4aa2d83022c8",
+        "docx_sha256": "sha256:c53ad70ac502a11eb0f35f211fc22c81b7585eac610a1c95c389feb1856aba4b",
+        "generation_status": "GENERATED_ON_DEMAND",
+        "narrative_character_count": 369,
+        "narrative_control_ref": null,
+        "narrative_max_characters": null,
+        "narrative_sha256": "sha256:49ec66c17fb02e5828539bbb4d2c0e5b68a40fdb34559530b9228fe6c23712c8",
+        "narrative_target_count": 0,
+        "narrative_target_status": "NOT_REQUESTED",
+        "pdf_secure_ref": "secure-ref:25a713bfcc7245f5967ba2317e7203e0",
+        "pdf_sha256": "sha256:c8fa7f4b34b8e59c0b5cf8cef4a20f9ef524e6e29ed0a59ad2ca8f358118b974",
+        "request_status": "REQUESTED_REQUIRED"
+      },
+      "portfolio_file": {
+        "binding_status": "NOT_REQUESTED",
+        "request_status": "NOT_REQUESTED",
+        "safe_filename": null,
+        "secure_ref": null,
+        "sha256": null
+      },
+      "public_links": [],
+      "real_external_actions": 0,
+      "resume": {
+        "derivation": "TAILORED_COPY_OF_SINGLE_APPROVED_MASTER",
+        "docx_secure_ref": "secure-ref:332e7dd8907b428e8b82b42ea2508618",
+        "docx_sha256": "sha256:445ab546bcb0de743e75117730e50f409a5620998d9acd9055307a7cd68c989d",
+        "generated_before_application": true,
+        "master_secure_ref": "secure-ref:a75456eeefeb4597b92ab2035aafcbd9",
+        "master_sha256": "sha256:faa0621fdcdd70ecb56cd404cc6c117a5d95d8686db8478046d7430a6a89d732",
+        "pdf_secure_ref": "secure-ref:85548e6eac32462686cfd1b2b78f6507",
+        "pdf_sha256": "sha256:71dadde867cd95265bb488bf80a52a3a8a9e1243c75ed2136fa858a450fe8724"
+      },
+      "schema_version": 1,
+      "status": "READY_FOR_REVIEW"
+    },
+    "packet_id": "RPK-4BFF4EF975FD",
+    "queue": {
+      "awaiting_approval": 0,
+      "closed_applications": 0,
+      "deferred_intake": 0,
+      "pending_limit": 10,
+      "reserved_slots": 1,
+      "slots_available": 9
+    },
+    "resume_bullets": [
+      {
+        "claim_id": "CLM-5E2325A5513E",
+        "evidence": [
+          {
+            "content_sha256": "sha256:fe4bac3ea1cae5b045cfb900e33a1a5c427b8e89913b4046d868618f89f8205d",
+            "kind": "UPLOADED_MATERIAL",
+            "secure_ref": "secure-ref:dfe1090b5da3492a99a57e76b7fa2bfc"
+          }
+        ],
+        "text": "在合成海港研究所02担任研究员期间，团队管理预算12502美元。"
+      }
+    ],
+    "schema_version": 1,
+    "sensitive_fields": [
+      {
+        "action": "STOP",
+        "ai_semantic_reason": "The role is based only on the sanitized prompt and deterministic JobFlow classification.",
+        "ai_semantic_role": "material_upload",
+        "answer_key": "resume",
+        "classification": "file_upload_stop",
+        "control_type": "file",
+        "gate": "STOP_REQUIRED",
+        "id": "CTL-34AA8EA15F1D",
+        "label": "Resume",
+        "max_length": null,
+        "max_length_status": "ABSENT",
+        "options": [],
+        "prompt_hash": "sha256:13b839c1ac586e5637a3ea2f639f30753085feb0a117a26189f1f2f6c92f5904",
+        "reason": "FILE_UPLOAD_EXTERNAL_ACTION",
+        "redacted_summary": "UNANSWERED",
+        "required": true,
+        "secure_ref": null,
+        "status": "STOPPED",
+        "untrusted_prompt_display_only": true
+      },
+      {
+        "action": "STOP",
+        "ai_semantic_reason": "The role is based only on the sanitized prompt and deterministic JobFlow classification.",
+        "ai_semantic_role": "material_upload",
+        "answer_key": "cover_letter",
+        "classification": "file_upload_stop",
+        "control_type": "file",
+        "gate": "STOP_REQUIRED",
+        "id": "CTL-FA00DAAA82A6",
+        "label": "Cover Letter",
+        "max_length": null,
+        "max_length_status": "ABSENT",
+        "options": [],
+        "prompt_hash": "sha256:270f9f35e2e61ca9cad0edb7776e95160158e9625e2266b5f72145ce70a3e4a8",
+        "reason": "FILE_UPLOAD_EXTERNAL_ACTION",
+        "redacted_summary": "UNANSWERED",
+        "required": true,
+        "secure_ref": null,
+        "status": "STOPPED",
+        "untrusted_prompt_display_only": true
+      },
+      {
+        "action": "STOP",
+        "ai_semantic_reason": "The role is based only on the sanitized prompt and deterministic JobFlow classification.",
+        "ai_semantic_role": "final_submit",
+        "answer_key": "UNKNOWN",
+        "classification": "final_submit_stop",
+        "control_type": "submit",
+        "gate": "STOP_REQUIRED",
+        "id": "CTL-FCEF9B148FC8",
+        "label": "Submit application",
+        "max_length": null,
+        "max_length_status": "ABSENT",
+        "options": [],
+        "prompt_hash": "sha256:d156a735372d4dc64a124b7e6dc6ffda2b9b4ba685f4bcf2bbfe6e21e6753b66",
+        "reason": "FINAL_SUBMIT_EXTERNAL_ACTION",
+        "redacted_summary": "UNANSWERED",
+        "required": false,
+        "secure_ref": null,
+        "status": "STOPPED",
+        "untrusted_prompt_display_only": true
+      }
+    ],
+    "source_route": {
+      "account_action": "NONE",
+      "ats_board": "official",
+      "ats_job_identity": "apply",
+      "ats_tenant": "example.com",
+      "company_domain": "example.com",
+      "current_url": "https://example.com/careers/analyst-first-use/apply",
+      "guest_mode": "GUEST_SELECTED",
+      "jd_snapshot_hash": "sha256:a64dd50b2e117aab7cb9e6c26927e0ee5c058a9c84d37cd1ec090f47ab0052dc",
+      "navigation_history": [
+        "https://example.com/careers/analyst-first-use",
+        "https://example.com/careers/analyst-first-use/apply"
+      ],
+      "official_entry_url": "https://example.com/careers/analyst-first-use",
+      "official_page_hash": "sha256:b928f6914c6b3862547bd45cfb354a6e62b97734cb6f361e4c1855ef453a8471",
+      "provider": "company",
+      "route_hash": "sha256:a73b0f88114949e89d4d3e1ffd5dbf019cb9f4a2fd459c5383f3d18c7ab32f95",
+      "route_kind": "OFFICIAL_DIRECT",
+      "status": "ROUTE_APPROVED"
+    },
+    "status": "AWAITING_APPROVAL",
+    "uploads": [
+      {
+        "filename": "jobflow-resume-948d2e6f9f13.pdf",
+        "purpose": "resume",
+        "sha256": "sha256:71dadde867cd95265bb488bf80a52a3a8a9e1243c75ed2136fa858a450fe8724"
+      },
+      {
+        "filename": "jobflow-cover-letter-948d2e6f9f13.pdf",
+        "purpose": "cover_letter",
+        "sha256": "sha256:c8fa7f4b34b8e59c0b5cf8cef4a20f9ef524e6e29ed0a59ad2ca8f358118b974"
+      }
+    ]
+  },
+  "private_transport": "LOCAL_SESSION_ONLY",
+  "field_resolution": {
+    "status": "READY_FOR_PACKET_APPROVAL",
+    "unresolved_count": 0,
+    "resolved_count": 0,
+    "separate_action_gate_count": 3,
+    "unresolved_fields": [],
+    "remaining_non_form_unknowns": [],
+    "private_values_emitted": 0,
+    "real_external_actions": 0
+  },
+  "private_values_persisted_to_project": 0,
+  "real_external_actions": 0
+}

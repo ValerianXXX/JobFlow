@@ -1,0 +1,268 @@
+{
+  "protocol": "EMPTY_PROFILE_TO_APPLICATION_REPLAY_UI_V2",
+  "synthetic_only": true,
+  "model": "Pinned CJK document response and bounded existing fake application adapter; no fresh inference",
+  "new_model_calls": 0,
+  "independent_human": false,
+  "steps": [
+    {
+      "step": "empty_workspace",
+      "at": "2026-11-01T06:27:56.257Z",
+      "sources": 0,
+      "claims": 0,
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "retained_unapproved_after_reload",
+      "at": "2026-11-01T06:28:04.556Z",
+      "sources": 1,
+      "decisions": [
+        "PENDING",
+        "PENDING",
+        "PENDING",
+        "PENDING",
+        "PENDING"
+      ],
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "answers_saved_through_ui",
+      "at": "2026-11-01T06:28:12.001Z",
+      "resolved": {
+        "total": 25,
+        "resolved": 25,
+        "remaining": 0,
+        "remaining_fields": [],
+        "percent": 100
+      },
+      "answerCount": 40,
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "premature_completion_blocked",
+      "at": "2026-11-01T06:28:13.738Z",
+      "http": 400,
+      "code": "PROFILE_REVIEW_REQUIRED",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "review_saved_through_ui",
+      "at": "2026-11-01T06:28:17.259Z",
+      "decisions": [
+        "CONFIRMED",
+        "CONFIRMED",
+        "CONFIRMED",
+        "CONFIRMED",
+        "CONFIRMED"
+      ],
+      "profile": "CONFIRMED",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "step": "completed_from_empty",
+      "at": "2026-11-01T06:28:23.233Z",
+      "status": "ONBOARDING_COMPLETE"
+    },
+    {
+      "step": "first_resume_from_empty",
+      "at": "2026-11-01T06:28:32.334Z",
+      "selected": 2,
+      "excluded": 3,
+      "layout": "STANDARD_SINGLE_COLUMN_V2",
+      "wording": [
+        "在合成青杉实验室02担任分析员期间，团队核验了14家门店。",
+        "合成青杉实验室02的分析员任职日期为2023-2024。"
+      ],
+      "docx_sha256": "8c55c9beb67214ab89787146d9a30e0981604c657116c75824c4f8b19b175868"
+    },
+    {
+      "step": "restored_without_consent",
+      "at": "2026-11-01T06:28:36.972Z",
+      "selected": 2,
+      "external_requests": 0,
+      "page_errors": 0
+    },
+    {
+      "step": "awaiting_actual_visual_review",
+      "at": "2026-11-01T06:28:55.244Z",
+      "pages": [
+        {
+          "file": "standard-page-1.png",
+          "sha256": "160f6b0ac26e1b5276e6197bd092dd85a98d7552429930449fd905b9c66adc21",
+          "page": 1
+        }
+      ],
+      "docx_sha256": "sha256:8c55c9beb67214ab89787146d9a30e0981604c657116c75824c4f8b19b175868",
+      "provider": "LIBREOFFICE",
+      "materials_validated": false
+    },
+    {
+      "step": "actual_pages_inspected",
+      "at": "2026-11-01T06:29:40.698Z",
+      "review_file": "standard-visual-review.json",
+      "pages": 1,
+      "independent_human": false
+    },
+    {
+      "step": "adopted_new_editable_revision",
+      "at": "2026-11-01T06:29:46.185Z",
+      "revision": 2,
+      "status": "IN_PROGRESS",
+      "profile": "PENDING",
+      "sources": 1,
+      "claims": 5,
+      "externalCurrent": false,
+      "tailoringCurrent": false
+    },
+    {
+      "step": "revision_completed_and_permissions_renewed",
+      "at": "2026-11-01T06:30:12.732Z",
+      "revision": 2,
+      "readiness": {
+        "schema_version": 1,
+        "status": "READY_FOR_OFFLINE_APPLICATION_PREPARATION",
+        "blockers": [],
+        "onboarding_complete": true,
+        "ai_structured_ready": true,
+        "master_resume": {
+          "present": true,
+          "editable_docx": true,
+          "template_fingerprint_present": true,
+          "tailoring_mode": "APPROVED_BLOCK_MANIFEST",
+          "template_slot_count": 0,
+          "tailoring_manifest_current": true,
+          "tailoring_block_count": 2
+        },
+        "claims": {
+          "confirmed_count": 5,
+          "review_hash": "sha256:4be826e571bc2f9ba88afac66ffde1f18acbcf7ca663382a1b8cdbfc20dadcbb",
+          "external_approval_current": true,
+          "externally_approved_count": 5
+        },
+        "queue": {
+          "pending_limit": 10,
+          "awaiting_approval": 0,
+          "slots_available": 10,
+          "continues_after_awaiting_approval": true
+        },
+        "capabilities": {
+          "saved_official_job_discovery": true,
+          "offline_application_preparation": true,
+          "tailored_resume_generation": true,
+          "on_demand_cover_letter_generation": true,
+          "review_packet_generation": true,
+          "live_site_access": false,
+          "real_prefill": false,
+          "real_upload": false,
+          "final_submission": false
+        },
+        "generated_at": "2026-11-01T06:30:12.283392Z",
+        "real_external_actions": 0
+      },
+      "tailoring_candidates": 2
+    },
+    {
+      "step": "offline_application_response",
+      "at": "2026-11-01T06:30:55.188Z",
+      "http": 200,
+      "result": {
+        "status": "AWAITING_APPROVAL",
+        "application_id": "APP-948D2E6F9F13",
+        "review_packet_id": "RPK-F37E7A7123FF",
+        "queue": {
+          "pending_limit": 10,
+          "awaiting_approval": 1,
+          "reserved_slots": 0,
+          "deferred_intake": 0,
+          "closed_applications": 0,
+          "slots_available": 9
+        },
+        "deferred_evidence_retained": false,
+        "real_external_actions": 0,
+        "network_actions": 0,
+        "next_safe_action": "OPEN_LOCAL_REVIEW_PACKET"
+      }
+    },
+    {
+      "step": "application_packet_restored_without_approval",
+      "at": "2026-11-01T06:31:01.247Z",
+      "application_status": "AWAITING_APPROVAL",
+      "external_requests": 0,
+      "page_errors": 0
+    }
+  ],
+  "reference_runtime": "95b8be63e7bdb479e4043e04ef0c0026beb36899",
+  "observed_head": "af4077d52bfef2b1e5b5a289b5aec3f236d447da",
+  "observed_product_tree": "39e419bb081d3bda0fae5cf50924da061cc56449",
+  "runtime_matches_reference": false,
+  "started_at": "2026-11-01T06:27:53.918Z",
+  "harness_sha256": "b265fcf2d67f06535682e634663bb99bbc25aa1fd2134ad5531b1bed7e4793e8",
+  "expected_final_facts": [
+    "在合成海港研究所02担任研究员期间，团队管理预算12502美元。",
+    "在合成海港研究所02担任研究员期间，申请人测试了26个场景。"
+  ],
+  "status": "PASS",
+  "completed_at": "2026-11-01T06:31:01.248Z",
+  "fixture_exit": 0,
+  "server": {
+    "synthetic_only": true,
+    "seeded_approval": false,
+    "real_model_calls": 0,
+    "recorded_response_replays": 1,
+    "synthetic_adapter_tasks": {
+      "JOBFLOW_APPLICATION_MATERIAL_DECISION_V1": 1,
+      "JOBFLOW_FORM_SEMANTIC_REVIEW_V1": 1
+    },
+    "revision_number": 2,
+    "status": "ONBOARDING_COMPLETE",
+    "source_count": 1,
+    "material_claim_count": 5,
+    "claim_decisions": [
+      "CONFIRMED",
+      "CONFIRMED",
+      "CONFIRMED",
+      "CONFIRMED",
+      "CONFIRMED"
+    ],
+    "database_counts": {
+      "applications": 1,
+      "claims": 0,
+      "approvals": 0,
+      "external_action_attempts": 0
+    },
+    "generated_artifacts": [
+      {
+        "file": "01-generated_cover_letter_docx.docx",
+        "sha256": "db4aa73c470da077088545e98230513522eeb03fb2e1a0bb87308d721bd8f7ee"
+      },
+      {
+        "file": "02-generated_cover_letter_pdf.pdf",
+        "sha256": "421073829ba2054ea66bf6055956d21dbcabbcdd40319d3d86773ed697e2c59c"
+      },
+      {
+        "file": "03-generated_resume_docx.docx",
+        "sha256": "8c55c9beb67214ab89787146d9a30e0981604c657116c75824c4f8b19b175868"
+      },
+      {
+        "file": "04-generated_resume_docx.docx",
+        "sha256": "bf74e10b52e007f1cd28c634aad6c02767a4a5779c5f7868d9d74eb8e9e75384"
+      },
+      {
+        "file": "05-generated_resume_pdf.pdf",
+        "sha256": "8f02ce46192e0776e4f45d42961038063bbd489ed9856738d33538c2b6ef2db7"
+      },
+      {
+        "file": "06-generated_resume_pdf.pdf",
+        "sha256": "67a55c4ce3c3eb888cfc2be3487660a6e25f52340e3774cdb1fbedbd45bfbbe7"
+      }
+    ],
+    "actual_native_qa_observations": 2,
+    "qa_results_overridden": false,
+    "temporary_state_removed": true
+  },
+  "bound_source_unchanged": true,
+  "final_docx_fact_occurrences": [
+    1,
+    1
+  ]
+}

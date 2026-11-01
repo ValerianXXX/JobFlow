@@ -15,6 +15,12 @@ signed desktop release. GitHub releases were rechecked on October 31: v0.7.0
 still contains source/checksum assets only; v0.6.0 remains the latest stable tag.
 Use the **Development setup** below to evaluate this branch.
 
+PDF-first users can adopt a generated DOCX and continue into application
+preparation. The handoff now verifies the exact adoption receipt and original
+PDF instead of rejecting every generated master. Current material permission
+and approved editing positions are still required. See the [continuous first-use
+verification, recovery and limits](docs/adopted-master-handoff-2026-11-01.md).
+
 The latest material-intake change rejects pages represented only by pagination
 or substantial raster areas missing from the text layer. Default, fallback and
 optional local parsers share the check; bilingual guidance explains recovery

@@ -1,0 +1,13 @@
+test_adopted_generated_master_is_accepted_without_changing_original_evidence (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_adopted_generated_master_is_accepted_without_changing_original_evidence) ... ok
+test_adoption_requires_current_completed_state_and_original_binding (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_adoption_requires_current_completed_state_and_original_binding) ... ok
+test_changed_original_pdf_is_rejected (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_changed_original_pdf_is_rejected) ... ok
+test_current_material_permission_is_still_required (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_current_material_permission_is_still_required) ... ok
+test_draft_file_hash_and_original_approval_must_all_agree (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_draft_file_hash_and_original_approval_must_all_agree) ... ok
+test_generated_file_without_explicit_adoption_is_rejected (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_generated_file_without_explicit_adoption_is_rejected) ... ok
+test_later_confirmed_revision_keeps_the_same_adoption_lineage (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_later_confirmed_revision_keeps_the_same_adoption_lineage) ... ok
+test_wrong_kind_adoption_receipt_is_rejected (test_adopted_master_handoff.AdoptedMasterHandoffTests.test_wrong_kind_adoption_receipt_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 31.109s
+
+OK

@@ -4,6 +4,20 @@ Notable JobFlow changes are listed here. The project follows semantic versioning
 
 ## [Unreleased]
 
+- Fix application preparation after adopting a generated standard DOCX: accept
+  only the exact adopted file bound to its completed state, original PDF and
+  historical generation receipt. Preserve original evidence, require current
+  material permission, and accept later reviewed revisions without a database
+  migration. Ordinary generated files remain ineligible as masters.
+  [Continuous journey and regression evidence](docs/adopted-master-handoff-2026-11-01.md).
+- Preserve native PDF line wrapping at URL/hyphen separators in reading-order
+  comparison, while retaining every separator, word/digit boundary and ordering
+  check. The frozen native Cover Letter initially failed; changed citations,
+  numbers, responsibility assignments and interleaved columns still fail.
+- Use named ranking fields and distinct IDs/wording when assigning approved
+  facts to resume positions. A score/index mix-up previously repeated the same
+  fact. Oversized candidates no longer hide a shorter approved alternative.
+
 - Add a reproducible empty-profile browser check through the first selected
   resume draft, using fixed synthetic answers and a recorded model response.
   Correct the discovery command test's directory-name false positive while

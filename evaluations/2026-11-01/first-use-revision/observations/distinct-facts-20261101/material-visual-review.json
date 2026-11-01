@@ -1,0 +1,35 @@
+{
+  "observed_at_utc": "2026-11-01T06:35:44.7049287Z",
+  "synthetic_only": true,
+  "reviewer": "ASSISTANT_VISUAL_REVIEW",
+  "independent_human": false,
+  "workflow_result": "PASS",
+  "material_result": "PASS",
+  "scope": "Native layout, source-bound synthetic facts, and distinct resume replacement facts",
+  "whole_product_accepted": false,
+  "pages": [
+    {
+      "file": "native-qa-1/page-1.png",
+      "reason": "Actually viewed full native resume page: two distinct source-confirmed facts, team budget 12502 USD and applicant testing 26 scenarios, each shown once; no visible clipping or overlap.",
+      "sha256": "6798fbc884e2474b3d9e1ba877ee0a0667fdd511cf4c1e0b07c462685c080d9b",
+      "result": "PASS"
+    },
+    {
+      "file": "native-qa-2/page-1.png",
+      "reason": "Actually viewed full native cover-letter page: preserved source URL wraps at its existing hyphen; facts and source citation remain readable, no visible clipping or overlap. Structural review only; repeated opening fact and mixed-language replay prose are not accepted as persuasive writing quality.",
+      "sha256": "444e2347eba844d4e0a7ffe54398fee88c61a6da9660510d395347cf0ea0f7dd",
+      "result": "PASS"
+    }
+  ],
+  "final_docx_fact_occurrences": [
+    1,
+    1
+  ],
+  "new_model_calls": 0,
+  "limits": [
+    "One pinned synthetic task",
+    "No independent human acceptance",
+    "No model prose-quality or job-match improvement established",
+    "Earlier workflow PASS with material FAIL remains unchanged"
+  ]
+}

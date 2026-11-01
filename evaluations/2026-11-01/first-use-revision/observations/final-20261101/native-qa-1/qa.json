@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "docx_name": "resume.docx",
+  "pdf_name": "resume.pdf",
+  "docx_hash": "sha256:445ab546bcb0de743e75117730e50f409a5620998d9acd9055307a7cd68c989d",
+  "pdf_hash": "sha256:71dadde867cd95265bb488bf80a52a3a8a9e1243c75ed2136fa858a450fe8724",
+  "page_count": 1,
+  "page_limit": 2,
+  "ats_text_present": true,
+  "placeholders": [],
+  "text_difference_ratio": 0.0,
+  "visual_record_hash": "sha256:7f86bbf6e2019f535110adef98e138aa668fcac1a91f612c32260dbd0eceef86",
+  "visual_inspection": "PASS",
+  "reading_order_issue_count": 0
+}

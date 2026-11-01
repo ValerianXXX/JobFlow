@@ -252,16 +252,21 @@ def reading_order_issues(docx_text: str, pdf_text: str) -> int:
 
     Word counts alone accept swapped ownership or interleaved columns. Require
     each paragraph of eight or more tokens to remain contiguous, ignoring line
-    wrapping and the same punctuation differences as the existing token check.
+    wrapping. Retain punctuation as separate ordered atoms so a URL or
+    hyphenated expression may wrap at a separator without joining ordinary
+    words or digits across whitespace. The word-count check is unchanged.
     Short headings/contact labels still use the existing checks. Return counts
     only: private paragraphs must not become diagnostic text.
     """
     separator = "\x1f"
-    stream = separator + separator.join(normalized_tokens(pdf_text)) + separator
+    def ordered_atoms(text: str) -> list[str]:
+        return re.findall(r"[a-z0-9]+|[+.#/-]|[\u4e00-\u9fff]", text.casefold())
+
+    stream = separator + separator.join(ordered_atoms(pdf_text)) + separator
     issues = 0
     for paragraph in docx_text.splitlines():
         tokens = normalized_tokens(paragraph)
-        if len(tokens) >= 8 and separator + separator.join(tokens) + separator not in stream:
+        if len(tokens) >= 8 and separator + separator.join(ordered_atoms(paragraph)) + separator not in stream:
             issues += 1
     return issues
 

@@ -1,0 +1,14 @@
+test_exhausted_candidates_do_not_repeat_a_fact_to_fill_another_position (test_tailoring_distinct_claims.DistinctTailoringClaimsTests.test_exhausted_candidates_do_not_repeat_a_fact_to_fill_another_position) ... ok
+test_identical_wording_under_two_ids_is_not_duplicated (test_tailoring_distinct_claims.DistinctTailoringClaimsTests.test_identical_wording_under_two_ids_is_not_duplicated) ... ok
+test_lexical_route_also_uses_each_claim_at_most_once (test_tailoring_distinct_claims.DistinctTailoringClaimsTests.test_lexical_route_also_uses_each_claim_at_most_once) ... ok
+test_long_preferred_fact_does_not_hide_a_shorter_approved_candidate (test_tailoring_distinct_claims.DistinctTailoringClaimsTests.test_long_preferred_fact_does_not_hide_a_shorter_approved_candidate) ... ok
+test_two_positions_receive_distinct_claims_in_ai_preference_order (test_tailoring_distinct_claims.DistinctTailoringClaimsTests.test_two_positions_receive_distinct_claims_in_ai_preference_order) ... ok
+test_ai_reviewed_block_proposal_persists_only_hashes_and_needs_confirmation (test_resume_tailoring_manifest.ResumeTailoringManifestTests.test_ai_reviewed_block_proposal_persists_only_hashes_and_needs_confirmation) ... ok
+test_job_ranker_selects_only_relevant_exact_claim_for_an_approved_block (test_resume_tailoring_manifest.ResumeTailoringManifestTests.test_job_ranker_selects_only_relevant_exact_claim_for_an_approved_block) ... ok
+test_manifest_tailoring_uses_exact_approved_claim_and_preserves_master (test_resume_tailoring_manifest.ResumeTailoringManifestTests.test_manifest_tailoring_uses_exact_approved_claim_and_preserves_master) ... ok
+test_unrelated_claim_cannot_create_or_fill_a_manifest_position (test_resume_tailoring_manifest.ResumeTailoringManifestTests.test_unrelated_claim_cannot_create_or_fill_a_manifest_position) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.297s
+
+OK
